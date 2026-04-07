@@ -1,27 +1,57 @@
-use crate::opt::process_file_to;
-use crate::BundleFormat;
-use crate::{
-    build::cache::ObjectCache, serve::WebServer, verbosity_or_default, BuildArtifacts,
-    BuildRequest, BuildStage, BuilderUpdate, ProgressRx, ProgressTx, Result, RustcArgs,
-    StructuredOutput,
-};
-use anyhow::Context;
-use futures_util::future::OptionFuture;
 use std::{
     collections::HashSet,
     env,
-    time::{Duration, Instant, SystemTime},
+    net::SocketAddr,
+    path::PathBuf,
+    process::Stdio,
+    time::{
+        Duration,
+        Instant,
+        SystemTime,
+    },
 };
-use std::{net::SocketAddr, path::PathBuf, process::Stdio};
+
+use anyhow::Context;
+use futures_util::future::OptionFuture;
 use subsecond_types::JumpTable;
 use target_lexicon::Architecture;
 use tokio::{
-    io::{AsyncBufReadExt, BufReader, Lines},
-    process::{Child, ChildStderr, ChildStdout, Command},
+    io::{
+        AsyncBufReadExt,
+        BufReader,
+        Lines,
+    },
+    process::{
+        Child,
+        ChildStderr,
+        ChildStdout,
+        Command,
+    },
     task::JoinHandle,
 };
 
-use super::{BuildContext, BuildId, BuildMode, HotpatchModuleCache};
+use super::{
+    BuildContext,
+    BuildId,
+    BuildMode,
+    HotpatchModuleCache,
+};
+use crate::{
+    build::cache::ObjectCache,
+    opt::process_file_to,
+    serve::WebServer,
+    verbosity_or_default,
+    BuildArtifacts,
+    BuildRequest,
+    BuildStage,
+    BuilderUpdate,
+    BundleFormat,
+    ProgressRx,
+    ProgressTx,
+    Result,
+    RustcArgs,
+    StructuredOutput,
+};
 
 /// The component of the serve engine that watches ongoing builds and manages their state, open handle,
 /// and progress.
@@ -758,7 +788,10 @@ impl AppBuilder {
             _ => vec![],
         };
 
-        use crate::styles::{GLOW_STYLE, NOTE_STYLE};
+        use crate::styles::{
+            GLOW_STYLE,
+            NOTE_STYLE,
+        };
 
         let changed_file = changed_files.first().unwrap();
         tracing::info!(

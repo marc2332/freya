@@ -311,38 +311,94 @@
 //! ## Extra links
 //! - xbuild: <https://github.com/rust-mobile/xbuild/blob/master/xbuild/src/command/build.rs>
 
-use super::HotpatchModuleCache;
-use crate::opt::{process_file_to, AssetManifest};
-use crate::{
-    AndroidTools, AppManifest, BuildContext, BuildId, BundleFormat, DioxusConfig, Error,
-    LinkAction, LinkerFlavor, ObjectCache, Platform, Renderer, Result, RustcArgs, TargetArgs,
-    TraceSrc, Workspace, DX_RUSTC_WRAPPER_ENV_VAR,
+use std::{
+    borrow::Cow,
+    collections::{
+        HashMap,
+        HashSet,
+    },
+    ffi::OsString,
+    path::{
+        Path,
+        PathBuf,
+    },
+    process::Stdio,
+    sync::{
+        atomic::{
+            AtomicUsize,
+            Ordering,
+        },
+        Arc,
+    },
+    time::{
+        SystemTime,
+        UNIX_EPOCH,
+    },
 };
-use anyhow::{bail, Context};
+
+use anyhow::{
+    bail,
+    Context,
+};
 use cargo_metadata::diagnostic::Diagnostic;
-use cargo_toml::{Profile, Profiles, StripSetting};
+use cargo_toml::{
+    Profile,
+    Profiles,
+    StripSetting,
+};
 use depinfo::RustcDepInfo;
 use freya_hotreload::PRODUCT_NAME_ENV;
 use itertools::Itertools;
-use krates::{cm::TargetKind, NodeId};
-use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
-use serde::{Deserialize, Serialize};
-use std::{borrow::Cow, ffi::OsString};
-use std::{
-    collections::{HashMap, HashSet},
-    path::{Path, PathBuf},
-    process::Stdio,
-    sync::{
-        atomic::{AtomicUsize, Ordering},
-        Arc,
-    },
-    time::{SystemTime, UNIX_EPOCH},
+use krates::{
+    cm::TargetKind,
+    NodeId,
+};
+use rayon::prelude::{
+    IntoParallelRefIterator,
+    ParallelIterator,
+};
+use serde::{
+    Deserialize,
+    Serialize,
 };
 use subsecond_types::JumpTable;
-use target_lexicon::{Architecture, OperatingSystem, Triple};
+use target_lexicon::{
+    Architecture,
+    OperatingSystem,
+    Triple,
+};
 use tempfile::TempDir;
-use tokio::{io::AsyncBufReadExt, process::Command};
+use tokio::{
+    io::AsyncBufReadExt,
+    process::Command,
+};
 use uuid::Uuid;
+
+use super::HotpatchModuleCache;
+use crate::{
+    opt::{
+        process_file_to,
+        AssetManifest,
+    },
+    AndroidTools,
+    AppManifest,
+    BuildContext,
+    BuildId,
+    BundleFormat,
+    DioxusConfig,
+    Error,
+    LinkAction,
+    LinkerFlavor,
+    ObjectCache,
+    Platform,
+    Renderer,
+    Result,
+    RustcArgs,
+    TargetArgs,
+    TraceSrc,
+    Workspace,
+    DX_RUSTC_WRAPPER_ENV_VAR,
+};
 
 /// This struct is used to plan the build process.
 ///
@@ -914,7 +970,10 @@ impl BuildRequest {
         // If the user provided a profile and wasm_split is enabled, we should check that LTO=true and debug=true
         if args.wasm_split {
             if let Some(profile_data) = workspace.cargo_toml.profile.custom.get(&profile) {
-                use cargo_toml::{DebugSetting, LtoSetting};
+                use cargo_toml::{
+                    DebugSetting,
+                    LtoSetting,
+                };
                 if matches!(profile_data.lto, Some(LtoSetting::None) | None) {
                     tracing::warn!(
                         "wasm-split requires LTO to be enabled in the profile. \
@@ -2505,7 +2564,10 @@ impl BuildRequest {
         patch: &Path,
         cache: &HotpatchModuleCache,
     ) -> Result<JumpTable> {
-        use crate::build::patch::{create_native_jump_table, create_windows_jump_table};
+        use crate::build::patch::{
+            create_native_jump_table,
+            create_windows_jump_table,
+        };
         let triple = &self.triple;
 
         // Symbols are stored differently based on the platform, so we need to handle them differently.
@@ -3347,7 +3409,10 @@ impl BuildRequest {
     /// would be to unpack some zip folder or something stored via `include_dir!()`. However, we do
     /// need to customize the whole setup a bit, so it's just simpler (though messier) to do it this way.
     fn build_android_app_dir(&self) -> Result<()> {
-        use std::fs::{create_dir_all, write};
+        use std::fs::{
+            create_dir_all,
+            write,
+        };
         let root = self.root_dir();
 
         // gradle
@@ -4012,7 +4077,10 @@ impl BuildRequest {
     }
 
     pub(crate) fn bundled_app_name(&self) -> String {
-        use convert_case::{Case, Casing};
+        use convert_case::{
+            Case,
+            Casing,
+        };
         self.executable_name().to_case(Case::Pascal)
     }
 
@@ -4467,8 +4535,13 @@ impl BuildRequest {
     ///
     /// It's not guaranteed that they're different from any other folder
     pub(crate) fn prepare_build_dir(&self, ctx: &BuildContext) -> Result<()> {
-        use std::fs::{create_dir_all, remove_dir_all};
-        use std::sync::OnceLock;
+        use std::{
+            fs::{
+                create_dir_all,
+                remove_dir_all,
+            },
+            sync::OnceLock,
+        };
 
         static PRIMARY_INITIALIZED: OnceLock<Result<()>> = OnceLock::new();
         static SECONDARY_INITIALIZED: OnceLock<Result<()>> = OnceLock::new();

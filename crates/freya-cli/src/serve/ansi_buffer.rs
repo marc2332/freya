@@ -1,5 +1,12 @@
-use ratatui::{buffer::Cell, prelude::*};
-use std::fmt::{self, Write};
+use std::fmt::{
+    self,
+    Write,
+};
+
+use ratatui::{
+    buffer::Cell,
+    prelude::*,
+};
 
 /// A buffer that can be rendered to and then dumped as raw ansi codes
 ///

@@ -1,12 +1,27 @@
-use crate::bundler::BundleContext;
-use crate::{NSISInstallerMode, WebviewInstallMode, WindowsSettings};
-use anyhow::{bail, Context, Result};
+use std::{
+    collections::BTreeMap,
+    path::{
+        Path,
+        PathBuf,
+    },
+};
+
+use anyhow::{
+    bail,
+    Context,
+    Result,
+};
 use handlebars::Handlebars;
 use serde_json::Value as JsonValue;
-use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
 use tokio::process::Command;
 use uuid::Uuid;
+
+use crate::{
+    bundler::BundleContext,
+    NSISInstallerMode,
+    WebviewInstallMode,
+    WindowsSettings,
+};
 
 impl BundleContext<'_> {
     /// Build a Windows MSI installer using the WiX toolset.
@@ -1251,10 +1266,15 @@ SectionEnd
 
 #[cfg(test)]
 mod tests {
-    use super::{render_template, WIX_TEMPLATE};
-    use crate::bundler::Arch;
-    use serde_json::json;
     use std::collections::BTreeMap;
+
+    use serde_json::json;
+
+    use super::{
+        render_template,
+        WIX_TEMPLATE,
+    };
+    use crate::bundler::Arch;
 
     #[test]
     fn wix_program_files_folder_matches_architecture() {

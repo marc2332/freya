@@ -1,9 +1,27 @@
-use crate::{Result, TraceSrc};
+use std::{
+    fs,
+    path::PathBuf,
+    sync::{
+        Arc,
+        LazyLock,
+    },
+};
+
 use anyhow::bail;
-use serde::{Deserialize, Serialize};
-use std::sync::LazyLock;
-use std::{fs, path::PathBuf, sync::Arc};
-use tracing::{error, trace, warn};
+use serde::{
+    Deserialize,
+    Serialize,
+};
+use tracing::{
+    error,
+    trace,
+    warn,
+};
+
+use crate::{
+    Result,
+    TraceSrc,
+};
 
 /// Describes cli settings from project or global level.
 /// The order of priority goes:

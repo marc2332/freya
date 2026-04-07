@@ -1,10 +1,16 @@
+use anyhow::bail;
+
 use super::*;
 use crate::{
-    serve::{AppServer, ServeUpdate, WebServer},
-    BuilderUpdate, Result,
+    serve::{
+        AppServer,
+        ServeUpdate,
+        WebServer,
+    },
+    BuildStage,
+    BuilderUpdate,
+    Result,
 };
-use anyhow::bail;
-use crate::BuildStage;
 
 /// Run the project with the given arguments
 ///

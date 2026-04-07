@@ -1,6 +1,16 @@
 use crate::{
-    styles::{GLOW_STYLE, LINK_STYLE},
-    AppBuilder, BuildId, BuildMode, BuilderUpdate, Result, ServeArgs, TraceController, TraceMsg,
+    styles::{
+        GLOW_STYLE,
+        LINK_STYLE,
+    },
+    AppBuilder,
+    BuildId,
+    BuildMode,
+    BuilderUpdate,
+    Result,
+    ServeArgs,
+    TraceController,
+    TraceMsg,
     TraceSrc,
 };
 
@@ -10,14 +20,21 @@ mod runner;
 mod server;
 mod update;
 
-use crate::BuildStage;
+use std::{
+    collections::HashSet,
+    time::{
+        Duration,
+        Instant,
+    },
+};
+
 use anyhow::bail;
 pub(crate) use output::*;
 pub(crate) use runner::*;
 pub(crate) use server::*;
-use std::collections::HashSet;
-use std::time::{Duration, Instant};
 pub(crate) use update::*;
+
+use crate::BuildStage;
 
 /// For *all* builds, the CLI spins up a dedicated webserver, file watcher, and build infrastructure to serve the project.
 ///
@@ -342,7 +359,10 @@ pub(crate) async fn serve_all(args: ServeArgs, tracer: &TraceController) -> Resu
             }
 
             ServeUpdate::ToggleShouldRebuild => {
-                use crate::styles::{ERROR, NOTE_STYLE};
+                use crate::styles::{
+                    ERROR,
+                    NOTE_STYLE,
+                };
                 builder.automatic_rebuilds = !builder.automatic_rebuilds;
                 tracing::info!(
                     "Automatic rebuilds are currently: {}",

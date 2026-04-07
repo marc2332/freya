@@ -3,13 +3,25 @@
 //! All downloads happen upfront via `resolve_tools()` before any bundling starts.
 //! This keeps tool downloads out of the bundle format modules.
 
-use super::Arch;
-use crate::{PackageType, WebviewInstallMode, WindowsSettings};
-use anyhow::{bail, Context, Result};
-use std::path::{Path, PathBuf};
-
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
+use std::path::{
+    Path,
+    PathBuf,
+};
+
+use anyhow::{
+    bail,
+    Context,
+    Result,
+};
+
+use super::Arch;
+use crate::{
+    PackageType,
+    WebviewInstallMode,
+    WindowsSettings,
+};
 
 /// NSIS download URL and expected hash
 const NSIS_URL: &str =

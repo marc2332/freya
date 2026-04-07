@@ -1,16 +1,36 @@
-use crate::styles::GLOW_STYLE;
-use crate::CliSettings;
-use crate::Result;
-use crate::{config::DioxusConfig, AndroidTools};
-use anyhow::{bail, Context};
+use std::{
+    collections::HashSet,
+    path::{
+        Path,
+        PathBuf,
+    },
+    sync::Arc,
+    time::Duration,
+};
+
+use anyhow::{
+    bail,
+    Context,
+};
 use ignore::gitignore::Gitignore;
-use krates::{semver::Version, KrateDetails, LockOptions};
-use krates::{Cmd, Krates, NodeId};
-use std::sync::Arc;
-use std::{collections::HashSet, path::Path};
-use std::{path::PathBuf, time::Duration};
+use krates::{
+    semver::Version,
+    Cmd,
+    KrateDetails,
+    Krates,
+    LockOptions,
+    NodeId,
+};
 use target_lexicon::Triple;
 use tokio::process::Command;
+
+use crate::{
+    config::DioxusConfig,
+    styles::GLOW_STYLE,
+    AndroidTools,
+    CliSettings,
+    Result,
+};
 
 pub struct Workspace {
     pub(crate) krates: Krates,

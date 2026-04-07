@@ -1,8 +1,15 @@
-use crate::StructuredBuildArtifacts;
-
 use crate::{
-    Anonymized, AppBuilder, BuildArtifacts, BuildId, BuildMode, BuildRequest, BundleFormat,
-    TargetArgs, Workspace, cli::*,
+    cli::*,
+    Anonymized,
+    AppBuilder,
+    BuildArtifacts,
+    BuildId,
+    BuildMode,
+    BuildRequest,
+    BundleFormat,
+    StructuredBuildArtifacts,
+    TargetArgs,
+    Workspace,
 };
 
 /// Build the Rust Dioxus app and all of its assets.
@@ -33,7 +40,6 @@ pub struct BuildArgs {
     /// and client builds in parallel. This flag will force the build to run the server build first, then the client build. [default: false]
     ///
     /// If CI is enabled, this will be set to true by default.
-    ///
     #[clap(
         long, default_missing_value = "true",
         num_args = 0..=1,

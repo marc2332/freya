@@ -12,9 +12,14 @@
 //! - **Tip crate:** objects are copied from linker arg paths since incremental compilation
 //!   overwrites them in place.
 
-use std::collections::HashMap;
-use std::io::Read;
-use std::path::{Path, PathBuf};
+use std::{
+    collections::HashMap,
+    io::Read,
+    path::{
+        Path,
+        PathBuf,
+    },
+};
 
 /// Cache of compiled object files on disk, keyed by crate name.
 ///

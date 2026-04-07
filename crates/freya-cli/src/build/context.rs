@@ -1,11 +1,27 @@
 //! Report progress about the build to the user. We use channels to report progress back to the CLI.
 
-use super::BuildMode;
-use crate::{BuildArtifacts, BuildStage, Error, TraceSrc};
+use std::{
+    path::PathBuf,
+    process::ExitStatus,
+};
+
 use cargo_metadata::diagnostic::Diagnostic;
-use futures_channel::mpsc::{UnboundedReceiver, UnboundedSender};
-use serde::{Deserialize, Serialize};
-use std::{path::PathBuf, process::ExitStatus};
+use futures_channel::mpsc::{
+    UnboundedReceiver,
+    UnboundedSender,
+};
+use serde::{
+    Deserialize,
+    Serialize,
+};
+
+use super::BuildMode;
+use crate::{
+    BuildArtifacts,
+    BuildStage,
+    Error,
+    TraceSrc,
+};
 
 /// The context of the build process. While the BuildRequest is a "plan" for the build, the BuildContext
 /// provides some dynamic configuration that is only known at runtime. For example, the Progress channel

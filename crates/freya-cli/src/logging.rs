@@ -14,34 +14,76 @@
 //! 3. Build CLI layer for routing tracing logs to the TUI.
 //! 4. Build fmt layer for non-interactive logging with a custom writer that prevents output during interactive mode.
 
-use crate::BundleFormat;
-use crate::StructuredOutput;
-use crate::{serve::ServeUpdate, Cli, Commands, Verbosity};
-use anyhow::{Context, Error, Result};
-use cargo_metadata::diagnostic::{Diagnostic, DiagnosticLevel};
-use clap::Parser;
-use futures_channel::mpsc::{UnboundedReceiver, UnboundedSender};
-use futures_util::FutureExt;
-use itertools::Itertools;
-use std::{any::Any, pin::Pin, str::FromStr, sync::Arc};
-use std::{borrow::Cow, sync::OnceLock};
 use std::{
+    any::Any,
+    borrow::Cow,
     collections::HashMap,
     env,
-    fmt::{Debug, Display, Write as _},
-    sync::atomic::{AtomicBool, Ordering},
-    time::{Duration, Instant},
+    fmt::{
+        Debug,
+        Display,
+        Write as _,
+    },
+    future::Future,
+    panic::AssertUnwindSafe,
+    pin::Pin,
+    str::FromStr,
+    sync::{
+        atomic::{
+            AtomicBool,
+            Ordering,
+        },
+        Arc,
+        OnceLock,
+    },
+    time::{
+        Duration,
+        Instant,
+    },
 };
-use std::{future::Future, panic::AssertUnwindSafe};
-use tracing::{field::Visit, Level, Subscriber};
+
+use anyhow::{
+    Context,
+    Error,
+    Result,
+};
+use cargo_metadata::diagnostic::{
+    Diagnostic,
+    DiagnosticLevel,
+};
+use clap::Parser;
+use futures_channel::mpsc::{
+    UnboundedReceiver,
+    UnboundedSender,
+};
+use futures_util::FutureExt;
+use itertools::Itertools;
+use tracing::{
+    field::Visit,
+    Level,
+    Subscriber,
+};
 use tracing_subscriber::{
     fmt::{
-        format::{self, Writer},
+        format::{
+            self,
+            Writer,
+        },
         time::FormatTime,
     },
     prelude::*,
     registry::LookupSpan,
-    EnvFilter, Layer,
+    EnvFilter,
+    Layer,
+};
+
+use crate::{
+    serve::ServeUpdate,
+    BundleFormat,
+    Cli,
+    Commands,
+    StructuredOutput,
+    Verbosity,
 };
 
 const LOG_ENV: &str = "FREYA_LOG";
@@ -337,7 +379,10 @@ impl TraceController {
             Ok(Ok(output)) => output,
 
             Ok(Err(err)) => {
-                use crate::styles::{ERROR_STYLE, GLOW_STYLE};
+                use crate::styles::{
+                    ERROR_STYLE,
+                    GLOW_STYLE,
+                };
                 let arg = std::env::args().nth(1).unwrap_or_else(|| "dx".to_string());
                 let err_display = format!("{err:?}")
                     .lines()
@@ -624,8 +669,9 @@ async fn run_with_ctrl_c<F: Future>(fut: F) -> F::Output {
 
 #[cfg(test)]
 mod pretty_uptime_tests {
-    use super::PrettyUptime;
     use std::time::Duration;
+
+    use super::PrettyUptime;
 
     #[test]
     fn pretty_uptime_pads_centiseconds_to_keep_a_stable_width() {

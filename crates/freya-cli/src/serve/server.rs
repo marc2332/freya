@@ -1,18 +1,56 @@
-use crate::{BuildId, BuildStage, BuilderUpdate, BundleFormat, Result, serve::ServeUpdate};
-use anyhow::Context;
-use freya_hotreload::{ClientMsg, DevserverMsg, HotReloadMsg, JumpTable};
-use futures_channel::mpsc::{UnboundedReceiver, UnboundedSender};
-use futures_util::{StreamExt, future, stream::FuturesUnordered};
-use serde::{Deserialize, Serialize};
 use std::{
-    net::{IpAddr, Ipv4Addr, SocketAddr, TcpListener},
-    sync::{Arc, RwLock},
+    net::{
+        IpAddr,
+        Ipv4Addr,
+        SocketAddr,
+        TcpListener,
+    },
+    sync::{
+        Arc,
+        RwLock,
+    },
     time::Duration,
 };
-use tokio::io::{AsyncReadExt, AsyncWriteExt, ReadHalf, WriteHalf};
-use tokio::net::TcpStream;
+
+use anyhow::Context;
+use freya_hotreload::{
+    ClientMsg,
+    DevserverMsg,
+    HotReloadMsg,
+    JumpTable,
+};
+use futures_channel::mpsc::{
+    UnboundedReceiver,
+    UnboundedSender,
+};
+use futures_util::{
+    future,
+    stream::FuturesUnordered,
+    StreamExt,
+};
+use serde::{
+    Deserialize,
+    Serialize,
+};
+use tokio::{
+    io::{
+        AsyncReadExt,
+        AsyncWriteExt,
+        ReadHalf,
+        WriteHalf,
+    },
+    net::TcpStream,
+};
 
 use super::AppServer;
+use crate::{
+    serve::ServeUpdate,
+    BuildId,
+    BuildStage,
+    BuilderUpdate,
+    BundleFormat,
+    Result,
+};
 
 /// The TCP server that handles devtools communication with connected clients.
 ///

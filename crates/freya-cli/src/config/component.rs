@@ -1,6 +1,10 @@
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+
+use schemars::JsonSchema;
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 /// Configuration for component-related settings in the project
 #[derive(Debug, Clone, Serialize, Deserialize, Default, JsonSchema)]

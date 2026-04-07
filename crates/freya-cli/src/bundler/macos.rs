@@ -1,13 +1,43 @@
-use crate::bundler::{copy_dir_recursive, AppCategory, Bundle, BundleContext};
-use crate::{MacOsSettings, PackageType};
-use anyhow::{bail, Context, Result};
-use image::{DynamicImage, ImageReader};
-use std::fs::{self, File};
-use std::io::BufWriter;
-use std::path::{Path, PathBuf};
-use std::process::{Command as StdCommand, Stdio};
-use tokio::io::AsyncWriteExt;
-use tokio::process::Command;
+use std::{
+    fs::{
+        self,
+        File,
+    },
+    io::BufWriter,
+    path::{
+        Path,
+        PathBuf,
+    },
+    process::{
+        Command as StdCommand,
+        Stdio,
+    },
+};
+
+use anyhow::{
+    bail,
+    Context,
+    Result,
+};
+use image::{
+    DynamicImage,
+    ImageReader,
+};
+use tokio::{
+    io::AsyncWriteExt,
+    process::Command,
+};
+
+use crate::{
+    bundler::{
+        copy_dir_recursive,
+        AppCategory,
+        Bundle,
+        BundleContext,
+    },
+    MacOsSettings,
+    PackageType,
+};
 
 impl BundleContext<'_> {
     /// Create the final macOS `.app` bundle and apply Apple-specific metadata.

@@ -1,6 +1,10 @@
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+
+use schemars::JsonSchema;
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub(crate) struct ApplicationConfig {

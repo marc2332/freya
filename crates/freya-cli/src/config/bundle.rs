@@ -1,7 +1,14 @@
+use std::{
+    collections::HashMap,
+    path::PathBuf,
+    str::FromStr,
+};
+
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
-use std::{collections::HashMap, str::FromStr};
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, JsonSchema)]
 pub(crate) struct BundleConfig {

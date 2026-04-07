@@ -7,20 +7,37 @@ pub(crate) mod serve;
 pub(crate) mod target;
 pub(crate) mod verbosity;
 
+use std::{
+    path::PathBuf,
+    sync::LazyLock,
+};
+
 pub(crate) use build::*;
+use clap::{
+    builder::styling::{
+        AnsiColor,
+        Effects,
+        Style,
+        Styles,
+    },
+    Parser,
+    Subcommand,
+};
+use serde::Deserialize;
+use serde_json::{
+    json,
+    Value,
+};
 pub(crate) use serve::*;
 pub(crate) use target::*;
 pub(crate) use verbosity::*;
 
-use crate::platform_override::CommandWithPlatformOverrides;
-use crate::Anonymized;
-use crate::{error::Result, StructuredOutput};
-use clap::builder::styling::{AnsiColor, Effects, Style, Styles};
-use clap::{Parser, Subcommand};
-use serde::Deserialize;
-use serde_json::{json, Value};
-use std::path::PathBuf;
-use std::sync::LazyLock;
+use crate::{
+    error::Result,
+    platform_override::CommandWithPlatformOverrides,
+    Anonymized,
+    StructuredOutput,
+};
 
 /// Dioxus: build web, desktop, and mobile apps with a single codebase.
 #[derive(Parser)]

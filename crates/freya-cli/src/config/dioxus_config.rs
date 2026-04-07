@@ -1,8 +1,11 @@
-use crate::config::component::ComponentConfig;
+use schemars::JsonSchema;
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 use super::*;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use crate::config::component::ComponentConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub(crate) struct DioxusConfig {
@@ -49,7 +52,7 @@ pub(crate) struct DioxusConfig {
     #[serde(default)]
     pub(crate) ios: IosConfigStub,
 
-    /// Android stub - not supported in Freya desktop  
+    /// Android stub - not supported in Freya desktop
     #[serde(default)]
     pub(crate) android: AndroidConfigStub,
 }

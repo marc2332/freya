@@ -1,8 +1,12 @@
 // Minimal opt module for Freya CLI - asset processing removed
 // This module is kept for structural compatibility but does not process assets
 
-use serde::{Deserialize, Serialize};
 use std::path::Path;
+
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 /// Empty asset manifest - assets are not processed in Freya desktop builds
 #[derive(Debug, PartialEq, Default, Clone, Serialize, Deserialize)]

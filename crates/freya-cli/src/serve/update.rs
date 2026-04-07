@@ -1,6 +1,14 @@
-use crate::{BuildId, BuilderUpdate, BundleFormat, Error, TraceMsg};
-use freya_hotreload::ClientMsg;
 use std::path::PathBuf;
+
+use freya_hotreload::ClientMsg;
+
+use crate::{
+    BuildId,
+    BuilderUpdate,
+    BundleFormat,
+    Error,
+    TraceMsg,
+};
 
 /// One fat enum to rule them all....
 ///

@@ -40,14 +40,22 @@ pub use freya_hotreload as hotreload;
 pub mod prelude {
     pub use bytes::Bytes;
     pub use cursor_icon::CursorIcon;
-    pub use keyboard_types::{Code, Key, Modifiers, NamedKey};
+    pub use keyboard_types::{
+        Code,
+        Key,
+        Modifiers,
+        NamedKey,
+    };
 
     pub use crate::{
         accessibility::{
             focus::*,
             focus_strategy::*,
             focusable::*,
-            id::{AccessibilityId, AccessibilityRole},
+            id::{
+                AccessibilityId,
+                AccessibilityRole,
+            },
             screen_reader::*,
         },
         animation_clock::AnimationClock,
@@ -56,7 +64,14 @@ pub mod prelude {
         debug::*,
         diff_key::DiffKey,
         element::RenderContext,
-        element::{App, Component, ComponentKey, ComponentOwned, Element, IntoElement},
+        element::{
+            App,
+            Component,
+            ComponentKey,
+            ComponentOwned,
+            Element,
+            IntoElement,
+        },
         elements::{
             extensions::*,
             image::{
@@ -65,12 +80,32 @@ pub mod prelude {
                 // The image element is hidden on purpose as its a "low level" element, users should rather use the `ImageViewer` component.
                 SamplingMode,
             },
-            label::{Label, TextWidth, label},
-            paragraph::{Paragraph, ParagraphHolder, Span, paragraph},
-            rect::{Rect, rect},
-            svg::{Svg, SvgBytes, svg},
+            label::{
+                Label,
+                TextWidth,
+                label,
+            },
+            paragraph::{
+                Paragraph,
+                ParagraphHolder,
+                Span,
+                paragraph,
+            },
+            rect::{
+                Rect,
+                rect,
+            },
+            svg::{
+                Svg,
+                SvgBytes,
+                svg,
+            },
         },
-        event_handler::{Callback, EventHandler, NoArgCallback},
+        event_handler::{
+            Callback,
+            EventHandler,
+            NoArgCallback,
+        },
         events::data::*,
         events::*,
         events_combos::*,
@@ -78,17 +113,38 @@ pub mod prelude {
         hooks::use_id::*,
         layers::Layer,
         lifecycle::{
-            base::*, context::*, effect::*, future_task::*, memo::*, reactive::*, readable::*,
-            state::*, task::*, writable::*,
+            base::*,
+            context::*,
+            effect::*,
+            future_task::*,
+            memo::*,
+            reactive::*,
+            readable::*,
+            state::*,
+            task::*,
+            writable::*,
         },
         platform::*,
         reactive_context::ReactiveContext,
         rendering_ticker::RenderingTicker,
         scope_id::ScopeId,
         style::{
-            border::*, color::*, corner_radius::*, cursor::*, fill::*, font_slant::*,
-            font_weight::*, font_width::*, gradient::*, scale::*, shadow::*, text_align::*,
-            text_decoration::*, text_height::*, text_overflow::*, text_shadow::*,
+            border::*,
+            color::*,
+            corner_radius::*,
+            cursor::*,
+            fill::*,
+            font_slant::*,
+            font_weight::*,
+            font_width::*,
+            gradient::*,
+            scale::*,
+            shadow::*,
+            text_align::*,
+            text_decoration::*,
+            text_height::*,
+            text_overflow::*,
+            text_shadow::*,
             vertical_align::*,
         },
         user_event::UserEvent,
@@ -100,12 +156,24 @@ pub mod integration {
     pub use rustc_hash::*;
 
     pub use crate::{
-        accessibility::{dirty_nodes::*, focus_strategy::*, id::*, screen_reader::*, tree::*},
+        accessibility::{
+            dirty_nodes::*,
+            focus_strategy::*,
+            id::*,
+            screen_reader::*,
+            tree::*,
+        },
         animation_clock::AnimationClock,
         data::*,
         element::*,
         elements::extensions::*,
-        events::{data::*, executor::*, measurer::*, name::*, platform::*},
+        events::{
+            data::*,
+            executor::*,
+            measurer::*,
+            name::*,
+            platform::*,
+        },
         lifecycle::state::State,
         node_id::NodeId,
         platform::*,
@@ -114,7 +182,10 @@ pub mod integration {
         runner::Runner,
         scope_id::ScopeId,
         style::default_fonts::default_fonts,
-        tree::{DiffModifies, Tree},
+        tree::{
+            DiffModifies,
+            Tree,
+        },
         user_event::*,
     };
 }

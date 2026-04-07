@@ -1,25 +1,64 @@
-use super::{AppBuilder, ServeUpdate, WebServer};
-use crate::BuildStage;
-use crate::{
-    platform_override::CommandWithPlatformOverrides, BuildArtifacts, BuildId, BuildMode,
-    BuildTargets, BuilderUpdate, HotpatchModuleCache, Result, ServeArgs, TraceSrc, Workspace,
-};
-use anyhow::{bail, Context};
-use freya_hotreload::HotReloadMsg;
-use futures_channel::mpsc::{UnboundedReceiver, UnboundedSender};
-use futures_util::future::OptionFuture;
-use futures_util::StreamExt;
-use krates::NodeId;
-use notify::{
-    event::{MetadataKind, ModifyKind},
-    Config, EventKind, RecursiveMode, Watcher as NotifyWatcher,
-};
 use std::{
-    collections::{HashMap, HashSet, VecDeque},
-    net::{IpAddr, TcpListener},
-    path::{Path, PathBuf},
+    collections::{
+        HashMap,
+        HashSet,
+        VecDeque,
+    },
+    net::{
+        IpAddr,
+        TcpListener,
+    },
+    path::{
+        Path,
+        PathBuf,
+    },
     sync::Arc,
     time::Duration,
+};
+
+use anyhow::{
+    bail,
+    Context,
+};
+use freya_hotreload::HotReloadMsg;
+use futures_channel::mpsc::{
+    UnboundedReceiver,
+    UnboundedSender,
+};
+use futures_util::{
+    future::OptionFuture,
+    StreamExt,
+};
+use krates::NodeId;
+use notify::{
+    event::{
+        MetadataKind,
+        ModifyKind,
+    },
+    Config,
+    EventKind,
+    RecursiveMode,
+    Watcher as NotifyWatcher,
+};
+
+use super::{
+    AppBuilder,
+    ServeUpdate,
+    WebServer,
+};
+use crate::{
+    platform_override::CommandWithPlatformOverrides,
+    BuildArtifacts,
+    BuildId,
+    BuildMode,
+    BuildStage,
+    BuildTargets,
+    BuilderUpdate,
+    HotpatchModuleCache,
+    Result,
+    ServeArgs,
+    TraceSrc,
+    Workspace,
 };
 
 /// This is the primary "state" object that holds the builds and handles for the running apps.

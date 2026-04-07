@@ -1,22 +1,33 @@
 #[cfg(feature = "devtools")]
-use std::io::{Read, Write};
+use std::io::{
+    Read,
+    Write,
+};
 #[cfg(feature = "devtools")]
 use std::net::TcpStream;
 use std::path::PathBuf;
 #[cfg(feature = "devtools")]
-use std::sync::{Mutex, OnceLock, mpsc};
+use std::sync::{
+    Mutex,
+    OnceLock,
+    mpsc,
+};
 
 pub mod config;
 pub use config::*;
-
 #[cfg(feature = "serve")]
 use futures_util::{
     StreamExt,
-    future::{Either, select},
+    future::{
+        Either,
+        select,
+    },
 };
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
-
+use serde::{
+    Deserialize,
+    Serialize,
+};
 pub use subsecond;
 pub use subsecond_types::JumpTable;
 

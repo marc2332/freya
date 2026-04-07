@@ -1,9 +1,13 @@
-use crate::BundleFormat;
-use crate::Platform;
-use crate::{cli::*, Renderer};
 // use crate::RendererArg;
 // use crate::PlatformAlias;
 use target_lexicon::Triple;
+
+use crate::{
+    cli::*,
+    BundleFormat,
+    Platform,
+    Renderer,
+};
 
 const HELP_HEADING: &str = "Target Options";
 
@@ -80,7 +84,6 @@ pub(crate) struct TargetArgs {
     /// to the underlying the `cargo rustc` command:
     ///
     /// cargo rustc -- -Clink-arg=-Wl,-blah
-    ///
     #[clap(long, help_heading = HELP_HEADING)]
     pub(crate) rustc_args: Option<String>,
 

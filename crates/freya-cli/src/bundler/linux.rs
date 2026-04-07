@@ -1,16 +1,38 @@
-use crate::{
-    bundler::{AppCategory, BundleContext},
-    PackageType,
-};
-use anyhow::{bail, Context, Result};
-use handlebars::Handlebars;
-use image::{GenericImageView, ImageFormat};
 use std::{
-    fs::{self, File},
-    io::{BufReader, Cursor, Write},
-    path::{Path, PathBuf},
+    fs::{
+        self,
+        File,
+    },
+    io::{
+        BufReader,
+        Cursor,
+        Write,
+    },
+    path::{
+        Path,
+        PathBuf,
+    },
+};
+
+use anyhow::{
+    bail,
+    Context,
+    Result,
+};
+use handlebars::Handlebars;
+use image::{
+    GenericImageView,
+    ImageFormat,
 };
 use tokio::process::Command;
+
+use crate::{
+    bundler::{
+        AppCategory,
+        BundleContext,
+    },
+    PackageType,
+};
 
 const DEFAULT_LINUX_ICON_PNG: &[u8] = include_bytes!("../../assets/default_icon.png");
 

@@ -5,7 +5,10 @@
 
 use std::{
     ffi::OsString,
-    path::{Path, PathBuf},
+    path::{
+        Path,
+        PathBuf,
+    },
 };
 
 use brotli::enc::BrotliEncoderParams;

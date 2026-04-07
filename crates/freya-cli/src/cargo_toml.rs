@@ -2,9 +2,16 @@
 //! doesn't handle global configs like ~/.cargo/config.toml. This module handles extending the manifest with those
 //! settings if they exist.
 
-use std::path::{Path, PathBuf};
+use std::path::{
+    Path,
+    PathBuf,
+};
 
-use cargo_toml::{Manifest, Profile, Profiles};
+use cargo_toml::{
+    Manifest,
+    Profile,
+    Profiles,
+};
 
 /// Load the manifest from a path inheriting from the global config where needed
 pub fn load_manifest_from_path(path: &Path) -> Result<Manifest, cargo_toml::Error> {

@@ -1,9 +1,25 @@
+use std::{
+    fmt::Display,
+    str::FromStr,
+};
+
 use anyhow::Result;
-use clap::{arg, Arg, ArgMatches, Args, FromArgMatches};
-use serde::{Deserialize, Serialize};
-use std::fmt::Display;
-use std::str::FromStr;
-use target_lexicon::{Environment, OperatingSystem, Triple};
+use clap::{
+    arg,
+    Arg,
+    ArgMatches,
+    Args,
+    FromArgMatches,
+};
+use serde::{
+    Deserialize,
+    Serialize,
+};
+use target_lexicon::{
+    Environment,
+    OperatingSystem,
+    Triple,
+};
 
 #[derive(
     Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Debug, Default,

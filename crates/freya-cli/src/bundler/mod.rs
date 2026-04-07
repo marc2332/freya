@@ -4,13 +4,27 @@ mod tools;
 mod updater;
 mod windows;
 
-use crate::PackageType;
-use crate::{BuildRequest, DebianSettings, MacOsSettings, WindowsSettings};
-use anyhow::Context;
-use anyhow::Result;
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::{
+    collections::HashMap,
+    path::{
+        Path,
+        PathBuf,
+    },
+};
+
+use anyhow::{
+    Context,
+    Result,
+};
 use tools::ResolvedTools;
+
+use crate::{
+    BuildRequest,
+    DebianSettings,
+    MacOsSettings,
+    PackageType,
+    WindowsSettings,
+};
 
 /// A completed bundle with its output paths.
 #[derive(Debug)]
@@ -174,7 +188,10 @@ impl<'a> BundleContext<'a> {
                 PackageType::Nsis => self.bundle_windows_nsis().await?,
                 PackageType::Updater => self.bundle_updater(&bundles).await?,
                 _ => {
-                    tracing::warn!("Bundle type {:?} is not supported in this build", package_type);
+                    tracing::warn!(
+                        "Bundle type {:?} is not supported in this build",
+                        package_type
+                    );
                     vec![]
                 }
             };
@@ -806,8 +823,13 @@ pub(crate) fn copy_dir_recursive(src: &Path, dest: &Path) -> Result<()> {
 
 /// Recursively zip a directory tree while preserving relative paths and Unix modes.
 pub(crate) fn zip_dir_recursive(src: &Path, dest: &Path) -> Result<()> {
-    use std::fs::File;
-    use std::io::{Read, Write};
+    use std::{
+        fs::File,
+        io::{
+            Read,
+            Write,
+        },
+    };
 
     let file =
         File::create(dest).with_context(|| format!("Failed to create {}", dest.display()))?;

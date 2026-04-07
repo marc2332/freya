@@ -1,5 +1,10 @@
 use super::*;
-use crate::{AddressArguments, Anonymized, BuildArgs, TraceController};
+use crate::{
+    AddressArguments,
+    Anonymized,
+    BuildArgs,
+    TraceController,
+};
 /// Serve the project
 ///
 /// `dx serve` takes cargo args by default with additional renderer args like `--web`, `--webview`, and `--native`:

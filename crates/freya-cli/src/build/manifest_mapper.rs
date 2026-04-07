@@ -6,8 +6,14 @@
 //! - iOS/macOS: Info.plist keys, URL schemes, UIBackgroundModes
 
 use crate::config::{
-    AndroidConfig, BackgroundConfig, DeepLinkConfig, IosConfig, LocationPrecision, MacosConfig,
-    PermissionsConfig, StorageAccess,
+    AndroidConfig,
+    BackgroundConfig,
+    DeepLinkConfig,
+    IosConfig,
+    LocationPrecision,
+    MacosConfig,
+    PermissionsConfig,
+    StorageAccess,
 };
 
 /// Android permission entry for AndroidManifest.xml
@@ -630,7 +636,10 @@ impl ManifestMapper {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::{LocationPermission, SimplePermission};
+    use crate::config::{
+        LocationPermission,
+        SimplePermission,
+    };
 
     #[test]
     fn test_location_permission_mapping() {

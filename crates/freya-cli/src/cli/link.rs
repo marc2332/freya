@@ -1,8 +1,21 @@
-use crate::Result;
-use anyhow::{bail, Context};
-use serde::{Deserialize, Serialize};
-use std::{borrow::Cow, ffi::OsString, path::PathBuf, process::ExitCode};
+use std::{
+    borrow::Cow,
+    ffi::OsString,
+    path::PathBuf,
+    process::ExitCode,
+};
+
+use anyhow::{
+    bail,
+    Context,
+};
+use serde::{
+    Deserialize,
+    Serialize,
+};
 use target_lexicon::Triple;
+
+use crate::Result;
 
 /// `dx` can act as a linker in a few scenarios. Note that we don't *actually* implement the linker logic,
 /// instead just proxying to a specified linker (or not linking at all!).

@@ -3,12 +3,21 @@
 //! Defines structured output types for CLI communication with external tools.
 //! This is a minimal version for Freya desktop builds (no asset processing).
 
-use cargo_metadata::{diagnostic::Diagnostic, CompilerMessage};
-use serde::{Deserialize, Serialize};
-use std::{borrow::Cow, path::PathBuf};
-use subsecond_types::JumpTable;
+use std::{
+    borrow::Cow,
+    path::PathBuf,
+};
 
 pub use cargo_metadata;
+use cargo_metadata::{
+    diagnostic::Diagnostic,
+    CompilerMessage,
+};
+use serde::{
+    Deserialize,
+    Serialize,
+};
+use subsecond_types::JumpTable;
 
 /// The structured output for the CLI
 ///

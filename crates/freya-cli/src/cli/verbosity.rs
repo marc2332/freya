@@ -1,5 +1,6 @@
-use clap::Parser;
 use std::path::PathBuf;
+
+use clap::Parser;
 
 #[derive(Parser, Clone, Debug, Default)]
 pub struct Verbosity {

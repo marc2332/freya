@@ -2,14 +2,25 @@
 //!
 //! Creates zip/tar.gz archives of bundle artifacts for auto-update distribution.
 
-use super::{Bundle, BundleContext};
-use crate::PackageType;
-use anyhow::{Context, Result};
 use std::{
     fs::File,
     io,
-    path::{Path, PathBuf},
+    path::{
+        Path,
+        PathBuf,
+    },
 };
+
+use anyhow::{
+    Context,
+    Result,
+};
+
+use super::{
+    Bundle,
+    BundleContext,
+};
+use crate::PackageType;
 
 impl BundleContext<'_> {
     /// Repackage previously-built bundle artifacts into updater-friendly archives.

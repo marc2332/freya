@@ -1,36 +1,78 @@
-use crate::{
-    serve::{ansi_buffer::ansi_string_to_line, ServeUpdate, WebServer},
-    BuildId, BuildStage, BuilderUpdate, TraceContent, TraceMsg, TraceSrc,
+use std::{
+    cell::RefCell,
+    collections::VecDeque,
+    io::{
+        self,
+        stdout,
+        Write,
+    },
+    rc::Rc,
+    time::Duration,
 };
-use crate::{BundleFormat, Result};
-use anyhow::{anyhow, bail, Context};
+
+use anyhow::{
+    anyhow,
+    bail,
+    Context,
+};
 use cargo_metadata::diagnostic::Diagnostic;
 use crossterm::{
-    cursor::{Hide, Show},
+    cursor::{
+        Hide,
+        Show,
+    },
     event::{
-        DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange, Event,
-        EventStream, KeyCode, KeyEvent, KeyEventKind, KeyModifiers,
+        DisableBracketedPaste,
+        DisableFocusChange,
+        EnableBracketedPaste,
+        EnableFocusChange,
+        Event,
+        EventStream,
+        KeyCode,
+        KeyEvent,
+        KeyEventKind,
+        KeyModifiers,
     },
     terminal::{
-        disable_raw_mode, enable_raw_mode, ClearType, EnterAlternateScreen, LeaveAlternateScreen,
+        disable_raw_mode,
+        enable_raw_mode,
+        ClearType,
+        EnterAlternateScreen,
+        LeaveAlternateScreen,
     },
     ExecutableCommand,
 };
 use ratatui::{
     prelude::*,
-    widgets::{Block, BorderType, Borders, LineGauge, Paragraph, Wrap},
-    TerminalOptions, Viewport,
-};
-use std::{
-    cell::RefCell,
-    collections::VecDeque,
-    io::{self, stdout, Write},
-    rc::Rc,
-    time::Duration,
+    widgets::{
+        Block,
+        BorderType,
+        Borders,
+        LineGauge,
+        Paragraph,
+        Wrap,
+    },
+    TerminalOptions,
+    Viewport,
 };
 use tracing::Level;
 
 use super::AppServer;
+use crate::{
+    serve::{
+        ansi_buffer::ansi_string_to_line,
+        ServeUpdate,
+        WebServer,
+    },
+    BuildId,
+    BuildStage,
+    BuilderUpdate,
+    BundleFormat,
+    Result,
+    TraceContent,
+    TraceMsg,
+    TraceSrc,
+};
 
 const TICK_RATE_MS: u64 = 100;
 const VIEWPORT_HEIGHT_SMALL: u16 = 5;
@@ -155,7 +197,10 @@ impl Output {
     fn enable_raw_mode() -> Result<()> {
         #[cfg(unix)]
         {
-            use tokio::signal::unix::{signal, SignalKind};
+            use tokio::signal::unix::{
+                signal,
+                SignalKind,
+            };
 
             // Ignore SIGTSTP, SIGTTIN, and SIGTTOU
             _ = signal(SignalKind::from_raw(20))?; // SIGTSTP
@@ -196,8 +241,10 @@ impl Output {
     }
 
     pub(crate) async fn wait(&mut self) -> ServeUpdate {
-        use futures_util::future::OptionFuture;
-        use futures_util::StreamExt;
+        use futures_util::{
+            future::OptionFuture,
+            StreamExt,
+        };
 
         if !self.interactive {
             return std::future::pending().await;

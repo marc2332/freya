@@ -1,11 +1,20 @@
-use crate::Result;
+use std::{
+    path::PathBuf,
+    sync::Arc,
+};
+
 use anyhow::Context;
 use itertools::Itertools;
-use std::{path::PathBuf, sync::Arc};
 use target_lexicon::{
-    Aarch64Architecture, Architecture, ArmArchitecture, Triple, X86_32Architecture,
+    Aarch64Architecture,
+    Architecture,
+    ArmArchitecture,
+    Triple,
+    X86_32Architecture,
 };
 use tokio::process::Command;
+
+use crate::Result;
 
 /// The tools for Android (ndk, sdk, etc)
 ///

@@ -1,5 +1,9 @@
 use std::{
-    net::{IpAddr, Ipv4Addr, SocketAddr},
+    net::{
+        IpAddr,
+        Ipv4Addr,
+        SocketAddr,
+    },
     path::PathBuf,
 };
 

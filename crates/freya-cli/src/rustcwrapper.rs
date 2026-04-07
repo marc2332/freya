@@ -1,8 +1,15 @@
-use serde::{Deserialize, Serialize};
 use std::{
-    env::{args, vars},
+    env::{
+        args,
+        vars,
+    },
     path::PathBuf,
     process::ExitCode,
+};
+
+use serde::{
+    Deserialize,
+    Serialize,
 };
 
 /// The environment variable indicating where the args directory is located.

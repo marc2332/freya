@@ -8,8 +8,12 @@
 //! Eventually, we might want to expand this to include more metadata about the build, including
 //! build time, target platform, etc.
 
+use serde::{
+    Deserialize,
+    Serialize,
+};
+
 use crate::opt::AssetManifest;
-use serde::{Deserialize, Serialize};
 
 #[derive(Default, Serialize, Deserialize)]
 pub struct AppManifest {

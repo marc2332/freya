@@ -1,28 +1,80 @@
+use std::{
+    collections::{
+        BTreeMap,
+        HashMap,
+        HashSet,
+    },
+    ops::{
+        Deref,
+        Range,
+    },
+    path::{
+        Path,
+        PathBuf,
+    },
+    sync::{
+        Arc,
+        RwLock,
+    },
+};
+
 use anyhow::Context;
 use itertools::Itertools;
 use object::{
-    macho::{self},
+    macho::{
+        self,
+    },
     read::File,
-    write::{MachOBuildVersion, SectionId, StandardSection, Symbol, SymbolId, SymbolSection},
-    Endianness, Object, ObjectSection, ObjectSymbol, SymbolFlags, SymbolKind, SymbolScope,
+    write::{
+        MachOBuildVersion,
+        SectionId,
+        StandardSection,
+        Symbol,
+        SymbolId,
+        SymbolSection,
+    },
+    Endianness,
+    Object,
+    ObjectSection,
+    ObjectSymbol,
+    SymbolFlags,
+    SymbolKind,
+    SymbolScope,
 };
-use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
-use std::{
-    collections::{BTreeMap, HashMap, HashSet},
-    ops::{Deref, Range},
-    path::Path,
-    path::PathBuf,
-    sync::{Arc, RwLock},
+use rayon::prelude::{
+    IntoParallelRefIterator,
+    ParallelIterator,
 };
-use subsecond_types::{AddressMap, JumpTable};
-use target_lexicon::{Architecture, OperatingSystem, PointerWidth, Triple};
+use subsecond_types::{
+    AddressMap,
+    JumpTable,
+};
+use target_lexicon::{
+    Architecture,
+    OperatingSystem,
+    PointerWidth,
+    Triple,
+};
 use thiserror::Error;
 use walrus::{
-    ConstExpr, ElementItems, ElementKind, FunctionBuilder, FunctionId, FunctionKind, ImportKind,
-    Module, ModuleConfig, TableId,
+    ConstExpr,
+    ElementItems,
+    ElementKind,
+    FunctionBuilder,
+    FunctionId,
+    FunctionKind,
+    ImportKind,
+    Module,
+    ModuleConfig,
+    TableId,
 };
 use wasmparser::{
-    BinaryReader, BinaryReaderError, Linking, LinkingSectionReader, Payload, SymbolInfo,
+    BinaryReader,
+    BinaryReaderError,
+    Linking,
+    LinkingSectionReader,
+    Payload,
+    SymbolInfo,
 };
 
 type Result<T, E = PatchError> = std::result::Result<T, E>;

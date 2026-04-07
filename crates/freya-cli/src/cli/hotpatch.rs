@@ -1,12 +1,23 @@
-use crate::StructuredBuildArtifacts;
-use crate::{
-    platform_override::CommandWithPlatformOverrides, AppBuilder, BuildArgs, BuildId, BuildMode,
-    HotpatchModuleCache, Result, StructuredOutput,
+use std::{
+    collections::HashMap,
+    io::Read,
+    sync::Arc,
 };
+
 use anyhow::Context;
 use clap::Parser;
-use std::sync::Arc;
-use std::{collections::HashMap, io::Read};
+
+use crate::{
+    platform_override::CommandWithPlatformOverrides,
+    AppBuilder,
+    BuildArgs,
+    BuildId,
+    BuildMode,
+    HotpatchModuleCache,
+    Result,
+    StructuredBuildArtifacts,
+    StructuredOutput,
+};
 
 const HELP_HEADING: &str = "Hotpatching a binary";
 

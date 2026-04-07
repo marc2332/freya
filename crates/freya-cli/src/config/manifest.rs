@@ -11,10 +11,16 @@
 //! dx config --schema > dioxus-schema.json
 //! ```
 
+use std::{
+    collections::HashMap,
+    path::PathBuf,
+};
+
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::path::PathBuf;
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 // ============================================================================
 // Unified Permissions
