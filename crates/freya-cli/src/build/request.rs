@@ -363,7 +363,6 @@ use serde::{
 };
 use subsecond_types::JumpTable;
 use target_lexicon::{
-    Architecture,
     OperatingSystem,
     Triple,
 };
@@ -380,7 +379,6 @@ use crate::{
         process_file_to,
         AssetManifest,
     },
-    AndroidTools,
     AppManifest,
     BuildContext,
     BuildId,
@@ -422,7 +420,6 @@ pub(crate) struct BuildRequest {
     pub(crate) release: bool,
     pub(crate) bundle: BundleFormat,
     pub(crate) triple: Triple,
-    pub(crate) device_name: Option<String>,
     pub(crate) should_codesign: bool,
     pub(crate) package: String,
     pub(crate) main_target: String,
@@ -433,13 +430,8 @@ pub(crate) struct BuildRequest {
     pub(crate) no_default_features: bool,
     pub(crate) all_features: bool,
     pub(crate) target_dir: PathBuf,
-    pub(crate) skip_assets: bool,
     pub(crate) wasm_split: bool,
-    pub(crate) debug_symbols: bool,
-    pub(crate) keep_names: bool,
-    pub(crate) inject_loading_scripts: bool,
     pub(crate) custom_linker: Option<PathBuf>,
-    pub(crate) base_path: Option<String>,
     pub(crate) using_dioxus_explicitly: bool,
     pub(crate) apple_entitlements: Option<PathBuf>,
     pub(crate) apple_team_id: Option<String>,
@@ -616,7 +608,7 @@ impl BuildRequest {
         // Load config from Dioxus.toml and/or inline config in the target's source file.
         // Inline config in doc comments takes precedence over Dioxus.toml.
         let config = workspace
-            .load_dioxus_config(crate_package, Some(crate_target.src_path.as_std_path()))?
+            .load_dioxus_config(crate_package)?
             .unwrap_or_default();
 
         // We usually use the simulator unless --device is passed *or* a device is detected by probing.
@@ -768,54 +760,6 @@ impl BuildRequest {
                 bundle_format = bundle_format.or(Some(BundleFormat::Linux));
                 triple = triple.or(Some(Triple::host()));
             }
-            Platform::Ios => {
-                if main_package.features.contains_key("mobile") && renderer.is_none() {
-                    features.push("mobile".into());
-                }
-                renderer = renderer.or(Some(Renderer::Native));
-                bundle_format = bundle_format.or(Some(BundleFormat::Ios));
-                match device.is_some() {
-                    // If targeting device, we want to build for the device which is always aarch64
-                    true => triple = triple.or(Some("aarch64-apple-ios".parse()?)),
-
-                    // If the host is aarch64, we assume the user wants to build for iOS simulator
-                    false if matches!(Triple::host().architecture, Architecture::Aarch64(_)) => {
-                        triple = triple.or(Some("aarch64-apple-ios-sim".parse()?))
-                    }
-
-                    // Otherwise, it's the x86_64 simulator, which is just x86_64-apple-ios
-                    _ => triple = triple.or(Some("x86_64-apple-ios".parse()?)),
-                }
-            }
-            Platform::Android => {
-                if main_package.features.contains_key("mobile") && renderer.is_none() {
-                    features.push("mobile".into());
-                }
-
-                renderer = renderer.or(Some(Renderer::Native));
-                bundle_format = bundle_format.or(Some(BundleFormat::Android));
-
-                // maybe probe adb?
-                if let Some(_device_name) = device.as_ref() {
-                    if triple.is_none() {
-                        triple = Some(
-                            crate::get_android_tools()
-                                .context("Failed to get android tools")?
-                                .autodetect_android_device_triple()
-                                .await,
-                        );
-                    }
-                } else {
-                    triple = triple.or(Some({
-                        match Triple::host().architecture {
-                            Architecture::X86_32(_) => "i686-linux-android".parse()?,
-                            Architecture::X86_64 => "x86_64-linux-android".parse()?,
-                            Architecture::Aarch64(_) => "aarch64-linux-android".parse()?,
-                            _ => "aarch64-linux-android".parse()?,
-                        }
-                    }));
-                }
-            }
         }
 
         // If default features are enabled, we need to add the default features
@@ -879,7 +823,7 @@ impl BuildRequest {
         // - The linker since we override it for Android and hotpatching
         // - RUSTFLAGS since we also override it for Android and hotpatching
         let cargo_config = cargo_config2::Config::load().unwrap();
-        let mut custom_linker = cargo_config.linker(triple.to_string()).ok().flatten();
+        let custom_linker = cargo_config.linker(triple.to_string()).ok().flatten();
         let mut rustflags = cargo_config2::Flags::default();
 
         // Make sure to take into account the RUSTFLAGS env var and the CARGO_TARGET_<triple>_RUSTFLAGS
@@ -901,65 +845,7 @@ impl BuildRequest {
             }
         }
 
-        // When we do android builds we need to make sure we link against the android libraries
-        // We also `--export-dynamic` to make sure we can do shenanigans like `dlsym` the `main` symbol
-        if matches!(bundle, BundleFormat::Android) {
-            rustflags.flags.extend([
-                "-Clink-arg=-landroid".to_string(),
-                "-Clink-arg=-llog".to_string(),
-                "-Clink-arg=-lOpenSLES".to_string(),
-                "-Clink-arg=-lc++abi".to_string(),
-                "-Clink-arg=-Wl,--export-dynamic".to_string(),
-                format!(
-                    "-Clink-arg=-Wl,--sysroot={}",
-                    workspace.android_tools()?.sysroot().display()
-                ),
-            ]);
-        }
-
-        // Make sure we set the sysroot for ios builds in the event the user doesn't have it set
-        if matches!(bundle, BundleFormat::Ios)
-            && matches!(
-                triple.operating_system,
-                target_lexicon::OperatingSystem::IOS(_)
-            )
-        {
-            let xcode_path = Workspace::get_xcode_path()
-                .await
-                .unwrap_or_else(|| "/Applications/Xcode.app".to_string().into());
-
-            let sysroot_location = match triple.environment {
-                target_lexicon::Environment::Sim => xcode_path
-                    .join("Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk"),
-                _ => {
-                    // If the target has been determined as the iOS x86 simulator above
-                    if triple.to_string() == "x86_64-apple-ios" {
-                        xcode_path.join(
-                            "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk",
-                        )
-                    } else {
-                        xcode_path.join("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk")
-                    }
-                }
-            };
-
-            if sysroot_location.exists() && !rustflags.flags.iter().any(|f| f == "-isysroot") {
-                rustflags.flags.extend([
-                    "-Clink-arg=-isysroot".to_string(),
-                    format!("-Clink-arg={}", sysroot_location.display()),
-                ]);
-            }
-        }
-
         // If no custom linker is set, then android falls back to us as the linker
-        if custom_linker.is_none() && bundle == BundleFormat::Android {
-            let min_sdk_version = config.application.android_min_sdk_version.unwrap_or(28);
-            custom_linker = Some(
-                workspace
-                    .android_tools()?
-                    .android_cc(&triple, min_sdk_version),
-            );
-        }
 
         let target_dir = std::env::var("CARGO_TARGET_DIR")
             .ok()
@@ -1022,7 +908,6 @@ impl BuildRequest {
             crate_target,
             profile,
             triple,
-            device_name: device,
             workspace,
             config,
             target_dir,
@@ -1036,12 +921,7 @@ impl BuildRequest {
             using_dioxus_explicitly,
             should_codesign,
             session_cache_dir,
-            skip_assets: args.skip_assets,
-            base_path: args.base_path.clone(),
             wasm_split: args.wasm_split,
-            debug_symbols: args.debug_symbols,
-            keep_names: args.keep_names,
-            inject_loading_scripts: args.inject_loading_scripts,
             apple_entitlements: args.apple_entitlements.clone(),
             apple_team_id: args.apple_team_id.clone(),
             raw_json_diagnostics: args.raw_json_diagnostics,
@@ -1493,38 +1373,9 @@ impl BuildRequest {
     ///
     /// All sources are bundled first, then a single Gradle build compiles everything in `assemble()`.
     /// Install Android plugin artifacts (not used in Freya desktop builds)
-    fn install_android_artifacts(&self, android_artifacts: &[()]) -> Result<()> {
-        // No-op for Freya desktop builds - no Android/iOS support
-        let _ = android_artifacts; // Suppress unused warning
-        Ok(())
-    }
 
     /// Recursively copy a directory and its contents.
     #[allow(clippy::only_used_in_recursion)]
-    fn copy_build_dir_recursive(&self, src: &Path, dst: &Path) -> Result<()> {
-        std::fs::create_dir_all(dst)?;
-
-        for entry in std::fs::read_dir(src)? {
-            let entry = entry?;
-            let src_path = entry.path();
-            let dst_path = dst.join(entry.file_name());
-
-            if src_path.is_dir() {
-                // Skip build directories and hidden folders
-                let name = entry.file_name();
-                let name_str = name.to_string_lossy();
-                if name_str == "build" || name_str == ".gradle" || name_str.starts_with('.') {
-                    continue;
-                }
-
-                self.copy_build_dir_recursive(&src_path, &dst_path)?;
-            } else {
-                std::fs::copy(&src_path, &dst_path)?;
-            }
-        }
-
-        Ok(())
-    }
 
     /// Strip version specifiers from build.gradle.kts plugins block.
     ///
@@ -1533,54 +1384,8 @@ impl BuildRequest {
     /// on the classpath. This function removes version specifications like:
     /// - `version "8.4.2"` or `version "1.9.24"`
     /// - Entire version calls from plugin declarations
-    fn strip_gradle_plugin_versions(&self, module_dir: &Path) -> Result<()> {
-        use std::fs;
-
-        let build_gradle = module_dir.join("build.gradle.kts");
-        if !build_gradle.exists() {
-            return Ok(());
-        }
-
-        let contents = fs::read_to_string(&build_gradle)?;
-
-        // Remove version specifications from plugin declarations
-        // Matches: id("com.android.library") version "8.4.2" -> id("com.android.library")
-        // Matches: kotlin("android") version "1.9.24" -> kotlin("android")
-        let version_pattern = regex::Regex::new(r#"\s+version\s+"[^"]+""#).expect("Invalid regex");
-        let cleaned = version_pattern.replace_all(&contents, "");
-
-        if cleaned != contents {
-            fs::write(&build_gradle, cleaned.as_ref())?;
-            tracing::debug!(
-                "Stripped version specifiers from {}",
-                build_gradle.display()
-            );
-        }
-
-        Ok(())
-    }
 
     /// Add a module include to settings.gradle if not already present.
-    fn ensure_settings_gradle_include(
-        &self,
-        settings_gradle: &Path,
-        plugin_name: &str,
-    ) -> Result<()> {
-        use std::fs;
-
-        let include_line = format!("include ':plugins:{}'", plugin_name);
-        let mut contents = fs::read_to_string(settings_gradle)?;
-
-        if contents.contains(&include_line) {
-            return Ok(());
-        }
-
-        // Add the include at the end
-        contents.push_str(&format!("\n{}\n", include_line));
-        fs::write(settings_gradle, contents)?;
-
-        Ok(())
-    }
 
     /// Move the executable to the workdir
     async fn write_executable(
@@ -1607,10 +1412,6 @@ impl BuildRequest {
             .get(&format!("{}.bin", self.tip_crate_name()))
             .cloned()
             .unwrap_or_default();
-
-        // We have some prebuilt stuff that needs to be copied into the framework dir
-        let openssl_dir = AndroidTools::openssl_lib_dir(&self.triple);
-        let openssl_dir_disp = openssl_dir.display().to_string();
 
         for arg in &direct_rustc.link_args {
             // todo - how do we handle windows dlls? we don't want to bundle the system dlls
@@ -1642,35 +1443,6 @@ impl BuildRequest {
                     std::fs::copy(from, to)?;
                 }
             }
-
-            // Always create the framework dir for android
-            if self.bundle == BundleFormat::Android {
-                _ = std::fs::create_dir_all(&framework_dir);
-            }
-
-            // On android, the c++_shared flag means we need to copy the libc++_shared.so precompiled
-            // library to the jniLibs folder
-            if self.bundle == BundleFormat::Android && arg.contains("-lc++_shared") {
-                std::fs::copy(
-                    self.workspace.android_tools()?.libcpp_shared(&self.triple),
-                    framework_dir.join("libc++_shared.so"),
-                )
-                .with_context(|| "Failed to copy libc++_shared.so into bundle")?;
-            }
-
-            // Copy over libssl and libcrypto if they are present in the link args
-            if self.bundle == BundleFormat::Android && arg.contains(openssl_dir_disp.as_str()) {
-                let libssl_source = openssl_dir.join("libssl.so");
-                let libcrypto_source = openssl_dir.join("libcrypto.so");
-                let libssl_target = framework_dir.join("libssl.so");
-                let libcrypto_target = framework_dir.join("libcrypto.so");
-                std::fs::copy(&libssl_source, &libssl_target).with_context(|| {
-                    format!("Failed to copy libssl.so into bundle\nfrom {libssl_source:?}\nto {libssl_target:?}")
-                })?;
-                std::fs::copy(&libcrypto_source, &libcrypto_target).with_context(
-                    || format!("Failed to copy libcrypto.so into bundle\nfrom {libcrypto_source:?}\nto {libcrypto_target:?}"),
-                )?;
-            }
         }
 
         Ok(())
@@ -1682,39 +1454,8 @@ impl BuildRequest {
                 self.root_dir().join("Contents").join("Frameworks")
             }
             OperatingSystem::IOS(_) => self.root_dir().join("Frameworks"),
-            OperatingSystem::Linux if self.bundle == BundleFormat::Android => {
-                let arch = match self.triple.architecture {
-                    Architecture::Aarch64(_) => "arm64-v8a",
-                    Architecture::Arm(_) => "armeabi-v7a",
-                    Architecture::X86_32(_) => "x86",
-                    Architecture::X86_64 => "x86_64",
-                    _ => panic!(
-                        "Unsupported architecture for Android: {:?}",
-                        self.triple.architecture
-                    ),
-                };
-
-                self.root_dir()
-                    .join("app")
-                    .join("src")
-                    .join("main")
-                    .join("jniLibs")
-                    .join(arch)
-            }
             OperatingSystem::Linux | OperatingSystem::Windows => self.root_dir(),
             _ => self.root_dir(),
-        }
-    }
-
-    /// Get the folder where Apple Widget Extensions (.appex bundles) are installed.
-    /// This is only applicable to iOS and macOS bundles.
-    fn plugins_folder(&self) -> PathBuf {
-        match self.triple.operating_system {
-            OperatingSystem::Darwin(_) | OperatingSystem::MacOSX(_) => {
-                self.root_dir().join("Contents").join("PlugIns")
-            }
-            OperatingSystem::IOS(_) => self.root_dir().join("PlugIns"),
-            _ => self.root_dir().join("PlugIns"),
         }
     }
 
@@ -2875,12 +2616,6 @@ impl BuildRequest {
             ));
         }
 
-        // for debuggability, we need to make sure android studio can properly understand our build
-        // https://stackoverflow.com/questions/68481401/debugging-a-prebuilt-shared-library-in-android-studio
-        if self.bundle == BundleFormat::Android {
-            cargo_args.push("-Clink-arg=-Wl,--build-id=sha1".to_string());
-        }
-
         // Handle frameworks/dylibs by setting the rpath
         // This is dependent on the bundle structure - iOS uses a flat structure while macOS uses nested
         // todo: we need to figure out what to do for windows
@@ -2929,11 +2664,6 @@ impl BuildRequest {
     ) -> Result<Vec<(Cow<'static, str>, OsString)>> {
         let mut env_vars = vec![];
 
-        // Make sure to set all the crazy android flags. Cross-compiling is hard, man.
-        if self.bundle == BundleFormat::Android {
-            env_vars.extend(self.android_env_vars()?);
-        };
-
         // Always bake the product name into the binary so bundled apps can find their assets
         // at runtime regardless of build profile (the asset directory structure uses the product name).
         env_vars.push((PRODUCT_NAME_ENV.into(), self.bundled_app_name().into()));
@@ -2975,285 +2705,6 @@ impl BuildRequest {
                 link_args_file: dunce::canonicalize(self.link_args_file())?,
             }
             .write_env_vars(&mut env_vars)?;
-        }
-
-        Ok(env_vars)
-    }
-
-    /// Set the environment variables required for building on Android.
-    ///
-    /// This involves setting sysroots, CC, CXX, AR, and other environment variables along with
-    /// vars that cc-rs uses for its C/C++ compilation.
-    ///
-    /// We pulled the environment setup from `cargo ndk` and attempt to mimic its behavior to retain
-    /// compatibility with existing crates that work with `cargo ndk`.
-    ///
-    /// <https://github.com/bbqsrc/cargo-ndk/blob/1d1a6dc70a99b7f95bc71ed07bf893ef37966efc/src/cargo.rs#L97-L102>
-    ///
-    /// cargo-ndk is MIT licensed.
-    ///
-    /// <https://github.com/bbqsrc/cargo-ndk>
-    fn android_env_vars(&self) -> Result<Vec<(Cow<'static, str>, OsString)>> {
-        // Derived from getenv_with_target_prefixes in `cc` crate.
-        fn cc_env(var_base: &str, triple: &str) -> (String, Option<String>) {
-            #[inline]
-            fn env_var_with_key(key: String) -> Option<(String, String)> {
-                std::env::var(&key).map(|value| (key, value)).ok()
-            }
-
-            let triple_u = triple.replace('-', "_");
-            let most_specific_key = format!("{}_{}", var_base, triple);
-
-            env_var_with_key(most_specific_key.to_string())
-                .or_else(|| env_var_with_key(format!("{}_{}", var_base, triple_u)))
-                .or_else(|| env_var_with_key(format!("TARGET_{}", var_base)))
-                .or_else(|| env_var_with_key(var_base.to_string()))
-                .map(|(key, value)| (key, Some(value)))
-                .unwrap_or_else(|| (most_specific_key, None))
-        }
-
-        fn cargo_env_target_cfg(triple: &str, key: &str) -> String {
-            format!("CARGO_TARGET_{}_{}", &triple.replace('-', "_"), key).to_uppercase()
-        }
-
-        fn clang_target(rust_target: &str, api_level: u8) -> String {
-            let target = match rust_target {
-                "arm-linux-androideabi" => "armv7a-linux-androideabi",
-                "armv7-linux-androideabi" => "armv7a-linux-androideabi",
-                _ => rust_target,
-            };
-            format!("--target={target}{api_level}")
-        }
-
-        fn sysroot_target(rust_target: &str) -> &str {
-            (match rust_target {
-                "armv7-linux-androideabi" => "arm-linux-androideabi",
-                _ => rust_target,
-            }) as _
-        }
-        fn rt_builtins(rust_target: &str) -> &str {
-            (match rust_target {
-                "armv7-linux-androideabi" => "arm",
-                "aarch64-linux-android" => "aarch64",
-                "i686-linux-android" => "i686",
-                "x86_64-linux-android" => "x86_64",
-                _ => rust_target,
-            }) as _
-        }
-
-        let mut env_vars: Vec<(Cow<'static, str>, OsString)> = vec![];
-
-        let min_sdk_version = self.min_sdk_version_or_default();
-
-        let tools = self.workspace.android_tools()?;
-        let linker = tools.android_cc(&self.triple, min_sdk_version);
-        let ar_path = tools.ar_path();
-        let target_cc = tools.target_cc();
-        let target_cxx = tools.target_cxx();
-        let java_home = tools.java_home();
-        let ndk_home = tools.ndk.clone();
-        let sdk_root = tools.sdk();
-        tracing::debug!(
-            r#"Using android:
-            min_sdk_version: {min_sdk_version}
-            linker: {linker:?}
-            ar_path: {ar_path:?}
-            target_cc: {target_cc:?}
-            target_cxx: {target_cxx:?}
-            java_home: {java_home:?}
-            sdk_root: {sdk_root:?}
-            "#
-        );
-
-        if let Some(java_home) = &java_home {
-            tracing::debug!("Setting JAVA_HOME to {java_home:?}");
-            env_vars.push(("JAVA_HOME".into(), java_home.clone().into_os_string()));
-            env_vars.push((
-                "DX_ANDROID_JAVA_HOME".into(),
-                java_home.clone().into_os_string(),
-            ));
-        }
-
-        env_vars.push((
-            "DX_ANDROID_NDK_HOME".into(),
-            ndk_home.clone().into_os_string(),
-        ));
-        env_vars.push((
-            "DX_ANDROID_SDK_ROOT".into(),
-            sdk_root.clone().into_os_string(),
-        ));
-        env_vars.push(("ANDROID_NDK_HOME".into(), ndk_home.clone().into_os_string()));
-        env_vars.push(("ANDROID_SDK_ROOT".into(), sdk_root.clone().into_os_string()));
-        env_vars.push(("ANDROID_HOME".into(), sdk_root.into_os_string()));
-        env_vars.push(("NDK_HOME".into(), ndk_home.clone().into_os_string()));
-
-        let triple = self.triple.to_string();
-
-        // Environment variables for the `cc` crate
-        let (cc_key, _cc_value) = cc_env("CC", &triple);
-        let (cflags_key, cflags_value) = cc_env("CFLAGS", &triple);
-        let (cxx_key, _cxx_value) = cc_env("CXX", &triple);
-        let (cxxflags_key, cxxflags_value) = cc_env("CXXFLAGS", &triple);
-        let (ar_key, _ar_value) = cc_env("AR", &triple);
-        let (ranlib_key, _ranlib_value) = cc_env("RANLIB", &triple);
-
-        // Environment variables for cargo
-        let cargo_ar_key = cargo_env_target_cfg(&triple, "ar");
-        let cargo_rust_flags_key = cargo_env_target_cfg(&triple, "rustflags");
-        let bindgen_clang_args_key =
-            format!("BINDGEN_EXTRA_CLANG_ARGS_{}", &triple.replace('-', "_"));
-
-        let clang_target = clang_target(&self.triple.to_string(), min_sdk_version as _);
-        let target_cc = tools.target_cc();
-        let target_cflags = match cflags_value {
-            Some(v) => format!("{clang_target} {v}"),
-            None => clang_target.to_string(),
-        };
-        let target_cxx = tools.target_cxx();
-        let target_cxxflags = match cxxflags_value {
-            Some(v) => format!("{clang_target} {v}"),
-            None => clang_target.to_string(),
-        };
-        let cargo_ndk_sysroot_path_key = "CARGO_NDK_SYSROOT_PATH";
-        let cargo_ndk_sysroot_path = tools.sysroot();
-        let cargo_ndk_sysroot_target_key = "CARGO_NDK_SYSROOT_TARGET";
-        let cargo_ndk_sysroot_target = sysroot_target(&triple);
-        let cargo_ndk_sysroot_libs_path_key = "CARGO_NDK_SYSROOT_LIBS_PATH";
-        let cargo_ndk_sysroot_libs_path = cargo_ndk_sysroot_path
-            .join("usr")
-            .join("lib")
-            .join(cargo_ndk_sysroot_target);
-        let target_ar = tools.ar_path();
-        let target_ranlib = tools.ranlib();
-        let clang_folder = tools.clang_folder();
-
-        // choose the clang target with the highest version
-        // Should we filter for only numbers?
-        let clang_rt = std::fs::read_dir(&clang_folder)
-            .map(|dir| {
-                let clang_builtins_target = dir
-                    .filter_map(|a| a.ok())
-                    .max_by(|a, b| a.file_name().cmp(&b.file_name()))
-                    .map(|s| s.path())
-                    .unwrap_or_else(|| clang_folder.join("clang"));
-
-                format!(
-                    "-L{} -lstatic=clang_rt.builtins-{}-android",
-                    clang_builtins_target.join("lib").join("linux").display(),
-                    rt_builtins(&triple)
-                )
-            })
-            .unwrap_or_default();
-
-        let extra_include: String = format!(
-            "{}/usr/include/{}",
-            &cargo_ndk_sysroot_path.display(),
-            &cargo_ndk_sysroot_target
-        );
-
-        let bindgen_args = format!(
-            "--sysroot={} -I{}",
-            &cargo_ndk_sysroot_path.display(),
-            extra_include
-        );
-
-        // Load up the OpenSSL environment variables, using our defaults if not set.
-        // if the user specifies `/vendor`, then they get vendored, unless OPENSSL_NO_VENDOR is passed (implicitly...)
-        let openssl_lib_dir = std::env::var("OPENSSL_LIB_DIR")
-            .map(PathBuf::from)
-            .unwrap_or_else(|_| AndroidTools::openssl_lib_dir(&self.triple));
-        let openssl_include_dir = std::env::var("OPENSSL_INCLUDE_DIR")
-            .map(PathBuf::from)
-            .unwrap_or_else(|_| AndroidTools::openssl_include_dir());
-        let openssl_libs =
-            std::env::var("OPENSSL_LIBS").unwrap_or_else(|_| "ssl:crypto".to_string());
-
-        for env in [
-            (cc_key, target_cc.clone().into_os_string()),
-            (cflags_key, target_cflags.into()),
-            (cxx_key, target_cxx.into_os_string()),
-            (cxxflags_key, target_cxxflags.into()),
-            (ar_key, target_ar.clone().into()),
-            (ranlib_key, target_ranlib.into_os_string()),
-            (cargo_ar_key, target_ar.into_os_string()),
-            (
-                cargo_ndk_sysroot_path_key.to_string(),
-                cargo_ndk_sysroot_path.clone().into_os_string(),
-            ),
-            (
-                cargo_ndk_sysroot_libs_path_key.to_string(),
-                cargo_ndk_sysroot_libs_path.into_os_string(),
-            ),
-            (
-                cargo_ndk_sysroot_target_key.to_string(),
-                cargo_ndk_sysroot_target.into(),
-            ),
-            (cargo_rust_flags_key, clang_rt.into()),
-            (bindgen_clang_args_key, bindgen_args.into()),
-            (
-                "ANDROID_NATIVE_API_LEVEL".to_string(),
-                min_sdk_version.to_string().into(),
-            ),
-            (
-                format!(
-                    "CARGO_TARGET_{}_LINKER",
-                    self.triple
-                        .to_string()
-                        .to_ascii_uppercase()
-                        .replace("-", "_")
-                ),
-                linker.into_os_string(),
-            ),
-            (
-                "ANDROID_NDK_ROOT".to_string(),
-                ndk_home.clone().into_os_string(),
-            ),
-            (
-                "OPENSSL_LIB_DIR".to_string(),
-                openssl_lib_dir.into_os_string(),
-            ),
-            (
-                "OPENSSL_INCLUDE_DIR".to_string(),
-                openssl_include_dir.into_os_string(),
-            ),
-            ("OPENSSL_LIBS".to_string(), openssl_libs.into()),
-            // Set the wry env vars - this is where wry will dump its kotlin files.
-            // Their setup is really annoying and requires us to hardcode `dx` to specific versions of tao/wry.
-            (
-                "WRY_ANDROID_PACKAGE".to_string(),
-                "dev.dioxus.main".to_string().into(),
-            ),
-            (
-                "WRY_ANDROID_LIBRARY".to_string(),
-                self.android_lib_name().into(),
-            ),
-            ("WRY_ANDROID_KOTLIN_FILES_OUT_DIR".to_string(), {
-                let kotlin_dir = self.wry_android_kotlin_files_out_dir();
-                // Ensure the directory exists for WRY's canonicalize check
-                if let Err(e) = std::fs::create_dir_all(&kotlin_dir) {
-                    tracing::error!("Failed to create kotlin directory {:?}: {}", kotlin_dir, e);
-                    return Err(anyhow::anyhow!("Failed to create kotlin directory: {}", e));
-                }
-                tracing::debug!("Created kotlin directory: {:?}", kotlin_dir);
-                kotlin_dir.into_os_string()
-            }),
-            // Found this through a comment related to bindgen using the wrong clang for cross compiles
-            //
-            // https://github.com/rust-lang/rust-bindgen/issues/2962#issuecomment-2438297124
-            //
-            // https://github.com/KyleMayes/clang-sys?tab=readme-ov-file#environment-variables
-            ("CLANG_PATH".into(), target_cc.with_extension("exe").into()),
-        ] {
-            env_vars.push((env.0.into(), env.1));
-        }
-
-        if std::env::var("MSYSTEM").is_ok() || std::env::var("CYGWIN").is_ok() {
-            for var in env_vars.iter_mut() {
-                // Convert windows paths to unix-style paths
-                // This is a workaround for the fact that the `cc` crate expects unix-style paths
-                // and will fail if it encounters windows-style paths.
-                var.1 = var.1.to_string_lossy().replace('\\', "/").into();
-            }
         }
 
         Ok(env_vars)
@@ -3358,11 +2809,7 @@ impl BuildRequest {
         match self.bundle {
             // These might not actually need to be called `.app` but it does let us run these with `open`
             BundleFormat::MacOS => platform_dir.join(format!("{}.app", self.bundled_app_name())),
-            BundleFormat::Ios => platform_dir.join(format!("{}.app", self.bundled_app_name())),
-
-            // in theory, these all could end up directly in the root dir
-            BundleFormat::Android => platform_dir.join("app"), // .apk (after bundling)
-            BundleFormat::Linux => platform_dir.join("app"),   // .appimage (after bundling)
+            BundleFormat::Linux => platform_dir.join("app"), // .appimage (after bundling)
             BundleFormat::Windows => platform_dir.join("app"), // .exe (after bundling)
         }
     }
@@ -3384,358 +2831,16 @@ impl BuildRequest {
     fn platform_exe_name(&self) -> String {
         match self.bundle {
             // mac/ios are unixy and dont have an exe extension
-            BundleFormat::MacOS | BundleFormat::Ios => self.executable_name().to_string(),
+            BundleFormat::MacOS => self.executable_name().to_string(),
 
             BundleFormat::Windows => match self.triple.operating_system {
                 OperatingSystem::Windows => format!("{}.exe", self.executable_name()),
                 _ => self.executable_name().to_string(),
             },
 
-            // from the apk spec, the root exe is a shared library
-            // defaults to "main" (libmain.so) per NativeActivity convention, overridable in Dioxus.toml
-            BundleFormat::Android => {
-                let lib_name = self.android_lib_name();
-                format!("lib{lib_name}.so")
-            }
-
             // todo: maybe this should be called AppRun?
             BundleFormat::Linux => self.executable_name().to_string(),
         }
-    }
-
-    /// Assemble the android app dir.
-    ///
-    /// This is a bit of a mess since we need to create a lot of directories and files. Other approaches
-    /// would be to unpack some zip folder or something stored via `include_dir!()`. However, we do
-    /// need to customize the whole setup a bit, so it's just simpler (though messier) to do it this way.
-    fn build_android_app_dir(&self) -> Result<()> {
-        use std::fs::{
-            create_dir_all,
-            write,
-        };
-        let root = self.root_dir();
-
-        // gradle
-        let wrapper = root.join("gradle").join("wrapper");
-        create_dir_all(&wrapper)?;
-
-        // app
-        let app = root.join("app");
-        let app_main = app.join("src").join("main");
-        let app_kotlin = app_main.join("kotlin");
-        let app_java = app_main.join("java");
-        let app_jnilibs = app_main.join("jniLibs");
-        let app_assets = app_main.join("assets");
-        let app_kotlin_out = self.wry_android_kotlin_files_out_dir();
-        create_dir_all(&app)?;
-        create_dir_all(&app_main)?;
-        create_dir_all(&app_kotlin)?;
-        create_dir_all(&app_java)?;
-        create_dir_all(&app_jnilibs)?;
-        create_dir_all(&app_assets)?;
-        create_dir_all(&app_kotlin_out)?;
-
-        tracing::debug!(
-            r#"Initialized android dirs:
-- gradle:              {wrapper:?}
-- app/                 {app:?}
-- app/src:             {app_main:?}
-- app/src/kotlin:      {app_kotlin:?}
-- app/src/jniLibs:     {app_jnilibs:?}
-- app/src/assets:      {app_assets:?}
-- app/src/kotlin/main: {app_kotlin_out:?}
-"#
-        );
-
-        // handlebars
-        #[derive(Serialize)]
-        struct AndroidHandlebarsObjects {
-            application_id: String,
-            app_name: String,
-            version: String,
-            android_bundle: Option<crate::AndroidSettings>,
-            /// Android SDK version settings
-            min_sdk: u32,
-            target_sdk: u32,
-            compile_sdk: u32,
-            /// Android permission strings (e.g., "android.permission.CAMERA")
-            permissions: Vec<String>,
-            /// Android hardware features (e.g., "android.hardware.location.gps")
-            features: Vec<String>,
-            /// Raw manifest XML to inject
-            raw_manifest: String,
-            /// URL schemes for deep linking
-            url_schemes: Vec<String>,
-            /// App link hosts for auto-verified deep links
-            app_link_hosts: Vec<String>,
-            /// Pipe-joined foreground service type string (e.g., "location|mediaPlayback")
-            foreground_service_type: String,
-            /// Extra Gradle dependencies from [android] config
-            gradle_dependencies: Vec<String>,
-            /// Extra Gradle plugins from [android] config
-            gradle_plugins: Vec<String>,
-            /// Application-level manifest attributes from [android.application]
-            uses_cleartext_traffic: Option<bool>,
-            app_theme: Option<String>,
-            supports_rtl: Option<bool>,
-            large_heap: Option<bool>,
-            /// Native library name (without lib prefix and .so extension)
-            lib_name: String,
-        }
-
-        // Get permission mapper from config
-        let mapper = super::manifest_mapper::ManifestMapper::default_for_desktop(); // Desktop only
-
-        // Collect Android permissions
-        let permissions: Vec<String> = mapper
-            .android_permissions
-            .iter()
-            .map(|p| p.permission.clone())
-            .collect();
-
-        // Collect Android features from config
-        let features = self.config.android.features.clone();
-
-        // Get raw manifest XML
-        let raw_manifest = self.config.android.raw.manifest.clone().unwrap_or_default();
-
-        // Foreground service types as pipe-separated string
-        let foreground_service_type = mapper.android_foreground_service_types.join("|");
-
-        let hbs_data = AndroidHandlebarsObjects {
-            application_id: self.bundle_identifier(),
-            app_name: self.bundled_app_name(),
-            version: self.crate_version(),
-            android_bundle: self.config.bundle.android.clone(),
-            min_sdk: self.config.android.min_sdk.unwrap_or(24),
-            target_sdk: self.config.android.target_sdk.unwrap_or(34),
-            compile_sdk: self.config.android.compile_sdk.unwrap_or(34),
-            permissions,
-            features,
-            raw_manifest,
-            url_schemes: mapper.android_url_schemes,
-            app_link_hosts: mapper.android_app_link_hosts,
-            foreground_service_type,
-            gradle_dependencies: self.config.android.gradle_dependencies.clone(),
-            gradle_plugins: self.config.android.gradle_plugins.clone(),
-            uses_cleartext_traffic: self.config.android.application.uses_cleartext_traffic,
-            app_theme: self.config.android.application.theme.clone(),
-            supports_rtl: self.config.android.application.supports_rtl,
-            large_heap: self.config.android.application.large_heap,
-            lib_name: self.android_lib_name(),
-        };
-        let hbs = handlebars::Handlebars::new();
-
-        // Top-level gradle config
-        write(
-            root.join("build.gradle.kts"),
-            include_bytes!("../../assets/android/gen/build.gradle.kts"),
-        )?;
-        write(
-            root.join("gradle.properties"),
-            include_bytes!("../../assets/android/gen/gradle.properties"),
-        )?;
-        write(
-            root.join("gradlew"),
-            include_bytes!("../../assets/android/gen/gradlew"),
-        )?;
-        write(
-            root.join("gradlew.bat"),
-            include_bytes!("../../assets/android/gen/gradlew.bat"),
-        )?;
-        write(
-            root.join("settings.gradle"),
-            include_bytes!("../../assets/android/gen/settings.gradle"),
-        )?;
-
-        // Then the wrapper and its properties
-        write(
-            wrapper.join("gradle-wrapper.properties"),
-            include_bytes!("../../assets/android/gen/gradle/wrapper/gradle-wrapper.properties"),
-        )?;
-        write(
-            wrapper.join("gradle-wrapper.jar"),
-            include_bytes!("../../assets/android/gen/gradle/wrapper/gradle-wrapper.jar"),
-        )?;
-
-        // Now the app directory
-        write(
-            app.join("build.gradle.kts"),
-            hbs.render_template(
-                include_str!("../../assets/android/gen/app/build.gradle.kts.hbs"),
-                &hbs_data,
-            )?,
-        )?;
-        write(
-            app.join("proguard-rules.pro"),
-            include_bytes!("../../assets/android/gen/app/proguard-rules.pro"),
-        )?;
-
-        // Copy additional ProGuard rule files from Dioxus.toml [android] config
-        for rule_file in &self.config.android.proguard_rules {
-            let src = self.package_manifest_dir().join(rule_file);
-            if src.exists() {
-                let dest_name = src
-                    .file_name()
-                    .unwrap_or_default()
-                    .to_string_lossy()
-                    .to_string();
-                std::fs::copy(&src, app.join(&dest_name))?;
-                tracing::debug!("Copied ProGuard rules: {}", dest_name);
-            } else {
-                tracing::warn!("ProGuard rules file not found: {}", src.display());
-            }
-        }
-
-        let manifest_xml = match self.config.application.android_manifest.as_deref() {
-            Some(manifest) => std::fs::read_to_string(self.package_manifest_dir().join(manifest))
-                .context("Failed to locate custom AndroidManifest.xml")?,
-            _ => hbs.render_template(
-                include_str!("../../assets/android/gen/app/src/main/AndroidManifest.xml.hbs"),
-                &hbs_data,
-            )?,
-        };
-
-        write(
-            app.join("src").join("main").join("AndroidManifest.xml"),
-            manifest_xml,
-        )?;
-
-        // Write the main activity manually since tao dropped support for it
-        let main_activity = match self.config.application.android_main_activity.as_deref() {
-            Some(activity) => std::fs::read_to_string(self.package_manifest_dir().join(activity))
-                .context("Failed to locate custom MainActivity.kt")?,
-            _ => hbs.render_template(
-                include_str!("../../assets/android/MainActivity.kt.hbs"),
-                &hbs_data,
-            )?,
-        };
-        write(
-            self.wry_android_kotlin_files_out_dir()
-                .join("MainActivity.kt"),
-            main_activity,
-        )?;
-
-        // Write the res folder, containing stuff like default icons, colors, and menubars.
-        let res = app_main.join("res");
-        create_dir_all(&res)?;
-        create_dir_all(res.join("values"))?;
-        write(
-            res.join("values").join("strings.xml"),
-            hbs.render_template(
-                include_str!("../../assets/android/gen/app/src/main/res/values/strings.xml.hbs"),
-                &hbs_data,
-            )?,
-        )?;
-        write(
-            res.join("values").join("colors.xml"),
-            include_bytes!("../../assets/android/gen/app/src/main/res/values/colors.xml"),
-        )?;
-        write(
-            res.join("values").join("styles.xml"),
-            include_bytes!("../../assets/android/gen/app/src/main/res/values/styles.xml"),
-        )?;
-
-        create_dir_all(res.join("xml"))?;
-        write(
-            res.join("xml").join("network_security_config.xml"),
-            include_bytes!(
-                "../../assets/android/gen/app/src/main/res/xml/network_security_config.xml"
-            ),
-        )?;
-
-        create_dir_all(res.join("drawable"))?;
-        write(
-            res.join("drawable").join("ic_launcher_background.xml"),
-            include_bytes!(
-                "../../assets/android/gen/app/src/main/res/drawable/ic_launcher_background.xml"
-            ),
-        )?;
-        create_dir_all(res.join("drawable-v24"))?;
-        write(
-            res.join("drawable-v24").join("ic_launcher_foreground.xml"),
-            include_bytes!(
-                "../../assets/android/gen/app/src/main/res/drawable-v24/ic_launcher_foreground.xml"
-            ),
-        )?;
-        create_dir_all(res.join("mipmap-anydpi-v26"))?;
-        write(
-            res.join("mipmap-anydpi-v26").join("ic_launcher.xml"),
-            include_bytes!(
-                "../../assets/android/gen/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml"
-            ),
-        )?;
-        create_dir_all(res.join("mipmap-hdpi"))?;
-        write(
-            res.join("mipmap-hdpi").join("ic_launcher.webp"),
-            include_bytes!(
-                "../../assets/android/gen/app/src/main/res/mipmap-hdpi/ic_launcher.webp"
-            ),
-        )?;
-        create_dir_all(res.join("mipmap-mdpi"))?;
-        write(
-            res.join("mipmap-mdpi").join("ic_launcher.webp"),
-            include_bytes!(
-                "../../assets/android/gen/app/src/main/res/mipmap-mdpi/ic_launcher.webp"
-            ),
-        )?;
-        create_dir_all(res.join("mipmap-xhdpi"))?;
-        write(
-            res.join("mipmap-xhdpi").join("ic_launcher.webp"),
-            include_bytes!(
-                "../../assets/android/gen/app/src/main/res/mipmap-xhdpi/ic_launcher.webp"
-            ),
-        )?;
-        create_dir_all(res.join("mipmap-xxhdpi"))?;
-        write(
-            res.join("mipmap-xxhdpi").join("ic_launcher.webp"),
-            include_bytes!(
-                "../../assets/android/gen/app/src/main/res/mipmap-xxhdpi/ic_launcher.webp"
-            ),
-        )?;
-        create_dir_all(res.join("mipmap-xxxhdpi"))?;
-        write(
-            res.join("mipmap-xxxhdpi").join("ic_launcher.webp"),
-            include_bytes!(
-                "../../assets/android/gen/app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp"
-            ),
-        )?;
-
-        Ok(())
-    }
-
-    fn wry_android_kotlin_files_out_dir(&self) -> PathBuf {
-        let mut kotlin_dir = self
-            .root_dir()
-            .join("app")
-            .join("src")
-            .join("main")
-            .join("kotlin");
-
-        for segment in "dev.dioxus.main".split('.') {
-            kotlin_dir = kotlin_dir.join(segment);
-        }
-
-        kotlin_dir
-    }
-
-    fn ensure_gradle_dependency(&self, build_gradle: &Path, dependency_line: &str) -> Result<()> {
-        use std::fs;
-
-        let mut contents = fs::read_to_string(build_gradle)?;
-        if contents.contains(dependency_line) {
-            return Ok(());
-        }
-
-        if let Some(idx) = contents.find("dependencies {") {
-            let insert_pos = idx + "dependencies {".len();
-            contents.insert_str(insert_pos, &format!("\n    {dependency_line}"));
-        } else {
-            contents.push_str(&format!("\ndependencies {{\n    {dependency_line}\n}}\n"));
-        }
-
-        fs::write(build_gradle, contents)?;
-        Ok(())
     }
 
     /// Get the directory where this app can write to for this session that's guaranteed to be stable
@@ -3767,16 +2872,6 @@ impl BuildRequest {
         self.session_cache_dir().join("windows_command.txt")
     }
 
-    /// Get the outdir specified by the Dioxus.toml, relative to the crate directory.
-    /// We don't support workspaces yet since that would cause a collision of bundles per project.
-    pub(crate) fn crate_out_dir(&self) -> Option<PathBuf> {
-        self.config
-            .application
-            .out_dir
-            .as_ref()
-            .map(|out_dir| self.crate_dir().join(out_dir))
-    }
-
     /// Compose an out directory. Represents the typical "dist" directory that
     /// is "distributed" after building an application (configurable in the
     /// `Dioxus.toml`).
@@ -3784,17 +2879,6 @@ impl BuildRequest {
         let dir = self.target_dir.join("dx");
         std::fs::create_dir_all(&dir).unwrap();
         dir
-    }
-
-    /// target/dx/bundle/app/
-    /// target/dx/bundle/app/blah.app
-    /// target/dx/bundle/app/blah.exe
-    /// target/dx/bundle/app/public/
-    pub(crate) fn bundle_dir(&self, bundle: BundleFormat) -> PathBuf {
-        self.internal_out_dir()
-            .join(&self.main_target)
-            .join("bundle")
-            .join(bundle.build_folder_name())
     }
 
     /// Get the workspace directory for the crate
@@ -3824,16 +2908,6 @@ impl BuildRequest {
     /// Get the name of the package we are compiling
     pub(crate) fn executable_name(&self) -> &str {
         &self.crate_target.name
-    }
-
-    /// Android native library name (without `lib` prefix and `.so` extension).
-    /// Defaults to `"main"` per NativeActivity convention, overridable via `[android] lib_name`.
-    fn android_lib_name(&self) -> String {
-        self.config
-            .android
-            .lib_name
-            .clone()
-            .unwrap_or_else(|| "main".to_string())
     }
 
     /// Get the type of executable we are compiling
@@ -4201,35 +3275,12 @@ impl BuildRequest {
                 std::fs::write(dest, plist)?;
             }
 
-            BundleFormat::Ios => {
-                let dest = self.root_dir().join("Info.plist");
-                let plist = self.info_plist_contents(self.bundle)?;
-                std::fs::write(dest, plist)?;
-            }
-
-            // AndroidManifest.xml
-            // er.... maybe even all the kotlin/java/gradle stuff?
-            BundleFormat::Android => {}
-
             // Probably some custom format or a plist file (haha)
             // When we do the proper bundle, we'll need to do something with wix templates, I think?
             BundleFormat::Windows => {}
 
             // eventually we'll create the .appimage file, I guess?
             BundleFormat::Linux => {}
-        }
-
-        Ok(())
-    }
-
-    /// Run the optimizers, obfuscators, minimizers, signers, etc
-    async fn optimize(&self) -> Result<()> {
-        match self.bundle {
-            BundleFormat::MacOS
-            | BundleFormat::Windows
-            | BundleFormat::Linux
-            | BundleFormat::Ios
-            | BundleFormat::Android => {}
         }
 
         Ok(())
@@ -4266,11 +3317,6 @@ impl BuildRequest {
             }
         }
         Ok(())
-    }
-
-    /// Check if assets should be pre_compressed. Always false for Freya desktop.
-    fn should_pre_compress_web_assets(&self, _release: bool) -> bool {
-        false // No web assets in Freya desktop builds
     }
 
     fn info_plist_contents(&self, bundle: BundleFormat) -> Result<String> {
@@ -4311,16 +3357,15 @@ impl BuildRequest {
                     return Ok(std::fs::read_to_string(macos_info_plist)?);
                 }
             }
-            BundleFormat::Ios => {
-                if let Some(macos_info_plist) = _app.ios_info_plist.as_deref() {
-                    return Ok(std::fs::read_to_string(macos_info_plist)?);
-                }
-            }
             _ => {}
         }
 
         // Get permission mapper from config
-        let mapper = super::manifest_mapper::ManifestMapper::default_for_desktop(); // Desktop only
+        let mapper = super::manifest_mapper::ManifestMapper::from_config(
+            &self.config.permissions,
+            &self.config.deep_links,
+            &self.config.macos,
+        );
 
         match bundle {
             BundleFormat::MacOS => {
@@ -4363,40 +3408,6 @@ impl BuildRequest {
                     )
                     .map_err(|e| e.into())
             }
-            BundleFormat::Ios => {
-                // Convert iOS plist entries to permission structs
-                let permissions: Vec<PlistPermission> = mapper
-                    .ios_plist_entries
-                    .iter()
-                    .map(|p| PlistPermission {
-                        key: p.key.clone(),
-                        description: p.value.clone(),
-                    })
-                    .collect();
-
-                // Generate plist entries from config
-                let plist_entries = generate_plist_entries(&self.config.ios.plist);
-                let raw_plist = self.config.ios.raw.info_plist.clone().unwrap_or_default();
-
-                handlebars::Handlebars::new()
-                    .render_template(
-                        include_str!("../../assets/ios/ios.plist.hbs"),
-                        &InfoPlistData {
-                            display_name: self.bundled_app_name(),
-                            bundle_name: self.bundled_app_name(),
-                            executable_name: self.platform_exe_name(),
-                            bundle_identifier: self.bundle_identifier(),
-                            version: self.crate_version(),
-                            permissions,
-                            plist_entries,
-                            raw_plist,
-                            minimum_system_version: String::new(), // Not used for iOS
-                            url_schemes: mapper.ios_url_schemes.clone(),
-                            background_modes: mapper.ios_background_modes.clone(),
-                        },
-                    )
-                    .map_err(|e| e.into())
-            }
             _ => Err(anyhow::anyhow!("Unsupported platform for Info.plist")),
         }
     }
@@ -4405,31 +3416,6 @@ impl BuildRequest {
     ///
     /// This might include codesigning, zipping, creating an appimage, etc
     async fn assemble(&self, ctx: &BuildContext) -> Result<()> {
-        if let BundleFormat::Android = self.bundle {
-            ctx.status_running_gradle();
-
-            // When the build mode is set to release and there is an Android signature configuration, use assembleRelease
-            let build_type = if self.release && self.config.bundle.android.is_some() {
-                "assembleRelease"
-            } else {
-                "assembleDebug"
-            };
-
-            let output = Command::new(self.gradle_exe()?)
-                .arg(build_type)
-                .current_dir(self.root_dir())
-                .output()
-                .await
-                .context("Failed to run gradle")?;
-
-            if !output.status.success() {
-                bail!(
-                    "Failed to assemble apk: {}",
-                    String::from_utf8_lossy(&output.stderr)
-                );
-            }
-        }
-
         // if the triple is a ios or macos target, we need to codesign the binary
         if matches!(
             self.triple.operating_system,
@@ -4440,90 +3426,6 @@ impl BuildRequest {
         }
 
         Ok(())
-    }
-
-    /// Run bundleRelease and return the path to the `.aab` file
-    ///
-    /// <https://stackoverflow.com/questions/57072558/whats-the-difference-between-gradlewassemblerelease-gradlewinstallrelease-and>
-    pub(crate) async fn android_gradle_bundle(&self) -> Result<PathBuf> {
-        let output = Command::new(self.gradle_exe()?)
-            .arg("bundleRelease")
-            .current_dir(self.root_dir())
-            .output()
-            .await
-            .context("Failed to run gradle bundleRelease")?;
-
-        if !output.status.success() {
-            bail!(
-                "Failed to bundleRelease: {}",
-                String::from_utf8_lossy(&output.stderr)
-            );
-        }
-
-        let app_release = self
-            .root_dir()
-            .join("app")
-            .join("build")
-            .join("outputs")
-            .join("bundle")
-            .join("release");
-
-        // Rename it to Name-arch.aab
-        let from = app_release.join("app-release.aab");
-        let to = app_release.join(format!("{}-{}.aab", self.bundled_app_name(), self.triple));
-
-        std::fs::rename(from, &to).context("Failed to rename aab")?;
-
-        Ok(to)
-    }
-
-    fn gradle_exe(&self) -> Result<PathBuf> {
-        // make sure we can execute the gradlew script
-        #[cfg(unix)]
-        {
-            use std::os::unix::prelude::PermissionsExt;
-            std::fs::set_permissions(
-                self.root_dir().join("gradlew"),
-                std::fs::Permissions::from_mode(0o755),
-            )
-            .context("Failed to make gradlew executable")?;
-        }
-
-        let gradle_exec_name = match cfg!(windows) {
-            true => "gradlew.bat",
-            false => "gradlew",
-        };
-
-        Ok(self.root_dir().join(gradle_exec_name))
-    }
-
-    pub(crate) fn debug_apk_path(&self) -> PathBuf {
-        self.root_dir()
-            .join("app")
-            .join("build")
-            .join("outputs")
-            .join("apk")
-            .join("debug")
-            .join("app-debug.apk")
-    }
-
-    pub(crate) fn release_apk_path(&self) -> PathBuf {
-        self.root_dir()
-            .join("app")
-            .join("build")
-            .join("outputs")
-            .join("apk")
-            .join("release")
-            .join("app-release.apk")
-    }
-
-    pub(crate) fn android_apk_path(&self) -> PathBuf {
-        let assembled_release = self.release && self.config.bundle.android.is_some();
-        if assembled_release {
-            self.release_apk_path()
-        } else {
-            self.debug_apk_path()
-        }
     }
 
     /// We only really currently care about:
@@ -4571,13 +3473,6 @@ impl BuildRequest {
                 self.asset_dir(),
             );
 
-            // we could download the templates from somewhere (github?) but after having banged my head against
-            // cargo-mobile2 for ages, I give up with that. We're literally just going to hardcode the templates
-            // by writing them here.
-            if self.bundle == BundleFormat::Android {
-                self.build_android_app_dir()?;
-            }
-
             Ok(())
         });
 
@@ -4596,17 +3491,8 @@ impl BuildRequest {
                 .join("Resources")
                 .join("assets"),
 
-            BundleFormat::Android => self
-                .root_dir()
-                .join("app")
-                .join("src")
-                .join("main")
-                .join("assets"),
-
             // everyone else is soooo normal, just app/assets :)
-            BundleFormat::Ios | BundleFormat::Windows | BundleFormat::Linux => {
-                self.root_dir().join("assets")
-            }
+            BundleFormat::Windows | BundleFormat::Linux => self.root_dir().join("assets"),
         }
     }
 
@@ -4624,17 +3510,8 @@ impl BuildRequest {
         match self.bundle {
             BundleFormat::MacOS => self.root_dir().join("Contents").join("MacOS"),
 
-            // Android has a whole build structure to it
-            BundleFormat::Android => self
-                .root_dir()
-                .join("app")
-                .join("src")
-                .join("main")
-                .join("jniLibs")
-                .join(AndroidTools::android_jnilib(&self.triple)),
-
             // these are all the same, I think?
-            BundleFormat::Windows | BundleFormat::Linux | BundleFormat::Ios => self.root_dir(),
+            BundleFormat::Windows | BundleFormat::Linux => self.root_dir(),
         }
     }
 
@@ -4667,7 +3544,6 @@ impl BuildRequest {
         match self.bundle {
             BundleFormat::Linux => self.verify_linux_tooling().await?,
             BundleFormat::MacOS | BundleFormat::Windows => {}
-            _ => {}
         }
 
         Ok(())
@@ -4947,27 +3823,9 @@ impl BuildRequest {
         )?)
     }
 
-    fn is_dev_build(&self) -> bool {
-        !self.release
-    }
-
-    /// Replace a string or insert the new contents before a marker
-    fn replace_or_insert_before(
-        replace: &str,
-        or_insert_before: &str,
-        with: &str,
-        content: &mut String,
-    ) {
-        if content.contains(replace) {
-            *content = content.replace(replace, with);
-        } else if let Some(pos) = content.find(or_insert_before) {
-            content.insert_str(pos, with);
-        }
-    }
-
     /// Resolve the configured public directory relative to the crate, if any.
     pub(crate) fn user_public_dir(&self) -> Option<PathBuf> {
-        let path = self.config.application.public_dir.as_ref()?;
+        let path = self.config.application.asset_dir.as_ref()?;
 
         if path.as_os_str().is_empty() {
             return None;
@@ -4991,24 +3849,6 @@ impl BuildRequest {
         let canonical_path = dunce::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
 
         canonical_path.starts_with(&canonical_static)
-    }
-
-    /// Get the path to the package manifest directory
-    pub(crate) fn package_manifest_dir(&self) -> PathBuf {
-        self.workspace.krates[self.crate_package]
-            .manifest_path
-            .parent()
-            .unwrap()
-            .to_path_buf()
-            .into()
-    }
-
-    /// Returns the min sdk version set in config. If not set 24 is returned as a default.
-    pub(crate) fn min_sdk_version_or_default(&self) -> u32 {
-        self.config
-            .application
-            .android_min_sdk_version
-            .unwrap_or(28)
     }
 
     /// Assemble a series of `--config key=value` arguments for the build command.
@@ -5073,10 +3913,9 @@ impl BuildRequest {
         }
 
         let mut entitlements_file = self.apple_entitlements.clone();
-        let mut provisioning_profile_path = None;
         if entitlements_file.is_none() {
             let bundle_id = self.bundle_identifier();
-            let (entitlements_xml, profile_path) = Self::auto_provision_entitlements(&bundle_id)
+            let (entitlements_xml, _profile_path) = Self::auto_provision_entitlements(&bundle_id)
                 .await
                 .context("Failed to auto-provision entitlements for Apple codesigning.")?;
 
@@ -5086,7 +3925,6 @@ impl BuildRequest {
             let entitlements_temp_file = tempfile::NamedTempFile::new()?;
             std::fs::write(entitlements_temp_file.path(), entitlements_xml)?;
             entitlements_file = Some(entitlements_temp_file.path().to_path_buf());
-            provisioning_profile_path = Some(profile_path);
             _saved_entitlements = Some(entitlements_temp_file);
         }
 
@@ -5106,18 +3944,8 @@ impl BuildRequest {
         // determine the target exe - the server and macos bundles are different
         let target_exe = match self.bundle {
             BundleFormat::MacOS => self.root_dir(),
-            BundleFormat::Ios => self.root_dir(),
             _ => bail!("Codesigning is only supported for MacOS and iOS bundles"),
         };
-
-        // iOS devices require the provisioning profile to be embedded in the .app bundle
-        if self.bundle == BundleFormat::Ios {
-            if let Some(profile_path) = &provisioning_profile_path {
-                let dest = target_exe.join("embedded.mobileprovision");
-                std::fs::copy(profile_path, &dest)
-                    .context("Failed to embed provisioning profile into .app bundle")?;
-            }
-        }
 
         // codesign the app
         let output = Command::new("codesign")
@@ -5176,93 +4004,6 @@ impl BuildRequest {
         let mut extra_entries = String::new();
 
         match self.bundle {
-            BundleFormat::Ios => {
-                let ent = &self.config.ios.entitlements;
-
-                // Associated domains (from deep_links.hosts + ios.entitlements.associated-domains)
-                let mapper = super::manifest_mapper::ManifestMapper::default_for_desktop(); // Desktop only
-                let mut domains: Vec<String> = mapper.ios_associated_domains;
-                domains.extend(ent.associated_domains.clone());
-                domains.dedup();
-                if !domains.is_empty() {
-                    extra_entries.push_str(
-                        "    <key>com.apple.developer.associated-domains</key>\n    <array>\n",
-                    );
-                    for domain in &domains {
-                        extra_entries.push_str(&format!("        <string>{domain}</string>\n"));
-                    }
-                    extra_entries.push_str("    </array>\n");
-                }
-
-                // App groups
-                if !ent.app_groups.is_empty() {
-                    extra_entries.push_str(
-                        "    <key>com.apple.security.application-groups</key>\n    <array>\n",
-                    );
-                    for group in &ent.app_groups {
-                        extra_entries.push_str(&format!("        <string>{group}</string>\n"));
-                    }
-                    extra_entries.push_str("    </array>\n");
-                }
-
-                // APS environment (push notifications)
-                if let Some(env) = &ent.aps_environment {
-                    extra_entries.push_str(&format!(
-                        "    <key>aps-environment</key>\n    <string>{env}</string>\n"
-                    ));
-                }
-
-                // iCloud
-                if ent.icloud {
-                    extra_entries.push_str(
-                        "    <key>com.apple.developer.icloud-container-identifiers</key>\n    <array/>\n\
-                         <key>com.apple.developer.icloud-services</key>\n    <array>\n        <string>CloudDocuments</string>\n    </array>\n"
-                    );
-                }
-
-                // Keychain access groups
-                // (base entitlements already include one from provisioning profile, only add extras)
-                if !ent.keychain_access_groups.is_empty() {
-                    extra_entries.push_str("    <key>keychain-access-groups</key>\n    <array>\n");
-                    for group in &ent.keychain_access_groups {
-                        extra_entries.push_str(&format!("        <string>{group}</string>\n"));
-                    }
-                    extra_entries.push_str("    </array>\n");
-                }
-
-                // Apple Pay
-                if ent.apple_pay {
-                    extra_entries.push_str(
-                        "    <key>com.apple.developer.in-app-payments</key>\n    <array>\n        <string>merchant.*</string>\n    </array>\n"
-                    );
-                }
-
-                // HealthKit
-                if ent.healthkit {
-                    extra_entries
-                        .push_str("    <key>com.apple.developer.healthkit</key>\n    <true/>\n");
-                }
-
-                // HomeKit
-                if ent.homekit {
-                    extra_entries
-                        .push_str("    <key>com.apple.developer.homekit</key>\n    <true/>\n");
-                }
-
-                // Additional entitlements from the flat map
-                for (key, value) in &ent.additional {
-                    extra_entries.push_str(&format!(
-                        "    <key>{key}</key>\n    {}\n",
-                        value_to_plist_xml(value, 1)
-                    ));
-                }
-
-                // Raw entitlements XML
-                if let Some(raw) = &self.config.ios.raw.entitlements {
-                    extra_entries.push_str(raw);
-                    extra_entries.push('\n');
-                }
-            }
             BundleFormat::MacOS => {
                 let ent = &self.config.macos.entitlements;
 

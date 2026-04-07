@@ -12,7 +12,6 @@ use anyhow::{
     bail,
     Context,
 };
-use ignore::gitignore::Gitignore;
 use krates::{
     semver::Version,
     Cmd,
@@ -27,7 +26,6 @@ use tokio::process::Command;
 use crate::{
     config::DioxusConfig,
     styles::GLOW_STYLE,
-    AndroidTools,
     CliSettings,
     Result,
 };
@@ -38,9 +36,7 @@ pub struct Workspace {
     pub(crate) wasm_opt: Option<PathBuf>,
     pub(crate) sysroot: PathBuf,
     pub(crate) rustc_version: String,
-    pub(crate) ignore: Gitignore,
     pub(crate) cargo_toml: cargo_toml::Manifest,
-    pub(crate) android_tools: Option<Arc<AndroidTools>>,
 }
 
 impl Workspace {
@@ -114,14 +110,10 @@ impl Workspace {
 
         let wasm_opt = which::which("wasm-opt").ok();
 
-        let ignore = Self::workspace_gitignore(krates.workspace_root().as_std_path());
-
         let cargo_toml = crate::cargo_toml::load_manifest_from_path(
             krates.workspace_root().join("Cargo.toml").as_std_path(),
         )
         .context("Failed to load Cargo.toml")?;
-
-        let android_tools = crate::build::get_android_tools();
 
         let workspace = Arc::new(Self {
             krates,
@@ -129,9 +121,7 @@ impl Workspace {
             wasm_opt,
             sysroot: sysroot.trim().into(),
             rustc_version: rustc_version.trim().into(),
-            ignore,
             cargo_toml,
-            android_tools,
         });
 
         tracing::debug!(
@@ -154,13 +144,6 @@ impl Workspace {
         lock.replace(workspace.clone());
 
         Ok(workspace)
-    }
-
-    pub fn android_tools(&self) -> Result<Arc<AndroidTools>> {
-        self
-            .android_tools
-            .clone()
-            .context("Android not installed properly. Please set the `ANDROID_NDK_HOME` environment variable to the root of your NDK installation.")
     }
 
     pub fn is_release_profile(&self, profile: &str) -> bool {
@@ -264,23 +247,11 @@ impl Workspace {
         self.gcc_ld_dir().join("lld-link")
     }
 
-    pub fn wasm_ld(&self) -> PathBuf {
-        self.gcc_ld_dir().join("wasm-ld")
-    }
-
     pub fn select_ranlib() -> Option<PathBuf> {
         // prefer the modern llvm-ranlib if they have it
         which::which("llvm-ranlib")
             .or_else(|_| which::which("ranlib"))
             .ok()
-    }
-
-    /// Return the version of the wasm-bindgen crate if it exists
-    pub fn wasm_bindgen_version(&self) -> Option<String> {
-        self.krates
-            .krates_by_name("wasm-bindgen")
-            .next()
-            .map(|krate| krate.krate.version.to_string())
     }
 
     // wasm-ld: ./rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/wasm-ld
@@ -422,11 +393,7 @@ impl Workspace {
     /// //! identifier = "com.example.app"
     /// //! ```
     /// ```
-    pub fn load_dioxus_config(
-        &self,
-        package: NodeId,
-        source_file: Option<&Path>,
-    ) -> Result<Option<DioxusConfig>> {
+    pub fn load_dioxus_config(&self, package: NodeId) -> Result<Option<DioxusConfig>> {
         // Walk up from the cargo.toml to the root of the workspace looking for Dioxus.toml
         let mut current_dir = self.krates[package]
             .manifest_path
@@ -473,40 +440,7 @@ impl Workspace {
             None => None,
         };
 
-        // Extract inline config from source file (if provided)
-        let inline_config = source_file.and_then(crate::config::extract_inline_config_from_file);
-
-        // Merge configs: inline overrides base
-        match (base_config, inline_config) {
-            (Some(base), Some(inline)) => crate::config::merge_with_inline_config(&base, inline)
-                .map(Some)
-                .map_err(|err| anyhow::anyhow!("Failed to merge inline config: {err}")),
-            (Some(base), None) => Ok(Some(base)),
-            (None, Some(inline)) => {
-                // No Dioxus.toml, but we have inline config - use defaults + inline
-                let base = DioxusConfig::default();
-                crate::config::merge_with_inline_config(&base, inline)
-                    .map(Some)
-                    .map_err(|err| anyhow::anyhow!("Failed to merge inline config: {err}"))
-            }
-            (None, None) => Ok(None),
-        }
-    }
-
-    /// Create a new gitignore map for this target crate
-    ///
-    /// todo(jon): this is a bit expensive to build, so maybe we should cache it?
-    pub fn workspace_gitignore(workspace_dir: &Path) -> Gitignore {
-        let mut ignore_builder = ignore::gitignore::GitignoreBuilder::new(workspace_dir);
-        ignore_builder.add(workspace_dir.join(".gitignore"));
-
-        for path in Self::default_ignore_list() {
-            ignore_builder
-                .add_line(None, path)
-                .expect("failed to add path to file excluded");
-        }
-
-        ignore_builder.build().unwrap()
+        Ok(base_config)
     }
 
     pub fn ignore_for_krate(&self, path: &Path) -> ignore::gitignore::Gitignore {
@@ -536,51 +470,6 @@ impl Workspace {
 
     pub(crate) fn workspace_root(&self) -> PathBuf {
         self.krates.workspace_root().as_std_path().to_path_buf()
-    }
-
-    /// Returns the root of the crate that the command is run from, without calling `cargo metadata`
-    ///
-    /// If the command is run from the workspace root, this will return the top-level Cargo.toml
-    pub(crate) fn crate_root_from_path() -> Result<PathBuf> {
-        /// How many parent folders are searched for a `Cargo.toml`
-        const MAX_ANCESTORS: u32 = 10;
-
-        /// Checks if the directory contains `Cargo.toml`
-        fn contains_manifest(path: &Path) -> bool {
-            std::fs::read_dir(path)
-                .map(|entries| {
-                    entries
-                        .filter_map(Result::ok)
-                        .any(|ent| &ent.file_name() == "Cargo.toml")
-                })
-                .unwrap_or(false)
-        }
-
-        // From the current directory we work our way up, looking for `Cargo.toml`
-        std::env::current_dir()
-            .ok()
-            .and_then(|mut wd| {
-                for _ in 0..MAX_ANCESTORS {
-                    if contains_manifest(&wd) {
-                        return Some(wd);
-                    }
-                    if !wd.pop() {
-                        break;
-                    }
-                }
-                None
-            })
-            .context("Failed to find directory containing Cargo.toml")
-    }
-
-    pub async fn get_xcode_path() -> Option<PathBuf> {
-        let xcode = Command::new("xcode-select")
-            .arg("-p")
-            .output()
-            .await
-            .ok()
-            .map(|s| String::from_utf8_lossy(&s.stdout).trim().to_string().into());
-        xcode
     }
 
     pub async fn get_rustc_sysroot() -> Result<String, anyhow::Error> {
@@ -633,33 +522,8 @@ impl Workspace {
             .to_path_buf()
     }
 
-    /// The directory where managed tool binaries are installed.
-    ///
-    /// Layout: `~/.dx/tools/{tool-name}-{version}/`
-    pub(crate) fn tools_dir() -> PathBuf {
-        Self::dioxus_data_dir().join("tools")
-    }
-
     pub(crate) fn global_settings_file() -> PathBuf {
         Self::dioxus_data_dir().join("settings.toml")
-    }
-
-    /// The path where components downloaded from git are cached
-    pub(crate) fn component_cache_dir() -> PathBuf {
-        Self::dioxus_data_dir().join("components")
-    }
-
-    /// Get the path to a specific component in the cache
-    pub(crate) fn component_cache_path(git: &str, rev: Option<&str>) -> PathBuf {
-        use std::hash::Hasher;
-
-        let mut hasher = std::hash::DefaultHasher::new();
-        std::hash::Hash::hash(git, &mut hasher);
-        if let Some(rev) = rev {
-            std::hash::Hash::hash(rev, &mut hasher);
-        }
-        let hash = hasher.finish();
-        Self::component_cache_dir().join(format!("{hash:016x}"))
     }
 }
 

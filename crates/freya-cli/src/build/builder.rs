@@ -94,10 +94,6 @@ pub(crate) struct AppBuilder {
     pub patches: Vec<JumpTable>,
     pub patch_cache: Option<HotpatchModuleCache>,
 
-    /// The virtual directory that assets will be served from
-    /// Used mostly for apk/ipa builds since they live in simulator
-    pub runtime_asset_dir: Option<PathBuf>,
-
     // These might be None if the app died or the user did not specify a server
     pub child: Option<Child>,
 
@@ -180,7 +176,6 @@ impl AppBuilder {
             compile_end: None,
             bundle_start: None,
             bundle_end: None,
-            runtime_asset_dir: None,
             child: None,
             stderr: None,
             stdout: None,
@@ -641,18 +636,8 @@ impl AppBuilder {
         );
 
         // We try to use stdin/stdout to communicate with the app
-        match self.build.bundle {
-            // These are all just basically running the main exe, but with slightly different resource dir paths
-            BundleFormat::MacOS | BundleFormat::Windows | BundleFormat::Linux => {
-                self.open_with_main_exe(envs, args)?
-            }
-            _ => {
-                tracing::warn!(
-                    "Bundle format {:?} is not supported for native execution",
-                    self.build.bundle
-                );
-            }
-        };
+        // These are all just basically running the main exe, but with slightly different resource dir paths
+        self.open_with_main_exe(envs, args)?;
 
         self.builds_opened += 1;
 
@@ -857,16 +842,10 @@ impl AppBuilder {
         let mut main_exe = self.build.main_exe();
 
         // The requirement here is based on the platform, not necessarily our current architecture.
-        let requires_entropy = match self.build.bundle {
-            // When running "bundled" (macOS app bundle), we don't need entropy
-            BundleFormat::MacOS => false,
-
-            // But on platforms that aren't running as "bundled", we do.
-            BundleFormat::Windows | BundleFormat::Linux => true,
-
-            // Default: use entropy for unknown platforms
-            _ => true,
-        };
+        let requires_entropy = matches!(
+            self.build.bundle,
+            BundleFormat::Windows | BundleFormat::Linux
+        );
 
         if requires_entropy || crate::devcfg::should_force_entropy() {
             // If we already have an entropy app exe, return it - this is useful for re-opening the same app

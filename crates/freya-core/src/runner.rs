@@ -706,7 +706,7 @@ impl Runner {
                     let scope = scope_rc.borrow();
                     #[cfg(feature = "hotreload")]
                     {
-                        subsecond::call(|| (scope.comp)(scope.props.clone()))
+                        freya_hotreload::subsecond::call(|| (scope.comp)(scope.props.clone()))
                     }
                     #[cfg(not(feature = "hotreload"))]
                     {
@@ -856,7 +856,9 @@ impl Runner {
                             let scope = scope_rc.borrow();
                             #[cfg(feature = "hotreload")]
                             {
-                                subsecond::call(|| (scope.comp)(scope.props.clone()))
+                                freya_hotreload::subsecond::call(|| {
+                                    (scope.comp)(scope.props.clone())
+                                })
                             }
                             #[cfg(not(feature = "hotreload"))]
                             {

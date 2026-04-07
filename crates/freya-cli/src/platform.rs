@@ -38,14 +38,6 @@ pub(crate) enum Platform {
     #[serde(rename = "linux")]
     Linux,
 
-    /// Alias for `--target <aarch64-apple-ios/sim> --renderer webview --bundle-format ios`
-    #[serde(rename = "ios")]
-    Ios,
-
-    /// Alias for `--target <device-triple> --renderer webview --bundle-format android`
-    #[serde(rename = "android")]
-    Android,
-
     /// No platform was specified, so the CLI is free to choose the best one.
     #[default]
     Unknown,
@@ -69,8 +61,6 @@ impl Platform {
             "macos" => Ok(Self::MacOS),
             "windows" => Ok(Self::Windows),
             "linux" => Ok(Self::Linux),
-            "ios" => Ok(Self::Ios),
-            "android" => Ok(Self::Android),
             "desktop" => {
                 if cfg!(target_os = "macos") {
                     Ok(Self::MacOS)
@@ -228,16 +218,6 @@ pub(crate) enum BundleFormat {
     #[cfg_attr(target_os = "windows", serde(alias = "desktop"))]
     #[serde(rename = "windows")]
     Windows,
-
-    /// Targeting the ios bundle structure
-    ///
-    /// Can't work properly if you're not building from an Apple device.
-    #[serde(rename = "ios")]
-    Ios,
-
-    /// Targeting the android bundle structure
-    #[serde(rename = "android")]
-    Android,
 }
 
 impl BundleFormat {
@@ -259,8 +239,6 @@ impl BundleFormat {
     /// Note that web and server share the same platform folder since we'll export the web folder as a bundle on its own
     pub(crate) fn build_folder_name(&self) -> &'static str {
         match self {
-            Self::Ios => "ios",
-            Self::Android => "android",
             Self::Windows => "windows",
             Self::Linux => "linux",
             Self::MacOS => "macos",
@@ -270,8 +248,6 @@ impl BundleFormat {
     pub(crate) fn profile_name(&self, release: bool) -> String {
         let base_profile = match self {
             Self::MacOS | Self::Windows | Self::Linux => "desktop",
-            Self::Ios => "ios",
-            Self::Android => "android",
         };
 
         let opt_level = if release { "release" } else { "dev" };
@@ -284,8 +260,6 @@ impl BundleFormat {
             Self::MacOS => "MacOS",
             Self::Windows => "Windows",
             Self::Linux => "Linux",
-            Self::Ios => "iOS",
-            Self::Android => "Android",
         }
     }
 }
@@ -309,8 +283,6 @@ impl FromStr for BundleFormat {
             "macos" => Ok(Self::MacOS),
             "windows" => Ok(Self::Windows),
             "linux" => Ok(Self::Linux),
-            "ios" => Ok(Self::Ios),
-            "android" => Ok(Self::Android),
             _ => Err(UnknownBundleFormatError),
         }
     }
@@ -322,8 +294,6 @@ impl Display for BundleFormat {
             BundleFormat::MacOS => "macos",
             BundleFormat::Windows => "windows",
             BundleFormat::Linux => "linux",
-            BundleFormat::Ios => "ios",
-            BundleFormat::Android => "android",
         })
     }
 }

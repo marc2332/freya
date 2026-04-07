@@ -445,40 +445,6 @@ impl Output {
         let level = Self::normalize_stdio_level(&msg, level);
 
         match bundle {
-            // If tracing is disabled, we need to filter out all the noise from Android logcat
-            BundleFormat::Android if !self.trace => {
-                // By default (trace off): only show RustStdoutStderr logs with proper log levels
-                // Filter out raw output like GL bindings, WebView internals, etc.
-                let is_rust_log = msg.contains("RustStdoutStderr");
-                let is_fatal = msg.contains("AndroidRuntime") || msg.starts_with('F');
-                let mut rendered_msg = None;
-
-                // If we're not in trace mode, then we need to filter out non-log messages and clean them up
-                // Only show logs with standard tracing level prefixes (check in the message after the colon)
-                if is_rust_log {
-                    if let Some(colon_pos) = msg.find(':') {
-                        let content = &msg[colon_pos + 1..];
-                        if content.contains(" TRACE ")
-                            || content.contains(" DEBUG ")
-                            || content.contains(" INFO ")
-                            || content.contains(" WARN ")
-                            || content.contains(" ERROR ")
-                        {
-                            rendered_msg = Some(content.trim().to_string());
-                        }
-                    }
-                }
-
-                // Always show fatal errors, even if they don't come from Rust logging
-                if is_fatal {
-                    rendered_msg = Some(msg);
-                }
-
-                if let Some(msg) = rendered_msg {
-                    self.push_or_merge_app_stdio(bundle, level, msg, !is_dbg_output);
-                }
-            }
-
             _ => self.push_or_merge_app_stdio(bundle, level, msg, !is_dbg_output),
         }
     }

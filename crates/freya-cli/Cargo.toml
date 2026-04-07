@@ -38,13 +38,8 @@ dunce = "1.0.5"
 
 # tools download
 dirs = "6.0.0"
-reqwest = { version = "0.12.23", default-features = false, features = [
-  "rustls-tls",
-  "json",
-] }
 # path lookup
 which = { version = "8.0.0" }
-png = "0.17.16"
 brotli = "8.0.1"
 ignore = "0.4.23"
 
@@ -75,22 +70,8 @@ itertools = { workspace = true }
 throbber-widgets-tui = "0.10.0"
 unicode-segmentation = "1.12.0"
 handlebars = "6.3.2"
-walrus = { version = "0.23.3", features = ["parallel"] }
 # TODO: NO DEBERIA SER NECESARIA!!
 wasmparser = "0.235.0"
-
-# bundler dependencies
-icns = "0.4.0"
-image = "0.25"
-zip = { version = "4", default-features = false, features = ["deflate"] }
-sha1 = "0.10"
-md5 = "0.8.0"
-rpm = { version = "0.19.0", default-features = false, features = [
-  "gzip-compression",
-] }
-sha2 = "0.10.9"
-flate2 = "1.1.2"
-tar = "0.4.44"
 plist = "1.7.4"
 # backtrace = "0.3.74"
 ar = "0.9.0"

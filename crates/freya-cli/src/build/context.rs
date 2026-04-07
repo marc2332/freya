@@ -101,35 +101,9 @@ impl BuildContext {
         self.build_id == BuildId::PRIMARY
     }
 
-    pub(crate) fn status_wasm_bindgen_start(&self) {
-        _ = self.tx.unbounded_send(BuilderUpdate::Progress {
-            stage: BuildStage::RunningBindgen,
-        });
-    }
-
-    pub(crate) fn status_splitting_bundle(&self) {
-        _ = self.tx.unbounded_send(BuilderUpdate::Progress {
-            stage: BuildStage::SplittingBundle,
-        });
-    }
-
     pub(crate) fn status_start_bundle(&self) {
         _ = self.tx.unbounded_send(BuilderUpdate::Progress {
             stage: BuildStage::Bundling,
-        });
-    }
-
-    pub(crate) fn status_running_gradle(&self) {
-        _ = self.tx.unbounded_send(BuilderUpdate::Progress {
-            stage: BuildStage::RunningGradle,
-        })
-    }
-
-    pub(crate) fn status_compiling_native_plugins(&self, detail: impl Into<String>) {
-        _ = self.tx.unbounded_send(BuilderUpdate::Progress {
-            stage: BuildStage::CompilingNativePlugins {
-                detail: detail.into(),
-            },
         });
     }
 
@@ -200,12 +174,6 @@ impl BuildContext {
         });
     }
 
-    pub(crate) fn status_optimizing_wasm(&self) {
-        _ = self.tx.unbounded_send(BuilderUpdate::Progress {
-            stage: BuildStage::OptimizingWasm,
-        });
-    }
-
     pub(crate) fn status_hotpatching(&self) {
         _ = self.tx.unbounded_send(BuilderUpdate::Progress {
             stage: BuildStage::Hotpatching,
@@ -215,17 +183,6 @@ impl BuildContext {
     pub(crate) fn status_installing_tooling(&self) {
         _ = self.tx.unbounded_send(BuilderUpdate::Progress {
             stage: BuildStage::InstallingTooling,
-        });
-    }
-
-    pub(crate) fn status_compressing_assets(&self) {
-        _ = self.tx.unbounded_send(BuilderUpdate::Progress {
-            stage: BuildStage::CompressingAssets,
-        });
-    }
-    pub(crate) fn status_extracting_assets(&self) {
-        _ = self.tx.unbounded_send(BuilderUpdate::Progress {
-            stage: BuildStage::ExtractingAssets,
         });
     }
 }

@@ -230,14 +230,7 @@ impl AppServer {
         if runner.watch_fs {
             // Spin up the notify watcher
             // When builds load though, we're going to parse their depinfo and add the paths to the watcher
-            runner.watch_filesystem();
-
-            // todo(jon): this might take a while so we should try and background it, or make it lazy somehow
-            // we could spawn a thread to search the FS and then when it returns we can fill the filemap
-            // in testing, if this hits a massive directory, it might take several seconds with no feedback.
-            // really, we should be using depinfo to get the files that are actually used, but the depinfo file might not be around yet
-            // todo(jon): see if we can just guess the depinfo file before it generates. might be stale but at least it catches most of the files
-            runner.load_rsx_filemap();
+            runner.watch_filesystem()
         }
 
         Ok(runner)
@@ -418,7 +411,6 @@ impl AppServer {
                     server.patch_rebuild(files.to_vec(), changed_crates, BuildId::SECONDARY);
                 }
                 self.clear_hot_reload_changes();
-                self.clear_cached_rsx();
                 server.send_patch_start().await;
             } else {
                 self.client
@@ -427,7 +419,6 @@ impl AppServer {
                     server.start_rebuild(BuildMode::Base { run: true }, BuildId::SECONDARY);
                 }
                 self.clear_hot_reload_changes();
-                self.clear_cached_rsx();
                 server.send_reload_start().await;
             }
         } else {
@@ -605,7 +596,6 @@ impl AppServer {
         }
 
         self.clear_hot_reload_changes();
-        self.clear_cached_rsx();
         self.clear_patches();
     }
 
@@ -761,81 +751,6 @@ impl AppServer {
         assets.extend(msg.assets.iter().cloned());
         applied.assets = assets.into_iter().collect();
         applied.jump_table = self.client.patches.last().cloned();
-    }
-
-    /// Register the files from the workspace into our file watcher.
-    ///
-    /// This very simply looks for all Rust files in the workspace and adds them to the filemap.
-    ///
-    /// Once the builds complete we'll use the depinfo files to get the actual files that are used,
-    /// making our watcher more accurate. Filling the filemap here is intended to catch any file changes
-    /// in between the first build and the depinfo file being generated.
-    ///
-    /// We don't want watch any registry files since that generally causes a huge performance hit -
-    /// we mostly just care about workspace files and local dependencies.
-    ///
-    /// Dep-info file background:
-    /// <https://doc.rust-lang.org/stable/nightly-rustc/cargo/core/compiler/fingerprint/index.html#dep-info-files>
-    fn load_rsx_filemap(&mut self) {
-        self.fill_filemap_from_krate(self.client.build.crate_dir());
-
-        if let Some(server) = self.server.as_ref() {
-            self.fill_filemap_from_krate(server.build.crate_dir());
-        }
-
-        for krate in self.all_watched_crates() {
-            self.fill_filemap_from_krate(krate);
-        }
-    }
-
-    /// Fill the filemap with files from the filesystem, using the given filter to determine which files to include.
-    ///
-    /// You can use the filter with something like a gitignore to only include files that are relevant to your project.
-    /// We'll walk the filesystem from the given path and recursively search for all files that match the filter.
-    ///
-    /// The filter function takes a path and returns true if the file should be included in the filemap.
-    /// Generally this will only be .rs files
-    ///
-    /// If a file couldn't be parsed, we don't fail. Instead, we save the error.
-    ///
-    /// todo: There are known bugs here when handling gitignores.
-    fn fill_filemap_from_krate(&mut self, crate_dir: PathBuf) {
-        for entry in walkdir::WalkDir::new(crate_dir).into_iter().flatten() {
-            if self
-                .workspace
-                .ignore
-                .matched(entry.path(), entry.file_type().is_dir())
-                .is_ignore()
-            {
-                continue;
-            }
-
-            let path = entry.path();
-            if path.extension().and_then(|s| s.to_str()) == Some("rs") {
-                if let Ok(contents) = std::fs::read_to_string(path) {
-                    self.file_map.insert(
-                        path.to_path_buf(),
-                        CachedFile {
-                            contents,
-                            most_recent: None,
-                        },
-                    );
-                }
-            }
-        }
-    }
-
-    /// Commit the changes to the filemap, overwriting the contents of the files
-    ///
-    /// Removes any cached templates and replaces the contents of the files with the most recent
-    ///
-    /// todo: we should-reparse the contents so we never send a new version, ever
-    fn clear_cached_rsx(&mut self) {
-        for cached_file in self.file_map.values_mut() {
-            if let Some(most_recent) = cached_file.most_recent.take() {
-                cached_file.contents = most_recent;
-            }
-        }
     }
 
     fn watch_filesystem(&mut self) {

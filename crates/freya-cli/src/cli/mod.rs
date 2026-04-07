@@ -115,5 +115,6 @@ pub mod styles {
     pub(crate) const NOTE_STYLE: Style = AnsiColor::Green.on_default();
     pub(crate) const LINK_STYLE: Style = AnsiColor::Blue.on_default();
     pub(crate) const ERROR_STYLE: Style = AnsiColor::Red.on_default();
+    #[allow(unused)]
     pub(crate) const HINT_STYLE: Style = clap::builder::styling::Ansi256Color(244).on_default();
 }

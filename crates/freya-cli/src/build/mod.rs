@@ -15,7 +15,6 @@ mod manifest;
 mod manifest_mapper;
 mod patch;
 mod request;
-mod tools;
 
 pub(crate) use builder::*;
 pub(crate) use cache::*;
@@ -23,4 +22,3 @@ pub(crate) use context::*;
 pub(crate) use manifest::*;
 pub(crate) use patch::*;
 pub(crate) use request::*;
-pub(crate) use tools::*;
