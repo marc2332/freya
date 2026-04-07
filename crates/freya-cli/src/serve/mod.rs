@@ -1,6 +1,7 @@
 use crate::{
     styles::{GLOW_STYLE, LINK_STYLE},
-    AppBuilder, BuildId, BuildMode, BuilderUpdate, Result, ServeArgs, TraceController,
+    AppBuilder, BuildId, BuildMode, BuilderUpdate, Result, ServeArgs, TraceController, TraceMsg,
+    TraceSrc,
 };
 
 mod ansi_buffer;
@@ -14,6 +15,8 @@ use anyhow::bail;
 pub(crate) use output::*;
 pub(crate) use runner::*;
 pub(crate) use server::*;
+use std::collections::HashSet;
+use std::time::{Duration, Instant};
 pub(crate) use update::*;
 
 /// For *all* builds, the CLI spins up a dedicated webserver, file watcher, and build infrastructure to serve the project.
@@ -89,6 +92,66 @@ pub(crate) async fn serve_all(args: ServeArgs, tracer: &TraceController) -> Resu
             ServeUpdate::FilesChanged { files } => {
                 if files.is_empty() || !builder.hot_reload {
                     continue;
+                }
+
+                if builder.use_hotpatch_engine && builder.automatic_rebuilds {
+                    let mut seen = HashSet::new();
+                    let changed_files = files
+                        .iter()
+                        .filter_map(|path| {
+                            let relative = path
+                                .strip_prefix(builder.client.build.crate_dir())
+                                .map(|p| p.display().to_string())
+                                .unwrap_or_else(|_| path.display().to_string());
+
+                            // Ignore editor temp files like `src/views/4913` that can appear during atomic writes.
+                            let looks_like_temp_numeric = path.extension().is_none()
+                                && path
+                                    .file_name()
+                                    .and_then(|name| name.to_str())
+                                    .map(|name| name.chars().all(|c| c.is_ascii_digit()))
+                                    .unwrap_or(false);
+
+                            let looks_like_editor_backup = path
+                                .file_name()
+                                .and_then(|name| name.to_str())
+                                .map(|name| name.ends_with('~'))
+                                .unwrap_or(false);
+
+                            if looks_like_temp_numeric || looks_like_editor_backup {
+                                return None;
+                            }
+
+                            if seen.insert(relative.clone()) {
+                                Some(relative)
+                            } else {
+                                None
+                            }
+                        })
+                        .collect::<Vec<_>>();
+
+                    if !changed_files.is_empty() {
+                        let detected =
+                            format!("Hotpatch: detected changes in {}", changed_files.join(", "));
+                        let now = Instant::now();
+
+                        let is_duplicate = last_hotpatch_detected
+                            .as_ref()
+                            .map(|(last_msg, at)| {
+                                *last_msg == detected
+                                    && now.duration_since(*at) <= Duration::from_millis(1200)
+                            })
+                            .unwrap_or(false);
+
+                        if !is_duplicate {
+                            last_hotpatch_detected = Some((detected.clone(), now));
+                            screen.push_log(TraceMsg::text(
+                                TraceSrc::Dev,
+                                tracing::Level::INFO,
+                                detected,
+                            ));
+                        }
+                    }
                 }
 
                 builder.handle_file_change(&files, &mut devserver).await;
@@ -180,6 +243,7 @@ pub(crate) async fn serve_all(args: ServeArgs, tracer: &TraceController) -> Resu
                     BuilderUpdate::BuildReady { bundle } => {
                         match bundle.mode {
                             BuildMode::Thin { ref cache, .. } => {
+                                tracing::info!(dx_src = ?TraceSrc::Dev, "Hotpatch: applying patch...");
                                 if let Err(err) =
                                     builder.hotpatch(&bundle, id, cache, &mut devserver).await
                                 {
@@ -193,6 +257,8 @@ pub(crate) async fn serve_all(args: ServeArgs, tracer: &TraceController) -> Resu
                                         devserver.send_reload_start().await;
                                         devserver.start_build().await;
                                     }
+                                } else {
+                                    tracing::info!(dx_src = ?TraceSrc::Dev, "Hotpatch: patch applied successfully");
                                 }
                             }
                             BuildMode::Base { .. } | BuildMode::Fat => {
