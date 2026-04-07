@@ -9,7 +9,7 @@ pub fn default_fonts() -> Vec<Cow<'static, str>> {
         fonts.insert(0, ".AppleSystemUIFont".into());
     } else if cfg!(target_os = "linux") {
         fonts.insert(0, "Ubuntu".into());
-        fonts.insert(1, "Inter".into());
+        fonts.insert(1, "Adwaita Sans".into());
     } else if cfg!(target_os = "android") {
         fonts.insert(0, "Roboto".into());
     }
