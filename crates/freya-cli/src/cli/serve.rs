@@ -92,12 +92,6 @@ impl ServeArgs {
     ///
     /// We also set up proper panic handling since the TUI has a tendency to corrupt the terminal.
     pub(crate) async fn serve(self, tracer: &TraceController) -> Result<StructuredOutput> {
-        // Redirect all logging the cli logger - if there's any pending after a panic, we flush it
-        let is_interactive_tty = self.is_interactive_tty();
-        if is_interactive_tty {
-            tracer.redirect_to_tui();
-        }
-
         crate::serve::serve_all(self, tracer)
             .await
             .map(|_| StructuredOutput::Success)

@@ -41,7 +41,6 @@ pub(crate) async fn serve_all(args: ServeArgs, tracer: &TraceController) -> Resu
     let exit_on_error = args.exit_on_error;
     let mut builder = AppServer::new(args).await?;
     let mut devserver = WebServer::start(&builder)?;
-    let mut screen = Output::start(builder.interactive).await?;
 
     // This is our default splash screen. We might want to make this a fancier splash screen in the future
     // Also, these commands might not be the most important, but it's all we've got enabled right now
@@ -64,20 +63,21 @@ pub(crate) async fn serve_all(args: ServeArgs, tracer: &TraceController) -> Resu
         }
     );
 
-    builder.initialize();
+    let mut screen = Output::start(builder.interactive).await?;
 
-    for log in tracer.drain_pending().await {
-        screen.push_log(log);
+    if builder.interactive {
+        tracer.redirect_to_tui();
     }
+
+    builder.initialize();
+    let mut last_hotpatch_detected: Option<(String, Instant)> = None;
 
     loop {
         for log in tracer.drain_pending().await {
             screen.push_log(log);
         }
-
         screen.render(&builder, &devserver);
 
-        // And then wait for any updates before redrawing
         let msg = tokio::select! {
             msg = builder.wait() => msg,
             msg = devserver.wait() => msg,
