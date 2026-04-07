@@ -316,19 +316,18 @@ impl TerminalHandle {
     /// Write text to the PTY as a paste operation.
     ///
     /// If bracketed paste mode is enabled, wraps the text with `\x1b[200~` ... `\x1b[201~`.
+    // Adapted from https://github.com/alacritty/alacritty/blob/master/alacritty/src/event.rs
     pub fn paste(&self, text: &str) -> Result<(), TerminalError> {
-        let bracketed = self.parser.borrow().screen().bracketed_paste();
-
-        let mut data = Vec::with_capacity(text.len() + 12);
-        if bracketed {
-            data.extend_from_slice(b"\x1b[200~");
+        if self.parser.borrow().screen().bracketed_paste() {
+            let filtered = text.replace(['\x1b', '\x03'], "");
+            self.write_raw(b"\x1b[200~")?;
+            self.write_raw(filtered.as_bytes())?;
+            self.write_raw(b"\x1b[201~")?;
+        } else {
+            let normalized = text.replace("\r\n", "\r").replace('\n', "\r");
+            self.write_raw(normalized.as_bytes())?;
         }
-        data.extend_from_slice(text.as_bytes());
-        if bracketed {
-            data.extend_from_slice(b"\x1b[201~");
-        }
-
-        self.write(&data)
+        Ok(())
     }
 
     /// Write data to the PTY without resetting scroll or selection state.
@@ -783,7 +782,7 @@ impl TerminalHandle {
                 &row_cells
             };
 
-            let line: String = cells
+            let mut line: String = cells
                 .iter()
                 .map(|cell| {
                     if cell.has_contents() {
@@ -792,7 +791,12 @@ impl TerminalHandle {
                         " "
                     }
                 })
-                .collect::<String>();
+                .collect();
+
+            // Strip trailing cell padding so it doesn't paste as blank lines.
+            if !is_single && !is_last {
+                line.truncate(line.trim_end_matches(' ').len());
+            }
 
             lines.push(line);
         }
