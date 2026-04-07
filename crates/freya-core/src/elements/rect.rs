@@ -1,50 +1,24 @@
 //! [rect()] acts as a generic container to contain other elements inside, like a box.
 
-use std::{
-    any::Any,
-    borrow::Cow,
-    rc::Rc,
-};
+use std::{any::Any, borrow::Cow, rc::Rc};
 
 use freya_engine::prelude::{
-    Canvas,
-    ClipOp,
-    Paint,
-    PaintStyle,
-    PathBuilder,
-    SkBlurStyle,
-    SkMaskFilter,
-    SkPath,
-    SkPathFillType,
-    SkPoint,
-    SkRRect,
-    SkRect,
+    Canvas, ClipOp, Paint, PaintStyle, PathBuilder, SkBlurStyle, SkMaskFilter, SkPath,
+    SkPathFillType, SkPoint, SkRRect, SkRect,
 };
 use rustc_hash::FxHashMap;
-use torin::{
-    prelude::Area,
-    scaled::Scaled,
-};
+use torin::{prelude::Area, scaled::Scaled};
 
 use crate::{
     diff_key::DiffKey,
-    element::{
-        ClipContext,
-        ElementExt,
-        EventHandlerType,
-        EventMeasurementContext,
-        RenderContext,
-    },
+    element::{ClipContext, ElementExt, EventHandlerType, EventMeasurementContext, RenderContext},
     events::name::EventName,
     layers::Layer,
     prelude::*,
     style::{
         font_size::FontSize,
         scale::Scale,
-        shadow::{
-            Shadow,
-            ShadowPosition,
-        },
+        shadow::{Shadow, ShadowPosition},
     },
     tree::DiffModifies,
 };
@@ -691,6 +665,13 @@ impl Rect {
             .effect
             .get_or_insert_with(Default::default)
             .blur = Some(blur.into());
+        self
+    }
+
+    pub fn glass_filter(mut self, filter: freya_engine::prelude::ImageFilter) -> Self {
+        let effect = self.element.effect.get_or_insert_with(Default::default);
+        effect.glass_filter_version = effect.glass_filter_version.wrapping_add(1);
+        effect.glass_filter = Some(filter);
         self
     }
 }
