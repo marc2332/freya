@@ -254,6 +254,12 @@ impl VulkanDriver {
             return;
         }
 
+        if self.swapchain_extent.width != size.width || self.swapchain_extent.height != size.height
+        {
+            self.swapchain_size = size;
+            self.recreate_swapchain();
+        }
+
         let mut surface = unsafe {
             self.device
                 .wait_for_fences(&[self.in_flight_fence], true, u64::MAX)
