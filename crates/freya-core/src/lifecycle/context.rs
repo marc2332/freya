@@ -31,6 +31,20 @@ pub fn try_consume_context<T: Clone + 'static>() -> Option<T> {
     try_consume_context_from_scope_id(None)
 }
 
+/// Try to get a context value stored only in the current scope, without walking up to ancestors.
+pub fn try_consume_own_context<T: Clone + 'static>() -> Option<T> {
+    CurrentContext::with(|context| {
+        let scopes_storages = context.scopes_storages.borrow();
+        let scopes_storage = scopes_storages.get(&context.scope_id)?;
+        let type_id = TypeId::of::<T>();
+        scopes_storage
+            .contexts
+            .get(&type_id)?
+            .downcast_ref::<T>()
+            .cloned()
+    })
+}
+
 pub fn try_consume_root_context<T: Clone + 'static>() -> Option<T> {
     try_consume_context_from_scope_id(Some(ScopeId::ROOT))
 }

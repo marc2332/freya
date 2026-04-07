@@ -27,8 +27,16 @@ impl<R: Routable + Clone> Router<R> {
 impl<R: Routable + Clone> Component for Router<R> {
     fn render(&self) -> impl IntoElement {
         use_hook(|| {
-            provide_context(RouterContext::create::<R>(self.0.call()));
-            provide_context(OutletContext::<R>::new());
+            // Only create contexts if they don't already exist in this scope.
+            // On hot-reload, `reset_hooks` clears hook values but preserves contexts,
+            // so unconditionally calling `provide_context` would overwrite the
+            // existing RouterContext and reset navigation state to the initial path.
+            if try_consume_own_context::<RouterContext>().is_none() {
+                provide_context(RouterContext::create::<R>(self.0.call()));
+            }
+            if try_consume_own_context::<OutletContext<R>>().is_none() {
+                provide_context(OutletContext::<R>::new());
+            }
         });
 
         Outlet::<R>::new()

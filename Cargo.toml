@@ -8,6 +8,7 @@ workspace = true
 
 [features]
 hotpath = ["freya/hotpath"]
+hotreload = ["freya/hotreload"]
 hotpath-alloc = ["hotpath/hotpath-alloc"]
 devtools = ["freya/devtools"]
 performance = ["freya/performance"]
