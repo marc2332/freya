@@ -11,18 +11,20 @@ use crossterm::{
         DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange, Event,
         EventStream, KeyCode, KeyEvent, KeyEventKind, KeyModifiers,
     },
-    terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType},
+    terminal::{
+        disable_raw_mode, enable_raw_mode, ClearType, EnterAlternateScreen, LeaveAlternateScreen,
+    },
     ExecutableCommand,
 };
 use ratatui::{
     prelude::*,
-    widgets::{Block, BorderType, Borders, LineGauge, Paragraph},
+    widgets::{Block, BorderType, Borders, LineGauge, Paragraph, Wrap},
     TerminalOptions, Viewport,
 };
 use std::{
     cell::RefCell,
     collections::VecDeque,
-    io::{self, stdout},
+    io::{self, stdout, Write},
     rc::Rc,
     time::Duration,
 };
@@ -31,7 +33,6 @@ use tracing::Level;
 use super::AppServer;
 
 const TICK_RATE_MS: u64 = 100;
-const VIEWPORT_MAX_WIDTH: u16 = 90;
 const VIEWPORT_HEIGHT_SMALL: u16 = 5;
 const VIEWPORT_HEIGHT_BIG: u16 = 14;
 
@@ -50,6 +51,8 @@ pub struct Output {
     // A list of all messages from build, dev, app, and more.
     more_modal_open: bool,
     interactive: bool,
+    show_all_logs: bool,
+    search_mode: bool,
 
     // Whether to show verbose logs or not
     // We automatically hide "debug" logs if verbose is false (only showing "info" / "warn" / "error")
@@ -58,6 +61,9 @@ pub struct Output {
 
     // Pending logs
     pending_logs: VecDeque<TraceMsg>,
+    recent_logs: VecDeque<TraceMsg>,
+    log_scroll: usize,
+    search_query: String,
 
     dx_version: String,
     tick_animation: bool,
@@ -75,6 +81,7 @@ struct RenderState<'a> {
     server: &'a WebServer,
 }
 
+#[allow(dead_code)]
 impl Output {
     pub(crate) async fn start(interactive: bool) -> crate::Result<Self> {
         let mut output = Self {
@@ -87,7 +94,12 @@ impl Output {
             ),
             events: None,
             more_modal_open: false,
+            show_all_logs: true,
+            search_mode: false,
             pending_logs: VecDeque::new(),
+            recent_logs: VecDeque::new(),
+            log_scroll: 0,
+            search_query: String::new(),
             throbber: RefCell::new(throbber_widgets_tui::ThrobberState::default()),
             trace: crate::logging::VERBOSITY.get().unwrap().trace,
             verbose: crate::logging::VERBOSITY.get().unwrap().verbose,
@@ -121,7 +133,7 @@ impl Output {
                 Terminal::with_options(
                     CrosstermBackend::new(stdout()),
                     TerminalOptions {
-                        viewport: Viewport::Inline(VIEWPORT_HEIGHT_SMALL),
+                        viewport: Viewport::Fullscreen,
                     },
                 )
                 .ok(),
@@ -159,6 +171,7 @@ impl Output {
 
         enable_raw_mode()?;
         stdout()
+            .execute(EnterAlternateScreen)?
             .execute(Hide)?
             .execute(EnableFocusChange)?
             .execute(EnableBracketedPaste)?;
@@ -171,7 +184,8 @@ impl Output {
             stdout()
                 .execute(Show)?
                 .execute(DisableFocusChange)?
-                .execute(DisableBracketedPaste)?;
+                .execute(DisableBracketedPaste)?
+                .execute(LeaveAlternateScreen)?;
             disable_raw_mode()?;
 
             // print a line to force the cursor down (no tearing)
@@ -248,23 +262,71 @@ impl Output {
             }
         }
 
+        if self.search_mode {
+            match key.code {
+                KeyCode::Esc => {
+                    self.search_query.clear();
+                    self.search_mode = false;
+                }
+                KeyCode::Enter => {
+                    self.search_mode = false;
+                }
+                KeyCode::Backspace => {
+                    self.search_query.pop();
+                }
+                KeyCode::Char(c) => {
+                    if !key.modifiers.contains(KeyModifiers::CONTROL) {
+                        self.search_query.push(c);
+                    }
+                }
+                _ => {}
+            }
+
+            return Ok(Some(ServeUpdate::Redraw));
+        }
+
         match key.code {
+            KeyCode::Up if self.show_all_logs => {
+                self.log_scroll = self.log_scroll.saturating_add(1);
+            }
+            KeyCode::Down if self.show_all_logs => {
+                self.log_scroll = self.log_scroll.saturating_sub(1);
+            }
             KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                 return Ok(Some(ServeUpdate::Exit { error: None }))
             }
-            KeyCode::Char('r') => return Ok(Some(ServeUpdate::RequestRebuild)),
+            KeyCode::Char('q') => return Ok(Some(ServeUpdate::Exit { error: None })),
+            KeyCode::Char('r') => {
+                self.push_log(TraceMsg::text(
+                    TraceSrc::Dev,
+                    Level::INFO,
+                    "Rebuild requested manually".to_string(),
+                ));
+                return Ok(Some(ServeUpdate::RequestRebuild));
+            }
             KeyCode::Char('o') => return Ok(Some(ServeUpdate::OpenApp)),
             KeyCode::Char('p') => return Ok(Some(ServeUpdate::ToggleShouldRebuild)),
             KeyCode::Char('v') => {
                 self.verbose = !self.verbose;
-                tracing::info!(
-                    "Verbose logging is now {}",
-                    if self.verbose { "on" } else { "off" }
-                );
+                self.push_log(TraceMsg::text(
+                    TraceSrc::Dev,
+                    Level::INFO,
+                    format!(
+                        "Verbose mode: {}",
+                        if self.verbose { "enabled" } else { "disabled" }
+                    ),
+                ));
             }
             KeyCode::Char('t') => {
                 self.trace = !self.trace;
-                tracing::info!("Tracing is now {}", if self.trace { "on" } else { "off" });
+                self.push_log(TraceMsg::text(
+                    TraceSrc::Dev,
+                    Level::INFO,
+                    format!(
+                        "Tracing mode: {}",
+                        if self.trace { "enabled" } else { "disabled" }
+                    ),
+                ));
             }
             KeyCode::Char('D') => {
                 return Ok(Some(ServeUpdate::OpenDebugger {
@@ -276,41 +338,25 @@ impl Output {
                     id: BuildId::PRIMARY,
                 }));
             }
-            KeyCode::Char('c') => {
-                stdout()
-                    .execute(Clear(ClearType::All))?
-                    .execute(Clear(ClearType::Purge))?;
-
-                // Clear the terminal and push the frame to the bottom
-                _ = self.term.borrow_mut().as_mut().map(|t| {
-                    let frame_rect = t.get_frame().area();
-                    let term_size = t.size().unwrap();
-                    let remaining_space = term_size
-                        .height
-                        .saturating_sub(frame_rect.y + frame_rect.height);
-                    t.insert_before(remaining_space, |_| {})
-                });
+            KeyCode::Char('+') => {
+                self.show_all_logs = true;
             }
-
-            // Toggle the more modal by swapping the terminal with a new one
-            // This is a bit of a hack since crossterm doesn't technically support changing the
-            // size of an inline viewport.
-            KeyCode::Char('/') => {
-                if let Some(terminal) = self.term.borrow_mut().as_mut() {
-                    // Toggle the more modal, which will change our current viewport height
-                    self.more_modal_open = !self.more_modal_open;
-
-                    // Clear the terminal before resizing it, such that it doesn't tear
-                    terminal.clear()?;
-
-                    // And then set the new viewport, which essentially mimics a resize
-                    *terminal = Terminal::with_options(
-                        CrosstermBackend::new(stdout()),
-                        TerminalOptions {
-                            viewport: Viewport::Inline(self.viewport_current_height()),
-                        },
-                    )?;
-                }
+            KeyCode::Esc => {
+                self.search_query.clear();
+                self.search_mode = false;
+            }
+            KeyCode::Char('/') if self.show_all_logs => {
+                self.search_mode = true;
+            }
+            KeyCode::Char('?') => {
+                self.more_modal_open = !self.more_modal_open;
+            }
+            KeyCode::Char('c') => {
+                self.pending_logs.clear();
+                self.recent_logs.clear();
+                self.log_scroll = 0;
+                self.search_mode = false;
+                self.search_query.clear();
             }
 
             _ => {}
@@ -328,7 +374,18 @@ impl Output {
     pub fn push_cargo_log(&mut self, message: Diagnostic) {
         use cargo_metadata::diagnostic::DiagnosticLevel;
 
-        if self.trace || !matches!(message.level, DiagnosticLevel::Note) {
+        let should_show = if self.trace {
+            true
+        } else if self.verbose {
+            !matches!(message.level, DiagnosticLevel::Note)
+        } else {
+            matches!(
+                message.level,
+                DiagnosticLevel::Error | DiagnosticLevel::FailureNote | DiagnosticLevel::Ice
+            )
+        };
+
+        if should_show {
             self.push_log(TraceMsg::cargo(message));
         }
     }
@@ -337,6 +394,9 @@ impl Output {
     /// This will queue the stderr message as a TraceMsg and print it on the next render
     /// We'll use the `App` TraceSrc for the msg, and whatever level is provided
     pub fn push_stdio(&mut self, bundle: BundleFormat, msg: String, level: Level) {
+        let is_dbg_output = Self::looks_like_dbg_output(&msg);
+        let level = Self::normalize_stdio_level(&msg, level);
+
         match bundle {
             // If tracing is disabled, we need to filter out all the noise from Android logcat
             BundleFormat::Android if !self.trace => {
@@ -368,12 +428,103 @@ impl Output {
                 }
 
                 if let Some(msg) = rendered_msg {
-                    self.push_log(TraceMsg::text(TraceSrc::App(bundle), level, msg));
+                    self.push_or_merge_app_stdio(bundle, level, msg, !is_dbg_output);
                 }
             }
 
-            _ => self.push_log(TraceMsg::text(TraceSrc::App(bundle), level, msg)),
+            _ => self.push_or_merge_app_stdio(bundle, level, msg, !is_dbg_output),
         }
+    }
+
+    fn push_or_merge_app_stdio(
+        &mut self,
+        bundle: BundleFormat,
+        level: Level,
+        msg: String,
+        allow_merge: bool,
+    ) {
+        let source = TraceSrc::App(bundle);
+        if !allow_merge || !self.append_to_latest_text_log(source, level, &msg) {
+            self.push_log(TraceMsg::text(source, level, msg));
+        }
+    }
+
+    fn append_to_latest_text_log(&mut self, source: TraceSrc, level: Level, msg: &str) -> bool {
+        fn append_if_compatible(
+            log: &mut TraceMsg,
+            source: TraceSrc,
+            level: Level,
+            msg: &str,
+        ) -> bool {
+            if log.source != source || log.level != level {
+                return false;
+            }
+
+            let elapsed = chrono::Local::now().signed_duration_since(log.timestamp);
+            if elapsed.num_milliseconds() > 700 {
+                return false;
+            }
+
+            let TraceContent::Text(text) = &mut log.content else {
+                return false;
+            };
+
+            text.push('\n');
+            text.push_str(msg);
+            true
+        }
+
+        if let Some(log) = self.pending_logs.front_mut() {
+            if append_if_compatible(log, source, level, msg) {
+                return true;
+            }
+        }
+
+        if let Some(log) = self.recent_logs.front_mut() {
+            if append_if_compatible(log, source, level, msg) {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    fn normalize_stdio_level(msg: &str, level: Level) -> Level {
+        if !matches!(level, Level::ERROR) {
+            return level;
+        }
+
+        // `dbg!()` writes to stderr with shape like: [src/file.rs:18:9] "x" = ...
+        // We treat that as info, not as an actual runtime error.
+        if Self::looks_like_dbg_output(msg) {
+            return Level::INFO;
+        }
+
+        level
+    }
+
+    fn looks_like_dbg_output(msg: &str) -> bool {
+        let trimmed = msg.trim();
+        if !(trimmed.starts_with('[') && trimmed.contains("] \"")) {
+            return false;
+        }
+
+        let Some(end_bracket) = trimmed.find(']') else {
+            return false;
+        };
+        let location = &trimmed[1..end_bracket];
+        let mut parts = location.rsplitn(3, ':');
+        let col = parts.next();
+        let line = parts.next();
+        let file = parts.next();
+
+        matches!(
+            (file, line, col),
+            (Some(file), Some(line), Some(col))
+                if !file.is_empty()
+                    && line.chars().all(|c| c.is_ascii_digit())
+                    && col.chars().all(|c| c.is_ascii_digit())
+        )
     }
 
     /// Push a message from the devtools client to the logs.
@@ -381,9 +532,6 @@ impl Output {
         let freya_hotreload::ClientMsg::Log { level, messages } = message else {
             return;
         };
-
-        // FIXME(jon): why are we pulling only the first message here?
-        let content = messages.first().unwrap_or(&String::new()).clone();
 
         let level = match level.as_str() {
             "trace" => Level::TRACE,
@@ -395,7 +543,13 @@ impl Output {
         };
 
         // We don't care about logging the app's message so we directly push it instead of using tracing.
-        self.push_log(TraceMsg::text(TraceSrc::App(bundle), level, content));
+        for content in messages {
+            self.push_log(TraceMsg::text(
+                TraceSrc::App(bundle),
+                level,
+                content.clone(),
+            ));
+        }
     }
 
     /// Change internal state based on the build engine's update
@@ -431,35 +585,499 @@ impl Output {
             return;
         };
 
-        // First, dequeue any logs that have built up from event handling
         while let Some(log) = self.pending_logs.pop_back() {
-            _ = self.render_log(term, log);
+            self.recent_logs.push_front(log);
+        }
+        while self.recent_logs.len() > 200 {
+            _ = self.recent_logs.pop_back();
         }
 
-        // Then, draw the frame, passing along all the state of the TUI so we can render it properly
+        // Draw the dashboard with the current state.
         _ = term.draw(|frame| {
             self.render_frame(frame, RenderState { runner, server });
         });
     }
 
     fn render_frame(&self, frame: &mut Frame, state: RenderState) {
-        // Use the max size of the viewport, but shrunk to a sensible max width
-        let mut area = frame.area();
-        area.width = area.width.clamp(0, VIEWPORT_MAX_WIDTH);
+        let area = frame.area();
 
-        let [_top, body, _bottom] = Layout::vertical([
-            Constraint::Length(1),
-            Constraint::Fill(1),
+        frame.render_widget(ratatui::widgets::Clear, area);
+
+        let overview_height = if self.show_all_logs { 14 } else { 18 };
+        let [overview_area, logs_area, footer_area] = Layout::vertical([
+            Constraint::Length(overview_height),
+            Constraint::Min(8),
             Constraint::Length(1),
         ])
-        .horizontal_margin(1)
         .areas(area);
 
-        self.render_borders(frame, area);
-        self.render_body(frame, body, state);
-        self.render_body_title(frame, _top, state);
+        self.render_overview_dashboard(frame, overview_area, state);
+        self.render_live_logs_panel(frame, logs_area);
+
+        let footer = if self.search_mode {
+            format!("/ search: {}", self.search_query)
+        } else if !self.search_query.is_empty() {
+            format!(
+                "filter: {}  (Esc to clean)  ↑↓ → navigation  / → search  ? → keybinds  q → quit",
+                self.search_query
+            )
+        } else {
+            "↑↓ → navigation  / → search  ? → keybinds  q → quit".to_string()
+        };
+        frame.render_widget(
+            Paragraph::new(Line::from(footer).dark_gray()).alignment(Alignment::Center),
+            footer_area,
+        );
+
+        if self.more_modal_open {
+            self.render_help_overlay(frame, area, state);
+        }
     }
 
+    fn render_overview_dashboard(&self, frame: &mut Frame<'_>, area: Rect, state: RenderState) {
+        let client = &state.runner.client();
+        let title = format!(
+            " {} DEV SERVER ",
+            client.build.executable_name().to_uppercase()
+        );
+
+        frame.render_widget(
+            Block::default()
+                .title(Span::styled(title, Style::default().bold().white()))
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .border_style(Style::default().fg(Color::DarkGray)),
+            area,
+        );
+
+        let inner = area.inner(Margin::new(2, 1));
+        let rows = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(1),
+                Constraint::Length(1),
+                Constraint::Length(1),
+                Constraint::Length(1),
+                Constraint::Length(1),
+                Constraint::Length(1),
+                Constraint::Length(1),
+                Constraint::Length(1),
+                Constraint::Length(1),
+                Constraint::Length(1),
+                Constraint::Length(1),
+                Constraint::Length(1),
+                Constraint::Min(0),
+            ])
+            .split(inner);
+
+        let status = match &client.stage {
+            BuildStage::Success => "Running".green(),
+            BuildStage::Failed | BuildStage::Aborted => "Error".red(),
+            _ => "Rebuilding".yellow(),
+        };
+        let status_icon = match &client.stage {
+            // Space for custom icons like a green checkmark or red X in the future
+            BuildStage::Success => "".to_string(),
+            BuildStage::Failed | BuildStage::Aborted => "".to_string(),
+            _ => "".to_string(),
+        };
+
+        let features: Vec<String> = client.build.all_target_features();
+        let features_text = if features.is_empty() {
+            "none".to_string()
+        } else {
+            features.join(", ")
+        };
+
+        let hot_reload = if !state.runner.automatic_rebuilds {
+            "disabled"
+        } else if state.runner.use_hotpatch_engine {
+            "enabled (hotpatch)"
+        } else {
+            "enabled"
+        };
+
+        frame.render_widget(
+            Paragraph::new(Line::from(vec![
+                " App        ".gray(),
+                client.build.executable_name().white(),
+            ])),
+            rows[0],
+        );
+        frame.render_widget(
+            Paragraph::new(Line::from(vec![
+                Span::raw(format!("{} ", status_icon)),
+                "Status     ".gray(),
+                status,
+            ])),
+            rows[1],
+        );
+
+        frame.render_widget(self.section_divider(inner.width, "Performance"), rows[3]);
+
+        let startup_ratio = if matches!(client.stage, BuildStage::Success) {
+            1.0
+        } else {
+            client.compile_progress()
+        };
+        self.render_metric_gauge(
+            frame,
+            rows[5],
+            "",
+            "Startup",
+            startup_ratio,
+            client.total_build_time().or(client.compile_duration()),
+            matches!(client.stage, BuildStage::Failed),
+        );
+        self.render_metric_gauge(
+            frame,
+            rows[6],
+            "",
+            if state.runner.is_fullstack() {
+                "Server"
+            } else {
+                "Bundle"
+            },
+            if state.runner.is_fullstack() {
+                state.runner.server_compile_progress()
+            } else {
+                client.bundle_progress()
+            },
+            if state.runner.is_fullstack() {
+                client.compile_duration()
+            } else {
+                client.bundle_duration()
+            },
+            false,
+        );
+
+        frame.render_widget(self.section_divider(inner.width, "Info"), rows[8]);
+        frame.render_widget(
+            Paragraph::new(Line::from(vec![
+                " Platform   ".gray(),
+                client.build.bundle.expected_name().yellow(),
+            ])),
+            rows[9],
+        );
+        frame.render_widget(
+            Paragraph::new(Line::from(vec![
+                " Features   ".gray(),
+                features_text.white(),
+            ])),
+            rows[10],
+        );
+        frame.render_widget(
+            Paragraph::new(Line::from(vec![" Hot Reload ".gray(), hot_reload.yellow()])),
+            rows[11],
+        );
+    }
+
+    fn render_live_logs_panel(&self, frame: &mut Frame<'_>, area: Rect) {
+        frame.render_widget(
+            Block::default()
+                .title(Span::styled(" LIVE LOGS ", Style::default().bold().white()))
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .border_style(Style::default().fg(Color::DarkGray)),
+            area,
+        );
+
+        let inner = area.inner(Margin::new(1, 1));
+        let visible_height = inner.height.max(1) as usize;
+        let filtered_logs = self.filtered_recent_logs();
+        let available = filtered_logs.len();
+        let max_scroll = available.saturating_sub(visible_height);
+        let scroll = self.log_scroll.min(max_scroll);
+        // `recent_logs` keeps newest entries first, so show from the head by default.
+        let start = scroll;
+        let end = (scroll + visible_height).min(available);
+        let visible_logs = &filtered_logs[start..end];
+
+        let mut log_lines = Vec::with_capacity(visible_logs.len());
+        for log in visible_logs {
+            log_lines.extend(self.format_log_lines(log));
+        }
+
+        let paragraph = if log_lines.is_empty() {
+            Paragraph::new(Line::from(vec!["No logs yet".dark_gray()]))
+        } else {
+            Paragraph::new(Text::from(log_lines))
+        }
+        .wrap(Wrap { trim: false });
+
+        frame.render_widget(paragraph, inner);
+    }
+
+    fn section_divider(&self, width: u16, title: &str) -> Line<'static> {
+        let min_body = title.len() + 2;
+        let total = width.max(min_body as u16) as usize;
+        let remaining = total.saturating_sub(min_body);
+        let left = remaining / 2;
+        let right = remaining.saturating_sub(left);
+
+        Line::from(vec![
+            Span::raw("─".repeat(left)),
+            Span::raw(" "),
+            Span::styled(
+                title.to_string(),
+                Style::default()
+                    .fg(Color::Gray)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::raw(" "),
+            Span::raw("─".repeat(right)),
+        ])
+    }
+
+    fn render_metric_gauge(
+        &self,
+        frame: &mut Frame<'_>,
+        area: Rect,
+        icon: &str,
+        label: &str,
+        ratio: f64,
+        duration: Option<Duration>,
+        failed: bool,
+    ) {
+        let [label_area, gauge_area, time_area] = Layout::horizontal([
+            Constraint::Length(18),
+            Constraint::Fill(1),
+            Constraint::Length(8),
+        ])
+        .areas(area);
+
+        frame.render_widget(
+            Paragraph::new(Line::from(vec![
+                Span::raw(format!("{} ", icon)),
+                Span::raw(format!("{label:<10}")),
+            ])),
+            label_area,
+        );
+
+        let gauge_ratio = if failed { 1.0 } else { ratio.clamp(0.0, 1.0) };
+        frame.render_widget(
+            LineGauge::default()
+                .filled_style(Style::default().fg(if failed {
+                    Color::Red
+                } else if gauge_ratio >= 1.0 {
+                    Color::Green
+                } else {
+                    Color::Yellow
+                }))
+                .unfilled_style(Style::default().fg(Color::DarkGray))
+                .filled_symbol("█")
+                .unfilled_symbol("░")
+                .ratio(gauge_ratio),
+            gauge_area,
+        );
+
+        if let Some(duration) = duration {
+            frame.render_widget(
+                Paragraph::new(Line::from(format!("{:>5.1}s", duration.as_secs_f32())).gray())
+                    .alignment(Alignment::Right),
+                time_area,
+            );
+        }
+    }
+
+    fn render_help_overlay(&self, frame: &mut Frame<'_>, area: Rect, _state: RenderState) {
+        let [_, modal_row, _] = Layout::vertical([
+            Constraint::Fill(1),
+            Constraint::Length(18),
+            Constraint::Fill(1),
+        ])
+        .areas(area);
+        let [_, modal_area, _] = Layout::horizontal([
+            Constraint::Fill(1),
+            Constraint::Length(76),
+            Constraint::Fill(1),
+        ])
+        .areas(modal_row);
+
+        frame.render_widget(ratatui::widgets::Clear, modal_area);
+        frame.render_widget(
+            Block::default()
+                .title(Span::styled(" KEYBINDS ", Style::default().bold().white()))
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .border_style(Style::default().fg(Color::DarkGray)),
+            modal_area,
+        );
+
+        let inner = modal_area.inner(Margin::new(2, 1));
+        let commands = [
+            "",
+            "↑ / ↓: navigate logs",
+            "/: search logs",
+            "c: clear logs",
+            "",
+            "r: rebuild",
+            "",
+            "v: verbose on/off",
+            "t: tracing on/off",
+            "d / D: debugger primary/sec",
+            "",
+            "?: open/close this modal",
+            "",
+            "q: quit",
+            "Ctrl+C: quit",
+        ];
+
+        let rows = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints(commands.iter().map(|_| Constraint::Length(1)))
+            .split(inner);
+
+        for (idx, cmd) in commands.iter().enumerate() {
+            if let Some(row) = rows.get(idx) {
+                frame.render_widget(Paragraph::new(Line::from(cmd.to_string())), *row);
+            }
+        }
+    }
+
+    fn log_counts(&self) -> (usize, usize) {
+        self.filtered_recent_logs()
+            .iter()
+            .fold((0, 0), |(errors, warnings), log| match log.level {
+                Level::ERROR => (errors + 1, warnings),
+                Level::WARN => (errors, warnings + 1),
+                _ => (errors, warnings),
+            })
+    }
+
+    fn filtered_recent_logs(&self) -> Vec<TraceMsg> {
+        let logs = self
+            .recent_logs
+            .iter()
+            .filter(|log| !self.is_redundant_error_summary(log));
+
+        if self.search_query.is_empty() {
+            return logs.cloned().collect();
+        }
+
+        let needle = self.search_query.to_lowercase();
+        logs.filter(|log| self.log_contains(log, &needle))
+            .cloned()
+            .collect()
+    }
+
+    fn is_redundant_error_summary(&self, log: &TraceMsg) -> bool {
+        let text = match &log.content {
+            TraceContent::Cargo(message) => message.message.as_str(),
+            TraceContent::Text(text) => text.as_str(),
+        };
+
+        let normalized = console::strip_ansi_codes(text).to_lowercase();
+
+        normalized.contains("aborting due to") && normalized.contains("previous error")
+            || normalized.contains("cargo build failed - no output location")
+            || normalized.contains("could not compile") && normalized.contains("due to")
+    }
+
+    fn log_contains(&self, log: &TraceMsg, needle: &str) -> bool {
+        let haystack = match &log.content {
+            TraceContent::Cargo(message) => message.message.as_str(),
+            TraceContent::Text(text) => text.as_str(),
+        };
+
+        console::strip_ansi_codes(haystack)
+            .to_lowercase()
+            .contains(needle)
+    }
+
+    fn format_log_lines(&self, log: &TraceMsg) -> Vec<Line<'static>> {
+        use cargo_metadata::diagnostic::DiagnosticLevel;
+        use chrono::Timelike;
+
+        let timestamp = format!(
+            "[{:02}:{:02}:{:02}]",
+            log.timestamp.hour(),
+            log.timestamp.minute(),
+            log.timestamp.second()
+        );
+
+        let message = match &log.content {
+            TraceContent::Cargo(msg) => {
+                let location = msg
+                    .spans
+                    .iter()
+                    .find(|span| span.is_primary)
+                    .map(|span| {
+                        format!(
+                            "[{}:{}:{}] ",
+                            span.file_name, span.line_start, span.column_start
+                        )
+                    })
+                    .unwrap_or_default();
+
+                format!("{}{}", location, msg.message)
+            }
+            TraceContent::Text(text) => text.clone(),
+        };
+        let message = console::strip_ansi_codes(&message)
+            .trim_end_matches(['\n', '\r'])
+            .to_string();
+
+        let message_lower = message.to_lowercase();
+        let is_freya_event = matches!(log.source, TraceSrc::Dev)
+            || message_lower.contains("hotpatch")
+            || message_lower.contains("verbose mode")
+            || message_lower.contains("tracing mode")
+            || message_lower.contains("rebuild requested");
+
+        let (tag, tag_style) = match &log.content {
+            TraceContent::Cargo(msg) => match msg.level {
+                DiagnosticLevel::Ice | DiagnosticLevel::Error | DiagnosticLevel::FailureNote => {
+                    ("[ERROR]", Style::default().red().bold())
+                }
+                DiagnosticLevel::Warning => ("[WARN]", Style::default().yellow().bold()),
+                _ if is_freya_event => ("[FREYA]", Style::default().cyan().bold()),
+                _ => ("[INFO]", Style::default().dark_gray()),
+            },
+            TraceContent::Text(_) => {
+                if matches!(log.level, Level::ERROR) {
+                    ("[ERROR]", Style::default().red().bold())
+                } else if matches!(log.level, Level::WARN) {
+                    ("[WARN]", Style::default().yellow().bold())
+                } else if is_freya_event {
+                    ("[FREYA]", Style::default().cyan().bold())
+                } else {
+                    ("[INFO]", Style::default().dark_gray())
+                }
+            }
+        };
+
+        let message_lines: Vec<&str> = if message.is_empty() {
+            vec![""]
+        } else {
+            message.split('\n').collect()
+        };
+
+        let mut rendered = Vec::with_capacity(message_lines.len());
+        let continuation_prefix =
+            format!("{} {} ", " ".repeat(timestamp.len()), " ".repeat(tag.len()));
+
+        for (idx, line) in message_lines.into_iter().enumerate() {
+            if idx == 0 {
+                rendered.push(Line::from(vec![
+                    Span::styled(timestamp.clone(), Style::default().dark_gray()),
+                    Span::raw(" "),
+                    Span::styled(tag.to_string(), tag_style),
+                    Span::raw(" "),
+                    Span::raw(line.to_string()),
+                ]));
+            } else {
+                rendered.push(Line::from(vec![
+                    Span::styled(continuation_prefix.clone(), Style::default().dark_gray()),
+                    Span::raw(line.to_string()),
+                ]));
+            }
+        }
+
+        rendered
+    }
+
+    #[allow(dead_code)]
     fn render_body_title(&self, frame: &mut Frame<'_>, area: Rect, _state: RenderState) {
         frame.render_widget(
             Line::from(vec![
@@ -475,6 +1093,7 @@ impl Output {
         );
     }
 
+    #[allow(dead_code)]
     fn render_body(&self, frame: &mut Frame<'_>, area: Rect, state: RenderState) {
         let [_title, body, more, _foot] = Layout::vertical([
             Constraint::Length(0),
@@ -492,9 +1111,8 @@ impl Output {
         self.render_gauges(frame, col1, state);
         self.render_stats(frame, col2, state);
 
-        if self.more_modal_open {
-            self.render_more_modal(frame, more, state);
-        }
+        self.render_body_title(frame, more, state);
+        self.render_more_modal(frame, more, state);
     }
 
     fn render_gauges(&self, frame: &mut Frame<'_>, area: Rect, state: RenderState) {
@@ -540,15 +1158,15 @@ impl Output {
 
         let mut lines = vec!["Status:  ".white()];
         match &client.stage {
-            BuildStage::Initializing => lines.push("Initializing".yellow()),
+            BuildStage::Initializing => lines.push("🟡 Initializing".yellow()),
             BuildStage::Starting { patch, .. } => {
                 if *patch {
-                    lines.push("Hot-patching...".yellow())
+                    lines.push("🟡 Rebuilding...".yellow())
                 } else {
-                    lines.push("Starting build".yellow())
+                    lines.push("🟡 Rebuilding...".yellow())
                 }
             }
-            BuildStage::InstallingTooling => lines.push("Installing tooling".yellow()),
+            BuildStage::InstallingTooling => lines.push("🟡 Installing tooling".yellow()),
             BuildStage::Compiling {
                 current,
                 total,
@@ -559,11 +1177,11 @@ impl Output {
                 lines.push(format!("{current}/{total} ").gray());
                 lines.push(krate.as_str().dark_gray())
             }
-            BuildStage::OptimizingWasm => lines.push("Optimizing wasm".yellow()),
-            BuildStage::SplittingBundle => lines.push("Splitting bundle".yellow()),
-            BuildStage::CompressingAssets => lines.push("Compressing assets".yellow()),
-            BuildStage::RunningBindgen => lines.push("Running wasm-bindgen".yellow()),
-            BuildStage::RunningGradle => lines.push("Running gradle assemble".yellow()),
+            BuildStage::OptimizingWasm => lines.push("🟡 Optimizing wasm".yellow()),
+            BuildStage::SplittingBundle => lines.push("🟡 Splitting bundle".yellow()),
+            BuildStage::CompressingAssets => lines.push("🟡 Compressing assets".yellow()),
+            BuildStage::RunningBindgen => lines.push("🟡 Running wasm-bindgen".yellow()),
+            BuildStage::RunningGradle => lines.push("🟡 Running gradle assemble".yellow()),
             BuildStage::CompilingNativePlugins { detail } => {
                 // detail is "Swift build: name" — split into label (yellow) and name (white)
                 if let Some((label, name)) = detail.split_once(": ") {
@@ -573,8 +1191,8 @@ impl Output {
                     lines.push(detail.clone().yellow());
                 }
             }
-            BuildStage::CodeSigning => lines.push("Code signing app".yellow()),
-            BuildStage::Bundling => lines.push("Bundling app".yellow()),
+            BuildStage::CodeSigning => lines.push("🟡 Code signing app".yellow()),
+            BuildStage::Bundling => lines.push("🟡 Bundling app".yellow()),
             BuildStage::CopyingAssets {
                 current,
                 total,
@@ -587,21 +1205,20 @@ impl Output {
                 }
             }
             BuildStage::Success => {
-                lines.push("Serving ".yellow());
+                lines.push("🟢 Running ".green());
                 lines.push(client.build.executable_name().white());
                 lines.push(" 🚀 ".green());
                 if let Some(comp_time) = client.total_build_time() {
                     lines.push(format!("{:.1}s", comp_time.as_secs_f32()).dark_gray());
                 }
             }
-            BuildStage::Failed => lines.push("Failed".red()),
-            BuildStage::Aborted => lines.push("Aborted".red()),
-            BuildStage::Restarting => lines.push("Restarting".yellow()),
-            BuildStage::Linking => lines.push("Linking".yellow()),
-            BuildStage::Hotpatching => lines.push("Hot-patching...".yellow()),
-            BuildStage::ExtractingAssets => lines.push("Extracting assets".yellow()),
-            BuildStage::Prerendering => lines.push("Pre-rendering...".yellow()),
-            _ => {}
+            BuildStage::Failed => lines.push("🔴 Error".red()),
+            BuildStage::Aborted => lines.push("🔴 Aborted".red()),
+            BuildStage::Restarting => lines.push("🟡 Restarting".yellow()),
+            BuildStage::Linking => lines.push("🟡 Linking".yellow()),
+            BuildStage::Hotpatching => lines.push("🟡 Hot-patching...".yellow()),
+            BuildStage::ExtractingAssets => lines.push("🟡 Extracting assets".yellow()),
+            BuildStage::Prerendering => lines.push("🟡 Pre-rendering...".yellow()),
         };
 
         frame.render_widget(Line::from(lines), status_line);
@@ -635,7 +1252,8 @@ impl Output {
                 }))
                 .unfilled_style(Style::default().fg(Color::DarkGray))
                 .label(label.gray())
-                .line_set(symbols::line::THICK)
+                .filled_symbol(symbols::line::THICK_HORIZONTAL)
+                .unfilled_symbol(symbols::line::THICK_HORIZONTAL)
                 .ratio(if !failed { value } else { 1.0 }),
             gauge_row,
         );
@@ -725,6 +1343,7 @@ impl Output {
         );
     }
 
+    #[allow(dead_code)]
     fn render_more_modal(&self, frame: &mut Frame<'_>, area: Rect, state: RenderState) {
         let [col1, col2] =
             Layout::horizontal([Constraint::Length(50), Constraint::Fill(1)]).areas(area);
@@ -808,7 +1427,7 @@ impl Output {
             "p: pause rebuilds",
             "v: toggle verbose logs",
             "t: toggle tracing logs",
-            "c: clear the screen",
+            "c: clear logs",
             "d: attach debugger",
             "/: toggle more commands",
         ];
@@ -833,6 +1452,7 @@ impl Output {
     }
 
     /// Render borders around the terminal, forcing an inner clear while we're at it
+    #[allow(dead_code)]
     fn render_borders(&self, frame: &mut Frame, area: Rect) {
         frame.render_widget(ratatui::widgets::Clear, area);
         frame.render_widget(
@@ -953,6 +1573,8 @@ impl Output {
                 crossterm::style::Print("\n"),
             )?;
         }
+
+        stdout().flush()?;
 
         Ok(())
     }
