@@ -302,12 +302,7 @@ impl<'a> Gradient<'a> {
 }
 
 pub mod shaders {
-    use super::{
-        Gradient,
-        Matrix,
-        Point,
-        Shader,
-    };
+    use super::{Gradient, Matrix, Point, Shader};
 
     pub fn linear_gradient<'a>(
         _points: (impl Into<Point>, impl Into<Point>),
@@ -1384,6 +1379,7 @@ pub enum SrcRectConstraint {
 #[derive(Default)]
 pub struct SamplingOptions;
 
+#[derive(Clone, Debug)]
 pub struct ImageFilter;
 
 pub fn blur(
@@ -2008,12 +2004,7 @@ pub enum BlurStyle {
 }
 
 pub mod svg {
-    use super::{
-        Canvas,
-        Color,
-        LocalResourceProvider,
-        Size,
-    };
+    use super::{Canvas, Color, LocalResourceProvider, Size};
 
     pub enum LengthUnit {
         Percentage,
@@ -2190,10 +2181,7 @@ pub enum ColorType {
 
 pub struct SurfaceProps;
 
-use std::ops::{
-    Deref,
-    DerefMut,
-};
+use std::ops::{Deref, DerefMut};
 
 pub struct RecordingContext;
 
@@ -2211,12 +2199,7 @@ pub mod gpu {
 }
 
 pub mod direct_contexts {
-    use super::{
-        DirectContext,
-        Interface,
-        gpu,
-        vk,
-    };
+    use super::{DirectContext, Interface, gpu, vk};
     pub fn make_gl<'a>(
         _interface: impl Into<Option<Interface>>,
         _options: impl Into<Option<&'a gpu::ContextOptions>>,
