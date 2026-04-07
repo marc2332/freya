@@ -60,6 +60,8 @@ pub struct EffectData {
     pub opacity: Option<f32>,
     pub blur: Option<f32>,
     pub glass_filter: Option<freya_engine::prelude::ImageFilter>,
+    /// Monotonic counter incremented when glass_filter changes, used for diff detection.
+    pub glass_filter_version: u64,
     pub scrollable: bool,
     pub interactive: Interactive,
 }
@@ -71,7 +73,7 @@ impl PartialEq for EffectData {
             && self.scale == other.scale
             && self.opacity == other.opacity
             && self.blur == other.blur
-            && self.glass_filter.is_some() == other.glass_filter.is_some()
+            && self.glass_filter_version == other.glass_filter_version
             && self.scrollable == other.scrollable
             && self.interactive == other.interactive
     }
@@ -289,6 +291,7 @@ pub struct EffectState {
 
     pub blur: Option<f32>,
     pub glass_filter: Option<freya_engine::prelude::ImageFilter>,
+    pub glass_filter_version: u64,
 
     pub scrollables: Rc<[NodeId]>,
 
@@ -305,7 +308,7 @@ impl PartialEq for EffectState {
             && self.scale == other.scale
             && self.opacities == other.opacities
             && self.blur == other.blur
-            && self.glass_filter.is_some() == other.glass_filter.is_some()
+            && self.glass_filter_version == other.glass_filter_version
             && self.scrollables == other.scrollables
             && self.interactive == other.interactive
     }
@@ -347,6 +350,7 @@ impl EffectState {
             self.overflow = effect_data.overflow;
             self.blur = effect_data.blur;
             self.glass_filter = effect_data.glass_filter.clone();
+            self.glass_filter_version = effect_data.glass_filter_version;
 
             if let Some(rotation) = effect_data.rotation {
                 let mut rotations = parent_effect_state.rotations.to_vec();

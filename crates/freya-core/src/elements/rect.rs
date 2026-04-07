@@ -669,10 +669,9 @@ impl Rect {
     }
 
     pub fn glass_filter(mut self, filter: freya_engine::prelude::ImageFilter) -> Self {
-        self.element
-            .effect
-            .get_or_insert_with(Default::default)
-            .glass_filter = Some(filter);
+        let effect = self.element.effect.get_or_insert_with(Default::default);
+        effect.glass_filter_version = effect.glass_filter_version.wrapping_add(1);
+        effect.glass_filter = Some(filter);
         self
     }
 }
