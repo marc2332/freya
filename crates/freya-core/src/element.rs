@@ -251,6 +251,7 @@ impl PartialEq for AppComponent {
     }
 }
 
+#[cfg(feature = "hotreload")]
 impl<F, E> From<F> for AppComponent
 where
     F: Fn() -> E + Clone + 'static,
@@ -258,13 +259,23 @@ where
 {
     fn from(render: F) -> Self {
         AppComponent {
-            #[cfg(feature = "hotreload")]
             render: Rc::new(move || {
                 crate::hotreload::subsecond::HotFn::current(render.clone())
                     .call(())
                     .into_element()
             }),
-            #[cfg(not(feature = "hotreload"))]
+        }
+    }
+}
+
+#[cfg(not(feature = "hotreload"))]
+impl<F, E> From<F> for AppComponent
+where
+    F: Fn() -> E + 'static,
+    E: IntoElement,
+{
+    fn from(render: F) -> Self {
+        AppComponent {
             render: Rc::new(move || render().into_element()),
         }
     }

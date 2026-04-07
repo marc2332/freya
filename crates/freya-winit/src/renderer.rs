@@ -95,8 +95,6 @@ pub struct WinitRenderer {
     pub futures: Vec<Pin<Box<dyn std::future::Future<Output = ()>>>>,
     pub waker: Waker,
     pub exit_on_close: bool,
-    #[cfg(feature = "hotreload")]
-    pub hot_reload_receiver: Option<futures_channel::mpsc::UnboundedReceiver<()>>,
 }
 
 pub struct RendererContext<'a> {
@@ -121,8 +119,6 @@ impl RendererContext<'_> {
             self.font_manager,
             self.fallback_fonts,
             self.screen_reader.clone(),
-            #[cfg(feature = "hotreload")]
-            futures_channel::mpsc::unbounded::<()>().1,
         );
 
         let window_id = app_window.window.id();
@@ -294,10 +290,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     &self.font_manager,
                     &self.fallback_fonts,
                     self.screen_reader.clone(),
-                    #[cfg(feature = "hotreload")]
-                    self.hot_reload_receiver
-                        .take()
-                        .unwrap_or_else(|| futures_channel::mpsc::unbounded::<()>().1),
                 );
 
                 self.proxy
@@ -403,10 +395,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             &self.font_manager,
                             &self.fallback_fonts,
                             self.screen_reader.clone(),
-                            #[cfg(feature = "hotreload")]
-                            self.hot_reload_receiver
-                                .take()
-                                .unwrap_or_else(|| futures_channel::mpsc::unbounded::<()>().1),
                         );
 
                         self.proxy
@@ -425,40 +413,20 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     match action {
                         NativeWindowEventAction::PollRunner => {
                             let mut cx = std::task::Context::from_waker(&app.waker);
+
                             #[cfg(feature = "hotreload")]
-                            let mut hotreload_triggered = false;
+                            let hotreload_triggered = app
+                                .hot_reload_pending
+                                .swap(false, std::sync::atomic::Ordering::AcqRel);
+
+                            #[cfg(feature = "hotreload")]
+                            if hotreload_triggered {
+                                app.runner.clear_all_tasks();
+                                app.runner.clear_all_scopes_storages();
+                                app.runner.mark_all_scopes_dirty();
+                            }
 
                             {
-                                #[cfg(feature = "hotreload")]
-                                let fut = std::pin::pin!(async {
-                                    select! {
-                                        events_chunk = app.events_receiver.next() => {
-                                            match events_chunk {
-                                                Some(EventsChunk::Processed(processed_events)) => {
-                                                    let events_executor_adapter = EventsExecutorAdapter {
-                                                        runner: &mut app.runner,
-                                                    };
-                                                    events_executor_adapter.run(&mut app.nodes_state, processed_events);
-                                                }
-                                                Some(EventsChunk::Batch(events)) => {
-                                                    for event in events {
-                                                        app.runner.handle_event(event.node_id, event.name, event.data, event.bubbles);
-                                                    }
-                                                }
-                                                _ => {}
-                                            }
-                                        },
-                                        _ = app.runner.handle_events().fuse() => {},
-                                        _ = app.hot_reload_receiver.next() => {
-                                            hotreload_triggered = true;
-                                            app.runner.clear_all_tasks();
-                                            app.runner.clear_all_scopes_storage();
-                                            app.runner.mark_all_scopes_dirty();
-                                        },
-                                    }
-                                });
-
-                                #[cfg(not(feature = "hotreload"))]
                                 let fut = std::pin::pin!(async {
                                     select! {
                                         events_chunk = app.events_receiver.next() => {
@@ -503,13 +471,13 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             );
                             let mutations = app.runner.sync_and_update();
                             let result = app.runner.run_in(|| app.tree.apply_mutations(mutations));
-                            #[cfg(feature = "hotreload")]
-                            if hotreload_triggered {
-                                // Hot-patch updates can alter layout/style paths that don't always set needs_render.
+                            if result.needs_render {
                                 app.process_layout_on_next_render = true;
                                 app.window.request_redraw();
                             }
-                            if result.needs_render {
+                            #[cfg(feature = "hotreload")]
+                            if hotreload_triggered {
+                                // Hot-patch updates can alter layout/style paths that don't always set needs_render.
                                 app.process_layout_on_next_render = true;
                                 app.window.request_redraw();
                             }
@@ -587,10 +555,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                             &self.font_manager,
                                             &self.fallback_fonts,
                                             self.screen_reader.clone(),
-                                            #[cfg(feature = "hotreload")]
-                                            self.hot_reload_receiver.take().unwrap_or_else(|| {
-                                                futures_channel::mpsc::unbounded::<()>().1
-                                            }),
                                         );
 
                                         let window_id = app_window.window.id();

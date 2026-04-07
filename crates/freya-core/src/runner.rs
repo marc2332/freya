@@ -1397,9 +1397,7 @@ impl Runner {
     }
 
     pub fn mark_all_scopes_dirty(&mut self) {
-        for scope_id in self.scopes.keys().cloned().collect::<Vec<_>>() {
-            self.dirty_scopes.insert(scope_id);
-        }
+        self.dirty_scopes.extend(self.scopes.keys());
         let _ = self
             .sender
             .unbounded_send(Message::MarkScopeAsDirty(ScopeId::ROOT));
@@ -1409,9 +1407,15 @@ impl Runner {
     /// Contexts are preserved so that imperatively-provided root contexts (e.g. [`crate::prelude::Platform`]) survive the reload.
     /// Each reset runs inside [`CurrentContext::run`] so that drop handlers registered via [`crate::prelude::use_drop`]
     /// (e.g. `use_asset` cleanup) can safely call [`crate::prelude::spawn_forever`] during value destruction.
-    pub fn clear_all_scopes_storage(&mut self) {
+    pub fn clear_all_scopes_storages(&mut self) {
         let mut scopes_storages = self.scopes_storages.borrow_mut();
-        let scopes = scopes_storages.keys().cloned().collect::<Vec<_>>();
+        let scopes = self
+            .scopes
+            .iter()
+            .sorted_by_key(|(_, s)| s.borrow().height)
+            .map(|(_, s)| s.borrow().id)
+            .collect::<Vec<_>>();
+
         for scope_id in scopes {
             CurrentContext::run(
                 CurrentContext {
@@ -1431,7 +1435,7 @@ impl Runner {
     }
 
     /// Cancels all running tasks and drains any pending messages those tasks may have queued.
-    /// Must be called before [`Self::clear_all_scopes_storage`] during hot-reload so that stale
+    /// Must be called before [`Self::clear_all_scopes_storages`] during hot-reload so that stale
     /// task wakers cannot keep firing [`Message::PollTask`] after the scope state is reset,
     /// which would otherwise saturate the main thread with empty update cycles.
     pub fn clear_all_tasks(&mut self) {

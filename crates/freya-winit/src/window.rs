@@ -107,7 +107,7 @@ pub struct AppWindow {
 
     pub(crate) window_attributes: WindowAttributes,
     #[cfg(feature = "hotreload")]
-    pub(crate) hot_reload_receiver: futures_channel::mpsc::UnboundedReceiver<()>,
+    pub(crate) hot_reload_pending: Arc<std::sync::atomic::AtomicBool>,
 }
 
 impl AppWindow {
@@ -121,10 +121,9 @@ impl AppWindow {
         font_manager: &FontMgr,
         fallback_fonts: &[Cow<'static, str>],
         screen_reader: ScreenReader,
-        #[cfg(feature = "hotreload")] hot_reload_receiver: futures_channel::mpsc::UnboundedReceiver<
-            (),
-        >,
     ) -> Self {
+        #[cfg(feature = "hotreload")]
+        let hot_reload_pending = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let mut window_attributes = Window::default_attributes()
             .with_resizable(window_config.resizable)
             .with_window_icon(window_config.icon.take())
@@ -294,7 +293,9 @@ impl AppWindow {
         {
             let event_loop_proxy = event_loop_proxy.clone();
             let window_id = window.id();
+            let hot_reload_pending_handler = hot_reload_pending.clone();
             freya_core::hotreload::subsecond::register_handler(Arc::new(move || {
+                hot_reload_pending_handler.store(true, std::sync::atomic::Ordering::Release);
                 let _ = event_loop_proxy.send_event(NativeEvent::Window(NativeWindowEvent {
                     window_id,
                     action: NativeWindowEventAction::PollRunner,
@@ -352,7 +353,7 @@ impl AppWindow {
             window_attributes,
 
             #[cfg(feature = "hotreload")]
-            hot_reload_receiver,
+            hot_reload_pending,
         }
     }
 

@@ -110,14 +110,7 @@ pub fn launch(mut launch_config: LaunchConfig) {
     let waker = waker(Arc::new(FuturesWaker(proxy.clone())));
 
     #[cfg(feature = "hotreload")]
-    let (hot_tx, hot_rx) = futures_channel::mpsc::unbounded::<()>();
-
-    #[cfg(feature = "hotreload")]
     freya_core::hotreload::connect_subsecond();
-    #[cfg(feature = "hotreload")]
-    freya_core::hotreload::subsecond::register_handler(std::sync::Arc::new(move || {
-        let _ = hot_tx.unbounded_send(());
-    }));
 
     let mut renderer = WinitRenderer {
         windows: HashMap::default(),
@@ -140,8 +133,6 @@ pub fn launch(mut launch_config: LaunchConfig) {
         screen_reader,
         waker,
         exit_on_close: launch_config.exit_on_close,
-        #[cfg(feature = "hotreload")]
-        hot_reload_receiver: Some(hot_rx),
     };
 
     #[cfg(feature = "tray")]

@@ -97,7 +97,6 @@ impl ScopeStorage {
     }
 
     /// Resets only the hooks state, preserving contexts.
-    /// Used during hot-reload so that imperatively-provided root contexts survive.
     pub(crate) fn reset_hooks(&mut self) {
         self.current_run = 0;
         self.current_value = 0;
