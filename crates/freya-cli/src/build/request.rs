@@ -2640,6 +2640,8 @@ impl BuildRequest {
                 cmd.env_remove("RUSTC_WORKSPACE_WRAPPER");
                 cmd.env_remove("RUSTC_WRAPPER");
                 cmd.env_remove(DX_RUSTC_WRAPPER_ENV_VAR);
+                cmd.env_remove("CARGO_MAKEFLAGS");
+                cmd.env_remove("MAKEFLAGS");
                 cmd.envs(
                     self.cargo_build_env_vars(build_mode)?
                         .iter()
@@ -2651,7 +2653,13 @@ impl BuildRequest {
                     cmd.arg("-Crelocation-model=pic");
                 }
 
-                cmd.envs(rustc_args.envs.iter().cloned());
+                cmd.envs(
+                    rustc_args
+                        .envs
+                        .iter()
+                        .filter(|(k, _)| !matches!(k.as_str(), "CARGO_MAKEFLAGS" | "MAKEFLAGS"))
+                        .cloned(),
+                );
 
                 Ok(cmd)
             }
