@@ -1,19 +1,9 @@
 use freya_engine::prelude::{
-    Canvas,
-    ClipOp,
-    FontCollection,
-    FontMgr,
-    SaveLayerRec,
-    SkMatrix,
-    SkPoint,
-    blur,
+    Canvas, ClipOp, FontCollection, FontMgr, SaveLayerRec, SkMatrix, SkPoint, blur,
 };
 
 use crate::{
-    element::{
-        ClipContext,
-        RenderContext,
-    },
+    element::{ClipContext, RenderContext},
     prelude::Color,
     style::shadow::ShadowPosition,
     tree::Tree,
@@ -167,8 +157,19 @@ impl RenderPipeline<'_> {
                 if let Some(effect_state) = effect_state {
                     let visible_area = layout_node.visible_area();
                     let render_rect = element.render_rect(&visible_area, self.scale_factor as f32);
-                    // Apply blur effect
-                    if let Some(blur_radius) = effect_state.blur {
+                    // Apply glass or blur effect (glass includes its own blur)
+                    if let Some(ref glass_filter) = effect_state.glass_filter {
+                        let style = element.style();
+                        let rec = SaveLayerRec::default()
+                            .bounds(render_rect.rect())
+                            .backdrop(glass_filter);
+                        if style.corner_radius.is_round() {
+                            self.canvas.clip_rrect(render_rect, ClipOp::Intersect, true);
+                            self.canvas.save_layer(&rec);
+                        } else {
+                            self.canvas.save_layer(&rec);
+                        }
+                    } else if let Some(blur_radius) = effect_state.blur {
                         let style = element.style();
 
                         let image_filter = blur(
