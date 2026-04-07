@@ -1,18 +1,18 @@
 use super::{AppBuilder, ServeUpdate, WebServer};
 use crate::BuildStage;
 use crate::{
-    BuildArtifacts, BuildId, BuildMode, BuildTargets, BuilderUpdate, HotpatchModuleCache, Result,
-    ServeArgs, TraceSrc, Workspace, platform_override::CommandWithPlatformOverrides,
+    platform_override::CommandWithPlatformOverrides, BuildArtifacts, BuildId, BuildMode,
+    BuildTargets, BuilderUpdate, HotpatchModuleCache, Result, ServeArgs, TraceSrc, Workspace,
 };
-use anyhow::{Context, bail};
+use anyhow::{bail, Context};
 use freya_hotreload::HotReloadMsg;
 use futures_channel::mpsc::{UnboundedReceiver, UnboundedSender};
-use futures_util::StreamExt;
 use futures_util::future::OptionFuture;
+use futures_util::StreamExt;
 use krates::NodeId;
 use notify::{
-    Config, EventKind, RecursiveMode, Watcher as NotifyWatcher,
     event::{MetadataKind, ModifyKind},
+    Config, EventKind, RecursiveMode, Watcher as NotifyWatcher,
 };
 use std::{
     collections::{HashMap, HashSet, VecDeque},
