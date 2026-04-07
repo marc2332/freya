@@ -1,13 +1,18 @@
+#[cfg(feature = "devtools")]
 use std::io::{Read, Write};
+#[cfg(feature = "devtools")]
 use std::net::TcpStream;
 use std::path::PathBuf;
+#[cfg(feature = "devtools")]
+use std::sync::{Mutex, OnceLock, mpsc};
 
 pub mod config;
 pub use config::*;
 
+#[cfg(feature = "serve")]
 use futures_util::{
     StreamExt,
-    future::{Either, Select},
+    future::{Either, select},
 };
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -53,6 +58,26 @@ pub enum ClientMsg {
     },
 }
 
+#[cfg(feature = "devtools")]
+fn client_msg_tx_slot() -> &'static Mutex<Option<mpsc::Sender<ClientMsg>>> {
+    static CLIENT_MSG_TX: OnceLock<Mutex<Option<mpsc::Sender<ClientMsg>>>> = OnceLock::new();
+    CLIENT_MSG_TX.get_or_init(|| Mutex::new(None))
+}
+
+#[cfg(feature = "devtools")]
+pub fn send_client_log(level: impl Into<String>, message: impl Into<String>) {
+    let msg = ClientMsg::Log {
+        level: level.into(),
+        messages: vec![message.into()],
+    };
+
+    if let Ok(slot) = client_msg_tx_slot().lock() {
+        if let Some(tx) = slot.as_ref() {
+            let _ = tx.send(msg);
+        }
+    }
+}
+
 #[derive(Debug, Default, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct HotReloadMsg {
@@ -94,6 +119,7 @@ pub fn connect_subsecond() {
             if let Some(jumptable) = hot_reload_msg.jump_table {
                 if hot_reload_msg.for_pid == Some(std::process::id()) {
                     unsafe { subsecond::apply_patch(jumptable).unwrap() };
+                    send_client_log("info", "Hotpatch applied successfully");
                 }
             }
         }
@@ -128,6 +154,28 @@ pub fn connect_at(endpoint: String, mut callback: impl FnMut(DevserverMsg) + Sen
             }
         }
 
+        // Spawn a lightweight writer loop for outbound client messages (logs, telemetry, etc).
+        let (tx, rx) = mpsc::channel::<ClientMsg>();
+        if let Ok(mut slot) = client_msg_tx_slot().lock() {
+            *slot = Some(tx);
+        }
+        if let Ok(mut writer) = stream.try_clone() {
+            std::thread::spawn(move || {
+                while let Ok(msg) = rx.recv() {
+                    let Ok(bytes) = serde_json::to_vec(&msg) else {
+                        continue;
+                    };
+
+                    let len = bytes.len() as u32;
+                    if writer.write_all(&len.to_be_bytes()).is_err()
+                        || writer.write_all(&bytes).is_err()
+                    {
+                        break;
+                    }
+                }
+            });
+        }
+
         // Read length-prefixed JSON messages from the server.
         loop {
             let mut len_buf = [0u8; 4];
@@ -142,6 +190,10 @@ pub fn connect_at(endpoint: String, mut callback: impl FnMut(DevserverMsg) + Sen
             if let Ok(msg) = serde_json::from_slice(&buf) {
                 callback(msg);
             }
+        }
+
+        if let Ok(mut slot) = client_msg_tx_slot().lock() {
+            *slot = None;
         }
     });
 }
