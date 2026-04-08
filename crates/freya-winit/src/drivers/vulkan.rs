@@ -380,6 +380,8 @@ impl VulkanDriver {
 
         let result = unsafe { self.swapchain_fns.queue_present(self.queue, &present_info) };
 
+        println!("result: {result:?}");
+
         drop(surface);
 
         if self.swapchain_suboptimal
@@ -387,6 +389,7 @@ impl VulkanDriver {
         {
             self.swapchain_size = size;
             self.recreate_swapchain();
+            window.request_redraw();
         }
     }
 
