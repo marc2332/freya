@@ -20,18 +20,21 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         fetch-depth: 2
-        submodules: true
-    - name: Install stable rust toolchain
-      uses: dtolnay/rust-toolchain@1.94
+        submodules: true    - name: Install stable rust toolchain
+      uses: dtolnay/rust-toolchain@aad518f59d88bae90133242f9ddac7f8bbc5dddf # 1.94
     - name: Install nextest
-      uses: taiki-e/install-action@nextest
+      uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
+      with:
+        tool: nextest
     - name: Install just
-      uses: taiki-e/install-action@just
+      uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
+      with:
+        tool: just
     - name: Set up cargo cache
-      uses: Swatinem/rust-cache@v2
+      uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
       if: github.ref != 'refs/heads/main'
       with:
         shared-key: "rust-${{ matrix.os }}"
@@ -59,7 +62,7 @@ jobs:
         rustup component add llvm-tools-preview
         curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf -
         ./grcov . --binary-path ./target/debug/deps -s . -t lcov --branch --ignore-not-existing --ignore "../*" --ignore "/*" -o cov.lcov
-    - uses: codecov/codecov-action@v6
+    - uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
       if: runner.os == 'Linux'
       with:
         token: ${{ secrets.CODECOV_TOKEN }}

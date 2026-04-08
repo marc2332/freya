@@ -17,25 +17,25 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: true
-
       - name: Set up cargo cache
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
         with:
           prefix-key: "docs"
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: cargo doc
         run: RUSTDOCFLAGS="--cfg docsrs" cargo +nightly-2026-03-15 doc --no-deps --workspace --features "all, docs"
       - name: Ensure nightly rustfmt
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
         with:
           toolchain: nightly-2025-09-25
           components: rustfmt
 
       - name: Upload to Deno Deploy
-        uses: denoland/deployctl@v1
+        uses: denoland/deployctl@7bded90d0d09cd99bbfb513966146315db97618b # 1.13.1
         with:
           project: freya-docs
           entrypoint: https://deno.land/std/http/file_server.ts
