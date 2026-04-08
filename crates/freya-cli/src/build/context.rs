@@ -1,9 +1,6 @@
 //! Report progress about the build to the user. We use channels to report progress back to the CLI.
 
-use std::{
-    path::PathBuf,
-    process::ExitStatus,
-};
+use std::process::ExitStatus;
 
 use cargo_metadata::diagnostic::Diagnostic;
 use futures_channel::mpsc::{
@@ -107,12 +104,6 @@ impl BuildContext {
         });
     }
 
-    pub(crate) fn status_codesigning(&self) {
-        _ = self.tx.unbounded_send(BuilderUpdate::Progress {
-            stage: BuildStage::CodeSigning,
-        });
-    }
-
     pub(crate) fn status_build_diagnostic(&self, message: Diagnostic) {
         _ = self
             .tx
@@ -156,21 +147,6 @@ impl BuildContext {
     pub(crate) fn status_starting_link(&self) {
         _ = self.tx.unbounded_send(BuilderUpdate::Progress {
             stage: BuildStage::Linking,
-        });
-    }
-
-    pub(crate) fn status_copied_asset(
-        progress: &UnboundedSender<BuilderUpdate>,
-        current: usize,
-        total: usize,
-        path: PathBuf,
-    ) {
-        _ = progress.unbounded_send(BuilderUpdate::Progress {
-            stage: BuildStage::CopyingAssets {
-                current,
-                total,
-                path,
-            },
         });
     }
 

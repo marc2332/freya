@@ -11,7 +11,6 @@
 mod builder;
 mod cache;
 mod context;
-mod manifest;
 mod manifest_mapper;
 mod patch;
 mod request;
@@ -19,6 +18,5 @@ mod request;
 pub(crate) use builder::*;
 pub(crate) use cache::*;
 pub(crate) use context::*;
-pub(crate) use manifest::*;
 pub(crate) use patch::*;
 pub(crate) use request::*;

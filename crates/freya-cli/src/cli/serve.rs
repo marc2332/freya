@@ -38,10 +38,6 @@ pub(crate) struct ServeArgs {
     #[arg(long, default_missing_value="true", num_args=0..=1)]
     pub(crate) open: Option<bool>,
 
-    /// Enable full hot reloading for the app [default: true - unless cli settings are set]
-    #[clap(long, group = "release-incompatible")]
-    pub(crate) hot_reload: Option<bool>,
-
     /// Configure always-on-top for desktop apps [default: true - unless cli settings are set]
     #[clap(long, default_missing_value = "true")]
     pub(crate) always_on_top: Option<bool>,
@@ -59,10 +55,10 @@ pub(crate) struct ServeArgs {
     #[arg(long, default_missing_value="true", num_args=0..=1, short = 'i')]
     pub(crate) interactive: Option<bool>,
 
-    /// Enable Rust hot-patching instead of full rebuilds [default: false]
+    /// Enable Rust hot-patching and hot reloading [default: true]
     ///
     /// This is quite experimental and may lead to unexpected segfaults or crashes in development.
-    #[arg(long, default_value_t = false, alias = "hotpatch")]
+    #[arg(long, default_value_t = true, default_missing_value = "true", num_args = 0..=1, alias = "hotpatch")]
     pub(crate) hot_patch: bool,
 
     /// Watch the filesystem for changes and trigger a rebuild [default: true]
@@ -114,7 +110,6 @@ impl Anonymized for ServeArgs {
         json! {{
             "address": self.address.anonymized(),
             "open": self.open,
-            "hot_reload": self.hot_reload,
             "always_on_top": self.always_on_top,
             "cross_origin_policy": self.cross_origin_policy,
             "wsl_file_poll_interval": self.wsl_file_poll_interval,

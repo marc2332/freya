@@ -323,13 +323,7 @@ use std::{
         PathBuf,
     },
     process::Stdio,
-    sync::{
-        atomic::{
-            AtomicUsize,
-            Ordering,
-        },
-        Arc,
-    },
+    sync::Arc,
     time::{
         SystemTime,
         UNIX_EPOCH,
@@ -353,10 +347,6 @@ use krates::{
     cm::TargetKind,
     NodeId,
 };
-use rayon::prelude::{
-    IntoParallelRefIterator,
-    ParallelIterator,
-};
 use serde::{
     Deserialize,
     Serialize,
@@ -375,11 +365,6 @@ use uuid::Uuid;
 
 use super::HotpatchModuleCache;
 use crate::{
-    opt::{
-        process_file_to,
-        AssetManifest,
-    },
-    AppManifest,
     BuildContext,
     BuildId,
     BundleFormat,
@@ -420,7 +405,6 @@ pub(crate) struct BuildRequest {
     pub(crate) release: bool,
     pub(crate) bundle: BundleFormat,
     pub(crate) triple: Triple,
-    pub(crate) should_codesign: bool,
     pub(crate) package: String,
     pub(crate) main_target: String,
     pub(crate) features: Vec<String>,
@@ -433,8 +417,6 @@ pub(crate) struct BuildRequest {
     pub(crate) wasm_split: bool,
     pub(crate) custom_linker: Option<PathBuf>,
     pub(crate) using_dioxus_explicitly: bool,
-    pub(crate) apple_entitlements: Option<PathBuf>,
-    pub(crate) apple_team_id: Option<String>,
     pub(crate) session_cache_dir: PathBuf,
     pub(crate) raw_json_diagnostics: bool,
     pub(crate) windows_subsystem: Option<String>,
@@ -507,7 +489,6 @@ pub struct BuildArtifacts {
     pub(crate) workspace_rustc_args: HashMap<String, RustcArgs>,
     pub(crate) time_start: SystemTime,
     pub(crate) time_end: SystemTime,
-    pub(crate) assets: AssetManifest,
     pub(crate) mode: BuildMode,
     pub(crate) patch_cache: Option<Arc<HotpatchModuleCache>>,
     pub(crate) depinfo: RustcDepInfo,
@@ -610,11 +591,6 @@ impl BuildRequest {
         let config = workspace
             .load_dioxus_config(crate_package)?
             .unwrap_or_default();
-
-        // We usually use the simulator unless --device is passed *or* a device is detected by probing.
-        // For now, though, since we don't have probing, it just defaults to false
-        // Tools like xcrun/adb can detect devices
-        let device = args.device.clone();
 
         let using_dioxus_explicitly = main_package
             .dependencies
@@ -802,10 +778,6 @@ impl BuildRequest {
             None => bundle.profile_name(args.release),
         };
 
-        // Determine if we should codesign
-        let should_codesign =
-            args.codesign || device.is_some() || args.apple_entitlements.is_some();
-
         // Determining release mode is based on the profile, actually, so we need to check that
         let release = workspace.is_release_profile(&profile);
 
@@ -919,11 +891,8 @@ impl BuildRequest {
             main_target,
             rustflags,
             using_dioxus_explicitly,
-            should_codesign,
             session_cache_dir,
             wasm_split: args.wasm_split,
-            apple_entitlements: args.apple_entitlements.clone(),
-            apple_team_id: args.apple_team_id.clone(),
             raw_json_diagnostics: args.raw_json_diagnostics,
             windows_subsystem: args.windows_subsystem.clone(),
         })
@@ -977,23 +946,16 @@ impl BuildRequest {
 
                 self.strip_binary(&artifacts).await?;
 
-                self.write_executable(ctx, &artifacts.exe, &mut artifacts.assets)
+                self.write_executable(ctx, &artifacts.exe)
                     .await
                     .context("Failed to write executable")?;
 
                 self.write_frameworks(ctx, &artifacts)
                     .await
                     .context("Failed to write frameworks")?;
-                self.write_assets(ctx, &artifacts.assets)
-                    .await
-                    .context("Failed to write assets")?;
                 self.write_metadata()
                     .await
                     .context("Failed to write metadata")?;
-
-                self.assemble(ctx)
-                    .await
-                    .context("Failed to assemble build")?;
 
                 // Populate the patch cache if we're in fat mode
                 if matches!(ctx.mode, BuildMode::Fat) {
@@ -1211,9 +1173,6 @@ impl BuildRequest {
             );
         }
 
-        // Extract all linker metadata (assets, Android/iOS plugins, widget extensions) in a single pass.
-        let (assets, _, _) = self.collect_assets_and_metadata(&exe, ctx).await?;
-
         let time_end = SystemTime::now();
         let mode = ctx.mode.clone();
         let depinfo = RustcDepInfo::from_file(&exe.with_extension("d")).unwrap_or_default();
@@ -1229,7 +1188,6 @@ impl BuildRequest {
             exe,
             workspace_rustc_args,
             time_start,
-            assets,
             mode,
             depinfo,
             root_dir: self.root_dir(),
@@ -1351,20 +1309,6 @@ impl BuildRequest {
         Ok(object_cache)
     }
 
-    /// Collect assets and plugin metadata from the final executable in one pass
-    ///
-    /// Freya desktop build - no asset extraction needed.
-    /// Assets are loaded directly from filesystem at runtime.
-    async fn collect_assets_and_metadata(
-        &self,
-        _exe: &Path,
-        _ctx: &BuildContext,
-    ) -> Result<(AssetManifest, Vec<()>, Vec<()>)> {
-        // Freya desktop (Linux, macOS, Windows) doesn't use manganis assets
-        // Assets are loaded at runtime from the filesystem
-        Ok((AssetManifest::default(), Vec::new(), Vec::new()))
-    }
-
     /// Install Android plugin artifacts by bundling source folders as Gradle submodules.
     ///
     /// This function handles both prebuilt AARs and source folders:
@@ -1388,12 +1332,7 @@ impl BuildRequest {
     /// Add a module include to settings.gradle if not already present.
 
     /// Move the executable to the workdir
-    async fn write_executable(
-        &self,
-        _ctx: &BuildContext,
-        exe: &Path,
-        _assets: &mut AssetManifest,
-    ) -> Result<()> {
+    async fn write_executable(&self, _ctx: &BuildContext, exe: &Path) -> Result<()> {
         std::fs::create_dir_all(self.exe_dir())?;
         std::fs::copy(exe, self.main_exe())?;
         Ok(())
@@ -1457,105 +1396,6 @@ impl BuildRequest {
             OperatingSystem::Linux | OperatingSystem::Windows => self.root_dir(),
             _ => self.root_dir(),
         }
-    }
-
-    /// Copy the assets out of the manifest and into the target location
-    ///
-    /// Should be the same on all platforms - just copy over the assets from the manifest into the output directory
-    async fn write_assets(&self, ctx: &BuildContext, assets: &AssetManifest) -> Result<()> {
-        // Server doesn't need assets - web will provide them
-        if !ctx.is_primary_build() {
-            return Ok(());
-        }
-
-        let asset_dir = self.asset_dir();
-
-        // First, clear the asset dir of any files that don't exist in the new manifest
-        _ = std::fs::create_dir_all(&asset_dir);
-
-        // Create a set of all the paths that new files will be bundled to
-        let mut keep_bundled_output_paths: HashSet<_> = assets
-            .unique_assets()
-            .map(|a| asset_dir.join(a.bundled_path()))
-            .collect();
-
-        // The CLI creates a .manifest.json file in the asset dir to keep track of the assets and
-        // other build metadata. If we can't parse this file (or the CLI version changed), then we
-        // want to re-copy all the assets rather than trying to do an incremental update.
-        let clear_cache = self
-            .load_manifest()
-            .map(|manifest| manifest.cli_version != crate::VERSION.as_str())
-            .unwrap_or(true);
-        if clear_cache {
-            keep_bundled_output_paths.clear();
-        }
-
-        tracing::trace!(
-            "Keeping bundled output paths: {:#?}",
-            keep_bundled_output_paths
-        );
-
-        // todo(jon): we also want to eventually include options for each asset's optimization and compression, which we currently aren't
-        let mut assets_to_transfer = vec![];
-
-        // Queue the bundled assets (skip sidecar assets that require special processing)
-        for bundled in assets.unique_assets() {
-            let from = PathBuf::from(bundled.absolute_source_path());
-            let to = asset_dir.join(bundled.bundled_path());
-
-            // prefer to log using a shorter path relative to the workspace dir by trimming the workspace dir
-            let from_ = from
-                .strip_prefix(self.workspace_dir())
-                .unwrap_or(from.as_path());
-            let to_ = from
-                .strip_prefix(self.workspace_dir())
-                .unwrap_or(to.as_path());
-
-            tracing::debug!("Copying asset {from_:?} to {to_:?}");
-            assets_to_transfer.push((from, to, *bundled.options()));
-        }
-
-        let asset_count = assets_to_transfer.len();
-        let started_processing = AtomicUsize::new(0);
-        let copied = AtomicUsize::new(0);
-
-        // Parallel Copy over the assets and keep track of progress with an atomic counter
-        let progress = ctx.tx.clone();
-        let ws_dir = self.workspace_dir();
-        // Optimizing assets is expensive and blocking, so we do it in a tokio spawn blocking task
-        tokio::task::spawn_blocking(move || {
-            assets_to_transfer
-                .par_iter()
-                .try_for_each(|(from, to, options)| {
-                    let processing = started_processing.fetch_add(1, Ordering::SeqCst);
-                    let from_ = from.strip_prefix(&ws_dir).unwrap_or(from);
-                    tracing::trace!(
-                        "Starting asset copy {processing}/{asset_count} from {from_:?}"
-                    );
-
-                    let res = process_file_to(options, from, to, None);
-                    if let Err(err) = res.as_ref() {
-                        tracing::error!("Failed to copy asset {from:?}: {err}");
-                    }
-
-                    let finished = copied.fetch_add(1, Ordering::SeqCst);
-                    BuildContext::status_copied_asset(
-                        &progress,
-                        finished,
-                        asset_count,
-                        from.to_path_buf(),
-                    );
-
-                    res.map(|_| ())
-                })
-        })
-        .await
-        .map_err(|e| anyhow::anyhow!("A task failed while trying to copy assets: {e}"))??;
-
-        // Write the version file so we know what version of the optimizer we used
-        self.write_app_manifest(assets).await?;
-
-        Ok(())
     }
 
     /// Run our custom linker setup to generate a patch file in the right location
@@ -1800,12 +1640,6 @@ impl BuildRequest {
         if let Some(idx) = args.link_args.iter().position(|arg| *arg == "-o") {
             _ = std::fs::remove_file(PathBuf::from(args.link_args[idx + 1].as_str()));
         }
-
-        // Now extract linker metadata from the fat binary (assets, plugin data)
-        let (assets, _, _) = self
-            .collect_assets_and_metadata(&self.patch_exe(artifacts.time_start), ctx)
-            .await?;
-        artifacts.assets = assets;
 
         // Clean up temp object files (tip incremental objects + stub.o).
         // Cached dep objects in object_cache/ are NOT deleted — they persist across patches.
@@ -3412,22 +3246,6 @@ impl BuildRequest {
         }
     }
 
-    /// Run any final tools to produce apks or other artifacts we might need.
-    ///
-    /// This might include codesigning, zipping, creating an appimage, etc
-    async fn assemble(&self, ctx: &BuildContext) -> Result<()> {
-        // if the triple is a ios or macos target, we need to codesign the binary
-        if matches!(
-            self.triple.operating_system,
-            OperatingSystem::Darwin(_) | OperatingSystem::IOS(_)
-        ) && self.should_codesign
-        {
-            self.codesign_apple(ctx).await?;
-        }
-
-        Ok(())
-    }
-
     /// We only really currently care about:
     ///
     /// - app dir (.app, .exe, .apk, etc)
@@ -3513,23 +3331,6 @@ impl BuildRequest {
             // these are all the same, I think?
             BundleFormat::Windows | BundleFormat::Linux => self.root_dir(),
         }
-    }
-
-    /// Get the path to the app manifest file
-    ///
-    /// This includes metadata about the build such as the bundle format, target triple, features, etc.
-    /// Manifests are only written by the `PRIMARY` build.
-    pub(crate) fn app_manifest(&self) -> PathBuf {
-        self.platform_dir().join(".manifest.json")
-    }
-
-    pub(crate) fn load_manifest(&self) -> Result<AppManifest> {
-        let manifest_path = self.app_manifest();
-        let manifest_data = std::fs::read_to_string(&manifest_path)
-            .with_context(|| format!("Failed to read manifest at {:?}", &manifest_path))?;
-        let manifest: AppManifest = serde_json::from_str(&manifest_data)
-            .with_context(|| format!("Failed to parse manifest at {:?}", &manifest_path))?;
-        Ok(manifest)
     }
 
     /// Check for tooling that might be required for this build.
@@ -3897,462 +3698,6 @@ impl BuildRequest {
         args.into_iter()
             .flat_map(|arg| ["--config".to_string(), arg])
             .collect()
-    }
-
-    pub async fn codesign_apple(&self, ctx: &BuildContext) -> Result<()> {
-        ctx.status_codesigning();
-
-        // We don't want to drop the entitlements file, until the end of the block, so we hoist it to this temporary.
-        let mut _saved_entitlements = None;
-
-        let mut app_dev_name = self.apple_team_id.clone();
-        if app_dev_name.is_none() {
-            app_dev_name = Some(Self::auto_provision_signing_name().await.context(
-                "Failed to automatically provision signing name for Apple codesigning.",
-            )?);
-        }
-
-        let mut entitlements_file = self.apple_entitlements.clone();
-        if entitlements_file.is_none() {
-            let bundle_id = self.bundle_identifier();
-            let (entitlements_xml, _profile_path) = Self::auto_provision_entitlements(&bundle_id)
-                .await
-                .context("Failed to auto-provision entitlements for Apple codesigning.")?;
-
-            // Enrich with entitlements from Dioxus.toml config
-            let entitlements_xml = self.enrich_entitlements_from_config(entitlements_xml)?;
-
-            let entitlements_temp_file = tempfile::NamedTempFile::new()?;
-            std::fs::write(entitlements_temp_file.path(), entitlements_xml)?;
-            entitlements_file = Some(entitlements_temp_file.path().to_path_buf());
-            _saved_entitlements = Some(entitlements_temp_file);
-        }
-
-        let entitlements_file = entitlements_file.as_ref().context(
-            "No entitlements file provided and could not provision entitlements to sign app.",
-        )?;
-        let app_dev_name = app_dev_name.as_ref().context(
-            "No Apple Development signing name provided and could not auto-provision one.",
-        )?;
-
-        tracing::debug!(
-            "Codesigning Apple app with entitlements: {} and dev name: {}",
-            entitlements_file.display(),
-            app_dev_name
-        );
-
-        // determine the target exe - the server and macos bundles are different
-        let target_exe = match self.bundle {
-            BundleFormat::MacOS => self.root_dir(),
-            _ => bail!("Codesigning is only supported for MacOS and iOS bundles"),
-        };
-
-        // codesign the app
-        let output = Command::new("codesign")
-            .args([
-                "--force",
-                "--entitlements",
-                entitlements_file.to_str().unwrap(),
-                "--sign",
-                app_dev_name,
-            ])
-            .arg(target_exe)
-            .output()
-            .await
-            .context("Failed to codesign the app - is `codesign` in your path?")?;
-
-        if !output.status.success() {
-            bail!(
-                "Failed to codesign the app: {}",
-                String::from_utf8(output.stderr).unwrap_or_default()
-            );
-        }
-
-        Ok(())
-    }
-
-    async fn auto_provision_signing_name() -> Result<String> {
-        let identities = Command::new("security")
-            .args(["find-identity", "-v", "-p", "codesigning"])
-            .output()
-            .await
-            .context("Failed to run `security find-identity -v -p codesigning` - is `security` in your path?")
-            .map(|e| {
-                String::from_utf8(e.stdout)
-                    .context("Failed to parse `security find-identity -v -p codesigning`")
-            })??;
-
-        // Parsing this:
-        // 1231231231231asdasdads123123 "Apple Development: foo@gmail.com (XYZYZY)"
-        let app_dev_name = regex::Regex::new(r#""Apple Development: (.+)""#)
-            .unwrap()
-            .captures(&identities)
-            .and_then(|caps| caps.get(1))
-            .map(|m| m.as_str())
-            .context(
-                "Failed to find Apple Development in `security find-identity -v -p codesigning`",
-            )?;
-
-        Ok(app_dev_name.to_string())
-    }
-
-    /// Enrich auto-provisioned entitlements XML with config from Dioxus.toml.
-    ///
-    /// Injects entitlements from `[ios.entitlements]` or `[macos.entitlements]` sections
-    /// and associated domains from `[deep_links]` into the base entitlements XML.
-    fn enrich_entitlements_from_config(&self, base_xml: String) -> Result<String> {
-        let mut extra_entries = String::new();
-
-        match self.bundle {
-            BundleFormat::MacOS => {
-                let ent = &self.config.macos.entitlements;
-
-                // App Sandbox
-                if let Some(v) = ent.app_sandbox {
-                    extra_entries.push_str(&format!(
-                        "    <key>com.apple.security.app-sandbox</key>\n    <{v}/>\n"
-                    ));
-                }
-
-                // File access
-                if let Some(true) = ent.files_user_selected {
-                    extra_entries.push_str(
-                        "    <key>com.apple.security.files.user-selected.read-write</key>\n    <true/>\n"
-                    );
-                }
-                if let Some(true) = ent.files_user_selected_readonly {
-                    extra_entries.push_str(
-                        "    <key>com.apple.security.files.user-selected.read-only</key>\n    <true/>\n"
-                    );
-                }
-
-                // Network
-                if let Some(true) = ent.network_client {
-                    extra_entries.push_str(
-                        "    <key>com.apple.security.network.client</key>\n    <true/>\n",
-                    );
-                }
-                if let Some(true) = ent.network_server {
-                    extra_entries.push_str(
-                        "    <key>com.apple.security.network.server</key>\n    <true/>\n",
-                    );
-                }
-
-                // Device access
-                if let Some(true) = ent.camera {
-                    extra_entries
-                        .push_str("    <key>com.apple.security.device.camera</key>\n    <true/>\n");
-                }
-                if let Some(true) = ent.microphone {
-                    extra_entries.push_str(
-                        "    <key>com.apple.security.device.microphone</key>\n    <true/>\n",
-                    );
-                }
-                if let Some(true) = ent.usb {
-                    extra_entries
-                        .push_str("    <key>com.apple.security.device.usb</key>\n    <true/>\n");
-                }
-                if let Some(true) = ent.bluetooth {
-                    extra_entries.push_str(
-                        "    <key>com.apple.security.device.bluetooth</key>\n    <true/>\n",
-                    );
-                }
-                if let Some(true) = ent.print {
-                    extra_entries
-                        .push_str("    <key>com.apple.security.print</key>\n    <true/>\n");
-                }
-
-                // Personal information
-                if let Some(true) = ent.location {
-                    extra_entries.push_str(
-                        "    <key>com.apple.security.personal-information.location</key>\n    <true/>\n"
-                    );
-                }
-                if let Some(true) = ent.addressbook {
-                    extra_entries.push_str(
-                        "    <key>com.apple.security.personal-information.addressbook</key>\n    <true/>\n"
-                    );
-                }
-                if let Some(true) = ent.calendars {
-                    extra_entries.push_str(
-                        "    <key>com.apple.security.personal-information.calendars</key>\n    <true/>\n"
-                    );
-                }
-
-                // Runtime exceptions
-                if let Some(true) = ent.disable_library_validation {
-                    extra_entries.push_str(
-                        "    <key>com.apple.security.cs.disable-library-validation</key>\n    <true/>\n"
-                    );
-                }
-                if let Some(true) = ent.allow_jit {
-                    extra_entries
-                        .push_str("    <key>com.apple.security.cs.allow-jit</key>\n    <true/>\n");
-                }
-                if let Some(true) = ent.allow_unsigned_executable_memory {
-                    extra_entries.push_str(
-                        "    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>\n    <true/>\n"
-                    );
-                }
-
-                // Additional entitlements from the flat map
-                for (key, value) in &ent.additional {
-                    extra_entries.push_str(&format!(
-                        "    <key>{key}</key>\n    {}\n",
-                        value_to_plist_xml(value, 1)
-                    ));
-                }
-
-                // Raw entitlements XML
-                if let Some(raw) = &self.config.macos.raw.entitlements {
-                    extra_entries.push_str(raw);
-                    extra_entries.push('\n');
-                }
-            }
-            _ => {}
-        }
-
-        if extra_entries.is_empty() {
-            return Ok(base_xml);
-        }
-
-        // Insert before closing </dict></plist>
-        if let Some(pos) = base_xml.rfind("</dict>") {
-            let mut enriched = base_xml[..pos].to_string();
-            enriched.push_str(&extra_entries);
-            enriched.push_str(&base_xml[pos..]);
-            Ok(enriched)
-        } else {
-            tracing::warn!("Could not find </dict> in entitlements XML to inject config entries");
-            Ok(base_xml)
-        }
-    }
-
-    async fn auto_provision_entitlements(bundle_id: &str) -> Result<(String, PathBuf)> {
-        const CODESIGN_ERROR: &str = r#"This is likely because you haven't
-- Created a provisioning profile before
-- Accepted the Apple Developer Program License Agreement
-
-The agreement changes frequently and might need to be accepted again.
-To accept the agreement, go to https://developer.apple.com/account
-
-To create a provisioning profile, follow the instructions here:
-https://developer.apple.com/documentation/xcode/sharing-your-teams-signing-certificates"#;
-
-        // Check the xcode 16 location first
-        let mut profiles_folder = dirs::home_dir()
-            .context("Your machine has no home-dir")?
-            .join("Library/Developer/Xcode/UserData/Provisioning Profiles");
-
-        // If it doesn't exist, check the old location
-        if !profiles_folder.exists() {
-            profiles_folder = dirs::home_dir()
-                .context("Your machine has no home-dir")?
-                .join("Library/MobileDevice/Provisioning Profiles");
-        }
-
-        if !profiles_folder.exists() || profiles_folder.read_dir()?.next().is_none() {
-            tracing::error!(
-                r#"No provisioning profiles found when trying to codesign the app.
-We checked the folders:
-- XCode16: ~/Library/Developer/Xcode/UserData/Provisioning Profiles
-- XCode15: ~/Library/MobileDevice/Provisioning Profiles
-
-{CODESIGN_ERROR}
-"#
-            )
-        }
-
-        #[derive(serde::Deserialize, Debug)]
-        struct ProvisioningProfile {
-            #[serde(rename = "TeamIdentifier")]
-            team_identifier: Vec<String>,
-            #[serde(rename = "Entitlements")]
-            entitlements: ProfileEntitlements,
-            #[allow(dead_code)]
-            #[serde(rename = "ApplicationIdentifierPrefix")]
-            application_identifier_prefix: Vec<String>,
-            #[serde(rename = "ProvisionedDevices", default)]
-            provisioned_devices: Vec<String>,
-        }
-
-        #[derive(serde::Deserialize, Debug)]
-        struct ProfileEntitlements {
-            #[serde(rename = "application-identifier")]
-            application_identifier: String,
-            #[serde(rename = "keychain-access-groups")]
-            keychain_access_groups: Vec<String>,
-        }
-
-        // The .mobileprovision file has some random binary thrown into it, but it's still basically a plist
-        // Let's use the plist markers to find the start and end of the plist
-        fn cut_plist(bytes: &[u8], byte_match: &[u8]) -> Option<usize> {
-            bytes
-                .windows(byte_match.len())
-                .enumerate()
-                .rev()
-                .find(|(_, slice)| *slice == byte_match)
-                .map(|(i, _)| i + byte_match.len())
-        }
-
-        fn parse_profile(path: &Path) -> Result<ProvisioningProfile> {
-            let bytes = std::fs::read(path)?;
-            let cut1 =
-                cut_plist(&bytes, b"<plist").context("Failed to parse .mobileprovision file")?;
-            let cut2 = cut_plist(&bytes, r#"</dict>"#.as_bytes())
-                .context("Failed to parse .mobileprovision file")?;
-            let sub_bytes = &bytes[(cut1 - 6)..cut2];
-            plist::from_bytes(sub_bytes).context("Failed to parse .mobileprovision file")
-        }
-
-        /// Check if a provisioning profile's application-identifier matches the given bundle ID.
-        /// The app ID is in the format "TEAMID.com.example.app" or "TEAMID.*" for wildcard profiles.
-        fn profile_matches_bundle_id(app_identifier: &str, bundle_id: &str) -> bool {
-            // Strip the team ID prefix (everything before and including the first dot)
-            let app_id_suffix = match app_identifier.split_once('.') {
-                Some((_, suffix)) => suffix,
-                None => return false,
-            };
-
-            // Wildcard profile matches everything
-            if app_id_suffix == "*" {
-                return true;
-            }
-
-            // Check exact match
-            if app_id_suffix == bundle_id {
-                return true;
-            }
-
-            // Check wildcard prefix match (e.g. "com.example.*" matches "com.example.app")
-            if let Some(prefix) = app_id_suffix.strip_suffix(".*") {
-                return bundle_id.starts_with(prefix);
-            }
-
-            false
-        }
-
-        // Collect all provisioning profiles and find the best match for the bundle ID.
-        // Priority: exact app ID match > more provisioned devices > newer file.
-        let mut best_match: Option<(PathBuf, ProvisioningProfile, bool, usize)> = None;
-
-        for entry in profiles_folder.read_dir()?.flatten() {
-            let path = entry.path();
-            let is_mobileprovision = path
-                .extension()
-                .map(|e| e == "mobileprovision")
-                .unwrap_or(false);
-
-            if !is_mobileprovision {
-                continue;
-            }
-
-            let profile = match parse_profile(&path) {
-                Ok(p) => p,
-                Err(e) => {
-                    tracing::debug!("Skipping profile {}: {e}", path.display());
-                    continue;
-                }
-            };
-
-            let app_id = &profile.entitlements.application_identifier;
-            if !profile_matches_bundle_id(app_id, bundle_id) {
-                tracing::debug!(
-                    "Skipping profile {} (app ID {app_id} does not match bundle ID {bundle_id})",
-                    path.display()
-                );
-                continue;
-            }
-
-            let is_exact = !app_id.ends_with(".*") && !app_id.ends_with("*");
-            let num_devices = profile.provisioned_devices.len();
-
-            tracing::debug!(
-                "Found matching profile {} (app ID: {app_id}, exact: {is_exact}, devices: {num_devices})",
-                path.display()
-            );
-
-            // Prefer: exact match > more provisioned devices (newer profiles have more devices)
-            let dominated = match &best_match {
-                Some((_, _, prev_exact, prev_devices)) => {
-                    if *prev_exact && !is_exact {
-                        true // existing exact match beats wildcard
-                    } else if is_exact && !*prev_exact {
-                        false // new exact match beats existing wildcard
-                    } else {
-                        // same specificity — prefer more provisioned devices
-                        num_devices <= *prev_devices
-                    }
-                }
-                None => false,
-            };
-
-            if !dominated {
-                best_match = Some((path, profile, is_exact, num_devices));
-            }
-        }
-
-        let (profile_path, mbfile) = match best_match {
-            Some((path, profile, _, _)) => {
-                tracing::info!(
-                    "Using provisioning profile: {} (app ID: {})",
-                    path.display(),
-                    profile.entitlements.application_identifier
-                );
-                (path, profile)
-            }
-            None => {
-                bail!(
-                    "No provisioning profile found matching bundle identifier \"{bundle_id}\".\n\
-                     \n\
-                     Your provisioning profiles are in: {}\n\
-                     \n\
-                     To fix this, either:\n  \
-                     1. Set `bundle.identifier` in Dioxus.toml to match an existing profile\n  \
-                     2. Create a wildcard provisioning profile in your Apple Developer account\n  \
-                     3. Open the project in Xcode and let it auto-provision\n\
-                     \n\
-                     {CODESIGN_ERROR}",
-                    profiles_folder.display()
-                );
-            }
-        };
-
-        let entitlements_xml = format!(
-            r#"<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><dict>
-    <key>application-identifier</key>
-    <string>{APPLICATION_IDENTIFIER}</string>
-    <key>keychain-access-groups</key>
-    <array>
-        <string>{APP_ID_ACCESS_GROUP}.*</string>
-    </array>
-    <key>get-task-allow</key>
-    <true/>
-    <key>com.apple.developer.team-identifier</key>
-    <string>{TEAM_IDENTIFIER}</string>
-</dict></plist>
-        "#,
-            APPLICATION_IDENTIFIER = mbfile.entitlements.application_identifier,
-            APP_ID_ACCESS_GROUP = mbfile.entitlements.keychain_access_groups[0],
-            TEAM_IDENTIFIER = mbfile.team_identifier[0],
-        );
-
-        Ok((entitlements_xml, profile_path))
-    }
-
-    async fn write_app_manifest(&self, assets: &AssetManifest) -> Result<()> {
-        let manifest = AppManifest {
-            assets: assets.clone(),
-            cli_version: crate::VERSION.to_string(),
-            rust_version: self.workspace.rustc_version.clone(),
-        };
-
-        let manifest_path = self.app_manifest();
-        std::fs::write(&manifest_path, serde_json::to_string_pretty(&manifest)?)?;
-
-        Ok(())
     }
 
     /// Log the build duration and some metadata about the build, saving a telemetry event.

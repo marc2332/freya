@@ -11,9 +11,7 @@ mod config;
 mod devcfg;
 mod dx_build_info;
 mod error;
-mod fastfs;
 mod logging;
-mod opt;
 mod platform;
 
 mod rustcwrapper;

@@ -38,7 +38,6 @@ use super::{
 };
 use crate::{
     build::cache::ObjectCache,
-    opt::process_file_to,
     serve::WebServer,
     verbosity_or_default,
     BuildArtifacts,
@@ -725,32 +724,6 @@ impl AppBuilder {
     ) -> Result<JumpTable> {
         let original = self.build.main_exe();
         let new = self.build.patch_exe(res.time_start);
-        let asset_dir = self.build.asset_dir();
-
-        // Hotpatch asset!() calls
-        for bundled in res.assets.unique_assets() {
-            let original_artifacts = self
-                .artifacts
-                .as_mut()
-                .context("No artifacts to hotpatch")?;
-
-            if original_artifacts.assets.contains(bundled) {
-                continue;
-            }
-
-            // If this is a new asset, insert it into the artifacts so we can track it when hot reloading
-            original_artifacts.assets.insert_asset(*bundled);
-
-            let from = dunce::canonicalize(PathBuf::from(bundled.absolute_source_path()))?;
-
-            let to = asset_dir.join(bundled.bundled_path());
-
-            tracing::debug!("Copying asset from patch: {}", from.display());
-            if let Err(e) = process_file_to(bundled.options(), &from, &to, None) {
-                tracing::error!("Failed to copy asset: {e}");
-                continue;
-            }
-        }
 
         // Make sure to add `include!()` calls to the watcher so we can watch changes as they evolve
         for file in res.depinfo.files.iter() {

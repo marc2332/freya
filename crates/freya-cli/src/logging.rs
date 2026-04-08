@@ -138,6 +138,7 @@ impl std::fmt::Display for CapturedPanicError {
 }
 impl std::error::Error for CapturedPanicError {}
 
+#[allow(unused)]
 #[derive(Debug, Clone)]
 struct SavedLocation {
     file: String,
@@ -542,7 +543,7 @@ pub struct TraceMsg {
     pub source: TraceSrc,
     pub level: Level,
     pub content: TraceContent,
-    pub timestamp: chrono::DateTime<chrono::Local>,
+    pub timestamp: std::time::SystemTime,
 }
 
 #[derive(Clone, PartialEq)]
@@ -558,7 +559,7 @@ impl TraceMsg {
             source,
             level,
             content: TraceContent::Text(content),
-            timestamp: chrono::Local::now(),
+            timestamp: std::time::SystemTime::now(),
         }
     }
 
@@ -574,7 +575,7 @@ impl TraceMsg {
                 DiagnosticLevel::Help => Level::TRACE,
                 _ => Level::TRACE,
             },
-            timestamp: chrono::Local::now(),
+            timestamp: std::time::SystemTime::now(),
             source: TraceSrc::Cargo,
             content: TraceContent::Cargo(content),
         }
@@ -586,7 +587,6 @@ pub enum TraceSrc {
     App(BundleFormat),
     Dev,
     Build,
-    Bundle,
     Cargo,
 
     #[default]
@@ -620,7 +620,6 @@ impl Display for TraceSrc {
             Self::Build => write!(f, "build"),
             Self::Cargo => write!(f, "cargo"),
             Self::Unknown => write!(f, "n/a"),
-            Self::Bundle => write!(f, "bundle"),
         }
     }
 }

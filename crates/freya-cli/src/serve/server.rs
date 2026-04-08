@@ -58,7 +58,6 @@ use crate::{
 /// (4-byte big-endian length followed by JSON payload).
 pub(crate) struct WebServer {
     devserver_exposed_ip: IpAddr,
-    devserver_bind_ip: IpAddr,
     devserver_port: u16,
     proxied_port: Option<u16>,
     hot_reload_sockets: Vec<ConnectedClient>,
@@ -132,7 +131,6 @@ impl WebServer {
         Ok(Self {
             build_status,
             proxied_port,
-            devserver_bind_ip,
             devserver_exposed_ip,
             devserver_port,
             hot_reload_sockets: Default::default(),
@@ -388,22 +386,6 @@ impl WebServer {
 
     pub fn server_address(&self) -> Option<SocketAddr> {
         self.proxied_server_address()
-    }
-
-    /// Get the address the server is running - showing 127.0.0.1 if the devserver is bound to 0.0.0.0
-    /// This is designed this way to not confuse users who expect the devserver to be bound to localhost
-    /// ... which it is, but they don't know that 0.0.0.0 also serves localhost.
-    pub fn displayed_address(&self) -> Option<SocketAddr> {
-        let mut address = self.server_address()?;
-
-        // Set the port to the devserver port since that's usually what people expect
-        address.set_port(self.devserver_port);
-
-        if self.devserver_bind_ip == IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)) {
-            address = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), address.port());
-        }
-
-        Some(address)
     }
 }
 

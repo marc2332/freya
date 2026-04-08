@@ -24,14 +24,19 @@ use crossterm::{
     event::{
         DisableBracketedPaste,
         DisableFocusChange,
+        DisableMouseCapture,
         EnableBracketedPaste,
         EnableFocusChange,
+        EnableMouseCapture,
         Event,
         EventStream,
         KeyCode,
         KeyEvent,
         KeyEventKind,
         KeyModifiers,
+        MouseButton,
+        MouseEvent,
+        MouseEventKind,
     },
     terminal::{
         disable_raw_mode,
@@ -106,6 +111,8 @@ pub struct Output {
     recent_logs: VecDeque<TraceMsg>,
     log_scroll: usize,
     search_query: String,
+    verbose_click_area: Option<Rect>,
+    trace_click_area: Option<Rect>,
 
     dx_version: String,
     tick_animation: bool,
@@ -142,6 +149,8 @@ impl Output {
             recent_logs: VecDeque::new(),
             log_scroll: 0,
             search_query: String::new(),
+            verbose_click_area: None,
+            trace_click_area: None,
             throbber: RefCell::new(throbber_widgets_tui::ThrobberState::default()),
             trace: crate::logging::VERBOSITY.get().unwrap().trace,
             verbose: crate::logging::VERBOSITY.get().unwrap().verbose,
@@ -219,6 +228,7 @@ impl Output {
             .execute(EnterAlternateScreen)?
             .execute(Hide)?
             .execute(EnableFocusChange)?
+            .execute(EnableMouseCapture)?
             .execute(EnableBracketedPaste)?;
 
         Ok(())
@@ -229,6 +239,7 @@ impl Output {
             stdout()
                 .execute(Show)?
                 .execute(DisableFocusChange)?
+                .execute(DisableMouseCapture)?
                 .execute(DisableBracketedPaste)?
                 .execute(LeaveAlternateScreen)?;
             disable_raw_mode()?;
@@ -279,8 +290,34 @@ impl Output {
     fn handle_input(&mut self, input: Event) -> Result<Option<ServeUpdate>> {
         match input {
             Event::Key(key) if key.kind == KeyEventKind::Press => self.handle_keypress(key),
+            Event::Mouse(mouse) => self.handle_mouse(mouse),
             _ => Ok(Some(ServeUpdate::Redraw)),
         }
+    }
+
+    fn handle_mouse(&mut self, mouse: MouseEvent) -> Result<Option<ServeUpdate>> {
+        if self.more_modal_open || self.search_mode {
+            return Ok(Some(ServeUpdate::Redraw));
+        }
+
+        if !matches!(mouse.kind, MouseEventKind::Down(MouseButton::Left)) {
+            return Ok(Some(ServeUpdate::Redraw));
+        }
+
+        let clicked_verbose = self
+            .verbose_click_area
+            .is_some_and(|area| Self::rect_contains(area, mouse.column, mouse.row));
+        let clicked_trace = self
+            .trace_click_area
+            .is_some_and(|area| Self::rect_contains(area, mouse.column, mouse.row));
+
+        if clicked_verbose {
+            self.toggle_verbose();
+        } else if clicked_trace {
+            self.toggle_trace();
+        }
+
+        Ok(Some(ServeUpdate::Redraw))
     }
 
     fn handle_keypress(&mut self, key: KeyEvent) -> Result<Option<ServeUpdate>> {
@@ -354,26 +391,10 @@ impl Output {
             KeyCode::Char('o') => return Ok(Some(ServeUpdate::OpenApp)),
             KeyCode::Char('p') => return Ok(Some(ServeUpdate::ToggleShouldRebuild)),
             KeyCode::Char('v') => {
-                self.verbose = !self.verbose;
-                self.push_log(TraceMsg::text(
-                    TraceSrc::Dev,
-                    Level::INFO,
-                    format!(
-                        "Verbose mode: {}",
-                        if self.verbose { "enabled" } else { "disabled" }
-                    ),
-                ));
+                self.toggle_verbose();
             }
             KeyCode::Char('t') => {
-                self.trace = !self.trace;
-                self.push_log(TraceMsg::text(
-                    TraceSrc::Dev,
-                    Level::INFO,
-                    format!(
-                        "Tracing mode: {}",
-                        if self.trace { "enabled" } else { "disabled" }
-                    ),
-                ));
+                self.toggle_trace();
             }
             KeyCode::Char('D') => {
                 return Ok(Some(ServeUpdate::OpenDebugger {
@@ -411,6 +432,37 @@ impl Output {
 
         // Out of safety, we always redraw, since it's relatively cheap operation
         Ok(Some(ServeUpdate::Redraw))
+    }
+
+    fn toggle_verbose(&mut self) {
+        self.verbose = !self.verbose;
+        self.push_log(TraceMsg::text(
+            TraceSrc::Dev,
+            Level::INFO,
+            format!(
+                "Verbose mode: {}",
+                if self.verbose { "enabled" } else { "disabled" }
+            ),
+        ));
+    }
+
+    fn toggle_trace(&mut self) {
+        self.trace = !self.trace;
+        self.push_log(TraceMsg::text(
+            TraceSrc::Dev,
+            Level::INFO,
+            format!(
+                "Tracing mode: {}",
+                if self.trace { "enabled" } else { "disabled" }
+            ),
+        ));
+    }
+
+    fn rect_contains(area: Rect, x: u16, y: u16) -> bool {
+        x >= area.x
+            && x < area.x.saturating_add(area.width)
+            && y >= area.y
+            && y < area.y.saturating_add(area.height)
     }
 
     /// Push a TraceMsg to be printed on the next render
@@ -473,8 +525,8 @@ impl Output {
                 return false;
             }
 
-            let elapsed = chrono::Local::now().signed_duration_since(log.timestamp);
-            if elapsed.num_milliseconds() > 700 {
+            let elapsed = log.timestamp.elapsed().unwrap();
+            if elapsed.as_millis() > 700 {
                 return false;
             }
 
@@ -611,12 +663,12 @@ impl Output {
         });
     }
 
-    fn render_frame(&self, frame: &mut Frame, state: RenderState) {
+    fn render_frame(&mut self, frame: &mut Frame, state: RenderState) {
         let area = frame.area();
 
         frame.render_widget(ratatui::widgets::Clear, area);
 
-        let overview_height = if self.show_all_logs { 14 } else { 18 };
+        let overview_height = if state.runner.is_fullstack() { 13 } else { 12 };
         let [overview_area, logs_area, footer_area] = Layout::vertical([
             Constraint::Length(overview_height),
             Constraint::Min(8),
@@ -664,22 +716,12 @@ impl Output {
         );
 
         let inner = area.inner(Margin::new(2, 1));
+        let has_server_metric = state.runner.is_fullstack();
         let rows = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([
-                Constraint::Length(1),
-                Constraint::Length(1),
-                Constraint::Length(1),
-                Constraint::Length(1),
-                Constraint::Length(1),
-                Constraint::Length(1),
-                Constraint::Length(1),
-                Constraint::Length(1),
-                Constraint::Length(1),
-                Constraint::Length(1),
-                Constraint::Length(1),
-                Constraint::Length(1),
-                Constraint::Min(0),
+            .constraints(vec![
+                Constraint::Length(1);
+                if has_server_metric { 11 } else { 10 }
             ])
             .split(inner);
 
@@ -702,21 +744,6 @@ impl Output {
             features.join(", ")
         };
 
-        let hot_reload = if !state.runner.automatic_rebuilds {
-            "disabled"
-        } else if state.runner.use_hotpatch_engine {
-            "enabled (hotpatch)"
-        } else {
-            "enabled"
-        };
-
-        frame.render_widget(
-            Paragraph::new(Line::from(vec![
-                " App        ".gray(),
-                client.build.executable_name().white(),
-            ])),
-            rows[0],
-        );
         frame.render_widget(
             Paragraph::new(Line::from(vec![
                 Span::raw(format!("{} ", status_icon)),
@@ -742,53 +769,95 @@ impl Output {
             client.total_build_time().or(client.compile_duration()),
             matches!(client.stage, BuildStage::Failed),
         );
-        self.render_metric_gauge(
-            frame,
-            rows[6],
-            "",
-            if state.runner.is_fullstack() {
-                "Server"
-            } else {
-                "Bundle"
-            },
-            if state.runner.is_fullstack() {
-                state.runner.server_compile_progress()
-            } else {
-                client.bundle_progress()
-            },
-            if state.runner.is_fullstack() {
-                client.compile_duration()
-            } else {
-                client.bundle_duration()
-            },
-            false,
-        );
+        if has_server_metric {
+            self.render_metric_gauge(
+                frame,
+                rows[6],
+                "",
+                "Server",
+                state.runner.server_compile_progress(),
+                client.compile_duration(),
+                false,
+            );
+        }
 
-        frame.render_widget(self.section_divider(inner.width, "Info"), rows[8]);
+        let info_row = if has_server_metric { 8 } else { 7 };
+        frame.render_widget(self.section_divider(inner.width, "Info"), rows[info_row]);
         frame.render_widget(
             Paragraph::new(Line::from(vec![
                 " Platform   ".gray(),
                 client.build.bundle.expected_name().yellow(),
             ])),
-            rows[9],
+            rows[info_row + 1],
         );
         frame.render_widget(
             Paragraph::new(Line::from(vec![
                 " Features   ".gray(),
                 features_text.white(),
             ])),
-            rows[10],
-        );
-        frame.render_widget(
-            Paragraph::new(Line::from(vec![" Hot Reload ".gray(), hot_reload.yellow()])),
-            rows[11],
+            rows[info_row + 2],
         );
     }
 
-    fn render_live_logs_panel(&self, frame: &mut Frame<'_>, area: Rect) {
+    fn render_live_logs_panel(&mut self, frame: &mut Frame<'_>, area: Rect) {
+        let logs_label = " LIVE LOGS ";
+        let verbose_label = "Verbose";
+        let trace_label = "Tracing";
+        let separator = " - ";
+        let available = area.width.saturating_sub(2) as usize;
+        let static_width =
+            logs_label.len() + 1 + verbose_label.len() + separator.len() + trace_label.len() + 1;
+        let filler_len = available.saturating_sub(static_width);
+        let start_x = area
+            .x
+            .saturating_add(1)
+            .saturating_add((logs_label.len() + filler_len + 1) as u16);
+        let trace_x = start_x
+            .saturating_add(verbose_label.len() as u16)
+            .saturating_add(separator.len() as u16);
+
+        self.verbose_click_area = Some(Rect {
+            x: start_x,
+            y: area.y,
+            width: verbose_label.len() as u16,
+            height: 1,
+        });
+        self.trace_click_area = Some(Rect {
+            x: trace_x,
+            y: area.y,
+            width: trace_label.len() as u16,
+            height: 1,
+        });
+
+        let active_style = Style::default()
+            .fg(Color::Yellow)
+            .add_modifier(Modifier::BOLD);
+        let inactive_style = Style::default().fg(Color::Gray);
         frame.render_widget(
             Block::default()
-                .title(Span::styled(" LIVE LOGS ", Style::default().bold().white()))
+                .title(Line::from(vec![
+                    Span::styled(logs_label, Style::default().bold().white()),
+                    Span::styled("─".repeat(filler_len), Style::default().fg(Color::DarkGray)),
+                    Span::raw(" "),
+                    Span::styled(
+                        verbose_label,
+                        if self.verbose {
+                            active_style
+                        } else {
+                            inactive_style
+                        },
+                    ),
+                    Span::styled(separator, Style::default().fg(Color::DarkGray)),
+                    Span::styled(
+                        trace_label,
+                        if self.trace {
+                            active_style
+                        } else {
+                            inactive_style
+                        },
+                    ),
+                    Span::raw(" "),
+                ]))
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded)
                 .border_style(Style::default().fg(Color::DarkGray)),
@@ -969,7 +1038,7 @@ impl Output {
         }
 
         let needle = self.search_query.to_lowercase();
-        logs.filter(|log| self.log_contains(log, &needle))
+        logs.filter(|log| !needle.is_empty() && self.log_contains(log, &needle))
             .cloned()
             .collect()
     }
@@ -1000,13 +1069,18 @@ impl Output {
 
     fn format_log_lines(&self, log: &TraceMsg) -> Vec<Line<'static>> {
         use cargo_metadata::diagnostic::DiagnosticLevel;
-        use chrono::Timelike;
+
+        let secs = log
+            .timestamp
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
 
         let timestamp = format!(
-            "[{:02}:{:02}:{:02}]",
-            log.timestamp.hour(),
-            log.timestamp.minute(),
-            log.timestamp.second()
+            "{:02}:{:02}:{:02} ",
+            (secs % 86400) / 3600,
+            (secs % 3600) / 60,
+            secs % 60,
         );
 
         let message = match &log.content {
@@ -1601,7 +1675,6 @@ impl Output {
 
     fn tracemsg_to_ansi_string(log: TraceMsg) -> Vec<String> {
         use ansi_to_tui::IntoText;
-        use chrono::Timelike;
 
         let rendered = match log.content {
             TraceContent::Cargo(msg) => msg.rendered.unwrap_or_default(),
@@ -1621,12 +1694,18 @@ impl Output {
                 if idx == 0 && subline_idx == 0 {
                     let mut formatted_line = Line::default();
 
+                    let secs = log
+                        .timestamp
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap()
+                        .as_secs();
+
                     formatted_line.push_span(
                         Span::raw(format!(
                             "{:02}:{:02}:{:02} ",
-                            log.timestamp.hour(),
-                            log.timestamp.minute(),
-                            log.timestamp.second()
+                            (secs % 86400) / 3600,
+                            (secs % 3600) / 60,
+                            secs % 60,
                         ))
                         .dark_gray(),
                     );
@@ -1655,7 +1734,6 @@ impl Output {
                             },
                             TraceSrc::Cargo => Style::new().yellow(),
                             TraceSrc::Build => Style::new().blue(),
-                            TraceSrc::Bundle => Style::new().blue(),
                             TraceSrc::Unknown => Style::new().gray(),
                         }),
                     );

@@ -33,7 +33,6 @@ impl RunArgs {
         // and other things like the devserver on.
         self.args.hot_patch = false;
         self.args.interactive = Some(false);
-        self.args.hot_reload = Some(false);
         self.args.watch = Some(false);
 
         let mut builder = AppServer::new(self.args).await?;

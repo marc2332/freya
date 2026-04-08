@@ -91,7 +91,6 @@ pub(crate) struct AppServer {
     pub(crate) interactive: bool,
     pub(crate) _force_sequential: bool,
     pub(crate) hot_reload: bool,
-    pub(crate) open_browser: bool,
     pub(crate) _wsl_file_poll_interval: u16,
     pub(crate) always_on_top: bool,
     pub(crate) fullstack: bool,
@@ -102,7 +101,6 @@ pub(crate) struct AppServer {
     pub(crate) devserver_port: u16,
     pub(crate) devserver_bind_ip: IpAddr,
     pub(crate) proxied_port: Option<u16>,
-    pub(crate) cross_origin_policy: bool,
 
     // The arguments that should be forwarded to the client app when it is opened
     pub(crate) client_args: Vec<String>,
@@ -114,7 +112,6 @@ pub(crate) struct AppServer {
 }
 
 pub(crate) struct CachedFile {
-    contents: String,
     most_recent: Option<String>,
 }
 
@@ -126,7 +123,6 @@ impl AppServer {
         // Resolve the simpler args
         let interactive = args.is_interactive_tty();
         let force_sequential = args.platform_args.shared.targets.force_sequential_build();
-        let cross_origin_policy = args.cross_origin_policy;
 
         // Find the launch args for the client and server
         let split_args = |args: &str| {
@@ -140,16 +136,8 @@ impl AppServer {
         let client_args = args.platform_args.with_client_or_shared(|c| &c.args);
         let client_args = split_args(client_args);
 
-        // These come from the args but also might come from the workspace settings
-        // We opt to use the manually specified args over the workspace settings
-        let hot_reload = args
-            .hot_reload
-            .unwrap_or_else(|| workspace.settings.always_hot_reload.unwrap_or(true));
-
-        let open_browser = args
-            .open
-            .unwrap_or_else(|| workspace.settings.always_open_browser.unwrap_or(false))
-            && interactive;
+        // Hot reloading follows the hotpatch toggle.
+        let hot_reload = args.hot_patch;
 
         let wsl_file_poll_interval = args
             .wsl_file_poll_interval
@@ -206,7 +194,6 @@ impl AppServer {
             client,
             server,
             hot_reload,
-            open_browser,
             _wsl_file_poll_interval: wsl_file_poll_interval,
             always_on_top,
             workspace,
@@ -218,7 +205,6 @@ impl AppServer {
             _watcher_tx: watcher_tx,
             interactive,
             _force_sequential: force_sequential,
-            cross_origin_policy,
             fullstack,
             ssg,
             server_args,

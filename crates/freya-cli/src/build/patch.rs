@@ -56,9 +56,6 @@ pub enum PatchError {
     #[error("Failed to read file: {0}")]
     ReadFs(#[from] std::io::Error),
 
-    #[error("Failed to parse wasm section: {0}")]
-    ParseSection(#[from] wasmparser::BinaryReaderError),
-
     #[error("Failed to parse object file, {0}")]
     ParseObjectFile(#[from] object::read::Error),
 
