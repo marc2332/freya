@@ -41,6 +41,7 @@
 //! - [Layers](self::_docs::layers)
 //! - [Platforms](self::_docs::platforms)
 //! - [Development Setup](self::_docs::development_setup)
+//! - [Extending Components](self::_docs::extending_components)
 //!
 //! ### Learn
 //! - [Built-in Components](crate::components)
