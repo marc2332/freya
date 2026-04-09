@@ -5,6 +5,24 @@ use std::{
     time::Instant,
 };
 
+use alacritty_terminal::{
+    event::{
+        Event as AlacrittyEvent,
+        EventListener,
+    },
+    grid::Dimensions,
+    term::{
+        Config as TermConfig,
+        Term,
+    },
+    vte::{
+        Parser as VteParser,
+        ansi::{
+            Processor,
+            StdSyncHandler,
+        },
+    },
+};
 use freya_core::{
     notify::ArcNotify,
     prelude::{
@@ -21,76 +39,85 @@ use portable_pty::{
     PtySize,
     native_pty_system,
 };
-use termwiz::escape::{
-    Action,
-    CSI,
-    OperatingSystemCommand,
-    csi::{
-        Cursor,
-        Device,
-    },
-    parser::Parser as TermwizParser,
-};
-use vt100::Parser;
 
 use crate::{
-    buffer::TerminalBuffer,
     handle::{
         TerminalCleaner,
         TerminalError,
         TerminalHandle,
         TerminalId,
     },
+    osc7::{
+        CwdSink,
+        parse_cwd_url,
+    },
 };
 
-/// Query the maximum scrollback available without disturbing the viewport.
-/// Saves current scrollback, queries max, and restores.
-pub(crate) fn query_max_scrollback(parser: &mut Parser) -> usize {
-    let saved = parser.screen().scrollback();
-    parser.screen_mut().set_scrollback(usize::MAX);
-    let max = parser.screen().scrollback();
-    parser.screen_mut().set_scrollback(saved);
-    max
+/// `Dimensions` impl passed to `Term::new` / `Term::resize`.
+#[derive(Clone, Copy)]
+pub(crate) struct TermSize {
+    pub screen_lines: usize,
+    pub columns: usize,
 }
 
-/// Extract visible cells from the parser at the current scrollback position.
-pub(crate) fn extract_buffer(
-    parser: &Parser,
-    scroll_offset: usize,
-    total_scrollback: usize,
-) -> TerminalBuffer {
-    let (rows, cols) = parser.screen().size();
-    let rows_vec: Vec<Vec<vt100::Cell>> = (0..rows)
-        .map(|r| {
-            (0..cols)
-                .filter_map(|c| parser.screen().cell(r, c).cloned())
-                .collect()
-        })
-        .collect();
-    let (cur_r, cur_c) = parser.screen().cursor_position();
-    TerminalBuffer {
-        rows: rows_vec,
-        cursor_row: cur_r as usize,
-        cursor_col: cur_c as usize,
-        cols: cols as usize,
-        rows_count: rows as usize,
-        selection: None,
-        scroll_offset,
-        total_scrollback,
-        cursor_visible: !parser.screen().hide_cursor(),
+impl Dimensions for TermSize {
+    fn total_lines(&self) -> usize {
+        self.screen_lines
+    }
+
+    fn screen_lines(&self) -> usize {
+        self.screen_lines
+    }
+
+    fn columns(&self) -> usize {
+        self.columns
     }
 }
 
-/// Spawn a PTY and return a TerminalHandle.
+/// Listener proxy passed into alacritty's `Term`. Routes its side-effects
+/// (PtyWrite, Title, ClipboardStore) into the freya-side state.
+#[derive(Clone)]
+pub struct EventProxy {
+    pub(crate) writer: Rc<RefCell<Option<Box<dyn std::io::Write + Send>>>>,
+    pub(crate) title: Rc<RefCell<Option<String>>>,
+    pub(crate) title_notifier: ArcNotify,
+    pub(crate) clipboard_content: Rc<RefCell<Option<String>>>,
+    pub(crate) clipboard_notifier: ArcNotify,
+}
+
+impl EventListener for EventProxy {
+    fn send_event(&self, event: AlacrittyEvent) {
+        match event {
+            AlacrittyEvent::PtyWrite(text) => {
+                if let Some(writer) = &mut *self.writer.borrow_mut() {
+                    let _ = writer.write_all(text.as_bytes());
+                    let _ = writer.flush();
+                }
+            }
+            AlacrittyEvent::Title(t) => {
+                *self.title.borrow_mut() = Some(t);
+                self.title_notifier.notify();
+            }
+            AlacrittyEvent::ResetTitle => {
+                *self.title.borrow_mut() = None;
+                self.title_notifier.notify();
+            }
+            AlacrittyEvent::ClipboardStore(_, text) => {
+                *self.clipboard_content.borrow_mut() = Some(text);
+                self.clipboard_notifier.notify();
+            }
+            // Bell, MouseCursorDirty, ChildExit, ColorRequest, etc.
+            _ => {}
+        }
+    }
+}
+
+/// Spawn a PTY and return a `TerminalHandle`.
 pub(crate) fn spawn_pty(
     id: TerminalId,
     command: CommandBuilder,
     scrollback_size: usize,
 ) -> Result<TerminalHandle, TerminalError> {
-    let (update_tx, mut update_rx) = futures_channel::mpsc::unbounded::<()>();
-
-    let buffer = Rc::new(RefCell::new(TerminalBuffer::default()));
-    let parser = Rc::new(RefCell::new(Parser::new(24, 80, scrollback_size)));
     let writer = Rc::new(RefCell::new(None::<Box<dyn std::io::Write + Send>>));
     let closer_notifier = ArcNotify::new();
     let output_notifier = ArcNotify::new();
@@ -99,6 +126,29 @@ pub(crate) fn spawn_pty(
     let title: Rc<RefCell<Option<String>>> = Rc::new(RefCell::new(None));
     let clipboard_content: Rc<RefCell<Option<String>>> = Rc::new(RefCell::new(None));
     let clipboard_notifier = ArcNotify::new();
+
+    let event_proxy = EventProxy {
+        writer: writer.clone(),
+        title: title.clone(),
+        title_notifier: title_notifier.clone(),
+        clipboard_content: clipboard_content.clone(),
+        clipboard_notifier: clipboard_notifier.clone(),
+    };
+
+    let term_config = TermConfig {
+        scrolling_history: scrollback_size,
+        ..TermConfig::default()
+    };
+    let initial_size = TermSize {
+        screen_lines: 24,
+        columns: 80,
+    };
+    let term = Rc::new(RefCell::new(Term::new(
+        term_config,
+        &initial_size,
+        event_proxy,
+    )));
+    let processor: Rc<RefCell<Processor<StdSyncHandler>>> = Rc::new(RefCell::new(Processor::new()));
 
     let pty_system = native_pty_system();
     let pair = pty_system
@@ -122,135 +172,41 @@ pub(crate) fn spawn_pty(
     let master: Rc<RefCell<Box<dyn MasterPty + Send>>> = Rc::new(RefCell::new(pair.master));
 
     let platform = Platform::get();
-    let reader_task = spawn_forever({
-        let parser = parser.clone();
-        let buffer = buffer.clone();
-        let closer_notifier = closer_notifier.clone();
-        let writer = writer.clone();
-        async move {
-            use futures_lite::StreamExt;
-            while let Some(()) = update_rx.next().await {
-                let mut parser = parser.borrow_mut();
-                let total_scrollback = query_max_scrollback(&mut parser);
-
-                let mut buffer = buffer.borrow_mut();
-                let old_total_scrollback = buffer.total_scrollback;
-                let delta = total_scrollback.saturating_sub(old_total_scrollback);
-                parser.screen_mut().set_scrollback(buffer.scroll_offset);
-                let mut new_buffer =
-                    extract_buffer(&parser, buffer.scroll_offset, total_scrollback);
-                parser.screen_mut().set_scrollback(0);
-
-                new_buffer.selection = buffer.selection.take().map(|mut selection| {
-                    selection.start_scroll = selection.start_scroll.saturating_add(delta);
-                    selection.end_scroll = selection.end_scroll.saturating_add(delta);
-                    selection
-                });
-                *buffer = new_buffer;
-                platform.send(UserEvent::RequestRedraw);
-            }
-            // Channel closed — PTY exited
-            *writer.borrow_mut() = None;
-            closer_notifier.notify();
-            platform.send(UserEvent::RequestRedraw);
-        }
-    });
-
     let pty_task = spawn_forever({
+        let term = term.clone();
         let writer = writer.clone();
-        let parser = parser.clone();
+        let closer_notifier = closer_notifier.clone();
         let output_notifier = output_notifier.clone();
         let cwd = cwd.clone();
-        let title = title.clone();
-        let title_notifier = title_notifier.clone();
-        let clipboard_content = clipboard_content.clone();
-        let clipboard_notifier = clipboard_notifier.clone();
         async move {
-            let mut tw_parser = TermwizParser::new();
+            // Side-channel parser for OSC 7 (cwd), which alacritty drops.
+            let mut cwd_parser = VteParser::new();
+            let mut cwd_sink = CwdSink::default();
             loop {
                 let mut buf = [0u8; 4096];
-
                 match reader.read(&mut buf).await {
                     Ok(0) => break,
                     Ok(n) => {
                         let data = &buf[..n];
+                        processor
+                            .borrow_mut()
+                            .advance(&mut *term.borrow_mut(), data);
 
-                        parser.borrow_mut().process(data);
-
-                        // Use termwiz to detect terminal queries and OSC sequences
-                        let actions = tw_parser.parse_as_vec(data);
-                        let mut responses: Vec<Vec<u8>> = Vec::new();
-
-                        for action in actions {
-                            match action {
-                                Action::CSI(CSI::Device(dev)) => match *dev {
-                                    Device::RequestPrimaryDeviceAttributes => {
-                                        responses.push(b"\x1b[?62;22c".to_vec());
-                                    }
-                                    Device::RequestSecondaryDeviceAttributes => {
-                                        responses.push(b"\x1b[>0;0;0c".to_vec());
-                                    }
-                                    Device::StatusReport => {
-                                        responses.push(b"\x1b[0n".to_vec());
-                                    }
-                                    _ => {}
-                                },
-                                Action::CSI(CSI::Cursor(Cursor::RequestActivePositionReport)) => {
-                                    let p = parser.borrow();
-                                    let (row, col) = p.screen().cursor_position();
-                                    let response = format!("\x1b[{};{}R", row + 1, col + 1);
-                                    responses.push(response.into_bytes());
-                                }
-                                Action::OperatingSystemCommand(osc) => match *osc {
-                                    OperatingSystemCommand::CurrentWorkingDirectory(url) => {
-                                        // Strip file:// prefix if present
-                                        let path =
-                                            if let Some(stripped) = url.strip_prefix("file://") {
-                                                // file:///path or file://hostname/path
-                                                if let Some(rest) = stripped.strip_prefix('/') {
-                                                    PathBuf::from(format!("/{rest}"))
-                                                } else if let Some((_host, path)) =
-                                                    stripped.split_once('/')
-                                                {
-                                                    PathBuf::from(format!("/{path}"))
-                                                } else {
-                                                    PathBuf::from(stripped)
-                                                }
-                                            } else {
-                                                PathBuf::from(url)
-                                            };
-                                        *cwd.borrow_mut() = Some(path);
-                                    }
-                                    OperatingSystemCommand::SetWindowTitle(t)
-                                    | OperatingSystemCommand::SetIconNameAndWindowTitle(t) => {
-                                        *title.borrow_mut() = Some(t);
-                                        title_notifier.notify();
-                                    }
-                                    OperatingSystemCommand::SetSelection(_sel, text) => {
-                                        *clipboard_content.borrow_mut() = Some(text);
-                                        clipboard_notifier.notify();
-                                    }
-                                    _ => {}
-                                },
-                                _ => {}
-                            }
+                        cwd_parser.advance(&mut cwd_sink, data);
+                        if let Some(url) = cwd_sink.take() {
+                            *cwd.borrow_mut() = Some(parse_cwd_url(&url));
                         }
 
-                        if !responses.is_empty()
-                            && let Some(writer) = &mut *writer.borrow_mut()
-                        {
-                            for response in responses {
-                                let _ = writer.write_all(&response);
-                            }
-                            let _ = writer.flush();
-                        }
-
-                        let _ = update_tx.unbounded_send(());
                         output_notifier.notify();
+                        platform.send(UserEvent::RequestRedraw);
                     }
                     Err(_) => break,
                 }
             }
+            // PTY closed — drop the writer and notify observers.
+            *writer.borrow_mut() = None;
+            closer_notifier.notify();
+            platform.send(UserEvent::RequestRedraw);
         }
     });
 
@@ -258,13 +214,11 @@ pub(crate) fn spawn_pty(
         closer_notifier: closer_notifier.clone(),
         cleaner: Rc::new(TerminalCleaner {
             writer: writer.clone(),
-            reader_task,
             pty_task,
             closer_notifier,
         }),
         id,
-        buffer,
-        parser,
+        term,
         writer,
         master,
         cwd,
@@ -276,5 +230,6 @@ pub(crate) fn spawn_pty(
         last_write_time: Rc::new(RefCell::new(Instant::now())),
         pressed_button: Rc::new(RefCell::new(None)),
         modifiers: Rc::new(RefCell::new(Modifiers::empty())),
+        dragging_selection: Rc::new(RefCell::new(false)),
     })
 }

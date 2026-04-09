@@ -5,6 +5,13 @@ use std::{
     rc::Rc,
 };
 
+use alacritty_terminal::{
+    grid::Dimensions,
+    term::{
+        TermMode,
+        cell::Cell,
+    },
+};
 use freya_core::{
     data::{
         AccessibilityData,
@@ -24,7 +31,6 @@ use freya_core::{
     tree::DiffModifies,
 };
 use freya_engine::prelude::{
-    Canvas,
     Font,
     FontEdging,
     FontHinting,
@@ -33,22 +39,17 @@ use freya_engine::prelude::{
     PaintStyle,
     ParagraphBuilder,
     ParagraphStyle,
-    SkRect,
-    TextBlob,
     TextStyle,
 };
 use rustc_hash::FxHashMap;
-use torin::prelude::{
-    Area,
-    Size2D,
-};
+use torin::prelude::Size2D;
 
 use crate::{
-    colors::map_vt100_color,
     handle::TerminalHandle,
     rendering::{
         CachedRow,
-        TextRenderer,
+        Renderer,
+        SelectionBounds,
     },
 };
 
@@ -61,209 +62,6 @@ struct TerminalMeasure {
     font_family: String,
     font_size: f32,
     row_cache: RefCell<FifoCache<u64, CachedRow>>,
-}
-
-/// Renders selection, backgrounds, cursor, and scrollbar.
-struct TerminalRenderer {
-    area: Area,
-    char_width: f32,
-    line_height: f32,
-    baseline_offset: f32,
-    foreground: Color,
-    background: Color,
-    selection_color: Color,
-}
-
-impl TerminalRenderer {
-    fn render_background(&self, canvas: &Canvas, paint: &mut Paint) {
-        paint.set_color(self.background);
-        canvas.draw_rect(
-            SkRect::new(
-                self.area.min_x(),
-                self.area.min_y(),
-                self.area.max_x(),
-                self.area.max_y(),
-            ),
-            paint,
-        );
-    }
-
-    fn render_selection(
-        &self,
-        row_idx: usize,
-        row_len: usize,
-        y: f32,
-        bounds: &(i64, usize, i64, usize),
-        canvas: &Canvas,
-        paint: &mut Paint,
-    ) {
-        let (start_row, start_col, end_row, end_col) = *bounds;
-        let row_i = row_idx as i64;
-
-        if row_i < start_row || row_i > end_row {
-            return;
-        }
-
-        let sel_start = if row_i == start_row { start_col } else { 0 };
-        let sel_end = if row_i == end_row {
-            end_col.min(row_len)
-        } else {
-            row_len
-        };
-
-        if sel_start < sel_end {
-            let left = self.area.min_x() + (sel_start as f32) * self.char_width;
-            let right = self.area.min_x() + (sel_end as f32) * self.char_width;
-            paint.set_color(self.selection_color);
-            canvas.draw_rect(
-                SkRect::new(left, y.round(), right, (y + self.line_height).round()),
-                paint,
-            );
-        }
-    }
-
-    fn render_cell_backgrounds(
-        &self,
-        row: &[vt100::Cell],
-        y: f32,
-        canvas: &Canvas,
-        paint: &mut Paint,
-    ) {
-        let mut run_start: Option<(usize, Color)> = None;
-        let mut col = 0;
-        while col < row.len() {
-            let cell = &row[col];
-            if cell.is_wide_continuation() {
-                col += 1;
-                continue;
-            }
-            let cell_bg = if cell.inverse() {
-                map_vt100_color(cell.fgcolor(), self.foreground)
-            } else {
-                map_vt100_color(cell.bgcolor(), self.background)
-            };
-            let end_col = if cell.is_wide() { col + 2 } else { col + 1 };
-
-            if cell_bg != self.background {
-                match &run_start {
-                    Some((_, color)) if *color == cell_bg => {}
-                    Some((start, color)) => {
-                        self.render_cell_background(*start, col, *color, y, canvas, paint);
-                        run_start = Some((col, cell_bg));
-                    }
-                    None => {
-                        run_start = Some((col, cell_bg));
-                    }
-                }
-            } else if let Some((start, color)) = run_start.take() {
-                self.render_cell_background(start, col, color, y, canvas, paint);
-            }
-            col = end_col;
-        }
-        if let Some((start, color)) = run_start {
-            self.render_cell_background(start, col, color, y, canvas, paint);
-        }
-    }
-
-    fn render_cell_background(
-        &self,
-        start: usize,
-        end: usize,
-        color: Color,
-        y: f32,
-        canvas: &Canvas,
-        paint: &mut Paint,
-    ) {
-        let left = self.area.min_x() + (start as f32) * self.char_width;
-        let right = self.area.min_x() + (end as f32) * self.char_width;
-        paint.set_color(color);
-        canvas.draw_rect(
-            SkRect::new(left, y.round(), right, (y + self.line_height).round()),
-            paint,
-        );
-    }
-
-    fn render_cursor(
-        &self,
-        row: &[vt100::Cell],
-        y: f32,
-        cursor_col: usize,
-        font: &Font,
-        canvas: &Canvas,
-        paint: &mut Paint,
-    ) {
-        let left = self.area.min_x() + (cursor_col as f32) * self.char_width;
-        let right = left + self.char_width.max(1.0);
-        let bottom = y + self.line_height.max(1.0);
-
-        paint.set_color(self.foreground);
-        canvas.draw_rect(SkRect::new(left, y.round(), right, bottom.round()), paint);
-
-        let content = row
-            .get(cursor_col)
-            .map(|cell| {
-                if cell.has_contents() {
-                    cell.contents()
-                } else {
-                    " "
-                }
-            })
-            .unwrap_or(" ");
-
-        paint.set_color(self.background);
-        if let Some(blob) = TextBlob::from_pos_text_h(content, &[0.0], 0.0, font) {
-            canvas.draw_text_blob(&blob, (left, y + self.baseline_offset), paint);
-        }
-    }
-
-    fn render_scrollbar(
-        &self,
-        scroll_offset: usize,
-        total_scrollback: usize,
-        rows_count: usize,
-        canvas: &Canvas,
-        paint: &mut Paint,
-    ) {
-        let viewport_height = self.area.height();
-        let total_rows = rows_count + total_scrollback;
-        let total_content_height = total_rows as f32 * self.line_height;
-
-        let scrollbar_height = (viewport_height * viewport_height / total_content_height).max(20.0);
-        let track_height = viewport_height - scrollbar_height;
-
-        let scroll_ratio = scroll_offset as f32 / total_scrollback as f32;
-        let thumb_y = self.area.min_y() + track_height * (1.0 - scroll_ratio);
-
-        let scrollbar_x = self.area.max_x() - 4.0;
-        let corner_radius = 2.0;
-
-        paint.set_anti_alias(true);
-        paint.set_color(Color::from_argb(50, 0, 0, 0));
-        canvas.draw_round_rect(
-            SkRect::new(
-                scrollbar_x,
-                self.area.min_y(),
-                self.area.max_x(),
-                self.area.max_y(),
-            ),
-            corner_radius,
-            corner_radius,
-            paint,
-        );
-
-        paint.set_color(Color::from_argb(60, 255, 255, 255));
-        canvas.draw_round_rect(
-            SkRect::new(
-                scrollbar_x,
-                thumb_y,
-                self.area.max_x(),
-                thumb_y + scrollbar_height,
-            ),
-            corner_radius,
-            corner_radius,
-            paint,
-        );
-    }
 }
 
 #[derive(Clone)]
@@ -494,88 +292,81 @@ impl ElementExt for Terminal {
             .downcast_ref::<TerminalMeasure>()
             .unwrap();
 
-        let font = &measure.font;
-        let baseline_offset = measure.baseline_offset;
-        let buffer = self.handle.read_buffer();
+        let term = self.handle.term();
+        let grid = term.grid();
+        let columns = grid.columns();
+        let screen_lines = grid.screen_lines();
+        let display_offset = grid.display_offset();
+        let total_scrollback = grid.history_size();
+
+        // Per-frame row materialisation; the row cache amortises redraws.
+        // `display_iter` is row-major and yields exactly `screen_lines * columns` cells.
+        let cells: Vec<Cell> = grid.display_iter().map(|c| c.cell.clone()).collect();
+        let rows: Vec<Vec<Cell>> = cells.chunks(columns).map(<[Cell]>::to_vec).collect();
+
+        // Hide the cursor when scrolled into history.
+        let cursor_point = grid.cursor.point;
+        let cursor_viewport_line = cursor_point.line.0 + display_offset as i32;
+        let cursor_visible = display_offset == 0
+            && term.mode().contains(TermMode::SHOW_CURSOR)
+            && (0..screen_lines as i32).contains(&cursor_viewport_line);
+
+        // Translate the selection range into viewport row indices.
+        let selection_bounds = term
+            .selection
+            .as_ref()
+            .and_then(|s| s.to_range(&*term))
+            .map(|range| {
+                let offset = display_offset as i64;
+                SelectionBounds {
+                    start_row: range.start.line.0 as i64 + offset,
+                    start_col: range.start.column.0,
+                    end_row: range.end.line.0 as i64 + offset,
+                    end_col: range.end.column.0,
+                }
+            });
 
         let mut paint = Paint::default();
         paint.set_anti_alias(true);
         paint.set_style(PaintStyle::Fill);
 
-        let renderer = TerminalRenderer {
+        let mut renderer = Renderer {
+            canvas: context.canvas,
+            paint: &mut paint,
+            font: &measure.font,
+            font_collection: context.font_collection,
+            row_cache: &mut measure.row_cache.borrow_mut(),
             area,
             char_width: measure.char_width,
             line_height: measure.line_height,
-            baseline_offset,
+            baseline_offset: measure.baseline_offset,
             foreground: self.foreground,
             background: self.background,
             selection_color: self.selection_color,
-        };
-
-        renderer.render_background(context.canvas, &mut paint);
-
-        let selection_bounds = buffer.selection.as_ref().and_then(|sel| {
-            if sel.is_empty() {
-                None
-            } else {
-                Some(sel.display_positions(buffer.scroll_offset))
-            }
-        });
-
-        let mut text_renderer = TextRenderer {
-            canvas: context.canvas,
-            font,
-            font_collection: context.font_collection,
-            paint: &mut paint,
-            row_cache: &mut measure.row_cache.borrow_mut(),
-            area_min_x: area.min_x(),
-            char_width: measure.char_width,
-            line_height: measure.line_height,
-            baseline_offset,
-            foreground: self.foreground,
-            background: self.background,
             font_family: &measure.font_family,
             font_size: measure.font_size,
         };
-        text_renderer.render_text(
-            &buffer.rows,
-            area.min_y(),
-            area.max_y(),
-            |row, y, canvas, paint| {
-                renderer.render_cell_backgrounds(row, y, canvas, paint);
-            },
-            |row_idx, row, y, canvas, paint| {
-                if let Some(bounds) = &selection_bounds {
-                    renderer.render_selection(row_idx, row.len(), y, bounds, canvas, paint);
-                }
-            },
-        );
 
-        if buffer.scroll_offset == 0
-            && buffer.cursor_visible
-            && let Some(row) = buffer.rows.get(buffer.cursor_row)
-        {
-            let cursor_y = area.min_y() + (buffer.cursor_row as f32) * measure.line_height;
+        renderer.render_background();
+
+        let mut y = area.min_y();
+        for (row_idx, row) in rows.iter().enumerate() {
+            if y + measure.line_height > area.max_y() {
+                break;
+            }
+            renderer.render_row(row_idx, row, y, selection_bounds.as_ref());
+            y += measure.line_height;
+        }
+
+        if cursor_visible && let Some(row) = rows.get(cursor_viewport_line as usize) {
+            let cursor_y = area.min_y() + (cursor_viewport_line as f32) * measure.line_height;
             if cursor_y + measure.line_height <= area.max_y() {
-                renderer.render_cursor(
-                    row,
-                    cursor_y,
-                    buffer.cursor_col,
-                    font,
-                    context.canvas,
-                    &mut paint,
-                );
+                renderer.render_cursor(row, cursor_y, cursor_point.column.0);
             }
         }
 
-        if buffer.total_scrollback > 0 {
-            renderer.render_scrollbar(
-                buffer.scroll_offset,
-                buffer.total_scrollback,
-                buffer.rows_count,
-                context.canvas,
-                &mut paint,
-            );
+        if total_scrollback > 0 {
+            renderer.render_scrollbar(display_offset, total_scrollback, screen_lines);
         }
     }
 }

@@ -1,14 +1,34 @@
 use std::{
-    cell::{
-        Ref,
-        RefCell,
-    },
+    cell::RefCell,
     io::Write,
     path::PathBuf,
     rc::Rc,
-    time::Instant,
+    time::{
+        Duration,
+        Instant,
+    },
 };
 
+use alacritty_terminal::{
+    grid::{
+        Dimensions,
+        Scroll,
+    },
+    index::{
+        Column,
+        Line,
+        Point,
+        Side,
+    },
+    selection::{
+        Selection,
+        SelectionType,
+    },
+    term::{
+        Term,
+        TermMode,
+    },
+};
 use freya_core::{
     notify::ArcNotify,
     prelude::{
@@ -27,13 +47,8 @@ use portable_pty::{
     MasterPty,
     PtySize,
 };
-use vt100::Parser;
 
 use crate::{
-    buffer::{
-        TerminalBuffer,
-        TerminalSelection,
-    },
     parser::{
         TerminalMouseButton,
         encode_mouse_move,
@@ -42,8 +57,8 @@ use crate::{
         encode_wheel_event,
     },
     pty::{
-        extract_buffer,
-        query_max_scrollback,
+        EventProxy,
+        TermSize,
         spawn_pty,
     },
 };
@@ -67,9 +82,6 @@ impl Default for TerminalId {
 /// Error type for terminal operations
 #[derive(Debug, thiserror::Error)]
 pub enum TerminalError {
-    #[error("PTY error: {0}")]
-    PtyError(String),
-
     #[error("Write error: {0}")]
     WriteError(String),
 
@@ -77,12 +89,17 @@ pub enum TerminalError {
     NotInitialized,
 }
 
-/// Internal cleanup handler for terminal resources.
+impl From<std::io::Error> for TerminalError {
+    fn from(e: std::io::Error) -> Self {
+        TerminalError::WriteError(e.to_string())
+    }
+}
+
+/// Cleans up the PTY and the reader task when the last handle is dropped.
 pub(crate) struct TerminalCleaner {
     /// Writer handle for the PTY.
     pub(crate) writer: Rc<RefCell<Option<Box<dyn Write + Send>>>>,
-    /// Async tasks
-    pub(crate) reader_task: TaskHandle,
+    /// PTY reader/parser task.
     pub(crate) pty_task: TaskHandle,
     /// Notifier that signals when the terminal should close.
     pub(crate) closer_notifier: ArcNotify,
@@ -91,7 +108,6 @@ pub(crate) struct TerminalCleaner {
 impl Drop for TerminalCleaner {
     fn drop(&mut self) {
         *self.writer.borrow_mut() = None;
-        self.reader_task.try_cancel();
         self.pty_task.try_cancel();
         self.closer_notifier.notify();
     }
@@ -99,19 +115,15 @@ impl Drop for TerminalCleaner {
 
 /// Handle to a running terminal instance.
 ///
-/// The handle allows you to write input to the terminal and resize it.
-/// Multiple Terminal components can share the same handle.
-///
-/// The PTY is automatically closed when the handle is dropped.
+/// Multiple `Terminal` components can share the same handle. The PTY is
+/// closed when the last handle is dropped.
 #[derive(Clone)]
-#[allow(dead_code)]
 pub struct TerminalHandle {
-    /// Unique identifier for this terminal instance.
+    /// Unique identifier for this terminal instance, used for `PartialEq`.
     pub(crate) id: TerminalId,
-    /// Terminal buffer containing the current screen state.
-    pub(crate) buffer: Rc<RefCell<TerminalBuffer>>,
-    /// VT100 parser for accessing full scrollback content.
-    pub(crate) parser: Rc<RefCell<Parser>>,
+    /// alacritty's terminal model — grid, modes, scrollback. The renderer
+    /// borrows this directly during paint, so there is no parallel snapshot.
+    pub(crate) term: Rc<RefCell<Term<EventProxy>>>,
     /// Writer for sending input to the PTY process.
     pub(crate) writer: Rc<RefCell<Option<Box<dyn Write + Send>>>>,
     /// PTY master handle for resizing.
@@ -122,9 +134,10 @@ pub struct TerminalHandle {
     pub(crate) title: Rc<RefCell<Option<String>>>,
     /// Notifier that signals when the terminal/PTY closes.
     pub(crate) closer_notifier: ArcNotify,
-    /// Handles cleanup when the terminal is dropped.
+    /// Kept alive purely so its `Drop` runs when the last handle dies.
+    #[allow(dead_code)]
     pub(crate) cleaner: Rc<TerminalCleaner>,
-    /// Notifier that signals when new output is received from the PTY.
+    /// Notifier that signals each time new output is received from the PTY.
     pub(crate) output_notifier: ArcNotify,
     /// Notifier that signals when the window title changes via OSC 0 or OSC 2.
     pub(crate) title_notifier: ArcNotify,
@@ -132,12 +145,15 @@ pub struct TerminalHandle {
     pub(crate) clipboard_content: Rc<RefCell<Option<String>>>,
     /// Notifier that signals when clipboard content changes via OSC 52.
     pub(crate) clipboard_notifier: ArcNotify,
-    /// Tracks when user last wrote input to the PTY.
+    /// Tracks when the user last wrote input to the PTY.
     pub(crate) last_write_time: Rc<RefCell<Instant>>,
     /// Currently pressed mouse button (for drag/motion tracking).
     pub(crate) pressed_button: Rc<RefCell<Option<TerminalMouseButton>>>,
     /// Current modifier keys state (shift, ctrl, alt, etc.).
     pub(crate) modifiers: Rc<RefCell<Modifiers>>,
+    /// Tracks an active text-selection drag, distinct from any held button
+    /// during mouse-tracking modes (vim etc.).
+    pub(crate) dragging_selection: Rc<RefCell<bool>>,
 }
 
 impl PartialEq for TerminalHandle {
@@ -147,19 +163,8 @@ impl PartialEq for TerminalHandle {
 }
 
 impl TerminalHandle {
-    /// Create a new terminal with the specified command and default scrollback size (1000 lines).
-    ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// use freya_terminal::prelude::*;
-    /// use portable_pty::CommandBuilder;
-    ///
-    /// let mut cmd = CommandBuilder::new("bash");
-    /// cmd.env("TERM", "xterm-256color");
-    ///
-    /// let handle = TerminalHandle::new(TerminalId::new(), cmd, None).unwrap();
-    /// ```
+    /// Spawn a PTY for `command` and return a handle. Defaults to 1000 lines
+    /// of scrollback when `scrollback_length` is `None`.
     pub fn new(
         id: TerminalId,
         command: portable_pty::CommandBuilder,
@@ -168,121 +173,48 @@ impl TerminalHandle {
         spawn_pty(id, command, scrollback_length.unwrap_or(1000))
     }
 
-    /// Refresh the terminal buffer from the parser, preserving selection state.
-    fn refresh_buffer(&self) {
-        let mut parser = self.parser.borrow_mut();
-        let total_scrollback = query_max_scrollback(&mut parser);
-
-        let mut buffer = self.buffer.borrow_mut();
-        buffer.scroll_offset = buffer.scroll_offset.min(total_scrollback);
-
-        parser.screen_mut().set_scrollback(buffer.scroll_offset);
-        let mut new_buffer = extract_buffer(&parser, buffer.scroll_offset, total_scrollback);
-        parser.screen_mut().set_scrollback(0);
-
-        new_buffer.selection = buffer.selection.take();
-        *buffer = new_buffer;
-    }
-
-    /// Write data to the terminal.
-    ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// # use freya_terminal::prelude::*;
-    /// # let handle: TerminalHandle = unimplemented!();
-    /// handle.write(b"ls -la\n").unwrap();
-    /// ```
+    /// Write data to the PTY, dropping any selection and snapping the
+    /// viewport back to the bottom so the user sees fresh output.
     pub fn write(&self, data: &[u8]) -> Result<(), TerminalError> {
         self.write_raw(data)?;
-        let mut buffer = self.buffer.borrow_mut();
-        buffer.selection = None;
-        buffer.scroll_offset = 0;
-        drop(buffer);
+        let mut term = self.term.borrow_mut();
+        term.selection = None;
+        term.scroll_display(Scroll::Bottom);
         *self.last_write_time.borrow_mut() = Instant::now();
-        self.scroll_to_bottom();
         Ok(())
     }
 
-    /// Process a key event and write the corresponding terminal escape sequence to the PTY.
-    ///
-    /// Handles standard terminal keys (Enter, Backspace, Tab, Escape, arrows, Delete),
-    /// Ctrl+letter control codes, modified Enter (Shift/Ctrl via CSI u encoding),
-    /// regular character input, and shift state tracking for mouse selection.
-    ///
-    /// Returns `Ok(true)` if the key was handled, `Ok(false)` if not recognized.
-    ///
-    /// Application-level shortcuts like clipboard copy/paste should be handled
-    /// by the caller before calling this method.
-    ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// # use freya_terminal::prelude::*;
-    /// # use keyboard_types::{Key, Modifiers};
-    /// # let handle: TerminalHandle = unimplemented!();
-    /// # let key = Key::Character("a".into());
-    /// # let modifiers = Modifiers::empty();
-    /// let _ = handle.write_key(&key, modifiers);
-    /// ```
+    /// Time since the user last wrote input to the PTY.
+    pub fn last_write_elapsed(&self) -> Duration {
+        self.last_write_time.borrow().elapsed()
+    }
+
+    /// Translate a key event into the matching terminal escape sequence and
+    /// write it to the PTY. Returns whether the key was recognised.
     pub fn write_key(&self, key: &Key, modifiers: Modifiers) -> Result<bool, TerminalError> {
         let shift = modifiers.contains(Modifiers::SHIFT);
         let ctrl = modifiers.contains(Modifiers::CONTROL);
         let alt = modifiers.contains(Modifiers::ALT);
 
-        match key {
-            Key::Character(ch) if ctrl && ch.len() == 1 => {
-                self.write(&[ch.as_bytes()[0] & 0x1f])?;
-                Ok(true)
-            }
+        // CSI u / xterm modifier byte: `1 + shift + alt*2 + ctrl*4`.
+        let modifier = || 1 + shift as u8 + (alt as u8) * 2 + (ctrl as u8) * 4;
+
+        let seq: Vec<u8> = match key {
+            Key::Character(ch) if ctrl && ch.len() == 1 => vec![ch.as_bytes()[0] & 0x1f],
             Key::Named(NamedKey::Enter) if shift || ctrl => {
-                let m = 1 + shift as u8 + (alt as u8) * 2 + (ctrl as u8) * 4;
-                let seq = format!("\x1b[13;{m}u");
-                self.write(seq.as_bytes())?;
-                Ok(true)
+                format!("\x1b[13;{}u", modifier()).into_bytes()
             }
-            Key::Named(NamedKey::Enter) => {
-                self.write(b"\r")?;
-                Ok(true)
-            }
-            Key::Named(NamedKey::Backspace) if ctrl => {
-                self.write(&[0x08])?;
-                Ok(true)
-            }
-            Key::Named(NamedKey::Backspace) if alt => {
-                self.write(&[0x1b, 0x7f])?;
-                Ok(true)
-            }
-            Key::Named(NamedKey::Backspace) => {
-                self.write(&[0x7f])?;
-                Ok(true)
-            }
+            Key::Named(NamedKey::Enter) => b"\r".to_vec(),
+            Key::Named(NamedKey::Backspace) if ctrl => vec![0x08],
+            Key::Named(NamedKey::Backspace) if alt => vec![0x1b, 0x7f],
+            Key::Named(NamedKey::Backspace) => vec![0x7f],
             Key::Named(NamedKey::Delete) if alt || ctrl || shift => {
-                let m = 1 + shift as u8 + (alt as u8) * 2 + (ctrl as u8) * 4;
-                let seq = format!("\x1b[3;{m}~");
-                self.write(seq.as_bytes())?;
-                Ok(true)
+                format!("\x1b[3;{}~", modifier()).into_bytes()
             }
-            Key::Named(NamedKey::Delete) => {
-                self.write(b"\x1b[3~")?;
-                Ok(true)
-            }
-            Key::Named(NamedKey::Shift) => {
-                self.shift_pressed(true);
-                Ok(true)
-            }
-            Key::Named(NamedKey::Tab) if shift => {
-                self.write(b"\x1b[Z")?;
-                Ok(true)
-            }
-            Key::Named(NamedKey::Tab) => {
-                self.write(b"\t")?;
-                Ok(true)
-            }
-            Key::Named(NamedKey::Escape) => {
-                self.write(&[0x1b])?;
-                Ok(true)
-            }
+            Key::Named(NamedKey::Delete) => b"\x1b[3~".to_vec(),
+            Key::Named(NamedKey::Tab) if shift => b"\x1b[Z".to_vec(),
+            Key::Named(NamedKey::Tab) => b"\t".to_vec(),
+            Key::Named(NamedKey::Escape) => vec![0x1b],
             Key::Named(
                 dir @ (NamedKey::ArrowUp
                 | NamedKey::ArrowDown
@@ -297,28 +229,32 @@ impl TerminalHandle {
                     _ => unreachable!(),
                 };
                 if shift || ctrl {
-                    let m = 1 + shift as u8 + (alt as u8) * 2 + (ctrl as u8) * 4;
-                    let seq = format!("\x1b[1;{m}{ch}");
-                    self.write(seq.as_bytes())?;
+                    format!("\x1b[1;{}{ch}", modifier()).into_bytes()
                 } else {
-                    self.write(&[0x1b, b'[', ch as u8])?;
+                    vec![0x1b, b'[', ch as u8]
                 }
-                Ok(true)
             }
-            Key::Character(ch) => {
-                self.write(ch.as_bytes())?;
-                Ok(true)
+            Key::Character(ch) => ch.as_bytes().to_vec(),
+            Key::Named(NamedKey::Shift) => {
+                self.shift_pressed(true);
+                return Ok(true);
             }
-            _ => Ok(false),
-        }
+            _ => return Ok(false),
+        };
+
+        self.write(&seq)?;
+        Ok(true)
     }
 
-    /// Write text to the PTY as a paste operation.
-    ///
-    /// If bracketed paste mode is enabled, wraps the text with `\x1b[200~` ... `\x1b[201~`.
-    // Adapted from https://github.com/alacritty/alacritty/blob/master/alacritty/src/event.rs
+    /// Paste text into the PTY, wrapping in bracketed-paste markers if the
+    /// running app has enabled them.
     pub fn paste(&self, text: &str) -> Result<(), TerminalError> {
-        if self.parser.borrow().screen().bracketed_paste() {
+        let bracketed = self
+            .term
+            .borrow()
+            .mode()
+            .contains(TermMode::BRACKETED_PASTE);
+        if bracketed {
             let filtered = text.replace(['\x1b', '\x03'], "");
             self.write_raw(b"\x1b[200~")?;
             self.write_raw(filtered.as_bytes())?;
@@ -332,105 +268,56 @@ impl TerminalHandle {
 
     /// Write data to the PTY without resetting scroll or selection state.
     fn write_raw(&self, data: &[u8]) -> Result<(), TerminalError> {
-        match &mut *self.writer.borrow_mut() {
-            Some(w) => {
-                w.write_all(data)
-                    .map_err(|e| TerminalError::WriteError(e.to_string()))?;
-                w.flush()
-                    .map_err(|e| TerminalError::WriteError(e.to_string()))?;
-                Ok(())
-            }
-            None => Err(TerminalError::NotInitialized),
-        }
+        let mut writer = self.writer.borrow_mut();
+        let writer = writer.as_mut().ok_or(TerminalError::NotInitialized)?;
+        writer.write_all(data)?;
+        writer.flush()?;
+        Ok(())
     }
 
-    /// Resize the terminal to the specified rows and columns.
-    ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// # use freya_terminal::prelude::*;
-    /// # let handle: TerminalHandle = unimplemented!();
-    /// handle.resize(24, 80);
-    /// ```
+    /// Resize the terminal. alacritty's grid reflows on width changes and
+    /// preserves scrollback on height changes, so this is lossless.
     pub fn resize(&self, rows: u16, cols: u16) {
-        self.parser.borrow_mut().screen_mut().set_size(rows, cols);
-        self.refresh_buffer();
+        // PTY first so SIGWINCH reaches the program before we update locally.
         let _ = self.master.borrow().resize(PtySize {
             rows,
             cols,
             pixel_width: 0,
             pixel_height: 0,
         });
+
+        self.term.borrow_mut().resize(TermSize {
+            screen_lines: rows as usize,
+            columns: cols as usize,
+        });
     }
 
-    /// Scroll the terminal by the specified delta.
-    ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// # use freya_terminal::prelude::*;
-    /// # let handle: TerminalHandle = unimplemented!();
-    /// handle.scroll(-3); // Scroll up 3 lines
-    /// handle.scroll(3); // Scroll down 3 lines
-    /// ```
+    /// Scroll the terminal by the specified delta. Positive delta moves the
+    /// viewport up into scrollback history, matching the vt100 convention.
     pub fn scroll(&self, delta: i32) {
-        if self.parser.borrow().screen().alternate_screen() {
-            return;
-        }
-
-        {
-            let mut buffer = self.buffer.borrow_mut();
-            let new_offset = (buffer.scroll_offset as i64 + delta as i64).max(0) as usize;
-            buffer.scroll_offset = new_offset.min(buffer.total_scrollback);
-        }
-
-        self.refresh_buffer();
-        Platform::get().send(UserEvent::RequestRedraw);
+        self.scroll_to(Scroll::Delta(delta));
     }
 
-    /// Scroll the terminal to the bottom.
-    ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// # use freya_terminal::prelude::*;
-    /// # let handle: TerminalHandle = unimplemented!();
-    /// handle.scroll_to_bottom();
-    /// ```
+    /// Scroll the terminal to the bottom of the buffer.
     pub fn scroll_to_bottom(&self) {
-        if self.parser.borrow().screen().alternate_screen() {
-            return;
-        }
-
-        self.buffer.borrow_mut().scroll_offset = 0;
-        self.refresh_buffer();
-        Platform::get().send(UserEvent::RequestRedraw);
+        self.scroll_to(Scroll::Bottom);
     }
 
-    /// Get the current scrollback position (scroll offset from buffer).
-    ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// # use freya_terminal::prelude::*;
-    /// # let handle: TerminalHandle = unimplemented!();
-    /// let position = handle.scrollback_position();
-    /// ```
-    pub fn scrollback_position(&self) -> usize {
-        self.buffer.borrow().scroll_offset
+    fn scroll_to(&self, target: Scroll) {
+        let mut term = self.term.borrow_mut();
+        if term.mode().contains(TermMode::ALT_SCREEN) {
+            return;
+        }
+        term.scroll_display(target);
+        Platform::get().send(UserEvent::RequestRedraw);
     }
 
     /// Get the current working directory reported by the shell via OSC 7.
-    ///
-    /// Returns `None` if the shell hasn't reported a CWD yet.
     pub fn cwd(&self) -> Option<PathBuf> {
         self.cwd.borrow().clone()
     }
 
     /// Get the window title reported by the shell via OSC 0 or OSC 2.
-    ///
-    /// Returns `None` if the shell hasn't reported a title yet.
     pub fn title(&self) -> Option<String> {
         self.title.borrow().clone()
     }
@@ -440,231 +327,125 @@ impl TerminalHandle {
         self.clipboard_content.borrow().clone()
     }
 
-    /// Send a wheel event to the PTY.
-    ///
-    /// This sends mouse wheel events as escape sequences to the running process.
-    /// Uses the currently active mouse protocol encoding based on what
-    /// the application has requested via DECSET sequences.
-    pub fn send_wheel_to_pty(&self, row: usize, col: usize, delta_y: f64) {
-        let encoding = self.parser.borrow().screen().mouse_protocol_encoding();
-        let seq = encode_wheel_event(row, col, delta_y, encoding);
-        let _ = self.write_raw(seq.as_bytes());
+    /// Snapshot of the active terminal mode bits.
+    fn mode(&self) -> TermMode {
+        *self.term.borrow().mode()
     }
 
-    /// Send a mouse move/drag event to the PTY based on the active mouse mode.
-    ///
-    /// - `AnyMotion` (DECSET 1003): sends motion events regardless of button state.
-    /// - `ButtonMotion` (DECSET 1002): sends motion events only while a button is held.
-    ///
-    /// When dragging, the held button is encoded in the motion event so TUI apps
-    /// can implement their own text selection.
-    ///
-    /// If shift is held and a button is pressed, updates the text selection instead
-    /// of sending events to the PTY.
+    /// Handle a mouse move/drag event based on the active mouse mode.
     pub fn mouse_move(&self, row: usize, col: usize) {
-        let is_dragging = self.pressed_button.borrow().is_some();
+        let held = *self.pressed_button.borrow();
+        let dragging = held.is_some();
 
-        if self.modifiers.borrow().contains(Modifiers::SHIFT) && is_dragging {
-            // Shift+drag updates text selection (raw mode, bypasses PTY)
+        if self.modifiers.borrow().contains(Modifiers::SHIFT) && dragging {
             self.update_selection(row, col);
             return;
         }
 
-        let parser = self.parser.borrow();
-        let mouse_mode = parser.screen().mouse_protocol_mode();
-        let encoding = parser.screen().mouse_protocol_encoding();
-
-        let held = *self.pressed_button.borrow();
-
-        match mouse_mode {
-            vt100::MouseProtocolMode::AnyMotion => {
-                let seq = encode_mouse_move(row, col, held, encoding);
-                let _ = self.write_raw(seq.as_bytes());
-            }
-            vt100::MouseProtocolMode::ButtonMotion => {
-                if let Some(button) = held {
-                    let seq = encode_mouse_move(row, col, Some(button), encoding);
-                    let _ = self.write_raw(seq.as_bytes());
-                }
-            }
-            vt100::MouseProtocolMode::None => {
-                // No mouse tracking - do text selection if dragging
-                if is_dragging {
-                    self.update_selection(row, col);
-                }
-            }
-            _ => {}
+        let mode = self.mode();
+        if mode.contains(TermMode::MOUSE_MOTION) {
+            // Any-motion mode: report regardless of button state.
+            let _ = self.write_raw(encode_mouse_move(row, col, held, mode).as_bytes());
+        } else if mode.contains(TermMode::MOUSE_DRAG)
+            && let Some(button) = held
+        {
+            // Button-motion mode: only while a button is held.
+            let _ = self.write_raw(encode_mouse_move(row, col, Some(button), mode).as_bytes());
+        } else if !mode.intersects(TermMode::MOUSE_MODE) && dragging {
+            self.update_selection(row, col);
         }
     }
 
-    /// Returns whether the running application has enabled mouse tracking.
-    fn is_mouse_tracking_enabled(&self) -> bool {
-        let parser = self.parser.borrow();
-        parser.screen().mouse_protocol_mode() != vt100::MouseProtocolMode::None
-    }
-
     /// Handle a mouse button press event.
-    ///
-    /// When the running application has enabled mouse tracking (e.g. vim,
-    /// helix, htop), this sends the press escape sequence to the PTY.
-    /// Otherwise it starts a text selection.
-    ///
-    /// If shift is held, text selection is always performed regardless of
-    /// the application's mouse tracking state.
     pub fn mouse_down(&self, row: usize, col: usize, button: TerminalMouseButton) {
         *self.pressed_button.borrow_mut() = Some(button);
 
-        if self.modifiers.borrow().contains(Modifiers::SHIFT) {
-            // Shift+drag always does raw text selection
-            self.start_selection(row, col);
-        } else if self.is_mouse_tracking_enabled() {
-            let encoding = self.parser.borrow().screen().mouse_protocol_encoding();
-            let seq = encode_mouse_press(row, col, button, encoding);
-            let _ = self.write_raw(seq.as_bytes());
+        let shift = self.modifiers.borrow().contains(Modifiers::SHIFT);
+        let mode = self.mode();
+        if !shift && mode.intersects(TermMode::MOUSE_MODE) {
+            let _ = self.write_raw(encode_mouse_press(row, col, button, mode).as_bytes());
         } else {
             self.start_selection(row, col);
         }
     }
 
     /// Handle a mouse button release event.
-    ///
-    /// When the running application has enabled mouse tracking, this sends the
-    /// release escape sequence to the PTY. Only `PressRelease`, `ButtonMotion`,
-    /// and `AnyMotion` modes receive release events — `Press` mode does not.
-    /// Otherwise it ends the current text selection.
-    ///
-    /// If shift is held, always ends the text selection instead of sending
-    /// events to the PTY.
     pub fn mouse_up(&self, row: usize, col: usize, button: TerminalMouseButton) {
         *self.pressed_button.borrow_mut() = None;
 
         if self.modifiers.borrow().contains(Modifiers::SHIFT) {
-            // Shift+drag ends text selection
             self.end_selection();
             return;
         }
 
-        let parser = self.parser.borrow();
-        let mouse_mode = parser.screen().mouse_protocol_mode();
-        let encoding = parser.screen().mouse_protocol_encoding();
-
-        match mouse_mode {
-            vt100::MouseProtocolMode::PressRelease
-            | vt100::MouseProtocolMode::ButtonMotion
-            | vt100::MouseProtocolMode::AnyMotion => {
-                let seq = encode_mouse_release(row, col, button, encoding);
-                let _ = self.write_raw(seq.as_bytes());
-            }
-            vt100::MouseProtocolMode::Press => {
-                // Press-only mode doesn't send release events
-            }
-            vt100::MouseProtocolMode::None => {
-                self.end_selection();
-            }
+        let mode = self.mode();
+        if mode.intersects(TermMode::MOUSE_MODE) {
+            let _ = self.write_raw(encode_mouse_release(row, col, button, mode).as_bytes());
+        } else {
+            self.end_selection();
         }
     }
 
-    /// Number of arrow key presses to send per wheel tick in alternate scroll mode.
-    const ALTERNATE_SCROLL_LINES: usize = 3;
-
     /// Handle a mouse button release from outside the terminal viewport.
-    ///
-    /// Clears the pressed state and ends any active text selection without
-    /// sending an encoded event to the PTY.
     pub fn release(&self) {
         *self.pressed_button.borrow_mut() = None;
         self.end_selection();
     }
 
-    /// Handle a wheel event intelligently.
-    ///
-    /// The behavior depends on the terminal state:
-    /// - If viewing scrollback history: scrolls the scrollback buffer.
-    /// - If mouse tracking is enabled (e.g., vim, helix): sends wheel escape
-    ///   sequences to the PTY.
-    /// - If on the alternate screen without mouse tracking (e.g., gitui, less):
-    ///   sends arrow key sequences to the PTY (alternate scroll mode, like
-    ///   wezterm/kitty/alacritty).
-    /// - Otherwise (normal shell): scrolls the scrollback buffer.
+    /// Route a wheel event to scrollback, PTY mouse events, or arrow-key
+    /// sequences depending on whether an app is tracking the mouse and
+    /// whether we're on the alternate screen (matches wezterm/kitty).
     pub fn wheel(&self, delta_y: f64, row: usize, col: usize) {
-        let scroll_delta = if delta_y > 0.0 { 3 } else { -3 };
-        let scroll_offset = self.buffer.borrow().scroll_offset;
-        let (mouse_mode, alt_screen, app_cursor) = {
-            let parser = self.parser.borrow();
-            let screen = parser.screen();
-            (
-                screen.mouse_protocol_mode(),
-                screen.alternate_screen(),
-                screen.application_cursor(),
-            )
-        };
+        // Lines per event from the OS delta, capped to keep flings sane.
+        let lines = (delta_y.abs().ceil() as i32).clamp(1, 10);
+        let scroll_delta = if delta_y > 0.0 { lines } else { -lines };
+
+        let mode = self.mode();
+        let scroll_offset = self.term.borrow().grid().display_offset();
 
         if scroll_offset > 0 {
-            // User is viewing scrollback history
-            let delta = scroll_delta;
-            self.scroll(delta);
-        } else if mouse_mode != vt100::MouseProtocolMode::None {
-            // App has enabled mouse tracking (vim, helix, etc.)
-            self.send_wheel_to_pty(row, col, delta_y);
-        } else if alt_screen {
-            // Alternate screen without mouse tracking (gitui, less, etc.)
-            // Send arrow key presses, matching wezterm/kitty/alacritty behavior
+            self.scroll(scroll_delta);
+        } else if mode.intersects(TermMode::MOUSE_MODE) {
+            let _ = self.write_raw(encode_wheel_event(row, col, delta_y, mode).as_bytes());
+        } else if mode.contains(TermMode::ALT_SCREEN) {
+            let app_cursor = mode.contains(TermMode::APP_CURSOR);
             let key = match (delta_y > 0.0, app_cursor) {
                 (true, true) => "\x1bOA",
                 (true, false) => "\x1b[A",
                 (false, true) => "\x1bOB",
                 (false, false) => "\x1b[B",
             };
-            for _ in 0..Self::ALTERNATE_SCROLL_LINES {
+            for _ in 0..lines {
                 let _ = self.write_raw(key.as_bytes());
             }
         } else {
-            // Normal screen, no mouse tracking — scroll scrollback
-            let delta = scroll_delta;
-            self.scroll(delta);
+            self.scroll(scroll_delta);
         }
     }
 
-    /// Read the current terminal buffer.
-    pub fn read_buffer(&'_ self) -> Ref<'_, TerminalBuffer> {
-        self.buffer.borrow()
+    /// Borrow the underlying alacritty `Term` for direct read access — used
+    /// by the renderer and accessibility code to inspect the grid without
+    /// holding a separate snapshot.
+    pub fn term(&self) -> std::cell::Ref<'_, Term<EventProxy>> {
+        self.term.borrow()
     }
 
-    /// Returns a future that completes when new output is received from the PTY.
-    ///
-    /// Can be called repeatedly in a loop to detect ongoing output activity.
+    /// Future that completes each time new output is received from the PTY.
     pub fn output_received(&self) -> impl std::future::Future<Output = ()> + '_ {
         self.output_notifier.notified()
     }
 
-    /// Returns a future that completes when the window title changes via OSC 0 or OSC 2.
-    ///
-    /// Can be called repeatedly in a loop to react to title updates from the shell.
+    /// Future that completes when the window title changes (OSC 0 / OSC 2).
     pub fn title_changed(&self) -> impl std::future::Future<Output = ()> + '_ {
         self.title_notifier.notified()
     }
 
-    /// Returns a future that completes when the terminal app sets clipboard content via OSC 52.
+    /// Future that completes when clipboard content changes (OSC 52).
     pub fn clipboard_changed(&self) -> impl std::future::Future<Output = ()> + '_ {
         self.clipboard_notifier.notified()
     }
 
-    pub fn last_write_elapsed(&self) -> std::time::Duration {
-        self.last_write_time.borrow().elapsed()
-    }
-
-    /// Returns a future that completes when the terminal/PTY closes.
-    ///
-    /// This can be used to detect when the shell process exits and update the UI accordingly.
-    ///
-    /// # Example
-    ///
-    /// ```rust,ignore
-    /// use_future(move || async move {
-    ///     terminal_handle.closed().await;
-    ///     // Terminal has exited, update UI state
-    /// });
-    /// ```
+    /// Future that completes when the PTY closes.
     pub fn closed(&self) -> impl std::future::Future<Output = ()> + '_ {
         self.closer_notifier.notified()
     }
@@ -675,9 +456,6 @@ impl TerminalHandle {
     }
 
     /// Track whether shift is currently pressed.
-    ///
-    /// This should be called from your key event handlers to track shift state
-    /// for shift+drag text selection.
     pub fn shift_pressed(&self, pressed: bool) {
         let mut mods = self.modifiers.borrow_mut();
         if pressed {
@@ -687,122 +465,41 @@ impl TerminalHandle {
         }
     }
 
-    /// Get the current text selection.
-    pub fn get_selection(&self) -> Option<TerminalSelection> {
-        self.buffer.borrow().selection.clone()
-    }
-
-    /// Set the text selection.
-    pub fn set_selection(&self, selection: Option<TerminalSelection>) {
-        self.buffer.borrow_mut().selection = selection;
-    }
-
     pub fn start_selection(&self, row: usize, col: usize) {
-        let mut buffer = self.buffer.borrow_mut();
-        let scroll = buffer.scroll_offset;
-        buffer.selection = Some(TerminalSelection {
-            dragging: true,
-            start_row: row,
-            start_col: col,
-            start_scroll: scroll,
-            end_row: row,
-            end_col: col,
-            end_scroll: scroll,
-        });
+        let mut term = self.term.borrow_mut();
+        let point = point_at(&term, row, col);
+        term.selection = Some(Selection::new(SelectionType::Simple, point, Side::Left));
+        *self.dragging_selection.borrow_mut() = true;
         Platform::get().send(UserEvent::RequestRedraw);
     }
 
     pub fn update_selection(&self, row: usize, col: usize) {
-        let mut buffer = self.buffer.borrow_mut();
-        let scroll = buffer.scroll_offset;
-        if let Some(selection) = &mut buffer.selection
-            && selection.dragging
-        {
-            selection.end_row = row;
-            selection.end_col = col;
-            selection.end_scroll = scroll;
-            Platform::get().send(UserEvent::RequestRedraw);
+        if !*self.dragging_selection.borrow() {
+            return;
         }
-    }
-
-    pub fn end_selection(&self) {
-        if let Some(selection) = &mut self.buffer.borrow_mut().selection {
-            selection.dragging = false;
-            Platform::get().send(UserEvent::RequestRedraw);
+        let mut term = self.term.borrow_mut();
+        let point = point_at(&term, row, col);
+        if let Some(selection) = term.selection.as_mut() {
+            selection.update(point, Side::Right);
         }
-    }
-
-    /// Clear the current selection.
-    pub fn clear_selection(&self) {
-        self.buffer.borrow_mut().selection = None;
         Platform::get().send(UserEvent::RequestRedraw);
     }
 
-    pub fn get_selected_text(&self) -> Option<String> {
-        let buffer = self.buffer.borrow();
-        let selection = buffer.selection.clone()?;
-        if selection.is_empty() {
-            return None;
-        }
-
-        let scroll = buffer.scroll_offset;
-        let (display_start, start_col, display_end, end_col) = selection.display_positions(scroll);
-
-        let mut parser = self.parser.borrow_mut();
-        let saved_scrollback = parser.screen().scrollback();
-        let (_rows, cols) = parser.screen().size();
-
-        let mut lines = Vec::new();
-
-        for d in display_start..=display_end {
-            let cp = d - scroll as i64;
-            let needed_scrollback = (-cp).max(0) as usize;
-            let viewport_row = cp.max(0) as u16;
-
-            parser.screen_mut().set_scrollback(needed_scrollback);
-
-            let row_cells: Vec<_> = (0..cols)
-                .filter_map(|c| parser.screen().cell(viewport_row, c).cloned())
-                .collect();
-
-            let is_single = display_start == display_end;
-            let is_first = d == display_start;
-            let is_last = d == display_end;
-
-            let cells = if is_single {
-                let s = start_col.min(row_cells.len());
-                let e = end_col.min(row_cells.len());
-                &row_cells[s..e]
-            } else if is_first {
-                let s = start_col.min(row_cells.len());
-                &row_cells[s..]
-            } else if is_last {
-                &row_cells[..end_col.min(row_cells.len())]
-            } else {
-                &row_cells
-            };
-
-            let mut line: String = cells
-                .iter()
-                .map(|cell| {
-                    if cell.has_contents() {
-                        cell.contents()
-                    } else {
-                        " "
-                    }
-                })
-                .collect();
-
-            // Strip trailing cell padding so it doesn't paste as blank lines.
-            if !is_single && !is_last {
-                line.truncate(line.trim_end_matches(' ').len());
-            }
-
-            lines.push(line);
-        }
-
-        parser.screen_mut().set_scrollback(saved_scrollback);
-
-        Some(lines.join("\n"))
+    pub fn end_selection(&self) {
+        *self.dragging_selection.borrow_mut() = false;
+        Platform::get().send(UserEvent::RequestRedraw);
     }
+
+    /// Returns the currently selected text as a string, if any.
+    pub fn get_selected_text(&self) -> Option<String> {
+        self.term.borrow().selection_to_string()
+    }
+}
+
+/// Translate a viewport `(row, col)` into an alacritty `Point` in absolute
+/// grid coordinates, accounting for the current scroll offset.
+fn point_at(term: &Term<EventProxy>, row: usize, col: usize) -> Point {
+    let offset = term.grid().display_offset() as i32;
+    let last_col = term.columns().saturating_sub(1);
+    Point::new(Line(row as i32 - offset), Column(col.min(last_col)))
 }
