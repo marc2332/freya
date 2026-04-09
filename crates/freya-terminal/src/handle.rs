@@ -121,7 +121,7 @@ impl Drop for TerminalCleaner {
 pub struct TerminalHandle {
     /// Unique identifier for this terminal instance, used for `PartialEq`.
     pub(crate) id: TerminalId,
-    /// alacritty's terminal model — grid, modes, scrollback. The renderer
+    /// alacritty's terminal model: grid, modes, scrollback. The renderer
     /// borrows this directly during paint, so there is no parallel snapshot.
     pub(crate) term: Rc<RefCell<Term<EventProxy>>>,
     /// Writer for sending input to the PTY process.
@@ -165,6 +165,18 @@ impl PartialEq for TerminalHandle {
 impl TerminalHandle {
     /// Spawn a PTY for `command` and return a handle. Defaults to 1000 lines
     /// of scrollback when `scrollback_length` is `None`.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use freya_terminal::prelude::*;
+    /// use portable_pty::CommandBuilder;
+    ///
+    /// let mut cmd = CommandBuilder::new("bash");
+    /// cmd.env("TERM", "xterm-256color");
+    ///
+    /// let handle = TerminalHandle::new(TerminalId::new(), cmd, None).unwrap();
+    /// ```
     pub fn new(
         id: TerminalId,
         command: portable_pty::CommandBuilder,
@@ -423,7 +435,7 @@ impl TerminalHandle {
         }
     }
 
-    /// Borrow the underlying alacritty `Term` for direct read access — used
+    /// Borrow the underlying alacritty `Term` for direct read access. Used
     /// by the renderer and accessibility code to inspect the grid without
     /// holding a separate snapshot.
     pub fn term(&self) -> std::cell::Ref<'_, Term<EventProxy>> {

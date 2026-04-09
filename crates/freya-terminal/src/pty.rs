@@ -203,7 +203,7 @@ pub(crate) fn spawn_pty(
                     Err(_) => break,
                 }
             }
-            // PTY closed — drop the writer and notify observers.
+            // PTY closed: drop the writer and notify observers.
             *writer.borrow_mut() = None;
             closer_notifier.notify();
             platform.send(UserEvent::RequestRedraw);
