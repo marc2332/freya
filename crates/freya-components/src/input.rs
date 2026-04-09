@@ -637,7 +637,7 @@ impl Component for Input {
                             .holder(holder.read().clone())
                             .on_sized(move |e: Event<SizedEventData>| area.set(e.visible_area))
                             .min_width(Size::func(move |context| {
-                                Some(context.parent + theme_layout.inner_margin.horizontal())
+                                Some(context.parent - theme_layout.inner_margin.horizontal())
                             }))
                             .maybe(self.enabled, |el| el.on_pointer_down(on_pointer_down))
                             .margin(theme_layout.inner_margin)
