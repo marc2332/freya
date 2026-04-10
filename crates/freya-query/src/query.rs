@@ -611,7 +611,7 @@ impl<Q: QueryCapability> UseQuery<Q> {
         let query_data = map.get(&query).cloned().unwrap();
 
         // Run the query
-        spawn(async move { QueriesStorage::run_queries(&[(&query, &query_data)]).await });
+        spawn_forever(async move { QueriesStorage::run_queries(&[(&query, &query_data)]).await });
     }
 }
 
@@ -662,7 +662,7 @@ pub fn use_query<Q: QueryCapability>(query: Query<Q>) -> UseQuery<Q> {
         // Immediately run the query if enabled and the value is stale
         if query.enabled && query_data.state.borrow().is_stale(query) {
             let query = query.clone();
-            spawn(async move {
+            spawn_forever(async move {
                 QueriesStorage::run_queries(&[(&query, &query_data)]).await;
             });
         }
