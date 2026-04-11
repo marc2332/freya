@@ -49,7 +49,6 @@ use crate::{
     rendering::{
         CachedRow,
         Renderer,
-        SelectionBounds,
     },
 };
 
@@ -298,33 +297,7 @@ impl ElementExt for Terminal {
         let screen_lines = grid.screen_lines();
         let display_offset = grid.display_offset();
         let total_scrollback = grid.history_size();
-
-        // Per-frame row materialisation; the row cache amortises redraws.
-        // `display_iter` is row-major and yields exactly `screen_lines * columns` cells.
-        let cells: Vec<Cell> = grid.display_iter().map(|c| c.cell.clone()).collect();
-        let rows: Vec<Vec<Cell>> = cells.chunks(columns).map(<[Cell]>::to_vec).collect();
-
-        // Hide the cursor when scrolled into history.
-        let cursor_point = grid.cursor.point;
-        let cursor_viewport_line = cursor_point.line.0 + display_offset as i32;
-        let cursor_visible = display_offset == 0
-            && term.mode().contains(TermMode::SHOW_CURSOR)
-            && (0..screen_lines as i32).contains(&cursor_viewport_line);
-
-        // Translate the selection range into viewport row indices.
-        let selection_bounds = term
-            .selection
-            .as_ref()
-            .and_then(|s| s.to_range(&*term))
-            .map(|range| {
-                let offset = display_offset as i64;
-                SelectionBounds {
-                    start_row: range.start.line.0 as i64 + offset,
-                    start_col: range.start.column.0,
-                    end_row: range.end.line.0 as i64 + offset,
-                    end_col: range.end.column.0,
-                }
-            });
+        let selection = term.selection.as_ref().and_then(|s| s.to_range(&*term));
 
         let mut paint = Paint::default();
         paint.set_anti_alias(true);
@@ -345,23 +318,31 @@ impl ElementExt for Terminal {
             selection_color: self.selection_color,
             font_family: &measure.font_family,
             font_size: measure.font_size,
+            selection,
+            display_offset,
         };
 
         renderer.render_background();
 
+        // Reused row buffer so redraws don't allocate a `Vec<Vec<Cell>>`.
+        let mut row: Vec<Cell> = Vec::with_capacity(columns);
+        let mut display_iter = grid.display_iter();
         let mut y = area.min_y();
-        for (row_idx, row) in rows.iter().enumerate() {
+        for row_idx in 0..screen_lines {
             if y + measure.line_height > area.max_y() {
                 break;
             }
-            renderer.render_row(row_idx, row, y, selection_bounds.as_ref());
+            row.clear();
+            row.extend(display_iter.by_ref().take(columns).map(|c| c.cell.clone()));
+            renderer.render_row(row_idx, &row, y);
             y += measure.line_height;
         }
 
-        if cursor_visible && let Some(row) = rows.get(cursor_viewport_line as usize) {
-            let cursor_y = area.min_y() + (cursor_viewport_line as f32) * measure.line_height;
+        if display_offset == 0 && term.mode().contains(TermMode::SHOW_CURSOR) {
+            let cursor_point = grid.cursor.point;
+            let cursor_y = area.min_y() + (cursor_point.line.0 as f32) * measure.line_height;
             if cursor_y + measure.line_height <= area.max_y() {
-                renderer.render_cursor(row, cursor_y, cursor_point.column.0);
+                renderer.render_cursor(&grid[cursor_point], cursor_y, cursor_point.column.0);
             }
         }
 

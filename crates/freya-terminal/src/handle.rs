@@ -105,6 +105,14 @@ pub(crate) struct TerminalCleaner {
     pub(crate) closer_notifier: ArcNotify,
 }
 
+/// Handle-local state grouped into a single `RefCell`.
+pub(crate) struct TerminalInner {
+    pub(crate) master: Box<dyn MasterPty + Send>,
+    pub(crate) last_write_time: Instant,
+    pub(crate) pressed_button: Option<TerminalMouseButton>,
+    pub(crate) modifiers: Modifiers,
+}
+
 impl Drop for TerminalCleaner {
     fn drop(&mut self) {
         *self.writer.borrow_mut() = None;
@@ -126,8 +134,8 @@ pub struct TerminalHandle {
     pub(crate) term: Rc<RefCell<Term<EventProxy>>>,
     /// Writer for sending input to the PTY process.
     pub(crate) writer: Rc<RefCell<Option<Box<dyn Write + Send>>>>,
-    /// PTY master handle for resizing.
-    pub(crate) master: Rc<RefCell<Box<dyn MasterPty + Send>>>,
+    /// Handle-local state (PTY master, input tracking).
+    pub(crate) inner: Rc<RefCell<TerminalInner>>,
     /// Current working directory reported by the shell via OSC 7.
     pub(crate) cwd: Rc<RefCell<Option<PathBuf>>>,
     /// Window title reported by the shell via OSC 0 or OSC 2.
@@ -145,15 +153,6 @@ pub struct TerminalHandle {
     pub(crate) clipboard_content: Rc<RefCell<Option<String>>>,
     /// Notifier that signals when clipboard content changes via OSC 52.
     pub(crate) clipboard_notifier: ArcNotify,
-    /// Tracks when the user last wrote input to the PTY.
-    pub(crate) last_write_time: Rc<RefCell<Instant>>,
-    /// Currently pressed mouse button (for drag/motion tracking).
-    pub(crate) pressed_button: Rc<RefCell<Option<TerminalMouseButton>>>,
-    /// Current modifier keys state (shift, ctrl, alt, etc.).
-    pub(crate) modifiers: Rc<RefCell<Modifiers>>,
-    /// Tracks an active text-selection drag, distinct from any held button
-    /// during mouse-tracking modes (vim etc.).
-    pub(crate) dragging_selection: Rc<RefCell<bool>>,
 }
 
 impl PartialEq for TerminalHandle {
@@ -192,13 +191,13 @@ impl TerminalHandle {
         let mut term = self.term.borrow_mut();
         term.selection = None;
         term.scroll_display(Scroll::Bottom);
-        *self.last_write_time.borrow_mut() = Instant::now();
+        self.inner.borrow_mut().last_write_time = Instant::now();
         Ok(())
     }
 
     /// Time since the user last wrote input to the PTY.
     pub fn last_write_elapsed(&self) -> Duration {
-        self.last_write_time.borrow().elapsed()
+        self.inner.borrow().last_write_time.elapsed()
     }
 
     /// Translate a key event into the matching terminal escape sequence and
@@ -291,7 +290,7 @@ impl TerminalHandle {
     /// preserves scrollback on height changes, so this is lossless.
     pub fn resize(&self, rows: u16, cols: u16) {
         // PTY first so SIGWINCH reaches the program before we update locally.
-        let _ = self.master.borrow().resize(PtySize {
+        let _ = self.inner.borrow().master.resize(PtySize {
             rows,
             cols,
             pixel_width: 0,
@@ -344,12 +343,23 @@ impl TerminalHandle {
         *self.term.borrow().mode()
     }
 
+    fn pressed_button(&self) -> Option<TerminalMouseButton> {
+        self.inner.borrow().pressed_button
+    }
+
+    fn set_pressed_button(&self, button: Option<TerminalMouseButton>) {
+        self.inner.borrow_mut().pressed_button = button;
+    }
+
+    fn is_shift_held(&self) -> bool {
+        self.inner.borrow().modifiers.contains(Modifiers::SHIFT)
+    }
+
     /// Handle a mouse move/drag event based on the active mouse mode.
     pub fn mouse_move(&self, row: usize, col: usize) {
-        let held = *self.pressed_button.borrow();
-        let dragging = held.is_some();
+        let held = self.pressed_button();
 
-        if self.modifiers.borrow().contains(Modifiers::SHIFT) && dragging {
+        if self.is_shift_held() && held.is_some() {
             self.update_selection(row, col);
             return;
         }
@@ -363,18 +373,17 @@ impl TerminalHandle {
         {
             // Button-motion mode: only while a button is held.
             let _ = self.write_raw(encode_mouse_move(row, col, Some(button), mode).as_bytes());
-        } else if !mode.intersects(TermMode::MOUSE_MODE) && dragging {
+        } else if !mode.intersects(TermMode::MOUSE_MODE) && held.is_some() {
             self.update_selection(row, col);
         }
     }
 
     /// Handle a mouse button press event.
     pub fn mouse_down(&self, row: usize, col: usize, button: TerminalMouseButton) {
-        *self.pressed_button.borrow_mut() = Some(button);
+        self.set_pressed_button(Some(button));
 
-        let shift = self.modifiers.borrow().contains(Modifiers::SHIFT);
         let mode = self.mode();
-        if !shift && mode.intersects(TermMode::MOUSE_MODE) {
+        if !self.is_shift_held() && mode.intersects(TermMode::MOUSE_MODE) {
             let _ = self.write_raw(encode_mouse_press(row, col, button, mode).as_bytes());
         } else {
             self.start_selection(row, col);
@@ -383,25 +392,17 @@ impl TerminalHandle {
 
     /// Handle a mouse button release event.
     pub fn mouse_up(&self, row: usize, col: usize, button: TerminalMouseButton) {
-        *self.pressed_button.borrow_mut() = None;
-
-        if self.modifiers.borrow().contains(Modifiers::SHIFT) {
-            self.end_selection();
-            return;
-        }
+        self.set_pressed_button(None);
 
         let mode = self.mode();
-        if mode.intersects(TermMode::MOUSE_MODE) {
+        if !self.is_shift_held() && mode.intersects(TermMode::MOUSE_MODE) {
             let _ = self.write_raw(encode_mouse_release(row, col, button, mode).as_bytes());
-        } else {
-            self.end_selection();
         }
     }
 
     /// Handle a mouse button release from outside the terminal viewport.
     pub fn release(&self) {
-        *self.pressed_button.borrow_mut() = None;
-        self.end_selection();
+        self.set_pressed_button(None);
     }
 
     /// Route a wheel event to scrollback, PTY mouse events, or arrow-key
@@ -469,7 +470,7 @@ impl TerminalHandle {
 
     /// Track whether shift is currently pressed.
     pub fn shift_pressed(&self, pressed: bool) {
-        let mut mods = self.modifiers.borrow_mut();
+        let mods = &mut self.inner.borrow_mut().modifiers;
         if pressed {
             mods.insert(Modifiers::SHIFT);
         } else {
@@ -481,25 +482,17 @@ impl TerminalHandle {
         let mut term = self.term.borrow_mut();
         let point = point_at(&term, row, col);
         term.selection = Some(Selection::new(SelectionType::Simple, point, Side::Left));
-        *self.dragging_selection.borrow_mut() = true;
         Platform::get().send(UserEvent::RequestRedraw);
     }
 
+    /// Extend the in-progress selection, if any.
     pub fn update_selection(&self, row: usize, col: usize) {
-        if !*self.dragging_selection.borrow() {
-            return;
-        }
         let mut term = self.term.borrow_mut();
         let point = point_at(&term, row, col);
         if let Some(selection) = term.selection.as_mut() {
             selection.update(point, Side::Right);
+            Platform::get().send(UserEvent::RequestRedraw);
         }
-        Platform::get().send(UserEvent::RequestRedraw);
-    }
-
-    pub fn end_selection(&self) {
-        *self.dragging_selection.borrow_mut() = false;
-        Platform::get().send(UserEvent::RequestRedraw);
     }
 
     /// Returns the currently selected text as a string, if any.

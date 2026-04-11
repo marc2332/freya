@@ -35,7 +35,6 @@ use futures_lite::AsyncReadExt;
 use keyboard_types::Modifiers;
 use portable_pty::{
     CommandBuilder,
-    MasterPty,
     PtySize,
     native_pty_system,
 };
@@ -46,6 +45,7 @@ use crate::{
         TerminalError,
         TerminalHandle,
         TerminalId,
+        TerminalInner,
     },
     osc7::{
         CwdSink,
@@ -148,7 +148,6 @@ pub(crate) fn spawn_pty(
         &initial_size,
         event_proxy,
     )));
-    let processor: Rc<RefCell<Processor<StdSyncHandler>>> = Rc::new(RefCell::new(Processor::new()));
 
     let pty_system = native_pty_system();
     let pair = pty_system
@@ -169,7 +168,12 @@ pub(crate) fn spawn_pty(
         .map_err(|_| TerminalError::NotInitialized)?;
     let mut reader = blocking::Unblock::new(reader);
 
-    let master: Rc<RefCell<Box<dyn MasterPty + Send>>> = Rc::new(RefCell::new(pair.master));
+    let inner = Rc::new(RefCell::new(TerminalInner {
+        master: pair.master,
+        last_write_time: Instant::now(),
+        pressed_button: None,
+        modifiers: Modifiers::empty(),
+    }));
 
     let platform = Platform::get();
     let pty_task = spawn_forever({
@@ -179,6 +183,7 @@ pub(crate) fn spawn_pty(
         let output_notifier = output_notifier.clone();
         let cwd = cwd.clone();
         async move {
+            let mut processor = Processor::<StdSyncHandler>::new();
             // Side-channel parser for OSC 7 (cwd), which alacritty drops.
             let mut cwd_parser = VteParser::new();
             let mut cwd_sink = CwdSink::default();
@@ -188,9 +193,7 @@ pub(crate) fn spawn_pty(
                     Ok(0) => break,
                     Ok(n) => {
                         let data = &buf[..n];
-                        processor
-                            .borrow_mut()
-                            .advance(&mut *term.borrow_mut(), data);
+                        processor.advance(&mut *term.borrow_mut(), data);
 
                         cwd_parser.advance(&mut cwd_sink, data);
                         if let Some(url) = cwd_sink.take() {
@@ -220,16 +223,12 @@ pub(crate) fn spawn_pty(
         id,
         term,
         writer,
-        master,
+        inner,
         cwd,
         title,
         title_notifier,
         clipboard_content,
         clipboard_notifier,
         output_notifier,
-        last_write_time: Rc::new(RefCell::new(Instant::now())),
-        pressed_button: Rc::new(RefCell::new(None)),
-        modifiers: Rc::new(RefCell::new(Modifiers::empty())),
-        dragging_selection: Rc::new(RefCell::new(false)),
     })
 }

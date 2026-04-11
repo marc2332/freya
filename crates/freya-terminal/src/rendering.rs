@@ -3,9 +3,12 @@ use std::hash::{
     Hasher,
 };
 
-use alacritty_terminal::term::cell::{
-    Cell,
-    Flags,
+use alacritty_terminal::{
+    selection::SelectionRange,
+    term::cell::{
+        Cell,
+        Flags,
+    },
 };
 use freya_core::{
     fifo_cache::FifoCache,
@@ -36,16 +39,6 @@ pub(crate) enum CachedRow {
     Paragraph(Paragraph),
 }
 
-/// Selection range expressed in viewport row indices, normalized so the
-/// `start_*` values precede the `end_*` values in document order.
-#[derive(Clone, Copy)]
-pub(crate) struct SelectionBounds {
-    pub start_row: i64,
-    pub start_col: usize,
-    pub end_row: i64,
-    pub end_col: usize,
-}
-
 /// Single renderer that draws the terminal background, a row's cell
 /// backgrounds, glyph runs, selection overlay, cursor, and scrollbar.
 pub(crate) struct Renderer<'a> {
@@ -63,6 +56,8 @@ pub(crate) struct Renderer<'a> {
     pub selection_color: Color,
     pub font_family: &'a str,
     pub font_size: f32,
+    pub selection: Option<SelectionRange>,
+    pub display_offset: usize,
 }
 
 impl Renderer<'_> {
@@ -80,21 +75,13 @@ impl Renderer<'_> {
     }
 
     /// Render one row: cell backgrounds, glyphs, then any selection overlay.
-    pub fn render_row(
-        &mut self,
-        row_idx: usize,
-        row: &[Cell],
-        y: f32,
-        selection: Option<&SelectionBounds>,
-    ) {
+    pub fn render_row(&mut self, row_idx: usize, row: &[Cell], y: f32) {
         self.render_cell_backgrounds(row, y);
         self.render_text_row(row, y);
-        if let Some(bounds) = selection {
-            self.render_selection(row_idx, row.len(), y, bounds);
-        }
+        self.render_selection(row_idx, row.len(), y);
     }
 
-    pub fn render_cursor(&mut self, row: &[Cell], y: f32, cursor_col: usize) {
+    pub fn render_cursor(&mut self, cell: &Cell, y: f32, cursor_col: usize) {
         let left = self.area.min_x() + (cursor_col as f32) * self.char_width;
         let right = left + self.char_width.max(1.0);
         let bottom = y + self.line_height.max(1.0);
@@ -105,14 +92,12 @@ impl Renderer<'_> {
             self.paint,
         );
 
-        let content = row
-            .get(cursor_col)
-            .map(|cell| if cell.c == '\0' { ' ' } else { cell.c })
-            .unwrap_or(' ')
-            .to_string();
+        let glyph = if cell.c == '\0' { ' ' } else { cell.c };
+        let mut buf = [0u8; 4];
+        let content: &str = glyph.encode_utf8(&mut buf);
 
         self.paint.set_color(self.background);
-        if let Some(blob) = TextBlob::from_pos_text_h(&content, &[0.0], 0.0, self.font) {
+        if let Some(blob) = TextBlob::from_pos_text_h(content, &[0.0], 0.0, self.font) {
             self.canvas
                 .draw_text_blob(&blob, (left, y + self.baseline_offset), self.paint);
         }
@@ -215,24 +200,24 @@ impl Renderer<'_> {
         );
     }
 
-    fn render_selection(
-        &mut self,
-        row_idx: usize,
-        row_len: usize,
-        y: f32,
-        bounds: &SelectionBounds,
-    ) {
+    fn render_selection(&mut self, row_idx: usize, row_len: usize, y: f32) {
+        let Some(range) = self.selection else {
+            return;
+        };
+        let offset = self.display_offset as i64;
+        let start_row = range.start.line.0 as i64 + offset;
+        let end_row = range.end.line.0 as i64 + offset;
         let row_i = row_idx as i64;
-        if row_i < bounds.start_row || row_i > bounds.end_row {
+        if row_i < start_row || row_i > end_row {
             return;
         }
-        let sel_start = if row_i == bounds.start_row {
-            bounds.start_col
+        let sel_start = if row_i == start_row {
+            range.start.column.0
         } else {
             0
         };
-        let sel_end = if row_i == bounds.end_row {
-            bounds.end_col.min(row_len)
+        let sel_end = if row_i == end_row {
+            range.end.column.0.min(row_len)
         } else {
             row_len
         };

@@ -36,12 +36,9 @@ pub(crate) fn parse_cwd_url(url: &str) -> PathBuf {
     let Some(stripped) = url.strip_prefix("file://") else {
         return PathBuf::from(url);
     };
-    if let Some(rest) = stripped.strip_prefix('/') {
-        PathBuf::from(format!("/{rest}"))
-    } else if let Some((_host, path)) = stripped.split_once('/') {
-        PathBuf::from(format!("/{path}"))
-    } else {
-        PathBuf::from(stripped)
+    match stripped.split_once('/') {
+        Some((_, path)) => PathBuf::from(format!("/{path}")),
+        None => PathBuf::from(stripped),
     }
 }
 
