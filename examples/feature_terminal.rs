@@ -19,24 +19,26 @@ fn app() -> impl IntoElement {
     });
 
     use_future(move || async move {
-        if let Some(terminal_handle) = handle.read().clone() {
-            loop {
-                futures_util::select! {
-                    _ = terminal_handle.closed().fuse() => {
-                        let _ = handle.write().take();
-                        break;
+        let terminal_handle = handle.read().clone();
+        let Some(terminal_handle) = terminal_handle else {
+            return;
+        };
+        loop {
+            futures_util::select! {
+                _ = terminal_handle.closed().fuse() => {
+                    let _ = handle.write().take();
+                    break;
+                }
+                _ = terminal_handle.title_changed().fuse() => {
+                    if let Some(new_title) = terminal_handle.title() {
+                        Platform::get().with_window(None, move |window| {
+                            window.set_title(&new_title);
+                        });
                     }
-                    _ = terminal_handle.title_changed().fuse() => {
-                        if let Some(new_title) = terminal_handle.title() {
-                            Platform::get().with_window(None, move |window| {
-                                window.set_title(&new_title);
-                            });
-                        }
-                    }
-                    _ = terminal_handle.clipboard_changed().fuse() => {
-                        if let Some(text) = terminal_handle.clipboard_content() {
-                            let _ = Clipboard::set(text);
-                        }
+                }
+                _ = terminal_handle.clipboard_changed().fuse() => {
+                    if let Some(text) = terminal_handle.clipboard_content() {
+                        let _ = Clipboard::set(text);
                     }
                 }
             }
