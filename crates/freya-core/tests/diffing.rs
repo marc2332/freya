@@ -1842,3 +1842,67 @@ fn moved_element_with_deeply_nested_child_type_change() {
     tree.verify_tree_integrity();
     assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 }
+
+/// Frame 1 reorders A's children inside a moved wrapper and inserts a new
+/// sibling in the middle. The PathGraph `insert` semantics used during move
+/// application and deferred additions leave an empty slot in `scope.nodes`
+/// that shifts `a1` from its tree path `[0,1,2]` to `[0,1,3]`.
+///
+/// Frame 2 adds a new grandchild under `a1` at tree path `[0,1,2,0]`. The
+/// diff emits `added = [[0,1,2,0]]`, which is not deferred (no moves), and
+/// `process_addition` looks up the parent `[0,1,2]` in `scope.nodes` — but
+/// that slot holds the leftover empty entry from frame 1, so `nodes.get`
+/// returns `None` and the unwrap at runner.rs L971 fires.
+#[test]
+fn crash_l971_leftover_empty_slot() {
+    fn app() -> Element {
+        let state = use_consume::<State<u8>>();
+        match state() {
+            0 => rect()
+                .child(rect().key(1).child(rect().key(2)).child(rect().key(3)))
+                .child(rect().key(4))
+                .into(),
+            1 => rect()
+                .child(rect().key(4))
+                .child(
+                    rect()
+                        .key(1)
+                        .child(rect().key(3).child(rect()))
+                        .child(rect())
+                        .child(rect().key(2)),
+                )
+                .into(),
+            _ => rect()
+                .child(rect().key(4))
+                .child(
+                    rect()
+                        .key(1)
+                        .child(rect().key(3).child(rect()))
+                        .child(rect())
+                        .child(rect().key(2).child(rect())),
+                )
+                .into(),
+        }
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+    let mut state = runner.provide_root_context(|| State::create(0u8));
+
+    let mutations = runner.sync_and_update();
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+
+    state.set(1);
+    let mutations = runner.sync_and_update();
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+
+    state.set(2);
+    let mutations = runner.sync_and_update();
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+}
