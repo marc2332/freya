@@ -19,19 +19,26 @@ impl<V> PathGraphEntry<V> {
         if path.is_empty() {
             self.value = Some(value);
         } else {
-            if self.items.get(path[0] as usize).is_none() {
-                self.items.resize_with(path[0] as usize + 1, || Self {
-                    value: None,
-                    items: Vec::new(),
-                });
-            } else if path.len() == 1 {
-                self.items.insert(
-                    path[0] as usize,
-                    Self {
+            match self.items.get(path[0] as usize) {
+                None => {
+                    self.items.resize_with(path[0] as usize + 1, || Self {
                         value: None,
                         items: Vec::new(),
-                    },
-                );
+                    });
+                }
+                Some(existing) if path.len() == 1 && existing.value.is_some() => {
+                    // Real sibling already here: shift it right and insert.
+                    self.items.insert(
+                        path[0] as usize,
+                        Self {
+                            value: None,
+                            items: Vec::new(),
+                        },
+                    );
+                }
+                // Empty placeholder (`value: None`) or intermediate entry:
+                // fall through and let the recursive call fill it in place.
+                _ => {}
             }
             self.items[path[0] as usize].insert(&path[1..], value)
         }
@@ -41,19 +48,23 @@ impl<V> PathGraphEntry<V> {
         if path.is_empty() {
             *self = entry;
         } else {
-            if self.items.get(path[0] as usize).is_none() {
-                self.items.resize_with(path[0] as usize + 1, || Self {
-                    value: None,
-                    items: Vec::new(),
-                });
-            } else if path.len() == 1 {
-                self.items.insert(
-                    path[0] as usize,
-                    Self {
+            match self.items.get(path[0] as usize) {
+                None => {
+                    self.items.resize_with(path[0] as usize + 1, || Self {
                         value: None,
                         items: Vec::new(),
-                    },
-                );
+                    });
+                }
+                Some(existing) if path.len() == 1 && existing.value.is_some() => {
+                    self.items.insert(
+                        path[0] as usize,
+                        Self {
+                            value: None,
+                            items: Vec::new(),
+                        },
+                    );
+                }
+                _ => {}
             }
             self.items[path[0] as usize].insert_entry(&path[1..], entry)
         }
@@ -403,5 +414,64 @@ impl<V> PathGraph<V> {
         if let Some(entry) = &self.entry {
             entry.traverse_1_level(target, vec![], &mut traverser);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// When a `remove` + `insert_entry` pair leaves a `None`-valued placeholder
+    /// inside an `items` vec, a subsequent `insert` targeting that same slot
+    /// must fill the placeholder in place instead of shifting it right.
+    /// Otherwise later siblings drift to a higher index than their logical
+    /// position and `get` at the intended path returns `None`.
+    #[test]
+    fn insert_fills_placeholder_left_by_move_sequence() {
+        let mut graph = PathGraph::<u32>::new();
+        graph.insert(&[], 0);
+        graph.insert(&[0], 10);
+        graph.insert(&[0, 0], 100);
+        graph.insert(&[0, 1], 200);
+
+        // Simulate the move sequence (1,0), (0,2) that `apply_diff` performs:
+        let a = graph.remove(&[0, 1]).unwrap();
+        graph.insert_entry(&[0, 0], a);
+        let b = graph.remove(&[0, 1]).unwrap();
+        graph.insert_entry(&[0, 2], b);
+
+        // Now [0,1] should be the empty slot the deferred addition targets.
+        assert_eq!(graph.get(&[0, 0]), Some(&200));
+        assert_eq!(graph.get(&[0, 1]), None);
+        assert_eq!(graph.get(&[0, 2]), Some(&100));
+
+        // Fill the placeholder with a deferred addition.
+        graph.insert(&[0, 1], 999);
+
+        // The deferred value lands at its intended position and the existing
+        // siblings stay put instead of drifting one index to the right.
+        assert_eq!(graph.get(&[0, 0]), Some(&200));
+        assert_eq!(graph.get(&[0, 1]), Some(&999));
+        assert_eq!(graph.get(&[0, 2]), Some(&100));
+        assert_eq!(graph.get(&[0, 3]), None);
+        assert_eq!(graph.len(&[0]), Some(3));
+    }
+
+    /// `insert` must still shift real siblings when inserting between
+    /// occupied positions.
+    #[test]
+    fn insert_still_shifts_occupied_siblings() {
+        let mut graph = PathGraph::<u32>::new();
+        graph.insert(&[], 0);
+        graph.insert(&[0], 10);
+        graph.insert(&[0, 0], 100);
+        graph.insert(&[0, 1], 200);
+
+        graph.insert(&[0, 1], 150);
+
+        assert_eq!(graph.get(&[0, 0]), Some(&100));
+        assert_eq!(graph.get(&[0, 1]), Some(&150));
+        assert_eq!(graph.get(&[0, 2]), Some(&200));
+        assert_eq!(graph.len(&[0]), Some(3));
     }
 }
