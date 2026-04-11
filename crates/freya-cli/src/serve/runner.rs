@@ -292,10 +292,17 @@ impl AppServer {
                         // - when edit & save a file in vscode, there will be two notifications,
                         // - the first one is a file with empty content.
                         // - filter the empty file notification to avoid false rebuild during hot-reload
-                        if let Ok(metadata) = std::fs::metadata(&path) {
-                            if metadata.len() == 0 {
-                                continue;
-                            }
+                        //
+                        // Also skip files that don't exist at all: on Linux, inotify fires a
+                        // REMOVE event immediately when an editor starts an atomic write (delete +
+                        // recreate). Starting a thin build at that moment causes rustc to fail
+                        // with "No such file or directory". The watcher fires again when the
+                        // file is fully written, so skipping the remove event is safe.
+                        let Ok(metadata) = std::fs::metadata(&path) else {
+                            continue;
+                        };
+                        if metadata.len() == 0 {
+                            continue;
                         }
 
                         files.push(path);

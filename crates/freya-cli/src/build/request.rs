@@ -2383,9 +2383,23 @@ impl BuildRequest {
             cargo_args.push("--all-features".to_string());
         }
 
-        if !self.features.is_empty() {
+        // For fat builds, automatically inject the hotreload feature so the app connects back
+        // to the devserver and provides its ASLR reference, which is required for hotpatching.
+        let mut features = self.features.clone();
+        if matches!(build_mode, BuildMode::Fat) && !self.all_features {
+            let already_enabled = features
+                .iter()
+                .any(|f| f == "hotreload" || f.ends_with("/hotreload"));
+            if !already_enabled {
+                if let Some(feat) = self.hotreload_cargo_feature() {
+                    features.push(feat);
+                }
+            }
+        }
+
+        if !features.is_empty() {
             cargo_args.push("--features".to_string());
-            cargo_args.push(self.features.join(" "));
+            cargo_args.push(features.join(" "));
         }
 
         // We *always* set the package since that's discovered from cargo metadata
@@ -3097,6 +3111,35 @@ impl BuildRequest {
         }
 
         false
+    }
+
+    /// Returns the cargo feature string to inject for the hotreload devserver connection during
+    /// fat builds.
+    ///
+    /// Hotpatching requires the running app to connect back to the devserver via TCP and send its
+    /// ASLR reference. This connection is compiled in behind `#[cfg(feature = "hotreload")]` in
+    /// `freya-winit`. We detect which package owns that feature gate and return the appropriate
+    /// `--features` argument.
+    ///
+    /// Priority:
+    /// 1. Package has its own `hotreload` feature → `"hotreload"`
+    /// 2. `freya` is a direct dep → `"freya/hotreload"`
+    /// 3. `freya-winit` is a direct dep → `"freya-winit/hotreload"`
+    /// 4. `freya-core` is a direct dep → `"freya-core/hotreload"`
+    fn hotreload_cargo_feature(&self) -> Option<String> {
+        let package = self.package();
+
+        if package.features.contains_key("hotreload") {
+            return Some("hotreload".to_string());
+        }
+
+        for candidate in ["freya", "freya-winit", "freya-core"] {
+            if package.dependencies.iter().any(|dep| dep.name == candidate) {
+                return Some(format!("{candidate}/hotreload"));
+            }
+        }
+
+        None
     }
 
     /// todo(jon): use handlebars templates instead of these prebaked templates
