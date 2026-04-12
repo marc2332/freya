@@ -327,7 +327,9 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
     }
 
     pub async fn invalidate_all() {
-        let storage = consume_context::<QueriesStorage<Q>>();
+        let Some(storage) = try_consume_context::<QueriesStorage<Q>>() else {
+            return;
+        };
 
         // Get all the queries
         let matching_queries = storage
@@ -346,7 +348,9 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
     }
 
     pub async fn invalidate_matching(matching_keys: Q::Keys) {
-        let storage = consume_context::<QueriesStorage<Q>>();
+        let Some(storage) = try_consume_context::<QueriesStorage<Q>>() else {
+            return;
+        };
 
         // Get those queries that match
         let mut matching_queries = Vec::new();
