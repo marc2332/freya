@@ -23,45 +23,50 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
 
-        commonPackages = [
-          pkgs.python3
+        commonPackages = with pkgs; [
+          python3
         ];
 
-        commonBuildInputs = [
-          pkgs.libxkbcommon
-          pkgs.libGL
-          pkgs.udev
-          pkgs.openssl
-          pkgs.pkg-config
-          pkgs.fontconfig
-          pkgs.libgcc.lib
-          pkgs.freetype
+        commonBuildInputs = with pkgs; [
+          libxkbcommon
+          libGL
+          udev
+          openssl
+          pkg-config
+          fontconfig
+          libgcc.lib
+          freetype
 
           # WINIT_UNIX_BACKEND=wayland
-          pkgs.wayland
+          wayland
 
           # WINIT_UNIX_BACKEND=x11
-          pkgs.xorg.libXcursor
-          pkgs.xorg.libXrandr
-          pkgs.xorg.libXi
-          pkgs.xorg.libX11
+          xorg.libXcursor
+          xorg.libXrandr
+          xorg.libXi
+          xorg.libX11
         ];
 
         mkDevShell =
-          toolchain:
+          toolchains:
           pkgs.mkShell rec {
-            packages = commonPackages ++ [
-              toolchain
-            ];
+            packages = commonPackages ++ toolchains;
             buildInputs = commonBuildInputs;
             LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath buildInputs}";
           };
       in
       {
         devShells = {
-          default = mkDevShell fenix.packages.${system}.stable.toolchain;
-          unstable = mkDevShell fenix.packages.${system}.default.toolchain;
+          default = mkDevShell [ ];
+          stable = mkDevShell [ fenix.packages.${system}.stable.toolchain ];
+          unstable = mkDevShell [ fenix.packages.${system}.default.toolchain ];
         };
       }
-    );
+    )
+    // {
+      templates.default = {
+        path = ./nix-template;
+        description = "Basic nix template to set up a devshell";
+      };
+    };
 }
