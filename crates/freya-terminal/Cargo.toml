@@ -32,6 +32,10 @@ portable-pty = "0.9"
 vt100 = "0.16"
 termwiz = "0.22"
 
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+anyhow = "1.0"
+
 # Async
 futures-channel = { workspace = true }
 futures-lite = { workspace = true }

@@ -1,46 +1,22 @@
-use std::{
-    cell::RefCell,
-    path::PathBuf,
-    rc::Rc,
-    time::Instant,
-};
+use std::{cell::RefCell, path::PathBuf, rc::Rc, time::Instant};
 
 use freya_core::{
     notify::ArcNotify,
-    prelude::{
-        Platform,
-        UserEvent,
-        spawn_forever,
-    },
+    prelude::{Platform, UserEvent, spawn_forever},
 };
 use futures_lite::AsyncReadExt;
 use keyboard_types::Modifiers;
-use portable_pty::{
-    CommandBuilder,
-    MasterPty,
-    PtySize,
-    native_pty_system,
-};
+use portable_pty::{CommandBuilder, MasterPty, PtySize, native_pty_system};
 use termwiz::escape::{
-    Action,
-    CSI,
-    OperatingSystemCommand,
-    csi::{
-        Cursor,
-        Device,
-    },
+    Action, CSI, OperatingSystemCommand,
+    csi::{Cursor, Device},
     parser::Parser as TermwizParser,
 };
 use vt100::Parser;
 
 use crate::{
     buffer::TerminalBuffer,
-    handle::{
-        TerminalCleaner,
-        TerminalError,
-        TerminalHandle,
-        TerminalId,
-    },
+    handle::{TerminalCleaner, TerminalError, TerminalHandle, TerminalId},
 };
 
 /// Query the maximum scrollback available without disturbing the viewport.
@@ -87,6 +63,28 @@ pub(crate) fn spawn_pty(
     command: CommandBuilder,
     scrollback_size: usize,
 ) -> Result<TerminalHandle, TerminalError> {
+    let pty_system = native_pty_system();
+    let pair = pty_system
+        .openpty(PtySize::default())
+        .map_err(|_| TerminalError::NotInitialized)?;
+
+    pair.slave
+        .spawn_command(command)
+        .map_err(|_| TerminalError::NotInitialized)?;
+
+    setup_terminal_from_master(id, pair.master, scrollback_size)
+}
+
+/// Wire up a [`MasterPty`] (reader, writer, async tasks) into a [`TerminalHandle`].
+///
+/// This is the shared post-PTY-creation path used by both [`spawn_pty`] (which
+/// opens its own PTY + spawns a command) and [`TerminalHandle::from_fd`] (which
+/// wraps a daemon-provided fd).
+pub(crate) fn setup_terminal_from_master(
+    id: TerminalId,
+    master: Box<dyn MasterPty + Send>,
+    scrollback_size: usize,
+) -> Result<TerminalHandle, TerminalError> {
     let (update_tx, mut update_rx) = futures_channel::mpsc::unbounded::<()>();
 
     let buffer = Rc::new(RefCell::new(TerminalBuffer::default()));
@@ -100,26 +98,17 @@ pub(crate) fn spawn_pty(
     let clipboard_content: Rc<RefCell<Option<String>>> = Rc::new(RefCell::new(None));
     let clipboard_notifier = ArcNotify::new();
 
-    let pty_system = native_pty_system();
-    let pair = pty_system
-        .openpty(PtySize::default())
-        .map_err(|_| TerminalError::NotInitialized)?;
-    let master_writer = pair
-        .master
+    let master_writer = master
         .take_writer()
         .map_err(|_| TerminalError::NotInitialized)?;
     *writer.borrow_mut() = Some(master_writer);
 
-    pair.slave
-        .spawn_command(command)
-        .map_err(|_| TerminalError::NotInitialized)?;
-    let reader = pair
-        .master
+    let reader = master
         .try_clone_reader()
         .map_err(|_| TerminalError::NotInitialized)?;
     let mut reader = blocking::Unblock::new(reader);
 
-    let master: Rc<RefCell<Box<dyn MasterPty + Send>>> = Rc::new(RefCell::new(pair.master));
+    let master: Rc<RefCell<Box<dyn MasterPty + Send>>> = Rc::new(RefCell::new(master));
 
     let platform = Platform::get();
     let reader_task = spawn_forever({
