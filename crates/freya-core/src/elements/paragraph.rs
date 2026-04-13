@@ -4,65 +4,31 @@ use std::{
     any::Any,
     borrow::Cow,
     cell::RefCell,
-    fmt::{
-        Debug,
-        Display,
-    },
+    fmt::{Debug, Display},
     rc::Rc,
 };
 
 use freya_engine::prelude::{
-    FontStyle,
-    Paint,
-    PaintStyle,
-    ParagraphBuilder,
-    ParagraphStyle,
-    RectHeightStyle,
-    RectWidthStyle,
-    SkParagraph,
-    SkRect,
-    TextStyle,
+    FontStyle, Paint, PaintStyle, ParagraphBuilder, ParagraphStyle, RectHeightStyle,
+    RectWidthStyle, SkParagraph, SkRect, TextStyle,
 };
 use rustc_hash::FxHashMap;
 use torin::prelude::Size2D;
 
 use crate::{
     data::{
-        AccessibilityData,
-        CursorStyleData,
-        EffectData,
-        LayoutData,
-        StyleState,
-        TextStyleData,
+        AccessibilityData, CursorStyleData, EffectData, LayoutData, StyleState, TextStyleData,
         TextStyleState,
     },
     diff_key::DiffKey,
-    element::{
-        Element,
-        ElementExt,
-        EventHandlerType,
-        LayoutContext,
-        RenderContext,
-    },
+    element::{Element, ElementExt, EventHandlerType, LayoutContext, RenderContext},
     events::name::EventName,
     layers::Layer,
     prelude::{
-        AccessibilityExt,
-        Color,
-        ContainerExt,
-        EventHandlersExt,
-        KeyExt,
-        LayerExt,
-        LayoutExt,
-        MaybeExt,
-        TextAlign,
-        TextStyleExt,
-        VerticalAlign,
+        AccessibilityExt, Color, ContainerExt, EventHandlersExt, KeyExt, LayerExt, LayoutExt,
+        MaybeExt, TextAlign, TextStyleExt, VerticalAlign,
     },
-    style::cursor::{
-        CursorMode,
-        CursorStyle,
-    },
+    style::cursor::{CursorMode, CursorStyle},
     text_cache::CachedParagraph,
     tree::DiffModifies,
 };
@@ -192,6 +158,14 @@ impl ElementExt for ParagraphElement {
 
         if self.accessibility != paragraph.accessibility {
             diff.insert(DiffModifies::ACCESSIBILITY);
+        }
+
+        if self.cursor_style != paragraph.cursor_style {
+            diff.insert(DiffModifies::STYLE);
+        }
+
+        if self.cursor_style_data != paragraph.cursor_style_data {
+            diff.insert(DiffModifies::STYLE);
         }
 
         if self.relative_layer != paragraph.relative_layer {
