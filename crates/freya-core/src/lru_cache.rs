@@ -40,23 +40,16 @@ impl<V, ID: Hash + Eq> LRUCache<V, ID> {
         let mut hasher = FxHasher::default();
         hash_value.hash(&mut hasher);
         let hash = hasher.finish();
-        let mut value = self.map.get_mut(&hash);
 
-        let cache_value = value.as_ref().map(|v| v.1.clone());
+        let cache_value = self.map.get(&hash).map(|v| v.1.clone());
 
         let hashes = self.users.entry(id).or_default();
 
         // New hashed value
         if !hashes.contains(&hash) {
-            if let Some(value) = &mut value {
-                value.0 += 1;
-                hashes.push(hash);
-            }
-
             let index = match hashes.len() {
                 ..=1 => 0,
-                2 => 1,
-                len => len - 2,
+                len => len - 1,
             };
             // Clean the first current hash
             for old_hash in hashes.drain(0..index) {
@@ -69,6 +62,10 @@ impl<V, ID: Hash + Eq> LRUCache<V, ID> {
                 if entry.0 == 0 {
                     self.map.remove(&old_hash);
                 }
+            }
+            if let Some(value) = self.map.get_mut(&hash) {
+                value.0 += 1;
+                hashes.push(hash);
             }
         }
 
@@ -170,5 +167,56 @@ mod test {
         assert!(cache.get(&70).is_some());
         cache.remove(&2);
         assert!(cache.get(&70).is_none());
+    }
+
+    #[test]
+    fn test_keep_old_hash_when_adding_second_hash() {
+        let mut cache = LRUCache::<i32, u64>::default();
+
+        cache
+            .utilize(1, &50)
+            .unwrap_or_else(|| cache.insert(1, &50, 5000));
+        cache
+            .utilize(2, &60)
+            .unwrap_or_else(|| cache.insert(2, &60, 6000));
+
+        assert_eq!(cache.utilize(1, &50), Some(Rc::new(5000)));
+        assert_eq!(cache.utilize(2, &60), Some(Rc::new(6000)));
+
+        cache
+            .utilize(1, &60)
+            .unwrap_or_else(|| cache.insert(1, &60, 6000));
+
+        assert!(cache.get(&50).is_some());
+        assert!(cache.get(&60).is_some());
+
+        let hashes = cache.users.get(&1).unwrap();
+        assert_eq!(hashes.len(), 2);
+    }
+
+    #[test]
+    fn test_smallvec_no_spill_on_third_hash() {
+        let mut cache = LRUCache::<i32, u64>::default();
+
+        cache
+            .utilize(1, &50)
+            .unwrap_or_else(|| cache.insert(1, &50, 5000));
+        cache
+            .utilize(1, &60)
+            .unwrap_or_else(|| cache.insert(1, &60, 6000));
+
+        let hashes = cache.users.get(&1).unwrap();
+        assert!(!hashes.spilled());
+
+        cache
+            .utilize(2, &70)
+            .unwrap_or_else(|| cache.insert(2, &70, 7000));
+        cache
+            .utilize(1, &70)
+            .unwrap_or_else(|| cache.insert(1, &70, 7000));
+
+        let hashes = cache.users.get(&1).unwrap();
+        assert_eq!(hashes.len(), 2);
+        assert!(!hashes.spilled());
     }
 }
