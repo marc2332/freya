@@ -335,7 +335,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
         storage.internal_invalidate_all().await;
     }
 
-    /// Non-panicking version of [`Self::invalidate_all()`]
+    /// Non-panicking version of [`QueriesStorage::invalidate_all()`]
     pub async fn try_invalidate_all() {
         let Some(storage) = try_consume_context::<QueriesStorage<Q>>() else {
             return;
@@ -365,7 +365,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
         storage.internal_invalidate_matching(matching_keys).await;
     }
 
-    /// Non-panicking version of [`Self::invalidate_matching()`]
+    /// Non-panicking version of [`QueriesStorage::invalidate_matching()`]
     pub async fn try_invalidate_matching(matching_keys: Q::Keys) {
         let Some(storage) = try_consume_context::<QueriesStorage<Q>>() else {
             return;
