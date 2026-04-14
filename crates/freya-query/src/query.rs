@@ -332,7 +332,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
     pub async fn invalidate_all() {
         let storage = consume_context::<QueriesStorage<Q>>();
 
-        storage.internal_invalidate_all().await;
+        storage.inner_invalidate_all().await;
     }
 
     /// Non-panicking version of [`QueriesStorage::invalidate_all()`]
@@ -341,10 +341,10 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
             return;
         };
 
-        storage.internal_invalidate_all().await;
+        storage.inner_invalidate_all().await;
     }
 
-    async fn internal_invalidate_all(self) {
+    async fn inner_invalidate_all(self) {
         // Get all the queries
         let matching_queries = self.storage.read().clone().into_iter().collect::<Vec<_>>();
         let matching_queries = matching_queries
@@ -362,7 +362,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
     pub async fn invalidate_matching(matching_keys: Q::Keys) {
         let storage = consume_context::<QueriesStorage<Q>>();
 
-        storage.internal_invalidate_matching(matching_keys).await;
+        storage.inner_invalidate_matching(matching_keys).await;
     }
 
     /// Non-panicking version of [`QueriesStorage::invalidate_matching()`]
@@ -371,10 +371,10 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
             return;
         };
 
-        storage.internal_invalidate_matching(matching_keys).await;
+        storage.inner_invalidate_matching(matching_keys).await;
     }
 
-    async fn internal_invalidate_matching(self, matching_keys: Q::Keys) {
+    async fn inner_invalidate_matching(self, matching_keys: Q::Keys) {
         // Get those queries that match
         let mut matching_queries = Vec::new();
         for (query, data) in self.storage.read().iter() {
