@@ -26,13 +26,19 @@ jobs:
           prefix-key: "docs"
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
-      - name: cargo doc
-        run: RUSTDOCFLAGS="--cfg docsrs" cargo +nightly-2026-03-15 doc --no-deps --workspace --features "all, docs"
-      - name: Ensure nightly rustfmt
-        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
+      - name: Install just
+        uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
         with:
-          toolchain: nightly-2025-09-25
+          tool: just
+      - name: Get nightly toolchain version
+        run: echo "NIGHTLY_TOOLCHAIN=$(just rv-nightly)" >> $GITHUB_ENV
+      - name: Install nightly Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ env.NIGHTLY_TOOLCHAIN }}
           components: rustfmt
+      - name: cargo doc
+        run: RUSTDOCFLAGS="--cfg docsrs" RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo doc --no-deps --workspace --features "all, docs"
 
       - name: Upload to Deno Deploy
         uses: denoland/deployctl@7bded90d0d09cd99bbfb513966146315db97618b # 1.13.1
