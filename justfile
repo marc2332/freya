@@ -9,13 +9,14 @@ rv-nightly:
 
 f:
     taplo fmt
-    alejandra flake.nix
     RUSTUP_TOOLCHAIN={{nightly_toolchain}} cargo fmt --all -- --error-on-unformatted --unstable-features
 
 f-check:
     taplo fmt --check
-    alejandra --check flake.nix
     RUSTUP_TOOLCHAIN={{nightly_toolchain}} cargo fmt --all --check -- --error-on-unformatted --unstable-features
+
+f-nix:
+    alejandra flake.nix
 
 c:
     taplo check
