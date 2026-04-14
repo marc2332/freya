@@ -9,6 +9,6 @@
 ## Checklist
 
 - [ ] I have tested my changes.
-- [ ] I did **not** use any AI assistance (e.g. ChatGPT, Copilot, etc.) to write this code.
+- [ ] I used AI assistance (e.g. ChatGPT, Copilot, etc.) to write this code.
 - [ ] I have added or updated documentation where relevant.
 - [ ] I have added or updated tests where relevant.
