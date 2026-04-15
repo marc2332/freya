@@ -16,19 +16,19 @@ jobs:
       group: rust-sync-${{ github.ref_name }}
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 2
           submodules: true
       - name: Install stable rust toolchain
-        uses: dtolnay/rust-toolchain@1.94
+        uses: dtolnay/rust-toolchain@aad518f59d88bae90133242f9ddac7f8bbc5dddf # 1.94
       - name: Install linux dependencies
         run: sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev libwebkit2gtk-4.1-dev
       - name: Set up cargo cache
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
         if: github.ref != 'refs/heads/main'
         with:
-          shared-key: "rust-${{ matrix.os }}"
+          shared-key: "rust-ubuntu-latest"
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Make sure the mocked Skia bindings are on sync
         run: cargo build --package freya --package freya-testing --features "mocked-engine, all-bindings" --no-default-features

@@ -1,3 +1,7 @@
+use alacritty_terminal::vte::ansi::{
+    Color as AnsiColor,
+    NamedColor,
+};
 use freya_core::prelude::Color;
 
 /// ANSI 16-color palette (matches WezTerm defaults)
@@ -23,39 +27,59 @@ const ANSI_COLORS: [(u8, u8, u8); 16] = [
 /// 6x6x6 RGB cube levels for 256-color palette
 const RGB_LEVELS: [u8; 6] = [0u8, 95u8, 135u8, 175u8, 215u8, 255u8];
 
-/// Map VT100 color to Skia Color
-///
-/// If `is_bg` is true, Default maps to background color instead of foreground
-pub fn map_vt100_color(c: vt100::Color, default: Color) -> Color {
+/// Map an alacritty `Color` to a Freya `Color`. `default_fg` / `default_bg`
+/// resolve `NamedColor::Foreground` / `Background` to the configured colors.
+pub fn map_ansi_color(c: AnsiColor, default_fg: Color, default_bg: Color) -> Color {
     match c {
-        vt100::Color::Default => default,
-        vt100::Color::Rgb(r, g, b) => Color::from_rgb(r, g, b),
-        vt100::Color::Idx(idx) => {
-            let i = idx as usize;
+        AnsiColor::Named(name) => named_color(name, default_fg, default_bg),
+        AnsiColor::Spec(rgb) => Color::from_rgb(rgb.r, rgb.g, rgb.b),
+        AnsiColor::Indexed(idx) => indexed_color(idx, default_fg),
+    }
+}
 
-            // ANSI 16 colors
-            if i < 16 {
-                let (r, g, b) = ANSI_COLORS[i];
-                return Color::from_rgb(r, g, b);
+fn named_color(name: NamedColor, default_fg: Color, default_bg: Color) -> Color {
+    match name {
+        NamedColor::Foreground | NamedColor::BrightForeground | NamedColor::DimForeground => {
+            default_fg
+        }
+        NamedColor::Background => default_bg,
+        NamedColor::Cursor => default_fg,
+        other => {
+            // NamedColor::Black..BrightWhite are 0..=15.
+            let idx = other as u8;
+            if idx < 16 {
+                let (r, g, b) = ANSI_COLORS[idx as usize];
+                Color::from_rgb(r, g, b)
+            } else {
+                default_fg
             }
-
-            // 6x6x6 RGB cube (216 colors, indices 16-231)
-            if (16..=231).contains(&i) {
-                let v = i - 16;
-                let r = v / 36;
-                let g = (v / 6) % 6;
-                let b = v % 6;
-                return Color::from_rgb(RGB_LEVELS[r], RGB_LEVELS[g], RGB_LEVELS[b]);
-            }
-
-            // Grayscale (24 colors, indices 232-255)
-            if (232..=255).contains(&i) {
-                let shade = 8 + ((i - 232) * 10) as u8;
-                return Color::from_rgb(shade, shade, shade);
-            }
-
-            // Fallback
-            default
         }
     }
+}
+
+fn indexed_color(idx: u8, default: Color) -> Color {
+    let i = idx as usize;
+
+    // ANSI 16 colors
+    if i < 16 {
+        let (r, g, b) = ANSI_COLORS[i];
+        return Color::from_rgb(r, g, b);
+    }
+
+    // 6x6x6 RGB cube (216 colors, indices 16-231)
+    if (16..=231).contains(&i) {
+        let v = i - 16;
+        let r = v / 36;
+        let g = (v / 6) % 6;
+        let b = v % 6;
+        return Color::from_rgb(RGB_LEVELS[r], RGB_LEVELS[g], RGB_LEVELS[b]);
+    }
+
+    // Grayscale (24 colors, indices 232-255)
+    if (232..=255).contains(&i) {
+        let shade = 8 + ((i - 232) * 10) as u8;
+        return Color::from_rgb(shade, shade, shade);
+    }
+
+    default
 }
