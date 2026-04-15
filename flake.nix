@@ -25,6 +25,8 @@
 
         commonPackages = with pkgs; [
           python3
+          just
+          taplo
         ];
 
         commonBuildInputs = with pkgs; [
