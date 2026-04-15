@@ -1,6 +1,6 @@
 target
-/Cargo.lock
-/.idea
+Cargo.lock
+.idea
 snapshot_before.png
 snapshot_after.png
 documents_example
@@ -11,4 +11,4 @@ documents_example
 *demo-*.png
 other
 state_query_sqlite_data
-/CLAUDE.md
+CLAUDE.md
