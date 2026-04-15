@@ -1,0 +1,28 @@
+[package]
+name = "freya-android"
+version = "0.4.0-rc.18"
+description = "Android integration for Freya"
+edition = "2024"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "android"]
+categories = ["gui"]
+
+[lints]
+workspace = true
+
+[package.metadata.docs.rs]
+features = ["freya-core/mocked-engine"]
+
+[features]
+skia-engine = ["freya-core/skia-engine"]
+
+[dependencies]
+freya-core = { workspace = true }
+freya-components = { workspace = true }
+freya-winit = { workspace = true }
+jni = "0.22"
+winit = { workspace = true }
+tracing = { workspace = true }

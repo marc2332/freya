@@ -2,9 +2,21 @@ use freya_core::prelude::*;
 use torin::size::Size;
 
 use crate::{
+    define_theme,
     get_theme,
-    theming::component_themes::TitlebarButtonThemePartial,
 };
+
+define_theme! {
+    %[component]
+    pub TitlebarButton {
+        %[fields]
+        background: Color,
+        hover_background: Color,
+        corner_radius: CornerRadius,
+        width: Size,
+        height: Size,
+    }
+}
 
 #[derive(Clone, PartialEq, Copy)]
 pub enum TitlebarAction {
@@ -47,7 +59,11 @@ impl TitlebarButton {
 impl Component for TitlebarButton {
     fn render(&self) -> impl IntoElement {
         let mut hovering = use_state(|| false);
-        let theme = get_theme!(&self.theme, titlebar_button);
+        let theme = get_theme!(
+            &self.theme,
+            TitlebarButtonThemePreference,
+            "titlebar_button"
+        );
 
         let icon_svg = match self.action {
             TitlebarAction::Minimize => {

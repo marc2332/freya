@@ -1,4 +1,4 @@
-use vt100::MouseProtocolEncoding;
+use alacritty_terminal::term::TermMode;
 
 /// Mouse button for terminal encoding.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -19,125 +19,70 @@ impl TerminalMouseButton {
     }
 }
 
-/// Encode a mouse button press event.
+/// Encode a mouse event to the byte sequence the running app expects.
+///
+/// `sgr_code` is the value emitted in SGR (1006) encoding; `x11_code` is the
+/// value emitted in classic X11 encoding before the mandatory `+32` offset.
+/// `release_in_sgr` only affects SGR encoding (lowercase `m` vs uppercase
+/// `M`); X11 release uses a fixed button byte and is selected by passing
+/// `x11_code = 3`.
+fn encode(
+    sgr_code: u8,
+    x11_code: u8,
+    row: usize,
+    col: usize,
+    mode: TermMode,
+    release_in_sgr: bool,
+) -> String {
+    let row = row.saturating_add(1);
+    let col = col.saturating_add(1);
+    if mode.contains(TermMode::SGR_MOUSE) {
+        let action = if release_in_sgr { 'm' } else { 'M' };
+        format!("\x1b[<{sgr_code};{col};{row}{action}")
+    } else {
+        let button_byte = x11_code.saturating_add(32);
+        let col_byte = col.min(255) as u8;
+        let row_byte = row.min(255) as u8;
+        format!(
+            "\x1b[M{}{}{}",
+            button_byte as char, col_byte as char, row_byte as char
+        )
+    }
+}
+
 pub fn encode_mouse_press(
     row: usize,
     col: usize,
     button: TerminalMouseButton,
-    encoding: MouseProtocolEncoding,
+    mode: TermMode,
 ) -> String {
-    match encoding {
-        MouseProtocolEncoding::Sgr => {
-            let sgr_row = row.saturating_add(1);
-            let sgr_col = col.saturating_add(1);
-            format!("\x1b[<{};{};{}M", button.code(), sgr_col, sgr_row)
-        }
-        _ => {
-            let button_byte = button.code().saturating_add(32);
-            let col_byte = col.saturating_add(1).min(255) as u8;
-            let row_byte = row.saturating_add(1).min(255) as u8;
-            format!(
-                "\x1b[M{}{}{}",
-                button_byte as char, col_byte as char, row_byte as char
-            )
-        }
-    }
+    encode(button.code(), button.code(), row, col, mode, false)
 }
 
-/// Encode a mouse button release event.
 pub fn encode_mouse_release(
     row: usize,
     col: usize,
     button: TerminalMouseButton,
-    encoding: MouseProtocolEncoding,
+    mode: TermMode,
 ) -> String {
-    match encoding {
-        MouseProtocolEncoding::Sgr => {
-            // SGR uses lowercase 'm' for release with the original button code
-            let sgr_row = row.saturating_add(1);
-            let sgr_col = col.saturating_add(1);
-            format!("\x1b[<{};{};{}m", button.code(), sgr_col, sgr_row)
-        }
-        _ => {
-            // X11: release is always button code 3 (no specific button) + 32
-            let button_byte = 35u8; // 3 + 32
-            let col_byte = col.saturating_add(1).min(255) as u8;
-            let row_byte = row.saturating_add(1).min(255) as u8;
-            format!(
-                "\x1b[M{}{}{}",
-                button_byte as char, col_byte as char, row_byte as char
-            )
-        }
-    }
+    // X11 collapses release into a single "button 3" byte; SGR keeps the
+    // original button code but switches `M` to `m`.
+    encode(button.code(), 3, row, col, mode, true)
 }
 
-/// Encode a mouse motion event using the specified protocol encoding.
-///
-/// When `button` is `None`, this encodes hover motion (no button pressed):
-/// button code = 3 + 32 (motion flag) = 35.
-/// When `button` is `Some`, this encodes drag motion (button held):
-/// button code = button.code() + 32 (motion flag).
+/// Encode a mouse motion event. `None` for `button` means hover (no button).
 pub fn encode_mouse_move(
     row: usize,
     col: usize,
     button: Option<TerminalMouseButton>,
-    encoding: MouseProtocolEncoding,
+    mode: TermMode,
 ) -> String {
-    // Motion flag = 32. No-button code = 3.
-    let code = match button {
-        Some(b) => b.code() + 32,
-        None => 3 + 32, // 35
-    };
-
-    match encoding {
-        MouseProtocolEncoding::Sgr => {
-            let sgr_row = row.saturating_add(1);
-            let sgr_col = col.saturating_add(1);
-            format!("\x1b[<{};{};{}M", code, sgr_col, sgr_row)
-        }
-        _ => {
-            let button_byte = code.saturating_add(32);
-            let col_byte = col.saturating_add(1).min(255) as u8;
-            let row_byte = row.saturating_add(1).min(255) as u8;
-            format!(
-                "\x1b[M{}{}{}",
-                button_byte as char, col_byte as char, row_byte as char
-            )
-        }
-    }
+    let code = button.map_or(3, TerminalMouseButton::code) + 32;
+    encode(code, code, row, col, mode, false)
 }
 
-/// Encode a mouse wheel event using the specified protocol encoding.
-///
-/// Positive `delta_y` = wheel up (away from user), negative = wheel down.
-pub fn encode_wheel_event(
-    row: usize,
-    col: usize,
-    delta_y: f64,
-    encoding: MouseProtocolEncoding,
-) -> String {
-    // Terminal protocol: wheel up = button 64, wheel down = button 65.
-    match encoding {
-        MouseProtocolEncoding::Sgr => {
-            let button = if delta_y > 0.0 { 64 } else { 65 };
-            let sgr_row = row.saturating_add(1);
-            let sgr_col = col.saturating_add(1);
-            // Wheel events are press-only (M), no release needed
-            format!("\x1b[<{};{};{}M", button, sgr_col, sgr_row)
-        }
-        // Default and Utf8 both use the X11-style encoding
-        _ => {
-            // \x1b[M followed by 3 bytes:
-            //   Byte 1: button + 32 (wheel up = 64+32=96, wheel down = 65+32=97)
-            //   Byte 2: column (1-indexed + 32)
-            //   Byte 3: row (1-indexed + 32)
-            let button_byte = if delta_y > 0.0 { 96u8 } else { 97u8 };
-            let col_byte = col.saturating_add(1).min(255) as u8;
-            let row_byte = row.saturating_add(1).min(255) as u8;
-            format!(
-                "\x1b[M{}{}{}",
-                button_byte as char, col_byte as char, row_byte as char
-            )
-        }
-    }
+/// Encode a mouse wheel event. Positive `delta_y` = wheel up.
+pub fn encode_wheel_event(row: usize, col: usize, delta_y: f64, mode: TermMode) -> String {
+    let code = if delta_y > 0.0 { 64 } else { 65 };
+    encode(code, code, row, col, mode, false)
 }

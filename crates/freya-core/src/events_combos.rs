@@ -40,6 +40,7 @@ impl EventsCombos {
                     match count {
                         1 => (PressEventType::Double, 2),
                         2 => (PressEventType::Triple, 3),
+                        3 => (PressEventType::Quadruple, 4),
                         _ => (PressEventType::Single, 1),
                     }
                 } else {
@@ -63,6 +64,7 @@ pub enum PressEventType {
     Single,
     Double,
     Triple,
+    Quadruple,
 }
 
 impl PressEventType {
@@ -76,5 +78,9 @@ impl PressEventType {
 
     pub fn is_triple(&self) -> bool {
         matches!(self, Self::Triple)
+    }
+
+    pub fn is_quadruple(&self) -> bool {
+        matches!(self, Self::Quadruple)
     }
 }

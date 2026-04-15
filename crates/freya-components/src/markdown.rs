@@ -27,6 +27,7 @@ use crate::link::{
     LinkTooltip,
 };
 use crate::{
+    define_theme,
     table::{
         Table,
         TableBody,
@@ -34,8 +35,29 @@ use crate::{
         TableHead,
         TableRow,
     },
-    theming::component_themes::MarkdownViewerTheme,
 };
+
+define_theme! {
+    %[component]
+    pub MarkdownViewer {
+        %[fields]
+        color: Color,
+        background_code: Color,
+        color_code: Color,
+        background_blockquote: Color,
+        border_blockquote: Color,
+        background_divider: Color,
+        heading_h1: f32,
+        heading_h2: f32,
+        heading_h3: f32,
+        heading_h4: f32,
+        heading_h5: f32,
+        heading_h6: f32,
+        paragraph_size: f32,
+        code_font_size: f32,
+        table_font_size: f32,
+    }
+}
 
 /// Markdown viewer component.
 ///
@@ -64,7 +86,7 @@ pub struct MarkdownViewer {
     content: Cow<'static, str>,
     layout: LayoutData,
     key: DiffKey,
-    pub(crate) theme: Option<crate::theming::component_themes::MarkdownViewerThemePartial>,
+    pub(crate) theme: Option<MarkdownViewerThemePartial>,
 }
 
 impl MarkdownViewer {
@@ -473,7 +495,11 @@ impl Component for MarkdownViewer {
             paragraph_size,
             code_font_size,
             table_font_size,
-        } = crate::get_theme!(&self.theme, markdown_viewer);
+        } = crate::get_theme!(
+            &self.theme,
+            MarkdownViewerThemePreference,
+            "markdown_viewer"
+        );
 
         let mut container = rect().vertical().layout(self.layout.clone()).spacing(12.);
 

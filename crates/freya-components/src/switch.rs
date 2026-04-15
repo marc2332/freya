@@ -8,12 +8,43 @@ use torin::{
 };
 
 use crate::{
+    define_theme,
     get_theme,
-    theming::component_themes::{
-        SwitchColorsThemePartial,
-        SwitchLayoutThemePartial,
-    },
 };
+
+define_theme! {
+    for = Switch;
+    theme_field = theme_colors;
+
+    %[component]
+    pub SwitchColors {
+        %[fields]
+        background: Color,
+        thumb_background: Color,
+        toggled_background: Color,
+        toggled_thumb_background: Color,
+        focus_border_fill: Color,
+    }
+}
+
+define_theme! {
+    for = Switch;
+    theme_field = theme_layout;
+
+    %[component]
+    pub SwitchLayout {
+        %[fields]
+        margin: Gaps,
+        width: f32,
+        height: f32,
+        padding: f32,
+        thumb_size: f32,
+        toggled_thumb_size: f32,
+        pressed_thumb_size_offset: f32,
+        thumb_offset: f32,
+        toggled_thumb_offset: f32,
+    }
+}
 
 #[derive(Clone, PartialEq)]
 pub enum SwitchLayoutVariant {
@@ -134,19 +165,28 @@ impl Switch {
 
 impl Component for Switch {
     fn render(self: &Switch) -> impl IntoElement {
-        let theme_colors = get_theme!(&self.theme_colors, switch);
+        let theme_colors = get_theme!(&self.theme_colors, SwitchColorsThemePreference, "switch");
         let theme_layout = match self.layout_variant {
-            SwitchLayoutVariant::Normal => get_theme!(&self.theme_layout, switch_layout),
-            SwitchLayoutVariant::Expanded => get_theme!(&self.theme_layout, expanded_switch_layout),
+            SwitchLayoutVariant::Normal => get_theme!(
+                &self.theme_layout,
+                SwitchLayoutThemePreference,
+                "switch_layout"
+            ),
+            SwitchLayoutVariant::Expanded => get_theme!(
+                &self.theme_layout,
+                SwitchLayoutThemePreference,
+                "expanded_switch_layout"
+            ),
         };
 
         let mut hovering = use_state(|| false);
+        let mut pressing = use_state(|| false);
         let focus = use_focus();
         let focus_status = use_focus_status(focus);
 
         let toggled = *self.toggled.read();
 
-        let animation = use_animation_with_dependencies(
+        let anim_toggle = use_animation_with_dependencies(
             &(theme_colors.clone(), theme_layout.clone(), toggled),
             |conf, (switch_colors, switch_layout, toggled)| {
                 conf.on_creation(OnCreation::Finish);
@@ -185,6 +225,21 @@ impl Component for Switch {
             },
         );
 
+        let anim_press = use_animation_with_dependencies(&pressing(), move |conf, pressing| {
+            conf.on_creation(OnCreation::Finish);
+            conf.on_change(OnChange::Rerun);
+            let anim = AnimNum::new(0.0, theme_layout.pressed_thumb_size_offset)
+                .time(150)
+                .function(Function::Expo)
+                .ease(Ease::Out);
+            if *pressing {
+                anim
+            } else {
+                anim.into_reversed()
+            }
+        });
+        let press_size = anim_press.get().value();
+
         let enabled = use_reactive(&self.enabled);
         use_drop(move || {
             if hovering() && enabled() {
@@ -200,7 +255,7 @@ impl Component for Switch {
         } else {
             Border::new()
         };
-        let (offset_x, size, background, thumb) = animation.get().value();
+        let (offset_x, size, background, thumb) = anim_toggle.get().value();
 
         rect()
             .a11y_id(focus.a11y_id())
@@ -211,7 +266,7 @@ impl Component for Switch {
             .height(Size::px(theme_layout.height))
             .padding(Gaps::new_all(theme_layout.padding))
             .main_align(Alignment::center())
-            .offset_x(offset_x)
+            .offset_x(offset_x - press_size / 2.0)
             .corner_radius(CornerRadius::new_all(50.))
             .background(background.mul_if(!self.enabled, 0.85))
             .border(border)
@@ -225,7 +280,13 @@ impl Component for Switch {
                         focus.request_focus();
                     }
                 })
+                .on_pointer_down(move |e: Event<PointerEventData>| {
+                    if matches!(e.data(), PointerEventData::Touch(_)) {
+                        pressing.set(true);
+                    }
+                })
             })
+            .on_global_pointer_press(move |_| pressing.set_if_modified(false))
             .on_pointer_enter(move |_| {
                 hovering.set(true);
                 if enabled() {
@@ -239,11 +300,12 @@ impl Component for Switch {
                     Cursor::set(CursorIcon::default());
                     hovering.set(false);
                 }
+                pressing.set_if_modified(false);
             })
             .child(
                 rect()
-                    .width(Size::px(size))
-                    .height(Size::px(size))
+                    .width(Size::px(size + press_size))
+                    .height(Size::px(size + press_size))
                     .background(thumb.mul_if(!self.enabled, 0.85))
                     .corner_radius(CornerRadius::new_all(50.)),
             )

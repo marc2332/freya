@@ -47,14 +47,19 @@ impl GraphicsDriver {
             return (Self::OpenGl(driver), window);
         }
 
-        // Vulkan by default with OpenGL as fallback.
-        // Set FREYA_RENDERER=opengl to force OpenGL.
+        // Linux: Vulkan by default, set FREYA_RENDERER=opengl to force OpenGL.
+        // Windows: OpenGL by default, set FREYA_RENDERER=vulkan to force Vulkan.
         #[cfg(all(not(target_os = "macos"), not(target_os = "android")))]
         {
-            let force_opengl =
-                std::env::var("FREYA_RENDERER").is_ok_and(|v| v.eq_ignore_ascii_case("opengl"));
+            let renderer = std::env::var("FREYA_RENDERER");
 
-            if !force_opengl {
+            let use_vulkan = if cfg!(target_os = "windows") {
+                renderer.is_ok_and(|v| v.eq_ignore_ascii_case("vulkan"))
+            } else {
+                !renderer.is_ok_and(|v| v.eq_ignore_ascii_case("opengl"))
+            };
+
+            if use_vulkan {
                 let vk_attrs = window_attributes.clone();
                 match vulkan::VulkanDriver::new(event_loop, vk_attrs) {
                     Ok((driver, window)) => return (Self::Vulkan(driver), window),

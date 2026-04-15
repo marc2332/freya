@@ -326,16 +326,27 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
         }
     }
 
+    /// Acquires query storage from context and invalidates all queries
+    ///
+    /// Panics if query storage is not in context
     pub async fn invalidate_all() {
         let storage = consume_context::<QueriesStorage<Q>>();
 
+        storage.inner_invalidate_all().await;
+    }
+
+    /// Non-panicking version of [`QueriesStorage::invalidate_all()`]
+    pub async fn try_invalidate_all() {
+        let Some(storage) = try_consume_context::<QueriesStorage<Q>>() else {
+            return;
+        };
+
+        storage.inner_invalidate_all().await;
+    }
+
+    async fn inner_invalidate_all(self) {
         // Get all the queries
-        let matching_queries = storage
-            .storage
-            .read()
-            .clone()
-            .into_iter()
-            .collect::<Vec<_>>();
+        let matching_queries = self.storage.read().clone().into_iter().collect::<Vec<_>>();
         let matching_queries = matching_queries
             .iter()
             .map(|(q, d)| (q, d))
@@ -345,12 +356,28 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
         Self::run_queries(&matching_queries).await
     }
 
+    /// Acquires query storage from context and invalidates matching queries
+    ///
+    /// Panics if query storage is not in context
     pub async fn invalidate_matching(matching_keys: Q::Keys) {
         let storage = consume_context::<QueriesStorage<Q>>();
 
+        storage.inner_invalidate_matching(matching_keys).await;
+    }
+
+    /// Non-panicking version of [`QueriesStorage::invalidate_matching()`]
+    pub async fn try_invalidate_matching(matching_keys: Q::Keys) {
+        let Some(storage) = try_consume_context::<QueriesStorage<Q>>() else {
+            return;
+        };
+
+        storage.inner_invalidate_matching(matching_keys).await;
+    }
+
+    async fn inner_invalidate_matching(self, matching_keys: Q::Keys) {
         // Get those queries that match
         let mut matching_queries = Vec::new();
-        for (query, data) in storage.storage.read().iter() {
+        for (query, data) in self.storage.read().iter() {
             if query.query.matches(&matching_keys) {
                 matching_queries.push((query.clone(), data.clone()));
             }
@@ -611,7 +638,7 @@ impl<Q: QueryCapability> UseQuery<Q> {
         let query_data = map.get(&query).cloned().unwrap();
 
         // Run the query
-        spawn(async move { QueriesStorage::run_queries(&[(&query, &query_data)]).await });
+        spawn_forever(async move { QueriesStorage::run_queries(&[(&query, &query_data)]).await });
     }
 }
 
@@ -662,7 +689,7 @@ pub fn use_query<Q: QueryCapability>(query: Query<Q>) -> UseQuery<Q> {
         // Immediately run the query if enabled and the value is stale
         if query.enabled && query_data.state.borrow().is_stale(query) {
             let query = query.clone();
-            spawn(async move {
+            spawn_forever(async move {
                 QueriesStorage::run_queries(&[(&query, &query_data)]).await;
             });
         }

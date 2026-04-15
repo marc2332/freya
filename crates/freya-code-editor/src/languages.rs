@@ -9,6 +9,7 @@ pub enum LanguageId {
     Markdown,
     Toml,
     Json,
+    SQL,
     #[default]
     Unknown,
 }
@@ -23,6 +24,7 @@ impl Display for LanguageId {
             Self::Markdown => f.write_str("Markdown"),
             Self::Toml => f.write_str("TOML"),
             Self::Json => f.write_str("JSON"),
+            Self::SQL => f.write_str("SQL"),
             Self::Unknown => f.write_str("Unknown"),
         }
     }
@@ -38,6 +40,7 @@ impl LanguageId {
             "md" => LanguageId::Markdown,
             "toml" => LanguageId::Toml,
             "json" => LanguageId::Json,
+            "sql" => LanguageId::SQL,
             _ => LanguageId::Unknown,
         }
     }

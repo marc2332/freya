@@ -105,7 +105,7 @@ pub fn svg(bytes: impl Into<SvgBytes>) -> Svg {
             event_handlers: HashMap::default(),
             bytes: bytes.into(),
             effect: None,
-            color: Color::BLACK,
+            color: None,
             stroke: None,
             stroke_width: None,
             fill: None,
@@ -120,7 +120,7 @@ pub struct SvgElement {
     pub layout: LayoutData,
     pub event_handlers: FxHashMap<EventName, EventHandlerType>,
     pub bytes: SvgBytes,
-    pub color: Color,
+    pub color: Option<Color>,
     pub stroke: Option<Color>,
     pub stroke_width: Option<f32>,
     pub fill: Option<Color>,
@@ -215,7 +215,10 @@ impl ElementExt for SvgElement {
             let mut root = svg_dom.root();
             match self.layout.width {
                 Size::Pixels(px) => {
-                    root.set_width(svg::Length::new(px.get(), svg::LengthUnit::PX));
+                    root.set_width(svg::Length::new(
+                        px.get() * context.scale_factor as f32,
+                        svg::LengthUnit::PX,
+                    ));
                 }
                 Size::Percentage(per) => {
                     root.set_width(svg::Length::new(per.get(), svg::LengthUnit::Percentage));
@@ -227,7 +230,10 @@ impl ElementExt for SvgElement {
             }
             match self.layout.height {
                 Size::Pixels(px) => {
-                    root.set_height(svg::Length::new(px.get(), svg::LengthUnit::PX));
+                    root.set_height(svg::Length::new(
+                        px.get() * context.scale_factor as f32,
+                        svg::LengthUnit::PX,
+                    ));
                 }
                 Size::Percentage(per) => {
                     root.set_height(svg::Length::new(per.get(), svg::LengthUnit::Percentage));
@@ -276,11 +282,8 @@ impl ElementExt for SvgElement {
         context
             .canvas
             .translate(context.layout_node.visible_area().origin.to_tuple());
-        context
-            .canvas
-            .scale((context.scale_factor as f32, context.scale_factor as f32));
 
-        root.set_color(self.color.into());
+        root.set_color(self.color.unwrap_or(context.text_style_state.color).into());
         if let Some(fill) = self.fill {
             root.set_fill(svg::Paint::from_color(fill.into()));
         }
@@ -350,7 +353,7 @@ impl Svg {
     }
 
     pub fn color(mut self, color: impl Into<Color>) -> Self {
-        self.element.color = color.into();
+        self.element.color = Some(color.into());
         self
     }
 

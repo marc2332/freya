@@ -76,6 +76,44 @@ impl TaskHandle {
     pub fn try_cancel(&self) {
         CurrentContext::try_with(|context| context.tasks.borrow_mut().remove(&self.0));
     }
+
+    /// Upgrade to an [OwnedTaskHandle] that cancels the task when the last clone is dropped.
+    pub fn owned(self) -> OwnedTaskHandle {
+        OwnedTaskHandle(Rc::new(InnerOwnedTaskHandle(self)))
+    }
+}
+
+struct InnerOwnedTaskHandle(TaskHandle);
+
+impl Drop for InnerOwnedTaskHandle {
+    fn drop(&mut self) {
+        self.0.try_cancel();
+    }
+}
+
+/// A task handle that cancels the task when the last clone is dropped.
+#[derive(Clone)]
+pub struct OwnedTaskHandle(Rc<InnerOwnedTaskHandle>);
+
+impl PartialEq for OwnedTaskHandle {
+    fn eq(&self, other: &Self) -> bool {
+        Rc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+impl OwnedTaskHandle {
+    pub fn cancel(&self) {
+        self.0.0.cancel();
+    }
+
+    pub fn try_cancel(&self) {
+        self.0.0.try_cancel();
+    }
+
+    /// Downgrade to a non-owning [TaskHandle].
+    pub fn downgrade(&self) -> TaskHandle {
+        self.0.0
+    }
 }
 
 pub struct TaskWaker {

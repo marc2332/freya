@@ -13,6 +13,7 @@ mod app;
 #[cfg(target_os = "android")]
 #[unsafe(no_mangle)]
 fn android_main(droid_app: AndroidApp) {
+    use freya::android::AndroidPlugin;
     use freya_winit::renderer::NativeEvent;
     use winit::{
         event_loop::EventLoop,
@@ -24,12 +25,13 @@ fn android_main(droid_app: AndroidApp) {
     );
 
     let event_loop = EventLoop::<NativeEvent>::with_user_event()
-        .with_android_app(droid_app)
+        .with_android_app(droid_app.clone())
         .build()
         .expect("Failed to build event loop");
 
     launch(
         LaunchConfig::new()
+            .with_plugin(AndroidPlugin::new(droid_app))
             .with_window(WindowConfig::new(app::app))
             .with_event_loop(event_loop),
     )

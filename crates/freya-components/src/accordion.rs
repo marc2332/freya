@@ -11,9 +11,19 @@ use torin::{
 };
 
 use crate::{
+    define_theme,
     get_theme,
-    theming::component_themes::AccordionThemePartial,
 };
+
+define_theme! {
+    %[component]
+    pub Accordion {
+        %[fields]
+        color: Color,
+        background: Color,
+        border_fill: Color,
+    }
+}
 
 /// A container that expands/collapses vertically when pressed.
 ///
@@ -86,7 +96,7 @@ impl ChildrenExt for Accordion {
 impl Component for Accordion {
     fn render(self: &Accordion) -> impl IntoElement {
         let header = use_focus();
-        let accordion_theme = get_theme!(&self.theme, accordion);
+        let accordion_theme = get_theme!(&self.theme, AccordionThemePreference, "accordion");
         let mut open = use_state(|| false);
         let mut animation = use_animation(move |_conf| {
             AnimNum::new(0., 100.)

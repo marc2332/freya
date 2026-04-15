@@ -20,6 +20,7 @@ use crate::{
     languages::LanguageId,
 };
 
+#[allow(dead_code)]
 fn capture_color(name: &str, theme: &SyntaxTheme) -> Color {
     match name {
         "attribute" => theme.attribute,
@@ -59,6 +60,7 @@ fn capture_color(name: &str, theme: &SyntaxTheme) -> Color {
 }
 
 /// Tries exact match, then strips trailing dot-segments for hierarchical fallback.
+#[allow(dead_code)]
 fn resolve_capture_color(name: &str, theme: &SyntaxTheme) -> Color {
     let color = capture_color(name, theme);
     if color != theme.text {
@@ -430,21 +432,30 @@ impl<'a> Iterator for RopeChunkIter<'a> {
 impl LanguageId {
     fn lang_config(&self, theme: &SyntaxTheme) -> Option<LangConfig> {
         let (language, highlights_query) = match self {
+            #[cfg(feature = "rust")]
             LanguageId::Rust => (
                 tree_sitter_rust::LANGUAGE.into(),
                 tree_sitter_rust::HIGHLIGHTS_QUERY,
             ),
+            #[cfg(feature = "json")]
             LanguageId::Json => (
                 tree_sitter_json::LANGUAGE.into(),
                 tree_sitter_json::HIGHLIGHTS_QUERY,
             ),
+            #[cfg(feature = "toml")]
             LanguageId::Toml => (
                 tree_sitter_toml_ng::LANGUAGE.into(),
                 tree_sitter_toml_ng::HIGHLIGHTS_QUERY,
             ),
+            #[cfg(feature = "md")]
             LanguageId::Markdown => (
                 tree_sitter_md::LANGUAGE.into(),
                 tree_sitter_md::HIGHLIGHT_QUERY_BLOCK,
+            ),
+            #[cfg(feature = "sql")]
+            LanguageId::SQL => (
+                tree_sitter_sequel::LANGUAGE.into(),
+                tree_sitter_sequel::HIGHLIGHTS_QUERY,
             ),
             _ => return None,
         };

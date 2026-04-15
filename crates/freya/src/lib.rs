@@ -41,6 +41,7 @@
 //! - [Layers](self::_docs::layers)
 //! - [Platforms](self::_docs::platforms)
 //! - [Development Setup](self::_docs::development_setup)
+//! - [Extending Components](self::_docs::extending_components)
 //!
 //! ### Learn
 //! - [Built-in Components](crate::components)
@@ -174,6 +175,7 @@ pub mod components {
         color_picker::*,
         context_menu::*,
         cursor_area::*,
+        define_theme,
         drag_drop::*,
         draggable_canvas::*,
         element_expansions::*,
@@ -203,7 +205,10 @@ pub mod components {
         switch::*,
         table::*,
         theming::{
-            component_themes::*,
+            component_themes::{
+                ColorsSheet,
+                Theme,
+            },
             extensions::*,
             hooks::*,
             macros::Preference,
@@ -322,6 +327,11 @@ pub mod code_editor {
 #[cfg_attr(feature = "docs", doc(cfg(feature = "performance")))]
 pub mod performance {
     pub use freya_performance_plugin::*;
+}
+
+#[cfg(target_os = "android")]
+pub mod android {
+    pub use freya_android::*;
 }
 
 #[cfg(doc)]

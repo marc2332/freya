@@ -85,7 +85,7 @@ impl App for SubApp {
         };
 
         let on_change_route = move |_| {
-            router.push(Route::SecondPage);
+            let _ = router.push(Route::SecondPage);
         };
 
         rect()
@@ -133,7 +133,7 @@ impl Component for SecondPage {
         rect().expanded().center().child(
             Button::new()
                 .on_press(|_| {
-                    RouterContext::get().replace(Route::Home);
+                    let _ = RouterContext::get().replace(Route::Home);
                 })
                 .child("Go Home"),
         )

@@ -198,7 +198,7 @@ Enable with the `code-editor` feature.
 
 ```rust
 fn app() -> impl IntoElement {
-    use_init_theme(|| DARK_THEME);
+    use_init_theme(dark_theme);
     let focus = use_focus();
     let editor = use_state(|| {
         let path = PathBuf::from("./crates/freya-code-editor/src/editor_ui.rs");
@@ -303,7 +303,7 @@ impl Component for Settings {
     fn render(&self) -> impl IntoElement {
         Button::new()
             .on_press(|_| {
-                RouterContext::get().replace(Route::Home);
+                 let _ = RouterContext::get().replace(Route::Home);
             })
             .child("Go Home")
     }
@@ -524,10 +524,20 @@ fn on_render(ctx: &mut RenderContext, (cursor_x, cursor_y): (f64, f64)) {
 fn app() -> impl IntoElement {
     let mut cursor_position = use_state(CursorPoint::default);
 
-    plot(RenderCallback::new(move |context| {
+    let on_global_pointer_move = move |e: Event<PointerEventData>| {
+        // Dont move when the cursor goes outside the window
+        if e.global_location().to_tuple() != (-1., -1.) {
+            cursor_position.set(e.global_location());
+            let platform = Platform::get();
+            platform.send(UserEvent::RequestRedraw);
+        }
+    };
+
+    canvas(RenderCallback::new(move |context| {
         on_render(context, cursor_position().to_tuple());
     }))
     .expanded()
+    .on_global_pointer_move(on_global_pointer_move)
 }
 ```
 
@@ -732,7 +742,7 @@ freya = { git = "https://github.com/marc2332/freya", branch = "main" }
 Release candidates:
 
 ```toml
-freya = "0.4.0-rc.16"
+freya = "0.4.0-rc.18"
 ```
 
 ### Contributing 🧙‍♂️
@@ -758,9 +768,21 @@ Thanks to my sponsors for supporting this project! 😄
 - [Aiving](https://github.com/Aiving) for having made heavy contributions to [rust-skia](https://github.com/rust-skia/rust-skia/) for better SVG support, and helped optimizing images rendering in Freya.
 - [RobertasJ](https://github.com/RobertasJ) for having added nested parenthesis to the `calc()` function and also pushed for improvements in the animation APIs.
 - And to the rest of contributors and anybody who gave me any kind of feedback!
+- [SparkyTD](https://github.com/SparkyTD) for contributing support for Android.
 
 ### History with Dioxus
 Freya 0.1, 0.2 and 0.3 were based on the core crates of Dioxus. Starting 0.4 Freya does no longer use Dioxus, instead it uses its own reactive core, partially inspired by Dioxus but yet with lots of differences.
+
+### Claude Code Skill
+
+A Claude Code skill with Freya best practices and patterns is available. Install it with:
+
+```
+/plugin marketplace add marc2332/freya
+/plugin install freya@freya-marketplace
+```
+
+For other AI coding agents, you can use the skill document directly as context: [plugins/freya/skills/freya/SKILL.md](plugins/freya/skills/freya/SKILL.md)
 
 ### License
 

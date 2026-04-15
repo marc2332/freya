@@ -3,11 +3,27 @@ use freya_core::prelude::*;
 use torin::prelude::*;
 
 use crate::{
+    define_theme,
     get_theme,
     icons::arrow::ArrowIcon,
     menu::MenuGroup,
-    theming::component_themes::SelectThemePartial,
 };
+
+define_theme! {
+    %[component]
+    pub Select {
+        %[fields]
+        width: Size,
+        margin: Gaps,
+        select_background: Color,
+        background_button: Color,
+        hover_background: Color,
+        border_fill: Color,
+        focus_border_fill: Color,
+        arrow_fill: Color,
+        color: Color,
+    }
+}
 
 #[derive(Debug, Default, PartialEq, Clone, Copy)]
 pub enum SelectStatus {
@@ -104,7 +120,7 @@ impl Select {
 
 impl Component for Select {
     fn render(&self) -> impl IntoElement {
-        let theme = get_theme!(&self.theme, select);
+        let theme = get_theme!(&self.theme, SelectThemePreference, "select");
         let focus = use_focus();
         let focus_status = use_focus_status(focus);
         let mut status = use_state(SelectStatus::default);
@@ -117,18 +133,26 @@ impl Component for Select {
             conf.on_change(OnChange::Rerun);
             conf.on_creation(OnCreation::Finish);
 
-            let scale = AnimNum::new(0.8, 1.)
-                .time(350)
+            let scale = AnimNum::new(0.9, 1.)
+                .time(125)
                 .ease(Ease::Out)
-                .function(Function::Expo);
+                .function(Function::Quart);
             let opacity = AnimNum::new(0., 1.)
-                .time(350)
+                .time(125)
                 .ease(Ease::Out)
-                .function(Function::Expo);
+                .function(Function::Quart);
+            let offset_y = AnimNum::new(-8., 1.)
+                .time(125)
+                .ease(Ease::Out)
+                .function(Function::Quart);
             if open() {
-                (scale, opacity)
+                (scale, opacity, offset_y)
             } else {
-                (scale.into_reversed(), opacity.into_reversed())
+                (
+                    scale.into_reversed(),
+                    opacity.into_reversed(),
+                    offset_y.into_reversed(),
+                )
             }
         });
 
@@ -186,7 +210,7 @@ impl Component for Select {
             _ => {}
         };
 
-        let (scale, opacity) = animation.read().value();
+        let (scale, opacity, offset_y) = animation.read().value();
 
         let background = match *status.read() {
             SelectStatus::Hovering => theme.hover_background,
@@ -220,7 +244,7 @@ impl Component for Select {
                     .width(theme.width)
                     .margin(theme.margin)
                     .background(background)
-                    .padding((6., 16., 6., 16.))
+                    .padding((8., 18., 8., 18.))
                     .border(border)
                     .horizontal()
                     .center()
@@ -239,6 +263,7 @@ impl Component for Select {
                     rect()
                         .width(Size::window_percent(100.))
                         .margin(Gaps::new(4., 0., 0., 0.))
+                        .offset_y(offset_y)
                         .child(
                             rect()
                                 .layer(Layer::Overlay)
@@ -251,8 +276,7 @@ impl Component for Select {
                                 .overflow(Overflow::Clip)
                                 .corner_radius(8.)
                                 .background(theme.select_background)
-                                // TODO: Shadows
-                                .padding(6.)
+                                .padding(4.)
                                 .content(Content::Fit)
                                 .opacity(opacity)
                                 .scale(scale)

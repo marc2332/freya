@@ -1,0 +1,16 @@
+{
+  "name": "freya-marketplace",
+  "owner": {
+    "name": "Marc Espín"
+  },
+  "metadata": {
+    "description": "Claude Code plugins for the Freya Rust GUI framework"
+  },
+  "plugins": [
+    {
+      "name": "freya",
+      "source": "./plugins/freya",
+      "description": "Freya Rust GUI framework best practices skill"
+    }
+  ]
+}

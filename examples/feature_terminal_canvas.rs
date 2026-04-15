@@ -36,7 +36,7 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    use_init_root_theme(|| DARK_THEME);
+    use_init_root_theme(dark_theme);
     use_init_radio_station::<AppState, AppChannel>(AppState::default);
     let mut radio = use_radio::<AppState, AppChannel>(AppChannel::Panels);
 

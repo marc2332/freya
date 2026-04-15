@@ -115,6 +115,9 @@ impl CodeEditorData {
                     self.measure_selection(char_position.position as usize, editor_line);
 
                 let new_selection = match EventsCombos::pressed(location) {
+                    PressEventType::Quadruple => {
+                        TextSelection::new_range((0, self.rope.len_utf16_cu()))
+                    }
                     PressEventType::Triple => {
                         let line = self.char_to_line(press_selection.pos());
                         let line_char = self.line_to_char(line);

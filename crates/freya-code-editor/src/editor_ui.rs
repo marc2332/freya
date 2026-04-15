@@ -27,6 +27,7 @@ pub struct CodeEditor {
     show_whitespace: bool,
     font_family: Cow<'static, str>,
     a11y_id: AccessibilityId,
+    a11y_auto_focus: bool,
     theme: Readable<EditorTheme>,
 }
 
@@ -44,6 +45,7 @@ impl CodeEditor {
             show_whitespace: true,
             font_family: Cow::Borrowed("Jetbrains Mono"),
             a11y_id,
+            a11y_auto_focus: false,
             theme: DEFAULT_EDITOR_THEME.into(),
         }
     }
@@ -83,6 +85,12 @@ impl CodeEditor {
         self
     }
 
+    /// Sets whether the editor automatically receives focus.
+    pub fn a11y_auto_focus(mut self, a11y_auto_focus: bool) -> Self {
+        self.a11y_auto_focus = a11y_auto_focus;
+        self
+    }
+
     /// Sets the editor theme.
     pub fn theme(mut self, theme: impl IntoReadable<EditorTheme>) -> Self {
         self.theme = theme.into_readable();
@@ -101,6 +109,7 @@ impl Component for CodeEditor {
             show_whitespace,
             font_family,
             a11y_id,
+            a11y_auto_focus,
             theme,
         } = self.clone();
 
@@ -144,7 +153,9 @@ impl Component for CodeEditor {
         let line_height = (font_size * line_height).floor();
         let lines_len = editor_data.metrics.syntax_blocks.len();
 
-        let on_pointer_down = move |_: Event<PointerEventData>| {
+        let on_pointer_down = move |e: Event<PointerEventData>| {
+            e.prevent_default();
+            e.stop_propagation();
             focus.request_focus();
         };
 
@@ -248,35 +259,36 @@ impl Component for CodeEditor {
             }
         };
 
-        rect().expanded().background(theme.read().background).child(
-            rect()
-                .a11y_auto_focus(true)
-                .a11y_focusable(true)
-                .a11y_id(focus.a11y_id())
-                .maybe(!read_only, |el| {
-                    el.on_key_down(on_key_down).on_key_up(on_key_up)
+        rect()
+            .a11y_auto_focus(a11y_auto_focus)
+            .a11y_focusable(true)
+            .a11y_id(focus.a11y_id())
+            .a11y_role(AccessibilityRole::TextInput)
+            .expanded()
+            .background(theme.read().background)
+            .maybe(!read_only, |el| {
+                el.on_key_down(on_key_down).on_key_up(on_key_up)
+            })
+            .on_global_pointer_press(on_global_pointer_press)
+            .on_pointer_down(on_pointer_down)
+            .child(
+                VirtualScrollView::new(move |line_index, _| {
+                    EditorLineUI {
+                        editor: editor.clone(),
+                        font_size,
+                        line_height,
+                        line_index,
+                        read_only,
+                        gutter,
+                        show_whitespace,
+                        font_family: font_family.clone(),
+                        theme: theme.clone(),
+                    }
+                    .into()
                 })
-                .on_global_pointer_press(on_global_pointer_press)
-                .on_pointer_down(on_pointer_down)
-                .child(
-                    VirtualScrollView::new(move |line_index, _| {
-                        EditorLineUI {
-                            editor: editor.clone(),
-                            font_size,
-                            line_height,
-                            line_index,
-                            read_only,
-                            gutter,
-                            show_whitespace,
-                            font_family: font_family.clone(),
-                            theme: theme.clone(),
-                        }
-                        .into()
-                    })
-                    .scroll_controller(scroll_controller)
-                    .length(lines_len)
-                    .item_size(line_height),
-                ),
-        )
+                .scroll_controller(scroll_controller)
+                .length(lines_len)
+                .item_size(line_height),
+            )
     }
 }
