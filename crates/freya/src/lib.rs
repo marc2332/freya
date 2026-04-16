@@ -79,7 +79,6 @@
 //! - `titlebar`: Enables the [TitlebarButton](components::TitlebarButton) component.
 //! - `terminal`: Reexport [freya_terminal] under [terminal].
 //! - `code-editor`: Reexport [freya_code_editor] under [code_editor].
-//! - `skeletons`: Reexport [freya_skeletons] under [skeletons].
 //!
 //! ## Misc features
 //! - `devtools`: Enables devtools support.
@@ -202,6 +201,7 @@ pub mod components {
         select::*,
         selectable_text::*,
         sidebar::*,
+        skeleton::*,
         slider::*,
         switch::*,
         table::*,
@@ -322,13 +322,6 @@ pub mod terminal {
 #[cfg_attr(feature = "docs", doc(cfg(feature = "code-editor")))]
 pub mod code_editor {
     pub use freya_code_editor::prelude::*;
-}
-
-/// Reexport `freya-skeletons` when the `skeletons` feature is enabled.
-#[cfg(feature = "skeletons")]
-#[cfg_attr(feature = "docs", doc(cfg(feature = "skeletons")))]
-pub mod skeletons {
-    pub use freya_skeletons::prelude::*;
 }
 
 #[cfg(feature = "performance")]

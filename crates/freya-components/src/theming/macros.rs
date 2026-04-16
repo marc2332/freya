@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 #[doc(hidden)]
 pub use ::paste::paste;
 use freya_core::prelude::*;
@@ -349,8 +351,8 @@ impl ResolvablePreference<f32> for Preference<f32> {
     }
 }
 
-impl ResolvablePreference<u64> for Preference<u64> {
-    fn resolve(&self, _colors_sheet: &ColorsSheet) -> u64 {
+impl ResolvablePreference<Duration> for Preference<Duration> {
+    fn resolve(&self, _colors_sheet: &ColorsSheet) -> Duration {
         match self {
             Self::Reference(_) => {
                 panic!("Only Colors support references.")

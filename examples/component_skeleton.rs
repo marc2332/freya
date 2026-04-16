@@ -2,10 +2,7 @@
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
 )]
-use freya::{
-    prelude::*,
-    skeletons::*,
-};
+use freya::prelude::*;
 
 fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
@@ -16,18 +13,17 @@ fn app() -> impl IntoElement {
 
     rect()
         .expanded()
-        .padding(Gaps::new_all(24.))
+        .padding(24.)
         .spacing(12.)
         .child(
-            rect().width(Size::fill()).height(Size::px(20.)).child(
-                Skeleton::new()
-                    .loading(*loading.read())
-                    .child("This text appears once loaded"),
-            ),
+            rect()
+                .width(Size::fill())
+                .height(Size::px(20.))
+                .child(Skeleton::new(*loading.read()).child("This text appears once loaded")),
         )
         .child(
             rect().width(Size::px(200.)).height(Size::px(200.)).child(
-                Skeleton::new().loading(*loading.read()).child(
+                Skeleton::new(*loading.read()).child(
                     rect()
                         .expanded()
                         .background((80, 120, 200))
@@ -44,8 +40,7 @@ fn app() -> impl IntoElement {
                     "Mark as loading"
                 })
                 .on_press(move |_| {
-                    let current = *loading.read();
-                    *loading.write() = !current;
+                    loading.toggle();
                 }),
         )
 }

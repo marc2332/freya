@@ -44,7 +44,6 @@ members = [
   "./crates/freya-terminal",
   "./crates/freya-code-editor",
   "./crates/freya-android",
-  "./crates/freya-skeletons",
   "./examples/ai-chat",
   "./examples/state_query_sqlite",
   "./examples/android",
@@ -84,7 +83,6 @@ freya-code-editor = { path = "./crates/freya-code-editor", version = "0.4.0-rc.1
   "rust",
 ] }
 freya-android = { path = "./crates/freya-android", version = "0.4.0-rc.18" }
-freya-skeletons = { path = "./crates/freya-skeletons", version = "0.1.0" }
 
 # core
 generational-box = "0.7"
