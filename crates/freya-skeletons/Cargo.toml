@@ -1,0 +1,29 @@
+[package]
+name = "freya-skeletons"
+version = "0.1.0"
+edition = "2024"
+description = "Skeletons for Freya components, useful for loading states."
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "ui", "desktop", "skia"]
+categories = ["gui", "asynchronous"]
+
+[lints]
+workspace = true
+
+[dependencies]
+freya-core = { workspace = true }
+freya-animation = { workspace = true }
+freya-components = { workspace = true }
+torin = { workspace = true }
+
+[features]
+# Enable only when checking the library standalone (without a real skia engine).
+# In a regular freya app, the engine is provided transitively by `freya`.
+mocked-engine = ["freya-core/mocked-engine"]
+
+[dev-dependencies]
+freya = { workspace = true }
