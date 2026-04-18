@@ -60,7 +60,8 @@
 //! ## Advanced Features
 //!
 //! - **Multiple Channels**: Subscribe to different channels for different types of updates.
-//! - **Derived Channels**: Notify multiple channels from a single write operation.
+//! - **Derived Channels**: Notify multiple channels from a single write via
+//!   [`hooks::RadioChannel::derive_channel`].
 //! - **Reducers**: Implement action-based state updates.
 //! - **Multi-window**: Share state across multiple windows using global radio stations.
 //!
