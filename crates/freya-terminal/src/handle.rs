@@ -184,8 +184,7 @@ impl TerminalHandle {
         spawn_pty(id, command, scrollback_length.unwrap_or(1000))
     }
 
-    /// Write data to the PTY, dropping any selection and snapping the
-    /// viewport back to the bottom so the user sees fresh output.
+    /// Write data to the PTY. Drops any selection and snaps the viewport to the bottom.
     pub fn write(&self, data: &[u8]) -> Result<(), TerminalError> {
         self.write_raw(data)?;
         let mut term = self.term.borrow_mut();
@@ -200,8 +199,7 @@ impl TerminalHandle {
         self.inner.borrow().last_write_time.elapsed()
     }
 
-    /// Translate a key event into the matching terminal escape sequence and
-    /// write it to the PTY. Returns whether the key was recognised.
+    /// Write a key event to the PTY as the matching escape sequence. Returns whether it was recognised.
     pub fn write_key(&self, key: &Key, modifiers: Modifiers) -> Result<bool, TerminalError> {
         let shift = modifiers.contains(Modifiers::SHIFT);
         let ctrl = modifiers.contains(Modifiers::CONTROL);
@@ -257,8 +255,7 @@ impl TerminalHandle {
         Ok(true)
     }
 
-    /// Paste text into the PTY, wrapping in bracketed-paste markers if the
-    /// running app has enabled them.
+    /// Paste text into the PTY, wrapping in bracketed-paste markers if the app enabled them.
     pub fn paste(&self, text: &str) -> Result<(), TerminalError> {
         let bracketed = self
             .term
@@ -286,8 +283,7 @@ impl TerminalHandle {
         Ok(())
     }
 
-    /// Resize the terminal. alacritty's grid reflows on width changes and
-    /// preserves scrollback on height changes, so this is lossless.
+    /// Resize the terminal. Lossless: the grid reflows on width, preserves scrollback on height.
     pub fn resize(&self, rows: u16, cols: u16) {
         // PTY first so SIGWINCH reaches the program before we update locally.
         let _ = self.inner.borrow().master.resize(PtySize {
@@ -303,13 +299,12 @@ impl TerminalHandle {
         });
     }
 
-    /// Scroll the terminal by the specified delta. Positive delta moves the
-    /// viewport up into scrollback history, matching the vt100 convention.
+    /// Scroll by delta. Positive moves up into scrollback (vt100 convention).
     pub fn scroll(&self, delta: i32) {
         self.scroll_to(Scroll::Delta(delta));
     }
 
-    /// Scroll the terminal to the bottom of the buffer.
+    /// Scroll to the bottom of the buffer.
     pub fn scroll_to_bottom(&self) {
         self.scroll_to(Scroll::Bottom);
     }
@@ -323,17 +318,17 @@ impl TerminalHandle {
         Platform::get().send(UserEvent::RequestRedraw);
     }
 
-    /// Get the current working directory reported by the shell via OSC 7.
+    /// Current working directory reported via OSC 7.
     pub fn cwd(&self) -> Option<PathBuf> {
         self.cwd.borrow().clone()
     }
 
-    /// Get the window title reported by the shell via OSC 0 or OSC 2.
+    /// Window title reported via OSC 0 / 2.
     pub fn title(&self) -> Option<String> {
         self.title.borrow().clone()
     }
 
-    /// Get the latest clipboard content set by the terminal app via OSC 52.
+    /// Latest clipboard content set via OSC 52.
     pub fn clipboard_content(&self) -> Option<String> {
         self.clipboard_content.borrow().clone()
     }
@@ -355,8 +350,9 @@ impl TerminalHandle {
         self.inner.borrow().modifiers.contains(Modifiers::SHIFT)
     }
 
-    /// Handle a mouse move/drag event based on the active mouse mode.
-    pub fn mouse_move(&self, row: usize, col: usize) {
+    /// Handle a mouse move/drag. `row` and `col` are fractional cell units;
+    /// the fraction of `col` picks which cell half anchors the selection.
+    pub fn mouse_move(&self, row: f32, col: f32) {
         let held = self.pressed_button();
 
         if self.is_shift_held() && held.is_some() {
@@ -367,36 +363,50 @@ impl TerminalHandle {
         let mode = self.mode();
         if mode.contains(TermMode::MOUSE_MOTION) {
             // Any-motion mode: report regardless of button state.
-            let _ = self.write_raw(encode_mouse_move(row, col, held, mode).as_bytes());
+            let _ = self
+                .write_raw(encode_mouse_move(row as usize, col as usize, held, mode).as_bytes());
         } else if mode.contains(TermMode::MOUSE_DRAG)
             && let Some(button) = held
         {
             // Button-motion mode: only while a button is held.
-            let _ = self.write_raw(encode_mouse_move(row, col, Some(button), mode).as_bytes());
+            let _ = self.write_raw(
+                encode_mouse_move(row as usize, col as usize, Some(button), mode).as_bytes(),
+            );
         } else if !mode.intersects(TermMode::MOUSE_MODE) && held.is_some() {
             self.update_selection(row, col);
         }
     }
 
-    /// Handle a mouse button press event.
-    pub fn mouse_down(&self, row: usize, col: usize, button: TerminalMouseButton) {
+    /// Handle a mouse button press. `selection_type` picks the selection kind when not in mouse mode:
+    /// [`SelectionType::Semantic`] for double-click (word), [`SelectionType::Lines`] for triple-click.
+    /// See [`Self::mouse_move`] for the fractional coordinates.
+    pub fn mouse_down(
+        &self,
+        row: f32,
+        col: f32,
+        button: TerminalMouseButton,
+        selection_type: SelectionType,
+    ) {
         self.set_pressed_button(Some(button));
 
         let mode = self.mode();
         if !self.is_shift_held() && mode.intersects(TermMode::MOUSE_MODE) {
-            let _ = self.write_raw(encode_mouse_press(row, col, button, mode).as_bytes());
+            let _ = self
+                .write_raw(encode_mouse_press(row as usize, col as usize, button, mode).as_bytes());
         } else {
-            self.start_selection(row, col);
+            self.start_selection(row, col, selection_type);
         }
     }
 
-    /// Handle a mouse button release event.
-    pub fn mouse_up(&self, row: usize, col: usize, button: TerminalMouseButton) {
+    /// Handle a mouse button release.
+    pub fn mouse_up(&self, row: f32, col: f32, button: TerminalMouseButton) {
         self.set_pressed_button(None);
 
         let mode = self.mode();
         if !self.is_shift_held() && mode.intersects(TermMode::MOUSE_MODE) {
-            let _ = self.write_raw(encode_mouse_release(row, col, button, mode).as_bytes());
+            let _ = self.write_raw(
+                encode_mouse_release(row as usize, col as usize, button, mode).as_bytes(),
+            );
         }
     }
 
@@ -405,10 +415,9 @@ impl TerminalHandle {
         self.set_pressed_button(None);
     }
 
-    /// Route a wheel event to scrollback, PTY mouse events, or arrow-key
-    /// sequences depending on whether an app is tracking the mouse and
-    /// whether we're on the alternate screen (matches wezterm/kitty).
-    pub fn wheel(&self, delta_y: f64, row: usize, col: usize) {
+    /// Route a wheel event to scrollback, PTY mouse, or arrow-key sequences
+    /// depending on the active mouse mode and alt-screen state (matches wezterm/kitty).
+    pub fn wheel(&self, delta_y: f64, row: f32, col: f32) {
         // Lines per event from the OS delta, capped to keep flings sane.
         let lines = (delta_y.abs().ceil() as i32).clamp(1, 10);
         let scroll_delta = if delta_y > 0.0 { lines } else { -lines };
@@ -419,7 +428,9 @@ impl TerminalHandle {
         if scroll_offset > 0 {
             self.scroll(scroll_delta);
         } else if mode.intersects(TermMode::MOUSE_MODE) {
-            let _ = self.write_raw(encode_wheel_event(row, col, delta_y, mode).as_bytes());
+            let _ = self.write_raw(
+                encode_wheel_event(row as usize, col as usize, delta_y, mode).as_bytes(),
+            );
         } else if mode.contains(TermMode::ALT_SCREEN) {
             let app_cursor = mode.contains(TermMode::APP_CURSOR);
             let key = match (delta_y > 0.0, app_cursor) {
@@ -436,9 +447,7 @@ impl TerminalHandle {
         }
     }
 
-    /// Borrow the underlying alacritty `Term` for direct read access. Used
-    /// by the renderer and accessibility code to inspect the grid without
-    /// holding a separate snapshot.
+    /// Borrow the underlying alacritty `Term` for direct read access.
     pub fn term(&self) -> std::cell::Ref<'_, Term<EventProxy>> {
         self.term.borrow()
     }
@@ -463,7 +472,7 @@ impl TerminalHandle {
         self.closer_notifier.notified()
     }
 
-    /// Returns the unique identifier for this terminal instance.
+    /// Unique identifier for this terminal instance.
     pub fn id(&self) -> TerminalId {
         self.id
     }
@@ -478,33 +487,40 @@ impl TerminalHandle {
         }
     }
 
-    pub fn start_selection(&self, row: usize, col: usize) {
-        let mut term = self.term.borrow_mut();
-        let point = point_at(&term, row, col);
-        term.selection = Some(Selection::new(SelectionType::Simple, point, Side::Left));
+    /// Start a new selection of `selection_type`. See [`Self::mouse_move`] for the fractional coordinates.
+    pub fn start_selection(&self, row: f32, col: f32, selection_type: SelectionType) {
+        let (point, side) = self.point_and_side_at(row, col);
+        self.term.borrow_mut().selection = Some(Selection::new(selection_type, point, side));
         Platform::get().send(UserEvent::RequestRedraw);
     }
 
     /// Extend the in-progress selection, if any.
-    pub fn update_selection(&self, row: usize, col: usize) {
-        let mut term = self.term.borrow_mut();
-        let point = point_at(&term, row, col);
-        if let Some(selection) = term.selection.as_mut() {
-            selection.update(point, Side::Right);
+    pub fn update_selection(&self, row: f32, col: f32) {
+        let (point, side) = self.point_and_side_at(row, col);
+        if let Some(selection) = self.term.borrow_mut().selection.as_mut() {
+            selection.update(point, side);
             Platform::get().send(UserEvent::RequestRedraw);
         }
     }
 
-    /// Returns the currently selected text as a string, if any.
+    /// Currently selected text, if any.
     pub fn get_selected_text(&self) -> Option<String> {
         self.term.borrow().selection_to_string()
     }
-}
 
-/// Translate a viewport `(row, col)` into an alacritty `Point` in absolute
-/// grid coordinates, accounting for the current scroll offset.
-fn point_at(term: &Term<EventProxy>, row: usize, col: usize) -> Point {
-    let offset = term.grid().display_offset() as i32;
-    let last_col = term.columns().saturating_sub(1);
-    Point::new(Line(row as i32 - offset), Column(col.min(last_col)))
+    /// Grid point and cell half (left vs right) for a pointer at fractional cell coordinates.
+    fn point_and_side_at(&self, row: f32, col: f32) -> (Point, Side) {
+        let term = self.term.borrow();
+        let col = col.max(0.0);
+        let side = if col.fract() < 0.5 {
+            Side::Left
+        } else {
+            Side::Right
+        };
+        let point = Point::new(
+            Line(row.max(0.0) as i32 - term.grid().display_offset() as i32),
+            Column((col as usize).min(term.columns().saturating_sub(1))),
+        );
+        (point, side)
+    }
 }
