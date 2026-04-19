@@ -16,21 +16,24 @@ fn app() -> impl IntoElement {
         .padding(24.)
         .spacing(12.)
         .child(
-            rect()
+            Skeleton::new(*loading.read())
                 .width(Size::fill())
                 .height(Size::px(20.))
-                .child(Skeleton::new(*loading.read()).child("This text appears once loaded")),
+                .animation(SkeletonAnimation::Shimmer)
+                .child("This text appears once loaded"),
         )
         .child(
-            rect().width(Size::px(200.)).height(Size::px(200.)).child(
-                Skeleton::new(*loading.read()).child(
+            Skeleton::new(*loading.read())
+                .width(Size::px(200.))
+                .height(Size::px(200.))
+                .animation(SkeletonAnimation::Shimmer)
+                .child(
                     rect()
                         .expanded()
                         .background((80, 120, 200))
                         .center()
                         .child("This box appears once loaded"),
                 ),
-            ),
         )
         .child(
             Button::new()

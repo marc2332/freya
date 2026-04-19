@@ -68,12 +68,12 @@ define_theme! {
 /// # use std::time::Duration;
 /// fn app() -> impl IntoElement {
 ///     let loading = use_state(|| true);
-///     rect().width(Size::px(200.)).height(Size::px(80.)).child(
-///         Skeleton::new(*loading.read())
-///             .animation(SkeletonAnimation::Shimmer)
-///             .duration(Duration::from_millis(1200))
-///             .child("Some content"),
-///     )
+///     Skeleton::new(*loading.read())
+///         .width(Size::px(200.))
+///         .height(Size::px(80.))
+///         .animation(SkeletonAnimation::Shimmer)
+///         .duration(Duration::from_millis(1200))
+///         .child("Some content")
 /// }
 /// ```
 #[derive(PartialEq)]
@@ -81,6 +81,7 @@ pub struct Skeleton {
     pub(crate) theme: Option<SkeletonThemePartial>,
     loading: bool,
     elements: Vec<Element>,
+    layout: LayoutData,
     key: DiffKey,
 }
 
@@ -96,6 +97,14 @@ impl ChildrenExt for Skeleton {
     }
 }
 
+impl LayoutExt for Skeleton {
+    fn get_layout(&mut self) -> &mut LayoutData {
+        &mut self.layout
+    }
+}
+
+impl ContainerExt for Skeleton {}
+
 impl Default for Skeleton {
     fn default() -> Self {
         Self::new(false)
@@ -108,6 +117,7 @@ impl Skeleton {
             theme: None,
             loading,
             elements: Vec::new(),
+            layout: LayoutData::default(),
             key: DiffKey::None,
         }
     }
@@ -145,7 +155,7 @@ impl Component for Skeleton {
         let is_pulse = theme.animation == SkeletonAnimation::Pulse;
 
         rect()
-            .expanded()
+            .layout(self.layout.clone())
             .maybe(loading, |el| {
                 el.background(theme.background)
                     .corner_radius(theme.corner_radius)
