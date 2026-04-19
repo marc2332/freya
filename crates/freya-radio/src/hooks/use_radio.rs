@@ -48,6 +48,10 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
     ///
     /// By default, returns a vector containing only `self`.
     ///
+    /// Declaring related channels here is a best practice enforced by design.
+    /// Making every write list them by hand is verbose and easy to get wrong.
+    /// Doing it once here keeps every write consistent.
+    ///
     /// # Example
     ///
     /// ```rust, no_run
