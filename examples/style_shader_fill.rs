@@ -2,7 +2,15 @@
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
 )]
-use freya::prelude::*;
+use std::sync::Arc;
+
+use freya::{
+    engine::prelude::{
+        Data,
+        RuntimeEffect,
+    },
+    prelude::*,
+};
 
 fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
@@ -24,13 +32,32 @@ half4 main(float2 fragCoord) {
 "#;
 
 fn app() -> impl IntoElement {
-    let now = std::time::Instant::now();
+    let (now, effect) = use_hook(|| {
+        // Create the effect once and reuse in the shader render function
+        (
+            std::time::Instant::now(),
+            Arc::new(
+                RuntimeEffect::make_for_shader(SHADER, None).expect("shader compilation failed"),
+            ),
+        )
+    });
+
+    use_future(move || {
+        async move {
+            let mut ticket = RenderingTicker::get();
+            loop {
+                // Continuously render the app so that the shader updates on live
+                ticket.tick().await;
+                Platform::get().send(UserEvent::RequestRedraw);
+            }
+        }
+    });
 
     rect()
         .expanded()
-        .background_shader(ShaderFill::new(SHADER, move |effect, bounds| {
+        .background_shader(ShaderFill::new(SHADER, effect, move |effect, bounds| {
             effect.make_shader(
-                skia_safe::Data::new_copy(
+                Data::new_copy(
                     &[
                         bounds.width().to_le_bytes(),
                         bounds.height().to_le_bytes(),

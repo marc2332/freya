@@ -658,7 +658,7 @@ where
     }
 
     fn background_shader(mut self, background: impl Into<ShaderFill>) -> Self {
-        self.get_style().background = Fill::Shader(background.into());
+        self.get_style().background = Fill::Shader(Box::new(background.into()));
         self
     }
 

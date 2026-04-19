@@ -4,58 +4,60 @@ use freya_engine::prelude::*;
 use torin::prelude::Area;
 
 pub trait ShaderProvider: Send + Sync {
-    fn prepare_shader(&self, effect: &RuntimeEffect, bounds: Area) -> Option<Shader>;
+    fn into_shader(&self, effect: &RuntimeEffect, bounds: Area) -> Option<Shader>;
 }
 
 impl<F> ShaderProvider for F
 where
     F: Fn(&RuntimeEffect, Area) -> Option<Shader> + Send + Sync,
 {
-    fn prepare_shader(&self, effect: &RuntimeEffect, bounds: Area) -> Option<Shader> {
+    fn into_shader(&self, effect: &RuntimeEffect, bounds: Area) -> Option<Shader> {
         self(effect, bounds)
     }
 }
 
 #[derive(Clone)]
 pub struct ShaderFill {
-    effect: Option<RuntimeEffect>,
+    sksl: Arc<str>,
+    effect: Arc<RuntimeEffect>,
     provider: Arc<dyn ShaderProvider>,
 }
 
+// SAFETY: `RuntimeEffect` is an immutable, atomically-refcounted skia handle.
 unsafe impl Send for ShaderFill {}
 unsafe impl Sync for ShaderFill {}
 
 impl ShaderFill {
-    pub fn new<F>(sksl: impl AsRef<str>, provider: F) -> Self
+    pub fn new<F>(
+        sksl: impl Into<Arc<str>>,
+        effect: impl Into<Arc<RuntimeEffect>>,
+        provider: F,
+    ) -> Self
     where
         F: Fn(&RuntimeEffect, Area) -> Option<Shader> + Send + Sync + 'static,
     {
-        Self::from_provider(sksl, provider)
+        Self::from_provider(sksl, effect, provider)
     }
 
-    pub fn from_provider<S>(sksl: impl AsRef<str>, provider: S) -> Self
+    pub fn from_provider<S>(
+        sksl: impl Into<Arc<str>>,
+        effect: impl Into<Arc<RuntimeEffect>>,
+        provider: S,
+    ) -> Self
     where
-        S: ShaderProvider + Send + Sync + 'static,
+        S: ShaderProvider + 'static,
     {
-        let effect = RuntimeEffect::make_for_shader(sksl, None)
-            .map_err(|err| {
-                tracing::error!("Failed to create shader: {err}");
-                err
-            })
-            .ok();
-
         Self {
-            effect,
+            sksl: sksl.into(),
+            effect: effect.into(),
             provider: Arc::new(provider),
         }
     }
 
     /// Prepare the shader for use by providing the necessary uniforms.
-    /// Returns [None] if the shader could not be prepared, in which case the renderer will fallback to no fill
-    pub fn prepare(&self, bounds: Area) -> Option<Shader> {
-        self.effect
-            .as_ref()
-            .and_then(|effect| self.provider.prepare_shader(effect, bounds))
+    /// Returns [None] if the provider could not produce a [Shader], in which case the renderer will fallback to no fill.
+    pub fn into_shader(&self, bounds: Area) -> Option<Shader> {
+        self.provider.into_shader(&self.effect, bounds)
     }
 }
 
@@ -68,14 +70,16 @@ impl std::fmt::Display for ShaderFill {
 impl std::fmt::Debug for ShaderFill {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("FillShader")
-            .field("effect", &self.effect)
+            .field("sksl", &self.sksl)
             .finish()
     }
 }
 
 impl PartialEq for ShaderFill {
     fn eq(&self, other: &Self) -> bool {
-        Arc::ptr_eq(&self.provider, &other.provider)
+        *self.sksl == *other.sksl
+            && Arc::ptr_eq(&self.effect, &other.effect)
+            && Arc::ptr_eq(&self.provider, &other.provider)
     }
 }
 
@@ -85,18 +89,23 @@ impl serde::Serialize for ShaderFill {
     where
         S: serde::Serializer,
     {
-        serializer.collect_str(format!("shader({:p})", Arc::as_ptr(&self.provider)).as_str())
+        serializer.serialize_str(&self.sksl)
     }
 }
 
 #[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for ShaderFill {
-    fn deserialize<D>(_: D) -> Result<Self, D::Error>
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
+        let sksl = String::deserialize(deserializer)?;
+        let effect =
+            RuntimeEffect::make_for_shader(&sksl, None).map_err(serde::de::Error::custom)?;
+
         Ok(Self {
-            effect: None,
+            sksl: sksl.into(),
+            effect: Arc::new(effect),
             provider: Arc::new(|_: &RuntimeEffect, _: Area| None),
         })
     }
