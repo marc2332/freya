@@ -54,9 +54,7 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
     ///
     /// ```rust, no_run
     /// # use freya::radio::*;
-    ///
-    /// # struct Data;
-    ///
+    /// # struct Data { items: Vec<u32> }
     /// #[derive(PartialEq, Eq, Clone, Debug, Copy, Hash)]
     /// pub enum DataChannel {
     ///     All,
@@ -64,10 +62,14 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
     /// }
     ///
     /// impl RadioChannel<Data> for DataChannel {
-    ///     fn derive_channel(self, _data: &Data) -> Vec<Self> {
+    ///     fn derive_channel(self, data: &Data) -> Vec<Self> {
     ///         match self {
-    ///             DataChannel::All => vec![DataChannel::All],
-    ///             DataChannel::Specific(id) => vec![DataChannel::All, DataChannel::Specific(id)],
+    ///             DataChannel::All => {
+    ///                 let mut channels = vec![DataChannel::All];
+    ///                 channels.extend((0..data.items.len()).map(DataChannel::Specific));
+    ///                 channels
+    ///             }
+    ///             DataChannel::Specific(_) => vec![self],
     ///         }
     ///     }
     /// }
