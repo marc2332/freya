@@ -1,0 +1,31 @@
+[package]
+name = "freya-video"
+version = "0.4.0-rc.18"
+edition = "2024"
+description = "Video playback component for Freya apps"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "ui", "video", "skia"]
+categories = ["gui", "multimedia"]
+
+[lints]
+workspace = true
+
+[dependencies]
+freya-core = { workspace = true }
+freya-components = { workspace = true }
+freya-engine = { workspace = true }
+torin = { workspace = true }
+
+ffmpeg-sidecar = { workspace = true }
+async-channel = { workspace = true }
+rodio = { workspace = true }
+async-io = { workspace = true }
+blocking = { workspace = true }
+
+tracing = { workspace = true }
+anyhow = { workspace = true }
+accesskit = { workspace = true }

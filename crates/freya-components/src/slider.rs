@@ -203,11 +203,22 @@ impl Component for Slider {
                 .alignment(BorderAlignment::Inner)
         };
 
-        let (slider_width, slider_height) = if direction_is_vertical {
-            (Size::px(6.), self.size.clone())
-        } else {
-            (self.size.clone(), Size::px(6.))
-        };
+        let (slider_width, slider_height, inner_slider_width, inner_slider_height) =
+            if direction_is_vertical {
+                (
+                    Size::auto(),
+                    self.size.clone(),
+                    Size::px(6.),
+                    self.size.clone(),
+                )
+            } else {
+                (
+                    self.size.clone(),
+                    Size::auto(),
+                    self.size.clone(),
+                    Size::px(6.),
+                )
+            };
 
         let track_size = Size::func_data(
             move |ctx| Some(value as f32 / 100. * (ctx.parent - 15.)),
@@ -251,8 +262,7 @@ impl Component for Slider {
                     .padding(4.)
                     .child(
                         rect()
-                            .width(Size::fill())
-                            .height(Size::fill())
+                            .expanded()
                             .background(theme.thumb_inner_background.mul_if(!self.enabled, 0.85))
                             .corner_radius(50.),
                     ),
@@ -280,10 +290,12 @@ impl Component for Slider {
             .border(border)
             .corner_radius(50.)
             .padding(padding)
+            .width(slider_width)
+            .height(slider_height)
             .child(
                 rect()
-                    .width(slider_width)
-                    .height(slider_height)
+                    .width(inner_slider_width)
+                    .height(inner_slider_height)
                     .background(theme.background.mul_if(!self.enabled, 0.85))
                     .corner_radius(50.)
                     .direction(self.direction)
