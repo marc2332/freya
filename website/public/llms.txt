@@ -25,6 +25,7 @@ Important notes:
 - **Routing**: Manage your app UI in separate routes using `freya-router`.
 - **WebView**: Integrate WebViews into your application using `freya-webview`.
 - **Terminal**: Integrate terminal emulators into your application using `freya-terminal`.
+- **Video**: Play videos with audio using `freya-video`.
 
 ## Example: Counter
 
@@ -91,6 +92,7 @@ fn app() -> impl IntoElement {
 - [Testing](https://docs.rs/freya-testing/0.4.0-rc.18/freya_testing/): Testing framework
 - [Terminal](https://docs.rs/freya-terminal/0.4.0-rc.18/freya_terminal/): Terminal emulator integration
 - [Code Editor](https://docs.rs/freya-code-editor/0.4.0-rc.18/freya_code_editor/): Code editor component
+- [Video](https://docs.rs/freya-video/0.4.0-rc.18/freya_video/): Video playback with audio
 
 ## Examples
 

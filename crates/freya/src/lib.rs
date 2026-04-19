@@ -68,7 +68,7 @@
 //! - `tray`: Enables tray support using the [tray_icon] crate.
 //! - `sdk`: Reexport [freya_sdk] under [sdk].
 //! - `gif`: Enables the [GifViewer](components::GifViewer) component.
-//! - `video`: Enables the [VideoViewer](components::VideoViewer) component (requires an `ffmpeg` binary at runtime).
+//! - `video`: Enables the [VideoViewer](components::VideoViewer) component.
 //! - `plot`: Reexport of plotters under [plot].
 //! - `material-design`: Reexport [freya_material_design] under [material_design].
 //! - `calendar`: Enables the [Calendar](components::Calendar) component.
