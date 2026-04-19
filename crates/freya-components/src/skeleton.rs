@@ -40,21 +40,13 @@ define_theme! {
     %[component]
     pub Skeleton {
         %[fields]
-        /// Background color of the placeholder.
         background: Color,
-        /// Shimmer highlight color.
         shimmer_color: Color,
-        /// Duration of one animation cycle.
         duration: Duration,
-        /// Animation style: [`SkeletonAnimation::Pulse`] or [`SkeletonAnimation::Shimmer`].
         animation: SkeletonAnimation,
-        /// Corner radius of the placeholder shape.
         corner_radius: CornerRadius,
-        /// Starting X position of the shimmer band (pixels, can be negative).
         shimmer_from: f32,
-        /// Ending X position of the shimmer band (pixels).
         shimmer_to: f32,
-        /// Width of the shimmer band in pixels.
         shimmer_width: f32,
     }
 }
