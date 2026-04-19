@@ -8,6 +8,7 @@ use std::time::Duration;
 use freya::prelude::*;
 
 fn main() {
+    ensure_ffmpeg().expect("failed to prepare ffmpeg");
     launch(LaunchConfig::new().with_window(WindowConfig::new(app).with_size(1200., 720.)))
 }
 

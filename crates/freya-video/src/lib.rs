@@ -21,3 +21,9 @@ pub use self::{
         video,
     },
 };
+
+/// Download an ffmpeg binary if one isn't already available on `PATH`.
+/// Call from `main` before `launch()` to opt in to auto-install.
+pub fn ensure_ffmpeg() -> anyhow::Result<()> {
+    ffmpeg_sidecar::download::auto_download()
+}
