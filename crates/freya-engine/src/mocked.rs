@@ -1712,6 +1712,10 @@ impl Image {
         unimplemented!("This is mocked")
     }
 
+    pub fn unique_id(&self) -> u32 {
+        unimplemented!("This is mocked")
+    }
+
     pub fn encode<'a>(
         &self,
         context: impl Into<Option<&'a mut DirectContext>>,
