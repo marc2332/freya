@@ -621,18 +621,17 @@ fn register_base_component_themes(theme: &mut Theme) {
             height: Preference::Specific(Size::Fill),
         },
     );
-    let colors = theme.colors.clone();
     theme.set(
         "skeleton",
         SkeletonThemePreference {
             background: Preference::Reference("surface_primary"),
-            shimmer_color: Preference::Specific(colors.text_placeholder.with_a(90)),
+            shimmer_color: Preference::Specific(Color::WHITE.with_a(160)),
             duration: Preference::Specific(Duration::from_millis(1000)),
             animation: Preference::Specific(SkeletonAnimation::Pulse),
             corner_radius: Preference::Specific(CornerRadius::new_all(4.)),
-            shimmer_from: Preference::Specific(-250.),
-            shimmer_to: Preference::Specific(900.),
-            shimmer_width: Preference::Specific(200.),
+            shimmer_from: Preference::Specific(-320.),
+            shimmer_to: Preference::Specific(960.),
+            shimmer_width: Preference::Specific(300.),
         },
     );
 }

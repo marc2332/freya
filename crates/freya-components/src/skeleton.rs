@@ -158,8 +158,16 @@ impl Component for Skeleton {
                             rect()
                                 .position(Position::new_absolute().left(value))
                                 .width(Size::px(theme.shimmer_width))
-                                .height(Size::fill())
-                                .background(theme.shimmer_color),
+                                .height(Size::percent(100.))
+                                .background_linear_gradient(
+                                    LinearGradient::new()
+                                        .angle(-90.)
+                                        .stop((theme.shimmer_color.with_a(0), 0.))
+                                        .stop((theme.shimmer_color.with_a(40), 30.))
+                                        .stop((theme.shimmer_color, 50.))
+                                        .stop((theme.shimmer_color.with_a(40), 70.))
+                                        .stop((theme.shimmer_color.with_a(0), 100.)),
+                                ),
                         )
                     })
             })
