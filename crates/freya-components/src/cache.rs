@@ -199,21 +199,20 @@ impl AssetCacher {
     pub(crate) fn listen(&self, mut rc: ReactiveContext, asset_config: AssetConfiguration) {
         let mut registry = self.registry.write_unchecked();
 
-        registry
-            .entry(asset_config.clone())
-            .or_insert_with(|| AssetState {
-                asset: Asset::Pending,
-                users: AssetUsers::Listeners(Rc::default()),
-            });
+        let asset = registry.entry(asset_config).or_insert_with(|| AssetState {
+            asset: Asset::Pending,
+            users: AssetUsers::Listeners(Rc::default()),
+        });
 
-        if let Some(asset) = registry.get(&asset_config) {
-            match &asset.users {
-                AssetUsers::Listeners(users) => {
-                    rc.subscribe(users);
-                }
-                AssetUsers::ClearTask(clear_task) => {
-                    clear_task.cancel();
-                }
+        match &mut asset.users {
+            AssetUsers::Listeners(users) => {
+                rc.subscribe(users);
+            }
+            AssetUsers::ClearTask(clear_task) => {
+                clear_task.cancel();
+                let listeners = Rc::<RefCell<FxHashSet<ReactiveContext>>>::default();
+                rc.subscribe(&listeners);
+                asset.users = AssetUsers::Listeners(listeners);
             }
         }
     }
