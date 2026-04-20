@@ -210,7 +210,7 @@ impl AssetCacher {
             }
             AssetUsers::ClearTask(clear_task) => {
                 clear_task.cancel();
-                let listeners = Rc::<RefCell<FxHashSet<ReactiveContext>>>::default();
+                let listeners = Rc::default();
                 rc.subscribe(&listeners);
                 asset.users = AssetUsers::Listeners(listeners);
             }
