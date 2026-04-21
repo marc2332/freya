@@ -77,6 +77,7 @@ mod rendering;
 
 /// Prelude module for convenient imports.
 pub mod prelude {
+    pub use alacritty_terminal::selection::SelectionType;
     pub use portable_pty::CommandBuilder;
 
     pub use crate::{

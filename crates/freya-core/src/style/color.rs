@@ -216,10 +216,10 @@ impl Color {
     pub fn to_hex_string(&self) -> String {
         format!(
             "#{:02X}{:02X}{:02X}{:02X}",
-            self.a(),
             self.r(),
             self.g(),
             self.b(),
+            self.a(),
         )
     }
 
