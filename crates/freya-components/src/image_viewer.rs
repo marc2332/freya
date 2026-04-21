@@ -164,6 +164,7 @@ impl ImageSource {
             };
             let image = SkImage::from_encoded(unsafe { SkData::new_bytes(&bytes) })
                 .context("Failed to decode Image.")?;
+            let image = image.make_raster_image(None, None).unwrap_or(image);
             Ok((image, bytes))
         })
         .await
@@ -282,28 +283,21 @@ impl Component for ImageViewer {
         let asset_config = AssetConfiguration::new(&self.source, AssetAge::default());
         let asset = use_asset(&asset_config);
         let mut asset_cacher = use_hook(AssetCacher::get);
-        let mut assets_tasks = use_state::<Vec<TaskHandle>>(Vec::new);
 
         use_side_effect_with_deps(
             &(self.source.clone(), asset_config),
             move |(source, asset_config): &(ImageSource, AssetConfiguration)| {
-                let source = source.clone();
-
-                // Cancel previous asset fetching requests
-                for asset_task in assets_tasks.write().drain(..) {
-                    asset_task.cancel();
-                }
-
-                // Fetch asset if still pending or errored
+                // Fetch asset if still pending or errored. The Loading state
+                // guards against duplicate in-flight fetches.
                 if matches!(
                     asset_cacher.read_asset(asset_config),
                     Some(Asset::Pending) | Some(Asset::Error(_))
                 ) {
-                    // Mark asset as loading
                     asset_cacher.update_asset(asset_config.clone(), Asset::Loading);
 
+                    let source = source.clone();
                     let asset_config = asset_config.clone();
-                    let asset_task = spawn(async move {
+                    spawn_forever(async move {
                         match source.bytes().await {
                             Ok((image, bytes)) => {
                                 // Image loaded
@@ -312,19 +306,17 @@ impl Component for ImageViewer {
                                     image: Rc::new(RefCell::new(image)),
                                 };
                                 asset_cacher.update_asset(
-                                    asset_config.clone(),
+                                    asset_config,
                                     Asset::Cached(Rc::new(image_holder)),
                                 );
                             }
                             Err(err) => {
-                                // Image errored asset_cacher
+                                // Image errored
                                 asset_cacher
                                     .update_asset(asset_config, Asset::Error(err.to_string()));
                             }
                         }
                     });
-
-                    assets_tasks.write().push(asset_task);
                 }
             },
         );
