@@ -189,7 +189,7 @@ impl Component for TodoRow {
 }
 
 fn app() -> impl IntoElement {
-    use_provide_context(|| Captured(init_db()));
+    use_provide_root_context(|| Captured(init_db()));
     let todos_query = use_query(Query::new((), GetTodos));
     let add_mutation = use_mutation(Mutation::new(AddTodo));
     let mut input_text = use_state(String::new);

@@ -217,7 +217,7 @@ impl Renderer<'_> {
             0
         };
         let sel_end = if row_i == end_row {
-            range.end.column.0.min(row_len)
+            (range.end.column.0 + 1).min(row_len)
         } else {
             row_len
         };

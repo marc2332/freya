@@ -13,6 +13,14 @@ pub fn provide_context<T: Clone + 'static>(value: T) {
     provide_context_for_scope_id(value, None)
 }
 
+/// Store the given value in the root scope.
+///
+/// Only needed for specific cases like values consumed by queries or mutations, which run in
+/// the root scope. Prefer [provide_context] otherwise.
+pub fn provide_root_context<T: Clone + 'static>(value: T) {
+    provide_context_for_scope_id(value, Some(ScopeId::ROOT))
+}
+
 pub fn provide_context_for_scope_id<T: Clone + 'static>(
     value: T,
     scope_id: impl Into<Option<ScopeId>>,
@@ -79,6 +87,18 @@ pub fn use_provide_context<T: Clone + 'static>(init: impl FnOnce() -> T) -> T {
     use_hook(|| {
         let ctx = init();
         provide_context(ctx.clone());
+        ctx
+    })
+}
+
+/// Store the given value in the root scope.
+///
+/// Only needed for specific cases like values consumed by queries or mutations, which run in
+/// the root scope. Prefer [use_provide_context] otherwise.
+pub fn use_provide_root_context<T: Clone + 'static>(init: impl FnOnce() -> T) -> T {
+    use_hook(|| {
+        let ctx = init();
+        provide_root_context(ctx.clone());
         ctx
     })
 }
