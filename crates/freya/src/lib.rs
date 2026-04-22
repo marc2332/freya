@@ -201,6 +201,7 @@ pub mod components {
         select::*,
         selectable_text::*,
         sidebar::*,
+        skeleton::*,
         slider::*,
         switch::*,
         table::*,
