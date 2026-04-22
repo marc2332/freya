@@ -188,9 +188,11 @@ impl WinitPlatformExt for Platform {
         window_id: Option<WindowId>,
         callback: impl FnOnce(&mut Window) + 'static,
     ) {
-        let _ = self.post_callback(move |id, c| {
-            callback(&mut c.windows.get_mut(&window_id.unwrap_or(id)).unwrap().window);
-        });
+        self.send(UserEvent::Erased(SingleThreadErasedEvent(Box::new(
+            NativeWindowErasedEventAction::RendererCallback(Box::new(move |id, c| {
+                callback(&mut c.windows.get_mut(&window_id.unwrap_or(id)).unwrap().window);
+            })),
+        ))));
     }
 
     fn post_callback<F, T: 'static>(&self, f: F) -> futures_channel::oneshot::Receiver<T>

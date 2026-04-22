@@ -190,13 +190,15 @@ impl LaunchProxy {
     }
 }
 
+pub type RendererCallback = Box<dyn FnOnce(WindowId, &mut RendererContext) + 'static>;
+
 pub enum NativeWindowErasedEventAction {
     LaunchWindow {
         window_config: WindowConfig,
         ack: futures_channel::oneshot::Sender<WindowId>,
     },
     CloseWindow(WindowId),
-    RendererCallback(Box<dyn FnOnce(WindowId, &mut RendererContext) + 'static>),
+    RendererCallback(RendererCallback),
 }
 
 #[derive(Debug)]
