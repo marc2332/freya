@@ -1396,18 +1396,15 @@ impl Runner {
         }
     }
 
-    pub fn mark_all_scopes_dirty(&mut self) {
-        self.dirty_scopes.extend(self.scopes.keys());
-        let _ = self
-            .sender
-            .unbounded_send(Message::MarkScopeAsDirty(ScopeId::ROOT));
-    }
+    /// Reloads the runner for a hot-reload: cancels tasks, reloads every scope's hooks
+    /// (contexts are preserved), and marks every scope dirty. Task cancellation must
+    /// happen first so stale wakers can't fire [`Message::PollTask`] against
+    /// freshly-reloaded scopes.
+    pub fn reload(&mut self) {
+        self.tasks.borrow_mut().clear();
+        self.dirty_tasks.clear();
+        while self.receiver.try_recv().is_ok() {}
 
-    /// Resets all scope storages, clearing hook values back to their initial state.
-    /// Contexts are preserved so that imperatively-provided root contexts (e.g. [`crate::prelude::Platform`]) survive the reload.
-    /// Each reset runs inside [`CurrentContext::run`] so that drop handlers registered via [`crate::prelude::use_drop`]
-    /// (e.g. `use_asset` cleanup) can safely call [`crate::prelude::spawn_forever`] during value destruction.
-    pub fn clear_all_scopes_storages(&mut self) {
         let mut scopes_storages = self.scopes_storages.borrow_mut();
         let scopes = self
             .scopes
@@ -1432,16 +1429,11 @@ impl Runner {
                 },
             );
         }
-    }
 
-    /// Cancels all running tasks and drains any pending messages those tasks may have queued.
-    /// Must be called before [`Self::clear_all_scopes_storages`] during hot-reload so that stale
-    /// task wakers cannot keep firing [`Message::PollTask`] after the scope state is reset,
-    /// which would otherwise saturate the main thread with empty update cycles.
-    pub fn clear_all_tasks(&mut self) {
-        self.tasks.borrow_mut().clear();
-        self.dirty_tasks.clear();
-        while self.receiver.try_recv().is_ok() {}
+        self.dirty_scopes.extend(self.scopes.keys());
+        let _ = self
+            .sender
+            .unbounded_send(Message::MarkScopeAsDirty(ScopeId::ROOT));
     }
 }
 

@@ -421,9 +421,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
 
                             #[cfg(feature = "hotreload")]
                             if hotreload_triggered {
-                                app.runner.clear_all_tasks();
-                                app.runner.clear_all_scopes_storages();
-                                app.runner.mark_all_scopes_dirty();
+                                app.runner.reload();
                             }
 
                             {
@@ -477,7 +475,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             }
                             #[cfg(feature = "hotreload")]
                             if hotreload_triggered {
-                                // Hot-patch updates can alter layout/style paths that don't always set needs_render.
+                                // Hot-patches can change closure bodies and custom `ElementExt` impls
+                                // that `PartialEq` can't observe, so force a layout + redraw.
                                 app.process_layout_on_next_render = true;
                                 app.window.request_redraw();
                             }
