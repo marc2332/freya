@@ -20,7 +20,7 @@ use crate::{
     config::WindowConfig,
     renderer::{
         NativeWindowErasedEventAction,
-        WithWindowCallback,
+        RendererContext,
     },
 };
 
@@ -117,6 +117,20 @@ pub trait WinitPlatformExt {
         window_id: Option<WindowId>,
         callback: impl FnOnce(&mut Window) + 'static,
     );
+
+    /// Queue a callback to be run on the renderer thread with access to a [`RendererContext`].
+    ///
+    /// The call dispatches an event to the winit event loop and returns right away; the
+    /// callback runs later, when the event loop picks it up. The [`WindowId`] passed to the
+    /// callback is the id of the window this [`Platform`] instance was bound to. The return
+    /// value is delivered through the returned oneshot
+    /// [`Receiver`](futures_channel::oneshot::Receiver), which can be `.await`ed or dropped.
+    ///
+    /// The callback runs outside any component scope, so you can't call [`Platform::get`] or
+    /// consume context from inside it; use the [`RendererContext`] argument instead.
+    fn post_callback<F, T: 'static>(&self, f: F) -> futures_channel::oneshot::Receiver<T>
+    where
+        F: FnOnce(WindowId, &mut RendererContext) -> T + 'static;
 }
 
 pub trait WindowDragExt {
@@ -166,12 +180,7 @@ impl WinitPlatformExt for Platform {
     }
 
     fn focus_window(&self, window_id: Option<WindowId>) {
-        self.send(UserEvent::Erased(SingleThreadErasedEvent(Box::new(
-            NativeWindowErasedEventAction::WithWindow {
-                window_id,
-                callback: WithWindowCallback(Box::new(|window| window.focus_window())),
-            },
-        ))));
+        self.with_window(window_id, |w| w.focus_window());
     }
 
     fn with_window(
@@ -179,11 +188,23 @@ impl WinitPlatformExt for Platform {
         window_id: Option<WindowId>,
         callback: impl FnOnce(&mut Window) + 'static,
     ) {
+        let _ = self.post_callback(move |id, c| {
+            callback(&mut c.windows.get_mut(&window_id.unwrap_or(id)).unwrap().window);
+        });
+    }
+
+    fn post_callback<F, T: 'static>(&self, f: F) -> futures_channel::oneshot::Receiver<T>
+    where
+        F: FnOnce(WindowId, &mut RendererContext) -> T + 'static,
+    {
+        let (tx, rx) = futures_channel::oneshot::channel::<T>();
+        let cb = Box::new(move |id, ctx: &mut RendererContext| {
+            let res = (f)(id, ctx);
+            let _ = tx.send(res);
+        });
         self.send(UserEvent::Erased(SingleThreadErasedEvent(Box::new(
-            NativeWindowErasedEventAction::WithWindow {
-                window_id,
-                callback: WithWindowCallback(Box::new(callback)),
-            },
+            NativeWindowErasedEventAction::RendererCallback(cb),
         ))));
+        rx
     }
 }
