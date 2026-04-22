@@ -23,6 +23,7 @@ pub enum TitlebarAction {
     Minimize,
     Maximize,
     Close,
+    Restore,
 }
 
 /// Titlebar button component.
@@ -71,6 +72,12 @@ impl Component for TitlebarButton {
             }
             TitlebarAction::Maximize => {
                 r#"<svg viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>"#
+            }
+            TitlebarAction::Restore => {
+                r#"<svg viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="1.5" y="3.5" width="6.5" height="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M4 3.5 V2 H10 V8 H8.5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                </svg>"#
             }
             TitlebarAction::Close => {
                 r#"<svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>"#
