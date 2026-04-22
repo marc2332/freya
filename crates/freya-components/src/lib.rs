@@ -36,6 +36,7 @@ pub mod segmented_button;
 pub mod select;
 pub mod selectable_text;
 pub mod sidebar;
+pub mod skeleton;
 pub mod slider;
 pub mod switch;
 pub mod table;

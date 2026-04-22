@@ -213,6 +213,7 @@ pub struct ImageViewer {
     corner_radius: Option<CornerRadius>,
 
     children: Vec<Element>,
+    loading_placeholder: Option<Element>,
 
     key: DiffKey,
 }
@@ -227,6 +228,7 @@ impl ImageViewer {
             effect: EffectData::default(),
             corner_radius: None,
             children: Vec::new(),
+            loading_placeholder: None,
             key: DiffKey::None,
         }
     }
@@ -274,6 +276,12 @@ impl EffectExt for ImageViewer {
 impl ImageViewer {
     pub fn corner_radius(mut self, corner_radius: impl Into<CornerRadius>) -> Self {
         self.corner_radius = Some(corner_radius.into());
+        self
+    }
+
+    /// Custom element rendered while loading.
+    pub fn loading_placeholder(mut self, placeholder: impl Into<Element>) -> Self {
+        self.loading_placeholder = Some(placeholder.into());
         self
     }
 }
@@ -340,7 +348,11 @@ impl Component for ImageViewer {
             Asset::Pending | Asset::Loading => rect()
                 .layout(self.layout.clone())
                 .center()
-                .child(CircularLoader::new())
+                .child(
+                    self.loading_placeholder
+                        .clone()
+                        .unwrap_or_else(|| CircularLoader::new().into_element()),
+                )
                 .into(),
             Asset::Error(err) => err.into(),
         }
