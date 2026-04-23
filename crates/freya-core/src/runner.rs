@@ -704,7 +704,14 @@ impl Runner {
                 },
                 || {
                     let scope = scope_rc.borrow();
-                    (scope.comp)(scope.props.clone())
+                    #[cfg(feature = "hotreload")]
+                    {
+                        subsecond::call(|| (scope.comp)(scope.props.clone()))
+                    }
+                    #[cfg(not(feature = "hotreload"))]
+                    {
+                        (scope.comp)(scope.props.clone())
+                    }
                 },
             );
 
@@ -847,7 +854,14 @@ impl Runner {
                         },
                         || {
                             let scope = scope_rc.borrow();
-                            (scope.comp)(scope.props.clone())
+                            #[cfg(feature = "hotreload")]
+                            {
+                                subsecond::call(|| (scope.comp)(scope.props.clone()))
+                            }
+                            #[cfg(not(feature = "hotreload"))]
+                            {
+                                (scope.comp)(scope.props.clone())
+                            }
                         },
                     )
                 });
@@ -1380,6 +1394,46 @@ impl Runner {
                     }
                 });
         }
+    }
+
+    /// Reloads the runner for a hot-reload: cancels tasks, reloads every scope's hooks
+    /// (contexts are preserved), and marks every scope dirty. Task cancellation must
+    /// happen first so stale wakers can't fire [`Message::PollTask`] against
+    /// freshly-reloaded scopes.
+    pub fn reload(&mut self) {
+        self.tasks.borrow_mut().clear();
+        self.dirty_tasks.clear();
+        while self.receiver.try_recv().is_ok() {}
+
+        let mut scopes_storages = self.scopes_storages.borrow_mut();
+        let scopes = self
+            .scopes
+            .iter()
+            .sorted_by_key(|(_, s)| s.borrow().height)
+            .map(|(_, s)| s.borrow().id)
+            .collect::<Vec<_>>();
+
+        for scope_id in scopes {
+            CurrentContext::run(
+                CurrentContext {
+                    scope_id,
+                    scopes_storages: self.scopes_storages.clone(),
+                    tasks: self.tasks.clone(),
+                    task_id_counter: self.task_id_counter.clone(),
+                    sender: self.sender.clone(),
+                },
+                || {
+                    if let Some(storage) = scopes_storages.get_mut(&scope_id) {
+                        storage.reset_hooks();
+                    }
+                },
+            );
+        }
+
+        self.dirty_scopes.extend(self.scopes.keys());
+        let _ = self
+            .sender
+            .unbounded_send(Message::MarkScopeAsDirty(ScopeId::ROOT));
     }
 }
 

@@ -411,6 +411,16 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         NativeWindowEventAction::PollRunner => {
                             let mut cx = std::task::Context::from_waker(&app.waker);
 
+                            #[cfg(feature = "hotreload")]
+                            let hotreload_triggered = app
+                                .hot_reload_pending
+                                .swap(false, std::sync::atomic::Ordering::AcqRel);
+
+                            #[cfg(feature = "hotreload")]
+                            if hotreload_triggered {
+                                app.runner.reload();
+                            }
+
                             {
                                 let fut = std::pin::pin!(async {
                                     select! {
@@ -429,9 +439,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                                 }
                                                 _ => {}
                                             }
-
                                         },
-                                         _ = app.runner.handle_events().fuse() => {},
+                                        _ = app.runner.handle_events().fuse() => {},
                                     }
                                 });
 
@@ -458,6 +467,13 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             let mutations = app.runner.sync_and_update();
                             let result = app.runner.run_in(|| app.tree.apply_mutations(mutations));
                             if result.needs_render {
+                                app.process_layout_on_next_render = true;
+                                app.window.request_redraw();
+                            }
+                            #[cfg(feature = "hotreload")]
+                            if hotreload_triggered {
+                                // Hot-patches can change closure bodies and custom `ElementExt` impls
+                                // that `PartialEq` can't observe, so force a layout + redraw.
                                 app.process_layout_on_next_render = true;
                                 app.window.request_redraw();
                             }
