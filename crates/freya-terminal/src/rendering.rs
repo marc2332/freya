@@ -92,7 +92,10 @@ impl Renderer<'_> {
             self.paint,
         );
 
-        let glyph = if cell.c == '\0' { ' ' } else { cell.c };
+        let glyph = match cell.c {
+            '\0' | '\t' => ' ',
+            c => c,
+        };
         let mut buf = [0u8; 4];
         let content: &str = glyph.encode_utf8(&mut buf);
 
@@ -370,11 +373,13 @@ impl Renderer<'_> {
     }
 }
 
-/// Printable text for a cell, treating empty cells as a space and appending
-/// any combining (zero-width) characters.
+/// Visible text for a cell, mapping empty (`\0`) and tab (`\t`) cells to a space.
 fn cell_text(cell: &Cell) -> String {
     let mut s = String::new();
-    s.push(if cell.c == '\0' { ' ' } else { cell.c });
+    s.push(match cell.c {
+        '\0' | '\t' => ' ',
+        c => c,
+    });
     if let Some(extra) = cell.zerowidth() {
         for c in extra {
             s.push(*c);
