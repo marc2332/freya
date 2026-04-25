@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 #[doc(hidden)]
 pub use ::paste::paste;
 use freya_core::prelude::*;
@@ -340,6 +342,17 @@ impl ResolvablePreference<CornerRadius> for Preference<CornerRadius> {
 
 impl ResolvablePreference<f32> for Preference<f32> {
     fn resolve(&self, _colors_sheet: &ColorsSheet) -> f32 {
+        match self {
+            Self::Reference(_) => {
+                panic!("Only Colors support references.")
+            }
+            Self::Specific(value) => *value,
+        }
+    }
+}
+
+impl ResolvablePreference<Duration> for Preference<Duration> {
+    fn resolve(&self, _colors_sheet: &ColorsSheet) -> Duration {
         match self {
             Self::Reference(_) => {
                 panic!("Only Colors support references.")

@@ -32,9 +32,7 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash + std::fmt::D
 ///
 /// ```rust, no_run
 /// # use freya::radio::*;
-///
 /// # struct Data;
-///
 /// #[derive(PartialEq, Eq, Clone, Debug, Copy, Hash)]
 /// pub enum DataChannel {
 ///     ListCreation,
@@ -50,13 +48,15 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
     ///
     /// By default, returns a vector containing only `self`.
     ///
+    /// Declaring related channels here is a best practice enforced by design.
+    /// Making every write list them by hand is verbose and easy to get wrong.
+    /// Doing it once here keeps every write consistent.
+    ///
     /// # Example
     ///
     /// ```rust, no_run
     /// # use freya::radio::*;
-    ///
-    /// # struct Data;
-    ///
+    /// # struct Data { items: Vec<u32> }
     /// #[derive(PartialEq, Eq, Clone, Debug, Copy, Hash)]
     /// pub enum DataChannel {
     ///     All,
@@ -64,10 +64,14 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
     /// }
     ///
     /// impl RadioChannel<Data> for DataChannel {
-    ///     fn derive_channel(self, _data: &Data) -> Vec<Self> {
+    ///     fn derive_channel(self, data: &Data) -> Vec<Self> {
     ///         match self {
-    ///             DataChannel::All => vec![DataChannel::All],
-    ///             DataChannel::Specific(id) => vec![DataChannel::All, DataChannel::Specific(id)],
+    ///             DataChannel::All => {
+    ///                 let mut channels = vec![DataChannel::All];
+    ///                 channels.extend((0..data.items.len()).map(DataChannel::Specific));
+    ///                 channels
+    ///             }
+    ///             DataChannel::Specific(_) => vec![self],
     ///         }
     ///     }
     /// }
@@ -90,7 +94,6 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
 /// ```rust, no_run
 /// # use freya::prelude::*;
 /// # use freya::radio::*;
-///
 /// #[derive(Default)]
 /// struct AppState {
 ///     count: i32,
@@ -175,7 +178,6 @@ where
     /// ```rust, ignore
     /// # use freya::prelude::*;
     /// # use freya::radio::*;
-    ///
     /// let radio_station = RadioStation::create_global(AppState::default);
     ///
     /// launch(
@@ -400,7 +402,6 @@ where
 /// ```rust, ignore
 /// # use freya::prelude::*;
 /// # use freya::radio::*;
-///
 /// #[derive(PartialEq)]
 /// struct MyComponent {}
 ///
@@ -424,7 +425,6 @@ where
 /// ```rust, ignore
 /// # use freya::prelude::*;
 /// # use freya::radio::*;
-///
 /// #[derive(Clone)]
 /// struct CounterState {
 ///     count: i32,

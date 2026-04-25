@@ -1,6 +1,6 @@
 [package]
 name = "freya"
-version = "0.4.0-rc.18"
+version = "0.4.0-rc.19"
 description = "Cross-platform and non-web GUI Library powered by Skia."
 edition = "2024"
 license = "MIT"
@@ -78,6 +78,7 @@ engine = []
 devtools = ["dep:freya-devtools", "freya-core/devtools"]
 performance = []
 plot = ["dep:plotters", "dep:freya-plotters-backend"]
+hotreload = ["freya-core/hotreload", "freya-winit/hotreload"]
 gif = ["freya-components/gif"]
 calendar = ["freya-components/calendar"]
 markdown = ["freya-components/markdown"]

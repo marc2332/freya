@@ -26,33 +26,42 @@
           pkgs.just
           pkgs.taplo
           pkgs.alejandra
+          pkgs.dioxus-cli
+          pkgs.taplo
         ];
 
-        commonBuildInputs = [
-          pkgs.libxkbcommon
-          pkgs.libGL
-          pkgs.udev
-          pkgs.openssl
-          pkgs.pkg-config
-          pkgs.fontconfig
-          pkgs.libgcc.lib
-          pkgs.freetype
+        commonBuildInputs = with pkgs; [
+          libxkbcommon
+          libGL
+          udev
+          openssl
+          pkg-config
+          fontconfig
+          libgcc.lib
+          freetype
+          cairo
+          gdk-pixbuf
+          pango
+          atk
+          xdo
+
+          llvmPackages.bintools
 
           # required by "webview" and "tray" `--features`
-          pkgs.glib
-          pkgs.gtk3
-          pkgs.webkitgtk_4_1
-          pkgs.libsoup_3
-          pkgs.xdotool
+          glib
+          gtk3
+          webkitgtk_4_1
+          libsoup_3
+          xdotool
 
           # WINIT_UNIX_BACKEND=wayland
-          pkgs.wayland
+          wayland
 
           # WINIT_UNIX_BACKEND=x11
-          pkgs.libxcursor
-          pkgs.libxrandr
-          pkgs.libxi
-          pkgs.libx11
+          libxcursor
+          libxrandr
+          libxi
+          libx11
         ];
 
         mkDevShell = toolchain:

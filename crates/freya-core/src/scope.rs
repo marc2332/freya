@@ -95,6 +95,13 @@ impl ScopeStorage {
         self.values.clear();
         self.contexts.clear();
     }
+
+    /// Resets only the hooks state, preserving contexts.
+    pub(crate) fn reset_hooks(&mut self) {
+        self.current_run = 0;
+        self.current_value = 0;
+        self.values.clear();
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]

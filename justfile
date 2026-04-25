@@ -53,6 +53,9 @@ t-core:
 pe:
     cargo run --example dev_perf --release
 
+hr:
+    dx serve --hot-patch --example animation_router --verbose --features "hotreload"
+
 ps:
     cargo run --example dev_perf --features "hotpath" --release
 

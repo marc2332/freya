@@ -357,7 +357,10 @@ impl Tree {
                         DiffModifies::STYLE
                             | DiffModifies::LAYER
                             | DiffModifies::EFFECT
-                            | DiffModifies::TEXT_STYLE,
+                            | DiffModifies::TEXT_STYLE
+                            | DiffModifies::LAYOUT
+                            | DiffModifies::INNER_LAYOUT
+                            | DiffModifies::REORDER_LAYOUT,
                     ))
                 {
                     needs_render = true;

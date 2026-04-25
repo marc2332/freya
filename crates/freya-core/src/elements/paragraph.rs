@@ -209,6 +209,8 @@ impl ElementExt for ParagraphElement {
         if self.cursor_index != paragraph.cursor_index
             || self.highlights != paragraph.highlights
             || self.cursor_mode != paragraph.cursor_mode
+            || self.cursor_style != paragraph.cursor_style
+            || self.cursor_style_data != paragraph.cursor_style_data
             || self.vertical_align != paragraph.vertical_align
         {
             diff.insert(DiffModifies::STYLE);
