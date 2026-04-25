@@ -26,7 +26,12 @@ fn app() -> impl IntoElement {
         .child(
             ImageViewer::new(SOURCES[index()])
                 .width(Size::px(600.))
-                .height(Size::px(400.)),
+                .height(Size::px(400.))
+                .loading_placeholder(
+                    Skeleton::new(true)
+                        .expanded()
+                        .animation(SkeletonAnimation::Shimmer),
+                ),
         )
         .child(
             rect()

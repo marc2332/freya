@@ -1,6 +1,6 @@
 [package]
 name = "freya-core"
-version = "0.4.0-rc.18"
+version = "0.4.0-rc.19"
 description = "Reactivity runtime, tree management, accessibility integration, rendering pipeline and more, for Freya"
 edition = "2024"
 license = "MIT"
@@ -60,6 +60,8 @@ paste = "1.0.15"
 
 # Devtools
 serde = { version = "1", optional = true }
+subsecond = { version = "0.7.4", optional = true }
+dioxus-devtools = { version = "0.7.4", optional = true }
 
 # Cursor styling
 cursor-icon = "1.2.0"
@@ -72,6 +74,7 @@ freya-engine = { path = "../freya-engine", features = ["skia-engine"] }
 
 [features]
 hotpath = ["hotpath/hotpath", "ragnarok/hotpath"]
+hotreload = ["dep:subsecond", "dep:dioxus-devtools"]
 debug-integrity = []
 devtools = ["serde"]
 serde = ["dep:serde"]

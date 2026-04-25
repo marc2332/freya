@@ -11,7 +11,7 @@ use freya::{
 fn main() {
     launch(LaunchConfig::new().with_future(|proxy| async move {
         let monitors: Vec<MonitorHandle> = proxy
-            .with(|ctx| ctx.active_event_loop.available_monitors().collect())
+            .post_callback(|ctx| ctx.active_event_loop.available_monitors().collect())
             .await
             .unwrap();
 
@@ -19,7 +19,7 @@ fn main() {
             let position = monitor.position();
 
             let _ = proxy
-                .with(move |ctx| {
+                .post_callback(move |ctx| {
                     ctx.launch_window(
                         WindowConfig::new(move || app(monitor.clone()))
                             .with_size(400., 300.)

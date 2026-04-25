@@ -8,6 +8,7 @@ use crate::{
         State,
         consume_root_context,
     },
+    user_event::UserEvent,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Default, Debug, Hash)]
@@ -23,8 +24,6 @@ pub enum PreferredTheme {
     Light,
     Dark,
 }
-
-use crate::user_event::UserEvent;
 
 /// Access point to different Freya-managed states such as the focused node,
 /// root window size, navigation mode, and theme preference.
@@ -42,7 +41,7 @@ pub struct Platform {
     pub navigation_mode: State<NavigationMode>,
     /// The OS-level [`PreferredTheme`].
     pub preferred_theme: State<PreferredTheme>,
-    /// Internal sender used to dispatch [`UserEvent`]s.
+    /// Sender used to dispatch [`UserEvent`]s to the active renderer.
     pub sender: Rc<dyn Fn(UserEvent)>,
 }
 
@@ -52,7 +51,7 @@ impl Platform {
         consume_root_context()
     }
 
-    /// Send a [`UserEvent`] through the platform.
+    /// Dispatch a [`UserEvent`] to the active renderer.
     pub fn send(&self, event: UserEvent) {
         (self.sender)(event)
     }

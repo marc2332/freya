@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use freya_core::prelude::*;
 #[cfg(feature = "titlebar")]
 use torin::prelude::Length;
@@ -48,6 +50,10 @@ use crate::{
     },
     select::SelectThemePreference,
     sidebar::SideBarItemThemePreference,
+    skeleton::{
+        SkeletonAnimation,
+        SkeletonThemePreference,
+    },
     slider::SliderThemePreference,
     switch::{
         SwitchColorsThemePreference,
@@ -613,6 +619,19 @@ fn register_base_component_themes(theme: &mut Theme) {
             corner_radius: Preference::Specific(CornerRadius::new_all(0.0)),
             width: Preference::Specific(Size::Pixels(Length::new(46.0))),
             height: Preference::Specific(Size::Fill),
+        },
+    );
+    theme.set(
+        "skeleton",
+        SkeletonThemePreference {
+            background: Preference::Reference("surface_primary"),
+            shimmer_color: Preference::Specific(Color::WHITE.with_a(160)),
+            duration: Preference::Specific(Duration::from_millis(1000)),
+            animation: Preference::Specific(SkeletonAnimation::Pulse),
+            corner_radius: Preference::Specific(CornerRadius::new_all(4.)),
+            shimmer_from: Preference::Specific(-320.),
+            shimmer_to: Preference::Specific(960.),
+            shimmer_width: Preference::Specific(300.),
         },
     );
 }
