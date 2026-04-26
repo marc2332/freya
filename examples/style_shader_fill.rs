@@ -2,8 +2,6 @@
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
 )]
-use std::sync::Arc;
-
 use freya::{
     engine::prelude::{
         Data,
@@ -36,9 +34,7 @@ fn app() -> impl IntoElement {
         // Create the effect once and reuse in the shader render function
         (
             std::time::Instant::now(),
-            Arc::new(
-                RuntimeEffect::make_for_shader(SHADER, None).expect("shader compilation failed"),
-            ),
+            RuntimeEffect::make_for_shader(SHADER, None).expect("shader compilation failed"),
         )
     });
 

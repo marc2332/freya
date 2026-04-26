@@ -44,16 +44,16 @@ impl Fill {
                 paint.set_color(*color);
             }
             Fill::LinearGradient(gradient) => {
-                paint.set_shader(gradient.into_shader(area));
+                paint.set_shader(gradient.prepare_shader(area));
             }
             Fill::RadialGradient(gradient) => {
-                paint.set_shader(gradient.into_shader(area));
+                paint.set_shader(gradient.prepare_shader(area));
             }
             Fill::ConicGradient(gradient) => {
-                paint.set_shader(gradient.into_shader(area));
+                paint.set_shader(gradient.prepare_shader(area));
             }
             Fill::Shader(shader) => {
-                paint.set_shader(shader.into_shader(area));
+                paint.set_shader(shader.prepare_shader(area));
             }
         }
     }
