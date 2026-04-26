@@ -32,7 +32,7 @@ jobs:
       with:
         tool: taplo
     - name: Install Rust toolchain
-      uses: actions-rust-lang/setup-rust-toolchain@v1
+      uses: actions-rust-lang/setup-rust-toolchain@2b1f5e9b395427c92ee4e3331786ca3c37afe2d7 # v1
       with:
         components: clippy
     - name: Set up cargo cache
@@ -43,10 +43,11 @@ jobs:
         save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: Lint
       run: just c-ci
+    # `nightly` needs to be installed just before running `rustfmt` to force CI to use `nightly` 
     - name: Get nightly toolchain version
       run: echo "NIGHTLY_TOOLCHAIN=$(just rv-nightly)" >> $GITHUB_ENV
     - name: Install nightly Rust toolchain
-      uses: actions-rust-lang/setup-rust-toolchain@v1
+      uses: actions-rust-lang/setup-rust-toolchain@2b1f5e9b395427c92ee4e3331786ca3c37afe2d7 # v1
       with:
         toolchain: ${{ env.NIGHTLY_TOOLCHAIN }}
         components: rustfmt
@@ -73,7 +74,7 @@ jobs:
       with:
         tool: taplo
     - name: Install Rust toolchain
-      uses: actions-rust-lang/setup-rust-toolchain@v1
+      uses: actions-rust-lang/setup-rust-toolchain@2b1f5e9b395427c92ee4e3331786ca3c37afe2d7 # v1
       with:
         components: clippy
     - name: Set up cargo cache
@@ -84,10 +85,11 @@ jobs:
         save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: Lint
       run: just c-ci
+    # `nightly` needs to be installed just before running `rustfmt` to force CI to use `nightly` 
     - name: Get nightly toolchain version
       run: echo "NIGHTLY_TOOLCHAIN=$(just rv-nightly)" >> $GITHUB_ENV
     - name: Install nightly Rust toolchain
-      uses: actions-rust-lang/setup-rust-toolchain@v1
+      uses: actions-rust-lang/setup-rust-toolchain@2b1f5e9b395427c92ee4e3331786ca3c37afe2d7 # v1
       with:
         toolchain: ${{ env.NIGHTLY_TOOLCHAIN }}
         components: rustfmt

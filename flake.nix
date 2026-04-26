@@ -27,7 +27,6 @@
           pkgs.taplo
           pkgs.alejandra
           pkgs.dioxus-cli
-          pkgs.taplo
         ];
 
         commonBuildInputs = with pkgs; [
@@ -77,12 +76,19 @@
 
         stableToolchain = fenix.packages.${system}.fromToolchainFile {
           file = ./rust-toolchain.toml;
-          # sha256 = pkgs.lib.fakeSha256;
+          # Whenever `channel` in `rust-toolchain.toml` has been updated, `sha256` needs to be updated as well: 
+          # 1. replace `sha256` with `pkgs.lib.fakeSha256`, 
+          # 2. copy the expected hash from the error
+          # 3. Update `sha256` with the new hash
           sha256 = "sha256-zC8E38iDVJ1oPIzCqTk/Ujo9+9kx9dXq7wAwPMpkpg0=";
         };
 
         nightlyToolchain = fenix.packages.${system}.fromToolchainFile {
           file = ./rust-toolchain-nightly.toml;
+          # Whenever `channel` in `rust-toolchain-nightly.toml` has been updated, `sha256` needs to be updated as well: 
+          # 1. replace `sha256` with `pkgs.lib.fakeSha256`, 
+          # 2. copy the expected hash from the error
+          # 3. Update `sha256` with the new hash
           # sha256 = pkgs.lib.fakeSha256;
           sha256 = "sha256-4ot8+Fs79G1hUwlEYI6700QBLKdkLb33yzwOou1o5Yk=";
         };
