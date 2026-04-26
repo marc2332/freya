@@ -2,6 +2,7 @@ pub mod development_setup;
 pub mod devtools;
 pub mod extending_components;
 pub mod hooks;
+pub mod hot_reload;
 pub mod layers;
 pub mod platforms;
 pub mod remote_data;
