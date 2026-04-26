@@ -704,7 +704,14 @@ impl Runner {
                 },
                 || {
                     let scope = scope_rc.borrow();
-                    (scope.comp)(scope.props.clone())
+                    #[cfg(feature = "hotreload")]
+                    {
+                        subsecond::call(|| (scope.comp)(scope.props.clone()))
+                    }
+                    #[cfg(not(feature = "hotreload"))]
+                    {
+                        (scope.comp)(scope.props.clone())
+                    }
                 },
             );
 
@@ -847,7 +854,14 @@ impl Runner {
                         },
                         || {
                             let scope = scope_rc.borrow();
-                            (scope.comp)(scope.props.clone())
+                            #[cfg(feature = "hotreload")]
+                            {
+                                subsecond::call(|| (scope.comp)(scope.props.clone()))
+                            }
+                            #[cfg(not(feature = "hotreload"))]
+                            {
+                                (scope.comp)(scope.props.clone())
+                            }
                         },
                     )
                 });
@@ -946,6 +960,68 @@ impl Runner {
         } else {
             path_node.node_id
         }
+    }
+
+    fn process_addition(
+        &mut self,
+        scope: &Rc<RefCell<Scope>>,
+        added: &[u32],
+        path_element: &PathElement,
+        mutations: &mut Mutations,
+        parents_to_resync_scopes: &mut FxHashSet<Box<[u32]>>,
+    ) {
+        let (parent_node_id, index_inside_parent) = if added == [0] {
+            let parent_id = scope.borrow().parent_id;
+            let scope_id = scope.borrow().id;
+            let parent_node_id = scope.borrow().parent_node_id_in_parent;
+            self.find_scope_root_parent_info(parent_id, parent_node_id, scope_id)
+        } else {
+            parents_to_resync_scopes.insert(Box::from(&added[..added.len() - 1]));
+            (
+                scope
+                    .borrow()
+                    .nodes
+                    .get(&added[..added.len() - 1])
+                    .unwrap()
+                    .node_id,
+                added[added.len() - 1],
+            )
+        };
+
+        self.node_id_counter += 1;
+
+        path_element.with_element(added, |element| match element {
+            PathElement::Component { .. } => {
+                self.scope_id_counter += 1;
+                let scope_id = self.scope_id_counter;
+
+                scope.borrow_mut().nodes.insert(
+                    added,
+                    PathNode {
+                        node_id: self.node_id_counter,
+                        scope_id: Some(scope_id),
+                    },
+                );
+            }
+            PathElement::Element { element, .. } => {
+                mutations.added.push(MutationAdd {
+                    node_id: self.node_id_counter,
+                    parent_id: parent_node_id,
+                    index: index_inside_parent,
+                    element: element.clone(),
+                });
+
+                self.node_to_scope
+                    .insert(self.node_id_counter, scope.borrow().id);
+                scope.borrow_mut().nodes.insert(
+                    added,
+                    PathNode {
+                        node_id: self.node_id_counter,
+                        scope_id: None,
+                    },
+                );
+            }
+        });
     }
 
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
@@ -1166,6 +1242,11 @@ impl Runner {
         // ]
         //
         // This way, no addition offsets the next additions in line.
+        // Additions whose parent is a move destination must be deferred until
+        // after moves are applied, because the nodes graph still has old-tree
+        // layout and the parent element hasn't been repositioned yet.
+        let mut deferred_adds = Vec::new();
+
         for added in diff
             .added
             .iter()
@@ -1180,59 +1261,20 @@ impl Runner {
             })
             .rev()
         {
-            let (parent_node_id, index_inside_parent) = if added.as_ref() == [0] {
-                let parent_id = scope.borrow().parent_id;
-                let scope_id = scope.borrow().id;
-                let parent_node_id = scope.borrow().parent_node_id_in_parent;
-                self.find_scope_root_parent_info(parent_id, parent_node_id, scope_id)
-            } else {
-                // Only do it for non-scope-roots because the root is is always in the same position therefore it doesnt make sense to resync from its parent
-                parents_to_resync_scopes.insert(Box::from(&added[..added.len() - 1]));
-                (
-                    scope
-                        .borrow()
-                        .nodes
-                        .get(&added[..added.len() - 1])
-                        .unwrap()
-                        .node_id,
-                    added[added.len() - 1],
-                )
-            };
+            let parent = &added[..added.len() - 1];
+            let has_moved_ancestor = resolve_old_path(parent, &diff.moved) != *parent;
+            if has_moved_ancestor {
+                deferred_adds.push(added.clone());
+                continue;
+            }
 
-            self.node_id_counter += 1;
-
-            path_element.with_element(added, |element| match element {
-                PathElement::Component { .. } => {
-                    self.scope_id_counter += 1;
-                    let scope_id = self.scope_id_counter;
-
-                    scope.borrow_mut().nodes.insert(
-                        added,
-                        PathNode {
-                            node_id: self.node_id_counter,
-                            scope_id: Some(scope_id),
-                        },
-                    );
-                }
-                PathElement::Element { element, .. } => {
-                    mutations.added.push(MutationAdd {
-                        node_id: self.node_id_counter,
-                        parent_id: parent_node_id,
-                        index: index_inside_parent,
-                        element: element.clone(),
-                    });
-
-                    self.node_to_scope
-                        .insert(self.node_id_counter, scope.borrow().id);
-                    scope.borrow_mut().nodes.insert(
-                        added,
-                        PathNode {
-                            node_id: self.node_id_counter,
-                            scope_id: None,
-                        },
-                    );
-                }
-            });
+            self.process_addition(
+                scope,
+                added,
+                path_element,
+                mutations,
+                &mut parents_to_resync_scopes,
+            );
         }
 
         for (parent, movements) in diff.moved.into_iter().sorted_by(|(a, _), (b, _)| {
@@ -1296,6 +1338,17 @@ impl Runner {
             }
         }
 
+        // Process deferred additions now that moves have repositioned parents
+        for added in &deferred_adds {
+            self.process_addition(
+                scope,
+                added,
+                path_element,
+                mutations,
+                &mut parents_to_resync_scopes,
+            );
+        }
+
         for (modified, flags) in diff.modified {
             path_element.with_element(&modified, |element| match element {
                 PathElement::Component { .. } => {
@@ -1341,6 +1394,46 @@ impl Runner {
                     }
                 });
         }
+    }
+
+    /// Reloads the runner for a hot-reload: cancels tasks, reloads every scope's hooks
+    /// (contexts are preserved), and marks every scope dirty. Task cancellation must
+    /// happen first so stale wakers can't fire [`Message::PollTask`] against
+    /// freshly-reloaded scopes.
+    pub fn reload(&mut self) {
+        self.tasks.borrow_mut().clear();
+        self.dirty_tasks.clear();
+        while self.receiver.try_recv().is_ok() {}
+
+        let mut scopes_storages = self.scopes_storages.borrow_mut();
+        let scopes = self
+            .scopes
+            .iter()
+            .sorted_by_key(|(_, s)| s.borrow().height)
+            .map(|(_, s)| s.borrow().id)
+            .collect::<Vec<_>>();
+
+        for scope_id in scopes {
+            CurrentContext::run(
+                CurrentContext {
+                    scope_id,
+                    scopes_storages: self.scopes_storages.clone(),
+                    tasks: self.tasks.clone(),
+                    task_id_counter: self.task_id_counter.clone(),
+                    sender: self.sender.clone(),
+                },
+                || {
+                    if let Some(storage) = scopes_storages.get_mut(&scope_id) {
+                        storage.reset_hooks();
+                    }
+                },
+            );
+        }
+
+        self.dirty_scopes.extend(self.scopes.keys());
+        let _ = self
+            .sender
+            .unbounded_send(Message::MarkScopeAsDirty(ScopeId::ROOT));
     }
 }
 

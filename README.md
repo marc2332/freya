@@ -198,7 +198,7 @@ Enable with the `code-editor` feature.
 
 ```rust
 fn app() -> impl IntoElement {
-    use_init_theme(|| DARK_THEME);
+    use_init_theme(dark_theme);
     let focus = use_focus();
     let editor = use_state(|| {
         let path = PathBuf::from("./crates/freya-code-editor/src/editor_ui.rs");
@@ -303,7 +303,7 @@ impl Component for Settings {
     fn render(&self) -> impl IntoElement {
         Button::new()
             .on_press(|_| {
-                RouterContext::get().replace(Route::Home);
+                 let _ = RouterContext::get().replace(Route::Home);
             })
             .child("Go Home")
     }
@@ -742,7 +742,7 @@ freya = { git = "https://github.com/marc2332/freya", branch = "main" }
 Release candidates:
 
 ```toml
-freya = "0.4.0-rc.16"
+freya = "0.4.0-rc.19"
 ```
 
 ### Contributing 🧙‍♂️
@@ -757,7 +757,7 @@ If you are interested in supporting the development of this project feel free to
 
 Thanks to my sponsors for supporting this project! 😄 
 
-<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;github.com&#x2F;piny4man.png" width="60px" alt="User avatar: " /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;github.com&#x2F;gqf2008.png" width="60px" alt="User avatar: 高庆丰" /></a><a href="https://github.com/lino-levan"><img src="https:&#x2F;&#x2F;github.com&#x2F;lino-levan.png" width="60px" alt="User avatar: Lino Le Van" /></a><a href="https://github.com/d3rpp"><img src="https:&#x2F;&#x2F;github.com&#x2F;d3rpp.png" width="60px" alt="User avatar: Huddy Buddy" /></a><a href="https://github.com/DrigsterI"><img src="https:&#x2F;&#x2F;github.com&#x2F;DrigsterI.png" width="60px" alt="User avatar: Gabriel Jõe" /></a><a href="https://github.com/markalexander"><img src="https:&#x2F;&#x2F;github.com&#x2F;markalexander.png" width="60px" alt="User avatar: Mark" /></a><!-- sponsors -->
+<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;github.com&#x2F;piny4man.png" width="60px" alt="User avatar: " /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;github.com&#x2F;gqf2008.png" width="60px" alt="User avatar: 高庆丰" /></a><a href="https://github.com/lino-levan"><img src="https:&#x2F;&#x2F;github.com&#x2F;lino-levan.png" width="60px" alt="User avatar: Lino Le Van" /></a><a href="https://github.com/d3rpp"><img src="https:&#x2F;&#x2F;github.com&#x2F;d3rpp.png" width="60px" alt="User avatar: Huddy Buddy" /></a><a href="https://github.com/DrigsterI"><img src="https:&#x2F;&#x2F;github.com&#x2F;DrigsterI.png" width="60px" alt="User avatar: Gabriel Jõe" /></a><a href="https://github.com/markalexander"><img src="https:&#x2F;&#x2F;github.com&#x2F;markalexander.png" width="60px" alt="User avatar: Mark" /></a><a href="https://github.com/Natane0808"><img src="https:&#x2F;&#x2F;github.com&#x2F;Natane0808.png" width="60px" alt="User avatar: Natane" /></a><!-- sponsors -->
 
 ### Special thanks 💪
 
@@ -772,6 +772,17 @@ Thanks to my sponsors for supporting this project! 😄
 
 ### History with Dioxus
 Freya 0.1, 0.2 and 0.3 were based on the core crates of Dioxus. Starting 0.4 Freya does no longer use Dioxus, instead it uses its own reactive core, partially inspired by Dioxus but yet with lots of differences.
+
+### Claude Code Skill
+
+A Claude Code skill with Freya best practices and patterns is available. Install it with:
+
+```
+/plugin marketplace add marc2332/freya
+/plugin install freya@freya-marketplace
+```
+
+For other AI coding agents, you can use the skill document directly as context: [plugins/freya/skills/freya/SKILL.md](plugins/freya/skills/freya/SKILL.md)
 
 ### License
 

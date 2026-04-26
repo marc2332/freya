@@ -17,6 +17,7 @@ mod accessibility;
 pub mod config;
 mod drivers;
 pub mod extensions;
+pub mod integration;
 pub mod plugins;
 pub mod renderer;
 #[cfg(feature = "tray")]
@@ -107,6 +108,9 @@ pub fn launch(mut launch_config: LaunchConfig) {
     }
 
     let waker = waker(Arc::new(FuturesWaker(proxy.clone())));
+
+    #[cfg(feature = "hotreload")]
+    freya_core::hotreload::connect_subsecond();
 
     let mut renderer = WinitRenderer {
         windows: HashMap::default(),

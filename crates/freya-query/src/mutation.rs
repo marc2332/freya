@@ -339,7 +339,7 @@ impl<Q: MutationCapability> UseMutation<Q> {
         let mutation_data = map.get(&mutation).cloned().unwrap();
 
         // Run the mutation
-        spawn(async move { MutationsStorage::run(&mutation, &mutation_data, keys).await });
+        spawn_forever(async move { MutationsStorage::run(&mutation, &mutation_data, keys).await });
     }
 }
 

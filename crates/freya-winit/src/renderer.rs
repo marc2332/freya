@@ -48,7 +48,6 @@ use winit::{
     },
     window::{
         Theme,
-        Window,
         WindowId,
     },
 };
@@ -60,6 +59,7 @@ use crate::{
         WindowConfig,
     },
     drivers::GraphicsDriver,
+    integration::is_ime_role,
     plugins::{
         PluginEvent,
         PluginHandle,
@@ -73,27 +73,6 @@ use crate::{
         map_winit_touch_phase,
     },
 };
-
-/// Returns `true` for accessibility roles that require IME input (text fields, terminals, etc.).
-fn is_ime_role(role: AccessibilityRole) -> bool {
-    matches!(
-        role,
-        AccessibilityRole::TextInput
-            | AccessibilityRole::MultilineTextInput
-            | AccessibilityRole::PasswordInput
-            | AccessibilityRole::SearchInput
-            | AccessibilityRole::DateInput
-            | AccessibilityRole::DateTimeInput
-            | AccessibilityRole::WeekInput
-            | AccessibilityRole::MonthInput
-            | AccessibilityRole::TimeInput
-            | AccessibilityRole::EmailInput
-            | AccessibilityRole::NumberInput
-            | AccessibilityRole::PhoneNumberInput
-            | AccessibilityRole::UrlInput
-            | AccessibilityRole::Terminal
-    )
-}
 
 pub struct WinitRenderer {
     pub windows_configs: Vec<WindowConfig>,
@@ -179,21 +158,21 @@ pub enum NativeWindowEventAction {
     User(UserEvent),
 }
 
-pub struct WithWindowCallback(pub(crate) Box<dyn FnOnce(&mut Window)>);
-
-impl fmt::Debug for WithWindowCallback {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("WithWindowCallback")
-    }
-}
-
 /// Proxy wrapper provided to launch tasks so they can post callbacks executed inside the renderer.
 #[derive(Clone)]
 pub struct LaunchProxy(pub EventLoopProxy<NativeEvent>);
 
 impl LaunchProxy {
-    /// Send a callback to the renderer to get access to [RendererContext].
-    pub fn with<F, T: 'static>(&self, f: F) -> futures_channel::oneshot::Receiver<T>
+    /// Queue a callback to be run on the renderer thread with access to a [`RendererContext`].
+    ///
+    /// The call dispatches an event to the winit event loop and returns right away; the
+    /// callback runs later, when the event loop picks it up. Its return value is delivered
+    /// through the returned oneshot [`Receiver`](futures_channel::oneshot::Receiver), which
+    /// can be `.await`ed or dropped.
+    ///
+    /// The callback runs outside any component scope, so you can't call `Platform::get` or
+    /// consume context from inside it; use the [`RendererContext`] argument instead.
+    pub fn post_callback<F, T: 'static>(&self, f: F) -> futures_channel::oneshot::Receiver<T>
     where
         F: FnOnce(&mut RendererContext) -> T + 'static,
     {
@@ -211,17 +190,15 @@ impl LaunchProxy {
     }
 }
 
-#[derive(Debug)]
+pub type RendererCallback = Box<dyn FnOnce(WindowId, &mut RendererContext) + 'static>;
+
 pub enum NativeWindowErasedEventAction {
     LaunchWindow {
         window_config: WindowConfig,
         ack: futures_channel::oneshot::Sender<WindowId>,
     },
     CloseWindow(WindowId),
-    WithWindow {
-        window_id: Option<WindowId>,
-        callback: WithWindowCallback,
-    },
+    RendererCallback(RendererCallback),
 }
 
 #[derive(Debug)]
@@ -434,6 +411,16 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         NativeWindowEventAction::PollRunner => {
                             let mut cx = std::task::Context::from_waker(&app.waker);
 
+                            #[cfg(feature = "hotreload")]
+                            let hotreload_triggered = app
+                                .hot_reload_pending
+                                .swap(false, std::sync::atomic::Ordering::AcqRel);
+
+                            #[cfg(feature = "hotreload")]
+                            if hotreload_triggered {
+                                app.runner.reload();
+                            }
+
                             {
                                 let fut = std::pin::pin!(async {
                                     select! {
@@ -452,9 +439,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                                 }
                                                 _ => {}
                                             }
-
                                         },
-                                         _ = app.runner.handle_events().fuse() => {},
+                                        _ = app.runner.handle_events().fuse() => {},
                                     }
                                 });
 
@@ -481,6 +467,13 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             let mutations = app.runner.sync_and_update();
                             let result = app.runner.run_in(|| app.tree.apply_mutations(mutations));
                             if result.needs_render {
+                                app.process_layout_on_next_render = true;
+                                app.window.request_redraw();
+                            }
+                            #[cfg(feature = "hotreload")]
+                            if hotreload_triggered {
+                                // Hot-patches can change closure bodies and custom `ElementExt` impls
+                                // that `PartialEq` can't observe, so force a layout + redraw.
                                 app.process_layout_on_next_render = true;
                                 app.window.request_redraw();
                             }
@@ -593,17 +586,19 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                             active_event_loop.exit();
                                         }
                                     }
-                                    NativeWindowErasedEventAction::WithWindow {
-                                        window_id,
-                                        callback,
-                                    } => {
-                                        if let Some(window_id) = window_id {
-                                            if let Some(app) = self.windows.get_mut(&window_id) {
-                                                (callback.0)(&mut app.window)
-                                            }
-                                        } else {
-                                            (callback.0)(&mut app.window)
-                                        }
+                                    NativeWindowErasedEventAction::RendererCallback(cb) => {
+                                        let window_id = app.window.id();
+                                        let mut renderer_context = RendererContext {
+                                            fallback_fonts: &mut self.fallback_fonts,
+                                            active_event_loop,
+                                            windows: &mut self.windows,
+                                            proxy: &mut self.proxy,
+                                            plugins: &mut self.plugins,
+                                            screen_reader: &mut self.screen_reader,
+                                            font_manager: &mut self.font_manager,
+                                            font_collection: &mut self.font_collection,
+                                        };
+                                        (cb)(window_id, &mut renderer_context);
                                     }
                                 }
                             }
@@ -702,7 +697,10 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     app.modifiers_state = modifiers.state();
                 }
                 WindowEvent::Focused(is_focused) => {
-                    app.just_focused = is_focused;
+                    if cfg!(not(target_os = "android")) {
+                        // The focused workaround is only for desktop targets
+                        app.just_focused = is_focused;
+                    }
                 }
                 WindowEvent::RedrawRequested => {
                     hotpath::measure_block!("RedrawRequested", {

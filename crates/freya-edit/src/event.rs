@@ -108,6 +108,15 @@ impl EditableEvent<'_> {
                             *text_editor.selection_mut() = new_selection;
                         }
                     }
+                    PressEventType::Quadruple => {
+                        let current_selection = text_editor.selection().clone();
+                        let new_selection =
+                            TextSelection::new_range((0, text_editor.len_utf16_cu()));
+
+                        if current_selection != new_selection {
+                            *text_editor.selection_mut() = new_selection;
+                        }
+                    }
                     PressEventType::Single => {
                         let current_selection = text_editor.selection().clone();
 

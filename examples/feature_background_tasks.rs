@@ -14,7 +14,7 @@ fn main() {
             // Create the Window
             Timer::after(Duration::from_secs(1)).await;
             let mut window_id = proxy
-                .with(|ctx| {
+                .post_callback(|ctx| {
                     ctx.launch_window(WindowConfig::new(|| {
                         rect().center().expanded().child("Hello, World!")
                     }))
@@ -26,7 +26,7 @@ fn main() {
             Timer::after(Duration::from_secs(1)).await;
             if let Some(window_id) = window_id.take() {
                 let _ = proxy
-                    .with(move |ctx| {
+                    .post_callback(move |ctx| {
                         ctx.windows_mut().remove(&window_id);
                     })
                     .await;

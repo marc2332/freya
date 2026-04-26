@@ -23,13 +23,23 @@ use torin::prelude::{
 use crate::{
     button::Button,
     context_menu::ContextMenu,
+    define_theme,
     get_theme,
     menu::{
         Menu,
         MenuButton,
     },
-    theming::component_themes::ColorPickerThemePartial,
 };
+
+define_theme! {
+    %[component]
+    pub ColorPicker {
+        %[fields]
+        background: Color,
+        color: Color,
+        border_fill: Color,
+    }
+}
 
 /// HSV-based gradient color picker.
 ///
@@ -123,7 +133,7 @@ impl Component for ColorPicker {
                 open.toggle();
             });
 
-        let theme = get_theme!(&self.theme, color_picker);
+        let theme = get_theme!(&self.theme, ColorPickerThemePreference, "color_picker");
         let hue_bar = rect()
             .height(Size::px(18.))
             .width(Size::fill())
@@ -205,6 +215,8 @@ impl Component for ColorPicker {
             move |e: Event<PointerEventData>| {
                 dragging.set(DragTarget::Sv);
                 update_sv(e.global_location());
+                e.stop_propagation();
+                e.prevent_default();
             }
         };
 
@@ -213,12 +225,18 @@ impl Component for ColorPicker {
             move |e: Event<PointerEventData>| {
                 dragging.set(DragTarget::Hue);
                 update_hue(e.global_location());
+                e.stop_propagation();
+                e.prevent_default();
             }
         };
 
         let on_global_pointer_move = move |e: Event<PointerEventData>| match *dragging.read() {
-            DragTarget::Sv => update_sv(e.global_location()),
-            DragTarget::Hue => update_hue(e.global_location()),
+            DragTarget::Sv => {
+                update_sv(e.global_location());
+            }
+            DragTarget::Hue => {
+                update_hue(e.global_location());
+            }
             DragTarget::None => {}
         };
 
@@ -334,15 +352,18 @@ impl Component for ColorPicker {
                     )
             });
 
-        rect().horizontal().spacing(8.).child(preview).child(
-            rect()
-                .width(Size::px(0.))
-                .height(Size::px(0.))
-                .opacity(opacity)
-                .maybe(opacity > 0., |el| {
-                    el.child(rect().scale(scale).child(popup))
-                }),
-        )
+        rect()
+            .horizontal()
+            .spacing(8.)
+            .child(preview)
+            .maybe_child((opacity > 0.).then(|| {
+                rect()
+                    .layer(Layer::Overlay)
+                    .width(Size::px(0.))
+                    .height(Size::px(0.))
+                    .opacity(opacity)
+                    .child(rect().scale(scale).child(popup))
+            }))
     }
 
     fn render_key(&self) -> DiffKey {

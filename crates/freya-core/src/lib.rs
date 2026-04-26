@@ -33,6 +33,11 @@ pub mod tree;
 pub mod tree_layout_adapter;
 pub mod user_event;
 
+#[cfg(feature = "hotreload")]
+pub mod hotreload {
+    pub use dioxus_devtools::*;
+}
+
 /// Used by all end users.
 pub mod prelude {
     pub use bytes::Bytes;
@@ -120,6 +125,7 @@ pub mod prelude {
             state::*,
             task::*,
             writable::*,
+            writable_utils::*,
         },
         platform::*,
         reactive_context::ReactiveContext,
@@ -172,7 +178,10 @@ pub mod integration {
             name::*,
             platform::*,
         },
-        lifecycle::state::State,
+        lifecycle::{
+            state::State,
+            writable_utils::WritableUtils,
+        },
         node_id::NodeId,
         platform::*,
         render_pipeline::RenderPipeline,

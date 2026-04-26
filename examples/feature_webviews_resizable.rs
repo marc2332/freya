@@ -23,7 +23,7 @@ struct Webview {
 }
 
 fn app() -> impl IntoElement {
-    use_init_root_theme(|| DARK_THEME);
+    use_init_root_theme(dark_theme);
     let mut webviews = use_state(|| {
         vec![Webview {
             id: WebViewId::new(),

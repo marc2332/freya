@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 #[doc(hidden)]
 pub use ::paste::paste;
 use freya_core::prelude::*;
@@ -218,10 +220,13 @@ macro_rules! define_theme {
 
 #[macro_export]
 macro_rules! get_theme {
-    ($theme_prop:expr, $theme_name:ident) => {{
+    ($theme_prop:expr, $theme_type:ty, $theme_key:expr) => {{
         let theme = $crate::theming::hooks::get_theme_or_default();
         let theme = theme.read();
-        let mut requested_theme = theme.$theme_name.clone();
+        let mut requested_theme = theme
+            .get::<$theme_type>($theme_key)
+            .cloned()
+            .expect(concat!("Theme key not found: ", $theme_key));
 
         if let Some(theme_override) = $theme_prop {
             requested_theme.apply_optional(&theme_override);
@@ -337,6 +342,17 @@ impl ResolvablePreference<CornerRadius> for Preference<CornerRadius> {
 
 impl ResolvablePreference<f32> for Preference<f32> {
     fn resolve(&self, _colors_sheet: &ColorsSheet) -> f32 {
+        match self {
+            Self::Reference(_) => {
+                panic!("Only Colors support references.")
+            }
+            Self::Specific(value) => *value,
+        }
+    }
+}
+
+impl ResolvablePreference<Duration> for Preference<Duration> {
+    fn resolve(&self, _colors_sheet: &ColorsSheet) -> Duration {
         match self {
             Self::Reference(_) => {
                 panic!("Only Colors support references.")

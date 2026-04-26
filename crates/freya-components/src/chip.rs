@@ -1,14 +1,38 @@
 use freya_core::prelude::*;
-use torin::size::Size;
+use torin::{
+    gaps::Gaps,
+    size::Size,
+};
 
 use crate::{
+    define_theme,
     get_theme,
     icons::tick::TickIcon,
-    theming::component_themes::{
-        ChipTheme,
-        ChipThemePartial,
-    },
 };
+
+define_theme! {
+    %[component]
+    pub Chip {
+        %[fields]
+        background: Color,
+        hover_background: Color,
+        selected_background: Color,
+        border_fill: Color,
+        selected_border_fill: Color,
+        hover_border_fill: Color,
+        focus_border_fill: Color,
+        margin: f32,
+        corner_radius: CornerRadius,
+        width: Size,
+        height: Size,
+        padding: Gaps,
+        color: Color,
+        hover_color: Color,
+        selected_color: Color,
+        selected_icon_fill: Color,
+        hover_icon_fill: Color,
+    }
+}
 
 #[derive(Debug, Default, PartialEq, Clone, Copy)]
 pub enum ChipStatus {
@@ -109,7 +133,7 @@ impl KeyExt for Chip {
 
 impl Component for Chip {
     fn render(&self) -> impl IntoElement {
-        let theme = get_theme!(&self.theme, chip);
+        let theme = get_theme!(&self.theme, ChipThemePreference, "chip");
         let mut status = use_state(|| ChipStatus::Idle);
         let focus = use_focus();
         let focus_status = use_focus_status(focus);

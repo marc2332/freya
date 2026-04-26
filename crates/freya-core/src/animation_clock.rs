@@ -44,7 +44,7 @@ impl AnimationClock {
     pub fn enable(&self) {
         self.0
             .store(Self::DEFAULT_SPEED.to_bits(), Ordering::Relaxed);
-        info!("Animation clock speed disabled");
+        info!("Animation clock speed enabled");
     }
 
     pub fn disable(&self) {

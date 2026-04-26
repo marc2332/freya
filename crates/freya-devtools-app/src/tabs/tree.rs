@@ -154,19 +154,19 @@ impl Component for NodesTree {
                         on_selected.call((window_id, node_id));
                         match RouterContext::get().current::<Route>() {
                             Route::NodeInspectorStyle { .. } => {
-                                RouterContext::get()
+                                let _ = RouterContext::get()
                                     .push(Route::NodeInspectorStyle { node_id, window_id });
                             }
                             Route::NodeInspectorTextStyle { .. } => {
-                                RouterContext::get()
+                                let _ = RouterContext::get()
                                     .push(Route::NodeInspectorTextStyle { node_id, window_id });
                             }
                             Route::NodeInspectorLayout { .. } => {
-                                RouterContext::get()
+                                let _ = RouterContext::get()
                                     .push(Route::NodeInspectorLayout { node_id, window_id });
                             }
                             _ => {
-                                RouterContext::get()
+                                let _ = RouterContext::get()
                                     .push(Route::NodeInspectorStyle { node_id, window_id });
                             }
                         }

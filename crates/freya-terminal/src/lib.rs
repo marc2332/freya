@@ -3,13 +3,13 @@
 //! Terminal emulator integration for Freya applications.
 //!
 //! This crate provides a way to embed interactive terminal emulators in your Freya applications.
-//! It uses PTY (pseudo-terminal) to spawn shell processes and renders VT100-compatible terminal output
-//! with full 256-color support.
+//! It uses PTY (pseudo-terminal) to spawn shell processes and drives an
+//! [`alacritty_terminal`] grid for parsing and reflow.
 //!
 //! ## Features
 //!
 //! - **PTY Integration**: Spawn and interact with shell processes
-//! - **VT100 Rendering**: Full terminal emulation with cursor, colors, and text attributes
+//! - **Reflowing terminal**: Lines reflow on width change and scrollback is preserved across resizes
 //! - **256-Color Support**: ANSI 16 colors, 6x6x6 RGB cube, and 24-level grayscale
 //! - **Keyboard Input**: Handle all standard terminal key sequences
 //! - **Auto-resize**: Terminal automatically resizes based on available space
@@ -67,23 +67,20 @@
 //! ## Advance usage
 //!
 //! Check the `feature_terminal.rs` example in the repository.
-pub mod buffer;
 pub mod colors;
 pub mod element;
 pub mod handle;
+mod osc7;
 pub mod parser;
 pub mod pty;
 mod rendering;
 
 /// Prelude module for convenient imports.
 pub mod prelude {
+    pub use alacritty_terminal::selection::SelectionType;
     pub use portable_pty::CommandBuilder;
 
     pub use crate::{
-        buffer::{
-            TerminalBuffer,
-            TerminalSelection,
-        },
         element::Terminal,
         handle::{
             TerminalError,

@@ -1734,7 +1734,17 @@ impl Image {
     ) -> Option<Data> {
         unimplemented!("This is mocked")
     }
+
+    pub fn make_raster_image<'a>(
+        &self,
+        _context: impl Into<Option<&'a mut DirectContext>>,
+        _caching_hint: impl Into<Option<CachingHint>>,
+    ) -> Option<Image> {
+        unimplemented!("This is mocked")
+    }
 }
+
+pub struct CachingHint;
 
 pub struct Data;
 

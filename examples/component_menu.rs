@@ -9,7 +9,7 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    use_init_theme(|| DARK_THEME);
+    use_init_theme(dark_theme);
     let mut show_menu = use_state(|| false);
 
     rect()

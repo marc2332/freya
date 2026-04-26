@@ -1,15 +1,19 @@
 use freya_core::prelude::*;
 use torin::size::Size;
+
+use crate::{
+    get_theme,
+    scrollviews::{
+        ScrollBarThemePartial,
+        ScrollBarThemePreference,
+        shared::Axis,
+    },
+};
+
 enum ScrollThumbState {
     Idle,
     Hovering,
 }
-
-use crate::{
-    get_theme,
-    scrollviews::shared::Axis,
-    theming::component_themes::ScrollBarThemePartial,
-};
 
 #[derive(Clone, PartialEq)]
 pub struct ScrollThumb {
@@ -21,7 +25,7 @@ pub struct ScrollThumb {
 
 impl ComponentOwned for ScrollThumb {
     fn render(mut self) -> impl IntoElement {
-        let scrollbar_theme = get_theme!(&self.theme, scrollbar);
+        let scrollbar_theme = get_theme!(&self.theme, ScrollBarThemePreference, "scrollbar");
         let mut state = use_state(|| ScrollThumbState::Idle);
 
         let (width, height) = match self.axis {

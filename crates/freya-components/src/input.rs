@@ -22,14 +22,38 @@ use torin::{
 
 use crate::{
     cursor_blink::use_cursor_blink,
+    define_theme,
     get_theme,
     scrollviews::ScrollView,
-    theming::component_themes::{
-        InputColorsThemePartial,
-        InputLayoutThemePartial,
-        InputLayoutThemePartialExt,
-    },
 };
+
+define_theme! {
+    for = Input;
+    theme_field = theme_layout;
+
+    %[component]
+    pub InputLayout {
+        %[fields]
+        corner_radius: CornerRadius,
+        inner_margin: Gaps,
+    }
+}
+
+define_theme! {
+    for = Input;
+    theme_field = theme_colors;
+
+    %[component]
+    pub InputColors {
+        %[fields]
+        background: Color,
+        hover_background: Color,
+        border_fill: Color,
+        focus_border_fill: Color,
+        color: Color,
+        placeholder_color: Color,
+    }
+}
 
 #[derive(Clone, PartialEq)]
 pub enum InputStyleVariant {
@@ -308,14 +332,34 @@ impl Component for Input {
         let mut value = self.value.clone();
 
         let theme_colors = match self.style_variant {
-            InputStyleVariant::Normal => get_theme!(&self.theme_colors, input),
-            InputStyleVariant::Filled => get_theme!(&self.theme_colors, filled_input),
-            InputStyleVariant::Flat => get_theme!(&self.theme_colors, flat_input),
+            InputStyleVariant::Normal => {
+                get_theme!(&self.theme_colors, InputColorsThemePreference, "input")
+            }
+            InputStyleVariant::Filled => get_theme!(
+                &self.theme_colors,
+                InputColorsThemePreference,
+                "filled_input"
+            ),
+            InputStyleVariant::Flat => {
+                get_theme!(&self.theme_colors, InputColorsThemePreference, "flat_input")
+            }
         };
         let theme_layout = match self.layout_variant {
-            InputLayoutVariant::Normal => get_theme!(&self.theme_layout, input_layout),
-            InputLayoutVariant::Compact => get_theme!(&self.theme_layout, compact_input_layout),
-            InputLayoutVariant::Expanded => get_theme!(&self.theme_layout, expanded_input_layout),
+            InputLayoutVariant::Normal => get_theme!(
+                &self.theme_layout,
+                InputLayoutThemePreference,
+                "input_layout"
+            ),
+            InputLayoutVariant::Compact => get_theme!(
+                &self.theme_layout,
+                InputLayoutThemePreference,
+                "compact_input_layout"
+            ),
+            InputLayoutVariant::Expanded => get_theme!(
+                &self.theme_layout,
+                InputLayoutThemePreference,
+                "expanded_input_layout"
+            ),
         };
 
         let (mut movement_timeout, cursor_color) =
@@ -407,6 +451,7 @@ impl Component for Input {
 
         let on_input_pointer_down = move |e: Event<PointerEventData>| {
             e.stop_propagation();
+            e.prevent_default();
             is_dragging.set(true);
             movement_timeout.reset();
             if !display_placeholder {
@@ -424,6 +469,7 @@ impl Component for Input {
 
         let on_pointer_down = move |e: Event<PointerEventData>| {
             e.stop_propagation();
+            e.prevent_default();
             is_dragging.set(true);
             movement_timeout.reset();
             if !display_placeholder {
@@ -591,7 +637,7 @@ impl Component for Input {
                             .holder(holder.read().clone())
                             .on_sized(move |e: Event<SizedEventData>| area.set(e.visible_area))
                             .min_width(Size::func(move |context| {
-                                Some(context.parent + theme_layout.inner_margin.horizontal())
+                                Some(context.parent - theme_layout.inner_margin.horizontal())
                             }))
                             .maybe(self.enabled, |el| el.on_pointer_down(on_pointer_down))
                             .margin(theme_layout.inner_margin)

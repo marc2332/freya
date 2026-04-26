@@ -13,9 +13,20 @@ use torin::{
 };
 
 use crate::{
+    define_theme,
     get_theme,
-    theming::component_themes::ProgressBarThemePartial,
 };
+
+define_theme! {
+    %[component]
+    pub ProgressBar {
+        %[fields]
+        color: Color,
+        background: Color,
+        progress_background: Color,
+        height: f32,
+    }
+}
 
 /// ProgressBar component.
 ///
@@ -69,6 +80,9 @@ impl ProgressBar {
         self
     }
 
+    /// Shows the progress bar percentage label
+    ///
+    /// This is set to true by default
     pub fn show_progress(mut self, show_progress: bool) -> Self {
         self.show_progress = show_progress;
         self
@@ -77,7 +91,7 @@ impl ProgressBar {
 
 impl Component for ProgressBar {
     fn render(&self) -> impl IntoElement {
-        let progressbar_theme = get_theme!(&self.theme, progressbar);
+        let progressbar_theme = get_theme!(&self.theme, ProgressBarThemePreference, "progressbar");
 
         let progress = use_reactive(&self.progress.clamp(0., 100.));
         let animation = use_animation_transition(progress, |from, to| {
@@ -112,14 +126,16 @@ impl Component for ProgressBar {
                     .height(Size::fill())
                     .corner_radius(99.)
                     .background(progressbar_theme.progress_background)
-                    .child(
-                        label()
-                            .width(Size::fill())
-                            .color(progressbar_theme.color)
-                            .text_align(TextAlign::Center)
-                            .text(format!("{}%", self.progress))
-                            .max_lines(1),
-                    ),
+                    .maybe(self.show_progress, |el| {
+                        el.child(
+                            label()
+                                .width(Size::fill())
+                                .color(progressbar_theme.color)
+                                .text_align(TextAlign::Center)
+                                .text(format!("{}%", self.progress))
+                                .max_lines(1),
+                        )
+                    }),
             )
     }
 

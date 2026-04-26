@@ -25,26 +25,40 @@
 
         commonPackages = [
           pkgs.python3
+          pkgs.dioxus-cli
+          pkgs.taplo
         ];
 
-        commonBuildInputs = [
-          pkgs.libxkbcommon
-          pkgs.libGL
-          pkgs.udev
-          pkgs.openssl
-          pkgs.pkg-config
-          pkgs.fontconfig
-          pkgs.libgcc.lib
-          pkgs.freetype
+        commonBuildInputs = with pkgs; [
+          libxkbcommon
+          libGL
+          udev
+          openssl
+          pkg-config
+          fontconfig
+          libgcc.lib
+          freetype
+          gtk3
+          glib
+          cairo
+          gdk-pixbuf
+          libsoup_3
+          pango
+          atk
+          webkitgtk_4_1
+          xdo
+          xdotool
+
+          llvmPackages.bintools
 
           # WINIT_UNIX_BACKEND=wayland
-          pkgs.wayland
+          wayland
 
           # WINIT_UNIX_BACKEND=x11
-          pkgs.xorg.libXcursor
-          pkgs.xorg.libXrandr
-          pkgs.xorg.libXi
-          pkgs.xorg.libX11
+          libxcursor
+          libxrandr
+          libxi
+          libx11
         ];
 
         mkDevShell =

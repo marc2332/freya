@@ -32,9 +32,7 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash + std::fmt::D
 ///
 /// ```rust, no_run
 /// # use freya::radio::*;
-///
 /// # struct Data;
-///
 /// #[derive(PartialEq, Eq, Clone, Debug, Copy, Hash)]
 /// pub enum DataChannel {
 ///     ListCreation,
@@ -50,13 +48,15 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
     ///
     /// By default, returns a vector containing only `self`.
     ///
+    /// Declaring related channels here is a best practice enforced by design.
+    /// Making every write list them by hand is verbose and easy to get wrong.
+    /// Doing it once here keeps every write consistent.
+    ///
     /// # Example
     ///
     /// ```rust, no_run
     /// # use freya::radio::*;
-    ///
-    /// # struct Data;
-    ///
+    /// # struct Data { items: Vec<u32> }
     /// #[derive(PartialEq, Eq, Clone, Debug, Copy, Hash)]
     /// pub enum DataChannel {
     ///     All,
@@ -64,10 +64,14 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
     /// }
     ///
     /// impl RadioChannel<Data> for DataChannel {
-    ///     fn derive_channel(self, _data: &Data) -> Vec<Self> {
+    ///     fn derive_channel(self, data: &Data) -> Vec<Self> {
     ///         match self {
-    ///             DataChannel::All => vec![DataChannel::All],
-    ///             DataChannel::Specific(id) => vec![DataChannel::All, DataChannel::Specific(id)],
+    ///             DataChannel::All => {
+    ///                 let mut channels = vec![DataChannel::All];
+    ///                 channels.extend((0..data.items.len()).map(DataChannel::Specific));
+    ///                 channels
+    ///             }
+    ///             DataChannel::Specific(_) => vec![self],
     ///         }
     ///     }
     /// }
@@ -90,7 +94,6 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
 /// ```rust, no_run
 /// # use freya::prelude::*;
 /// # use freya::radio::*;
-///
 /// #[derive(Default)]
 /// struct AppState {
 ///     count: i32,
@@ -175,7 +178,6 @@ where
     /// ```rust, ignore
     /// # use freya::prelude::*;
     /// # use freya::radio::*;
-    ///
     /// let radio_station = RadioStation::create_global(AppState::default);
     ///
     /// launch(
@@ -233,10 +235,12 @@ where
     /// # use freya::radio::*;
     /// let value = radio_station.read();
     /// ```
+    #[track_caller]
     pub fn read(&'_ self) -> ReadRef<'_, Value> {
         self.value.read()
     }
 
+    #[track_caller]
     pub fn peek_unchecked(&self) -> ReadRef<'static, Value> {
         self.value.peek()
     }
@@ -250,6 +254,7 @@ where
     /// # use freya::radio::*;
     /// let value = radio_station.peek();
     /// ```
+    #[track_caller]
     pub fn peek(&'_ self) -> ReadRef<'_, Value> {
         self.value.peek()
     }
@@ -296,6 +301,7 @@ where
     /// # use freya::radio::*;
     /// radio_station.write_channel(MyChannel::Update).count += 1;
     /// ```
+    #[track_caller]
     pub fn write_channel(&mut self, channel: Channel) -> RadioGuard<Value, Channel> {
         let value = self.value.write_unchecked();
         RadioGuard {
@@ -396,7 +402,6 @@ where
 /// ```rust, ignore
 /// # use freya::prelude::*;
 /// # use freya::radio::*;
-///
 /// #[derive(PartialEq)]
 /// struct MyComponent {}
 ///
@@ -420,7 +425,6 @@ where
 /// ```rust, ignore
 /// # use freya::prelude::*;
 /// # use freya::radio::*;
-///
 /// #[derive(Clone)]
 /// struct CounterState {
 ///     count: i32,
@@ -518,6 +522,7 @@ where
     /// # use freya::radio::*;
     /// let count = radio.read().count;
     /// ```
+    #[track_caller]
     pub fn read(&'_ self) -> ReadRef<'_, Value> {
         self.subscribe_if_not();
         self.antenna.peek().station.value.peek()
@@ -533,6 +538,7 @@ where
     ///     // Do something with `value`
     /// });
     /// ```
+    #[track_caller]
     pub fn with(&self, cb: impl FnOnce(ReadRef<Value>)) {
         self.subscribe_if_not();
         let value = self.antenna.peek().station.value;
@@ -551,6 +557,7 @@ where
     /// # use freya::radio::*;
     /// radio.write().count += 1;
     /// ```
+    #[track_caller]
     pub fn write(&mut self) -> RadioGuard<Value, Channel> {
         let value = self.antenna.peek().station.value.write_unchecked();
         let channel = self.antenna.peek().channel.clone();
@@ -571,6 +578,7 @@ where
     ///     // Modify `value`
     /// });
     /// ```
+    #[track_caller]
     pub fn write_with(&mut self, cb: impl FnOnce(RadioGuard<Value, Channel>)) {
         let guard = self.write();
         cb(guard);
@@ -583,6 +591,7 @@ where
     /// # use freya::radio::*;
     /// radio.write(Channel::Whatever).value = 1;
     /// ```
+    #[track_caller]
     pub fn write_channel(&mut self, channel: Channel) -> RadioGuard<Value, Channel> {
         let value = self.antenna.peek().station.value.write_unchecked();
         RadioGuard {
@@ -602,6 +611,7 @@ where
     ///     // Modify `value`
     /// });
     /// ```
+    #[track_caller]
     pub fn write_channel_with(
         &mut self,
         channel: Channel,
@@ -626,6 +636,7 @@ where
     ///     }
     /// });
     /// ```
+    #[track_caller]
     pub fn write_with_channel_selection(
         &mut self,
         cb: impl FnOnce(&mut Value) -> ChannelSelection<Channel>,
@@ -655,6 +666,7 @@ where
     /// Modify the state silently, no component will be notified.
     ///
     /// This is not recommended, the only intended usage for this is inside [RadioAsyncReducer].
+    #[track_caller]
     pub fn write_silently(&mut self) -> RadioGuard<Value, Channel> {
         let value = self.antenna.peek().station.value.write_unchecked();
         RadioGuard {
@@ -662,6 +674,27 @@ where
             station: self.antenna.read().station,
             value,
         }
+    }
+}
+
+impl<Value, Channel> WritableUtils<Value> for Radio<Value, Channel>
+where
+    Channel: RadioChannel<Value>,
+    Value: 'static,
+{
+    fn write_state(&mut self) -> WriteRef<'static, Value> {
+        let antenna = self.antenna.peek();
+        let channel = antenna.channel.clone();
+        let value = antenna.station.value.write_unchecked();
+        for ch in channel.derive_channel(&*value) {
+            antenna.station.notify_listeners(&ch);
+        }
+        antenna.station.cleanup();
+        value
+    }
+
+    fn peek_state(&self) -> ReadRef<'static, Value> {
+        self.antenna.peek().station.peek_unchecked()
     }
 }
 

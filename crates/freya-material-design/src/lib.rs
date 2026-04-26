@@ -21,6 +21,7 @@ pub mod floating_tab;
 pub mod menu;
 pub mod ripple;
 pub mod sidebar;
+pub mod tile;
 
 pub mod prelude {
     pub use crate::{
@@ -29,5 +30,6 @@ pub mod prelude {
         menu::*,
         ripple::*,
         sidebar::*,
+        tile::*,
     };
 }

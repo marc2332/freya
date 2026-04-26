@@ -5,13 +5,20 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
+    let mut maximized = use_state(|| false);
+
+    use_side_effect(move || {
+        let _ = Platform::get().root_size.read();
+        Platform::get().with_window(None, move |window| maximized.set(window.is_maximized()));
+    });
+
     let minimize = move |_| {
         Platform::get().with_window(None, |window| {
             window.set_minimized(true);
         });
     };
 
-    let maximize = move |_| {
+    let toggle_maximize = move |_| {
         Platform::get().with_window(None, |window| {
             let is_max = window.is_maximized();
             window.set_maximized(!is_max);
@@ -44,7 +51,11 @@ fn app() -> impl IntoElement {
                         .height(Size::fill()),
                 )
                 .child(TitlebarButton::new(TitlebarAction::Minimize).on_press(minimize))
-                .child(TitlebarButton::new(TitlebarAction::Maximize).on_press(maximize))
+                .child(if maximized() {
+                    TitlebarButton::new(TitlebarAction::Restore).on_press(toggle_maximize)
+                } else {
+                    TitlebarButton::new(TitlebarAction::Maximize).on_press(toggle_maximize)
+                })
                 .child(TitlebarButton::new(TitlebarAction::Close).on_press(close)),
         )
         .child(rect().expanded().center().child("Hello, World!"))

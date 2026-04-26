@@ -9,12 +9,18 @@ use torin::{
 };
 
 use crate::{
+    define_theme,
     get_theme,
-    theming::component_themes::{
-        PopupTheme,
-        PopupThemePartial,
-    },
 };
+
+define_theme! {
+    %[component]
+    pub Popup {
+        %[fields]
+        background: Color,
+        color: Color,
+    }
+}
 
 /// Popup background wrapper.
 #[derive(Clone, PartialEq)]
@@ -203,7 +209,8 @@ impl Component for Popup {
 
         let should_render = show || *background_animation.is_running().read();
 
-        let PopupTheme { background, color } = get_theme!(&self.theme, popup);
+        let PopupTheme { background, color } =
+            get_theme!(&self.theme, PopupThemePreference, "popup");
 
         let request_to_close = {
             let handler = self.on_close_request.clone();

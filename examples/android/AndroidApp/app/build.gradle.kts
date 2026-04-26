@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.freya.androidapp"
-        minSdk = 36
+        minSdk = 31
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -53,7 +53,6 @@ tasks.named("preBuild") {
 }
 
 dependencies {
-    implementation(libs.androidx.games.activity)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
