@@ -38,7 +38,6 @@ pub struct VideoPlayer {
 }
 
 impl VideoPlayer {
-    /// Allocate the reactive slots in the current scope.
     pub fn create() -> Self {
         Self {
             frame: State::create(None),
@@ -53,7 +52,7 @@ impl VideoPlayer {
 
     /// Latest decoded frame, if any.
     pub fn frame(&self) -> Option<VideoFrame> {
-        self.frame.read().as_ref().cloned()
+        self.frame.read().clone()
     }
 
     /// Current [`PlaybackState`].
@@ -73,14 +72,13 @@ impl VideoPlayer {
 
     /// Playback progress in `0.0..=100.0`.
     pub fn progress(&self) -> f64 {
-        let position = *self.position.read();
         let Some(duration) = *self.duration.read() else {
             return 0.0;
         };
         if duration.is_zero() {
             return 0.0;
         }
-        (position.as_secs_f64() / duration.as_secs_f64() * 100.0).clamp(0.0, 100.0)
+        (self.position().as_secs_f64() / duration.as_secs_f64() * 100.0).clamp(0.0, 100.0)
     }
 
     /// Stop playback and reset to the beginning.
@@ -94,7 +92,7 @@ impl VideoPlayer {
 
     /// Resume playback.
     pub fn play(&mut self) {
-        if (self.playback)() == PlaybackState::Paused {
+        if self.state() == PlaybackState::Paused {
             self.playback.set(PlaybackState::Playing);
             if let Some(client) = self.client.peek().as_ref() {
                 client.play();
@@ -104,7 +102,7 @@ impl VideoPlayer {
 
     /// Pause playback.
     pub fn pause(&mut self) {
-        if (self.playback)() == PlaybackState::Playing {
+        if self.state() == PlaybackState::Playing {
             self.playback.set(PlaybackState::Paused);
             if let Some(client) = self.client.peek().as_ref() {
                 client.pause();
@@ -114,7 +112,7 @@ impl VideoPlayer {
 
     /// Toggle play/pause, or restart from the beginning when ended.
     pub fn toggle(&mut self) {
-        match (self.playback)() {
+        match self.state() {
             PlaybackState::Playing => self.pause(),
             PlaybackState::Paused => self.play(),
             PlaybackState::Ended => self.seek(Duration::ZERO),
@@ -128,17 +126,48 @@ impl VideoPlayer {
         self.client.set(None);
         self.playback.set(PlaybackState::Loading);
 
-        let Some(source) = self.source.peek().as_ref().cloned() else {
+        let Some(source) = self.source.peek().clone() else {
             self.forwarder.set(None);
             return;
         };
         let player = *self;
         let handle = spawn(async move {
             Timer::after(SEEK_DEBOUNCE).await;
-            run_playback(source, position, player).await;
+            player.run(source, position).await;
         })
         .owned();
         self.forwarder.set(Some(handle));
+    }
+
+    /// Drive this player from a [`VideoClient`] decoding `source`.
+    async fn run(mut self, source: VideoSource, start_offset: Duration) {
+        let client = VideoClient::new(source, start_offset);
+        let events = client.events().clone();
+        self.client.set(Some(client));
+
+        while let Ok(event) = events.recv().await {
+            match event {
+                VideoEvent::Duration(duration) => {
+                    self.duration.set(Some(duration));
+                }
+                VideoEvent::Frame { frame, position } => {
+                    self.frame.set(Some(frame));
+                    self.position.set(position);
+                    if self.state() == PlaybackState::Loading {
+                        self.playback.set(PlaybackState::Playing);
+                    }
+                }
+                VideoEvent::Ended => {
+                    self.playback.set(PlaybackState::Ended);
+                    break;
+                }
+                VideoEvent::Errored => {
+                    tracing::warn!("Video stream errored");
+                    self.playback.set(PlaybackState::Errored);
+                    break;
+                }
+            }
+        }
     }
 }
 
@@ -149,38 +178,8 @@ pub fn use_video(init: impl FnOnce() -> VideoSource + 'static) -> VideoPlayer {
         let mut player = VideoPlayer::create();
         player.source.set(Some(source.clone()));
         player.playback.set(PlaybackState::Loading);
-        let handle = spawn(run_playback(source, Duration::ZERO, player)).owned();
+        let handle = spawn(player.run(source, Duration::ZERO)).owned();
         player.forwarder.set(Some(handle));
         player
     })
-}
-
-/// Play `source` from `start_offset` into `player`.
-async fn run_playback(source: VideoSource, start_offset: Duration, mut player: VideoPlayer) {
-    let client = VideoClient::new(source, start_offset);
-    let events = client.events().clone();
-    player.client.set(Some(client));
-
-    while let Ok(event) = events.recv().await {
-        match event {
-            VideoEvent::Duration(duration) => {
-                player.duration.set(Some(duration));
-            }
-            VideoEvent::Frame { frame, position } => {
-                player.frame.set(Some(frame));
-                player.position.set(position);
-                if (player.playback)() == PlaybackState::Loading {
-                    player.playback.set(PlaybackState::Playing);
-                }
-            }
-            VideoEvent::Ended => {
-                player.playback.set(PlaybackState::Ended);
-                break;
-            }
-            VideoEvent::Errored => {
-                player.playback.set(PlaybackState::Errored);
-                break;
-            }
-        }
-    }
 }

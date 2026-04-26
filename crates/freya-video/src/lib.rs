@@ -14,12 +14,7 @@ pub use self::{
         VideoPlayer,
         use_video,
     },
-    viewer::{
-        Video,
-        VideoElement,
-        VideoViewer,
-        video,
-    },
+    viewer::VideoViewer,
 };
 
 /// Download an ffmpeg binary if one isn't already available on `PATH`.

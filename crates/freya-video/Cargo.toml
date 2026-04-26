@@ -18,7 +18,6 @@ workspace = true
 freya-core = { workspace = true }
 freya-components = { workspace = true }
 freya-engine = { workspace = true }
-torin = { workspace = true }
 
 ffmpeg-sidecar = { workspace = true }
 async-channel = { workspace = true }
@@ -28,4 +27,3 @@ blocking = { workspace = true }
 
 tracing = { workspace = true }
 anyhow = { workspace = true }
-accesskit = { workspace = true }

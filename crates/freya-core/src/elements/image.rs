@@ -3,12 +3,10 @@
 use std::{
     any::Any,
     borrow::Cow,
-    cell::RefCell,
     collections::HashMap,
     rc::Rc,
 };
 
-use bytes::Bytes;
 use freya_engine::prelude::{
     ClipOp,
     CubicResampler,
@@ -109,13 +107,18 @@ pub enum SamplingMode {
 
 #[derive(Clone)]
 pub struct ImageHolder {
-    pub image: Rc<RefCell<SkImage>>,
-    pub bytes: Bytes,
+    pub image: SkImage,
+}
+
+impl ImageHolder {
+    pub fn new(image: SkImage) -> Self {
+        Self { image }
+    }
 }
 
 impl PartialEq for ImageHolder {
     fn eq(&self, other: &Self) -> bool {
-        Rc::ptr_eq(&self.image, &other.image)
+        self.image.unique_id() == other.image.unique_id()
     }
 }
 
@@ -213,13 +216,13 @@ impl ElementExt for ImageElement {
     }
 
     fn measure(&self, context: LayoutContext) -> Option<(Size2D, Rc<dyn Any>)> {
-        let image = self.image_holder.image.borrow();
+        let image = &self.image_holder.image;
 
         let image_width = image.width() as f32;
         let image_height = image.height() as f32;
 
-        let width_ratio = context.area_size.width / image.width() as f32;
-        let height_ratio = context.area_size.height / image.height() as f32;
+        let width_ratio = context.area_size.width / image_width;
+        let height_ratio = context.area_size.height / image_height;
 
         let size = match self.image_data.aspect_ratio {
             AspectRatio::Max => {
@@ -254,7 +257,6 @@ impl ElementExt for ImageElement {
             .unwrap();
 
         let area = context.layout_node.visible_area();
-        let image = self.image_holder.image.borrow();
 
         let mut rect = SkRect::new(
             area.min_x(),
@@ -289,9 +291,13 @@ impl ElementExt for ImageElement {
         let mut paint = Paint::default();
         paint.set_anti_alias(true);
 
-        context
-            .canvas
-            .draw_image_rect_with_sampling_options(&*image, None, rect, sampling, &paint);
+        context.canvas.draw_image_rect_with_sampling_options(
+            &self.image_holder.image,
+            None,
+            rect,
+            sampling,
+            &paint,
+        );
 
         context.canvas.restore();
     }
