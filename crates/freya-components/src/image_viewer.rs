@@ -1,5 +1,4 @@
 use std::{
-    cell::RefCell,
     collections::hash_map::DefaultHasher,
     fs,
     hash::{
@@ -149,7 +148,8 @@ impl Hash for ImageSource {
 }
 
 impl ImageSource {
-    pub async fn bytes(&self) -> anyhow::Result<(SkImage, Bytes)> {
+    /// Fetch the source's encoded bytes and decode them into a Skia image.
+    pub async fn load(&self) -> anyhow::Result<SkImage> {
         let source = self.clone();
         blocking::unblock(move || {
             let bytes = match source {
@@ -164,8 +164,7 @@ impl ImageSource {
             };
             let image = SkImage::from_encoded(unsafe { SkData::new_bytes(&bytes) })
                 .context("Failed to decode Image.")?;
-            let image = image.make_raster_image(None, None).unwrap_or(image);
-            Ok((image, bytes))
+            Ok(image.make_raster_image(None, None).unwrap_or(image))
         })
         .await
     }
@@ -306,20 +305,14 @@ impl Component for ImageViewer {
                     let source = source.clone();
                     let asset_config = asset_config.clone();
                     spawn_forever(async move {
-                        match source.bytes().await {
-                            Ok((image, bytes)) => {
-                                // Image loaded
-                                let image_holder = ImageHolder {
-                                    bytes,
-                                    image: Rc::new(RefCell::new(image)),
-                                };
+                        match source.load().await {
+                            Ok(image) => {
                                 asset_cacher.update_asset(
                                     asset_config,
-                                    Asset::Cached(Rc::new(image_holder)),
+                                    Asset::Cached(Rc::new(ImageHolder::new(image))),
                                 );
                             }
                             Err(err) => {
-                                // Image errored
                                 asset_cacher
                                     .update_asset(asset_config, Asset::Error(err.to_string()));
                             }

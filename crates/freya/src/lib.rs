@@ -68,6 +68,7 @@
 //! - `tray`: Enables tray support using the [tray_icon] crate.
 //! - `sdk`: Reexport [freya_sdk] under [sdk].
 //! - `gif`: Enables the [GifViewer](components::GifViewer) component.
+//! - `video`: Enables the [VideoViewer](components::VideoViewer) component.
 //! - `plot`: Reexport of plotters under [plot].
 //! - `material-design`: Reexport [freya_material_design] under [material_design].
 //! - `calendar`: Enables the [Calendar](components::Calendar) component.
@@ -146,6 +147,9 @@ pub mod components {
     #[cfg_attr(feature = "docs", doc(cfg(feature = "markdown")))]
     #[cfg(feature = "markdown")]
     pub use freya_components::markdown::*;
+    #[cfg_attr(feature = "docs", doc(cfg(feature = "video")))]
+    #[cfg(feature = "video")]
+    pub use freya_video::*;
     cfg_if::cfg_if! {
         if #[cfg(feature = "router")] {
             #[cfg_attr(feature = "docs", doc(cfg(feature = "router")))]

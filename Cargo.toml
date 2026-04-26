@@ -25,6 +25,7 @@ members = [
   "./crates/freya-edit",
   "./crates/freya-winit",
   "./crates/freya-components",
+  "./crates/freya-video",
   "./crates/pathgraph",
   "./crates/freya-animation",
   "./crates/freya-router",
@@ -59,6 +60,7 @@ freya-clipboard = { path = "./crates/freya-clipboard", version = "0.4.0-rc.19" }
 freya-edit = { path = "./crates/freya-edit", version = "0.4.0-rc.19" }
 freya-winit = { path = "./crates/freya-winit", version = "0.4.0-rc.19" }
 freya-components = { path = "./crates/freya-components", version = "0.4.0-rc.19" }
+freya-video = { path = "./crates/freya-video", version = "0.4.0-rc.19" }
 pathgraph = { path = "./crates/pathgraph/", version = "0.4.0-rc.19" }
 freya-animation = { path = "./crates/freya-animation", version = "0.4.0-rc.19" }
 freya-router = { path = "./crates/freya-router", version = "0.4.0-rc.19" }
@@ -95,6 +97,7 @@ futures-util = "0.3.31"
 futures-channel = "0.3.31"
 futures-lite = "2.6.1"
 async-io = "2.5.0"
+async-channel = "2.3"
 blocking = "1.6.2"
 ureq = "3.1.4"
 serde = { version = "1", features = ["derive"] }
@@ -155,6 +158,10 @@ thiserror = "2.0.17"
 
 # Images
 image = "0.25.8"
+
+# Video
+ffmpeg-sidecar = "2.3"
+rodio = { version = "0.20", default-features = false }
 
 # SDK
 tokio = { version = "1.0", default-features = false }
