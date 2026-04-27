@@ -2455,6 +2455,14 @@ impl LocalResourceProvider {
 pub fn raster_n32_premul(size: impl Into<ISize>) -> Option<Surface> {
     unimplemented!("This is mocked")
 }
+pub fn wrap_pixels<'pixels>(
+    _image_info: &ImageInfo,
+    _pixels: &'pixels mut [u8],
+    _row_bytes: impl Into<Option<usize>>,
+    _surface_props: Option<&()>,
+) -> Option<Surface> {
+    unimplemented!("This is mocked")
+}
 pub mod vk {
 
     #[derive(Default)]

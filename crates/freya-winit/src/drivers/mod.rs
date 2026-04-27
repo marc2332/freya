@@ -2,6 +2,7 @@
 mod gl;
 #[cfg(target_os = "macos")]
 mod metal;
+mod software;
 #[cfg(any(target_os = "linux", target_os = "windows"))]
 mod vulkan;
 
@@ -23,6 +24,7 @@ pub enum GraphicsDriver {
     Metal(metal::MetalDriver),
     #[cfg(any(target_os = "linux", target_os = "windows"))]
     Vulkan(vulkan::VulkanDriver),
+    Software(software::SoftwareDriver),
 }
 
 impl GraphicsDriver {
@@ -31,6 +33,23 @@ impl GraphicsDriver {
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
     ) -> (Self, Window) {
+        let renderer = std::env::var("FREYA_RENDERER")
+            .ok()
+            .map(|v| v.to_ascii_lowercase());
+        let renderer = renderer.as_deref();
+
+        // Opt-in via FREYA_RENDERER=software, available on every platform.
+        if renderer == Some("software") {
+            match software::SoftwareDriver::new(event_loop, window_attributes.clone()) {
+                Ok((driver, window)) => return (Self::Software(driver), window),
+                Err(err) => {
+                    tracing::warn!(
+                        "Software renderer initialization failed, falling back to default: {err}"
+                    );
+                }
+            }
+        }
+
         // Metal (macOS)
         #[cfg(target_os = "macos")]
         {
@@ -42,26 +61,31 @@ impl GraphicsDriver {
         // OpenGL only on Android.
         #[cfg(target_os = "android")]
         {
-            let (driver, window) = gl::OpenGLDriver::new(event_loop, window_attributes);
+            match gl::OpenGLDriver::new(event_loop, window_attributes.clone()) {
+                Ok((driver, window)) => return (Self::OpenGl(driver), window),
+                Err(err) => {
+                    tracing::warn!("OpenGL initialization failed, falling back to software: {err}");
+                }
+            }
 
-            return (Self::OpenGl(driver), window);
+            let (driver, window) = software::SoftwareDriver::new(event_loop, window_attributes)
+                .expect("Failed to initialize software renderer fallback");
+            return (Self::Software(driver), window);
         }
 
         // Linux: Vulkan by default, set FREYA_RENDERER=opengl to force OpenGL.
         // Windows: OpenGL by default, set FREYA_RENDERER=vulkan to force Vulkan.
+        // If both fail, falls back to the software renderer.
         #[cfg(all(not(target_os = "macos"), not(target_os = "android")))]
         {
-            let renderer = std::env::var("FREYA_RENDERER");
-
             let use_vulkan = if cfg!(target_os = "windows") {
-                renderer.is_ok_and(|v| v.eq_ignore_ascii_case("vulkan"))
+                renderer == Some("vulkan")
             } else {
-                !renderer.is_ok_and(|v| v.eq_ignore_ascii_case("opengl"))
+                renderer != Some("opengl")
             };
 
             if use_vulkan {
-                let vk_attrs = window_attributes.clone();
-                match vulkan::VulkanDriver::new(event_loop, vk_attrs) {
+                match vulkan::VulkanDriver::new(event_loop, window_attributes.clone()) {
                     Ok((driver, window)) => return (Self::Vulkan(driver), window),
                     Err(err) => {
                         tracing::warn!(
@@ -71,9 +95,16 @@ impl GraphicsDriver {
                 }
             }
 
-            let (driver, window) = gl::OpenGLDriver::new(event_loop, window_attributes);
+            match gl::OpenGLDriver::new(event_loop, window_attributes.clone()) {
+                Ok((driver, window)) => return (Self::OpenGl(driver), window),
+                Err(err) => {
+                    tracing::warn!("OpenGL initialization failed, falling back to software: {err}");
+                }
+            }
 
-            return (Self::OpenGl(driver), window);
+            let (driver, window) = software::SoftwareDriver::new(event_loop, window_attributes)
+                .expect("Failed to initialize software renderer fallback");
+            return (Self::Software(driver), window);
         }
     }
 
@@ -90,6 +121,7 @@ impl GraphicsDriver {
             Self::Metal(mtl) => mtl.present(_size, window, render),
             #[cfg(any(target_os = "linux", target_os = "windows"))]
             Self::Vulkan(vk) => vk.present(_size, window, render),
+            Self::Software(sw) => sw.present(_size, window, render),
         }
     }
 
@@ -102,6 +134,7 @@ impl GraphicsDriver {
             Self::Metal(_) => "Metal",
             #[cfg(any(target_os = "linux", target_os = "windows"))]
             Self::Vulkan(_) => "Vulkan",
+            Self::Software(_) => "Software",
         }
     }
 
@@ -113,6 +146,7 @@ impl GraphicsDriver {
             Self::Metal(mtl) => mtl.resize(size),
             #[cfg(any(target_os = "linux", target_os = "windows"))]
             Self::Vulkan(vk) => vk.resize(size),
+            Self::Software(sw) => sw.resize(size),
         }
     }
 }
