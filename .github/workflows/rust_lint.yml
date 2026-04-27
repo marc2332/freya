@@ -23,15 +23,6 @@ jobs:
         submodules: true
     - name: Install linux dependencies
       run: sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev libwebkit2gtk-4.1-dev
-    - name: Install stable rust toolchain
-      uses: dtolnay/rust-toolchain@aad518f59d88bae90133242f9ddac7f8bbc5dddf # 1.94
-      with:
-        components: rustfmt, clippy
-    - name: Install nightly rust toolchain
-      uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
-      with:
-        toolchain: nightly-2026-03-15
-        components: rustfmt
     - name: Install just
       uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
       with:
@@ -40,6 +31,10 @@ jobs:
       uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
       with:
         tool: taplo
+    - name: Install Rust toolchain
+      uses: actions-rust-lang/setup-rust-toolchain@2b1f5e9b395427c92ee4e3331786ca3c37afe2d7 # v1
+      with:
+        components: clippy
     - name: Set up cargo cache
       uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
       if: github.ref != 'refs/heads/main'
@@ -48,6 +43,14 @@ jobs:
         save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: Lint
       run: just c-ci
+    # `nightly` needs to be installed just before running `rustfmt` to force CI to use `nightly` 
+    - name: Get nightly toolchain version
+      run: echo "NIGHTLY_TOOLCHAIN=$(just rv-nightly)" >> $GITHUB_ENV
+    - name: Install nightly Rust toolchain
+      uses: actions-rust-lang/setup-rust-toolchain@2b1f5e9b395427c92ee4e3331786ca3c37afe2d7 # v1
+      with:
+        toolchain: ${{ env.NIGHTLY_TOOLCHAIN }}
+        components: rustfmt
     - name: Format
       run: just f-check
 
@@ -62,15 +65,6 @@ jobs:
       with:
         fetch-depth: 2
         submodules: true
-    - name: Install stable rust toolchain
-      uses: dtolnay/rust-toolchain@aad518f59d88bae90133242f9ddac7f8bbc5dddf # 1.94
-      with:
-        components: rustfmt, clippy
-    - name: Install nightly rust toolchain
-      uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
-      with:
-        toolchain: nightly-2026-03-15
-        components: rustfmt
     - name: Install just
       uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
       with:
@@ -79,6 +73,10 @@ jobs:
       uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
       with:
         tool: taplo
+    - name: Install Rust toolchain
+      uses: actions-rust-lang/setup-rust-toolchain@2b1f5e9b395427c92ee4e3331786ca3c37afe2d7 # v1
+      with:
+        components: clippy
     - name: Set up cargo cache
       uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
       if: github.ref != 'refs/heads/main'
@@ -87,5 +85,13 @@ jobs:
         save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: Lint
       run: just c-ci
+    # `nightly` needs to be installed just before running `rustfmt` to force CI to use `nightly` 
+    - name: Get nightly toolchain version
+      run: echo "NIGHTLY_TOOLCHAIN=$(just rv-nightly)" >> $GITHUB_ENV
+    - name: Install nightly Rust toolchain
+      uses: actions-rust-lang/setup-rust-toolchain@2b1f5e9b395427c92ee4e3331786ca3c37afe2d7 # v1
+      with:
+        toolchain: ${{ env.NIGHTLY_TOOLCHAIN }}
+        components: rustfmt
     - name: Format
       run: just f-check

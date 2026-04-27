@@ -1,10 +1,22 @@
+toolchain := `sed -nr 's/channel = "(.*)"/\1/p' rust-toolchain.toml`
+nightly_toolchain := `sed -nr 's/channel = "(.*)"/\1/p' rust-toolchain-nightly.toml`
+
+rv:
+    @echo '{{toolchain}}'
+
+rv-nightly:
+    @echo {{nightly_toolchain}}
+
 f:
     taplo fmt
-    cargo +nightly-2026-03-15 fmt --all -- --error-on-unformatted --unstable-features
+    RUSTUP_TOOLCHAIN={{nightly_toolchain}} cargo fmt --all -- --error-on-unformatted --unstable-features
 
 f-check:
     taplo fmt --check
-    cargo +nightly-2026-03-15 fmt --all --check -- --error-on-unformatted --unstable-features
+    RUSTUP_TOOLCHAIN={{nightly_toolchain}} cargo fmt --all --check -- --error-on-unformatted --unstable-features
+
+f-nix:
+    alejandra flake.nix
 
 c:
     taplo check
@@ -27,7 +39,7 @@ t-layout:
     cargo nextest run --package torin
 
 d:
-    RUSTDOCFLAGS="--cfg docsrs" cargo +nightly-2026-03-15 doc --no-deps --workspace --features "all, docs" --open
+    RUSTDOCFLAGS="--cfg docsrs" RUSTUP_TOOLCHAIN={{nightly_toolchain}} cargo doc --no-deps --workspace --features "all, docs" --open
 
 tc:
     cargo nextest run --workspace --exclude examples --features all-tests
