@@ -74,7 +74,7 @@ impl LinearGradient {
         self
     }
 
-    pub fn into_shader(&self, bounds: Area) -> Option<Shader> {
+    pub fn prepare_shader(&self, bounds: Area) -> Option<Shader> {
         let colors: Vec<SkColor4f> = self
             .stops
             .iter()
@@ -148,7 +148,7 @@ impl RadialGradient {
         self
     }
 
-    pub fn into_shader(&self, bounds: Area) -> Option<Shader> {
+    pub fn prepare_shader(&self, bounds: Area) -> Option<Shader> {
         let colors: Vec<SkColor4f> = self
             .stops
             .iter()
@@ -227,7 +227,7 @@ impl ConicGradient {
         self
     }
 
-    pub fn into_shader(&self, bounds: Area) -> Option<Shader> {
+    pub fn prepare_shader(&self, bounds: Area) -> Option<Shader> {
         let colors: Vec<SkColor4f> = self
             .stops
             .iter()

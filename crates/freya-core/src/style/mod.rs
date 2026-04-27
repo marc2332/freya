@@ -10,6 +10,7 @@ pub mod font_weight;
 pub mod font_width;
 pub mod gradient;
 pub mod scale;
+pub mod shader;
 pub mod shadow;
 pub mod text_align;
 pub mod text_decoration;

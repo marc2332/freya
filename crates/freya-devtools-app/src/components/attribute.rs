@@ -4,7 +4,7 @@ use freya_devtools::AttributeType;
 use crate::property::{
     BorderProperty,
     ColorProperty,
-    GradientProperty,
+    FillProperty,
     Property,
     ShadowProperty,
     TextShadowProperty,
@@ -58,7 +58,7 @@ pub fn attribute_element(name: &str, attribute: AttributeType<'_>) -> Option<Ele
         AttributeType::OptionalColor(fill) => {
             fill.map(|color| ColorProperty::new(name, color).into())
         }
-        AttributeType::Gradient(fill) => Some(GradientProperty::new(name, fill).into()),
+        AttributeType::Fill(fill) => Some(FillProperty::new(name, fill).into()),
         AttributeType::Border(border) => Some(BorderProperty::new(name, border.clone()).into()),
         AttributeType::Text(text) => Some(Property::new(name, text).into()),
         AttributeType::Direction(direction) => Some(Property::new(name, direction.pretty()).into()),
