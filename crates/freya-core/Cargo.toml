@@ -38,7 +38,7 @@ torin = { workspace = true }
 smallvec = "1.15.1"
 
 # OS preferences
-platform-preferences = { workspace = true }
+mundy = { workspace = true }
 
 # Layers
 itertools = { workspace = true }

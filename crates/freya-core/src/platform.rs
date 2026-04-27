@@ -1,8 +1,9 @@
 use std::rc::Rc;
 
-pub use platform_preferences::{
+pub use mundy::{
     AccentColor,
-    ScrollBarStyle,
+    ScrollbarStyle,
+    Srgba,
 };
 use torin::prelude::Size2D;
 
@@ -45,8 +46,8 @@ pub struct Platform {
     pub navigation_mode: State<NavigationMode>,
     /// The OS-level [`PreferredTheme`].
     pub preferred_theme: State<PreferredTheme>,
-    /// The OS-level [`ScrollBarStyle`].
-    pub scrollbar_style: State<ScrollBarStyle>,
+    /// The OS-level [`ScrollbarStyle`].
+    pub scrollbar_style: State<ScrollbarStyle>,
     /// The OS-level [`AccentColor`].
     pub accent_color: State<AccentColor>,
     /// Sender used to dispatch [`UserEvent`]s to the active renderer.

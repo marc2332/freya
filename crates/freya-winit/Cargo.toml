@@ -32,7 +32,7 @@ winit = { workspace = true }
 freya-engine = { workspace = true }
 
 # OS preferences
-platform-preferences = { workspace = true, features = ["winit"] }
+mundy = { workspace = true }
 
 # Events
 ragnarok = { workspace = true }

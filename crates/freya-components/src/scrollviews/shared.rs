@@ -29,13 +29,13 @@ pub enum ResolvedScrollBarBehavior {
 
 impl ScrollBarBehavior {
     #[doc(hidden)]
-    pub fn resolve(self, os_style: ScrollBarStyle) -> ResolvedScrollBarBehavior {
+    pub fn resolve(self, os_style: ScrollbarStyle) -> ResolvedScrollBarBehavior {
         match self {
             Self::Visible => ResolvedScrollBarBehavior::AlwaysVisible,
             Self::Hidden => ResolvedScrollBarBehavior::Hidden,
             Self::FollowOS => match os_style {
-                ScrollBarStyle::AutoHide => ResolvedScrollBarBehavior::AutoHide,
-                ScrollBarStyle::AlwaysVisible => ResolvedScrollBarBehavior::AlwaysVisible,
+                ScrollbarStyle::AutoHide => ResolvedScrollBarBehavior::AutoHide,
+                _ => ResolvedScrollBarBehavior::AlwaysVisible,
             },
         }
     }

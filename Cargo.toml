@@ -45,7 +45,6 @@ members = [
   "./crates/freya-terminal",
   "./crates/freya-code-editor",
   "./crates/freya-android",
-  "./crates/platform-preferences",
   "./examples/ai-chat",
   "./examples/state_query_sqlite",
   "./examples/android",
@@ -85,7 +84,7 @@ freya-code-editor = { path = "./crates/freya-code-editor", version = "0.4.0-rc.1
   "rust",
 ] }
 freya-android = { path = "./crates/freya-android", version = "0.4.0-rc.19" }
-platform-preferences = { path = "./crates/platform-preferences", version = "0.4.0-rc.19" }
+mundy = { git = "https://github.com/marc2332/mundy", branch = "extra", default-features = false, features = ["async-io", "callback", "scrollbar-style", "accent-color"] }
 
 # core
 generational-box = "0.7"
