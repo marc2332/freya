@@ -24,7 +24,7 @@ jobs:
         with:
           tool: just
       - name: Install hotpath-utils CLI
-        run: cargo install hotpath --version '^0.14' --bin hotpath-utils --features=utils
+        run: cargo install hotpath --version '^0.15' --bin hotpath-utils --features=utils
       - name: Set up cargo cache
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
         if: github.ref != 'refs/heads/main'
