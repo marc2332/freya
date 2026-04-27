@@ -8,10 +8,13 @@ use torin::prelude::Area;
 
 use crate::{
     prelude::Color,
-    style::gradient::{
-        ConicGradient,
-        LinearGradient,
-        RadialGradient,
+    style::{
+        gradient::{
+            ConicGradient,
+            LinearGradient,
+            RadialGradient,
+        },
+        shader::ShaderFill,
     },
 };
 
@@ -19,6 +22,7 @@ use crate::{
 #[derive(Clone, Debug, PartialEq)]
 pub enum Fill {
     Color(Color),
+    Shader(Box<ShaderFill>),
     LinearGradient(Box<LinearGradient>),
     RadialGradient(Box<RadialGradient>),
     ConicGradient(Box<ConicGradient>),
@@ -40,13 +44,16 @@ impl Fill {
                 paint.set_color(*color);
             }
             Fill::LinearGradient(gradient) => {
-                paint.set_shader(gradient.into_shader(area));
+                paint.set_shader(gradient.prepare_shader(area));
             }
             Fill::RadialGradient(gradient) => {
-                paint.set_shader(gradient.into_shader(area));
+                paint.set_shader(gradient.prepare_shader(area));
             }
             Fill::ConicGradient(gradient) => {
-                paint.set_shader(gradient.into_shader(area));
+                paint.set_shader(gradient.prepare_shader(area));
+            }
+            Fill::Shader(shader) => {
+                paint.set_shader(shader.prepare_shader(area));
             }
         }
     }
@@ -68,6 +75,7 @@ impl fmt::Display for Fill {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Color(color) => color.fmt(f),
+            Self::Shader(shader) => shader.as_ref().fmt(f),
             Self::LinearGradient(gradient) => gradient.as_ref().fmt(f),
             Self::RadialGradient(gradient) => gradient.as_ref().fmt(f),
             Self::ConicGradient(gradient) => gradient.as_ref().fmt(f),

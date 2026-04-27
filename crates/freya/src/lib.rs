@@ -37,7 +37,7 @@
 //! - [Elements](self::elements)
 //! - [Hooks](self::_docs::hooks)
 //! - [State](self::_docs::state_management)
-//! - [Remote Data](self::_docs::remote_data)
+//! - [Async](self::_docs::_async)
 //! - [Layers](self::_docs::layers)
 //! - [Platforms](self::_docs::platforms)
 //! - [Development Setup](self::_docs::development_setup)
@@ -56,8 +56,10 @@
 //! - [Testing](freya_testing)
 //! - [WebView](freya_webview)
 //! - [Terminal](freya_terminal)
+//! - [Freya Query](freya_query)
 //! - [Tokio Integration](self::_docs::tokio_integration)
 //! - [Devtools](self::_docs::devtools)
+//! - [Hot Reload](self::_docs::hot_reload)
 //!
 //! ## Features flags
 //!
@@ -85,6 +87,7 @@
 //! - `performance`: Reexports the performance overlay plugin. The plugin is auto-added in debug builds.
 //! - `vulkan`: Enables Vulkan rendering support.
 //! - `hotpath`: Enables Freya's internal usage of hotpath.
+//! - `hotreload`: Enables hot reload support via the `dx` CLI from `dioxus-cli`. See [Hot Reload](self::_docs::hot_reload).
 
 pub mod prelude {
     pub use freya_core::prelude::*;
