@@ -10,6 +10,37 @@ pub enum Axis {
     Y,
 }
 
+/// Controls how the scrollbar of a scroll view is presented.
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
+pub enum ScrollBarBehavior {
+    Visible,
+    Hidden,
+    #[default]
+    FollowOS,
+}
+
+#[doc(hidden)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum ResolvedScrollBarBehavior {
+    AlwaysVisible,
+    AutoHide,
+    Hidden,
+}
+
+impl ScrollBarBehavior {
+    #[doc(hidden)]
+    pub fn resolve(self, os_style: ScrollBarStyle) -> ResolvedScrollBarBehavior {
+        match self {
+            Self::Visible => ResolvedScrollBarBehavior::AlwaysVisible,
+            Self::Hidden => ResolvedScrollBarBehavior::Hidden,
+            Self::FollowOS => match os_style {
+                ScrollBarStyle::AutoHide => ResolvedScrollBarBehavior::AutoHide,
+                ScrollBarStyle::AlwaysVisible => ResolvedScrollBarBehavior::AlwaysVisible,
+            },
+        }
+    }
+}
+
 #[doc(hidden)]
 pub fn get_scroll_position_from_wheel(
     wheel_movement: f32,
@@ -68,14 +99,16 @@ pub fn get_container_sizes(size: Size) -> (Size, Size) {
 
 #[doc(hidden)]
 pub fn is_scrollbar_visible(
-    is_scrollbar_enabled: bool,
+    behavior: ResolvedScrollBarBehavior,
+    timeout_elapsed: bool,
     inner_size: f32,
     viewport_size: f32,
 ) -> bool {
-    if is_scrollbar_enabled {
-        viewport_size > 0. && viewport_size < inner_size
-    } else {
-        false
+    let content_overflows = viewport_size > 0. && viewport_size < inner_size;
+    match behavior {
+        ResolvedScrollBarBehavior::Hidden => false,
+        ResolvedScrollBarBehavior::AlwaysVisible => content_overflows,
+        ResolvedScrollBarBehavior::AutoHide => content_overflows && !timeout_elapsed,
     }
 }
 

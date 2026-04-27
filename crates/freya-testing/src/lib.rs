@@ -203,6 +203,8 @@ impl TestingRunner {
                 root_size: State::create(size),
                 navigation_mode: State::create(NavigationMode::NotKeyboard),
                 preferred_theme: State::create(PreferredTheme::Light),
+                scrollbar_style: State::create(ScrollBarStyle::AlwaysVisible),
+                accent_color: State::create(AccentColor::Blue),
                 sender: Rc::new(move |user_event| {
                     match user_event {
                         UserEvent::RequestRedraw => {

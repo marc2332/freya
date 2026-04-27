@@ -247,6 +247,7 @@ pub enum NativeEvent {
     #[cfg(feature = "tray")]
     Tray(NativeTrayEvent),
     Generic(NativeGenericEvent),
+    Preferences(platform_preferences::PreferencesEvent),
 }
 
 impl From<accesskit_winit::Event> for NativeEvent {
@@ -255,6 +256,12 @@ impl From<accesskit_winit::Event> for NativeEvent {
             window_id: event.window_id,
             action: NativeWindowEventAction::Accessibility(event.window_event),
         })
+    }
+}
+
+impl From<platform_preferences::PreferencesEvent> for NativeEvent {
+    fn from(event: platform_preferences::PreferencesEvent) -> Self {
+        NativeEvent::Preferences(event)
     }
 }
 
@@ -299,6 +306,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 self.windows.insert(app_window.window.id(), app_window);
             }
             self.resumed = true;
+
+            let _ = platform_preferences::subscribe(self.proxy.clone());
 
             let _ = self
                 .proxy
@@ -353,6 +362,19 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 self.futures
                     .retain_mut(|fut| fut.poll(&mut cx).is_pending());
             }
+            NativeEvent::Preferences(event) => match event {
+                platform_preferences::PreferencesEvent::ScrollBarStyleChanged(style) => {
+                    for app in self.windows.values_mut() {
+                        app.platform.scrollbar_style.set_if_modified(style);
+                    }
+                }
+                platform_preferences::PreferencesEvent::AccentColorChanged(accent) => {
+                    for app in self.windows.values_mut() {
+                        app.platform.accent_color.set_if_modified(accent);
+                    }
+                }
+                _ => {}
+            },
             #[cfg(feature = "tray")]
             NativeEvent::Tray(NativeTrayEvent { action }) => {
                 let renderer_context = RendererContext {

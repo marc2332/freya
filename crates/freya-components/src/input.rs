@@ -24,7 +24,10 @@ use crate::{
     cursor_blink::use_cursor_blink,
     define_theme,
     get_theme,
-    scrollviews::ScrollView,
+    scrollviews::{
+        ScrollBarBehavior,
+        ScrollView,
+    },
 };
 
 define_theme! {
@@ -631,7 +634,7 @@ impl Component for Input {
                     .width(Size::flex(1.))
                     .height(Size::Inner)
                     .direction(Direction::Horizontal)
-                    .show_scrollbar(false)
+                    .scrollbar_behavior(ScrollBarBehavior::Hidden)
                     .child(
                         paragraph()
                             .holder(holder.read().clone())

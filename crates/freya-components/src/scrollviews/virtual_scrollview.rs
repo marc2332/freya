@@ -19,6 +19,8 @@ use crate::scrollviews::{
     ScrollThumb,
     shared::{
         Axis,
+        ResolvedScrollBarBehavior,
+        ScrollBarBehavior,
         get_container_sizes,
         get_corrected_scroll_position,
         get_scroll_position_from_cursor,
@@ -73,7 +75,7 @@ pub struct VirtualScrollView<D, B: Fn(usize, &D) -> Element> {
     item_size: f32,
     length: usize,
     layout: LayoutData,
-    show_scrollbar: bool,
+    scrollbar_behavior: ScrollBarBehavior,
     scroll_with_arrows: bool,
     scroll_controller: Option<ScrollController>,
     invert_scroll_wheel: bool,
@@ -101,7 +103,7 @@ impl<D: PartialEq, B: Fn(usize, &D) -> Element> PartialEq for VirtualScrollView<
             && self.item_size == other.item_size
             && self.length == other.length
             && self.layout == other.layout
-            && self.show_scrollbar == other.show_scrollbar
+            && self.scrollbar_behavior == other.scrollbar_behavior
             && self.scroll_with_arrows == other.scroll_with_arrows
             && self.scroll_controller == other.scroll_controller
             && self.invert_scroll_wheel == other.invert_scroll_wheel
@@ -121,7 +123,7 @@ impl<B: Fn(usize, &()) -> Element> VirtualScrollView<(), B> {
                 l.layout.height = Size::fill();
                 l
             },
-            show_scrollbar: true,
+            scrollbar_behavior: ScrollBarBehavior::default(),
             scroll_with_arrows: true,
             scroll_controller: None,
             invert_scroll_wheel: false,
@@ -142,7 +144,7 @@ impl<B: Fn(usize, &()) -> Element> VirtualScrollView<(), B> {
                 l.layout.height = Size::fill();
                 l
             },
-            show_scrollbar: true,
+            scrollbar_behavior: ScrollBarBehavior::default(),
             scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
             invert_scroll_wheel: false,
@@ -165,7 +167,7 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
                 ..Default::default()
             }
             .into(),
-            show_scrollbar: true,
+            scrollbar_behavior: ScrollBarBehavior::default(),
             scroll_with_arrows: true,
             scroll_controller: None,
             invert_scroll_wheel: false,
@@ -191,7 +193,7 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
                 ..Default::default()
             }
             .into(),
-            show_scrollbar: true,
+            scrollbar_behavior: ScrollBarBehavior::default(),
             scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
             invert_scroll_wheel: false,
@@ -200,8 +202,8 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
         }
     }
 
-    pub fn show_scrollbar(mut self, show_scrollbar: bool) -> Self {
-        self.show_scrollbar = show_scrollbar;
+    pub fn scrollbar_behavior(mut self, scrollbar_behavior: ScrollBarBehavior) -> Self {
+        self.scrollbar_behavior = scrollbar_behavior;
         self
     }
 
@@ -294,10 +296,23 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
             size.read().area.height(),
             scrolled_y as f32,
         );
-        let horizontal_scrollbar_is_visible = !timeout.elapsed()
-            && is_scrollbar_visible(self.show_scrollbar, inner_width, size.read().area.width());
-        let vertical_scrollbar_is_visible = !timeout.elapsed()
-            && is_scrollbar_visible(self.show_scrollbar, inner_height, size.read().area.height());
+        let resolved_behavior = self
+            .scrollbar_behavior
+            .resolve(*Platform::get().scrollbar_style.read());
+        let scrollbar_expanded = resolved_behavior == ResolvedScrollBarBehavior::AlwaysVisible;
+        let timeout_elapsed = timeout.elapsed();
+        let horizontal_scrollbar_is_visible = is_scrollbar_visible(
+            resolved_behavior,
+            timeout_elapsed,
+            inner_width,
+            size.read().area.width(),
+        );
+        let vertical_scrollbar_is_visible = is_scrollbar_visible(
+            resolved_behavior,
+            timeout_elapsed,
+            inner_height,
+            size.read().area.height(),
+        );
 
         let (scrollbar_x, scrollbar_width) =
             get_scrollbar_pos_and_size(inner_width, size.read().area.width(), corrected_scrolled_x);
@@ -574,6 +589,7 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
                                 axis: Axis::Y,
                                 size: scrollbar_height,
                             },
+                            expanded: scrollbar_expanded,
                         })
                     })),
             )
@@ -590,6 +606,7 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
                         axis: Axis::X,
                         size: scrollbar_width,
                     },
+                    expanded: scrollbar_expanded,
                 })
             }))
     }

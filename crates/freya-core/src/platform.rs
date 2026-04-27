@@ -1,5 +1,9 @@
 use std::rc::Rc;
 
+pub use platform_preferences::{
+    AccentColor,
+    ScrollBarStyle,
+};
 use torin::prelude::Size2D;
 
 use crate::{
@@ -41,6 +45,10 @@ pub struct Platform {
     pub navigation_mode: State<NavigationMode>,
     /// The OS-level [`PreferredTheme`].
     pub preferred_theme: State<PreferredTheme>,
+    /// The OS-level [`ScrollBarStyle`].
+    pub scrollbar_style: State<ScrollBarStyle>,
+    /// The OS-level [`AccentColor`].
+    pub accent_color: State<AccentColor>,
     /// Sender used to dispatch [`UserEvent`]s to the active renderer.
     pub sender: Rc<dyn Fn(UserEvent)>,
 }

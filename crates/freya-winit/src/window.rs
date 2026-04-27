@@ -200,6 +200,8 @@ impl AppWindow {
                 )),
                 navigation_mode: State::create(NavigationMode::NotKeyboard),
                 preferred_theme: State::create(theme),
+                scrollbar_style: State::create(ScrollBarStyle::get()),
+                accent_color: State::create(AccentColor::get()),
                 sender: Rc::new(move |user_event| {
                     event_loop_proxy
                         .send_event(NativeEvent::Window(NativeWindowEvent {

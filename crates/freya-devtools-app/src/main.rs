@@ -240,7 +240,7 @@ impl Component for LayoutForNodeInspector {
             .expanded()
             .child(
                 ScrollView::new()
-                    .show_scrollbar(false)
+                    .scrollbar_behavior(ScrollBarBehavior::Hidden)
                     .height(Size::px(280.))
                     .child(
                         rect()
@@ -272,7 +272,7 @@ impl Component for LayoutForNodeInspector {
             )
             .child(
                 ScrollView::new()
-                    .show_scrollbar(false)
+                    .scrollbar_behavior(ScrollBarBehavior::Hidden)
                     .height(Size::auto())
                     .child(
                         rect()
