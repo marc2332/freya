@@ -57,7 +57,7 @@ define_theme! {
 /// # use std::time::Duration;
 /// # launch_doc(|| {
 /// #     rect().padding(6.).child(app())
-/// # }, "./images/gallery_color_picker.png").with_hook(|t| { t.move_cursor((15., 15.)); t.click_cursor((15., 15.)); t.poll(Duration::from_millis(1), Duration::from_millis(250)); }).with_scale_factor(0.85).render();
+/// # }, "./images/gallery_color_picker.png").with_hook(|t| { t.move_cursor((15., 15.)); t.click_cursor((15., 15.)); t.poll(Duration::from_millis(1), Duration::from_millis(500)); }).with_scale_factor(0.85).render();
 /// ```
 ///
 /// # Preview
