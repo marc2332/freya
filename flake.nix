@@ -25,6 +25,7 @@
           pkgs.python3
           pkgs.just
           pkgs.taplo
+          pkgs.cargo-nextest
           pkgs.alejandra
           pkgs.dioxus-cli
         ];
