@@ -105,8 +105,10 @@ impl MetalDriver {
             )
         };
 
-        let gr_context =
+        let mut gr_context =
             direct_contexts::make_metal(&backend, None).expect("Could not create Metal context");
+
+        gr_context.set_resource_cache_limit(super::GPU_RESOURCE_CACHE_LIMIT);
 
         let driver = Self {
             metal_layer,

@@ -636,8 +636,12 @@ fn create_gr_context(
 
     let context_options = ContextOptions::default();
 
-    direct_contexts::make_vulkan(&backend_context, &context_options)
-        .ok_or_else(|| "Failed to create Vulkan Skia context".into())
+    let mut gr_context = direct_contexts::make_vulkan(&backend_context, &context_options)
+        .ok_or("Failed to create Vulkan Skia context")?;
+
+    gr_context.set_resource_cache_limit(super::GPU_RESOURCE_CACHE_LIMIT);
+
+    Ok(gr_context)
 }
 
 fn create_sync_objects(

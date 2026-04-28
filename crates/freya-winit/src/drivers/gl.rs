@@ -184,6 +184,8 @@ impl OpenGLDriver {
         let mut gr_context =
             direct_contexts::make_gl(interface, None).expect("Could not create direct context");
 
+        gr_context.set_resource_cache_limit(super::GPU_RESOURCE_CACHE_LIMIT);
+
         let render_target = backend_render_targets::make_gl(
             (size.width as i32, size.height as i32),
             num_samples,
