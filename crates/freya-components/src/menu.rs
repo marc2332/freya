@@ -85,7 +85,7 @@ define_theme! {
 /// #                   .child(MenuButton::new().child("Save"))
 /// #           }))
 /// #   )
-/// # }, "./images/gallery_menu.png").render();
+/// # }, "./images/gallery_menu.png").with_hook(|t| { t.poll(std::time::Duration::from_millis(1), std::time::Duration::from_millis(100)); }).render();
 /// ```
 ///
 /// # Preview
