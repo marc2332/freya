@@ -116,6 +116,7 @@ impl VulkanDriver {
     pub fn new(
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
+        gpu_resource_cache_limit: usize,
     ) -> Result<(Self, Window), Box<dyn std::error::Error>> {
         let transparent = window_attributes.transparent;
         let window = event_loop.create_window(window_attributes)?;
@@ -163,6 +164,7 @@ impl VulkanDriver {
             device.clone(),
             queue,
             queue_family_index,
+            gpu_resource_cache_limit,
         )?;
 
         let (image_available_semaphore, render_finished_semaphore, in_flight_fence) =
@@ -603,6 +605,7 @@ fn create_gr_context(
     device: Arc<Device>,
     queue: Queue,
     queue_family_index: u32,
+    gpu_resource_cache_limit: usize,
 ) -> Result<DirectContext, Box<dyn std::error::Error>> {
     let get_proc = unsafe {
         |gpo: vk::GetProcOf| {
@@ -639,7 +642,7 @@ fn create_gr_context(
     let mut gr_context = direct_contexts::make_vulkan(&backend_context, &context_options)
         .ok_or("Failed to create Vulkan Skia context")?;
 
-    gr_context.set_resource_cache_limit(super::GPU_RESOURCE_CACHE_LIMIT);
+    gr_context.set_resource_cache_limit(gpu_resource_cache_limit);
 
     Ok(gr_context)
 }

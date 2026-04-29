@@ -5,8 +5,8 @@ mod metal;
 #[cfg(any(target_os = "linux", target_os = "windows"))]
 mod vulkan;
 
-/// Skia's built-in default is too small for image-heavy UIs.
-pub(crate) const GPU_RESOURCE_CACHE_LIMIT: usize = 512 * 1024 * 1024;
+/// Default Skia GPU resource cache limit. Skia's built-in default is too small for image-heavy UIs.
+pub const DEFAULT_GPU_RESOURCE_CACHE_LIMIT: usize = 1024 * 1024 * 1024;
 
 use freya_engine::prelude::Surface as SkiaSurface;
 use winit::{
@@ -33,11 +33,13 @@ impl GraphicsDriver {
     pub fn new(
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
+        gpu_resource_cache_limit: usize,
     ) -> (Self, Window) {
         // Metal (macOS)
         #[cfg(target_os = "macos")]
         {
-            let (driver, window) = metal::MetalDriver::new(event_loop, window_attributes);
+            let (driver, window) =
+                metal::MetalDriver::new(event_loop, window_attributes, gpu_resource_cache_limit);
 
             return (Self::Metal(driver), window);
         }
@@ -45,7 +47,8 @@ impl GraphicsDriver {
         // OpenGL only on Android.
         #[cfg(target_os = "android")]
         {
-            let (driver, window) = gl::OpenGLDriver::new(event_loop, window_attributes);
+            let (driver, window) =
+                gl::OpenGLDriver::new(event_loop, window_attributes, gpu_resource_cache_limit);
 
             return (Self::OpenGl(driver), window);
         }
@@ -64,7 +67,7 @@ impl GraphicsDriver {
 
             if use_vulkan {
                 let vk_attrs = window_attributes.clone();
-                match vulkan::VulkanDriver::new(event_loop, vk_attrs) {
+                match vulkan::VulkanDriver::new(event_loop, vk_attrs, gpu_resource_cache_limit) {
                     Ok((driver, window)) => return (Self::Vulkan(driver), window),
                     Err(err) => {
                         tracing::warn!(
@@ -74,7 +77,8 @@ impl GraphicsDriver {
                 }
             }
 
-            let (driver, window) = gl::OpenGLDriver::new(event_loop, window_attributes);
+            let (driver, window) =
+                gl::OpenGLDriver::new(event_loop, window_attributes, gpu_resource_cache_limit);
 
             return (Self::OpenGl(driver), window);
         }

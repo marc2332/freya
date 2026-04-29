@@ -121,6 +121,7 @@ impl AppWindow {
         font_manager: &FontMgr,
         fallback_fonts: &[Cow<'static, str>],
         screen_reader: ScreenReader,
+        gpu_resource_cache_limit: usize,
     ) -> Self {
         #[cfg(feature = "hotreload")]
         let hot_reload_pending = Arc::new(std::sync::atomic::AtomicBool::new(false));
@@ -149,8 +150,11 @@ impl AppWindow {
         if let Some(window_attributes_hook) = window_config.window_attributes_hook.take() {
             window_attributes = window_attributes_hook(window_attributes, active_event_loop);
         }
-        let (driver, mut window) =
-            GraphicsDriver::new(active_event_loop, window_attributes.clone());
+        let (driver, mut window) = GraphicsDriver::new(
+            active_event_loop,
+            window_attributes.clone(),
+            gpu_resource_cache_limit,
+        );
 
         if let Some(window_handle_hook) = window_config.window_handle_hook.take() {
             window_handle_hook(&mut window);
