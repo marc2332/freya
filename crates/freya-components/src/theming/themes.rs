@@ -637,15 +637,42 @@ fn register_base_component_themes(theme: &mut Theme) {
 }
 
 /// Light theme with all built-in component themes registered.
+///
+/// The primary color tracks the OS-level [`AccentColor`] when available; the
+/// secondary and tertiary colors are derived from it (lightened / darkened).
 pub fn light_theme() -> Theme {
-    let mut theme = Theme::new("light", LIGHT_COLORS);
+    let mut colors = LIGHT_COLORS;
+    if let Some(primary) = current_accent_color() {
+        apply_accent(&mut colors, primary);
+    }
+    let mut theme = Theme::new("light", colors);
     register_base_component_themes(&mut theme);
     theme
 }
 
 /// Dark theme with all built-in component themes registered.
+///
+/// The primary color tracks the OS-level [`AccentColor`] when available; the
+/// secondary and tertiary colors are derived from it (lightened / darkened).
 pub fn dark_theme() -> Theme {
-    let mut theme = Theme::new("dark", DARK_COLORS);
+    let mut colors = DARK_COLORS;
+    if let Some(primary) = current_accent_color() {
+        apply_accent(&mut colors, primary);
+    }
+    let mut theme = Theme::new("dark", colors);
     register_base_component_themes(&mut theme);
     theme
+}
+
+fn current_accent_color() -> Option<Color> {
+    let platform: Platform = try_consume_root_context()?;
+    let accent = platform.accent_color.read().0?;
+    let [r, g, b, _] = accent.to_u8_array();
+    Some(Color::from_rgb(r, g, b))
+}
+
+fn apply_accent(colors: &mut ColorsSheet, primary: Color) {
+    colors.primary = primary;
+    colors.secondary = Color::lerp(primary, Color::WHITE, 0.65);
+    colors.tertiary = Color::lerp(primary, Color::BLACK, 0.23);
 }

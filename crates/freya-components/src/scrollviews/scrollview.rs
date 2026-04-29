@@ -19,6 +19,8 @@ use crate::scrollviews::{
     ScrollThumb,
     shared::{
         Axis,
+        ResolvedScrollBarBehavior,
+        ScrollBarBehavior,
         get_container_sizes,
         get_corrected_scroll_position,
         get_scroll_position_from_cursor,
@@ -62,7 +64,7 @@ use crate::scrollviews::{
 pub struct ScrollView {
     children: Vec<Element>,
     layout: LayoutData,
-    show_scrollbar: bool,
+    scrollbar_behavior: ScrollBarBehavior,
     scroll_with_arrows: bool,
     scroll_controller: Option<ScrollController>,
     invert_scroll_wheel: bool,
@@ -92,7 +94,7 @@ impl Default for ScrollView {
                 ..Default::default()
             }
             .into(),
-            show_scrollbar: true,
+            scrollbar_behavior: ScrollBarBehavior::default(),
             scroll_with_arrows: true,
             scroll_controller: None,
             invert_scroll_wheel: false,
@@ -114,8 +116,8 @@ impl ScrollView {
         }
     }
 
-    pub fn show_scrollbar(mut self, show_scrollbar: bool) -> Self {
-        self.show_scrollbar = show_scrollbar;
+    pub fn scrollbar_behavior(mut self, scrollbar_behavior: ScrollBarBehavior) -> Self {
+        self.scrollbar_behavior = scrollbar_behavior;
         self
     }
 
@@ -196,18 +198,23 @@ impl Component for ScrollView {
             size.read().area.height(),
             scrolled_y as f32,
         );
-        let horizontal_scrollbar_is_visible = !timeout.elapsed()
-            && is_scrollbar_visible(
-                self.show_scrollbar,
-                size.read().inner_sizes.width,
-                size.read().area.width(),
-            );
-        let vertical_scrollbar_is_visible = !timeout.elapsed()
-            && is_scrollbar_visible(
-                self.show_scrollbar,
-                size.read().inner_sizes.height,
-                size.read().area.height(),
-            );
+        let resolved_behavior = self
+            .scrollbar_behavior
+            .resolve(*Platform::get().scrollbar_style.read());
+        let scrollbar_expanded = resolved_behavior == ResolvedScrollBarBehavior::AlwaysVisible;
+        let timeout_elapsed = timeout.elapsed();
+        let horizontal_scrollbar_is_visible = is_scrollbar_visible(
+            resolved_behavior,
+            timeout_elapsed,
+            size.read().inner_sizes.width,
+            size.read().area.width(),
+        );
+        let vertical_scrollbar_is_visible = is_scrollbar_visible(
+            resolved_behavior,
+            timeout_elapsed,
+            size.read().inner_sizes.height,
+            size.read().area.height(),
+        );
 
         let (scrollbar_x, scrollbar_width) = get_scrollbar_pos_and_size(
             size.read().inner_sizes.width,
@@ -458,6 +465,7 @@ impl Component for ScrollView {
                                 axis: Axis::Y,
                                 size: scrollbar_height,
                             },
+                            expanded: scrollbar_expanded,
                         })
                     })),
             )
@@ -474,6 +482,7 @@ impl Component for ScrollView {
                         axis: Axis::X,
                         size: scrollbar_width,
                     },
+                    expanded: scrollbar_expanded,
                 })
             }))
     }

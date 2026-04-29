@@ -84,6 +84,7 @@ freya-code-editor = { path = "./crates/freya-code-editor", version = "0.4.0-rc.1
   "rust",
 ] }
 freya-android = { path = "./crates/freya-android", version = "0.4.0-rc.19" }
+mundy = { git = "https://github.com/marc2332/mundy", branch = "extra", default-features = false, features = ["async-io", "callback", "scrollbar-style", "accent-color"] }
 
 # core
 generational-box = "0.7"

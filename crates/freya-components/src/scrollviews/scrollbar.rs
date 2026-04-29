@@ -43,6 +43,7 @@ pub struct ScrollBar {
     pub offset: f32,
     pub size: Size,
     pub thumb: ScrollThumb,
+    pub expanded: bool,
 }
 
 impl ComponentOwned for ScrollBar {
@@ -51,11 +52,11 @@ impl ComponentOwned for ScrollBar {
 
         let mut state = use_state(|| ScrollBarState::Idle);
 
-        let (cross_size, cross_offset, opacity) = match *state.read() {
-            _ if self.clicking_scrollbar.read().is_some() => (16., 0., 160),
-            ScrollBarState::Idle => (12., 3., 0),
-            ScrollBarState::Hovering => (16., 0., 160),
-        };
+        let active = self.expanded
+            || self.clicking_scrollbar.read().is_some()
+            || matches!(*state.read(), ScrollBarState::Hovering);
+        let (cross_size, cross_offset, opacity) =
+            if active { (16., 0., 160) } else { (12., 3., 0) };
 
         let (
             width,
