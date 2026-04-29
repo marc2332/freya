@@ -22,7 +22,6 @@ use winit::{
     },
 };
 
-pub use crate::drivers::DEFAULT_GPU_RESOURCE_CACHE_LIMIT;
 use crate::{
     plugins::{
         FreyaPlugin,
@@ -269,7 +268,7 @@ impl Default for LaunchConfig {
             tasks: Vec::new(),
             exit_on_close: true,
             event_loop: None,
-            gpu_resource_cache_limit: DEFAULT_GPU_RESOURCE_CACHE_LIMIT,
+            gpu_resource_cache_limit: 1024 * 1024 * 1024,
         }
     }
 }
@@ -389,9 +388,7 @@ impl LaunchConfig {
         self
     }
 
-    /// Set the Skia GPU resource cache limit, in bytes, applied to every window.
-    ///
-    /// Defaults to [`DEFAULT_GPU_RESOURCE_CACHE_LIMIT`] (1 GB).
+    /// Set the Skia GPU resource cache limit, in bytes, applied to every window. Defaults to 1 GB.
     pub fn with_gpu_resource_cache_limit(mut self, gpu_resource_cache_limit: usize) -> Self {
         self.gpu_resource_cache_limit = gpu_resource_cache_limit;
         self

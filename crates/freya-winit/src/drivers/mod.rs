@@ -5,9 +5,6 @@ mod metal;
 #[cfg(any(target_os = "linux", target_os = "windows"))]
 mod vulkan;
 
-/// Default Skia GPU resource cache limit. Skia's built-in default is too small for image-heavy UIs.
-pub const DEFAULT_GPU_RESOURCE_CACHE_LIMIT: usize = 1024 * 1024 * 1024;
-
 use freya_engine::prelude::Surface as SkiaSurface;
 use winit::{
     dpi::PhysicalSize,
