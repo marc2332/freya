@@ -30,11 +30,13 @@ impl GraphicsDriver {
     pub fn new(
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
+        gpu_resource_cache_limit: usize,
     ) -> (Self, Window) {
         // Metal (macOS)
         #[cfg(target_os = "macos")]
         {
-            let (driver, window) = metal::MetalDriver::new(event_loop, window_attributes);
+            let (driver, window) =
+                metal::MetalDriver::new(event_loop, window_attributes, gpu_resource_cache_limit);
 
             return (Self::Metal(driver), window);
         }
@@ -42,7 +44,8 @@ impl GraphicsDriver {
         // OpenGL only on Android.
         #[cfg(target_os = "android")]
         {
-            let (driver, window) = gl::OpenGLDriver::new(event_loop, window_attributes);
+            let (driver, window) =
+                gl::OpenGLDriver::new(event_loop, window_attributes, gpu_resource_cache_limit);
 
             return (Self::OpenGl(driver), window);
         }
@@ -61,7 +64,7 @@ impl GraphicsDriver {
 
             if use_vulkan {
                 let vk_attrs = window_attributes.clone();
-                match vulkan::VulkanDriver::new(event_loop, vk_attrs) {
+                match vulkan::VulkanDriver::new(event_loop, vk_attrs, gpu_resource_cache_limit) {
                     Ok((driver, window)) => return (Self::Vulkan(driver), window),
                     Err(err) => {
                         tracing::warn!(
@@ -71,7 +74,8 @@ impl GraphicsDriver {
                 }
             }
 
-            let (driver, window) = gl::OpenGLDriver::new(event_loop, window_attributes);
+            let (driver, window) =
+                gl::OpenGLDriver::new(event_loop, window_attributes, gpu_resource_cache_limit);
 
             return (Self::OpenGl(driver), window);
         }
