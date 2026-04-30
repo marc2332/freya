@@ -208,6 +208,7 @@ impl GifSource {
 #[derive(PartialEq)]
 pub struct GifViewer {
     source: GifSource,
+    asset_age: AssetAge,
 
     layout: LayoutData,
     image_data: ImageData,
@@ -220,11 +221,20 @@ impl GifViewer {
     pub fn new(source: impl Into<GifSource>) -> Self {
         GifViewer {
             source: source.into(),
+            asset_age: AssetAge::default(),
             layout: LayoutData::default(),
             image_data: ImageData::default(),
             accessibility: AccessibilityData::default(),
             key: DiffKey::None,
         }
+    }
+
+    /// Customize how long the GIF will remain cached after no longer being used.
+    ///
+    /// Defaults to [`AssetAge::default`] (1h).
+    pub fn asset_age(mut self, asset_age: impl Into<AssetAge>) -> Self {
+        self.asset_age = asset_age.into();
+        self
     }
 }
 
@@ -262,7 +272,7 @@ enum Status {
 
 impl Component for GifViewer {
     fn render(&self) -> impl IntoElement {
-        let asset_config = AssetConfiguration::new(&self.source, AssetAge::default());
+        let asset_config = AssetConfiguration::new(&self.source, self.asset_age.clone());
         let asset_data = use_asset(&asset_config);
         let mut status = use_state(|| Status::Decoding);
         let mut cached_frames = use_state::<Option<Rc<CachedGifFrames>>>(|| None);
