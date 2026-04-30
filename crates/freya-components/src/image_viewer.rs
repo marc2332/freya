@@ -205,6 +205,7 @@ impl ImageSource {
 #[derive(PartialEq)]
 pub struct ImageViewer {
     source: ImageSource,
+    asset_age: AssetAge,
 
     layout: LayoutData,
     image_data: ImageData,
@@ -222,6 +223,7 @@ impl ImageViewer {
     pub fn new(source: impl Into<ImageSource>) -> Self {
         ImageViewer {
             source: source.into(),
+            asset_age: AssetAge::default(),
             layout: LayoutData::default(),
             image_data: ImageData::default(),
             accessibility: AccessibilityData::default(),
@@ -284,11 +286,19 @@ impl ImageViewer {
         self.loading_placeholder = Some(placeholder.into());
         self
     }
+
+    /// Customize how long the image will remain cached after no longer being used.
+    ///
+    /// Defaults to [`AssetAge::default`] (1h).
+    pub fn asset_age(mut self, asset_age: impl Into<AssetAge>) -> Self {
+        self.asset_age = asset_age.into();
+        self
+    }
 }
 
 impl Component for ImageViewer {
     fn render(&self) -> impl IntoElement {
-        let asset_config = AssetConfiguration::new(&self.source, AssetAge::default());
+        let asset_config = AssetConfiguration::new(&self.source, self.asset_age.clone());
         let asset = use_asset(&asset_config);
         let mut asset_cacher = use_hook(AssetCacher::get);
 
