@@ -78,34 +78,32 @@ impl OpenGLDriver {
     pub fn new(
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
-    ) -> (Self, Window) {
+    ) -> Result<(Self, Window), Box<dyn std::error::Error>> {
         let transparent = window_attributes.transparent;
         let template = ConfigTemplateBuilder::new()
             .with_alpha_size(8)
             .with_transparency(window_attributes.transparent);
 
         let display_builder = DisplayBuilder::new().with_window_attributes(Some(window_attributes));
-        let (window, gl_config) = display_builder
-            .build(event_loop, template, |configs| {
-                configs
-                    .reduce(|accum, config| {
-                        let transparency_check = transparent
-                            && config.supports_transparency().unwrap_or(false)
-                            && !accum.supports_transparency().unwrap_or(false);
+        let (window, gl_config) = display_builder.build(event_loop, template, |configs| {
+            configs
+                .reduce(|accum, config| {
+                    let transparency_check = transparent
+                        && config.supports_transparency().unwrap_or(false)
+                        && !accum.supports_transparency().unwrap_or(false);
 
-                        if transparency_check || config.num_samples() < accum.num_samples() {
-                            config
-                        } else {
-                            accum
-                        }
-                    })
-                    .unwrap()
-            })
-            .unwrap();
+                    if transparency_check || config.num_samples() < accum.num_samples() {
+                        config
+                    } else {
+                        accum
+                    }
+                })
+                .expect("at least one OpenGL config")
+        })?;
 
-        let window = window.expect("Could not create window with OpenGL context");
+        let window = window.ok_or("OpenGL display builder returned no window")?;
 
-        let window_handle = window.window_handle().unwrap();
+        let window_handle = window.window_handle()?;
 
         let context_attributes = ContextAttributesBuilder::new()
             .with_profile(GlProfile::Core)
@@ -117,35 +115,32 @@ impl OpenGLDriver {
             .build(Some(window_handle.as_raw()));
 
         let not_current_gl_context = unsafe {
-            gl_config
+            match gl_config
                 .display()
                 .create_context(&gl_config, &context_attributes)
-                .unwrap_or_else(|_| {
-                    gl_config
-                        .display()
-                        .create_context(&gl_config, &fallback_context_attributes)
-                        .expect("failed to create context")
-                })
+            {
+                Ok(ctx) => ctx,
+                Err(_) => gl_config
+                    .display()
+                    .create_context(&gl_config, &fallback_context_attributes)?,
+            }
         };
 
         let size = window.inner_size();
 
         let attrs = SurfaceAttributesBuilder::<WindowSurface>::new().build(
             window_handle.as_raw(),
-            NonZeroU32::new(size.width).unwrap(),
-            NonZeroU32::new(size.height).unwrap(),
+            NonZeroU32::new(size.width).ok_or("OpenGL window has zero width")?,
+            NonZeroU32::new(size.height).ok_or("OpenGL window has zero height")?,
         );
 
         let gl_surface = unsafe {
             gl_config
                 .display()
-                .create_window_surface(&gl_config, &attrs)
-                .expect("Could not create gl window surface")
+                .create_window_surface(&gl_config, &attrs)?
         };
 
-        let gl_context = not_current_gl_context
-            .make_current(&gl_surface)
-            .expect("Could not make GL context current when setting up skia renderer");
+        let gl_context = not_current_gl_context.make_current(&gl_surface)?;
 
         // Try setting vsync.
         gl_surface
@@ -165,14 +160,14 @@ impl OpenGLDriver {
                 .display()
                 .get_proc_address(CString::new(name).unwrap().as_c_str())
         })
-        .expect("Could not create interface");
+        .ok_or("could not create OpenGL interface")?;
 
         let fb_info = {
             let mut fboid: GLint = 0;
             unsafe { GetIntegerv(FRAMEBUFFER_BINDING, &mut fboid) };
 
             FramebufferInfo {
-                fboid: fboid.try_into().unwrap(),
+                fboid: fboid.try_into()?,
                 format: Format::RGBA8.into(),
                 ..Default::default()
             }
@@ -181,8 +176,8 @@ impl OpenGLDriver {
         let num_samples = gl_config.num_samples() as usize;
         let stencil_size = gl_config.stencil_size() as usize;
 
-        let mut gr_context =
-            direct_contexts::make_gl(interface, None).expect("Could not create direct context");
+        let mut gr_context = direct_contexts::make_gl(interface, None)
+            .ok_or("could not create OpenGL direct context")?;
 
         let render_target = backend_render_targets::make_gl(
             (size.width as i32, size.height as i32),
@@ -198,7 +193,7 @@ impl OpenGLDriver {
             None,
             None,
         )
-        .expect("Could not create skia surface");
+        .ok_or("could not create OpenGL skia surface")?;
 
         let driver = OpenGLDriver {
             gl_context,
@@ -210,7 +205,7 @@ impl OpenGLDriver {
             surface,
         };
 
-        (driver, window)
+        Ok((driver, window))
     }
 
     pub fn present(&mut self, window: &Window, render: impl FnOnce(&mut SkiaSurface)) {
