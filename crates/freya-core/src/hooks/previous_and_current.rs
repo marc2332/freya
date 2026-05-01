@@ -3,7 +3,7 @@ use std::mem;
 use crate::prelude::{
     IntoReadable,
     State,
-    use_side_effect,
+    use_side_effect_with_deps,
     use_state,
 };
 
@@ -34,8 +34,7 @@ pub fn use_previous_and_current<T: 'static + Clone + PartialEq>(
     let value = value.into_readable();
     let mut state = use_state(|| (value.read().clone(), value.read().clone()));
 
-    use_side_effect(move || {
-        let value = value.read();
+    use_side_effect_with_deps(&*value.read(), move |value| {
         let mut state = state.write();
         let old_current = mem::replace(&mut state.1, value.clone());
         state.0 = old_current;
