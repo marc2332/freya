@@ -182,6 +182,7 @@ impl AppWindow {
         let mut tree = Tree::default();
 
         let window_size = window.inner_size();
+        let initial_preferences = initial_preferences();
         let platform = runner.provide_root_context({
             let event_loop_proxy = event_loop_proxy.clone();
             let window_id = window.id();
@@ -200,6 +201,7 @@ impl AppWindow {
                 )),
                 navigation_mode: State::create(NavigationMode::NotKeyboard),
                 preferred_theme: State::create(theme),
+                accent_color: State::create(initial_preferences.accent_color),
                 sender: Rc::new(move |user_event| {
                     event_loop_proxy
                         .send_event(NativeEvent::Window(NativeWindowEvent {
@@ -364,4 +366,16 @@ impl AppWindow {
     pub fn window_mut(&mut self) -> &mut Window {
         &mut self.window
     }
+}
+
+fn initial_preferences() -> mundy::Preferences {
+    use std::sync::OnceLock;
+    static CACHE: OnceLock<mundy::Preferences> = OnceLock::new();
+    *CACHE.get_or_init(|| {
+        mundy::Preferences::once_blocking(
+            mundy::Interest::AccentColor,
+            std::time::Duration::from_millis(200),
+        )
+        .unwrap_or_default()
+    })
 }
