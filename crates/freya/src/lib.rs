@@ -107,11 +107,12 @@ pub mod prelude {
             NativeEvent,
             RendererContext,
         },
+        winit::error::EventLoopError,
     };
 
     pub use crate::components::*;
 
-    pub fn launch(launch_config: LaunchConfig) {
+    pub fn launch(launch_config: LaunchConfig) -> Result<(), EventLoopError> {
         #[cfg(feature = "devtools")]
         let launch_config = launch_config.with_plugin(freya_devtools::DevtoolsPlugin::default());
         #[cfg(debug_assertions)]

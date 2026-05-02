@@ -48,7 +48,7 @@ pub mod tray {
 ///
 /// If a custom event loop was provided via [`LaunchConfig::with_event_loop`], it will be used.
 /// Otherwise a default one is created.
-pub fn launch(mut launch_config: LaunchConfig) {
+pub fn launch(mut launch_config: LaunchConfig) -> Result<(), winit::error::EventLoopError> {
     use std::collections::HashMap;
 
     use freya_core::integration::*;
@@ -73,11 +73,10 @@ pub fn launch(mut launch_config: LaunchConfig) {
         }));
     }
 
-    let event_loop = launch_config.event_loop.take().unwrap_or_else(|| {
-        EventLoop::<NativeEvent>::with_user_event()
-            .build()
-            .expect("Failed to create event loop.")
-    });
+    let event_loop = match launch_config.event_loop.take() {
+        Some(event_loop) => event_loop,
+        None => EventLoop::<NativeEvent>::with_user_event().build()?,
+    };
 
     let proxy = event_loop.create_proxy();
 
@@ -179,5 +178,5 @@ pub fn launch(mut launch_config: LaunchConfig) {
         }
     }
 
-    event_loop.run_app(&mut renderer).unwrap();
+    event_loop.run_app(&mut renderer)
 }
