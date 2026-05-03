@@ -44,6 +44,7 @@ members = [
   "./crates/freya-webview",
   "./crates/freya-terminal",
   "./crates/freya-code-editor",
+  "./crates/freya-camera",
   "./crates/freya-android",
   "./examples/ai-chat",
   "./examples/state_query_sqlite",
@@ -83,6 +84,7 @@ freya-terminal = { path = "./crates/freya-terminal", version = "0.4.0-rc.19" }
 freya-code-editor = { path = "./crates/freya-code-editor", version = "0.4.0-rc.19", features = [
   "rust",
 ] }
+freya-camera = { path = "./crates/freya-camera", version = "0.4.0-rc.19" }
 freya-android = { path = "./crates/freya-android", version = "0.4.0-rc.19" }
 
 # core
