@@ -76,6 +76,7 @@ pub struct Select {
     pub(crate) theme: Option<SelectThemePartial>,
     selected_item: Option<Element>,
     children: Vec<Element>,
+    cursor_icon: CursorIcon,
     key: DiffKey,
 }
 
@@ -103,6 +104,7 @@ impl Select {
             theme: None,
             selected_item: None,
             children: Vec::new(),
+            cursor_icon: CursorIcon::Pointer,
             key: DiffKey::None,
         }
     }
@@ -114,6 +116,12 @@ impl Select {
 
     pub fn selected_item(mut self, item: impl Into<Element>) -> Self {
         self.selected_item = Some(item.into());
+        self
+    }
+
+    /// Override the cursor icon shown when hovering over this component.
+    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+        self.cursor_icon = cursor_icon.into();
         self
     }
 }
@@ -156,6 +164,7 @@ impl Component for Select {
             }
         });
 
+        let cursor_icon = self.cursor_icon;
         use_drop(move || {
             if status() == SelectStatus::Hovering {
                 Cursor::set(CursorIcon::default());
@@ -187,7 +196,7 @@ impl Component for Select {
 
         let on_pointer_enter = move |_| {
             *status.write() = SelectStatus::Hovering;
-            Cursor::set(CursorIcon::Pointer);
+            Cursor::set(cursor_icon);
         };
 
         let on_pointer_leave = move |_| {

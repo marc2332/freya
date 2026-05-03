@@ -82,6 +82,7 @@ pub struct Card {
     style_variant: CardStyleVariant,
     layout_variant: CardLayoutVariant,
     hoverable: bool,
+    cursor_icon: CursorIcon,
 }
 
 impl Default for Card {
@@ -134,6 +135,7 @@ impl Card {
             on_press: None,
             elements: Vec::default(),
             hoverable: false,
+            cursor_icon: CursorIcon::Pointer,
             key: DiffKey::None,
         }
     }
@@ -198,6 +200,12 @@ impl Card {
     pub fn compact(self) -> Self {
         self.layout_variant(CardLayoutVariant::Compact)
     }
+
+    /// Override the cursor icon shown when hovering over this component while hoverable.
+    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+        self.cursor_icon = cursor_icon.into();
+        self
+    }
 }
 
 impl Component for Card {
@@ -207,6 +215,7 @@ impl Component for Card {
         let focus_status = use_focus_status(focus);
 
         let is_hoverable = self.hoverable;
+        let cursor_icon = self.cursor_icon;
 
         use_drop(move || {
             if hovering() && is_hoverable {
@@ -281,7 +290,7 @@ impl Component for Card {
             .maybe(is_hoverable, |rect| {
                 rect.on_pointer_enter(move |_| {
                     hovering.set(true);
-                    Cursor::set(CursorIcon::Pointer);
+                    Cursor::set(cursor_icon);
                 })
                 .on_pointer_leave(move |_| {
                     if hovering() {

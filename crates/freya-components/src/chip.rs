@@ -71,6 +71,7 @@ pub struct Chip {
     on_press: Option<EventHandler<Event<PressEventData>>>,
     selected: bool,
     enabled: bool,
+    cursor_icon: CursorIcon,
     key: DiffKey,
 }
 
@@ -82,6 +83,7 @@ impl Default for Chip {
             on_press: None,
             selected: false,
             enabled: true,
+            cursor_icon: CursorIcon::Pointer,
             key: DiffKey::None,
         }
     }
@@ -115,6 +117,12 @@ impl Chip {
 
     pub fn on_press(mut self, handler: impl Into<EventHandler<Event<PressEventData>>>) -> Self {
         self.on_press = Some(handler.into());
+        self
+    }
+
+    /// Override the cursor icon shown when hovering over this component while enabled.
+    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+        self.cursor_icon = cursor_icon.into();
         self
     }
 }
@@ -159,6 +167,7 @@ impl Component for Chip {
         } = theme;
 
         let enabled = use_reactive(&self.enabled);
+        let cursor_icon = self.cursor_icon;
         use_drop(move || {
             if status() == ChipStatus::Hovering && enabled() {
                 Cursor::set(CursorIcon::default());
@@ -176,7 +185,7 @@ impl Component for Chip {
         let on_pointer_enter = move |_| {
             status.set(ChipStatus::Hovering);
             if enabled() {
-                Cursor::set(CursorIcon::Pointer);
+                Cursor::set(cursor_icon);
             } else {
                 Cursor::set(CursorIcon::NotAllowed);
             }
