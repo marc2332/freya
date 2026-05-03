@@ -104,7 +104,7 @@ impl Select {
             theme: None,
             selected_item: None,
             children: Vec::new(),
-            cursor_icon: CursorIcon::Pointer,
+            cursor_icon: CursorIcon::default(),
             key: DiffKey::None,
         }
     }

@@ -83,7 +83,7 @@ impl Default for Chip {
             on_press: None,
             selected: false,
             enabled: true,
-            cursor_icon: CursorIcon::Pointer,
+            cursor_icon: CursorIcon::default(),
             key: DiffKey::None,
         }
     }

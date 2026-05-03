@@ -135,7 +135,7 @@ impl Card {
             on_press: None,
             elements: Vec::default(),
             hoverable: false,
-            cursor_icon: CursorIcon::Pointer,
+            cursor_icon: CursorIcon::default(),
             key: DiffKey::None,
         }
     }

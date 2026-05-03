@@ -68,7 +68,7 @@ impl Slider {
             size: Size::fill(),
             direction: Direction::Horizontal,
             enabled: true,
-            cursor_icon: CursorIcon::Pointer,
+            cursor_icon: CursorIcon::default(),
             key: DiffKey::None,
         }
     }

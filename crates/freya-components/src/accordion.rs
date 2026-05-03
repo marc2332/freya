@@ -62,25 +62,13 @@ define_theme! {
 #[cfg_attr(feature = "docs",
     doc = embed_doc_image::embed_image!("accordion", "images/gallery_accordion.png")
 )]
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Default)]
 pub struct Accordion {
     pub(crate) theme: Option<AccordionThemePartial>,
     header: Option<Element>,
     children: Vec<Element>,
     cursor_icon: CursorIcon,
     key: DiffKey,
-}
-
-impl Default for Accordion {
-    fn default() -> Self {
-        Self {
-            theme: None,
-            header: None,
-            children: Vec::new(),
-            cursor_icon: CursorIcon::Pointer,
-            key: DiffKey::default(),
-        }
-    }
 }
 
 impl KeyExt for Accordion {
