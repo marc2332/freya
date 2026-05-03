@@ -43,14 +43,14 @@ impl From<(u8, u8, u8)> for Color {
     }
 }
 
-impl From<(u8, u8, u8, f32)> for Color {
-    fn from((a, r, g, b): (u8, u8, u8, f32)) -> Self {
+impl From<(f32, u8, u8, u8)> for Color {
+    fn from((a, r, g, b): (f32, u8, u8, u8)) -> Self {
         Color::from_af32rgb(a, r, g, b)
     }
 }
 
 impl From<(u8, u8, u8, u8)> for Color {
-    fn from((r, g, b, a): (u8, u8, u8, u8)) -> Self {
+    fn from((a, r, g, b): (u8, u8, u8, u8)) -> Self {
         Color::from_argb(a, r, g, b)
     }
 }
