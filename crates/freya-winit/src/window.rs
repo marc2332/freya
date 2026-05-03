@@ -106,9 +106,17 @@ pub struct AppWindow {
     pub(crate) on_close: Option<OnCloseHook>,
 
     pub(crate) window_attributes: WindowAttributes,
+
+    pub(crate) user_zoom: f32,
     #[cfg(feature = "hotreload")]
     pub(crate) hot_reload_pending: Arc<std::sync::atomic::AtomicBool>,
 }
+
+pub(crate) const MIN_USER_ZOOM: f32 = 0.25;
+pub(crate) const MAX_USER_ZOOM: f32 = 5.0;
+
+#[cfg(feature = "zoom-shortcuts")]
+pub(crate) const ZOOM_STEP: f32 = 0.10;
 
 impl AppWindow {
     #[allow(clippy::too_many_arguments)]
@@ -352,6 +360,8 @@ impl AppWindow {
 
             window_attributes,
 
+            user_zoom: 1.0,
+
             #[cfg(feature = "hotreload")]
             hot_reload_pending,
         }
@@ -363,5 +373,56 @@ impl AppWindow {
 
     pub fn window_mut(&mut self) -> &mut Window {
         &mut self.window
+    }
+
+    pub fn effective_scale_factor(&self) -> f64 {
+        self.window.scale_factor() * self.user_zoom as f64
+    }
+
+    /// Sets `user_zoom`, clamped to `[MIN_USER_ZOOM, MAX_USER_ZOOM]`. On change,
+    /// resets layout/text caches and requests a redraw, mirroring `ScaleFactorChanged`.
+    pub fn set_user_zoom(&mut self, zoom: f32) {
+        let clamped = zoom.clamp(MIN_USER_ZOOM, MAX_USER_ZOOM);
+        if (clamped - self.user_zoom).abs() < f32::EPSILON {
+            return;
+        }
+        self.user_zoom = clamped;
+        self.process_layout_on_next_render = true;
+        self.tree.layout.reset();
+        self.tree.text_cache.reset();
+        self.window.request_redraw();
+    }
+
+    /// Returns `true` when the combo matched. Releases are also consumed so
+    /// press/release pairs stay symmetrical for upstream listeners.
+    #[cfg(feature = "zoom-shortcuts")]
+    pub fn try_handle_zoom_shortcut(
+        &mut self,
+        key: &keyboard_types::Key,
+        modifiers: keyboard_types::Modifiers,
+        is_pressed: bool,
+    ) -> bool {
+        use keyboard_types::{
+            Key,
+            Modifiers,
+        };
+        let zoom_modifier = if cfg!(target_os = "macos") {
+            Modifiers::META
+        } else {
+            Modifiers::CONTROL
+        };
+        if !modifiers.contains(zoom_modifier) {
+            return false;
+        }
+        let new_zoom = match key {
+            Key::Character(c) if c == "+" || c == "=" => self.user_zoom + ZOOM_STEP,
+            Key::Character(c) if c == "-" => self.user_zoom - ZOOM_STEP,
+            Key::Character(c) if c == "0" => 1.0,
+            _ => return false,
+        };
+        if is_pressed {
+            self.set_user_zoom(new_zoom);
+        }
+        true
     }
 }

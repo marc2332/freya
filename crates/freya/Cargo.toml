@@ -19,7 +19,7 @@ features = ["all-publish"]
 no-default-features = true
 
 [features]
-default = ["skia-engine"]
+default = ["skia-engine", "zoom-shortcuts"]
 # Enable skia-safe
 skia-engine = ["freya-engine/skia-engine"]
 mocked-engine = ["freya-engine/mocked-engine"]
@@ -93,6 +93,7 @@ webview = ["dep:freya-webview"]
 titlebar = ["freya-components/titlebar"]
 terminal = ["dep:freya-terminal"]
 code-editor = ["dep:freya-code-editor"]
+zoom-shortcuts = ["freya-winit/zoom-shortcuts"]
 
 [dependencies]
 freya-core = { workspace = true }
