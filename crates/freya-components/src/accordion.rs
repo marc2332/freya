@@ -67,6 +67,7 @@ pub struct Accordion {
     pub(crate) theme: Option<AccordionThemePartial>,
     header: Option<Element>,
     children: Vec<Element>,
+    cursor_icon: CursorIcon,
     key: DiffKey,
 }
 
@@ -85,6 +86,12 @@ impl Accordion {
         self.header = Some(header.into());
         self
     }
+
+    /// Override the cursor icon shown when hovering over this component.
+    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+        self.cursor_icon = cursor_icon.into();
+        self
+    }
 }
 
 impl ChildrenExt for Accordion {
@@ -97,6 +104,7 @@ impl Component for Accordion {
     fn render(self: &Accordion) -> impl IntoElement {
         let header = use_focus();
         let accordion_theme = get_theme!(&self.theme, AccordionThemePreference, "accordion");
+        let cursor_icon = self.cursor_icon;
         let mut open = use_state(|| false);
         let mut animation = use_animation(move |_conf| {
             AnimNum::new(0., 100.)
@@ -122,7 +130,7 @@ impl Component for Accordion {
                     .alignment(BorderAlignment::Inner),
             )
             .on_pointer_enter(move |_| {
-                Cursor::set(CursorIcon::Pointer);
+                Cursor::set(cursor_icon);
             })
             .on_pointer_leave(move |_| {
                 Cursor::set(CursorIcon::default());
