@@ -56,6 +56,7 @@
 //! - [Testing](freya_testing)
 //! - [WebView](freya_webview)
 //! - [Terminal](freya_terminal)
+//! - [Camera](freya_camera)
 //! - [Freya Query](freya_query)
 //! - [Tokio Integration](self::_docs::tokio_integration)
 //! - [Devtools](self::_docs::devtools)
@@ -81,6 +82,7 @@
 //! - `titlebar`: Enables the [TitlebarButton](components::TitlebarButton) component.
 //! - `terminal`: Reexport [freya_terminal] under [terminal].
 //! - `code-editor`: Reexport [freya_code_editor] under [code_editor].
+//! - `camera`: Reexport [freya_camera] under [camera].
 //!
 //! ## Misc features
 //! - `devtools`: Enables devtools support.
@@ -325,6 +327,16 @@ pub mod terminal {
 #[cfg_attr(feature = "docs", doc(cfg(feature = "code-editor")))]
 pub mod code_editor {
     pub use freya_code_editor::prelude::*;
+}
+
+/// Reexport `freya-camera` when the `camera` feature is enabled.
+#[cfg(feature = "camera")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "camera")))]
+pub mod camera {
+    pub use freya_camera::{
+        init,
+        prelude::*,
+    };
 }
 
 #[cfg(feature = "performance")]
