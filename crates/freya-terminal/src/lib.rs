@@ -74,6 +74,7 @@ mod osc7;
 pub mod parser;
 pub mod pty;
 mod rendering;
+mod url;
 
 /// Prelude module for convenient imports.
 pub mod prelude {
