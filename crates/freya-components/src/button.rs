@@ -140,6 +140,7 @@ pub struct Button {
     layout_variant: ButtonLayoutVariant,
     enabled: bool,
     focusable: bool,
+    cursor_icon: Option<CursorIcon>,
 }
 
 impl Default for Button {
@@ -173,6 +174,7 @@ impl Button {
             elements: Vec::default(),
             enabled: true,
             focusable: true,
+            cursor_icon: None,
             key: DiffKey::None,
         }
     }
@@ -260,6 +262,12 @@ impl Button {
     pub fn flat(self) -> Self {
         self.style_variant(ButtonStyleVariant::Flat)
     }
+
+    /// Override the cursor icon shown when hovering over the button while enabled.
+    pub fn icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+        self.cursor_icon = Some(cursor_icon.into());
+        self
+    }
 }
 
 impl CornerRadiusExt for Button {
@@ -275,6 +283,7 @@ impl Component for Button {
         let focus_status = use_focus_status(focus);
 
         let enabled = use_reactive(&self.enabled);
+        let cursor_icon = self.cursor_icon.unwrap_or_default();
         use_drop(move || {
             if hovering() {
                 Cursor::set(CursorIcon::default());
@@ -389,7 +398,7 @@ impl Component for Button {
             })
             .on_pointer_enter(move |_| {
                 if enabled() {
-                    Cursor::set(CursorIcon::Pointer);
+                    Cursor::set(cursor_icon);
                 } else {
                     Cursor::set(CursorIcon::NotAllowed);
                 }
