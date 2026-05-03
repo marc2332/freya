@@ -696,12 +696,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 WindowEvent::ModifiersChanged(modifiers) => {
                     app.modifiers_state = modifiers.state();
                 }
-                WindowEvent::Focused(is_focused) => {
-                    if cfg!(not(target_os = "android")) {
-                        // The focused workaround is only for desktop targets
-                        app.just_focused = is_focused;
-                    }
-                }
                 WindowEvent::RedrawRequested => {
                     hotpath::measure_block!("RedrawRequested", {
                         if app.process_layout_on_next_render {
@@ -887,7 +881,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 }
 
                 WindowEvent::MouseInput { state, button, .. } => {
-                    app.just_focused = false;
                     app.mouse_state = state;
                     app.platform
                         .navigation_mode
@@ -917,10 +910,13 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         .unwrap();
                 }
 
-                WindowEvent::KeyboardInput { event, .. } => {
-                    // Workaround for winit sending a Tab event when alt-tabbing
-                    if app.just_focused {
-                        app.just_focused = false;
+                WindowEvent::KeyboardInput {
+                    event,
+                    is_synthetic,
+                    ..
+                } => {
+                    // Ignore synthetic presses (e.g. Tab on alt-tab) but keep synthetic releases so keys don't get stuck.
+                    if is_synthetic && event.state == ElementState::Pressed {
                         return;
                     }
 
@@ -1025,7 +1021,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     }
                 }
                 WindowEvent::CursorMoved { position, .. } => {
-                    app.just_focused = false;
                     app.position = CursorPoint::from((position.x, position.y));
 
                     let mut platform_event = vec![PlatformEvent::Mouse {

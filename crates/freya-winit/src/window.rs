@@ -80,7 +80,6 @@ pub struct AppWindow {
     pub(crate) position: CursorPoint,
     pub(crate) mouse_state: ElementState,
     pub(crate) modifiers_state: ModifiersState,
-    pub(crate) just_focused: bool,
 
     pub(crate) events_receiver: futures_channel::mpsc::UnboundedReceiver<EventsChunk>,
     pub(crate) events_sender: futures_channel::mpsc::UnboundedSender<EventsChunk>,
@@ -325,7 +324,6 @@ impl AppWindow {
             mouse_state: ElementState::Released,
             position: CursorPoint::default(),
             modifiers_state: ModifiersState::default(),
-            just_focused: false,
 
             events_receiver,
             events_sender,
