@@ -604,10 +604,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             }
                         },
                         NativeWindowEventAction::PlatformEvent(platform_event) => {
-                            let scale_factor = app.effective_scale_factor();
                             let mut events_measurer_adapter = EventsMeasurerAdapter {
+                                scale_factor: app.effective_scale_factor(),
                                 tree: &mut app.tree,
-                                scale_factor,
                             };
                             let processed_events = events_measurer_adapter.run(
                                 &mut vec![platform_event],
@@ -905,10 +904,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         cursor: (app.position.x, app.position.y).into(),
                         button: Some(map_winit_mouse_button(button)),
                     };
-                    let scale_factor = app.effective_scale_factor();
                     let mut events_measurer_adapter = EventsMeasurerAdapter {
+                        scale_factor: app.effective_scale_factor(),
                         tree: &mut app.tree,
-                        scale_factor,
                     };
                     let processed_events = events_measurer_adapter.run(
                         &mut vec![platform_event],
@@ -957,10 +955,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         code,
                         modifiers,
                     };
-                    let scale_factor = app.effective_scale_factor();
                     let mut events_measurer_adapter = EventsMeasurerAdapter {
+                        scale_factor: app.effective_scale_factor(),
                         tree: &mut app.tree,
-                        scale_factor,
                     };
                     let processed_events = events_measurer_adapter.run(
                         &mut vec![platform_event],
@@ -996,10 +993,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             cursor: app.position,
                             source: WheelSource::Device,
                         };
-                        let scale_factor = app.effective_scale_factor();
                         let mut events_measurer_adapter = EventsMeasurerAdapter {
+                            scale_factor: app.effective_scale_factor(),
                             tree: &mut app.tree,
-                            scale_factor,
                         };
                         let processed_events = events_measurer_adapter.run(
                             &mut vec![platform_event],
@@ -1020,10 +1016,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             cursor: app.position,
                             button: None,
                         };
-                        let scale_factor = app.effective_scale_factor();
                         let mut events_measurer_adapter = EventsMeasurerAdapter {
+                            scale_factor: app.effective_scale_factor(),
                             tree: &mut app.tree,
-                            scale_factor,
                         };
                         let processed_events = events_measurer_adapter.run(
                             &mut vec![platform_event],
@@ -1053,10 +1048,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         });
                     }
 
-                    let scale_factor = app.effective_scale_factor();
                     let mut events_measurer_adapter = EventsMeasurerAdapter {
+                        scale_factor: app.effective_scale_factor(),
                         tree: &mut app.tree,
-                        scale_factor,
                     };
                     let processed_events = events_measurer_adapter.run(
                         &mut platform_event,
@@ -1091,10 +1085,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         phase: map_winit_touch_phase(phase),
                         force: force.map(map_winit_touch_force),
                     };
-                    let scale_factor = app.effective_scale_factor();
                     let mut events_measurer_adapter = EventsMeasurerAdapter {
+                        scale_factor: app.effective_scale_factor(),
                         tree: &mut app.tree,
-                        scale_factor,
                     };
                     let processed_events = events_measurer_adapter.run(
                         &mut vec![platform_event],
@@ -1113,10 +1106,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         code: keyboard_types::Code::Unidentified,
                         modifiers: winit_mappings::map_winit_modifiers(app.modifiers_state),
                     };
-                    let scale_factor = app.effective_scale_factor();
                     let mut events_measurer_adapter = EventsMeasurerAdapter {
+                        scale_factor: app.effective_scale_factor(),
                         tree: &mut app.tree,
-                        scale_factor,
                     };
                     let processed_events = events_measurer_adapter.run(
                         &mut vec![platform_event],
@@ -1133,10 +1125,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         text,
                         cursor: pos,
                     };
-                    let scale_factor = app.effective_scale_factor();
                     let mut events_measurer_adapter = EventsMeasurerAdapter {
+                        scale_factor: app.effective_scale_factor(),
                         tree: &mut app.tree,
-                        scale_factor,
                     };
                     let processed_events = events_measurer_adapter.run(
                         &mut vec![platform_event],
@@ -1156,10 +1147,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         file_path: Some(file_path),
                         cursor: app.position,
                     };
-                    let scale_factor = app.effective_scale_factor();
                     let mut events_measurer_adapter = EventsMeasurerAdapter {
+                        scale_factor: app.effective_scale_factor(),
                         tree: &mut app.tree,
-                        scale_factor,
                     };
                     let processed_events = events_measurer_adapter.run(
                         &mut vec![platform_event],
@@ -1176,10 +1166,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         file_path: None,
                         cursor: app.position,
                     };
-                    let scale_factor = app.effective_scale_factor();
                     let mut events_measurer_adapter = EventsMeasurerAdapter {
+                        scale_factor: app.effective_scale_factor(),
                         tree: &mut app.tree,
-                        scale_factor,
                     };
                     let processed_events = events_measurer_adapter.run(
                         &mut vec![platform_event],

@@ -19,7 +19,7 @@ features = ["all-publish"]
 no-default-features = true
 
 [features]
-default = ["skia-engine", "zoom-shortcuts"]
+default = ["skia-engine"]
 # Enable skia-safe
 skia-engine = ["freya-engine/skia-engine"]
 mocked-engine = ["freya-engine/mocked-engine"]
