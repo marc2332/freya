@@ -45,6 +45,7 @@ tasks.register<Exec>("buildRustLibrary") {
         "-o", "AndroidApp/app/src/main/jniLibs/",
         "-t", "arm64-v8a",
         "-t", "x86_64-linux-android",
+        "--platform", "36",
         "build", "--lib", "--release")
 }
 
