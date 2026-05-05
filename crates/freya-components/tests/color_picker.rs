@@ -82,11 +82,9 @@ pub fn color_picker_sv_selects_correct_color() {
     );
 
     // Expected color computed using same algorithm as component
-    const MIN_S: f32 = 0.07;
-    const MIN_V: f32 = 0.07;
     let initial_h = Color::RED.to_hsv().h;
-    let sat = (rel_x as f32).max(MIN_S);
-    let v = (1.0 - rel_y as f32).clamp(MIN_V, 1.0 - MIN_V);
+    let sat = rel_x as f32;
+    let v = 1.0 - rel_y as f32;
     let expected = Color::from_hsv(initial_h, sat, v);
 
     // Click and wait
@@ -247,5 +245,117 @@ pub fn color_picker_hue_changes_color() {
         "v mismatch {} vs {}",
         ah.v,
         eh.v
+    );
+}
+
+#[test]
+pub fn color_picker_can_reach_pure_red() {
+    fn cp_app() -> impl IntoElement {
+        let mut color = use_state(|| Color::RED);
+
+        rect()
+            .child(label().text(format!(
+                "Color: #{:02X}{:02X}{:02X}",
+                color().r(),
+                color().g(),
+                color().b()
+            )))
+            .child(ColorPicker::new(move |c| color.set(c)).value(color()))
+    }
+
+    let mut test = launch_test(cp_app);
+    test.sync_and_update();
+
+    // Open popup
+    let preview = test
+        .find(|node, element| {
+            Rect::try_downcast(element)
+                .filter(|_| {
+                    (node.layout().area.size.width - 40.0).abs() < 1.0
+                        && (node.layout().area.size.height - 24.0).abs() < 1.0
+                })
+                .map(|_| node)
+        })
+        .unwrap();
+
+    let preview_area = preview.layout().area;
+    let preview_center = (
+        preview_area.min_x() as f64 + (preview_area.size.width as f64) / 2.0,
+        preview_area.min_y() as f64 + (preview_area.size.height as f64) / 2.0,
+    );
+
+    test.click_cursor(preview_center);
+    test.sync_and_update();
+    test.poll_n(Duration::from_millis(5), 100);
+    test.sync_and_update();
+
+    // Find popup and sv area
+    let popup = test
+        .find(|node, element| {
+            Rect::try_downcast(element)
+                .filter(|_| (node.layout().area.size.width - 220.0).abs() < 5.0)
+                .map(|_| node)
+        })
+        .unwrap();
+
+    let popup_area = popup.layout().area;
+
+    let sv = test
+        .find(|node, element| {
+            Rect::try_downcast(element)
+                .filter(|_| {
+                    let a = node.layout().area;
+                    (a.size.height - 140.0).abs() < 10.0
+                        && a.min_x() >= popup_area.min_x()
+                        && a.min_y() >= popup_area.min_y()
+                })
+                .map(|_| node)
+        })
+        .unwrap();
+
+    let sv_area = sv.layout().area;
+
+    // Click the top-right corner: sat=1.0, v=1.0 -> should give pure hue color
+    let sv_point = (
+        sv_area.min_x() as f64 + sv_area.size.width as f64,
+        sv_area.min_y() as f64,
+    );
+
+    test.click_cursor(sv_point);
+    test.sync_and_update();
+    test.poll_n(Duration::from_millis(5), 20);
+    test.sync_and_update();
+
+    // Read label
+    let label_node = test
+        .find(|node, element| {
+            Label::try_downcast(element)
+                .filter(|l| l.text.starts_with("Color:"))
+                .map(|_| node)
+        })
+        .unwrap();
+
+    let label_text = Label::try_downcast(&*label_node.element())
+        .unwrap()
+        .text
+        .clone();
+    let hex = label_text.split_whitespace().nth(1).unwrap();
+    let actual = Color::from_hex(hex).unwrap();
+
+    // Should be pure red (or very close) since hue starts at 0 (red)
+    assert!(
+        actual.r() >= 250,
+        "red channel should be ~255, got {}",
+        actual.r()
+    );
+    assert!(
+        actual.g() <= 5,
+        "green channel should be ~0, got {}",
+        actual.g()
+    );
+    assert!(
+        actual.b() <= 5,
+        "blue channel should be ~0, got {}",
+        actual.b()
     );
 }

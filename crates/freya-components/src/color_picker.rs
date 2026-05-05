@@ -179,22 +179,16 @@ impl Component for ColorPicker {
                     ),
             );
 
-        // Minimum perceptible floor to avoid full desaturation/black when dragging
-        const MIN_S: f32 = 0.07;
-        const MIN_V: f32 = 0.07;
-
         let mut update_sv = {
             let on_change = self.on_change.clone();
             move |coords: CursorPoint| {
                 let sv_area = area.read().to_f64();
-                let rel_x = (((coords.x - sv_area.min_x()) / sv_area.width()).clamp(0., 1.)) as f32;
-                let rel_y = (((coords.y - sv_area.min_y()) / sv_area.height())
-                    .clamp(MIN_V as f64, 1. - MIN_V as f64)) as f32;
-                let sat = rel_x.max(MIN_S);
-                let v = (1.0 - rel_y).clamp(MIN_V, 1.0 - MIN_V);
+                let sat = ((coords.x - sv_area.min_x()) / sv_area.width()).clamp(0., 1.) as f32;
+                let rel_y = ((coords.y - sv_area.min_y()) / sv_area.height()).clamp(0., 1.) as f32;
+                let v = 1.0 - rel_y;
                 let hsv = color.read().to_hsv();
-                color.set(Color::from_hsv(hsv.h, sat, v));
-                on_change.call(color());
+                let new_color = Color::from_hsv(hsv.h, sat, v);
+                color.set_if_modified_and_then(new_color, || on_change.call(new_color));
             }
         };
 
@@ -202,11 +196,10 @@ impl Component for ColorPicker {
             let on_change = self.on_change.clone();
             move |coords: CursorPoint| {
                 let bar_area = hue_area.read().to_f64();
-                let rel_x =
-                    ((coords.x - bar_area.min_x()) / bar_area.width()).clamp(0.01, 1.) as f32;
+                let rel_x = ((coords.x - bar_area.min_x()) / bar_area.width()).clamp(0., 1.) as f32;
                 let hsv = color.read().to_hsv();
-                color.set(Color::from_hsv(rel_x * 360.0, hsv.s, hsv.v));
-                on_change.call(color());
+                let new_color = Color::from_hsv(rel_x * 360.0, hsv.s, hsv.v);
+                color.set_if_modified_and_then(new_color, || on_change.call(new_color));
             }
         };
 
