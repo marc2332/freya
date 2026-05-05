@@ -121,12 +121,19 @@ pub struct TooltipContainer {
     tooltip: Tooltip,
     children: Vec<Element>,
     position: AttachedPosition,
+    layout: LayoutData,
     key: DiffKey,
 }
 
 impl KeyExt for TooltipContainer {
     fn write_key(&mut self) -> &mut DiffKey {
         &mut self.key
+    }
+}
+
+impl LayoutExt for TooltipContainer {
+    fn get_layout(&mut self) -> &mut LayoutData {
+        &mut self.layout
     }
 }
 
@@ -142,6 +149,7 @@ impl TooltipContainer {
             tooltip,
             children: vec![],
             position: AttachedPosition::Bottom,
+            layout: LayoutData::default(),
             key: DiffKey::None,
         }
     }
@@ -196,6 +204,7 @@ impl Component for TooltipContainer {
         };
 
         rect()
+            .layout(self.layout.clone())
             .a11y_focusable(false)
             .a11y_role(AccessibilityRole::Tooltip)
             .on_pointer_over(on_pointer_over)
