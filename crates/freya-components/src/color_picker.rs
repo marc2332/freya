@@ -188,10 +188,7 @@ impl Component for ColorPicker {
                 let v = 1.0 - rel_y;
                 let hsv = color.read().to_hsv();
                 let new_color = Color::from_hsv(hsv.h, sat, v);
-                if new_color != color() {
-                    color.set(new_color);
-                    on_change.call(new_color);
-                }
+                color.set_if_modified_and_then(new_color, || on_change.call(new_color));
             }
         };
 
@@ -202,10 +199,7 @@ impl Component for ColorPicker {
                 let rel_x = ((coords.x - bar_area.min_x()) / bar_area.width()).clamp(0., 1.) as f32;
                 let hsv = color.read().to_hsv();
                 let new_color = Color::from_hsv(rel_x * 360.0, hsv.s, hsv.v);
-                if new_color != color() {
-                    color.set(new_color);
-                    on_change.call(new_color);
-                }
+                color.set_if_modified_and_then(new_color, || on_change.call(new_color));
             }
         };
 
