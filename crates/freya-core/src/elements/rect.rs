@@ -645,7 +645,7 @@ impl Rect {
     }
 
     pub fn color(mut self, color: impl Into<Color>) -> Self {
-        self.element.text_style_data.color = Some(color.into());
+        self.element.text_style_data.color = Some(Fill::Color(color.into()));
         self
     }
 
