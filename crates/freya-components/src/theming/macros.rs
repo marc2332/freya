@@ -16,8 +16,7 @@ macro_rules! define_theme {
 
     (
         $(#[$attrs:meta])*
-        for = $for_ty:ident ;
-        theme_field = $theme_field:ident ;
+        $(for = $for_ty:ident ; theme_field = $theme_field:ident ;)+
         $(%[component$($component_attr_control:tt)?])?
         $vis:vis $name:ident $(<$lifetime:lifetime>)? {
             $(
@@ -105,15 +104,17 @@ macro_rules! define_theme {
                 )*)?
             }
 
-            impl $(<$lifetime>)? [<$name ThemePartialExt>] for $for_ty $(<$lifetime>)? {
-                $($(
-                    $(#[$field_attrs])*
-                    fn $field_name(mut self, $field_name: impl Into<$field_ty>) -> Self {
-                        self.$theme_field = Some(self.$theme_field.unwrap_or_default().$field_name($field_name));
-                        self
-                    }
-                )*)?
-            }
+            $(
+                impl $(<$lifetime>)? [<$name ThemePartialExt>] for $for_ty $(<$lifetime>)? {
+                    $($(
+                        $(#[$field_attrs])*
+                        fn $field_name(mut self, $field_name: impl Into<$field_ty>) -> Self {
+                            self.$theme_field = Some(self.$theme_field.unwrap_or_default().$field_name($field_name));
+                            self
+                        }
+                    )*)?
+                }
+            )+
         }
     };
 
