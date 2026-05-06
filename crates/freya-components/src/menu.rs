@@ -16,6 +16,10 @@ use crate::{
 };
 
 define_theme! {
+    for = MenuContainer; theme_field = theme;
+    for = Menu; theme_field = theme;
+    for = SubMenu; theme_field = theme;
+
     %[component]
     pub MenuContainer {
         %[fields]
@@ -28,6 +32,9 @@ define_theme! {
 }
 
 define_theme! {
+    for = MenuItem; theme_field = theme;
+    for = MenuButton; theme_field = theme;
+
     %[component]
     pub MenuItem {
         %[fields]
@@ -95,6 +102,7 @@ define_theme! {
 )]
 #[derive(Default, Clone, PartialEq)]
 pub struct Menu {
+    pub(crate) theme: Option<MenuContainerThemePartial>,
     children: Vec<Element>,
     on_close: Option<EventHandler<()>>,
     key: DiffKey,
@@ -124,6 +132,11 @@ impl Menu {
         self.on_close = Some(f.into());
         self
     }
+
+    pub fn theme(mut self, theme: MenuContainerThemePartial) -> Self {
+        self.theme = Some(theme);
+        self
+    }
 }
 
 impl ComponentOwned for Menu {
@@ -146,7 +159,11 @@ impl ComponentOwned for Menu {
                     on_close.call(());
                 }
             })
-            .child(MenuContainer::new().children(self.children))
+            .child(
+                MenuContainer::new()
+                    .map(self.theme, |el, theme| el.theme(theme))
+                    .children(self.children),
+            )
     }
     fn render_key(&self) -> DiffKey {
         self.key.clone().or(self.default_key())
@@ -187,6 +204,11 @@ impl ChildrenExt for MenuContainer {
 impl MenuContainer {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn theme(mut self, theme: MenuContainerThemePartial) -> Self {
+        self.theme = Some(theme);
+        self
     }
 }
 
@@ -437,6 +459,7 @@ impl ComponentOwned for MenuItem {
 /// ```
 #[derive(Default, Clone, PartialEq)]
 pub struct MenuButton {
+    pub(crate) theme: Option<MenuItemThemePartial>,
     children: Vec<Element>,
     on_press: Option<EventHandler<Event<PressEventData>>>,
     key: DiffKey,
@@ -463,6 +486,12 @@ impl MenuButton {
         self.on_press = Some(on_press.into());
         self
     }
+
+    /// Set a theme override for the inner [`MenuItem`].
+    pub fn theme(mut self, theme: MenuItemThemePartial) -> Self {
+        self.theme = Some(theme);
+        self
+    }
 }
 
 impl ComponentOwned for MenuButton {
@@ -471,8 +500,9 @@ impl ComponentOwned for MenuButton {
         let parent_menu_id = use_consume::<MenuId>();
 
         MenuItem::new()
+            .map(self.theme, |el, theme| el.theme(theme))
             .on_pointer_enter(move |_| close_menus_until(&mut menus, parent_menu_id))
-            .map(self.on_press.clone(), |el, on_press| el.on_press(on_press))
+            .map(self.on_press, |el, on_press| el.on_press(on_press))
             .children(self.children)
     }
 
@@ -495,6 +525,7 @@ impl ComponentOwned for MenuButton {
 /// ```
 #[derive(Default, Clone, PartialEq)]
 pub struct SubMenu {
+    pub(crate) theme: Option<MenuContainerThemePartial>,
     label: Option<Element>,
     items: Vec<Element>,
     key: DiffKey,
@@ -513,6 +544,12 @@ impl SubMenu {
 
     pub fn label(mut self, label: impl IntoElement) -> Self {
         self.label = Some(label.into_element());
+        self
+    }
+
+    /// Set a theme override for the inner [`MenuContainer`].
+    pub fn theme(mut self, theme: MenuContainerThemePartial) -> Self {
+        self.theme = Some(theme);
         self
     }
 }
@@ -558,9 +595,11 @@ impl ComponentOwned for SubMenu {
                     .width(Size::px(0.))
                     .height(Size::px(0.))
                     .child(
-                        rect()
-                            .width(Size::window_percent(100.))
-                            .child(MenuContainer::new().children(self.items)),
+                        rect().width(Size::window_percent(100.)).child(
+                            MenuContainer::new()
+                                .map(self.theme, |el, theme| el.theme(theme))
+                                .children(self.items),
+                        ),
                     )
             }))
     }
