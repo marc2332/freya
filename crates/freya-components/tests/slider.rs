@@ -247,8 +247,23 @@ pub fn slider_wheel() {
     let mut test = launch_test(slider_app);
     test.sync_and_update();
 
-    // Scroll up to increase, scroll down past 0 to test clamping
-    test.scroll((100.0, 30.0), (0.0, 53.0));
+    // Scroll up far past the maximum to test upper clamping
+    test.scroll((100.0, 30.0), (0.0, 5300.0));
+
+    let label = test
+        .find(|node, element| {
+            Label::try_downcast(element)
+                .filter(|l| l.text.starts_with("Value:"))
+                .map(|_| node)
+        })
+        .unwrap();
+
+    let value_text = Label::try_downcast(&*label.element()).unwrap().text;
+    let value: f64 = value_text.replace("Value: ", "").parse().unwrap();
+
+    assert_eq!(value, 100.0);
+
+    // Scroll down far past the minimum to test lower clamping
     test.scroll((100.0, 30.0), (0.0, -5300.0));
 
     let label = test
