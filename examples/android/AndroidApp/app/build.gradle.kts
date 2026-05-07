@@ -43,7 +43,6 @@ tasks.register<Exec>("buildRustLibrary") {
     workingDir("../..")
     val androidHome = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT") ?: ""
     environment("ANDROID_HOME", androidHome)
-    environment("ANDROID_PLATFORM", "36")
     environment("ANDROID_JAR", "$androidHome/platforms/android-36/android.jar")
     commandLine("cargo", "ndk",
         "-o", "AndroidApp/app/src/main/jniLibs/",
