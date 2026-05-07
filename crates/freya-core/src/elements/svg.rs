@@ -283,7 +283,12 @@ impl ElementExt for SvgElement {
             .canvas
             .translate(context.layout_node.visible_area().origin.to_tuple());
 
-        root.set_color(self.color.unwrap_or(context.text_style_state.color).into());
+        let inherited_color = context
+            .text_style_state
+            .color
+            .as_color()
+            .unwrap_or(Color::BLACK);
+        root.set_color(self.color.unwrap_or(inherited_color).into());
         if let Some(fill) = self.fill {
             root.set_fill(svg::Paint::from_color(fill.into()));
         }
