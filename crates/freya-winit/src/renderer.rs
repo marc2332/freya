@@ -247,6 +247,7 @@ pub enum NativeEvent {
     #[cfg(feature = "tray")]
     Tray(NativeTrayEvent),
     Generic(NativeGenericEvent),
+    Preferences(mundy::Preferences),
 }
 
 impl From<accesskit_winit::Event> for NativeEvent {
@@ -300,6 +301,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
             }
             self.resumed = true;
 
+            subscribe_preferences(self.proxy.clone());
+
             let _ = self
                 .proxy
                 .send_event(NativeEvent::Generic(NativeGenericEvent::PollFutures));
@@ -352,6 +355,13 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 let mut cx = std::task::Context::from_waker(&self.waker);
                 self.futures
                     .retain_mut(|fut| fut.poll(&mut cx).is_pending());
+            }
+            NativeEvent::Preferences(prefs) => {
+                for app in self.windows.values_mut() {
+                    app.platform
+                        .accent_color
+                        .set_if_modified(prefs.accent_color);
+                }
             }
             #[cfg(feature = "tray")]
             NativeEvent::Tray(NativeTrayEvent { action }) => {
@@ -1177,4 +1187,11 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
             }
         }
     }
+}
+
+fn subscribe_preferences(proxy: EventLoopProxy<NativeEvent>) {
+    let subscription = mundy::Preferences::subscribe(mundy::Interest::AccentColor, move |prefs| {
+        let _ = proxy.send_event(NativeEvent::Preferences(prefs));
+    });
+    std::mem::forget(subscription);
 }
