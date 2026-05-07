@@ -164,7 +164,7 @@
 //!         rect()
 //!             .padding(8.)
 //!             .background(Color::BLUE)
-//!             .on_press(self.on_press)
+//!             .on_press(self.on_press.clone())
 //!             .child("Press me")
 //!     }
 //! }
