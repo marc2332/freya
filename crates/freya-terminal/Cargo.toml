@@ -31,6 +31,9 @@ keyboard-types = { workspace = true }
 portable-pty = "0.9"
 alacritty_terminal = "0.26"
 
+# URL detection in terminal output
+linkify = { workspace = true }
+
 # Async
 futures-channel = { workspace = true }
 futures-lite = { workspace = true }
