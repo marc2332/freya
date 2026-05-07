@@ -10,6 +10,8 @@ env:
   CARGO_TERM_COLOR: always
   ANDROID_NDK_HOME: /home/runner/android-ndk-r26d
   ANDROID_NDK: /home/runner/android-ndk-r26d
+  ANDROID_HOME: /usr/local/lib/android/sdk
+  ANDROID_PLATFORM: "36"
 
 jobs:
   android:
