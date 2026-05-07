@@ -31,7 +31,7 @@ use torin::prelude::Area;
 
 use crate::{
     colors::map_ansi_color,
-    url::url_ranges,
+    url::link_ranges,
 };
 
 /// Cached per-row drawing primitives keyed by a hash of the row contents.
@@ -209,46 +209,16 @@ impl Renderer<'_> {
 
     /// Draw a thin underline beneath OSC 8 hyperlink runs and detected plain-text URLs.
     fn render_hyperlink_underlines(&mut self, row: &[Cell], y: f32) {
-        let mut run_start: Option<usize> = None;
-        let mut col = 0;
-        while col < row.len() {
-            let cell = &row[col];
-            if cell.flags.contains(Flags::WIDE_CHAR_SPACER) {
-                col += 1;
-                continue;
-            }
-            let end_col = if cell.flags.contains(Flags::WIDE_CHAR) {
-                col + 2
-            } else {
-                col + 1
-            };
-            if cell.hyperlink().is_some() {
-                if run_start.is_none() {
-                    run_start = Some(col);
-                }
-            } else if let Some(start) = run_start.take() {
-                self.fill_underline(start, col, y);
-            }
-            col = end_col;
-        }
-        if let Some(start) = run_start {
-            self.fill_underline(start, col, y);
-        }
-
-        for (start, end) in url_ranges(row) {
-            self.fill_underline(start, end, y);
-        }
-    }
-
-    fn fill_underline(&mut self, start: usize, end: usize, y: f32) {
-        let left = self.area.min_x() + (start as f32) * self.char_width;
-        let right = self.area.min_x() + (end as f32) * self.char_width;
         let underline_y = (y + self.line_height - 2.0).round();
         self.paint.set_color(self.foreground);
-        self.canvas.draw_rect(
-            SkRect::new(left, underline_y, right, underline_y + 1.0),
-            self.paint,
-        );
+        for (start, end) in link_ranges(row) {
+            let left = self.area.min_x() + (start as f32) * self.char_width;
+            let right = self.area.min_x() + (end as f32) * self.char_width;
+            self.canvas.draw_rect(
+                SkRect::new(left, underline_y, right, underline_y + 1.0),
+                self.paint,
+            );
+        }
     }
 
     fn render_selection(&mut self, row_idx: usize, row_len: usize, y: f32) {

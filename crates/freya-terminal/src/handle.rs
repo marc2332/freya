@@ -519,11 +519,7 @@ impl TerminalHandle {
         if let Some(h) = grid[point].hyperlink() {
             return Some(h.uri().to_owned());
         }
-        let columns = grid.columns();
-        let row_cells: Vec<_> = (0..columns)
-            .map(|c| grid[Point::new(point.line, Column(c))].clone())
-            .collect();
-        url_at(&row_cells, point.column.0)
+        url_at(&grid[point.line][..], point.column.0)
     }
 
     /// Grid point and cell half (left vs right) for a pointer at fractional cell coordinates.
