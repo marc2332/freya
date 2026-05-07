@@ -41,13 +41,16 @@ android {
 
 tasks.register<Exec>("buildRustLibrary") {
     workingDir("../..")
-    environment("ANDROID_HOME", System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT") ?: "")
+    val androidHome = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT") ?: ""
+    environment("ANDROID_HOME", androidHome)
     environment("ANDROID_PLATFORM", "36")
-    commandLine("bash", "-c",
-        "env | grep -iE '^android|sdk' | sort && " +
-        "cargo ndk -o AndroidApp/app/src/main/jniLibs/ " +
-        "-t arm64-v8a -t x86_64-linux-android " +
-        "--platform 31 build --lib --release")
+    environment("ANDROID_JAR", "$androidHome/platforms/android-36/android.jar")
+    commandLine("cargo", "ndk",
+        "-o", "AndroidApp/app/src/main/jniLibs/",
+        "-t", "arm64-v8a",
+        "-t", "x86_64-linux-android",
+        "--platform", "31",
+        "build", "--lib", "--release")
 }
 
 tasks.named("preBuild") {
