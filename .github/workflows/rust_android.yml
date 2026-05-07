@@ -34,12 +34,6 @@ jobs:
           rm ndk.zip
       - name: Install Android SDK platform 36
         run: yes | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36"
-      - name: Debug Android paths
-        run: |
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          echo "ANDROID_PLATFORM=$ANDROID_PLATFORM"
-          ls -la "$ANDROID_HOME/platforms/" || echo "NO platforms dir"
-          ls -la "$ANDROID_HOME/platforms/android-36/android.jar" || echo "NO android-36/android.jar"
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@2b1f5e9b395427c92ee4e3331786ca3c37afe2d7 # v1
         with:
