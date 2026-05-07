@@ -191,6 +191,17 @@ impl Component for Slider {
             }
         };
 
+        let on_wheel = {
+            let on_moved = self.on_moved.clone();
+            move |e: Event<WheelEventData>| {
+                if e.delta_y == 0.0 {
+                    return;
+                }
+                e.stop_propagation();
+                on_moved.call((value + e.delta_y * 0.1).clamp(0.0, 100.0));
+            }
+        };
+
         let border = if focus_status() == FocusStatus::Keyboard {
             Border::new()
                 .fill(theme.border_fill)
@@ -274,6 +285,7 @@ impl Component for Slider {
                     .on_pointer_down(on_pointer_down)
                     .on_global_pointer_move(on_global_pointer_move)
                     .on_global_pointer_press(on_global_pointer_press)
+                    .on_wheel(on_wheel)
             })
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
