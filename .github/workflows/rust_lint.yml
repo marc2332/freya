@@ -24,11 +24,11 @@ jobs:
     - name: Install linux dependencies
       run: sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev libwebkit2gtk-4.1-dev
     - name: Install just
-      uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
+      uses: taiki-e/install-action@cca35edeb1d01366c2843b68fc3ca441446d73d3 # v2.77.1
       with:
         tool: just
     - name: Install taplo
-      uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
+      uses: taiki-e/install-action@cca35edeb1d01366c2843b68fc3ca441446d73d3 # v2.77.1
       with:
         tool: taplo
     - name: Install Rust toolchain
@@ -66,11 +66,11 @@ jobs:
         fetch-depth: 2
         submodules: true
     - name: Install just
-      uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
+      uses: taiki-e/install-action@cca35edeb1d01366c2843b68fc3ca441446d73d3 # v2.77.1
       with:
         tool: just
     - name: Install taplo
-      uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
+      uses: taiki-e/install-action@cca35edeb1d01366c2843b68fc3ca441446d73d3 # v2.77.1
       with:
         tool: taplo
     - name: Install Rust toolchain
