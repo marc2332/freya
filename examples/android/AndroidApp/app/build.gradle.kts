@@ -41,7 +41,7 @@ android {
 
 tasks.register<Exec>("buildRustLibrary") {
     workingDir("../..")
-    environment("ANDROID_HOME", System.getenv("ANDROID_HOME") ?: android.sdkDirectory.absolutePath)
+    environment("ANDROID_HOME", System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT") ?: "")
     environment("ANDROID_PLATFORM", "36")
     commandLine("cargo", "ndk",
         "-o", "AndroidApp/app/src/main/jniLibs/",
