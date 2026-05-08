@@ -16,9 +16,9 @@ pub(crate) enum ContextMenuCloseRequest {
     Pending,
 }
 
-/// Context for managing a global context menu.
+/// Global context menu state.
 ///
-/// Requires a [`ContextMenuViewer`] mounted somewhere in the app tree.
+/// Requires a [`ContextMenuViewer`] in an ancestor scope.
 ///
 /// # Example
 ///
@@ -45,16 +45,12 @@ pub struct ContextMenu {
 }
 
 impl ContextMenu {
-    /// Returns the global [`ContextMenu`] state.
-    ///
     /// # Panics
     ///
-    /// Panics if no [`ContextMenuViewer`] has been mounted in the app tree.
+    /// Panics if no [`ContextMenuViewer`] is mounted in an ancestor scope.
     pub fn get() -> Self {
-        try_consume_root_context().expect(
-            "ContextMenu requires a `ContextMenuViewer` mounted in the app tree. \
-             Add `ContextMenuViewer::new()` somewhere inside your `app` component.",
-        )
+        try_consume_root_context()
+            .expect("ContextMenu requires a `ContextMenuViewer` in an ancestor scope")
     }
 
     pub fn is_open() -> bool {
@@ -97,9 +93,9 @@ impl ContextMenu {
 
 /// Provides the [`ContextMenu`] state and renders the floating menu overlay.
 ///
-/// Mount this component once inside your `app` component to enable [`ContextMenu`].
-/// Placing it inside the app tree (rather than above it) means the rendered menu
-/// inherits any styling applied to the app's root element, e.g. `font_size`.
+/// Mount this as high up in your tree as possible (typically in your `app`
+/// component) so the rendered menu inherits styling like `font_size` from
+/// the app's root element.
 ///
 /// # Example
 ///
