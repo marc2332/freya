@@ -289,7 +289,6 @@ impl ResolvablePreference<Color> for Preference<Color> {
                 "text_highlight" => colors_sheet.text_highlight,
 
                 // States
-                "hover" => colors_sheet.hover,
                 "focus" => colors_sheet.focus,
                 "active" => colors_sheet.active,
                 "disabled" => colors_sheet.disabled,
