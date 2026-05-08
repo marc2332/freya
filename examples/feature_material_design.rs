@@ -41,6 +41,7 @@ fn app() -> impl IntoElement {
         .expanded()
         .spacing(16.)
         .padding(16.)
+        .child(ContextMenuViewer::new())
         .child(
             Button::new()
                 .on_press(|_| {
