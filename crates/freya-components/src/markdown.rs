@@ -448,31 +448,28 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
 }
 
 /// Render text spans as a paragraph element.
-fn render_spans(spans: &[TextSpan], base_font_size: f32, code_color: Option<Color>) -> Paragraph {
-    let mut p = paragraph().font_size(base_font_size);
-
-    for span in spans {
-        let mut s = Span::new(span.text.clone());
-
-        if span.bold {
-            s = s.font_weight(FontWeight::BOLD);
-        }
-
-        if span.italic {
-            s = s.font_slant(FontSlant::Italic);
-        }
-
-        if span.code {
-            s = s.font_family("monospace");
-            if let Some(c) = code_color {
-                s = s.color(c);
+fn render_spans(
+    spans: &[TextSpan],
+    base_font_size: f32,
+    text_color: Color,
+    code_color: Color,
+) -> Paragraph {
+    paragraph()
+        .font_size(base_font_size)
+        .spans_iter(spans.iter().map(|span| {
+            let mut styled = Span::new(span.text.clone());
+            if span.bold {
+                styled = styled.font_weight(FontWeight::BOLD);
             }
-        }
-
-        p = p.span(s);
-    }
-
-    p
+            if span.italic {
+                styled = styled.font_slant(FontSlant::Italic);
+            }
+            if span.code {
+                styled.font_family("monospace").color(code_color)
+            } else {
+                styled.color(text_color)
+            }
+        }))
 }
 
 impl Component for MarkdownViewer {
@@ -514,13 +511,13 @@ impl Component for MarkdownViewer {
                         HeadingLevel::H5 => heading_h5,
                         HeadingLevel::H6 => heading_h6,
                     };
-                    render_spans(&spans, font_size, Some(color))
+                    render_spans(&spans, font_size, color, color_code)
                         .font_weight(FontWeight::BOLD)
                         .key(idx)
                         .into()
                 }
                 MarkdownElement::Paragraph { spans } => {
-                    render_spans(&spans, paragraph_size, Some(color))
+                    render_spans(&spans, paragraph_size, color, color_code)
                         .key(idx)
                         .into()
                 }
@@ -551,8 +548,13 @@ impl Component for MarkdownViewer {
                             .horizontal()
                             .cross_align(Alignment::Start)
                             .spacing(8.)
-                            .child(label().text("•").font_size(paragraph_size))
-                            .child(render_spans(&item_spans, paragraph_size, Some(color_code)));
+                            .child(
+                                label()
+                                    .text("•")
+                                    .font_size(paragraph_size)
+                                    .color(color),
+                            )
+                            .child(render_spans(&item_spans, paragraph_size, color, color_code));
 
                         list = list.child(item_content);
                     }
@@ -576,9 +578,10 @@ impl Component for MarkdownViewer {
                             .child(
                                 label()
                                     .text(format!("{}.", number))
-                                    .font_size(paragraph_size),
+                                    .font_size(paragraph_size)
+                                    .color(color),
                             )
-                            .child(render_spans(&item_spans, paragraph_size, Some(color_code)));
+                            .child(render_spans(&item_spans, paragraph_size, color, color_code));
 
                         list = list.child(item_content);
                     }
@@ -616,13 +619,13 @@ impl Component for MarkdownViewer {
 
                     Link::new(url)
                         .tooltip(tooltip)
-                        .child(render_spans(&text, paragraph_size, Some(color)))
+                        .child(render_spans(&text, paragraph_size, color, color_code))
                         .key(idx)
                         .into()
                 }
                 #[cfg(not(feature = "router"))]
                 MarkdownElement::Link { text, .. } => {
-                    render_spans(&text, paragraph_size, Some(color))
+                    render_spans(&text, paragraph_size, color, color_code)
                         .key(idx)
                         .into()
                 }
@@ -638,7 +641,7 @@ impl Component for MarkdownViewer {
                     )
                     .background(background_blockquote)
                     .child(
-                        render_spans(&spans, paragraph_size, Some(color_code))
+                        render_spans(&spans, paragraph_size, color, color_code)
                             .font_slant(FontSlant::Italic),
                     )
                     .into(),
@@ -654,7 +657,7 @@ impl Component for MarkdownViewer {
                     for (col_idx, header_spans) in headers.into_iter().enumerate() {
                         header_row = header_row.child(
                             TableCell::new().key(col_idx).child(
-                                render_spans(&header_spans, table_font_size, Some(color_code))
+                                render_spans(&header_spans, table_font_size, color, color_code)
                                     .font_weight(FontWeight::BOLD),
                             ),
                         );
@@ -666,7 +669,7 @@ impl Component for MarkdownViewer {
                         let mut table_row = TableRow::new().key(row_idx);
                         for (col_idx, cell_spans) in row.into_iter().enumerate() {
                             table_row = table_row.child(TableCell::new().key(col_idx).child(
-                                render_spans(&cell_spans, table_font_size, Some(color_code)),
+                                render_spans(&cell_spans, table_font_size, color, color_code),
                             ));
                         }
                         body = body.child(table_row);
