@@ -61,12 +61,12 @@ impl Component for Property {
 }
 
 #[derive(Clone, PartialEq)]
-pub struct GradientProperty {
+pub struct FillProperty {
     name: String,
     fill: Fill,
 }
 
-impl GradientProperty {
+impl FillProperty {
     pub fn new(name: impl Into<String>, fill: Fill) -> Self {
         Self {
             name: name.into(),
@@ -75,7 +75,7 @@ impl GradientProperty {
     }
 }
 
-impl Component for GradientProperty {
+impl Component for FillProperty {
     fn render(&self) -> impl IntoElement {
         paragraph()
             .line_height(1.9)

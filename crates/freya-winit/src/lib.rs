@@ -133,6 +133,7 @@ pub fn launch(mut launch_config: LaunchConfig) {
         screen_reader,
         waker,
         exit_on_close: launch_config.exit_on_close,
+        gpu_resource_cache_limit: launch_config.gpu_resource_cache_limit,
     };
 
     #[cfg(feature = "tray")]

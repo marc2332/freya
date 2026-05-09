@@ -32,6 +32,7 @@ impl GraphicsDriver {
     pub fn new(
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
+        gpu_resource_cache_limit: usize,
     ) -> (Self, Window) {
         let renderer = std::env::var("FREYA_RENDERER")
             .ok()
@@ -53,7 +54,8 @@ impl GraphicsDriver {
         // Metal (macOS)
         #[cfg(target_os = "macos")]
         {
-            let (driver, window) = metal::MetalDriver::new(event_loop, window_attributes);
+            let (driver, window) =
+                metal::MetalDriver::new(event_loop, window_attributes, gpu_resource_cache_limit);
 
             return (Self::Metal(driver), window);
         }
@@ -61,7 +63,11 @@ impl GraphicsDriver {
         // OpenGL only on Android.
         #[cfg(target_os = "android")]
         {
-            match gl::OpenGLDriver::new(event_loop, window_attributes.clone()) {
+            match gl::OpenGLDriver::new(
+                event_loop,
+                window_attributes.clone(),
+                gpu_resource_cache_limit,
+            ) {
                 Ok((driver, window)) => return (Self::OpenGl(driver), window),
                 Err(err) => {
                     tracing::warn!("OpenGL initialization failed, falling back to software: {err}");
@@ -85,7 +91,11 @@ impl GraphicsDriver {
             };
 
             if use_vulkan {
-                match vulkan::VulkanDriver::new(event_loop, window_attributes.clone()) {
+                match vulkan::VulkanDriver::new(
+                    event_loop,
+                    window_attributes.clone(),
+                    gpu_resource_cache_limit,
+                ) {
                     Ok((driver, window)) => return (Self::Vulkan(driver), window),
                     Err(err) => {
                         tracing::warn!(
@@ -95,7 +105,11 @@ impl GraphicsDriver {
                 }
             }
 
-            match gl::OpenGLDriver::new(event_loop, window_attributes.clone()) {
+            match gl::OpenGLDriver::new(
+                event_loop,
+                window_attributes.clone(),
+                gpu_resource_cache_limit,
+            ) {
                 Ok((driver, window)) => return (Self::OpenGl(driver), window),
                 Err(err) => {
                     tracing::warn!("OpenGL initialization failed, falling back to software: {err}");

@@ -1583,10 +1583,24 @@ pub struct PositionWithAffinity {
     pub position: i32,
 }
 
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+pub struct Options<'a> {
+    pub force_unoptimized: bool,
+    pub name: &'a str,
+}
+
+#[derive(Debug, Clone)]
 pub struct RuntimeEffect;
 
 impl RuntimeEffect {
     pub fn uniforms(&self) -> &[Uniform] {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn make_for_shader(
+        _sksl: impl AsRef<str>,
+        _options: Option<&Options<'_>>,
+    ) -> Result<RuntimeEffect, String> {
         unimplemented!("This is mocked")
     }
 }

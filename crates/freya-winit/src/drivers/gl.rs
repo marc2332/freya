@@ -78,6 +78,7 @@ impl OpenGLDriver {
     pub fn new(
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
+        gpu_resource_cache_limit: usize,
     ) -> Result<(Self, Window), Box<dyn std::error::Error>> {
         let transparent = window_attributes.transparent;
         let template = ConfigTemplateBuilder::new()
@@ -178,6 +179,8 @@ impl OpenGLDriver {
 
         let mut gr_context = direct_contexts::make_gl(interface, None)
             .ok_or("could not create OpenGL direct context")?;
+
+        gr_context.set_resource_cache_limit(gpu_resource_cache_limit);
 
         let render_target = backend_render_targets::make_gl(
             (size.width as i32, size.height as i32),
