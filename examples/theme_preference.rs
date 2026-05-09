@@ -9,7 +9,7 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    let mut theme = use_init_root_theme(|| Platform::get().preferred_theme.read().to_theme());
+    let mut theme = use_init_theme(|| Platform::get().preferred_theme.read().to_theme());
 
     use_side_effect(move || theme.set(Platform::get().preferred_theme.read().to_theme()));
 
