@@ -142,6 +142,13 @@ impl ComponentOwned for ContextMenuViewer {
             })
         });
 
+        use_side_effect(move || {
+            if !*Platform::get().is_app_focused.read() {
+                context.menu.set(None);
+                context.close_request.set(ContextMenuCloseRequest::None);
+            }
+        });
+
         rect()
             .on_global_pointer_move(move |e: Event<PointerEventData>| {
                 context.location.set(e.global_location());
