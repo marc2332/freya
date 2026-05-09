@@ -194,7 +194,7 @@ impl ImageSource {
 /// # use std::path::PathBuf;
 /// # launch_doc(|| {
 /// #   rect().center().expanded().child(ImageViewer::new(("rust-logo", include_bytes!("../../../examples/rust_logo.png"))))
-/// # }, "./images/gallery_image_viewer.png").with_hook(|t| { t.poll(std::time::Duration::from_millis(1), std::time::Duration::from_millis(50)); t.sync_and_update(); }).with_scale_factor(1.).render();
+/// # }, "./images/gallery_image_viewer.png").with_hook(|t| { t.poll(std::time::Duration::from_millis(1), std::time::Duration::from_millis(300)); t.sync_and_update(); }).with_scale_factor(1.).render();
 /// ```
 ///
 /// # Preview
@@ -214,6 +214,7 @@ pub struct ImageViewer {
 
     children: Vec<Element>,
     loading_placeholder: Option<Element>,
+    error_renderer: Option<Callback<String, Element>>,
 
     key: DiffKey,
 }
@@ -229,6 +230,7 @@ impl ImageViewer {
             corner_radius: None,
             children: Vec::new(),
             loading_placeholder: None,
+            error_renderer: None,
             key: DiffKey::None,
         }
     }
@@ -282,6 +284,12 @@ impl ImageViewer {
     /// Custom element rendered while loading.
     pub fn loading_placeholder(mut self, placeholder: impl Into<Element>) -> Self {
         self.loading_placeholder = Some(placeholder.into());
+        self
+    }
+
+    /// Custom element rendered when the image fails to load.
+    pub fn error_renderer(mut self, renderer: impl Into<Callback<String, Element>>) -> Self {
+        self.error_renderer = Some(renderer.into());
         self
     }
 }
@@ -354,7 +362,10 @@ impl Component for ImageViewer {
                         .unwrap_or_else(|| CircularLoader::new().into_element()),
                 )
                 .into(),
-            Asset::Error(err) => err.into(),
+            Asset::Error(err) => match &self.error_renderer {
+                Some(renderer) => renderer.call(err),
+                None => err.into(),
+            },
         }
     }
 

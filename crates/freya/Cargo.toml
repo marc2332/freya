@@ -93,6 +93,7 @@ webview = ["dep:freya-webview"]
 titlebar = ["freya-components/titlebar"]
 terminal = ["dep:freya-terminal"]
 code-editor = ["dep:freya-code-editor"]
+zoom-shortcuts = ["freya-winit/zoom-shortcuts"]
 
 [dependencies]
 freya-core = { workspace = true }

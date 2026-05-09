@@ -80,6 +80,7 @@ pub struct ButtonSegment {
     on_press: Option<EventHandler<Event<PressEventData>>>,
     selected: bool,
     enabled: bool,
+    cursor_icon: CursorIcon,
     key: DiffKey,
 }
 
@@ -97,6 +98,7 @@ impl ButtonSegment {
             on_press: None,
             selected: false,
             enabled: true,
+            cursor_icon: CursorIcon::default(),
             key: DiffKey::None,
         }
     }
@@ -129,6 +131,12 @@ impl ButtonSegment {
 
     pub fn on_press(mut self, on_press: impl Into<EventHandler<Event<PressEventData>>>) -> Self {
         self.on_press = Some(on_press.into());
+        self
+    }
+
+    /// Override the cursor icon shown when hovering over this component while enabled.
+    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+        self.cursor_icon = cursor_icon.into();
         self
     }
 }
@@ -167,6 +175,7 @@ impl Component for ButtonSegment {
         } = theme;
 
         let enabled = use_reactive(&self.enabled);
+        let cursor_icon = self.cursor_icon;
         use_drop(move || {
             if status() == ButtonSegmentStatus::Hovering && enabled() {
                 Cursor::set(CursorIcon::default());
@@ -184,7 +193,7 @@ impl Component for ButtonSegment {
         let on_pointer_enter = move |_| {
             status.set(ButtonSegmentStatus::Hovering);
             if enabled() {
-                Cursor::set(CursorIcon::Pointer);
+                Cursor::set(cursor_icon);
             } else {
                 Cursor::set(CursorIcon::NotAllowed);
             }
