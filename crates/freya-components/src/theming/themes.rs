@@ -490,6 +490,10 @@ fn register_base_component_themes(theme: &mut Theme) {
         PopupThemePreference {
             background: Preference::Reference("background"),
             color: Preference::Reference("text_primary"),
+            width: Preference::Specific(Size::px(500.)),
+            height: Preference::Specific(Size::auto()),
+            padding: Preference::Specific(Gaps::new_all(8.)),
+            spacing: Preference::Specific(4.),
         },
     );
     theme.set(
