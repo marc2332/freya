@@ -2,6 +2,10 @@ use freya::{
     elements::image::Image,
     prelude::*,
 };
+use freya_components::cache::{
+    AssetAge,
+    AssetCacher,
+};
 use freya_testing::prelude::*;
 
 #[test]
@@ -81,6 +85,68 @@ pub fn image_viewer_source_change() {
         image_element.is_some(),
         "Image element should be rendered after new source loads"
     );
+}
+
+#[test]
+pub fn image_viewer_asset_age_zero_clears_cache_on_unmount() {
+    fn app() -> impl IntoElement {
+        let mut show = use_state(|| true);
+        let cacher = use_hook(AssetCacher::get);
+
+        rect()
+            .child(format!("size:{}", cacher.size()))
+            .child(
+                Button::new()
+                    .on_press(move |_| *show.write() = false)
+                    .child("hide"),
+            )
+            .maybe(show(), |r| {
+                r.child(
+                    ImageViewer::new((
+                        "rust-logo-zero-age",
+                        include_bytes!("../../../examples/rust_logo.png"),
+                    ))
+                    .asset_age(AssetAge::zero())
+                    .width(Size::px(300.))
+                    .height(Size::px(300.)),
+                )
+            })
+    }
+
+    let mut test = launch_test(app);
+    test.sync_and_update();
+
+    test.poll(
+        std::time::Duration::from_millis(1),
+        std::time::Duration::from_millis(70),
+    );
+    test.sync_and_update();
+
+    let read_size = |test: &mut TestingRunner| {
+        test.find_many(|node, element| Label::try_downcast(element).map(|_| node))
+            .into_iter()
+            .find_map(|l| {
+                Label::try_downcast(&*l.element())
+                    .unwrap()
+                    .text
+                    .strip_prefix("size:")
+                    .map(|s| s.to_string())
+            })
+            .unwrap()
+    };
+
+    assert_eq!(read_size(&mut test), "1");
+
+    test.click_cursor((20.0, 30.0));
+    test.sync_and_update();
+
+    test.poll(
+        std::time::Duration::from_millis(1),
+        std::time::Duration::from_millis(70),
+    );
+    test.sync_and_update();
+
+    assert_eq!(read_size(&mut test), "0");
 }
 
 #[test]
