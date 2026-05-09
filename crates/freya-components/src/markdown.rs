@@ -602,12 +602,15 @@ impl Component for MarkdownViewer {
                     Err(_) => label()
                         .key(idx)
                         .text(format!("[Invalid image URL: {}]", url))
+                        .color(color)
                         .into(),
                 },
                 #[cfg(not(feature = "remote-asset"))]
-                MarkdownElement::Image { alt, .. } => {
-                    label().key(idx).text(format!("[Image: {}]", alt)).into()
-                }
+                MarkdownElement::Image { alt, .. } => label()
+                    .key(idx)
+                    .text(format!("[Image: {}]", alt))
+                    .color(color)
+                    .into(),
                 #[cfg(feature = "router")]
                 MarkdownElement::Link { url, title, text } => {
                     let mut tooltip = LinkTooltip::Default;
