@@ -43,11 +43,11 @@ fn app() -> impl IntoElement {
         .padding(16.)
         .child(
             Button::new()
-                .on_press(|_| {
+                .on_press(|e: Event<PressEventData>| {
                     if ContextMenu::is_open() {
                         ContextMenu::close();
                     } else {
-                        ContextMenu::open(context_menu());
+                        ContextMenu::open_from_event(&e, context_menu());
                     }
                 })
                 .flat()
