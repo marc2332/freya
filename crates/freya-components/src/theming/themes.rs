@@ -335,6 +335,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             background: Preference::Reference("surface_tertiary"),
             active_background: Preference::Reference("surface_secondary"),
             hover_background: Preference::Reference("hover"),
+            focus_border_fill: Preference::Reference("border_focus"),
             corner_radius: Preference::Specific(CornerRadius::new_all(12.)),
             margin: Preference::Specific(Gaps::new_all(0.)),
             padding: Preference::Specific(Gaps::new(8., 12., 8., 12.)),
