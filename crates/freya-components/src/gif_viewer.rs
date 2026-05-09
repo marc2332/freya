@@ -197,7 +197,7 @@ impl GifSource {
 /// # use std::path::PathBuf;
 /// # launch_doc(|| {
 /// #   rect().center().expanded().child(GifViewer::new(("frog-typing", include_bytes!("../../../examples/frog_typing.gif"))))
-/// # }, "./images/gallery_gif_viewer.png").with_hook(|t| { t.poll(std::time::Duration::from_millis(1), std::time::Duration::from_millis(50)); t.sync_and_update(); }).with_scale_factor(1.).render();
+/// # }, "./images/gallery_gif_viewer.png").with_hook(|t| { t.poll(std::time::Duration::from_millis(1), std::time::Duration::from_millis(1500)); t.sync_and_update(); }).with_scale_factor(1.).render();
 /// ```
 ///
 /// # Preview

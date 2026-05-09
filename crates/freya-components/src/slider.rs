@@ -49,6 +49,7 @@ pub struct Slider {
     size: Size,
     direction: Direction,
     enabled: bool,
+    cursor_icon: CursorIcon,
     key: DiffKey,
 }
 
@@ -67,6 +68,7 @@ impl Slider {
             size: Size::fill(),
             direction: Direction::Horizontal,
             enabled: true,
+            cursor_icon: CursorIcon::default(),
             key: DiffKey::None,
         }
     }
@@ -95,6 +97,12 @@ impl Slider {
         self.direction = direction;
         self
     }
+
+    /// Override the cursor icon shown when hovering over this component while enabled.
+    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+        self.cursor_icon = cursor_icon.into();
+        self
+    }
 }
 
 impl Component for Slider {
@@ -107,6 +115,7 @@ impl Component for Slider {
         let mut size = use_state(Area::default);
 
         let enabled = use_reactive(&self.enabled);
+        let cursor_icon = self.cursor_icon;
         use_drop(move || {
             if hovering() {
                 Cursor::set(CursorIcon::default());
@@ -143,7 +152,7 @@ impl Component for Slider {
         let on_pointer_enter = move |_| {
             hovering.set(true);
             if enabled() {
-                Cursor::set(CursorIcon::Pointer);
+                Cursor::set(cursor_icon);
             } else {
                 Cursor::set(CursorIcon::NotAllowed);
             }
@@ -188,6 +197,17 @@ impl Component for Slider {
                     coordinates.x - size.read().min_x() as f64,
                     coordinates.y - size.read().min_y() as f64,
                 ));
+            }
+        };
+
+        let on_wheel = {
+            let on_moved = self.on_moved.clone();
+            move |e: Event<WheelEventData>| {
+                if e.delta_y == 0.0 {
+                    return;
+                }
+                e.stop_propagation();
+                on_moved.call((value + e.delta_y * 0.1).clamp(0.0, 100.0));
             }
         };
 
@@ -274,6 +294,7 @@ impl Component for Slider {
                     .on_pointer_down(on_pointer_down)
                     .on_global_pointer_move(on_global_pointer_move)
                     .on_global_pointer_press(on_global_pointer_press)
+                    .on_wheel(on_wheel)
             })
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)

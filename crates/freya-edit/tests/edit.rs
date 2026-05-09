@@ -1331,3 +1331,239 @@ fn navigate_empty_lines() {
     let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
     assert!(cursor.is_some());
 }
+
+#[test]
+fn cursor_word_navigation() {
+    fn app() -> impl IntoElement {
+        let mut editable = use_editable(
+            || "Hello Rustaceans\nFoo bar".to_string(),
+            EditableConfig::new,
+        );
+        let holder = use_state(ParagraphHolder::default);
+        let editor = editable.editor().read();
+        let cursor_pos = editor.cursor_pos();
+
+        let on_global_key_down = move |e: Event<KeyboardEventData>| {
+            editable.process_event(EditableEvent::KeyDown {
+                key: &e.key,
+                modifiers: e.modifiers,
+            });
+        };
+
+        rect()
+            .font_family("NotoSans")
+            .width(Size::fill())
+            .height(Size::fill())
+            .background((255, 255, 255))
+            .child(
+                paragraph()
+                    .holder(holder.read().clone())
+                    .height(Size::percent(50.0))
+                    .width(Size::fill())
+                    .cursor_index(cursor_pos)
+                    .cursor_color((0, 0, 0))
+                    .on_global_key_down(on_global_key_down)
+                    .span(Span::new(editor.to_string())),
+            )
+            .child(
+                label()
+                    .color((0, 0, 0))
+                    .height(Size::percent(50.0))
+                    .text(format!("{}:{}", editor.cursor_row(), editor.cursor_col())),
+            )
+    }
+
+    let mut utils = launch_test(app);
+    utils.set_fonts(HashMap::from_iter([(
+        "NotoSans",
+        include_bytes!("./NotoSans-Regular.ttf").as_slice(),
+    )]));
+    utils.set_default_fonts(&["NotoSans".into()]);
+
+    let word_modifier = if cfg!(target_os = "macos") {
+        Modifiers::ALT
+    } else {
+        Modifiers::CONTROL
+    };
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::ArrowRight),
+        code: Code::Unidentified,
+        modifiers: word_modifier,
+    });
+    utils.sync_and_update();
+    let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
+    assert_eq!(cursor.as_deref(), Some("0:5"));
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::ArrowRight),
+        code: Code::Unidentified,
+        modifiers: word_modifier,
+    });
+    utils.sync_and_update();
+    let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
+    assert_eq!(cursor.as_deref(), Some("0:16"));
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::ArrowRight),
+        code: Code::Unidentified,
+        modifiers: word_modifier,
+    });
+    utils.sync_and_update();
+    let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
+    assert_eq!(cursor.as_deref(), Some("1:3"));
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::ArrowRight),
+        code: Code::Unidentified,
+        modifiers: word_modifier,
+    });
+    utils.sync_and_update();
+    let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
+    assert_eq!(cursor.as_deref(), Some("1:7"));
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::ArrowRight),
+        code: Code::Unidentified,
+        modifiers: word_modifier,
+    });
+    utils.sync_and_update();
+    let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
+    assert_eq!(cursor.as_deref(), Some("1:7"));
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::ArrowLeft),
+        code: Code::Unidentified,
+        modifiers: word_modifier,
+    });
+    utils.sync_and_update();
+    let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
+    assert_eq!(cursor.as_deref(), Some("1:4"));
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::ArrowLeft),
+        code: Code::Unidentified,
+        modifiers: word_modifier,
+    });
+    utils.sync_and_update();
+    let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
+    assert_eq!(cursor.as_deref(), Some("1:0"));
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::ArrowLeft),
+        code: Code::Unidentified,
+        modifiers: word_modifier,
+    });
+    utils.sync_and_update();
+    let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
+    assert_eq!(cursor.as_deref(), Some("0:6"));
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::ArrowLeft),
+        code: Code::Unidentified,
+        modifiers: word_modifier,
+    });
+    utils.sync_and_update();
+    let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
+    assert_eq!(cursor.as_deref(), Some("0:0"));
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::ArrowLeft),
+        code: Code::Unidentified,
+        modifiers: word_modifier,
+    });
+    utils.sync_and_update();
+    let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
+    assert_eq!(cursor.as_deref(), Some("0:0"));
+}
+
+#[test]
+fn cursor_word_navigation_with_selection() {
+    fn app() -> impl IntoElement {
+        let mut editable = use_editable(|| "Hello Rustaceans".to_string(), EditableConfig::new);
+        let holder = use_state(ParagraphHolder::default);
+        let editor = editable.editor().read();
+        let cursor_pos = editor.cursor_pos();
+
+        let on_global_key_down = move |e: Event<KeyboardEventData>| {
+            editable.process_event(EditableEvent::KeyDown {
+                key: &e.key,
+                modifiers: e.modifiers,
+            });
+        };
+
+        rect()
+            .font_family("NotoSans")
+            .width(Size::fill())
+            .height(Size::fill())
+            .background((255, 255, 255))
+            .child(
+                paragraph()
+                    .holder(holder.read().clone())
+                    .highlights(
+                        editor
+                            .get_visible_selection(EditorLine::SingleParagraph)
+                            .map(|h| vec![h]),
+                    )
+                    .height(Size::percent(50.0))
+                    .width(Size::fill())
+                    .cursor_index(cursor_pos)
+                    .cursor_color((0, 0, 0))
+                    .on_global_key_down(on_global_key_down)
+                    .span(Span::new(editor.to_string())),
+            )
+    }
+
+    let mut utils = launch_test(app);
+    utils.set_fonts(HashMap::from_iter([(
+        "NotoSans",
+        include_bytes!("./NotoSans-Regular.ttf").as_slice(),
+    )]));
+    utils.set_default_fonts(&["NotoSans".into()]);
+
+    let shift_word_modifier = if cfg!(target_os = "macos") {
+        Modifiers::ALT | Modifiers::SHIFT
+    } else {
+        Modifiers::CONTROL | Modifiers::SHIFT
+    };
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::ArrowRight),
+        code: Code::Unidentified,
+        modifiers: shift_word_modifier,
+    });
+    utils.sync_and_update();
+    let highlights = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.highlights.clone()));
+    assert_eq!(highlights, Some(vec![(0, 5)]));
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::ArrowRight),
+        code: Code::Unidentified,
+        modifiers: shift_word_modifier,
+    });
+    utils.sync_and_update();
+    let highlights = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.highlights.clone()));
+    assert_eq!(highlights, Some(vec![(0, 16)]));
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::ArrowLeft),
+        code: Code::Unidentified,
+        modifiers: shift_word_modifier,
+    });
+    utils.sync_and_update();
+    let highlights = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.highlights.clone()));
+    assert_eq!(highlights, Some(vec![(0, 6)]));
+}

@@ -30,17 +30,22 @@ fn context_menu() -> Menu {
 }
 
 fn app() -> impl IntoElement {
-    use_init_root_theme(dark_theme);
+    use_init_theme(dark_theme);
 
-    rect().theme_background().center().expanded().child(
-        Button::new()
-            .on_press(move |e: Event<PressEventData>| {
-                if ContextMenu::is_open() {
-                    ContextMenu::close();
-                } else {
-                    ContextMenu::open_from_event(&e, context_menu())
-                }
-            })
-            .child("Open"),
-    )
+    rect()
+        .theme_background()
+        .center()
+        .expanded()
+        .child(ContextMenuViewer::new())
+        .child(
+            Button::new()
+                .on_press(move |e: Event<PressEventData>| {
+                    if ContextMenu::is_open() {
+                        ContextMenu::close();
+                    } else {
+                        ContextMenu::open_from_event(&e, context_menu())
+                    }
+                })
+                .child("Open"),
+        )
 }
