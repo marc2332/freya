@@ -193,6 +193,7 @@ impl AppWindow {
         let mut tree = Tree::default();
 
         let window_size = window.inner_size();
+        let accent_color_preference = accent_color_preference();
         let platform = runner.provide_root_context({
             let event_loop_proxy = event_loop_proxy.clone();
             let window_id = window.id();
@@ -211,6 +212,7 @@ impl AppWindow {
                 )),
                 navigation_mode: State::create(NavigationMode::NotKeyboard),
                 preferred_theme: State::create(theme),
+                accent_color: State::create(accent_color_preference.accent_color),
                 sender: Rc::new(move |user_event| {
                     event_loop_proxy
                         .send_event(NativeEvent::Window(NativeWindowEvent {
@@ -427,4 +429,16 @@ impl AppWindow {
         }
         true
     }
+}
+
+fn accent_color_preference() -> mundy::Preferences {
+    use std::sync::OnceLock;
+    static PREFERENCE: OnceLock<mundy::Preferences> = OnceLock::new();
+    *PREFERENCE.get_or_init(|| {
+        mundy::Preferences::once_blocking(
+            mundy::Interest::AccentColor,
+            std::time::Duration::from_millis(200),
+        )
+        .unwrap_or_default()
+    })
 }
