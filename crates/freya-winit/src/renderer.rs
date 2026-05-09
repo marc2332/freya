@@ -94,6 +94,7 @@ pub struct WinitRenderer {
     pub futures: Vec<Pin<Box<dyn std::future::Future<Output = ()>>>>,
     pub waker: Waker,
     pub exit_on_close: bool,
+    pub gpu_resource_cache_limit: usize,
 }
 
 pub struct RendererContext<'a> {
@@ -105,6 +106,7 @@ pub struct RendererContext<'a> {
     pub font_manager: &'a mut FontMgr,
     pub font_collection: &'a mut FontCollection,
     pub active_event_loop: &'a ActiveEventLoop,
+    pub gpu_resource_cache_limit: usize,
 }
 
 impl RendererContext<'_> {
@@ -118,6 +120,7 @@ impl RendererContext<'_> {
             self.font_manager,
             self.fallback_fonts,
             self.screen_reader.clone(),
+            self.gpu_resource_cache_limit,
         );
 
         let window_id = app_window.window.id();
@@ -287,6 +290,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     &self.font_manager,
                     &self.fallback_fonts,
                     self.screen_reader.clone(),
+                    self.gpu_resource_cache_limit,
                 );
 
                 self.proxy
@@ -308,8 +312,11 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
             // so we don't end up with a completely black surface with broken rendering.
             let old_windows: Vec<_> = self.windows.drain().collect();
             for (_, mut app_window) in old_windows {
-                let (new_driver, new_window) =
-                    GraphicsDriver::new(active_event_loop, app_window.window_attributes.clone());
+                let (new_driver, new_window) = GraphicsDriver::new(
+                    active_event_loop,
+                    app_window.window_attributes.clone(),
+                    self.gpu_resource_cache_limit,
+                );
 
                 let new_id = new_window.id();
                 app_window.driver = new_driver;
@@ -345,6 +352,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     screen_reader: &mut self.screen_reader,
                     font_manager: &mut self.font_manager,
                     font_collection: &mut self.font_collection,
+                    gpu_resource_cache_limit: self.gpu_resource_cache_limit,
                 };
                 (cb)(&mut renderer_context);
             }
@@ -364,6 +372,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     screen_reader: &mut self.screen_reader,
                     font_manager: &mut self.font_manager,
                     font_collection: &mut self.font_collection,
+                    gpu_resource_cache_limit: self.gpu_resource_cache_limit,
                 };
                 match action {
                     NativeTrayEventAction::TrayEvent(icon_event) => {
@@ -392,6 +401,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             &self.font_manager,
                             &self.fallback_fonts,
                             self.screen_reader.clone(),
+                            self.gpu_resource_cache_limit,
                         );
 
                         self.proxy
@@ -551,6 +561,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                             &self.font_manager,
                                             &self.fallback_fonts,
                                             self.screen_reader.clone(),
+                                            self.gpu_resource_cache_limit,
                                         );
 
                                         let window_id = app_window.window.id();
@@ -597,6 +608,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                             screen_reader: &mut self.screen_reader,
                                             font_manager: &mut self.font_manager,
                                             font_collection: &mut self.font_collection,
+                                            gpu_resource_cache_limit: self.gpu_resource_cache_limit,
                                         };
                                         (cb)(window_id, &mut renderer_context);
                                     }
@@ -660,6 +672,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             screen_reader: &mut self.screen_reader,
                             font_manager: &mut self.font_manager,
                             font_collection: &mut self.font_collection,
+                            gpu_resource_cache_limit: self.gpu_resource_cache_limit,
                         };
                         on_close(renderer_context, window_id)
                     } else {
