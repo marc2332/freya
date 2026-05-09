@@ -99,7 +99,10 @@ pub use skia_safe::{
     rrect::Corner,
     runtime_effect::Uniform,
     shaders,
-    surfaces::raster_n32_premul,
+    surfaces::{
+        raster_n32_premul,
+        wrap_pixels,
+    },
     svg,
     textlayout::{
         Decoration,
