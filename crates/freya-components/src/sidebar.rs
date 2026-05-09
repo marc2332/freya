@@ -18,6 +18,7 @@ define_theme! {
         background: Color,
         hover_background: Color,
         active_background: Color,
+        focus_border_fill: Color,
         corner_radius: CornerRadius,
         margin: Gaps,
         padding: Gaps,
@@ -138,12 +139,15 @@ impl Component for SideBarItem {
             hover_background,
             active_background,
             background,
+            focus_border_fill,
             corner_radius,
             padding,
             color,
         } = get_theme!(&self.theme, SideBarItemThemePreference, "sidebar_item");
         let mut status = use_state(SideBarItemStatus::default);
         let is_active = use_activable_route();
+        let focus = use_focus();
+        let focus_status = use_focus_status(focus);
 
         let on_pointer_enter = move |_| {
             status.set(SideBarItemStatus::Hovering);
@@ -159,11 +163,22 @@ impl Component for SideBarItem {
             SideBarItemStatus::Idle => background,
         };
 
+        let border = (focus_status() == FocusStatus::Keyboard).then(|| {
+            Border::new()
+                .fill(focus_border_fill)
+                .width(2.)
+                .alignment(BorderAlignment::Inner)
+        });
+
+        let on_press = self.on_press.clone();
         rect()
+            .a11y_id(focus.a11y_id())
             .a11y_focusable(true)
             .a11y_role(AccessibilityRole::Link)
-            .map(self.on_press.clone(), |rect, on_press| {
-                rect.on_press(on_press)
+            .on_press(move |e: Event<PressEventData>| {
+                if let Some(handler) = &on_press {
+                    handler.call(e);
+                }
             })
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
@@ -174,6 +189,7 @@ impl Component for SideBarItem {
             .color(color)
             .background(background)
             .corner_radius(corner_radius)
+            .map(border, |rect, border| rect.border(border))
             .children(self.children.clone())
     }
 

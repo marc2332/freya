@@ -80,7 +80,6 @@ pub struct AppWindow {
     pub(crate) position: CursorPoint,
     pub(crate) mouse_state: ElementState,
     pub(crate) modifiers_state: ModifiersState,
-    pub(crate) just_focused: bool,
 
     pub(crate) events_receiver: futures_channel::mpsc::UnboundedReceiver<EventsChunk>,
     pub(crate) events_sender: futures_channel::mpsc::UnboundedSender<EventsChunk>,
@@ -106,9 +105,17 @@ pub struct AppWindow {
     pub(crate) on_close: Option<OnCloseHook>,
 
     pub(crate) window_attributes: WindowAttributes,
+
+    pub(crate) user_zoom: f32,
     #[cfg(feature = "hotreload")]
     pub(crate) hot_reload_pending: Arc<std::sync::atomic::AtomicBool>,
 }
+
+pub(crate) const MIN_USER_ZOOM: f32 = 0.25;
+pub(crate) const MAX_USER_ZOOM: f32 = 5.0;
+
+#[cfg(feature = "zoom-shortcuts")]
+pub(crate) const ZOOM_STEP: f32 = 0.10;
 
 impl AppWindow {
     #[allow(clippy::too_many_arguments)]
@@ -121,6 +128,7 @@ impl AppWindow {
         font_manager: &FontMgr,
         fallback_fonts: &[Cow<'static, str>],
         screen_reader: ScreenReader,
+        gpu_resource_cache_limit: usize,
     ) -> Self {
         #[cfg(feature = "hotreload")]
         let hot_reload_pending = Arc::new(std::sync::atomic::AtomicBool::new(false));
@@ -149,8 +157,11 @@ impl AppWindow {
         if let Some(window_attributes_hook) = window_config.window_attributes_hook.take() {
             window_attributes = window_attributes_hook(window_attributes, active_event_loop);
         }
-        let (driver, mut window) =
-            GraphicsDriver::new(active_event_loop, window_attributes.clone());
+        let (driver, mut window) = GraphicsDriver::new(
+            active_event_loop,
+            window_attributes.clone(),
+            gpu_resource_cache_limit,
+        );
 
         if let Some(window_handle_hook) = window_config.window_handle_hook.take() {
             window_handle_hook(&mut window);
@@ -182,6 +193,7 @@ impl AppWindow {
         let mut tree = Tree::default();
 
         let window_size = window.inner_size();
+        let accent_color_preference = accent_color_preference();
         let platform = runner.provide_root_context({
             let event_loop_proxy = event_loop_proxy.clone();
             let window_id = window.id();
@@ -202,6 +214,7 @@ impl AppWindow {
                 navigation_mode: State::create(NavigationMode::NotKeyboard),
                 preferred_theme: State::create(theme),
                 is_app_focused: State::create(is_app_focused),
+                accent_color: State::create(accent_color_preference.accent_color),
                 sender: Rc::new(move |user_event| {
                     event_loop_proxy
                         .send_event(NativeEvent::Window(NativeWindowEvent {
@@ -327,7 +340,6 @@ impl AppWindow {
             mouse_state: ElementState::Released,
             position: CursorPoint::default(),
             modifiers_state: ModifiersState::default(),
-            just_focused: false,
 
             events_receiver,
             events_sender,
@@ -354,6 +366,8 @@ impl AppWindow {
 
             window_attributes,
 
+            user_zoom: 1.0,
+
             #[cfg(feature = "hotreload")]
             hot_reload_pending,
         }
@@ -366,4 +380,67 @@ impl AppWindow {
     pub fn window_mut(&mut self) -> &mut Window {
         &mut self.window
     }
+
+    pub fn effective_scale_factor(&self) -> f64 {
+        self.window.scale_factor() * self.user_zoom as f64
+    }
+
+    /// Sets `user_zoom`, clamped to `[MIN_USER_ZOOM, MAX_USER_ZOOM]`. On change,
+    /// resets layout/text caches and requests a redraw, mirroring `ScaleFactorChanged`.
+    pub fn set_user_zoom(&mut self, zoom: f32) {
+        let clamped = zoom.clamp(MIN_USER_ZOOM, MAX_USER_ZOOM);
+        if (clamped - self.user_zoom).abs() < f32::EPSILON {
+            return;
+        }
+        self.user_zoom = clamped;
+        self.process_layout_on_next_render = true;
+        self.tree.layout.reset();
+        self.tree.text_cache.reset();
+        self.window.request_redraw();
+    }
+
+    /// Returns `true` when the combo matched. Releases are also consumed so
+    /// press/release pairs stay symmetrical for upstream listeners.
+    #[cfg(feature = "zoom-shortcuts")]
+    pub fn try_handle_zoom_shortcut(
+        &mut self,
+        key: &keyboard_types::Key,
+        modifiers: keyboard_types::Modifiers,
+        is_pressed: bool,
+    ) -> bool {
+        use keyboard_types::{
+            Key,
+            Modifiers,
+        };
+        let zoom_modifier = if cfg!(target_os = "macos") {
+            Modifiers::META
+        } else {
+            Modifiers::CONTROL
+        };
+        if !modifiers.contains(zoom_modifier) {
+            return false;
+        }
+        let new_zoom = match key {
+            Key::Character(c) if c == "+" || c == "=" => self.user_zoom + ZOOM_STEP,
+            Key::Character(c) if c == "-" => self.user_zoom - ZOOM_STEP,
+            Key::Character(c) if c == "0" => 1.0,
+            _ => return false,
+        };
+        if is_pressed {
+            self.set_user_zoom(new_zoom);
+        }
+        true
+    }
+}
+
+fn accent_color_preference() -> mundy::Preferences {
+    use std::sync::OnceLock;
+    static PREFERENCE: OnceLock<mundy::Preferences> = OnceLock::new();
+    *PREFERENCE.get_or_init(|| {
+        mundy::Preferences::once_blocking(
+            mundy::Interest::AccentColor,
+            std::time::Duration::from_millis(200),
+        )
+        .unwrap_or_default()
+    })
 }

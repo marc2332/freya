@@ -1,5 +1,9 @@
 use std::rc::Rc;
 
+pub use mundy::{
+    AccentColor,
+    Srgba,
+};
 use torin::prelude::Size2D;
 
 use crate::{
@@ -43,6 +47,8 @@ pub struct Platform {
     pub preferred_theme: State<PreferredTheme>,
     /// Whether the app currently has the OS-level focus.
     pub is_app_focused: State<bool>,
+    /// The OS-level [`AccentColor`].
+    pub accent_color: State<AccentColor>,
     /// Sender used to dispatch [`UserEvent`]s to the active renderer.
     pub sender: Rc<dyn Fn(UserEvent)>,
 }

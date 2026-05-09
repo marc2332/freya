@@ -12,7 +12,6 @@ define_theme! {
     pub CircularLoader {
         %[fields]
         primary_color: Color,
-        inversed_color: Color,
     }
 }
 

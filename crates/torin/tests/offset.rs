@@ -368,6 +368,59 @@ pub fn offset_change_and_nested_addition() {
     assert_eq!(layout.get_dirty_nodes().get(&2), Some(&DirtyReason::None));
 }
 
+/// Regression: the inner-sized origin recompute used to translate
+/// descendants that the initial-phase pass had skipped caching.
+#[test]
+pub fn inner_sized_absolute_under_aligned_parent_does_not_panic() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
+        0,
+        None,
+        vec![1],
+        Node::from_size_and_alignments_and_direction(
+            Size::Inner,
+            Size::Inner,
+            Alignment::Center,
+            Alignment::Start,
+            Direction::Vertical,
+        ),
+    );
+    mocked_tree.add(
+        1,
+        Some(0),
+        vec![2],
+        Node::from_size_and_direction(Size::Inner, Size::Inner, Direction::Vertical),
+    );
+    mocked_tree.add(
+        2,
+        Some(1),
+        vec![3],
+        Node::from_size_and_position(Size::Inner, Size::Inner, Position::new_absolute().right(0.)),
+    );
+    mocked_tree.add(
+        3,
+        Some(2),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(50.0)),
+            Size::Pixels(Length::new(50.0)),
+            Direction::Vertical,
+        ),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        &mut measurer,
+        &mut mocked_tree,
+    );
+
+    assert_eq!(layout.get(&3).unwrap().area.size, Size2D::new(50.0, 50.0));
+    assert_eq!(layout.get(&2).unwrap().area.size, Size2D::new(50.0, 50.0));
+}
+
 #[test]
 pub fn offset() {
     let (mut layout, mut measurer) = test_utils();

@@ -94,6 +94,7 @@ pub struct WinitRenderer {
     pub futures: Vec<Pin<Box<dyn std::future::Future<Output = ()>>>>,
     pub waker: Waker,
     pub exit_on_close: bool,
+    pub gpu_resource_cache_limit: usize,
 }
 
 pub struct RendererContext<'a> {
@@ -105,6 +106,7 @@ pub struct RendererContext<'a> {
     pub font_manager: &'a mut FontMgr,
     pub font_collection: &'a mut FontCollection,
     pub active_event_loop: &'a ActiveEventLoop,
+    pub gpu_resource_cache_limit: usize,
 }
 
 impl RendererContext<'_> {
@@ -118,6 +120,7 @@ impl RendererContext<'_> {
             self.font_manager,
             self.fallback_fonts,
             self.screen_reader.clone(),
+            self.gpu_resource_cache_limit,
         );
 
         let window_id = app_window.window.id();
@@ -247,6 +250,7 @@ pub enum NativeEvent {
     #[cfg(feature = "tray")]
     Tray(NativeTrayEvent),
     Generic(NativeGenericEvent),
+    Preferences(mundy::Preferences),
 }
 
 impl From<accesskit_winit::Event> for NativeEvent {
@@ -287,6 +291,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     &self.font_manager,
                     &self.fallback_fonts,
                     self.screen_reader.clone(),
+                    self.gpu_resource_cache_limit,
                 );
 
                 self.proxy
@@ -300,6 +305,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
             }
             self.resumed = true;
 
+            subscribe_preferences(self.proxy.clone());
+
             let _ = self
                 .proxy
                 .send_event(NativeEvent::Generic(NativeGenericEvent::PollFutures));
@@ -308,8 +315,11 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
             // so we don't end up with a completely black surface with broken rendering.
             let old_windows: Vec<_> = self.windows.drain().collect();
             for (_, mut app_window) in old_windows {
-                let (new_driver, new_window) =
-                    GraphicsDriver::new(active_event_loop, app_window.window_attributes.clone());
+                let (new_driver, new_window) = GraphicsDriver::new(
+                    active_event_loop,
+                    app_window.window_attributes.clone(),
+                    self.gpu_resource_cache_limit,
+                );
 
                 let new_id = new_window.id();
                 app_window.driver = new_driver;
@@ -345,6 +355,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     screen_reader: &mut self.screen_reader,
                     font_manager: &mut self.font_manager,
                     font_collection: &mut self.font_collection,
+                    gpu_resource_cache_limit: self.gpu_resource_cache_limit,
                 };
                 (cb)(&mut renderer_context);
             }
@@ -352,6 +363,13 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 let mut cx = std::task::Context::from_waker(&self.waker);
                 self.futures
                     .retain_mut(|fut| fut.poll(&mut cx).is_pending());
+            }
+            NativeEvent::Preferences(prefs) => {
+                for app in self.windows.values_mut() {
+                    app.platform
+                        .accent_color
+                        .set_if_modified(prefs.accent_color);
+                }
             }
             #[cfg(feature = "tray")]
             NativeEvent::Tray(NativeTrayEvent { action }) => {
@@ -364,6 +382,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     screen_reader: &mut self.screen_reader,
                     font_manager: &mut self.font_manager,
                     font_collection: &mut self.font_collection,
+                    gpu_resource_cache_limit: self.gpu_resource_cache_limit,
                 };
                 match action {
                     NativeTrayEventAction::TrayEvent(icon_event) => {
@@ -392,6 +411,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             &self.font_manager,
                             &self.fallback_fonts,
                             self.screen_reader.clone(),
+                            self.gpu_resource_cache_limit,
                         );
 
                         self.proxy
@@ -551,6 +571,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                             &self.font_manager,
                                             &self.fallback_fonts,
                                             self.screen_reader.clone(),
+                                            self.gpu_resource_cache_limit,
                                         );
 
                                         let window_id = app_window.window.id();
@@ -597,6 +618,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                             screen_reader: &mut self.screen_reader,
                                             font_manager: &mut self.font_manager,
                                             font_collection: &mut self.font_collection,
+                                            gpu_resource_cache_limit: self.gpu_resource_cache_limit,
                                         };
                                         (cb)(window_id, &mut renderer_context);
                                     }
@@ -605,8 +627,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         },
                         NativeWindowEventAction::PlatformEvent(platform_event) => {
                             let mut events_measurer_adapter = EventsMeasurerAdapter {
+                                scale_factor: app.effective_scale_factor(),
                                 tree: &mut app.tree,
-                                scale_factor: app.window.scale_factor(),
                             };
                             let processed_events = events_measurer_adapter.run(
                                 &mut vec![platform_event],
@@ -660,6 +682,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             screen_reader: &mut self.screen_reader,
                             font_manager: &mut self.font_manager,
                             font_collection: &mut self.font_collection,
+                            gpu_resource_cache_limit: self.gpu_resource_cache_limit,
                         };
                         on_close(renderer_context, window_id)
                     } else {
@@ -697,13 +720,10 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     app.modifiers_state = modifiers.state();
                 }
                 WindowEvent::Focused(is_focused) => {
-                    if cfg!(not(target_os = "android")) {
-                        // The focused workaround is only for desktop targets
-                        app.just_focused = is_focused;
-                    }
                     app.platform.is_app_focused.set_if_modified(is_focused);
                 }
                 WindowEvent::RedrawRequested => {
+                    let scale_factor = app.effective_scale_factor();
                     hotpath::measure_block!("RedrawRequested", {
                         if app.process_layout_on_next_render {
                             self.plugins.send(
@@ -724,7 +744,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 &mut self.font_collection,
                                 &self.font_manager,
                                 &app.events_sender,
-                                app.window.scale_factor(),
+                                scale_factor,
                                 &self.fallback_fonts,
                             );
                             app.platform.root_size.set_if_modified(size);
@@ -757,7 +777,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                     font_manager: &self.font_manager,
                                     tree: &app.tree,
                                     canvas: surface.canvas(),
-                                    scale_factor: app.window.scale_factor(),
+                                    scale_factor,
                                     background: app.background,
                                 };
 
@@ -888,7 +908,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 }
 
                 WindowEvent::MouseInput { state, button, .. } => {
-                    app.just_focused = false;
                     app.mouse_state = state;
                     app.platform
                         .navigation_mode
@@ -905,8 +924,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         button: Some(map_winit_mouse_button(button)),
                     };
                     let mut events_measurer_adapter = EventsMeasurerAdapter {
+                        scale_factor: app.effective_scale_factor(),
                         tree: &mut app.tree,
-                        scale_factor: app.window.scale_factor(),
                     };
                     let processed_events = events_measurer_adapter.run(
                         &mut vec![platform_event],
@@ -918,10 +937,13 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         .unwrap();
                 }
 
-                WindowEvent::KeyboardInput { event, .. } => {
-                    // Workaround for winit sending a Tab event when alt-tabbing
-                    if app.just_focused {
-                        app.just_focused = false;
+                WindowEvent::KeyboardInput {
+                    event,
+                    is_synthetic,
+                    ..
+                } => {
+                    // Ignore synthetic presses (e.g. Tab on alt-tab) but keep synthetic releases so keys don't get stuck.
+                    if is_synthetic && event.state == ElementState::Pressed {
                         return;
                     }
 
@@ -932,6 +954,11 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     let key = winit_mappings::map_winit_key(&event.logical_key);
                     let code = winit_mappings::map_winit_physical_key(&event.physical_key);
                     let modifiers = winit_mappings::map_winit_modifiers(app.modifiers_state);
+
+                    #[cfg(feature = "zoom-shortcuts")]
+                    if app.try_handle_zoom_shortcut(&key, modifiers, event.state.is_pressed()) {
+                        return;
+                    }
 
                     self.plugins.send(
                         PluginEvent::KeyboardInput {
@@ -951,8 +978,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         modifiers,
                     };
                     let mut events_measurer_adapter = EventsMeasurerAdapter {
+                        scale_factor: app.effective_scale_factor(),
                         tree: &mut app.tree,
-                        scale_factor: app.window.scale_factor(),
                     };
                     let processed_events = events_measurer_adapter.run(
                         &mut vec![platform_event],
@@ -989,8 +1016,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             source: WheelSource::Device,
                         };
                         let mut events_measurer_adapter = EventsMeasurerAdapter {
+                            scale_factor: app.effective_scale_factor(),
                             tree: &mut app.tree,
-                            scale_factor: app.window.scale_factor(),
                         };
                         let processed_events = events_measurer_adapter.run(
                             &mut vec![platform_event],
@@ -1012,8 +1039,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             button: None,
                         };
                         let mut events_measurer_adapter = EventsMeasurerAdapter {
+                            scale_factor: app.effective_scale_factor(),
                             tree: &mut app.tree,
-                            scale_factor: app.window.scale_factor(),
                         };
                         let processed_events = events_measurer_adapter.run(
                             &mut vec![platform_event],
@@ -1026,7 +1053,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     }
                 }
                 WindowEvent::CursorMoved { position, .. } => {
-                    app.just_focused = false;
                     app.position = CursorPoint::from((position.x, position.y));
 
                     let mut platform_event = vec![PlatformEvent::Mouse {
@@ -1044,8 +1070,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     }
 
                     let mut events_measurer_adapter = EventsMeasurerAdapter {
+                        scale_factor: app.effective_scale_factor(),
                         tree: &mut app.tree,
-                        scale_factor: app.window.scale_factor(),
                     };
                     let processed_events = events_measurer_adapter.run(
                         &mut platform_event,
@@ -1081,8 +1107,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         force: force.map(map_winit_touch_force),
                     };
                     let mut events_measurer_adapter = EventsMeasurerAdapter {
+                        scale_factor: app.effective_scale_factor(),
                         tree: &mut app.tree,
-                        scale_factor: app.window.scale_factor(),
                     };
                     let processed_events = events_measurer_adapter.run(
                         &mut vec![platform_event],
@@ -1102,8 +1128,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         modifiers: winit_mappings::map_winit_modifiers(app.modifiers_state),
                     };
                     let mut events_measurer_adapter = EventsMeasurerAdapter {
+                        scale_factor: app.effective_scale_factor(),
                         tree: &mut app.tree,
-                        scale_factor: app.window.scale_factor(),
                     };
                     let processed_events = events_measurer_adapter.run(
                         &mut vec![platform_event],
@@ -1121,8 +1147,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         cursor: pos,
                     };
                     let mut events_measurer_adapter = EventsMeasurerAdapter {
+                        scale_factor: app.effective_scale_factor(),
                         tree: &mut app.tree,
-                        scale_factor: app.window.scale_factor(),
                     };
                     let processed_events = events_measurer_adapter.run(
                         &mut vec![platform_event],
@@ -1143,8 +1169,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         cursor: app.position,
                     };
                     let mut events_measurer_adapter = EventsMeasurerAdapter {
+                        scale_factor: app.effective_scale_factor(),
                         tree: &mut app.tree,
-                        scale_factor: app.window.scale_factor(),
                     };
                     let processed_events = events_measurer_adapter.run(
                         &mut vec![platform_event],
@@ -1162,8 +1188,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         cursor: app.position,
                     };
                     let mut events_measurer_adapter = EventsMeasurerAdapter {
+                        scale_factor: app.effective_scale_factor(),
                         tree: &mut app.tree,
-                        scale_factor: app.window.scale_factor(),
                     };
                     let processed_events = events_measurer_adapter.run(
                         &mut vec![platform_event],
@@ -1178,4 +1204,11 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
             }
         }
     }
+}
+
+fn subscribe_preferences(proxy: EventLoopProxy<NativeEvent>) {
+    let subscription = mundy::Preferences::subscribe(mundy::Interest::AccentColor, move |prefs| {
+        let _ = proxy.send_event(NativeEvent::Preferences(prefs));
+    });
+    std::mem::forget(subscription);
 }

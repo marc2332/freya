@@ -1,18 +1,10 @@
 use freya_core::{
     integration::AppComponent,
-    layers::Layer,
     prelude::*,
-};
-use torin::prelude::Position;
-
-use crate::context_menu::{
-    ContextMenu,
-    ContextMenuCloseRequest,
 };
 
 pub fn integration(app: AppComponent) -> impl IntoElement {
     let platform = use_hook(Platform::get);
-    let mut context = use_hook(ContextMenu::get);
 
     use_side_effect(move || {
         if !*platform.is_app_focused.read() {
@@ -45,27 +37,5 @@ pub fn integration(app: AppComponent) -> impl IntoElement {
         _ => {}
     };
 
-    let on_global_pointer_move = move |e: Event<PointerEventData>| {
-        context.location.set(e.global_location());
-    };
-
-    rect()
-        .on_global_pointer_move(on_global_pointer_move)
-        .on_global_key_down(on_global_key_down)
-        .child(app)
-        .maybe_child(context.menu.read().clone().map(|(location, menu)| {
-            let location = location.to_f32();
-            rect()
-                .layer(Layer::Overlay)
-                .position(Position::new_global().left(location.x).top(location.y))
-                .child(menu.on_close(move |_| match (context.close_request)() {
-                    ContextMenuCloseRequest::None => {
-                        context.close_request.set(ContextMenuCloseRequest::Pending);
-                    }
-                    ContextMenuCloseRequest::Pending => {
-                        context.menu.set(None);
-                        context.close_request.set(ContextMenuCloseRequest::None);
-                    }
-                }))
-        }))
+    rect().on_global_key_down(on_global_key_down).child(app)
 }
