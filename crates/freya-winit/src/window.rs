@@ -201,6 +201,7 @@ impl AppWindow {
                 Some(Theme::Dark) => PreferredTheme::Dark,
                 _ => PreferredTheme::Light,
             };
+            let is_app_focused = window.has_focus();
             move || Platform {
                 focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
                 focused_accessibility_node: State::create(accesskit::Node::new(
@@ -212,6 +213,7 @@ impl AppWindow {
                 )),
                 navigation_mode: State::create(NavigationMode::NotKeyboard),
                 preferred_theme: State::create(theme),
+                is_app_focused: State::create(is_app_focused),
                 accent_color: State::create(accent_color_preference.accent_color),
                 sender: Rc::new(move |user_event| {
                     event_loop_proxy

@@ -45,6 +45,8 @@ pub struct Platform {
     pub navigation_mode: State<NavigationMode>,
     /// The OS-level [`PreferredTheme`].
     pub preferred_theme: State<PreferredTheme>,
+    /// Whether the app currently has the OS-level focus.
+    pub is_app_focused: State<bool>,
     /// The OS-level [`AccentColor`].
     pub accent_color: State<AccentColor>,
     /// Sender used to dispatch [`UserEvent`]s to the active renderer.

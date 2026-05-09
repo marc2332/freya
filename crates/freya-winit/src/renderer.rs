@@ -719,6 +719,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 WindowEvent::ModifiersChanged(modifiers) => {
                     app.modifiers_state = modifiers.state();
                 }
+                WindowEvent::Focused(is_focused) => {
+                    app.platform.is_app_focused.set_if_modified(is_focused);
+                }
                 WindowEvent::RedrawRequested => {
                     let scale_factor = app.effective_scale_factor();
                     hotpath::measure_block!("RedrawRequested", {
