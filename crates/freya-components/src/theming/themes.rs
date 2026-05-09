@@ -361,7 +361,6 @@ fn register_base_component_themes(theme: &mut Theme) {
         "circular_loader",
         CircularLoaderThemePreference {
             primary_color: Preference::Reference("surface_primary"),
-            inversed_color: Preference::Reference("surface_inverse"),
         },
     );
     theme.set(
