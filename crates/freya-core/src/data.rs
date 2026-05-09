@@ -119,7 +119,7 @@ impl Default for CursorStyleData {
 #[derive(Debug, Clone, PartialEq, Hash)]
 pub struct TextStyleState {
     pub font_size: FontSize,
-    pub color: Color,
+    pub color: Fill,
     pub text_align: TextAlign,
     pub font_families: Vec<Cow<'static, str>>,
     pub text_height: TextHeightBehavior,
@@ -135,7 +135,7 @@ impl Default for TextStyleState {
     fn default() -> Self {
         Self {
             font_size: FontSize::default(),
-            color: Color::BLACK,
+            color: Fill::Color(Color::BLACK),
             text_align: TextAlign::default(),
             font_families: Vec::new(),
             text_height: TextHeightBehavior::default(),
@@ -151,7 +151,7 @@ impl Default for TextStyleState {
 
 impl TextStyleState {
     pub fn from_data(parent: &TextStyleState, data: &TextStyleData) -> Self {
-        let color = data.color.unwrap_or(parent.color);
+        let color = data.color.as_ref().unwrap_or(&parent.color).clone();
 
         let text_align = data.text_align.unwrap_or_default();
         let text_height = data.text_height.unwrap_or_default();
@@ -205,7 +205,7 @@ impl TextStyleState {
 
 #[derive(Debug, Clone, PartialEq, Default, Hash)]
 pub struct TextStyleData {
-    pub color: Option<Color>,
+    pub color: Option<Fill>,
     pub font_size: Option<FontSize>,
     pub font_families: Vec<Cow<'static, str>>,
     pub text_align: Option<TextAlign>,

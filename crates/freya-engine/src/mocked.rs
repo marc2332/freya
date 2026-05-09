@@ -1699,7 +1699,7 @@ impl Rect {
         unimplemented!("This is mocked")
     }
 
-    pub fn from_xywh(x: f32, y: f32, w: f32, h: f32) -> IRect {
+    pub fn from_xywh(_x: f32, _y: f32, _w: f32, _h: f32) -> Self {
         unimplemented!("This is mocked")
     }
 }

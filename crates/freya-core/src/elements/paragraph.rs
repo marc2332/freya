@@ -12,6 +12,8 @@ use std::{
 };
 
 use freya_engine::prelude::{
+    BlendMode,
+    Canvas,
     FontStyle,
     Paint,
     PaintStyle,
@@ -19,12 +21,17 @@ use freya_engine::prelude::{
     ParagraphStyle,
     RectHeightStyle,
     RectWidthStyle,
+    SaveLayerRec,
     SkParagraph,
     SkRect,
     TextStyle,
 };
 use rustc_hash::FxHashMap;
-use torin::prelude::Size2D;
+use torin::prelude::{
+    Area,
+    Point2D,
+    Size2D,
+};
 
 use crate::{
     data::{
@@ -51,6 +58,7 @@ use crate::{
         Color,
         ContainerExt,
         EventHandlersExt,
+        Fill,
         KeyExt,
         LayerExt,
         LayoutExt,
@@ -273,7 +281,13 @@ impl ElementExt for ParagraphElement {
                 let mut font_families = context.text_style_state.font_families.clone();
                 font_families.extend_from_slice(context.fallback_fonts);
 
-                text_style.set_color(context.text_style_state.color);
+                text_style.set_color(
+                    context
+                        .text_style_state
+                        .color
+                        .as_color()
+                        .unwrap_or(Color::WHITE),
+                );
                 text_style.set_font_size(
                     f32::from(context.text_style_state.font_size) * context.scale_factor as f32,
                 );
@@ -320,7 +334,7 @@ impl ElementExt for ParagraphElement {
                         text_style.add_shadow((*text_shadow).into());
                     }
 
-                    text_style.set_color(text_style_state.color);
+                    text_style.set_color(text_style_state.color.as_color().unwrap_or(Color::WHITE));
                     text_style.set_font_size(
                         f32::from(text_style_state.font_size) * context.scale_factor as f32,
                     );
@@ -505,9 +519,11 @@ impl ElementExt for ParagraphElement {
         }
 
         // Draw text (always uses visible_area with vertical_offset)
-        paragraph.paint(
+        paint_paragraph_with_fill(
+            paragraph,
             context.canvas,
-            (visible_area.min_x(), visible_area.min_y() + vertical_offset),
+            Point2D::new(visible_area.min_x(), visible_area.min_y() + vertical_offset),
+            &context.text_style_state.color,
         );
 
         // Draw cursor
@@ -587,6 +603,39 @@ impl From<Paragraph> for Element {
             elements: vec![],
         }
     }
+}
+
+/// Paints a paragraph with a [Fill] as the text color. Non-color fills are masked
+/// onto the rendered glyph alpha via an offscreen layer + [BlendMode::SrcIn].
+pub(crate) fn paint_paragraph_with_fill(
+    paragraph: &SkParagraph,
+    canvas: &Canvas,
+    origin: Point2D,
+    fill: &Fill,
+) {
+    if matches!(fill, Fill::Color(_)) {
+        paragraph.paint(canvas, origin.to_tuple());
+        return;
+    }
+
+    let width = paragraph.longest_line().max(paragraph.max_width());
+    let height = paragraph.height();
+    let area = Area::new(origin, Size2D::new(width, height));
+    let bounds_rect = SkRect::from_xywh(area.min_x(), area.min_y(), width, height);
+
+    let layer = canvas.save_layer(&SaveLayerRec::default().bounds(&bounds_rect));
+
+    paragraph.paint(canvas, origin.to_tuple());
+
+    let mut paint = Paint::default();
+    paint.set_anti_alias(true);
+    paint.set_style(PaintStyle::Fill);
+    paint.set_blend_mode(BlendMode::SrcIn);
+    fill.apply_to_paint(&mut paint, area);
+
+    canvas.draw_rect(bounds_rect, &paint);
+
+    canvas.restore_to_count(layer);
 }
 
 impl KeyExt for Paragraph {
