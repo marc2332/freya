@@ -548,12 +548,7 @@ impl Component for MarkdownViewer {
                             .horizontal()
                             .cross_align(Alignment::Start)
                             .spacing(8.)
-                            .child(
-                                label()
-                                    .text("•")
-                                    .font_size(paragraph_size)
-                                    .color(color),
-                            )
+                            .child(label().text("•").font_size(paragraph_size).color(color))
                             .child(render_spans(&item_spans, paragraph_size, color, color_code));
 
                         list = list.child(item_content);
