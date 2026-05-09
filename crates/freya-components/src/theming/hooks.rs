@@ -56,21 +56,3 @@ pub fn get_theme_or_default() -> Readable<Theme> {
         .map(|v| v.into())
         .unwrap_or_else(|| Theme::default().into())
 }
-
-/// Indicates what type of surface to use.
-#[derive(Clone, Copy, PartialEq, Debug, Default)]
-pub enum SurfaceThemeIndicator {
-    #[default]
-    Primary,
-    Opposite,
-}
-
-/// Provide a [SurfaceThemeIndicator] down to the components.
-pub fn use_init_surface_theme_indicator(theme: impl FnOnce() -> SurfaceThemeIndicator) {
-    use_hook(|| provide_context(theme()))
-}
-
-/// Get the inherited [SurfaceThemeIndicator].
-pub fn use_surface_theme_indicator() -> SurfaceThemeIndicator {
-    use_hook(|| try_consume_context().unwrap_or_default())
-}
