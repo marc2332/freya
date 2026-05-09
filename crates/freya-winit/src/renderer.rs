@@ -701,6 +701,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         // The focused workaround is only for desktop targets
                         app.just_focused = is_focused;
                     }
+                    app.platform.is_app_focused.set_if_modified(is_focused);
                 }
                 WindowEvent::RedrawRequested => {
                     hotpath::measure_block!("RedrawRequested", {

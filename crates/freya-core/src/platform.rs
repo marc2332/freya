@@ -41,6 +41,8 @@ pub struct Platform {
     pub navigation_mode: State<NavigationMode>,
     /// The OS-level [`PreferredTheme`].
     pub preferred_theme: State<PreferredTheme>,
+    /// Whether the app currently has the OS-level focus.
+    pub is_app_focused: State<bool>,
     /// Sender used to dispatch [`UserEvent`]s to the active renderer.
     pub sender: Rc<dyn Fn(UserEvent)>,
 }

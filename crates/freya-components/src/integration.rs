@@ -14,6 +14,13 @@ pub fn integration(app: AppComponent) -> impl IntoElement {
     let platform = use_hook(Platform::get);
     let mut context = use_hook(ContextMenu::get);
 
+    use_side_effect(move || {
+        if !*platform.is_app_focused.read() {
+            context.menu.set(None);
+            context.close_request.set(ContextMenuCloseRequest::None);
+        }
+    });
+
     let on_global_key_down = move |e: Event<KeyboardEventData>| match e.key {
         Key::Named(NamedKey::Tab) if e.modifiers == Modifiers::SHIFT => {
             platform.send(UserEvent::FocusAccessibilityNode(
