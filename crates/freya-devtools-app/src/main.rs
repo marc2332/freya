@@ -56,7 +56,7 @@ fn main() {
 }
 
 pub fn app() -> impl IntoElement {
-    use_init_root_theme(dark_theme);
+    use_init_theme(dark_theme);
     use_init_radio_station::<DevtoolsState, DevtoolsChannel>(|| DevtoolsState {
         nodes: HashMap::new(),
         expanded_nodes: HashSet::default(),
@@ -115,6 +115,7 @@ pub fn app() -> impl IntoElement {
         .height(Size::fill())
         .color(Color::WHITE)
         .background((15, 15, 15))
+        .child(ContextMenuViewer::new())
         .child(Router::new(|| {
             RouterConfig::<Route>::default().with_initial_path(Route::TreeInspector {})
         }))

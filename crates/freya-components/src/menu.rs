@@ -85,7 +85,7 @@ define_theme! {
 /// #                   .child(MenuButton::new().child("Save"))
 /// #           }))
 /// #   )
-/// # }, "./images/gallery_menu.png").render();
+/// # }, "./images/gallery_menu.png").with_hook(|t| { t.poll(std::time::Duration::from_millis(1), std::time::Duration::from_millis(100)); }).render();
 /// ```
 ///
 /// # Preview
@@ -131,9 +131,21 @@ impl ComponentOwned for Menu {
         // Provide the menus ID generator
         use_provide_context(|| State::create(ROOT_MENU.0));
         // Provide the menus stack
-        use_provide_context::<State<Vec<MenuId>>>(|| State::create(vec![ROOT_MENU]));
+        let mut menus =
+            use_provide_context::<State<Vec<MenuId>>>(|| State::create(vec![ROOT_MENU]));
         // Provide this the ROOT Menu ID
         use_provide_context(|| ROOT_MENU);
+
+        let on_close = self.on_close.clone();
+        let on_global_key_down = move |e: Event<KeyboardEventData>| {
+            if e.key == Key::Named(NamedKey::Escape) {
+                if menus.read().len() > 1 {
+                    menus.write().pop();
+                } else if let Some(on_close) = &on_close {
+                    on_close.call(());
+                }
+            }
+        };
 
         rect()
             .layer(Layer::Overlay)
@@ -146,6 +158,7 @@ impl ComponentOwned for Menu {
                     on_close.call(());
                 }
             })
+            .on_global_key_down(on_global_key_down)
             .child(MenuContainer::new().children(self.children))
     }
     fn render_key(&self) -> DiffKey {

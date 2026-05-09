@@ -47,6 +47,7 @@ fn app() -> impl IntoElement {
 
     let focus = use_focus();
     let mut dimensions = use_state(|| (0.0, 0.0));
+    let mut click_origin = use_state(|| None::<(usize, usize)>);
 
     rect()
         .expanded()
@@ -67,6 +68,7 @@ fn app() -> impl IntoElement {
                                 let (char_width, line_height) = dimensions();
                                 let col = (e.element_location.x / char_width as f64) as f32;
                                 let row = (e.element_location.y / line_height as f64) as f32;
+                                click_origin.set(Some((row as usize, col as usize)));
                                 let button = match e.button {
                                     Some(MouseButton::Middle) => TerminalMouseButton::Middle,
                                     Some(MouseButton::Right) => TerminalMouseButton::Right,
@@ -102,6 +104,14 @@ fn app() -> impl IntoElement {
                                     _ => TerminalMouseButton::Left,
                                 };
                                 handle.mouse_up(row, col, button);
+                                let origin = click_origin();
+                                click_origin.set(None);
+                                if button == TerminalMouseButton::Left
+                                    && origin == Some((row as usize, col as usize))
+                                    && let Some(url) = handle.hyperlink_at(row, col)
+                                {
+                                    let _ = open::that(url);
+                                }
                             }
                         })
                         .on_global_pointer_press({

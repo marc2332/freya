@@ -61,6 +61,7 @@ use crate::{
         TermSize,
         spawn_pty,
     },
+    url::url_at,
 };
 
 /// Unique identifier for a terminal instance
@@ -506,6 +507,19 @@ impl TerminalHandle {
     /// Currently selected text, if any.
     pub fn get_selected_text(&self) -> Option<String> {
         self.term.borrow().selection_to_string()
+    }
+
+    /// URI at viewport `row`/`col` if the cell carries an OSC 8 hyperlink or
+    /// sits inside a detected plain-text URL. See [`Self::mouse_move`] for the
+    /// fractional coordinate convention.
+    pub fn hyperlink_at(&self, row: f32, col: f32) -> Option<String> {
+        let (point, _) = self.point_and_side_at(row, col);
+        let term = self.term.borrow();
+        let grid = term.grid();
+        if let Some(h) = grid[point].hyperlink() {
+            return Some(h.uri().to_owned());
+        }
+        url_at(&grid[point.line][..], point.column.0)
     }
 
     /// Grid point and cell half (left vs right) for a pointer at fractional cell coordinates.
