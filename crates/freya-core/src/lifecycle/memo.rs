@@ -34,6 +34,14 @@ pub struct Memo<T> {
     state: State<T>,
 }
 
+impl<T: 'static> PartialEq for Memo<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.state == other.state
+    }
+}
+
+impl<T: 'static> Eq for Memo<T> {}
+
 impl<T> Clone for Memo<T> {
     fn clone(&self) -> Self {
         *self
