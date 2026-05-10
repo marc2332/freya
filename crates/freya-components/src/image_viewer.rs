@@ -353,7 +353,6 @@ impl Component for ImageViewer {
                 image(asset)
                     .accessibility(self.accessibility.clone())
                     .a11y_role(AccessibilityRole::Image)
-                    .a11y_focusable(true)
                     .layout(self.layout.clone())
                     .image_data(self.image_data.clone())
                     .effect(self.effect.clone())
