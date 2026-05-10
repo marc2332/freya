@@ -37,16 +37,10 @@ jobs:
       - name: Install cargo-ndk
         run: cargo install cargo-ndk
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
-      - name: Set up cargo cache
-        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
-        if: github.ref != 'refs/heads/main'
-        with:
-          shared-key: "rust-android"
-          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Build Android example
         working-directory: examples/android/AndroidApp
         run: ./gradlew buildRelease
