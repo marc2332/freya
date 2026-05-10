@@ -429,7 +429,6 @@ impl Component for GifViewer {
                 Status::Playing(frame_idx) => gif(frames.clone(), *frame_idx)
                     .accessibility(self.accessibility.clone())
                     .a11y_role(AccessibilityRole::Image)
-                    .a11y_focusable(true)
                     .layout(self.layout.clone())
                     .image_data(self.image_data.clone())
                     .into_element(),
