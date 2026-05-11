@@ -69,7 +69,7 @@ impl Component for DraggableCanvas {
     fn render(&self) -> impl IntoElement {
         let mut layout = use_state(Area::default);
         use_provide_context(|| DraggableCanvasRegistry(State::create(Vec::new())));
-        let focus = use_focus();
+        let a11y_id = use_a11y();
         let mut offset = use_state(CursorPoint::zero);
         let mut dragging_position = use_state::<Option<CursorPoint>>(|| None);
 
@@ -110,7 +110,7 @@ impl Component for DraggableCanvas {
             .on_wheel(on_wheel)
             .offset_x(offset_x as f32)
             .offset_y(offset_y as f32)
-            .a11y_id(focus.a11y_id())
+            .a11y_id(a11y_id)
             .a11y_role(AccessibilityRole::ScrollView)
             .a11y_builder(move |node| {
                 node.set_scroll_x(offset_x);
