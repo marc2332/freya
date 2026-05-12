@@ -177,8 +177,16 @@ impl PathElement {
                     {
                         let mut seen = FxHashMap::<&DiffKey, &[u32]>::default();
                         for child in e1 {
-                            let (PathElement::Element { key, path: child_path, .. }
-                            | PathElement::Component { key, path: child_path, .. }) = child;
+                            let (PathElement::Element {
+                                key,
+                                path: child_path,
+                                ..
+                            }
+                            | PathElement::Component {
+                                key,
+                                path: child_path,
+                                ..
+                            }) = child;
                             if matches!(key, DiffKey::None | DiffKey::DefaultU64(_)) {
                                 continue;
                             }
