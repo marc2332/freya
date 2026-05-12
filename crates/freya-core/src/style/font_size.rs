@@ -6,7 +6,11 @@ pub struct FontSize(i32);
 
 impl Default for FontSize {
     fn default() -> Self {
-        FontSize(16)
+        if cfg!(any(target_os = "android", target_os = "ios")) {
+            FontSize(17)
+        } else {
+            FontSize(14)
+        }
     }
 }
 
