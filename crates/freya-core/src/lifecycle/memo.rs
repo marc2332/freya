@@ -31,7 +31,7 @@ pub fn use_memo<T: 'static + PartialEq>(callback: impl FnMut() -> T + 'static) -
 }
 
 pub struct Memo<T> {
-    state: State<T>,
+    pub(crate) state: State<T>,
 }
 
 impl<T: 'static> PartialEq for Memo<T> {
@@ -56,12 +56,6 @@ impl<T: Copy + PartialEq + 'static> Deref for Memo<T> {
 
     fn deref(&self) -> &Self::Target {
         unsafe { Memo::deref_impl(self) }
-    }
-}
-
-impl<T> Memo<T> {
-    pub fn as_state(&self) -> State<T> {
-        self.state
     }
 }
 

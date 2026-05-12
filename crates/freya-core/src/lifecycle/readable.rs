@@ -137,7 +137,7 @@ impl<T: 'static> IntoReadable<T> for T {
 
 impl<T: 'static> IntoReadable<T> for Memo<T> {
     fn into_readable(self) -> Readable<T> {
-        Readable::from_state(self.as_state())
+        Readable::from_state(self.state)
     }
 }
 
