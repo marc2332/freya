@@ -59,6 +59,12 @@ impl<T: Copy + PartialEq + 'static> Deref for Memo<T> {
     }
 }
 
+impl<T> Memo<T> {
+    pub fn as_state(&self) -> State<T> {
+        self.state
+    }
+}
+
 impl<T: PartialEq> Memo<T> {
     /// Adapted from https://github.com/DioxusLabs/dioxus/blob/a4aef33369894cd6872283d6d7d265303ae63913/packages/signals/src/read.rs#L246
     /// SAFETY: You must call this function directly with `self` as the argument.
