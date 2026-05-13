@@ -1699,7 +1699,7 @@ impl Rect {
         unimplemented!("This is mocked")
     }
 
-    pub fn from_xywh(x: f32, y: f32, w: f32, h: f32) -> IRect {
+    pub fn from_xywh(_x: f32, _y: f32, _w: f32, _h: f32) -> Self {
         unimplemented!("This is mocked")
     }
 }
@@ -2467,6 +2467,14 @@ impl LocalResourceProvider {
 }
 
 pub fn raster_n32_premul(size: impl Into<ISize>) -> Option<Surface> {
+    unimplemented!("This is mocked")
+}
+pub fn wrap_pixels<'pixels>(
+    _image_info: &ImageInfo,
+    _pixels: &'pixels mut [u8],
+    _row_bytes: impl Into<Option<usize>>,
+    _surface_props: Option<&()>,
+) -> Option<Surface> {
     unimplemented!("This is mocked")
 }
 pub mod vk {

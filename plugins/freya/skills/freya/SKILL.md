@@ -73,7 +73,7 @@ Use plain functions when you only need to reuse a chunk of UI with no internal s
 
 ## Element Builder Pattern
 
-Elements use a fluent builder API. **Never store an element in a variable to modify it later** - chain all methods directly or use `.when` / `.map`.
+Elements use a fluent builder API. **Never store an element in a variable to modify it later** - chain all methods directly or use `.maybe` / `.map`.
 
 ```rust
 // Good
@@ -104,6 +104,24 @@ rect()
 - `.maybe(bool, |el| el)` - applies the callback when the condition is true
 - `.map(Option<T>, |el, val| el)` - applies the callback when the `Option` is `Some`, passing the inner value
 - `.maybe_child(Option<impl IntoElement>)` - appends a child only when `Some`
+
+**Prefer one outer `.maybe` / `.map` over several consecutive `.maybe_child` calls gated on the same condition** - it keeps the gating in one place and avoids re-evaluating the same predicate.
+
+```rust
+// Good, single .maybe wraps all conditional children
+rect()
+    .maybe(show, |el| {
+        el.child(Title::new("Hi"))
+            .child(Content::new().child("Hello"))
+            .child(Footer::new())
+    })
+
+// Bad, same predicate repeated per child
+rect()
+    .maybe_child(show.then(|| Title::new("Hi")))
+    .maybe_child(show.then(|| Content::new().child("Hello")))
+    .maybe_child(show.then(|| Footer::new()))
+```
 
 ### Labels from &str and String
 
@@ -399,6 +417,132 @@ fn main() {
 ```
 
 Use Freya's `spawn()` for UI updates. `tokio::spawn` runs on the Tokio runtime and **cannot** update component state.
+
+## Theming
+
+Use the theming system to centralize component styling. Prefer it over hand-rolled structs of `Color`/size constants or scattered hardcoded values.
+
+A `Theme` bundles a `ColorsSheet` (the app palette) and per-component `*ThemePreference` entries indexed by string key. Components read their theme via `get_theme!` and resolve color references against the active `ColorsSheet`.
+
+### Provide a theme
+
+Initialize a theme in the root component. The returned `State<Theme>` is reactive - writing to it switches the theme app-wide:
+
+```rust
+fn app() -> impl IntoElement {
+    let mut theme = use_init_theme(light_theme); // or dark_theme, or your own
+    rect()
+        .theme_background()
+        .theme_color()
+        .expanded()
+        .center()
+        .child(Button::new().on_press(move |_| theme.set(dark_theme())).child("Dark"))
+}
+```
+
+Use `use_init_root_theme` to register at the root scope. To follow the OS preference, convert `Platform::get().preferred_theme` via the `FromPreference::to_theme` extension.
+
+### Element theme extensions
+
+Built-in elements expose helpers that read the active theme - prefer these over hardcoded colors:
+
+- `rect().theme_background()`, `rect().theme_color()`
+- `label().theme_color()`, `paragraph().theme_color()`
+- `svg(...).theme_color()` / `.theme_accent_color()` / `.theme_fill()` / `.theme_stroke()` / `.theme_accent_fill()` / `.theme_accent_stroke()`
+
+### Custom themes
+
+Start from `light_theme()` / `dark_theme()` and override what you need. Use `LIGHT_COLORS` / `DARK_COLORS` as base palettes with struct update syntax:
+
+```rust
+fn brand_theme() -> Theme {
+    let mut theme = dark_theme();
+    theme.name = "brand";
+    theme.colors = ColorsSheet {
+        primary: Color::from_rgb(37, 52, 63),
+        secondary: Color::from_rgb(255, 155, 81),
+        tertiary: Color::from_rgb(81, 155, 255),
+        ..DARK_COLORS
+    };
+    theme
+}
+```
+
+`ColorsSheet` covers brand (`primary`/`secondary`/`tertiary`), status (`success`/`warning`/`error`/`info`), surfaces (`background`, `surface_primary`/`secondary`/`tertiary`, `surface_inverse[_secondary|_tertiary]`), borders (`border`, `border_focus`, `border_disabled`), text (`text_primary`/`secondary`/`placeholder`/`inverse`/`highlight`), interaction states (`hover`, `focus`, `active`, `disabled`), and utility (`overlay`, `shadow`).
+
+### Defining a theme for your component
+
+Use `define_theme!` to generate the theme types for a component. This replaces hand-rolled "props struct of colors and sizes" patterns:
+
+```rust
+define_theme! {
+    %[component]
+    pub StatusBadge {
+        %[fields]
+        background: Color,
+        color: Color,
+        corner_radius: CornerRadius,
+        padding: Gaps,
+    }
+}
+
+#[derive(PartialEq)]
+struct StatusBadge {
+    theme: Option<StatusBadgeThemePartial>,
+}
+
+impl Component for StatusBadge {
+    fn render(&self) -> impl IntoElement {
+        let StatusBadgeTheme { background, color, corner_radius, padding } =
+            get_theme!(&self.theme, StatusBadgeThemePreference, "status_badge");
+
+        rect()
+            .background(background)
+            .corner_radius(corner_radius)
+            .padding(padding)
+            .child(label().text("Active").color(color).font_size(12.))
+    }
+}
+```
+
+The macro generates three structs:
+- `StatusBadgeThemePartial` - `Option<Preference<T>>` per field, used for per-instance overrides.
+- `StatusBadgeThemePreference` - `Preference<T>` per field, registered in the `Theme` as the default.
+- `StatusBadgeTheme` - resolved concrete values, returned by `get_theme!`.
+
+`get_theme!(&self.theme, StatusBadgeThemePreference, "status_badge")` looks up the registered preference, applies any `ThemePartial` override on the instance, and resolves it against the active `ColorsSheet`.
+
+Register the default preference on your custom theme:
+
+```rust
+theme.set(
+    "status_badge",
+    StatusBadgeThemePreference {
+        background: Preference::Reference("secondary"),    // resolves from ColorsSheet
+        color: Preference::Reference("text_inverse"),
+        corner_radius: CornerRadius::new_all(99.).into(),  // Specific via Into
+        padding: Gaps::new(4., 10., 4., 10.).into(),
+    },
+);
+```
+
+`Preference::Reference("...")` looks up the named color in the active `ColorsSheet` so the component automatically follows theme switches. Only `Color` fields support references - `Size`, `Gaps`, `CornerRadius`, `f32`, and `Duration` must use `Preference::Specific(v)` (or `v.into()`).
+
+The macro also generates a `StatusBadgeThemePartialExt` trait implemented on the component, giving callers per-field builder methods:
+
+```rust
+StatusBadge::new()
+    .background(Color::from_rgb(123, 123, 123))   // from the generated Ext trait
+    .corner_radius(CornerRadius::new_all(4.))
+```
+
+For components that store the partial under a non-default field name (e.g. `theme_colors` alongside `theme_layout`), pass `for = ...; theme_field = ...;` to point the generated builder at the right field. Examples: `Button`, `Card`, `Switch`, `Input` in `crates/freya-components/`.
+
+### When to define a theme
+
+- The component is reusable and could be styled differently across apps or theme switches: use `define_theme!`.
+- You currently have a struct of `Color`/size constants that callers tweak: replace it with a theme.
+- One-off internal helpers with no styling variation: plain values are fine, no theme needed.
 
 ## Keying
 

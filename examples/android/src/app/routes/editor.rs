@@ -138,7 +138,7 @@ pub struct EditorDemo;
 
 impl Component for EditorDemo {
     fn render(&self) -> impl IntoElement {
-        let focus = use_focus();
+        let a11y_id = use_a11y();
 
         let editor = use_state(move || {
             let rope = Rope::from_str(SAMPLE_CODE);
@@ -152,6 +152,6 @@ impl Component for EditorDemo {
         rect()
             .expanded()
             .padding(8.)
-            .child(CodeEditor::new(editor, focus.a11y_id()).line_height(1.3))
+            .child(CodeEditor::new(editor, a11y_id).line_height(1.3))
     }
 }

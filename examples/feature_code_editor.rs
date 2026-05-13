@@ -17,7 +17,7 @@ fn main() {
 
 fn app() -> impl IntoElement {
     use_init_theme(dark_theme);
-    let focus = use_focus();
+    let a11y_id = use_a11y();
     let custom_theme = use_state(|| EditorTheme {
         background: (20, 20, 20).into(),
         ..Default::default()
@@ -35,5 +35,5 @@ fn app() -> impl IntoElement {
         editor
     });
 
-    CodeEditor::new(editor, focus.a11y_id()).theme(custom_theme)
+    CodeEditor::new(editor, a11y_id).theme(custom_theme)
 }

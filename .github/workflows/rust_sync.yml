@@ -21,14 +21,8 @@ jobs:
           fetch-depth: 2
           submodules: true
       - name: Install Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@2b1f5e9b395427c92ee4e3331786ca3c37afe2d7 # v1
+        uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1
       - name: Install linux dependencies
         run: sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev libwebkit2gtk-4.1-dev
-      - name: Set up cargo cache
-        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
-        if: github.ref != 'refs/heads/main'
-        with:
-          shared-key: "rust-ubuntu-latest"
-          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Make sure the mocked Skia bindings are on sync
         run: cargo build --package freya --package freya-testing --features "mocked-engine, all-bindings" --no-default-features

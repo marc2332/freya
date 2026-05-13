@@ -284,7 +284,7 @@ pub trait EventHandlersExt: Sized {
             }
         })
         .on_key_down(move |e: Event<KeyboardEventData>| {
-            if Focus::is_pressed(&e) {
+            if e.is_press_event() {
                 on_press.call(e.map(PressEventData::Keyboard))
             }
         })
@@ -330,7 +330,7 @@ pub trait EventHandlersExt: Sized {
             }
         })
         .on_key_down(move |e: Event<KeyboardEventData>| {
-            if Focus::is_pressed(&e) {
+            if e.is_press_event() {
                 on_press.call(e.map(PressEventData::Keyboard))
             }
         })
@@ -572,7 +572,27 @@ where
     }
 
     fn color(mut self, color: impl Into<Color>) -> Self {
-        self.get_text_style_data().color = Some(color.into());
+        self.get_text_style_data().color = Some(Fill::Color(color.into()));
+        self
+    }
+
+    fn color_conic_gradient<S: Into<ConicGradient>>(mut self, color: S) -> Self {
+        self.get_text_style_data().color = Some(Fill::ConicGradient(Box::new(color.into())));
+        self
+    }
+
+    fn color_linear_gradient<S: Into<LinearGradient>>(mut self, color: S) -> Self {
+        self.get_text_style_data().color = Some(Fill::LinearGradient(Box::new(color.into())));
+        self
+    }
+
+    fn color_radial_gradient<S: Into<RadialGradient>>(mut self, color: S) -> Self {
+        self.get_text_style_data().color = Some(Fill::RadialGradient(Box::new(color.into())));
+        self
+    }
+
+    fn color_shader(mut self, color: impl Into<ShaderFill>) -> Self {
+        self.get_text_style_data().color = Some(Fill::Shader(Box::new(color.into())));
         self
     }
 

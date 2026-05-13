@@ -724,9 +724,16 @@ Make sure to have [Development Setup](https://docs.rs/freya/0.3/freya/_docs/deve
 
 > ⚠️ If you happen to be on Windows using `windows-gnu` and get compile errors, maybe go check this [issue](https://github.com/marc2332/freya/issues/794).
 
-Clone this repo and run:
+Clone this repo (this project uses git submodules, so make sure to clone with `--recurse-submodules`):
 
-> **Note:** After cloning, make sure to initialize and update the git submodules: `git submodule update --init --recursive`
+```shell
+git clone --recurse-submodules https://github.com/marc2332/freya.git
+cd freya
+```
+
+> **Already cloned without submodules?** Run `git submodule update --init --recursive` to fetch them.
+
+Then run an example:
 
 ```shell
 cargo run --example counter

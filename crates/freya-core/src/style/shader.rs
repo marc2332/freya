@@ -78,6 +78,16 @@ impl PartialEq for ShaderFill {
     }
 }
 
+impl std::hash::Hash for ShaderFill {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        // Mirrors PartialEq: SKSL by bytes, effect/provider by Arc pointer.
+        // The provider cast strips the vtable to match `Arc::ptr_eq` semantics.
+        (*self.sksl).hash(state);
+        Arc::as_ptr(&self.effect).hash(state);
+        Arc::as_ptr(&self.provider).cast::<()>().hash(state);
+    }
+}
+
 #[cfg(feature = "serde")]
 impl serde::Serialize for ShaderFill {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>

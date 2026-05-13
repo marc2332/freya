@@ -35,6 +35,7 @@
 //! ### Basics
 //! - [UI and Components](self::_docs::ui_and_components)
 //! - [Elements](self::elements)
+//! - [Events](self::_docs::events)
 //! - [Hooks](self::_docs::hooks)
 //! - [State](self::_docs::state_management)
 //! - [Async](self::_docs::_async)
@@ -90,6 +91,7 @@
 //! - `vulkan`: Enables Vulkan rendering support.
 //! - `hotpath`: Enables Freya's internal usage of hotpath.
 //! - `hotreload`: Enables hot reload support via the `dx` CLI from `dioxus-cli`. See [Hot Reload](self::_docs::hot_reload).
+//! - `zoom-shortcuts`: Enables `Ctrl`/`Cmd` + `+`/`-`/`0` to zoom the app.
 
 pub mod prelude {
     pub use freya_core::prelude::*;
