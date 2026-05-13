@@ -129,13 +129,11 @@ impl Select {
 impl Component for Select {
     fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, SelectThemePreference, "select");
-        let focus = use_focus();
-        let focus_status = use_focus_status(focus);
+        let a11y_id = use_a11y();
+        let focus = use_focus(a11y_id);
         let mut status = use_state(SelectStatus::default);
         let mut open = use_state(|| false);
-        use_provide_context(|| MenuGroup {
-            group_id: focus.a11y_id(),
-        });
+        use_provide_context(|| MenuGroup { group_id: a11y_id });
 
         let animation = use_animation(move |conf| {
             conf.on_change(OnChange::Rerun);
@@ -179,7 +177,7 @@ impl Component for Select {
                     .focused_accessibility_node
                     .read()
                     .member_of()
-                    .is_none_or(|member_of| member_of != focus.a11y_id());
+                    .is_none_or(|member_of| member_of != a11y_id);
                 if should_close {
                     open.set_if_modified(false);
                 }
@@ -187,7 +185,7 @@ impl Component for Select {
         });
 
         let on_press = move |e: Event<PressEventData>| {
-            focus.request_focus();
+            a11y_id.request_focus();
             open.toggle();
             // Prevent global mouse up
             e.prevent_default();
@@ -213,7 +211,7 @@ impl Component for Select {
             Key::Named(NamedKey::Escape) => {
                 open.set_if_modified(false);
             }
-            Key::Named(NamedKey::Enter) if focus.is_focused() => {
+            Key::Named(NamedKey::Enter) if a11y_id.is_focused() => {
                 open.toggle();
             }
             _ => {}
@@ -226,7 +224,7 @@ impl Component for Select {
             SelectStatus::Idle => theme.background_button,
         };
 
-        let border = if focus_status() == FocusStatus::Keyboard {
+        let border = if focus() == Focus::Keyboard {
             Border::new()
                 .fill(theme.focus_border_fill)
                 .width(2.)
@@ -241,8 +239,8 @@ impl Component for Select {
         rect()
             .child(
                 rect()
-                    .a11y_id(focus.a11y_id())
-                    .a11y_member_of(focus.a11y_id())
+                    .a11y_id(a11y_id)
+                    .a11y_member_of(a11y_id)
                     .a11y_role(AccessibilityRole::ListBox)
                     .a11y_focusable(Focusable::Enabled)
                     .on_pointer_enter(on_pointer_enter)

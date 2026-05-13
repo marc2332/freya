@@ -104,8 +104,8 @@ impl Checkbox {
 
 impl Component for Checkbox {
     fn render(&self) -> impl IntoElement {
-        let focus = use_focus();
-        let focus_status = use_focus_status(focus);
+        let a11y_id = use_a11y();
+        let focus = use_focus(a11y_id);
         let CheckboxTheme {
             border_fill,
             unselected_fill,
@@ -146,7 +146,7 @@ impl Component for Checkbox {
             .width(2.)
             .alignment(BorderAlignment::Inner);
 
-        let focused_border = (focus_status() == FocusStatus::Keyboard).then(|| {
+        let focused_border = (focus() == Focus::Keyboard).then(|| {
             Border::new()
                 .fill(border_fill)
                 .width((self.size * 0.15).ceil())
@@ -154,7 +154,7 @@ impl Component for Checkbox {
         });
 
         rect()
-            .a11y_id(focus.a11y_id())
+            .a11y_id(a11y_id)
             .a11y_focusable(Focusable::Enabled)
             .a11y_role(AccessibilityRole::CheckBox)
             .width(Size::px(self.size))
@@ -168,7 +168,7 @@ impl Component for Checkbox {
             .background(background)
             .on_key_down({
                 move |e: Event<KeyboardEventData>| {
-                    if !Focus::is_pressed(&e) {
+                    if !e.is_press_event() {
                         e.stop_propagation();
                     }
                 }

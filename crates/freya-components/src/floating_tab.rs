@@ -109,8 +109,8 @@ impl FloatingTab {
 
 impl Component for FloatingTab {
     fn render(&self) -> impl IntoElement {
-        let focus = use_focus();
-        let focus_status = use_focus_status(focus);
+        let a11y_id = use_a11y();
+        let focus = use_focus(a11y_id);
         let mut status = use_state(TabStatus::default);
         let is_active = use_activable_route();
 
@@ -134,17 +134,15 @@ impl Component for FloatingTab {
             status.set(TabStatus::default());
         };
 
-        let background = if focus_status() == FocusStatus::Keyboard
-            || is_active
-            || *status.read() == TabStatus::Hovering
-        {
-            hover_background
-        } else {
-            background
-        };
+        let background =
+            if focus() == Focus::Keyboard || is_active || *status.read() == TabStatus::Hovering {
+                hover_background
+            } else {
+                background
+            };
 
         rect()
-            .a11y_id(focus.a11y_id())
+            .a11y_id(a11y_id)
             .a11y_focusable(Focusable::Enabled)
             .a11y_role(AccessibilityRole::Tab)
             .on_pointer_enter(on_pointer_enter)

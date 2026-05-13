@@ -31,7 +31,7 @@ pub fn use_memo<T: 'static + PartialEq>(callback: impl FnMut() -> T + 'static) -
 }
 
 pub struct Memo<T> {
-    state: State<T>,
+    pub(crate) state: State<T>,
 }
 
 impl<T: 'static> PartialEq for Memo<T> {

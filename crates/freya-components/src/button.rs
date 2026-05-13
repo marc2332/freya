@@ -279,8 +279,8 @@ impl CornerRadiusExt for Button {
 impl Component for Button {
     fn render(&self) -> impl IntoElement {
         let mut hovering = use_state(|| false);
-        let focus = use_focus();
-        let focus_status = use_focus_status(focus);
+        let a11y_id = use_a11y();
+        let focus = use_focus(a11y_id);
 
         let enabled = use_reactive(&self.enabled);
         let cursor_icon = self.cursor_icon;
@@ -328,7 +328,7 @@ impl Component for Button {
             ),
         };
 
-        let border = if focus_status() == FocusStatus::Keyboard {
+        let border = if focus() == Focus::Keyboard {
             Border::new()
                 .fill(theme_colors.focus_border_fill)
                 .width(2.)
@@ -347,7 +347,7 @@ impl Component for Button {
 
         rect()
             .overflow(Overflow::Clip)
-            .a11y_id(focus.a11y_id())
+            .a11y_id(a11y_id)
             .a11y_focusable(self.enabled && self.focusable)
             .a11y_role(AccessibilityRole::Button)
             .background(background.mul_if(!self.enabled, 0.9))
@@ -368,7 +368,7 @@ impl Component for Button {
                     let on_press = self.on_press.clone();
                     let on_secondary_down = self.on_secondary_down.clone();
                     move |e: Event<PressEventData>| {
-                        focus.request_focus();
+                        a11y_id.request_focus();
                         match e.data() {
                             PressEventData::Mouse(data) => match data.button {
                                 Some(MouseButton::Left) => {

@@ -124,6 +124,7 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
                     let (x, y) = position.to_f32().to_tuple();
                     rect()
                         .position(Position::new_global())
+                        .layer(Layer::Overlay)
                         .width(Size::px(0.))
                         .height(Size::px(0.))
                         // Extend by 1. so that the cursor click can reach the drop zone

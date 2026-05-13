@@ -45,7 +45,7 @@ fn app() -> impl IntoElement {
         }
     });
 
-    let focus = use_focus();
+    let a11y_id = use_a11y();
     let mut dimensions = use_state(|| (0.0, 0.0));
     let mut click_origin = use_state(|| None::<(usize, usize)>);
 
@@ -64,7 +64,7 @@ fn app() -> impl IntoElement {
                         .on_mouse_down({
                             let handle = handle.clone();
                             move |e: Event<MouseEventData>| {
-                                focus.request_focus();
+                                a11y_id.request_focus();
                                 let (char_width, line_height) = dimensions();
                                 let col = (e.element_location.x / char_width as f64) as f32;
                                 let row = (e.element_location.y / line_height as f64) as f32;
@@ -130,7 +130,7 @@ fn app() -> impl IntoElement {
                                 handle.wheel(e.delta_y, row, col);
                             }
                         })
-                        .a11y_id(focus.a11y_id())
+                        .a11y_id(a11y_id)
                         .a11y_role(AccessibilityRole::Terminal)
                         .a11y_auto_focus(true)
                         .on_key_up({

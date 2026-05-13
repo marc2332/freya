@@ -31,15 +31,15 @@
 //!         TerminalHandle::new(TerminalId::new(), cmd, None).ok()
 //!     });
 //!
-//!     let focus = use_focus();
+//!     let a11y_id = use_a11y();
 //!
 //!     rect().expanded().background((30, 30, 30)).child(
 //!         if let Some(handle) = handle.read().clone() {
 //!             rect()
 //!                 .child(
 //!                     Terminal::new(handle.clone())
-//!                         .a11y_id(focus.a11y_id())
-//!                         .on_mouse_down(move |_| focus.request_focus())
+//!                         .a11y_id(a11y_id)
+//!                         .on_mouse_down(move |_| a11y_id.request_focus())
 //!                         .on_key_down(move |e: Event<KeyboardEventData>| {
 //!                             let _ = handle.write_key(&e.key, e.modifiers);
 //!                         }),
