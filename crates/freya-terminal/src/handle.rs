@@ -244,6 +244,28 @@ impl TerminalHandle {
                     vec![0x1b, b'[', ch as u8]
                 }
             }
+            Key::Named(NamedKey::Home) => {
+                self.scroll(i32::MAX);
+                if self.term.borrow().grid().display_offset() != 0 {
+                    return Ok(true);
+                }
+                if shift || ctrl {
+                    format!("\x1b[1;{}H", modifier()).into_bytes()
+                } else {
+                    b"\x1b[H".to_vec()
+                }
+            }
+            Key::Named(NamedKey::End) => {
+                if self.term.borrow().grid().display_offset() != 0 {
+                    self.scroll_to_bottom();
+                    return Ok(true);
+                }
+                if shift || ctrl {
+                    format!("\x1b[1;{}F", modifier()).into_bytes()
+                } else {
+                    b"\x1b[F".to_vec()
+                }
+            }
             Key::Character(ch) => ch.as_bytes().to_vec(),
             Key::Named(NamedKey::Shift) => {
                 self.shift_pressed(true);

@@ -284,7 +284,7 @@ pub trait EventHandlersExt: Sized {
             }
         })
         .on_key_down(move |e: Event<KeyboardEventData>| {
-            if Focus::is_pressed(&e) {
+            if e.is_press_event() {
                 on_press.call(e.map(PressEventData::Keyboard))
             }
         })
@@ -330,7 +330,7 @@ pub trait EventHandlersExt: Sized {
             }
         })
         .on_key_down(move |e: Event<KeyboardEventData>| {
-            if Focus::is_pressed(&e) {
+            if e.is_press_event() {
                 on_press.call(e.map(PressEventData::Keyboard))
             }
         })

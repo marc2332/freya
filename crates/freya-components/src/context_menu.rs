@@ -73,10 +73,13 @@ impl ContextMenu {
     /// closed with a single click.
     pub fn open_from_event(event: &Event<PressEventData>, menu: Menu) {
         let mut this = Self::get();
+        let was_already_open = this.menu.read().is_some();
         this.menu.set(Some(((this.location)(), menu)));
 
         let close_request = match event.data() {
-            PressEventData::Mouse(mouse) if mouse.button == Some(MouseButton::Left) => {
+            PressEventData::Mouse(mouse)
+                if mouse.button == Some(MouseButton::Left) && !was_already_open =>
+            {
                 ContextMenuCloseRequest::Pending
             }
             _ => ContextMenuCloseRequest::None,

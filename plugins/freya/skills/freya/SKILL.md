@@ -73,7 +73,7 @@ Use plain functions when you only need to reuse a chunk of UI with no internal s
 
 ## Element Builder Pattern
 
-Elements use a fluent builder API. **Never store an element in a variable to modify it later** - chain all methods directly or use `.when` / `.map`.
+Elements use a fluent builder API. **Never store an element in a variable to modify it later** - chain all methods directly or use `.maybe` / `.map`.
 
 ```rust
 // Good

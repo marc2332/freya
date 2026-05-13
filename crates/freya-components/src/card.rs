@@ -211,8 +211,8 @@ impl Card {
 impl Component for Card {
     fn render(&self) -> impl IntoElement {
         let mut hovering = use_state(|| false);
-        let focus = use_focus();
-        let focus_status = use_focus_status(focus);
+        let a11y_id = use_a11y();
+        let focus = use_focus(a11y_id);
 
         let is_hoverable = self.hoverable;
         let cursor_icon = self.cursor_icon;
@@ -244,7 +244,7 @@ impl Component for Card {
             ),
         };
 
-        let border = if focus_status() == FocusStatus::Keyboard {
+        let border = if focus() == Focus::Keyboard {
             Border::new()
                 .fill(theme_colors.border_fill)
                 .width(2.)
@@ -271,7 +271,7 @@ impl Component for Card {
         rect()
             .layout(self.layout.clone())
             .overflow(Overflow::Clip)
-            .a11y_id(focus.a11y_id())
+            .a11y_id(a11y_id)
             .a11y_focusable(is_hoverable)
             .a11y_role(AccessibilityRole::GenericContainer)
             .accessibility(self.accessibility.clone())
@@ -283,7 +283,7 @@ impl Component for Card {
             .map(shadow, |rect, shadow| rect.shadow(shadow))
             .map(self.on_press.clone(), |rect, on_press| {
                 rect.on_press(move |e: Event<PressEventData>| {
-                    focus.request_focus();
+                    a11y_id.request_focus();
                     on_press.call(e);
                 })
             })
