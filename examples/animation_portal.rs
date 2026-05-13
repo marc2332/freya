@@ -35,20 +35,22 @@ fn popup(mut show_popup: State<Option<i32>>) -> impl IntoElement {
         .map(show_popup(), |popup, i| {
             popup
                 .child(PopupTitle::new("Title".to_string()))
-                .child(PopupContent::new().child(
-                    rect()
-                        .horizontal()
-                        .spacing(8.)
-                        .child(
-                            Portal::new(i)
-                                .width(Size::px(200.))
-                                .height(Size::px(200.))
-                                .function(Function::Expo)
-                                .duration(Duration::from_millis(500))
-                                .child(card(i)),
-                        )
-                        .child(LOREM_IPSUM),
-                ))
+                .child(
+                    PopupContent::new().child(
+                        rect()
+                            .horizontal()
+                            .spacing(8.)
+                            .child(
+                                Portal::new(i)
+                                    .width(Size::px(200.))
+                                    .height(Size::px(200.))
+                                    .function(Function::Expo)
+                                    .duration(Duration::from_millis(500))
+                                    .child(card(i)),
+                            )
+                            .child(LOREM_IPSUM),
+                    ),
+                )
                 .child(
                     PopupButtons::new()
                         .child(
