@@ -227,13 +227,11 @@ impl MenuContainer {
 
 impl ComponentOwned for MenuContainer {
     fn render(self) -> impl IntoElement {
-        let focus = use_focus();
+        let a11y_id = use_a11y();
         let theme = get_theme!(self.theme, MenuContainerThemePreference, "menu_container");
         let mut measured = use_state(|| None::<(Area, f32, f32)>);
 
-        use_provide_context(move || MenuGroup {
-            group_id: focus.a11y_id(),
-        });
+        use_provide_context(move || MenuGroup { group_id: a11y_id });
 
         let (offset_x, offset_y, opacity) = match *measured.read() {
             None => (0.0, 0.0, 0.0),
@@ -258,8 +256,8 @@ impl ComponentOwned for MenuContainer {
             })
             .child(
                 rect()
-                    .a11y_id(focus.a11y_id())
-                    .a11y_member_of(focus.a11y_id())
+                    .a11y_id(a11y_id)
+                    .a11y_member_of(a11y_id)
                     .a11y_focusable(true)
                     .a11y_role(AccessibilityRole::Menu)
                     .shadow((0.0, 4.0, 10.0, 0., theme.shadow))
@@ -386,8 +384,8 @@ impl ComponentOwned for MenuItem {
     fn render(self) -> impl IntoElement {
         let theme = get_theme!(self.theme, MenuItemThemePreference, "menu_item");
         let mut hovering = use_state(|| false);
-        let focus = use_focus();
-        let focus_status = use_focus_status(focus);
+        let a11y_id = use_a11y();
+        let focus = use_focus(a11y_id);
         let MenuGroup { group_id } = use_consume::<MenuGroup>();
 
         let background = if self.selected {
@@ -398,7 +396,7 @@ impl ComponentOwned for MenuItem {
             theme.background
         };
 
-        let border = if focus_status() == FocusStatus::Keyboard {
+        let border = if focus() == Focus::Keyboard {
             Border::new()
                 .fill(theme.select_border_fill)
                 .width(2.)
@@ -427,13 +425,13 @@ impl ComponentOwned for MenuItem {
                 on_press.call(e);
             }
             if *prevent_default.borrow() {
-                focus.request_focus();
+                a11y_id.request_focus();
             }
         };
 
         rect()
             .a11y_role(AccessibilityRole::MenuItem)
-            .a11y_id(focus.a11y_id())
+            .a11y_id(a11y_id)
             .a11y_focusable(true)
             .a11y_member_of(group_id)
             .min_width(Size::px(105.))

@@ -10,6 +10,7 @@ use crate::{
         ACCESSIBILITY_ROOT_ID,
         AccessibilityGenerator,
     },
+    lifecycle::reactive::use_reactive,
     platform::{
         NavigationMode,
         Platform,
@@ -26,62 +27,109 @@ use crate::{
     },
 };
 
-#[derive(Clone, Copy)]
-pub struct Focus {
-    a11y_id: AccessibilityId,
+/// Extension trait for [`AccessibilityId`].
+///
+/// Pair an id with an element through `.a11y_id(...)`, then call any of these
+/// methods on the id to interact with focus.
+///
+/// ```rust, no_run
+/// # use freya::prelude::*;
+/// fn focusable_box() -> impl IntoElement {
+///     let a11y_id = use_a11y();
+///     rect()
+///         .a11y_id(a11y_id)
+///         .a11y_focusable(true)
+///         .on_mouse_down(move |_| a11y_id.request_focus())
+///         .child(if a11y_id.is_focused() {
+///             "Focused"
+///         } else {
+///             "Not focused"
+///         })
+/// }
+/// ```
+pub trait AccessibilityIdExt {
+    /// Whether the linked node is currently focused (via keyboard or pointer).
+    fn is_focused(&self) -> bool;
+
+    /// Request focus to be moved to the linked node.
+    fn request_focus(&self);
+
+    /// Request focus to be cleared from the linked node.
+    fn request_unfocus(&self);
+
+    /// Generate a unique [`AccessibilityId`]. Prefer [`use_a11y`] for component-scoped ids.
+    fn new_unique() -> AccessibilityId;
 }
 
-impl Focus {
-    pub fn create() -> Self {
-        Self::new_for_id(Self::new_id())
+impl AccessibilityIdExt for AccessibilityId {
+    fn is_focused(&self) -> bool {
+        let platform = Platform::get();
+        *platform.focused_accessibility_id.read() == *self
     }
 
-    pub fn new_for_id(a11y_id: AccessibilityId) -> Self {
-        Self { a11y_id }
+    fn request_focus(&self) {
+        if !self.is_focused() {
+            Platform::get().send(UserEvent::FocusAccessibilityNode(
+                AccessibilityFocusStrategy::Node(*self),
+            ));
+        }
     }
 
-    pub fn new_id() -> AccessibilityId {
+    fn request_unfocus(&self) {
+        if self.is_focused() {
+            Platform::get().send(UserEvent::FocusAccessibilityNode(
+                AccessibilityFocusStrategy::Node(ACCESSIBILITY_ROOT_ID),
+            ));
+        }
+    }
+
+    fn new_unique() -> Self {
         let accessibility_generator = consume_root_context::<AccessibilityGenerator>();
         AccessibilityId(accessibility_generator.new_id())
     }
+}
 
-    pub fn a11y_id(&self) -> AccessibilityId {
-        self.a11y_id
-    }
+/// Create a unique [`AccessibilityId`] that persists for the lifetime of the component.
+pub fn use_a11y() -> AccessibilityId {
+    use_hook(AccessibilityId::new_unique)
+}
 
+/// Focus state for an [`AccessibilityId`], distinguishing keyboard vs pointer focus.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Focus {
+    /// The node is not focused.
+    Not,
+    /// The node is focused after a pointer (mouse / touch) interaction.
+    Pointer,
+    /// The node is focused while the user is navigating with the keyboard.
+    Keyboard,
+}
+
+impl Focus {
+    /// Whether the node is focused, regardless of how it got focused.
     pub fn is_focused(&self) -> bool {
-        let platform = Platform::get();
-        *platform.focused_accessibility_id.peek() == self.a11y_id
+        matches!(self, Self::Pointer | Self::Keyboard)
     }
+}
 
-    pub fn is_focused_with_keyboard(&self) -> bool {
-        let platform = Platform::get();
-        *platform.focused_accessibility_id.peek() == self.a11y_id
-            && *platform.navigation_mode.peek() == NavigationMode::Keyboard
-    }
+/// Extension trait for [`KeyboardEventData`] with focus-related helpers.
+pub trait KeyboardEventExt {
+    /// Whether this event is the "press" gesture for a focusable node (`Enter` / `Space`,
+    /// or `Ctrl+Alt+Space` on macOS with a screen reader).
+    fn is_press_event(&self) -> bool;
+}
 
-    pub fn request_focus(&self) {
-        Platform::get().send(UserEvent::FocusAccessibilityNode(
-            AccessibilityFocusStrategy::Node(self.a11y_id),
-        ));
-    }
-
-    pub fn request_unfocus(&self) {
-        Platform::get().send(UserEvent::FocusAccessibilityNode(
-            AccessibilityFocusStrategy::Node(ACCESSIBILITY_ROOT_ID),
-        ));
-    }
-
-    pub fn is_pressed(event: &KeyboardEventData) -> bool {
-        let is_space = matches!(event.key, Key::Character(ref s) if s == " ");
-        let is_enter = event.key == Key::Named(NamedKey::Enter);
+impl KeyboardEventExt for KeyboardEventData {
+    fn is_press_event(&self) -> bool {
+        let is_space = matches!(self.key, Key::Character(ref s) if s == " ");
+        let is_enter = self.key == Key::Named(NamedKey::Enter);
 
         if cfg!(target_os = "macos") {
             let screen_reader = ScreenReader::get();
             if screen_reader.is_on() {
                 is_space
-                    && event.modifiers.contains(Modifiers::CONTROL)
-                    && event.modifiers.contains(Modifiers::ALT)
+                    && self.modifiers.contains(Modifiers::CONTROL)
+                    && self.modifiers.contains(Modifiers::ALT)
             } else {
                 is_enter || is_space
             }
@@ -91,33 +139,32 @@ impl Focus {
     }
 }
 
-pub fn use_focus() -> Focus {
-    use_hook(Focus::create)
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum FocusStatus {
-    Not,
-    Pointer,
-    Keyboard,
-}
-
-impl FocusStatus {
-    pub fn is_focused(&self) -> bool {
-        matches!(self, Self::Pointer | Self::Keyboard)
-    }
-}
-
-pub fn use_focus_status(focus: Focus) -> Memo<FocusStatus> {
+/// Reactively track the [`Focus`] state of an [`AccessibilityId`].
+///
+/// ```rust, no_run
+/// # use freya::prelude::*;
+/// fn highlighted_box() -> impl IntoElement {
+///     let a11y_id = use_a11y();
+///     let focus = use_focus(a11y_id);
+///     rect()
+///         .a11y_id(a11y_id)
+///         .a11y_focusable(true)
+///         .maybe(focus() == Focus::Keyboard, |el| {
+///             el.border(Border::new().fill(Color::BLUE).width(2.))
+///         })
+/// }
+/// ```
+pub fn use_focus(a11y_id: AccessibilityId) -> Memo<Focus> {
+    let id = use_reactive(&a11y_id);
     use_memo(move || {
         let platform = Platform::get();
-        let is_focused = *platform.focused_accessibility_id.read() == focus.a11y_id;
+        let is_focused = *platform.focused_accessibility_id.read() == id();
         let is_keyboard = *platform.navigation_mode.read() == NavigationMode::Keyboard;
 
         match (is_focused, is_keyboard) {
-            (true, false) => FocusStatus::Pointer,
-            (true, true) => FocusStatus::Keyboard,
-            _ => FocusStatus::Not,
+            (true, false) => Focus::Pointer,
+            (true, true) => Focus::Keyboard,
+            _ => Focus::Not,
         }
     })
 }

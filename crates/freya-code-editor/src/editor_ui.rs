@@ -115,8 +115,6 @@ impl Component for CodeEditor {
 
         let editor_data = editor.read();
 
-        let focus = Focus::new_for_id(a11y_id);
-
         let scroll_controller = use_hook(|| {
             let notifier = State::create(());
             let requests = State::create(vec![]);
@@ -156,7 +154,7 @@ impl Component for CodeEditor {
         let on_pointer_down = move |e: Event<PointerEventData>| {
             e.prevent_default();
             e.stop_propagation();
-            focus.request_focus();
+            a11y_id.request_focus();
         };
 
         let on_key_up = {
@@ -262,7 +260,7 @@ impl Component for CodeEditor {
         rect()
             .a11y_auto_focus(a11y_auto_focus)
             .a11y_focusable(true)
-            .a11y_id(focus.a11y_id())
+            .a11y_id(a11y_id)
             .a11y_role(AccessibilityRole::TextInput)
             .expanded()
             .background(theme.read().background)
