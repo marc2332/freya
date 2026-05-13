@@ -108,15 +108,15 @@ rect()
 **Prefer one outer `.maybe` / `.map` over several consecutive `.maybe_child` calls gated on the same condition** - it keeps the gating in one place and avoids re-evaluating the same predicate.
 
 ```rust
-// Good - single .maybe wraps all conditional children
+// Good, single .maybe wraps all conditional children
 rect()
-    .maybe(show, |r| {
-        r.child(Title::new("Hi"))
+    .maybe(show, |el| {
+        el.child(Title::new("Hi"))
             .child(Content::new().child("Hello"))
             .child(Footer::new())
     })
 
-// Bad - same predicate repeated per child
+// Bad, same predicate repeated per child
 rect()
     .maybe_child(show.then(|| Title::new("Hi")))
     .maybe_child(show.then(|| Content::new().child("Hello")))
