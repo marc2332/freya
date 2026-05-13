@@ -73,7 +73,7 @@ Use plain functions when you only need to reuse a chunk of UI with no internal s
 
 ## Element Builder Pattern
 
-Elements use a fluent builder API. **Never store an element in a variable to modify it later** - chain all methods directly or use `.when` / `.map`.
+Elements use a fluent builder API. **Never store an element in a variable to modify it later** - chain all methods directly or use `.maybe` / `.map`.
 
 ```rust
 // Good
@@ -104,6 +104,24 @@ rect()
 - `.maybe(bool, |el| el)` - applies the callback when the condition is true
 - `.map(Option<T>, |el, val| el)` - applies the callback when the `Option` is `Some`, passing the inner value
 - `.maybe_child(Option<impl IntoElement>)` - appends a child only when `Some`
+
+**Prefer one outer `.maybe` / `.map` over several consecutive `.maybe_child` calls gated on the same condition** - it keeps the gating in one place and avoids re-evaluating the same predicate.
+
+```rust
+// Good - single .maybe wraps all conditional children
+rect()
+    .maybe(show, |r| {
+        r.child(Title::new("Hi"))
+            .child(Content::new().child("Hello"))
+            .child(Footer::new())
+    })
+
+// Bad - same predicate repeated per child
+rect()
+    .maybe_child(show.then(|| Title::new("Hi")))
+    .maybe_child(show.then(|| Content::new().child("Hello")))
+    .maybe_child(show.then(|| Footer::new()))
+```
 
 ### Labels from &str and String
 
