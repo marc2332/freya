@@ -386,7 +386,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "input",
         InputColorsThemePreference {
             background: Preference::Reference("surface_tertiary"),
-            hover_background: Preference::Reference("background"),
+            focus_background: Preference::Reference("background"),
             color: Preference::Reference("text_primary"),
             placeholder_color: Preference::Reference("text_secondary"),
             border_fill: Preference::Reference("border"),
@@ -397,7 +397,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "filled_input",
         InputColorsThemePreference {
             background: Preference::Reference("primary"),
-            hover_background: Preference::Reference("tertiary"),
+            focus_background: Preference::Reference("tertiary"),
             color: Preference::Reference("text_inverse"),
             placeholder_color: Preference::Reference("text_inverse"),
             border_fill: Preference::Specific(Color::TRANSPARENT),
@@ -408,7 +408,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "flat_input",
         InputColorsThemePreference {
             background: Preference::Specific(Color::TRANSPARENT),
-            hover_background: Preference::Reference("surface_tertiary"),
+            focus_background: Preference::Reference("surface_tertiary"),
             color: Preference::Reference("text_primary"),
             placeholder_color: Preference::Reference("text_secondary"),
             border_fill: Preference::Specific(Color::TRANSPARENT),

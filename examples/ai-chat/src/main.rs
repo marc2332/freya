@@ -135,7 +135,7 @@ fn app() -> impl IntoElement {
                 .child(
                     Input::new(input_value)
                         .background((65, 65, 65))
-                        .hover_background((75, 75, 75))
+                        .focus_background((75, 75, 75))
                         .border_fill(Color::TRANSPARENT)
                         .color((200, 200, 200))
                         .placeholder("Type your message...")

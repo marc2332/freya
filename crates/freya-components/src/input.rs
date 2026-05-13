@@ -47,7 +47,7 @@ define_theme! {
     pub InputColors {
         %[fields]
         background: Color,
-        hover_background: Color,
+        focus_background: Color,
         border_fill: Color,
         focus_border_fill: Color,
         color: Color,
@@ -554,7 +554,7 @@ impl Component for Input {
 
         let (background, cursor_index, text_selection) = if enabled() && focus() != Focus::Not {
             (
-                theme_colors.hover_background,
+                theme_colors.focus_background,
                 Some(editable.editor().read().cursor_pos()),
                 editable
                     .editor()
