@@ -165,7 +165,7 @@ impl ContainerSizeExt for ScrollView {}
 
 impl Component for ScrollView {
     fn render(self: &ScrollView) -> impl IntoElement {
-        let focus = use_focus();
+        let a11y_id = use_a11y();
         let mut timeout = use_timeout(|| Duration::from_millis(800));
         let mut pressing_shift = use_state(|| false);
         let mut clicking_scrollbar = use_state::<Option<(Axis, f64)>>(|| None);
@@ -344,8 +344,8 @@ impl Component for ScrollView {
             if clicking_scrollbar.is_some() {
                 e.prevent_default();
                 timeout.reset();
-                if !focus.is_focused() {
-                    focus.request_focus();
+                if !a11y_id.is_focused() {
+                    a11y_id.request_focus();
                 }
             }
         };
@@ -398,7 +398,7 @@ impl Component for ScrollView {
         let on_pointer_down = move |e: Event<PointerEventData>| {
             if drag_scrolling {
                 drag_origin.set(Some(e.global_location()));
-                focus.request_focus();
+                a11y_id.request_focus();
                 timeout.reset();
             }
         };
@@ -408,7 +408,7 @@ impl Component for ScrollView {
             .height(layout.height.clone())
             .max_width(layout.maximum_width.clone())
             .max_height(layout.maximum_height.clone())
-            .a11y_id(focus.a11y_id())
+            .a11y_id(a11y_id)
             .a11y_focusable(false)
             .a11y_role(AccessibilityRole::ScrollView)
             .a11y_builder(move |node| {

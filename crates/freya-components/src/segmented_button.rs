@@ -157,8 +157,8 @@ impl Component for ButtonSegment {
     fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, ButtonSegmentThemePreference, "button_segment");
         let mut status = use_state(|| ButtonSegmentStatus::Idle);
-        let focus = use_focus();
-        let focus_status = use_focus_status(focus);
+        let a11y_id = use_a11y();
+        let focus = use_focus(a11y_id);
 
         let ButtonSegmentTheme {
             background,
@@ -184,7 +184,7 @@ impl Component for ButtonSegment {
 
         let on_press = self.on_press.clone();
         let on_press = move |e: Event<PressEventData>| {
-            focus.request_focus();
+            a11y_id.request_focus();
             if let Some(on_press) = &on_press {
                 on_press.call(e);
             }
@@ -218,14 +218,14 @@ impl Component for ButtonSegment {
         } else {
             padding
         };
-        let background = if *focus_status.read() == FocusStatus::Keyboard {
+        let background = if *focus.read() == Focus::Keyboard {
             focus_background
         } else {
             background
         };
 
         rect()
-            .a11y_id(focus.a11y_id())
+            .a11y_id(a11y_id)
             .a11y_focusable(self.enabled)
             .a11y_role(AccessibilityRole::Button)
             .maybe(self.enabled, |rect| rect.on_press(on_press))

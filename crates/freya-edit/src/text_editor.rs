@@ -6,6 +6,7 @@ use std::{
 };
 
 use freya_clipboard::clipboard::Clipboard;
+use freya_core::events::modifiers::ModifiersExt;
 use keyboard_types::{
     Key,
     Modifiers,
@@ -602,11 +603,7 @@ pub trait TextEditor {
                 event.insert(TextEvent::TEXT_CHANGED);
             }
             Key::Character(character) => {
-                let meta_or_ctrl = if cfg!(target_os = "macos") {
-                    modifiers.meta()
-                } else {
-                    modifiers.ctrl()
-                };
+                let meta_or_ctrl = modifiers.ctrl_or_meta();
 
                 match character.as_str() {
                     " " if allow_changes => {
