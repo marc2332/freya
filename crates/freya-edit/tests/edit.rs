@@ -40,6 +40,7 @@ fn multiple_lines_single_editor() {
             .on_mouse_down(on_mouse_down)
             .child(
                 paragraph()
+                    .font_size(16.)
                     .holder(holder.read().clone())
                     .height(Size::percent(50.0))
                     .width(Size::fill())
@@ -160,6 +161,7 @@ fn single_line_multiple_editors() {
                         });
                     };
                     paragraph()
+                        .font_size(16.)
                         .holder(holder.read().clone())
                         .width(Size::fill())
                         .height(Size::px(30.0))
@@ -244,6 +246,7 @@ fn highlight_multiple_lines_single_editor() {
             .background((255, 255, 255))
             .child(
                 paragraph()
+                    .font_size(16.)
                     .holder(holder.read().clone())
                     .highlights(
                         editor
@@ -334,6 +337,7 @@ fn highlights_single_line_multiple_editors() {
                     };
 
                     paragraph()
+                        .font_size(16.)
                         .holder(holder.read().clone())
                         .width(Size::fill())
                         .height(Size::px(30.0))
@@ -410,6 +414,7 @@ fn special_text_editing() {
             .on_mouse_down(on_mouse_down)
             .child(
                 paragraph()
+                    .font_size(16.)
                     .holder(holder.read().clone())
                     .width(Size::fill())
                     .height(Size::percent(50.0))
@@ -469,6 +474,7 @@ fn backspace_remove() {
             .background((255, 255, 255))
             .child(
                 paragraph()
+                    .font_size(16.)
                     .holder(holder.read().clone())
                     .width(Size::fill())
                     .height(Size::percent(50.0))
@@ -544,6 +550,7 @@ fn highlight_shift_click_multiple_lines_single_editor() {
             .background((255, 255, 255))
             .child(
                 paragraph()
+                    .font_size(16.)
                     .holder(holder.read().clone())
                     .width(Size::fill())
                     .height(Size::percent(50.0))
@@ -651,6 +658,7 @@ fn highlights_shift_click_single_line_multiple_editors() {
                             };
 
                             paragraph()
+                                .font_size(16.)
                                 .holder(holder.read().clone())
                                 .width(Size::fill())
                                 .height(Size::px(30.))
@@ -732,6 +740,7 @@ fn double_click_select_word() {
             .on_mouse_down(on_mouse_down)
             .child(
                 paragraph()
+                    .font_size(16.)
                     .holder(holder.read().clone())
                     .height(Size::percent(50.0))
                     .width(Size::fill())
@@ -802,6 +811,7 @@ fn triple_click_select_line() {
             .on_mouse_down(on_mouse_down)
             .child(
                 paragraph()
+                    .font_size(16.)
                     .holder(holder.read().clone())
                     .height(Size::percent(50.0))
                     .width(Size::fill())
@@ -873,6 +883,7 @@ fn quadruple_click_select_all() {
             .on_mouse_down(on_mouse_down)
             .child(
                 paragraph()
+                    .font_size(16.)
                     .holder(holder.read().clone())
                     .height(Size::percent(50.0))
                     .width(Size::fill())
@@ -956,6 +967,7 @@ fn double_click_select_word_single_line_multiple_editors() {
                     };
 
                     paragraph()
+                        .font_size(16.)
                         .holder(holder.read().clone())
                         .width(Size::fill())
                         .height(Size::px(30.0))
@@ -1043,6 +1055,7 @@ fn triple_click_select_line_single_line_multiple_editors() {
                     };
 
                     paragraph()
+                        .font_size(16.)
                         .holder(holder.read().clone())
                         .width(Size::fill())
                         .height(Size::px(30.0))
@@ -1131,6 +1144,7 @@ fn highlight_all_text() {
             .background((255, 255, 255))
             .child(
                 paragraph()
+                    .font_size(16.)
                     .holder(holder.read().clone())
                     .width(Size::fill())
                     .height(Size::percent(50.0))
@@ -1227,6 +1241,7 @@ fn replace_text() {
             .on_mouse_up(on_mouse_up)
             .child(
                 paragraph()
+                    .font_size(16.)
                     .holder(holder.read().clone())
                     .width(Size::fill())
                     .height(Size::percent(50.0))
@@ -1300,6 +1315,7 @@ fn navigate_empty_lines() {
             .background((255, 255, 255))
             .child(
                 paragraph()
+                    .font_size(16.)
                     .holder(holder.read().clone())
                     .width(Size::fill())
                     .height(Size::percent(50.0))
@@ -1357,6 +1373,7 @@ fn cursor_word_navigation() {
             .background((255, 255, 255))
             .child(
                 paragraph()
+                    .font_size(16.)
                     .holder(holder.read().clone())
                     .height(Size::percent(50.0))
                     .width(Size::fill())
@@ -1509,6 +1526,7 @@ fn cursor_word_navigation_with_selection() {
             .background((255, 255, 255))
             .child(
                 paragraph()
+                    .font_size(16.)
                     .holder(holder.read().clone())
                     .highlights(
                         editor

@@ -5,7 +5,8 @@ use freya_testing::prelude::*;
 
 #[test]
 fn selectable_text_drag_selects_text() {
-    let mut utils = launch_test(|| SelectableText::new("Hello Rustaceans\nHello Rustaceans"));
+    let mut utils =
+        launch_test(|| SelectableText::new("Hello Rustaceans\nHello Rustaceans").font_size(16.));
 
     utils.set_fonts(HashMap::from_iter([(
         "NotoSans",
