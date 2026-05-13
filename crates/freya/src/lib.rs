@@ -337,6 +337,7 @@ pub mod code_editor {
 pub mod camera {
     pub use freya_camera::{
         init,
+        nokhwa,
         prelude::*,
     };
 }

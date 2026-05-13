@@ -23,10 +23,9 @@ skia-engine = ["freya-core/skia-engine"]
 freya-core = { workspace = true }
 freya-engine = { workspace = true }
 nokhwa = { version = "0.10", features = ["input-native"] }
+async-channel = { workspace = true }
+blocking = { workspace = true }
 bytes = { workspace = true }
-futures-channel = { workspace = true, features = ["sink"] }
-futures-lite = { workspace = true }
-futures-util = { workspace = true, features = ["sink"] }
 tracing = { workspace = true }
 
 [dev-dependencies]

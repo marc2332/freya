@@ -7,12 +7,12 @@ use freya_core::{
 
 use crate::{
     camera::CameraError,
-    use_camera::UseCamera,
+    use_camera::Camera,
 };
 
 /// Live camera preview component.
 ///
-/// Renders the latest frame produced by a [`UseCamera`] handle. While the
+/// Renders the latest frame produced by a [`Camera`] handle. While the
 /// camera has not yet produced a frame the `placeholder` is rendered instead.
 ///
 /// # Example
@@ -30,7 +30,7 @@ use crate::{
 /// ```
 #[derive(PartialEq)]
 pub struct CameraViewer {
-    camera: UseCamera,
+    camera: Camera,
 
     layout: LayoutData,
     image_data: ImageData,
@@ -46,7 +46,7 @@ pub struct CameraViewer {
 }
 
 impl CameraViewer {
-    pub fn new(camera: UseCamera) -> Self {
+    pub fn new(camera: Camera) -> Self {
         Self {
             camera,
             layout: LayoutData::default(),

@@ -1,4 +1,4 @@
-//! [`use_camera`] hook and the [`UseCamera`] handle.
+//! [`use_camera`] hook and the [`Camera`] handle.
 
 use std::{
     cell::RefCell,
@@ -17,7 +17,6 @@ use freya_engine::prelude::{
     ImageInfo,
     raster_from_data,
 };
-use futures_util::StreamExt;
 
 use crate::{
     camera::{
@@ -33,13 +32,13 @@ use crate::{
 };
 
 /// A handle to a running camera, produced by [`use_camera`] or
-/// [`UseCamera::create`].
+/// [`Camera::create`].
 ///
 /// The handle is `Copy` and can be passed freely to child components, including
 /// [`CameraViewer`](crate::camera_viewer::CameraViewer). The camera is closed
 /// automatically when the scope where the handle was created is dropped.
 #[derive(Clone, Copy, PartialEq)]
-pub struct UseCamera {
+pub struct Camera {
     /// The latest frame produced by the camera.
     pub frame: State<Option<ImageHolder>>,
     /// The resolution and frame rate negotiated with the device.
@@ -48,7 +47,7 @@ pub struct UseCamera {
     pub error: State<Option<CameraError>>,
 }
 
-impl UseCamera {
+impl Camera {
     /// Open a camera and start streaming frames into reactive state.
     ///
     /// Must be called from within a Freya render context (typically through
@@ -59,10 +58,10 @@ impl UseCamera {
         let mut info: State<Option<StreamInfo>> = State::create(None);
         let mut error: State<Option<CameraError>> = State::create(None);
 
-        let mut receiver = spawn_capture(config);
+        let receiver = spawn_capture(config);
 
         spawn(async move {
-            while let Some(message) = receiver.next().await {
+            while let Ok(message) = receiver.recv().await {
                 match message {
                     CaptureMessage::Started(new_info) => {
                         *info.write() = Some(new_info);
@@ -86,7 +85,7 @@ impl UseCamera {
     }
 }
 
-/// Open a camera and return a [`UseCamera`] handle.
+/// Open a camera and return a [`Camera`] handle.
 ///
 /// The `init` closure is invoked once on mount to produce the [`CameraConfig`].
 /// To switch to a different camera, recreate the component (for example by
@@ -106,8 +105,8 @@ impl UseCamera {
 ///     rect().center().expanded().child(CameraViewer::new(camera))
 /// }
 /// ```
-pub fn use_camera(init: impl FnOnce() -> CameraConfig) -> UseCamera {
-    use_hook(|| UseCamera::create(init()))
+pub fn use_camera(init: impl FnOnce() -> CameraConfig) -> Camera {
+    use_hook(|| Camera::create(init()))
 }
 
 /// Build an [`ImageHolder`] from a raw `RGBA8` camera frame.

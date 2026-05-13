@@ -1,16 +1,13 @@
 //! Background capture thread that drives [nokhwa] and forwards decoded frames
 //! to the UI thread.
 
-use std::thread;
-
-use bytes::Bytes;
-use futures_channel::mpsc::{
+use async_channel::{
     Receiver,
     Sender,
-    channel,
+    bounded,
 };
-use futures_lite::future::block_on;
-use futures_util::SinkExt;
+use blocking::unblock;
+use bytes::Bytes;
 use nokhwa::{
     Camera,
     pixel_format::RgbAFormat,
@@ -45,39 +42,25 @@ pub enum CaptureMessage {
     Error(CameraError),
 }
 
-/// When the consumer falls behind, the producer blocks on `send` and the
-/// camera driver drops old frames at the OS level, so 2 slots are enough to
-/// keep the pipeline full without ever displaying a stale frame.
 const CHANNEL_CAPACITY: usize = 2;
 
 /// Spawn a thread that opens the camera and streams decoded frames back.
 ///
 /// The thread terminates when the returned receiver is dropped.
 pub fn spawn_capture(config: CameraConfig) -> Receiver<CaptureMessage> {
-    let (tx, rx) = channel(CHANNEL_CAPACITY);
+    let (tx, rx) = bounded(CHANNEL_CAPACITY);
 
-    let mut spawn_tx = tx.clone();
-    let result = thread::Builder::new()
-        .name("freya-camera-capture".into())
-        .spawn(move || {
-            let mut tx = tx;
-            if let Err(err) = run_capture(config, &mut tx) {
-                let _ = block_on(tx.send(CaptureMessage::Error(err)));
-            }
-        });
-
-    if let Err(err) = result {
-        let _ = block_on(
-            spawn_tx.send(CaptureMessage::Error(CameraError::GeneralError(format!(
-                "failed to spawn capture thread: {err}"
-            )))),
-        );
-    }
+    unblock(move || {
+        if let Err(err) = run_capture(config, &tx) {
+            let _ = tx.send_blocking(CaptureMessage::Error(err));
+        }
+    })
+    .detach();
 
     rx
 }
 
-fn run_capture(config: CameraConfig, tx: &mut Sender<CaptureMessage>) -> Result<(), CameraError> {
+fn run_capture(config: CameraConfig, tx: &Sender<CaptureMessage>) -> Result<(), CameraError> {
     let requested = RequestedFormat::new::<RgbAFormat>(config.format.into());
 
     let mut camera = Camera::new(config.device, requested)?;
@@ -90,7 +73,7 @@ fn run_capture(config: CameraConfig, tx: &mut Sender<CaptureMessage>) -> Result<
         frame_rate: camera.frame_rate(),
     };
 
-    if block_on(tx.send(CaptureMessage::Started(info))).is_err() {
+    if tx.send_blocking(CaptureMessage::Started(info)).is_err() {
         return Ok(());
     }
 
@@ -106,7 +89,7 @@ fn run_capture(config: CameraConfig, tx: &mut Sender<CaptureMessage>) -> Result<
             data: Bytes::from(decoded.into_raw()),
         };
 
-        if block_on(tx.send(CaptureMessage::Frame(frame))).is_err() {
+        if tx.send_blocking(CaptureMessage::Frame(frame)).is_err() {
             // Receiver was dropped, stop capturing.
             break;
         }

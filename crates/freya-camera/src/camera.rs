@@ -76,10 +76,6 @@ pub struct StreamInfo {
 
 /// Enumerate the cameras available on the system.
 ///
-/// Uses the platform's native backend (V4L2 on Linux, AVFoundation on macOS,
-/// MediaFoundation on Windows). On macOS make sure [`init`](crate::init) has
-/// been called first so the OS authorization prompt has a chance to run.
-///
 /// # Example
 ///
 /// ```rust, no_run

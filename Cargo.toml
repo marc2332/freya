@@ -102,6 +102,7 @@ futures-util = "0.3.31"
 futures-channel = "0.3.31"
 futures-lite = "2.6.1"
 async-io = "2.5.0"
+async-channel = "2.5.0"
 blocking = "1.6.2"
 ureq = "3.1.4"
 serde = { version = "1", features = ["derive"] }

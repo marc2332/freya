@@ -83,27 +83,30 @@ rect()
     .height(Size::px(100.))
     .center()       // centers children both axes
     .expanded()     // fills available space in parent's main axis
-    .maybe(is_active, |r| r.child("Active"))
-    .map(some_value, |r, v| r.child(v.to_string()))
+    .horizontal()   // sets layout direction to horizontal
+    .maybe(is_active, |el| el.child("Active"))
+    .map(some_value, |el, v| el.child(v.to_string()))
 
 // Bad - storing to modify later
 let mut element = rect();
 ```
 
-Common layout shorthands: `.center()` centers children on both axes; `.expanded()` makes the element fill all remaining space along the parent's main axis (equivalent to `flex: 1` in CSS).
+Common layout shorthands: `.center()` centers children on both axes; `.expanded()` makes the element fill all remaining space along the parent's main axis (equivalent to `flex: 1` in CSS); `.horizontal()` and `.vertical()` set the layout direction (prefer them over `.direction(Direction::Horizontal/Vertical)`).
 
 ### Conditional and Dynamic Rendering
 
 ```rust
 rect()
-    .maybe(show_badge, |r| r.child("New"))          // bool condition
-    .map(large_size, |r, size| r.height(size))       // Option<T>, passes value
-    .maybe_child(optional_element)                   // Option<impl IntoElement>
+    .maybe(show_badge, |el| el.child("New"))          // bool condition
+    .map(large_size, |el, size| el.height(size))      // Option<T>, passes value
+    .maybe_child(optional_element)                    // Option<impl IntoElement>
 ```
 
 - `.maybe(bool, |el| el)` - applies the callback when the condition is true
 - `.map(Option<T>, |el, val| el)` - applies the callback when the `Option` is `Some`, passing the inner value
 - `.maybe_child(Option<impl IntoElement>)` - appends a child only when `Some`
+
+Name the element argument `el` in `.maybe` / `.map` callbacks (not `r`, `rect`, `e`, etc.).
 
 **Prefer one outer `.maybe` / `.map` over several consecutive `.maybe_child` calls gated on the same condition** - it keeps the gating in one place and avoids re-evaluating the same predicate.
 
