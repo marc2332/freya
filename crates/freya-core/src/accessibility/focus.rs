@@ -27,13 +27,10 @@ use crate::{
     },
 };
 
-/// Extension trait for [`AccessibilityId`] with focus-related operations and constructors.
+/// Extension trait for [`AccessibilityId`].
 ///
 /// Pair an id with an element through `.a11y_id(...)`, then call any of these
-/// methods on the id to interact with focus. The trait also provides
-/// [`new_unique`](Self::new_unique) for generating a fresh id, which lives
-/// here because `AccessibilityId` is re-exported from `accesskit` and can't
-/// carry inherent methods.
+/// methods on the id to interact with focus.
 ///
 /// ```rust, no_run
 /// # use freya::prelude::*;
@@ -51,31 +48,16 @@ use crate::{
 /// }
 /// ```
 pub trait AccessibilityIdExt {
-    /// Whether the linked node is currently the focused one.
-    ///
-    /// This is `true` regardless of whether focus arrived via keyboard or
-    /// pointer. Use [`use_focus`] when you need to distinguish them (e.g. to
-    /// only show a focus ring during keyboard navigation).
+    /// Whether the linked node is currently focused (via keyboard or pointer).
     fn is_focused(&self) -> bool;
 
     /// Request focus to be moved to the linked node.
-    ///
-    /// No-op if this id is already the focused node. The focus change is
-    /// delivered through the platform event loop, so it becomes visible on
-    /// the next render.
     fn request_focus(&self);
 
-    /// Request focus to be cleared by moving it back to the accessibility root.
-    ///
-    /// No-op if this id is not currently the focused node, so it's safe to
-    /// call from any handler without first checking [`is_focused`](Self::is_focused).
+    /// Request focus to be cleared from the linked node.
     fn request_unfocus(&self);
 
-    /// Generate a unique [`AccessibilityId`].
-    ///
-    /// Must be called from within a component render (it reads from the root
-    /// context). Prefer [`use_a11y`] when you just need one per component,
-    /// since it persists the id across renders automatically.
+    /// Generate a unique [`AccessibilityId`]. Prefer [`use_a11y`] for component-scoped ids.
     fn new_unique() -> AccessibilityId;
 }
 
@@ -108,19 +90,11 @@ impl AccessibilityIdExt for AccessibilityId {
 }
 
 /// Create a unique [`AccessibilityId`] that persists for the lifetime of the component.
-///
-/// This is the default way to obtain an id: it's generated once and reused on
-/// every render, so it stays stable for use as a focus target.
 pub fn use_a11y() -> AccessibilityId {
     use_hook(AccessibilityId::new_unique)
 }
 
-/// Detailed focus state for an [`AccessibilityId`].
-///
-/// Returned reactively by [`use_focus`]. Unlike [`AccessibilityIdExt::is_focused`]
-/// (which only tells you *whether* focus is on the node), `Focus` also
-/// tells you *how* the user got there, which is what you typically need to
-/// decide whether to show a focus ring.
+/// Focus state for an [`AccessibilityId`], distinguishing keyboard vs pointer focus.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Focus {
     /// The node is not focused.
@@ -140,10 +114,8 @@ impl Focus {
 
 /// Extension trait for [`KeyboardEventData`] with focus-related helpers.
 pub trait KeyboardEventExt {
-    /// Whether this keyboard event represents the "press" gesture for a focusable node.
-    ///
-    /// Generally that means `Enter` or `Space`. On macOS with a screen reader
-    /// active, only `Ctrl+Alt+Space` counts, matching the system convention.
+    /// Whether this event is the "press" gesture for a focusable node (`Enter` / `Space`,
+    /// or `Ctrl+Alt+Space` on macOS with a screen reader).
     fn is_press_event(&self) -> bool;
 }
 
@@ -168,9 +140,6 @@ impl KeyboardEventExt for KeyboardEventData {
 }
 
 /// Reactively track the [`Focus`] state of an [`AccessibilityId`].
-///
-/// The returned [`Memo`] updates on every focus or navigation-mode change,
-/// so reading it inside `render` re-runs the component when the status changes.
 ///
 /// ```rust, no_run
 /// # use freya::prelude::*;
