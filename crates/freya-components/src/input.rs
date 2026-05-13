@@ -413,6 +413,7 @@ impl Component for Input {
                 key => {
                     if *key != Key::Named(NamedKey::Tab) {
                         e.stop_propagation();
+                        e.prevent_default();
                         movement_timeout.reset();
                         editable.process_event(EditableEvent::KeyDown {
                             key: &e.key,
