@@ -551,7 +551,11 @@ impl TerminalHandle {
         let row = (row.max(0.0) as usize).min(term.screen_lines().saturating_sub(1));
         let column = (col as usize).min(term.columns().saturating_sub(1));
         let line = row as i32 - term.grid().display_offset() as i32;
-        let side = if col.fract() < 0.5 { Side::Left } else { Side::Right };
+        let side = if col.fract() < 0.5 {
+            Side::Left
+        } else {
+            Side::Right
+        };
         (Point::new(Line(line), Column(column)), side)
     }
 }
