@@ -548,15 +548,10 @@ impl TerminalHandle {
     fn point_and_side_at(&self, row: f32, col: f32) -> (Point, Side) {
         let term = self.term.borrow();
         let col = col.max(0.0);
-        let side = if col.fract() < 0.5 {
-            Side::Left
-        } else {
-            Side::Right
-        };
-        let point = Point::new(
-            Line(row.max(0.0) as i32 - term.grid().display_offset() as i32),
-            Column((col as usize).min(term.columns().saturating_sub(1))),
-        );
-        (point, side)
+        let row = (row.max(0.0) as usize).min(term.screen_lines().saturating_sub(1));
+        let column = (col as usize).min(term.columns().saturating_sub(1));
+        let line = row as i32 - term.grid().display_offset() as i32;
+        let side = if col.fract() < 0.5 { Side::Left } else { Side::Right };
+        (Point::new(Line(line), Column(column)), side)
     }
 }
