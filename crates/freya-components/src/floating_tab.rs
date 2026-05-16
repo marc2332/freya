@@ -5,7 +5,7 @@ use torin::{
 };
 
 use crate::{
-    activable_route_context::use_activable_route,
+    activable_context::use_is_active,
     define_theme,
     get_theme,
 };
@@ -112,7 +112,7 @@ impl Component for FloatingTab {
         let a11y_id = use_a11y();
         let focus = use_focus(a11y_id);
         let mut status = use_state(TabStatus::default);
-        let is_active = use_activable_route();
+        let is_active = use_is_active();
 
         let FloatingTabTheme {
             background,
