@@ -3,7 +3,7 @@ use freya_core::prelude::{
     use_try_consume,
 };
 
-/// Context that exposes whether the current subtree is considered active.
+/// Context that exposes whether the descendants are considered active.
 ///
 /// Provided by [`Activable`](crate::activable::Activable) for user-controlled state
 /// and by [`ActivableRoute`](crate::activable_route::ActivableRoute) for route-driven

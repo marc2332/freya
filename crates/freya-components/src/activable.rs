@@ -4,17 +4,9 @@ use crate::activable_context::ActivableContext;
 
 /// User-controlled provider of [`ActivableContext`].
 ///
-/// Wraps a subtree and exposes whether it is active to descendants via
-/// [`use_is_active`](crate::activable_context::use_is_active). Pair with components like
-/// [`SideBarItem`](crate::sidebar::SideBarItem) or [`FloatingTab`](crate::floating_tab::FloatingTab)
-/// to drive their active styling outside of a router context.
-///
-/// ```rust, ignore
-/// let active = use_state(|| false);
-///
-/// Activable::new(SideBarItem::new().child("Item"))
-///     .active(active)
-/// ```
+/// Exposes whether the descendants are considered active, useful to drive
+/// active styling of components like [`SideBarItem`](crate::sidebar::SideBarItem)
+/// or [`FloatingTab`](crate::floating_tab::FloatingTab) outside of a router context.
 #[derive(PartialEq, Clone)]
 pub struct Activable {
     child: Element,
