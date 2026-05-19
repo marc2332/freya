@@ -170,7 +170,8 @@ pub mod components {
     pub use freya_components::titlebar::*;
     pub use freya_components::{
         accordion::*,
-        activable_route_context::*,
+        activable::*,
+        activable_context::*,
         attached::*,
         button::*,
         canvas::*,

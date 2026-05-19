@@ -5,7 +5,7 @@ use torin::{
 };
 
 use crate::{
-    activable_route_context::use_activable_route,
+    activable_context::use_is_active,
     define_theme,
     get_theme,
 };
@@ -145,7 +145,7 @@ impl Component for SideBarItem {
             color,
         } = get_theme!(&self.theme, SideBarItemThemePreference, "sidebar_item");
         let mut status = use_state(SideBarItemStatus::default);
-        let is_active = use_activable_route();
+        let is_active = use_is_active();
         let a11y_id = use_a11y();
         let focus = use_focus(a11y_id);
 
