@@ -29,8 +29,7 @@ impl Activable {
         }
     }
 
-    /// Set the active state. Accepts any reactive source convertible to [`Readable<bool>`],
-    /// such as [`State<bool>`], [`Memo<bool>`], a `RadioSlice`, or a plain `bool`.
+    /// Set the active state.
     pub fn active(mut self, active: impl Into<Readable<bool>>) -> Self {
         self.active = active.into();
         self
