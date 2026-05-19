@@ -68,7 +68,9 @@ impl AccessibilityIdExt for AccessibilityId {
     }
 
     fn request_focus(&self) {
-        if !self.is_focused() {
+        let platform = Platform::get();
+
+        if *platform.focused_accessibility_id.peek() != *self {
             Platform::get().send(UserEvent::FocusAccessibilityNode(
                 AccessibilityFocusStrategy::Node(*self),
             ));
@@ -76,7 +78,9 @@ impl AccessibilityIdExt for AccessibilityId {
     }
 
     fn request_unfocus(&self) {
-        if self.is_focused() {
+        let platform = Platform::get();
+
+        if *platform.focused_accessibility_id.peek() == *self {
             Platform::get().send(UserEvent::FocusAccessibilityNode(
                 AccessibilityFocusStrategy::Node(ACCESSIBILITY_ROOT_ID),
             ));
