@@ -1,16 +1,14 @@
 //! # Tokio Integration
 //!
 //! Freya has its own async runtime, but many Rust ecosystem crates depend on
-//! [Tokio](https://tokio.rs/): HTTP clients, database drivers, gRPC libraries, and more.
-//! This page explains how to set up a Tokio runtime alongside Freya so you can use
-//! those crates in your application.
+//! [Tokio](https://tokio.rs/) for things like HTTP clients, database drivers, etc.
 //!
 //! ## Setting up the Runtime
 //!
-//! Create a Tokio runtime in `main()` and enter its context before launching Freya.
+//! `#[tokio::main]` is **completely discouraged** because it messes the event loop, instead create a Tokio runtime in `main()`
+//! and enter it before launching Freya.
 //! The [`enter()`](https://docs.rs/tokio/latest/tokio/runtime/struct.Runtime.html#method.enter)
-//! guard makes Tokio APIs available on the current thread without
-//! requiring `#[tokio::main]`:
+//! guard makes Tokio APIs available on the current thread.
 //!
 //! ```rust,no_run
 //! # use freya::prelude::*;
@@ -18,15 +16,14 @@
 //!
 //! fn main() {
 //!     let rt = Builder::new_multi_thread().enable_all().build().unwrap();
-//!     // Enter the Tokio context so its APIs (channels, timers, etc.) work.
+//!     // Enter the Tokio runtime so its APIs (channels, timers, etc.) work.
 //!     let _rt = rt.enter();
 //!
 //!     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 //! }
-//!
-//! fn app() -> impl IntoElement {
-//!     rect()
-//! }
+//! # fn app() -> impl IntoElement {
+//! #     rect()
+//! # }
 //! ```
 //!
 //! The `_rt` guard must remain alive for the duration of the program.
@@ -47,12 +44,12 @@
 //! # fn app() -> impl IntoElement {
 //! let mut count = use_state(|| 0);
 //!
-//! use_hook(move || {
-//!     spawn(async move {
+//! use_future(move || {
+//!     async move {
 //!         // tokio::time::sleep works because the Tokio context is active
 //!         tokio::time::sleep(std::time::Duration::from_secs(2)).await;
 //!         count.set(42);
-//!     });
+//!     }
 //! });
 //! # rect()
 //! # }
@@ -60,23 +57,18 @@
 //!
 //! ## Caveat about `tokio::spawn`
 //!
-//! `tokio::spawn` runs tasks on the **Tokio** runtime, which is separate from
-//! Freya's reactivity system. Tasks spawned there **cannot directly update
-//! component state**. Signals, hooks, and other reactive primitives are
-//! tied to Freya's own executor.
+//! Freya's reactivity model is single-threaded, which means you cannot update
+//! e.g state from another thread, and thus using `tokio::spawn` is simply
+//! not possible due to the `Sync` and `Send` bounds.
 //!
-//! Use `tokio::spawn` only for background work that does not interact with
-//! components (e.g. writing to a file, sending a network request whose
-//! result you don't need in the UI). For anything that updates the UI, use
+//! You may  `tokio::spawn` for background work that does not interact with
+//! components. For anything that updates the UI, use
 //! Freya's [`spawn()`](freya_core::prelude::spawn) instead.
 //!
 //! ## Watch Channels with `use_track_watcher`
 //!
-//! You can push data **into** Freya from an external source
-//! (a background thread, another runtime, a hardware driver, etc.).
-//! `tokio::sync::watch` channels pair well with the
-//! [`use_track_watcher`](crate::sdk::use_track_watcher) hook from the `sdk`
-//! feature:
+//! You can easily subscribe to tokio watch channels using [`use_track_watcher`](crate::sdk::use_track_watcher)
+//! hook from the `sdk` feature:
 //!
 //! ```toml
 //! [dependencies]
@@ -84,28 +76,34 @@
 //! tokio = { version = "1", features = ["sync"] }
 //! ```
 //!
-//! The sender can live on any thread. `use_track_watcher` re-renders the
+//! The sender can live on any thread/task. `use_track_watcher` re-renders the
 //! component whenever the watch value changes:
 //!
-//! ```rust,ignore
+//! ```rust,no_run
 //! # use freya::prelude::*;
 //! # use freya::sdk::use_track_watcher;
-//! # use tokio::sync::watch;
+//! # use tokio::{runtime::Builder, sync::watch};
 //! # use std::time::Duration;
 //! fn main() {
+//!     let rt = Builder::new_multi_thread().enable_all().build().unwrap();
+//!     let _rt = rt.enter();
+//!
 //!     let (tx, rx) = watch::channel(0);
 //!
-//!     // Producer: a plain thread that pushes new values.
-//!     std::thread::spawn(move || {
-//!         let mut i = 0;
-//!         loop {
-//!             std::thread::sleep(Duration::from_secs(1));
-//!             i += 1;
-//!             let _ = tx.send(i);
-//!         }
-//!     });
-//!
-//!     launch(LaunchConfig::new().with_window(WindowConfig::new_app(MyApp { rx })))
+//!     launch(
+//!         LaunchConfig::new()
+//!             .with_future(move |_| async move {
+//!                 let mut interval = tokio::time::interval(Duration::from_secs(1));
+//!                 interval.tick().await;
+//!                 let mut i = 0;
+//!                 loop {
+//!                     interval.tick().await;
+//!                     i += 1;
+//!                     let _ = tx.send(i);
+//!                 }
+//!             })
+//!             .with_window(WindowConfig::new_app(MyApp { rx })),
+//!     )
 //! }
 //!
 //! struct MyApp {
@@ -114,7 +112,7 @@
 //!
 //! impl App for MyApp {
 //!     fn render(&self) -> impl IntoElement {
-//!         // Re-renders this component whenever the watch value changes.
+//!         // Re-renders this component whenever the watched value changes.
 //!         use_track_watcher(&self.rx);
 //!
 //!         rect()
@@ -127,5 +125,5 @@
 //!
 //! ## Examples
 //!
-//! - [`integration_tokio.rs`](https://github.com/marc2332/freya/tree/main/examples/integration_tokio.rs) : Minimal Tokio runtime setup
-//! - [`sdk_watch.rs`](https://github.com/marc2332/freya/tree/main/examples/sdk_watch.rs) : Reactive watch channel with `use_track_watcher`
+//! - [`integration_tokio_spawn.rs`](https://github.com/marc2332/freya/tree/main/examples/integration_tokio_spawn.rs) : Minimal Tokio runtime setup
+//! - [`integration_tokio_watch.rs`](https://github.com/marc2332/freya/tree/main/examples/integration_tokio_watch.rs) : Reactive watch channel with `use_track_watcher`

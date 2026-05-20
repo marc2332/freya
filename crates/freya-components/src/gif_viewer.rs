@@ -197,7 +197,7 @@ impl GifSource {
 /// # use std::path::PathBuf;
 /// # launch_doc(|| {
 /// #   rect().center().expanded().child(GifViewer::new(("frog-typing", include_bytes!("../../../examples/frog_typing.gif"))))
-/// # }, "./images/gallery_gif_viewer.png").with_hook(|t| { t.poll(std::time::Duration::from_millis(1), std::time::Duration::from_millis(50)); t.sync_and_update(); }).with_scale_factor(1.).render();
+/// # }, "./images/gallery_gif_viewer.png").with_hook(|t| { t.poll(std::time::Duration::from_millis(1), std::time::Duration::from_millis(1500)); t.sync_and_update(); }).with_scale_factor(1.).render();
 /// ```
 ///
 /// # Preview
@@ -208,6 +208,7 @@ impl GifSource {
 #[derive(PartialEq)]
 pub struct GifViewer {
     source: GifSource,
+    asset_age: AssetAge,
 
     layout: LayoutData,
     image_data: ImageData,
@@ -220,11 +221,20 @@ impl GifViewer {
     pub fn new(source: impl Into<GifSource>) -> Self {
         GifViewer {
             source: source.into(),
+            asset_age: AssetAge::default(),
             layout: LayoutData::default(),
             image_data: ImageData::default(),
             accessibility: AccessibilityData::default(),
             key: DiffKey::None,
         }
+    }
+
+    /// Customize how long the GIF will remain cached after no longer being used.
+    ///
+    /// Defaults to [`AssetAge::default`] (1h).
+    pub fn asset_age(mut self, asset_age: impl Into<AssetAge>) -> Self {
+        self.asset_age = asset_age.into();
+        self
     }
 }
 
@@ -262,7 +272,7 @@ enum Status {
 
 impl Component for GifViewer {
     fn render(&self) -> impl IntoElement {
-        let asset_config = AssetConfiguration::new(&self.source, AssetAge::default());
+        let asset_config = AssetConfiguration::new(&self.source, self.asset_age.clone());
         let asset_data = use_asset(&asset_config);
         let mut status = use_state(|| Status::Decoding);
         let mut cached_frames = use_state::<Option<Rc<CachedGifFrames>>>(|| None);
@@ -419,7 +429,6 @@ impl Component for GifViewer {
                 Status::Playing(frame_idx) => gif(frames.clone(), *frame_idx)
                     .accessibility(self.accessibility.clone())
                     .a11y_role(AccessibilityRole::Image)
-                    .a11y_focusable(true)
                     .layout(self.layout.clone())
                     .image_data(self.image_data.clone())
                     .into_element(),

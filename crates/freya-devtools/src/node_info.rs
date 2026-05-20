@@ -116,16 +116,7 @@ impl NodeStateAttributes for NodeState {
     }
     fn style_attributes(&'_ self) -> Vec<(&'_ str, AttributeType<'_>)> {
         let mut attributes = vec![
-            {
-                let background = &self.style.background;
-                let fill = match *background {
-                    Fill::Color(background) => AttributeType::Color(background),
-                    Fill::LinearGradient(_) | Fill::RadialGradient(_) | Fill::ConicGradient(_) => {
-                        AttributeType::Gradient(background.clone())
-                    }
-                };
-                ("background", fill)
-            },
+            ("background", AttributeType::from(&self.style.background)),
             (
                 "corner_radius",
                 AttributeType::CornerRadius(self.style.corner_radius),
@@ -147,7 +138,7 @@ impl NodeStateAttributes for NodeState {
 
     fn text_style_attributes(&'_ self) -> Vec<(&'_ str, AttributeType<'_>)> {
         let mut attributes = vec![
-            ("color", AttributeType::Color(self.text_style.color)),
+            ("color", AttributeType::from(&self.text_style.color)),
             (
                 "font_family",
                 AttributeType::Text(self.text_style.font_families.join(", ")),
@@ -201,7 +192,7 @@ impl NodeStateAttributes for NodeState {
 pub enum AttributeType<'a> {
     Color(Color),
     OptionalColor(Option<Color>),
-    Gradient(Fill),
+    Fill(Fill),
     Size(&'a Size),
     VisibleSize(&'a VisibleSize),
     Measure(f32),
@@ -225,4 +216,13 @@ pub enum AttributeType<'a> {
     Layer(i16),
     CursorMode(CursorMode),
     VerticalAlign(VerticalAlign),
+}
+
+impl<'a> From<&'a Fill> for AttributeType<'a> {
+    fn from(fill: &'a Fill) -> Self {
+        match fill.as_color() {
+            Some(color) => AttributeType::Color(color),
+            None => AttributeType::Fill(fill.clone()),
+        }
+    }
 }

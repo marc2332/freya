@@ -4,7 +4,7 @@ use freya_router::{
     prelude::Routable,
 };
 
-use crate::activable_route_context::ActivableRouteContext;
+use crate::activable_context::ActivableContext;
 
 #[derive(PartialEq, Clone)]
 pub struct ActivableRoute<T> {
@@ -51,13 +51,13 @@ impl<T: PartialEq + Clone + 'static + Routable> Component for ActivableRoute<T> 
 
         let is_active = is_descendent_active || is_exact_active;
 
-        let mut ctx = use_provide_context::<ActivableRouteContext>(|| {
-            ActivableRouteContext(State::create(is_active))
-        });
+        let mut state = use_state(|| is_active);
 
-        if *ctx.0.peek() != is_active {
-            *ctx.0.write() = is_active;
+        if *state.peek() != is_active {
+            *state.write() = is_active;
         }
+
+        use_provide_context::<ActivableContext>(|| ActivableContext(state.into_readable()));
 
         self.child.clone()
     }

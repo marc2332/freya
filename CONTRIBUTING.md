@@ -13,6 +13,14 @@ cd freya
 
 ### Required Tools
 
+> **Note:** The repository uses two toolchain files: [`rust-toolchain.toml`](./rust-toolchain.toml) for the stable toolchain and [`rust-toolchain-nightly.toml`](./rust-toolchain-nightly.toml) for the nightly toolchain required for formatting.
+
+#### Nix
+
+A [flake.nix](./flake.nix) is included in the repository. Run `nix develop` to enter a dev shell with all required tools and dependencies (stable toolchain). For the nightly toolchain, use `nix develop .#unstable` instead.
+
+#### Without Nix
+
 You will need the following tools installed:
 
 - [Rust](https://www.rust-lang.org/tools/install) (stable and nightly toolchains)
@@ -20,7 +28,7 @@ You will need the following tools installed:
 - [taplo](https://taplo.tamasfe.dev/) - TOML formatter
 - [cargo-nextest](https://nexte.st/) - Test runner
 
-Install nightly Rust (required for formatting):
+Install the nightly toolchain with the version pinned in [`rust-toolchain-nightly.toml`](./rust-toolchain-nightly.toml):
 ```sh
 rustup toolchain install nightly-2026-03-15
 ```

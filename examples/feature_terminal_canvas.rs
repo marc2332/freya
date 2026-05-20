@@ -36,7 +36,7 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    use_init_root_theme(dark_theme);
+    use_init_theme(dark_theme);
     use_init_radio_station::<AppState, AppChannel>(AppState::default);
     let mut radio = use_radio::<AppState, AppChannel>(AppChannel::Panels);
 
@@ -113,11 +113,11 @@ impl Component for TerminalPanel {
             }
         });
 
-        let focus = use_focus();
-        let focus_status = use_focus_status(focus);
+        let a11y_id = use_a11y();
+        let focus = use_focus(a11y_id);
         let mut dimensions = use_state(|| (0.0, 0.0));
 
-        let background = if focus_status.read().is_focused() {
+        let background = if focus.read().is_focused() {
             (25, 25, 25)
         } else {
             (10, 10, 10)
@@ -164,7 +164,7 @@ impl Component for TerminalPanel {
                             .padding(6.)
                             .child(
                                 Terminal::new(handle.clone())
-                                    .a11y_id(focus.a11y_id())
+                                    .a11y_id(a11y_id)
                                     .a11y_auto_focus(true)
                                     .a11y_focusable(true)
                                     .on_measured(move |(char_width, line_height)| {
@@ -173,7 +173,7 @@ impl Component for TerminalPanel {
                                     .on_mouse_down({
                                         let handle = handle.clone();
                                         move |e: Event<MouseEventData>| {
-                                            focus.request_focus();
+                                            a11y_id.request_focus();
                                             let (char_width, line_height) = dimensions();
                                             let col =
                                                 (e.element_location.x / char_width as f64) as f32;

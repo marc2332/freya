@@ -251,6 +251,7 @@ impl ElementExt for SvgElement {
                 Rc::new(RefCell::new(svg_dom)),
             ))
         } else {
+            tracing::error!("Invalid SVG");
             None
         }
     }
@@ -268,33 +269,38 @@ impl ElementExt for SvgElement {
         let mut paint = Paint::default();
         paint.set_anti_alias(true);
 
-        let svg_dom = context
+        if let Some(svg_dom) = context
             .layout_node
             .data
             .as_ref()
-            .unwrap()
-            .downcast_ref::<RefCell<svg::Dom>>()
-            .unwrap();
-        let svg_dom = svg_dom.borrow();
+            .and_then(|data| data.downcast_ref::<RefCell<svg::Dom>>())
+        {
+            let svg_dom = svg_dom.borrow();
 
-        let mut root = svg_dom.root();
-        context.canvas.save();
-        context
-            .canvas
-            .translate(context.layout_node.visible_area().origin.to_tuple());
+            let mut root = svg_dom.root();
+            context.canvas.save();
+            context
+                .canvas
+                .translate(context.layout_node.visible_area().origin.to_tuple());
 
-        root.set_color(self.color.unwrap_or(context.text_style_state.color).into());
-        if let Some(fill) = self.fill {
-            root.set_fill(svg::Paint::from_color(fill.into()));
+            let inherited_color = context
+                .text_style_state
+                .color
+                .as_color()
+                .unwrap_or(Color::BLACK);
+            root.set_color(self.color.unwrap_or(inherited_color).into());
+            if let Some(fill) = self.fill {
+                root.set_fill(svg::Paint::from_color(fill.into()));
+            }
+            if let Some(stroke) = self.stroke {
+                root.set_stroke(svg::Paint::from_color(stroke.into()));
+            }
+            if let Some(stroke_width) = self.stroke_width {
+                root.set_stroke_width(svg::Length::new(stroke_width, svg::LengthUnit::PX));
+            }
+            svg_dom.render(context.canvas);
+            context.canvas.restore();
         }
-        if let Some(stroke) = self.stroke {
-            root.set_stroke(svg::Paint::from_color(stroke.into()));
-        }
-        if let Some(stroke_width) = self.stroke_width {
-            root.set_stroke_width(svg::Length::new(stroke_width, svg::LengthUnit::PX));
-        }
-        svg_dom.render(context.canvas);
-        context.canvas.restore();
     }
 }
 

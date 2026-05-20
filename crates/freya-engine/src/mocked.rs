@@ -1583,10 +1583,24 @@ pub struct PositionWithAffinity {
     pub position: i32,
 }
 
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+pub struct Options<'a> {
+    pub force_unoptimized: bool,
+    pub name: &'a str,
+}
+
+#[derive(Debug, Clone)]
 pub struct RuntimeEffect;
 
 impl RuntimeEffect {
     pub fn uniforms(&self) -> &[Uniform] {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn make_for_shader(
+        _sksl: impl AsRef<str>,
+        _options: Option<&Options<'_>>,
+    ) -> Result<RuntimeEffect, String> {
         unimplemented!("This is mocked")
     }
 }
@@ -1685,7 +1699,7 @@ impl Rect {
         unimplemented!("This is mocked")
     }
 
-    pub fn from_xywh(x: f32, y: f32, w: f32, h: f32) -> IRect {
+    pub fn from_xywh(_x: f32, _y: f32, _w: f32, _h: f32) -> Self {
         unimplemented!("This is mocked")
     }
 }
@@ -2457,6 +2471,14 @@ impl LocalResourceProvider {
 }
 
 pub fn raster_n32_premul(size: impl Into<ISize>) -> Option<Surface> {
+    unimplemented!("This is mocked")
+}
+pub fn wrap_pixels<'pixels>(
+    _image_info: &ImageInfo,
+    _pixels: &'pixels mut [u8],
+    _row_bytes: impl Into<Option<usize>>,
+    _surface_props: Option<&()>,
+) -> Option<Surface> {
     unimplemented!("This is mocked")
 }
 pub mod vk {

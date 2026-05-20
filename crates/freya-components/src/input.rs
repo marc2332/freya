@@ -47,7 +47,7 @@ define_theme! {
     pub InputColors {
         %[fields]
         background: Color,
-        hover_background: Color,
+        focus_background: Color,
         border_fill: Color,
         focus_border_fill: Color,
         color: Color,
@@ -322,12 +322,16 @@ impl CornerRadiusExt for Input {
 
 impl Component for Input {
     fn render(&self) -> impl IntoElement {
-        let focus = use_hook(|| Focus::new_for_id(self.a11y_id.unwrap_or_else(Focus::new_id)));
-        let focus_status = use_focus_status(focus);
+        let a11y_id = use_hook(|| self.a11y_id.unwrap_or_else(AccessibilityId::new_unique));
+        let focus = use_focus(a11y_id);
         let holder = use_state(ParagraphHolder::default);
         let mut area = use_state(Area::default);
         let mut status = use_state(InputStatus::default);
-        let mut editable = use_editable(|| self.value.read().to_string(), EditableConfig::new);
+        let allow_write_clipboard = !matches!(self.mode, InputMode::Hidden(_));
+        let mut editable = use_editable(
+            || self.value.read().to_string(),
+            move || EditableConfig::new().with_allow_write_clipboard(allow_write_clipboard),
+        );
         let mut is_dragging = use_state(|| false);
         let mut value = self.value.clone();
 
@@ -363,7 +367,7 @@ impl Component for Input {
         };
 
         let (mut movement_timeout, cursor_color) =
-            use_cursor_blink(focus_status() != FocusStatus::Not, theme_colors.color);
+            use_cursor_blink(focus() != Focus::Not, theme_colors.color);
 
         let enabled = use_reactive(&self.enabled);
         use_drop(move || {
@@ -406,13 +410,14 @@ impl Component for Input {
                 }
                 // On unfocus
                 Key::Named(NamedKey::Escape) => {
-                    focus.request_unfocus();
+                    a11y_id.request_unfocus();
                     Cursor::set(CursorIcon::default());
                 }
                 // On change
                 key => {
                     if *key != Key::Named(NamedKey::Tab) {
                         e.stop_propagation();
+                        e.prevent_default();
                         movement_timeout.reset();
                         editable.process_event(EditableEvent::KeyDown {
                             key: &e.key,
@@ -464,7 +469,7 @@ impl Component for Input {
                     holder: &holder.read(),
                 });
             }
-            focus.request_focus();
+            a11y_id.request_focus();
         };
 
         let on_pointer_down = move |e: Event<PointerEventData>| {
@@ -479,11 +484,11 @@ impl Component for Input {
                     holder: &holder.read(),
                 });
             }
-            focus.request_focus();
+            a11y_id.request_focus();
         };
 
         let on_global_pointer_move = move |e: Event<PointerEventData>| {
-            if focus.is_focused() && *is_dragging.read() {
+            if a11y_id.is_focused() && *is_dragging.read() {
                 let mut location = e.global_location();
                 location.x -= area.read().min_x() as f64;
                 location.y -= area.read().min_y() as f64;
@@ -513,7 +518,7 @@ impl Component for Input {
 
         let on_global_pointer_press = move |_: Event<PointerEventData>| {
             match *status.read() {
-                InputStatus::Idle if focus.is_focused() => {
+                InputStatus::Idle if a11y_id.is_focused() => {
                     editable.process_event(EditableEvent::Release);
                 }
                 InputStatus::Hovering => {
@@ -522,13 +527,13 @@ impl Component for Input {
                 _ => {}
             };
 
-            if focus.is_focused() {
+            if a11y_id.is_focused() {
                 if *is_dragging.read() {
                     // The input is focused and dragging, but it just clicked so we assume the dragging can stop
                     is_dragging.set(false);
                 } else {
                     // The input is focused but not dragging, so the click means it was clicked outside, therefore we can unfocus this input
-                    focus.request_unfocus();
+                    a11y_id.request_unfocus();
                 }
             }
         };
@@ -537,7 +542,7 @@ impl Component for Input {
             e.stop_propagation();
             e.prevent_default();
             match *status.read() {
-                InputStatus::Idle if focus.is_focused() => {
+                InputStatus::Idle if a11y_id.is_focused() => {
                     editable.process_event(EditableEvent::Release);
                 }
                 InputStatus::Hovering => {
@@ -546,28 +551,25 @@ impl Component for Input {
                 _ => {}
             };
 
-            if focus.is_focused() {
+            if a11y_id.is_focused() {
                 is_dragging.set_if_modified(false);
             }
         };
 
-        let a11y_id = focus.a11y_id();
+        let (background, cursor_index, text_selection) = if enabled() && focus() != Focus::Not {
+            (
+                theme_colors.focus_background,
+                Some(editable.editor().read().cursor_pos()),
+                editable
+                    .editor()
+                    .read()
+                    .get_visible_selection(EditorLine::SingleParagraph),
+            )
+        } else {
+            (theme_colors.background, None, None)
+        };
 
-        let (background, cursor_index, text_selection) =
-            if enabled() && focus_status() != FocusStatus::Not {
-                (
-                    theme_colors.hover_background,
-                    Some(editable.editor().read().cursor_pos()),
-                    editable
-                        .editor()
-                        .read()
-                        .get_visible_selection(EditorLine::SingleParagraph),
-                )
-            } else {
-                (theme_colors.background, None, None)
-            };
-
-        let border = if focus_status().is_focused() {
+        let border = if focus().is_focused() {
             Border::new()
                 .fill(theme_colors.focus_border_fill)
                 .width(2.)

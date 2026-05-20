@@ -6,6 +6,7 @@ use std::{
 };
 
 use freya_clipboard::clipboard::Clipboard;
+use freya_core::events::modifiers::ModifiersExt;
 use keyboard_types::{
     Key,
     Modifiers,
@@ -267,6 +268,96 @@ pub trait TextEditor {
         }
     }
 
+    /// Move the cursor to the end of the next word.
+    fn cursor_word_right(&mut self) -> bool {
+        let pos = self.cursor_pos();
+        let len = self.len_utf16_cu();
+        if pos >= len {
+            return false;
+        }
+
+        // Walk forward line by line starting at the cursor.
+        let start_char = self.utf16_cu_to_char(pos);
+        let initial_line = self.char_to_line(start_char);
+        let initial_offset = start_char - self.line_to_char(initial_line);
+
+        for line_idx in initial_line..self.len_lines() {
+            let Some(line) = self.line(line_idx) else {
+                continue;
+            };
+            let line_char_offset = self.line_to_char(line_idx);
+            let from = if line_idx == initial_line {
+                initial_offset
+            } else {
+                0
+            };
+
+            // Stop at the end of the first non-whitespace segment past the cursor.
+            let mut char_offset = 0;
+            for word in line.text.split_word_bounds() {
+                char_offset += word.chars().count();
+                if char_offset > from && !word.chars().all(char::is_whitespace) {
+                    let new_pos = self.char_to_utf16_cu(line_char_offset + char_offset);
+                    self.selection_mut().move_to(new_pos);
+                    return true;
+                }
+            }
+        }
+
+        // Trailing whitespace only, snap to text end.
+        self.selection_mut().move_to(len);
+        true
+    }
+
+    /// Move the cursor to the start of the previous word.
+    fn cursor_word_left(&mut self) -> bool {
+        let pos = self.cursor_pos();
+        if pos == 0 {
+            return false;
+        }
+
+        // Walk backward line by line starting at the cursor.
+        let start_char = self.utf16_cu_to_char(pos);
+        let initial_line = self.char_to_line(start_char);
+        let initial_offset = start_char - self.line_to_char(initial_line);
+
+        for line_idx in (0..=initial_line).rev() {
+            let Some(line) = self.line(line_idx) else {
+                continue;
+            };
+            let line_char_offset = self.line_to_char(line_idx);
+            let to = if line_idx == initial_line {
+                initial_offset
+            } else {
+                line.text.chars().count()
+            };
+
+            // Track the latest non-whitespace segment that starts before the cursor.
+            let mut char_offset = 0;
+            let mut last_word_start = None;
+            for word in line.text.split_word_bounds() {
+                if char_offset >= to {
+                    break;
+                }
+                if !word.chars().all(char::is_whitespace) {
+                    last_word_start = Some(char_offset);
+                }
+                char_offset += word.chars().count();
+            }
+
+            // Found one on this line, jump to its start.
+            if let Some(start) = last_word_start {
+                let new_pos = self.char_to_utf16_cu(line_char_offset + start);
+                self.selection_mut().move_to(new_pos);
+                return true;
+            }
+        }
+
+        // Leading whitespace only, snap to text start.
+        self.selection_mut().move_to(0);
+        true
+    }
+
     /// Get the cursor position
     fn cursor_pos(&self) -> usize {
         self.selection().pos()
@@ -381,7 +472,8 @@ pub trait TextEditor {
         modifiers: &Modifiers,
         allow_tabs: bool,
         allow_changes: bool,
-        allow_clipboard: bool,
+        allow_read_clipboard: bool,
+        allow_write_clipboard: bool,
     ) -> TextEvent {
         let mut event = TextEvent::empty();
 
@@ -413,7 +505,20 @@ pub trait TextEditor {
                     self.selection_mut().set_as_cursor();
                 }
 
-                if !skip_arrows_movement && self.cursor_left() {
+                let word_jump = if cfg!(target_os = "macos") {
+                    modifiers.contains(Modifiers::ALT)
+                } else {
+                    modifiers.contains(Modifiers::CONTROL)
+                };
+
+                let moved = !skip_arrows_movement
+                    && if word_jump {
+                        self.cursor_word_left()
+                    } else {
+                        self.cursor_left()
+                    };
+
+                if moved {
                     event.insert(TextEvent::CURSOR_CHANGED);
                 }
             }
@@ -424,7 +529,20 @@ pub trait TextEditor {
                     self.selection_mut().set_as_cursor();
                 }
 
-                if !skip_arrows_movement && self.cursor_right() {
+                let word_jump = if cfg!(target_os = "macos") {
+                    modifiers.contains(Modifiers::ALT)
+                } else {
+                    modifiers.contains(Modifiers::CONTROL)
+                };
+
+                let moved = !skip_arrows_movement
+                    && if word_jump {
+                        self.cursor_word_right()
+                    } else {
+                        self.cursor_right()
+                    };
+
+                if moved {
                     event.insert(TextEvent::CURSOR_CHANGED);
                 }
             }
@@ -486,11 +604,7 @@ pub trait TextEditor {
                 event.insert(TextEvent::TEXT_CHANGED);
             }
             Key::Character(character) => {
-                let meta_or_ctrl = if cfg!(target_os = "macos") {
-                    modifiers.meta()
-                } else {
-                    modifiers.ctrl()
-                };
+                let meta_or_ctrl = modifiers.ctrl_or_meta();
 
                 match character.as_str() {
                     " " if allow_changes => {
@@ -516,7 +630,7 @@ pub trait TextEditor {
                     }
 
                     // Copy selected text
-                    "c" if meta_or_ctrl && allow_clipboard => {
+                    "c" if meta_or_ctrl && allow_write_clipboard => {
                         let selected = self.get_selected_text();
                         if let Some(selected) = selected {
                             Clipboard::set(selected).ok();
@@ -524,7 +638,7 @@ pub trait TextEditor {
                     }
 
                     // Cut selected text
-                    "x" if meta_or_ctrl && allow_changes && allow_clipboard => {
+                    "x" if meta_or_ctrl && allow_changes && allow_write_clipboard => {
                         let selection = self.get_selection_range();
                         if let Some((start, end)) = selection {
                             let text = self.get_selected_text().unwrap();
@@ -536,7 +650,7 @@ pub trait TextEditor {
                     }
 
                     // Paste copied text
-                    "v" if meta_or_ctrl && allow_changes && allow_clipboard => {
+                    "v" if meta_or_ctrl && allow_changes && allow_read_clipboard => {
                         if let Ok(copied_text) = Clipboard::get() {
                             let selection = self.get_selection_range();
                             if let Some((start, end)) = selection {

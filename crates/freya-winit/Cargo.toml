@@ -31,6 +31,12 @@ raw-window-handle = { workspace = true }
 winit = { workspace = true }
 freya-engine = { workspace = true }
 
+# Software rendering
+softbuffer = { workspace = true }
+
+# OS preferences
+mundy = { workspace = true }
+
 # Events
 ragnarok = { workspace = true }
 keyboard-types = { workspace = true }
@@ -95,3 +101,4 @@ hotreload = ["freya-core/hotreload"]
 skia-engine = ["freya-engine/skia-engine"]
 tray = ["dep:tray-icon", "dep:gtk"]
 tracing = []
+zoom-shortcuts = []

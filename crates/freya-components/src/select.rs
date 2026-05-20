@@ -76,6 +76,7 @@ pub struct Select {
     pub(crate) theme: Option<SelectThemePartial>,
     selected_item: Option<Element>,
     children: Vec<Element>,
+    cursor_icon: CursorIcon,
     key: DiffKey,
 }
 
@@ -103,6 +104,7 @@ impl Select {
             theme: None,
             selected_item: None,
             children: Vec::new(),
+            cursor_icon: CursorIcon::default(),
             key: DiffKey::None,
         }
     }
@@ -116,18 +118,22 @@ impl Select {
         self.selected_item = Some(item.into());
         self
     }
+
+    /// Override the cursor icon shown when hovering over this component.
+    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+        self.cursor_icon = cursor_icon.into();
+        self
+    }
 }
 
 impl Component for Select {
     fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, SelectThemePreference, "select");
-        let focus = use_focus();
-        let focus_status = use_focus_status(focus);
+        let a11y_id = use_a11y();
+        let focus = use_focus(a11y_id);
         let mut status = use_state(SelectStatus::default);
         let mut open = use_state(|| false);
-        use_provide_context(|| MenuGroup {
-            group_id: focus.a11y_id(),
-        });
+        use_provide_context(|| MenuGroup { group_id: a11y_id });
 
         let animation = use_animation(move |conf| {
             conf.on_change(OnChange::Rerun);
@@ -156,6 +162,7 @@ impl Component for Select {
             }
         });
 
+        let cursor_icon = self.cursor_icon;
         use_drop(move || {
             if status() == SelectStatus::Hovering {
                 Cursor::set(CursorIcon::default());
@@ -170,7 +177,7 @@ impl Component for Select {
                     .focused_accessibility_node
                     .read()
                     .member_of()
-                    .is_none_or(|member_of| member_of != focus.a11y_id());
+                    .is_none_or(|member_of| member_of != a11y_id);
                 if should_close {
                     open.set_if_modified(false);
                 }
@@ -178,7 +185,7 @@ impl Component for Select {
         });
 
         let on_press = move |e: Event<PressEventData>| {
-            focus.request_focus();
+            a11y_id.request_focus();
             open.toggle();
             // Prevent global mouse up
             e.prevent_default();
@@ -187,7 +194,7 @@ impl Component for Select {
 
         let on_pointer_enter = move |_| {
             *status.write() = SelectStatus::Hovering;
-            Cursor::set(CursorIcon::Pointer);
+            Cursor::set(cursor_icon);
         };
 
         let on_pointer_leave = move |_| {
@@ -204,7 +211,7 @@ impl Component for Select {
             Key::Named(NamedKey::Escape) => {
                 open.set_if_modified(false);
             }
-            Key::Named(NamedKey::Enter) if focus.is_focused() => {
+            Key::Named(NamedKey::Enter) if a11y_id.is_focused() => {
                 open.toggle();
             }
             _ => {}
@@ -217,7 +224,7 @@ impl Component for Select {
             SelectStatus::Idle => theme.background_button,
         };
 
-        let border = if focus_status() == FocusStatus::Keyboard {
+        let border = if focus() == Focus::Keyboard {
             Border::new()
                 .fill(theme.focus_border_fill)
                 .width(2.)
@@ -232,8 +239,8 @@ impl Component for Select {
         rect()
             .child(
                 rect()
-                    .a11y_id(focus.a11y_id())
-                    .a11y_member_of(focus.a11y_id())
+                    .a11y_id(a11y_id)
+                    .a11y_member_of(a11y_id)
                     .a11y_role(AccessibilityRole::ListBox)
                     .a11y_focusable(Focusable::Enabled)
                     .on_pointer_enter(on_pointer_enter)
