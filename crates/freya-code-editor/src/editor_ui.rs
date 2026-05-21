@@ -105,14 +105,8 @@ impl CodeEditor {
         self
     }
 
-    /// Sets a callback that runs before each key event reaches the editor.
-    ///
-    /// Returning `true` lets the editor process the event, `false` skips it. The callback
-    /// owns the [`Event`] and is free to call `stop_propagation()` / `prevent_default()`
-    /// to control how unhandled keys behave (e.g. let `Tab` move focus instead of inserting).
-    ///
-    /// The default calls `stop_propagation()` for every key, `prevent_default()` for `Tab`,
-    /// and returns `true`.
+    /// Sets a pre-handler called for each key event. Return `true` to let the editor process it,
+    /// `false` to skip. The callback may call `stop_propagation()` / `prevent_default()` directly.
     pub fn on_pre_key_down(
         mut self,
         on_pre_key_down: impl Into<Callback<Event<KeyboardEventData>, bool>>,
