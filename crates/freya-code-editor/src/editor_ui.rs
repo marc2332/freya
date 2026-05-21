@@ -1,13 +1,20 @@
 use std::borrow::Cow;
 
-use freya_components::scrollviews::{ScrollController, ScrollEvent, VirtualScrollView};
+use freya_components::scrollviews::{
+    ScrollController,
+    ScrollEvent,
+    VirtualScrollView,
+};
 use freya_core::prelude::*;
 use freya_edit::EditableEvent;
 
 use crate::{
     editor_data::CodeEditorData,
     editor_line::EditorLineUI,
-    editor_theme::{DEFAULT_EDITOR_THEME, EditorTheme},
+    editor_theme::{
+        DEFAULT_EDITOR_THEME,
+        EditorTheme,
+    },
 };
 
 #[derive(PartialEq, Clone)]
