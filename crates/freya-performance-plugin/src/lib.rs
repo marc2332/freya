@@ -6,7 +6,10 @@ use std::{
     },
 };
 
-use freya_core::prelude::UserEvent;
+use freya_core::prelude::{
+    ModifiersExt,
+    UserEvent,
+};
 use freya_engine::prelude::{
     Color,
     FontStyle,
@@ -48,14 +51,12 @@ pub struct PerformanceOverlayPlugin {
 
 impl Default for PerformanceOverlayPlugin {
     fn default() -> Self {
-        let modifiers = if cfg!(target_os = "macos") {
-            Modifiers::META | Modifiers::SHIFT
-        } else {
-            Modifiers::CONTROL | Modifiers::SHIFT
-        };
         Self {
             enabled: false,
-            toggle_shortcut: (Key::Character("p".into()), modifiers),
+            toggle_shortcut: (
+                Key::Character("p".into()),
+                Modifiers::ctrl_or_meta() | Modifiers::SHIFT,
+            ),
             metrics: HashMap::new(),
         }
     }
