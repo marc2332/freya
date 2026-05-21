@@ -188,7 +188,6 @@ impl Component for CodeEditor {
         let on_key_down = {
             let mut editor = editor.clone();
             let font_family = font_family.clone();
-            let accepts_key = accepts_key.clone();
             move |e: Event<KeyboardEventData>| {
                 e.stop_propagation();
 
