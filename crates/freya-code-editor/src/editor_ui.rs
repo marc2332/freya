@@ -1,20 +1,13 @@
 use std::borrow::Cow;
 
-use freya_components::scrollviews::{
-    ScrollController,
-    ScrollEvent,
-    VirtualScrollView,
-};
+use freya_components::scrollviews::{ScrollController, ScrollEvent, VirtualScrollView};
 use freya_core::prelude::*;
 use freya_edit::EditableEvent;
 
 use crate::{
     editor_data::CodeEditorData,
     editor_line::EditorLineUI,
-    editor_theme::{
-        DEFAULT_EDITOR_THEME,
-        EditorTheme,
-    },
+    editor_theme::{DEFAULT_EDITOR_THEME, EditorTheme},
 };
 
 #[derive(PartialEq, Clone)]
@@ -170,7 +163,7 @@ impl Component for CodeEditor {
         let line_height = (font_size * line_height).floor();
         let lines_len = editor_data.metrics.syntax_blocks.len();
 
-        let on_pointer_down = move |e: Event<PointerEventData>| {
+        let on_pointer_down = move |_: Event<PointerEventData>| {
             a11y_id.request_focus();
         };
 
