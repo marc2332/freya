@@ -185,6 +185,7 @@ pub struct Input {
     a11y_id: Option<AccessibilityId>,
     leading: Option<Element>,
     trailing: Option<Element>,
+    on_pre_key_down: Callback<Event<KeyboardEventData>, bool>,
 }
 
 impl KeyExt for Input {
@@ -213,6 +214,15 @@ impl Input {
             a11y_id: None,
             leading: None,
             trailing: None,
+            on_pre_key_down: Callback::new(|e: Event<KeyboardEventData>| match &e.key {
+                Key::Named(NamedKey::Enter) | Key::Named(NamedKey::Escape) => true,
+                Key::Named(NamedKey::Tab) => false,
+                _ => {
+                    e.stop_propagation();
+                    e.prevent_default();
+                    true
+                }
+            }),
         }
     }
 
@@ -312,6 +322,16 @@ impl Input {
         self.trailing = Some(trailing.into());
         self
     }
+
+    /// Sets a pre-handler called for each key event. Return `true` to let the input process it,
+    /// `false` to skip. The callback may call `stop_propagation()` / `prevent_default()` directly.
+    pub fn on_pre_key_down(
+        mut self,
+        on_pre_key_down: impl Into<Callback<Event<KeyboardEventData>, bool>>,
+    ) -> Self {
+        self.on_pre_key_down = on_pre_key_down.into();
+        self
+    }
 }
 
 impl CornerRadiusExt for Input {
@@ -399,8 +419,16 @@ impl Component for Input {
             }
         };
 
+        let on_pre_key_down = self.on_pre_key_down.clone();
         let on_key_down = move |e: Event<KeyboardEventData>| {
-            match &e.key {
+            let key = e.key.clone();
+            let modifiers = e.modifiers;
+
+            if !on_pre_key_down.call(e) {
+                return;
+            }
+
+            match &key {
                 // On submit
                 Key::Named(NamedKey::Enter) => {
                     if let Some(on_submit) = &on_submit {
@@ -414,36 +442,32 @@ impl Component for Input {
                     Cursor::set(CursorIcon::default());
                 }
                 // On change
-                key => {
-                    if *key != Key::Named(NamedKey::Tab) {
-                        e.stop_propagation();
-                        e.prevent_default();
-                        movement_timeout.reset();
-                        editable.process_event(EditableEvent::KeyDown {
-                            key: &e.key,
-                            modifiers: e.modifiers,
-                        });
-                        let text = editable.editor().read().committed_text();
+                _ => {
+                    movement_timeout.reset();
+                    editable.process_event(EditableEvent::KeyDown {
+                        key: &key,
+                        modifiers,
+                    });
+                    let text = editable.editor().read().committed_text();
 
-                        let apply_change = match &on_validate {
-                            Some(on_validate) => {
-                                let mut editor = editable.editor_mut().write();
-                                let validator = InputValidator::new(text.clone());
-                                on_validate.call(validator.clone());
-                                if !validator.is_valid() {
-                                    if let Some(selection) = editor.undo() {
-                                        *editor.selection_mut() = selection;
-                                    }
-                                    editor.editor_history().clear_redos();
+                    let apply_change = match &on_validate {
+                        Some(on_validate) => {
+                            let mut editor = editable.editor_mut().write();
+                            let validator = InputValidator::new(text.clone());
+                            on_validate.call(validator.clone());
+                            if !validator.is_valid() {
+                                if let Some(selection) = editor.undo() {
+                                    *editor.selection_mut() = selection;
                                 }
-                                validator.is_valid()
+                                editor.editor_history().clear_redos();
                             }
-                            None => true,
-                        };
-
-                        if apply_change {
-                            *value.write() = text;
+                            validator.is_valid()
                         }
+                        None => true,
+                    };
+
+                    if apply_change {
+                        *value.write() = text;
                     }
                 }
             }
