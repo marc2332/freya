@@ -29,7 +29,7 @@ pub struct CodeEditor {
     a11y_id: AccessibilityId,
     a11y_auto_focus: bool,
     theme: Readable<EditorTheme>,
-    accepts_key: Callback<KeyboardEventData, bool>,
+    on_pre_key_down: Callback<Event<KeyboardEventData>, bool>,
 }
 
 impl CodeEditor {
@@ -48,7 +48,13 @@ impl CodeEditor {
             a11y_id,
             a11y_auto_focus: false,
             theme: DEFAULT_EDITOR_THEME.into(),
-            accepts_key: Callback::new(|_| true),
+            on_pre_key_down: Callback::new(|e: Event<KeyboardEventData>| {
+                e.stop_propagation();
+                if let Key::Named(NamedKey::Tab) = &e.key {
+                    e.prevent_default();
+                }
+                true
+            }),
         }
     }
 
@@ -99,14 +105,19 @@ impl CodeEditor {
         self
     }
 
-    /// Sets a callback that decides whether a key event is forwarded to the editor.
+    /// Sets a callback that runs before each key event reaches the editor.
     ///
-    /// Useful to reserve shortcuts for the host application. Defaults to accepting every key.
-    pub fn accepts_key(
+    /// Returning `true` lets the editor process the event, `false` skips it. The callback
+    /// owns the [`Event`] and is free to call `stop_propagation()` / `prevent_default()`
+    /// to control how unhandled keys behave (e.g. let `Tab` move focus instead of inserting).
+    ///
+    /// The default calls `stop_propagation()` for every key, `prevent_default()` for `Tab`,
+    /// and returns `true`.
+    pub fn on_pre_key_down(
         mut self,
-        accepts_key: impl Into<Callback<KeyboardEventData, bool>>,
+        on_pre_key_down: impl Into<Callback<Event<KeyboardEventData>, bool>>,
     ) -> Self {
-        self.accepts_key = accepts_key.into();
+        self.on_pre_key_down = on_pre_key_down.into();
         self
     }
 }
@@ -124,7 +135,7 @@ impl Component for CodeEditor {
             a11y_id,
             a11y_auto_focus,
             theme,
-            accepts_key,
+            on_pre_key_down,
         } = self.clone();
 
         let editor_data = editor.read();
@@ -189,14 +200,15 @@ impl Component for CodeEditor {
             let mut editor = editor.clone();
             let font_family = font_family.clone();
             move |e: Event<KeyboardEventData>| {
-                e.stop_propagation();
-
-                if let Key::Named(NamedKey::Tab) = &e.key {
-                    e.prevent_default();
-                }
-
                 const LINES_JUMP_ALT: usize = 5;
                 const LINES_JUMP_CONTROL: usize = 3;
+
+                let key = e.key.clone();
+                let modifiers = e.modifiers;
+
+                if !on_pre_key_down.call(e) {
+                    return;
+                }
 
                 editor.write_if(|mut editor| {
                     let lines_jump = (line_height * LINES_JUMP_ALT as f32).ceil() as i32;
@@ -204,44 +216,41 @@ impl Component for CodeEditor {
                     let max_height = 0; // TODO, this should be the height of the viewport
                     let current_scroll = editor.scrolls.1;
 
-                    let events = match &e.key {
-                        Key::Named(NamedKey::ArrowUp) if e.modifiers.contains(Modifiers::ALT) => {
+                    let events = match &key {
+                        Key::Named(NamedKey::ArrowUp) if modifiers.contains(Modifiers::ALT) => {
                             let jump = (current_scroll + lines_jump).clamp(min_height, max_height);
                             editor.scrolls.1 = jump;
                             (0..LINES_JUMP_ALT)
                                 .map(|_| EditableEvent::KeyDown {
-                                    key: &e.key,
-                                    modifiers: e.modifiers,
+                                    key: &key,
+                                    modifiers,
                                 })
                                 .collect::<Vec<EditableEvent>>()
                         }
-                        Key::Named(NamedKey::ArrowDown) if e.modifiers.contains(Modifiers::ALT) => {
+                        Key::Named(NamedKey::ArrowDown) if modifiers.contains(Modifiers::ALT) => {
                             let jump = (current_scroll - lines_jump).clamp(min_height, max_height);
                             editor.scrolls.1 = jump;
                             (0..LINES_JUMP_ALT)
                                 .map(|_| EditableEvent::KeyDown {
-                                    key: &e.key,
-                                    modifiers: e.modifiers,
+                                    key: &key,
+                                    modifiers,
                                 })
                                 .collect::<Vec<EditableEvent>>()
                         }
                         Key::Named(NamedKey::ArrowDown) | Key::Named(NamedKey::ArrowUp)
-                            if e.modifiers.contains(Modifiers::CONTROL) =>
+                            if modifiers.contains(Modifiers::CONTROL) =>
                         {
                             (0..LINES_JUMP_CONTROL)
                                 .map(|_| EditableEvent::KeyDown {
-                                    key: &e.key,
-                                    modifiers: e.modifiers,
+                                    key: &key,
+                                    modifiers,
                                 })
                                 .collect::<Vec<EditableEvent>>()
                         }
-                        _ if accepts_key.call((*e).clone()) => {
-                            vec![EditableEvent::KeyDown {
-                                key: &e.key,
-                                modifiers: e.modifiers,
-                            }]
-                        }
-                        _ => Vec::new(),
+                        _ => vec![EditableEvent::KeyDown {
+                            key: &key,
+                            modifiers,
+                        }],
                     };
 
                     let mut changed = false;
