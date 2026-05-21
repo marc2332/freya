@@ -171,8 +171,6 @@ impl Component for CodeEditor {
         let lines_len = editor_data.metrics.syntax_blocks.len();
 
         let on_pointer_down = move |e: Event<PointerEventData>| {
-            e.prevent_default();
-            e.stop_propagation();
             a11y_id.request_focus();
         };
 
