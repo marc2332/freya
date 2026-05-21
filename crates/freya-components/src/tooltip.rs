@@ -1,5 +1,9 @@
-use std::borrow::Cow;
+use std::{
+    borrow::Cow,
+    time::Duration,
+};
 
+use async_io::Timer;
 use freya_animation::{
     easing::Function,
     hook::{
@@ -122,6 +126,7 @@ pub struct TooltipContainer {
     children: Vec<Element>,
     position: AttachedPosition,
     layout: LayoutData,
+    delay: Duration,
     key: DiffKey,
 }
 
@@ -150,6 +155,7 @@ impl TooltipContainer {
             children: vec![],
             position: AttachedPosition::Bottom,
             layout: LayoutData::default(),
+            delay: Duration::from_millis(500),
             key: DiffKey::None,
         }
     }
@@ -158,22 +164,30 @@ impl TooltipContainer {
         self.position = position;
         self
     }
+
+    /// Delay before the tooltip is shown once the pointer starts hovering.
+    /// Defaults to 500ms.
+    pub fn delay(mut self, delay: Duration) -> Self {
+        self.delay = delay;
+        self
+    }
 }
 
 impl Component for TooltipContainer {
     fn render(&self) -> impl IntoElement {
         let mut is_hovering = use_state(|| false);
+        let mut delay_task = use_state::<Option<TaskHandle>>(|| None);
 
         let animation = use_animation(move |conf| {
             conf.on_change(OnChange::Rerun);
             conf.on_creation(OnCreation::Finish);
 
-            let scale = AnimNum::new(0.8, 1.)
-                .time(350)
+            let scale = AnimNum::new(0.9, 1.)
+                .time(150)
                 .ease(Ease::Out)
                 .function(Function::Expo);
             let opacity = AnimNum::new(0., 1.)
-                .time(350)
+                .time(150)
                 .ease(Ease::Out)
                 .function(Function::Expo);
 
@@ -186,12 +200,24 @@ impl Component for TooltipContainer {
 
         let (scale, opacity) = animation.read().value();
 
+        let delay = self.delay;
         let on_pointer_over = move |_| {
-            is_hovering.set(true);
+            if let Some(handle) = delay_task() {
+                handle.cancel();
+            }
+            let task = spawn(async move {
+                Timer::after(delay).await;
+                is_hovering.set_if_modified(true);
+            });
+            delay_task.set(Some(task));
         };
 
         let on_pointer_out = move |_| {
-            is_hovering.set(false);
+            if let Some(handle) = delay_task() {
+                handle.cancel();
+                delay_task.set(None);
+            }
+            is_hovering.set_if_modified(false);
         };
 
         let is_visible = opacity > 0. && !ContextMenu::is_open();
