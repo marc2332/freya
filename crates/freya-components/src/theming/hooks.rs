@@ -25,6 +25,15 @@ pub fn use_init_theme(theme_cb: impl FnOnce() -> Theme) -> State<Theme> {
     })
 }
 
+/// Provides a custom [`Theme`].
+pub fn use_provide_theme(theme_cb: impl FnOnce() -> Theme) -> State<Theme> {
+    use_hook(|| {
+        let state = State::create(theme_cb());
+        provide_context(state);
+        state
+    })
+}
+
 /// Subscribe to [`Theme`] changes.
 pub fn use_theme() -> State<Theme> {
     use_consume::<State<Theme>>()
