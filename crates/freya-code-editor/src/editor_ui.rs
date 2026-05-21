@@ -29,6 +29,7 @@ pub struct CodeEditor {
     a11y_id: AccessibilityId,
     a11y_auto_focus: bool,
     theme: Readable<EditorTheme>,
+    accepts_key: Callback<KeyboardEventData, bool>,
 }
 
 impl CodeEditor {
@@ -47,6 +48,7 @@ impl CodeEditor {
             a11y_id,
             a11y_auto_focus: false,
             theme: DEFAULT_EDITOR_THEME.into(),
+            accepts_key: Callback::new(|_| true),
         }
     }
 
@@ -96,6 +98,17 @@ impl CodeEditor {
         self.theme = theme.into_readable();
         self
     }
+
+    /// Sets a callback that decides whether a key event is forwarded to the editor.
+    ///
+    /// Useful to reserve shortcuts for the host application. Defaults to accepting every key.
+    pub fn accepts_key(
+        mut self,
+        accepts_key: impl Into<Callback<KeyboardEventData, bool>>,
+    ) -> Self {
+        self.accepts_key = accepts_key.into();
+        self
+    }
 }
 
 impl Component for CodeEditor {
@@ -111,6 +124,7 @@ impl Component for CodeEditor {
             a11y_id,
             a11y_auto_focus,
             theme,
+            accepts_key,
         } = self.clone();
 
         let editor_data = editor.read();
@@ -174,6 +188,7 @@ impl Component for CodeEditor {
         let on_key_down = {
             let mut editor = editor.clone();
             let font_family = font_family.clone();
+            let accepts_key = accepts_key.clone();
             move |e: Event<KeyboardEventData>| {
                 e.stop_propagation();
 
@@ -221,19 +236,13 @@ impl Component for CodeEditor {
                                 })
                                 .collect::<Vec<EditableEvent>>()
                         }
-                        _ if e.code == Code::Escape
-                            || e.modifiers.contains(Modifiers::ALT)
-                            || (e.modifiers.contains(Modifiers::CONTROL)
-                                && e.code == Code::KeyS) =>
-                        {
-                            Vec::new()
-                        }
-                        _ => {
+                        _ if accepts_key.call((*e).clone()) => {
                             vec![EditableEvent::KeyDown {
                                 key: &e.key,
                                 modifiers: e.modifiers,
                             }]
                         }
+                        _ => Vec::new(),
                     };
 
                     let mut changed = false;
