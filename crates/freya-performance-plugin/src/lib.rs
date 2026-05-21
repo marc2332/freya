@@ -40,10 +40,25 @@ use freya_winit::{
 /// Performance overlay plugin that displays FPS, timing metrics, and other
 /// diagnostics on top of the rendered frame. Hidden by default, toggle with
 /// Ctrl+Shift+P (Cmd+Shift+P on macOS).
-#[derive(Default)]
 pub struct PerformanceOverlayPlugin {
     enabled: bool,
+    toggle_shortcut: (Key, Modifiers),
     metrics: HashMap<WindowId, WindowMetrics>,
+}
+
+impl Default for PerformanceOverlayPlugin {
+    fn default() -> Self {
+        let modifiers = if cfg!(target_os = "macos") {
+            Modifiers::META | Modifiers::SHIFT
+        } else {
+            Modifiers::CONTROL | Modifiers::SHIFT
+        };
+        Self {
+            enabled: false,
+            toggle_shortcut: (Key::Character("p".into()), modifiers),
+            metrics: HashMap::new(),
+        }
+    }
 }
 
 #[derive(Default)]
@@ -70,6 +85,12 @@ struct WindowMetrics {
 }
 
 impl PerformanceOverlayPlugin {
+    /// Set the keyboard shortcut that toggles the overlay visibility.
+    pub fn with_toggle_shortcut(mut self, key: Key, modifiers: Modifiers) -> Self {
+        self.toggle_shortcut = (key, modifiers);
+        self
+    }
+
     /// Set whether the overlay is visible by default.
     pub fn with_visible(mut self, visible: bool) -> Self {
         self.enabled = visible;
@@ -95,13 +116,12 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 is_pressed,
                 ..
             } => {
-                let toggle_modifier = if cfg!(target_os = "macos") {
-                    Modifiers::META | Modifiers::SHIFT
-                } else {
-                    Modifiers::CONTROL | Modifiers::SHIFT
+                let (shortcut_key, shortcut_modifiers) = &self.toggle_shortcut;
+                let key_matches = match (key, shortcut_key) {
+                    (Key::Character(a), Key::Character(b)) => a.eq_ignore_ascii_case(b),
+                    (a, b) => a == b,
                 };
-                let is_p = matches!(key, Key::Character(c) if c.eq_ignore_ascii_case("p"));
-                if *is_pressed && is_p && *modifiers == toggle_modifier {
+                if *is_pressed && *modifiers == *shortcut_modifiers && key_matches {
                     self.enabled = !self.enabled;
                     handle.send_event_loop_event(NativeEvent::Window(NativeWindowEvent {
                         window_id: window.id(),
