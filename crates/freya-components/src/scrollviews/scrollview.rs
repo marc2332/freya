@@ -96,7 +96,7 @@ impl Default for ScrollView {
             scroll_with_arrows: true,
             scroll_controller: None,
             invert_scroll_wheel: false,
-            drag_scrolling: cfg!(target_os = "android"),
+            drag_scrolling: true,
             key: DiffKey::None,
         }
     }
