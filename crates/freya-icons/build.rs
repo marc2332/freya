@@ -8,7 +8,7 @@ fn main() {
 }
 
 fn generate(name: &str, path: &str) {
-	fs::create_dir_all(path);
+	let _ = fs::create_dir_all(path);
     let out_dir = std::env::var("OUT_DIR").unwrap();
     let dest_path = Path::new(&out_dir).join(name).with_extension("rs");
 
