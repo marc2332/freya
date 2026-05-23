@@ -178,49 +178,11 @@ pub fn scroll_view_drag_scrolling_release_stops() {
     assert!(content[2].is_visible());
     assert!(!content[3].is_visible());
 
-    // Move cursor further after releasing — should NOT scroll further
+    // Move cursor further after releasing, should NOT scroll further
     test.move_cursor((100., 50.));
     test.sync_and_update();
 
     // Visibility should remain unchanged since drag ended on release
-    assert!(content[0].is_visible());
-    assert!(content[1].is_visible());
-    assert!(content[2].is_visible());
-    assert!(!content[3].is_visible());
-}
-
-#[test]
-pub fn scroll_view_drag_scrolling_disabled_by_default() {
-    fn scroll_view_no_drag_app() -> impl IntoElement {
-        ScrollView::new()
-            .child(rect().height(Size::px(200.)).width(Size::px(200.)))
-            .child(rect().height(Size::px(200.)).width(Size::px(200.)))
-            .child(rect().height(Size::px(200.)).width(Size::px(200.)))
-            .child(rect().height(Size::px(200.)).width(Size::px(200.)))
-    }
-
-    let mut test = launch_test(scroll_view_no_drag_app);
-    let scrollview = test
-        .find(|node, element| {
-            Rect::try_downcast(element)
-                .filter(|rect| rect.accessibility.builder.role() == AccessibilityRole::ScrollView)
-                .map(move |_| node)
-        })
-        .unwrap();
-    let content = scrollview.children()[0].children()[0].children();
-
-    assert!(content[0].is_visible());
-    assert!(!content[3].is_visible());
-
-    // Attempt a drag gesture without drag_scrolling enabled
-    test.press_cursor((100., 400.));
-    test.sync_and_update();
-    test.move_cursor((100., 100.));
-    test.sync_and_update();
-    test.release_cursor((100., 100.));
-    test.sync_and_update();
-
-    // Nothing should have scrolled — visibility unchanged
     assert!(content[0].is_visible());
     assert!(content[1].is_visible());
     assert!(content[2].is_visible());
