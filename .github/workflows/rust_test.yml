@@ -27,11 +27,11 @@ jobs:
     - name: Install Rust toolchain
       uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1
     - name: Install nextest
-      uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
+      uses: taiki-e/install-action@f48d2f8ba2b452934c948b7be1a768079c3632ff # v2.79.6
       with:
         tool: nextest
     - name: Install just
-      uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
+      uses: taiki-e/install-action@f48d2f8ba2b452934c948b7be1a768079c3632ff # v2.79.6
       with:
         tool: just
     - name: Install linux dependencies
