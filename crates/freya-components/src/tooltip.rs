@@ -202,7 +202,7 @@ impl Component for TooltipContainer {
 
         let delay = self.delay;
         let on_pointer_over = move |_| {
-            if let Some(handle) = delay_task() {
+            if let Some(handle) = delay_task.write().take() {
                 handle.cancel();
             }
             let task = spawn(async move {
@@ -213,9 +213,8 @@ impl Component for TooltipContainer {
         };
 
         let on_pointer_out = move |_| {
-            if let Some(handle) = delay_task() {
+            if let Some(handle) = delay_task.write().take() {
                 handle.cancel();
-                delay_task.set(None);
             }
             is_hovering.set_if_modified(false);
         };
