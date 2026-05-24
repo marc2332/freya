@@ -338,7 +338,7 @@ pub trait EventHandlersExt: Sized {
     /// - **Started clicking**: There is a `MouseDown` event (Left button)
     /// - **Touched**: There is a `TouchEnd` event in the same element that there had been a `TouchStart` just before
     ///
-    /// This event is intended to focus elements.
+    /// This event is intended to focus elements such as text inputs following each platform style.
     fn on_focus_press(
         self,
         on_focus_press: impl Into<EventHandler<Event<FocusPressEventData>>>,
