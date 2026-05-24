@@ -41,6 +41,10 @@
 //!
 //! No setup required. But feel free to add more if we miss something.
 //!
+//! ## Android
+//!
+//! When targeting Android you also need `javac` available in your `PATH`. On Linux you can install it via your distro's JDK package, for example `default-jdk` on Debian-based distros.
+//!
 //! ## Custom Linkers
 //!
 //! The following custom linkers are not supported at the moment:
