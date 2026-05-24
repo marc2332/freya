@@ -3,7 +3,8 @@ pub struct EditableConfig {
     pub(crate) indentation: u8,
     pub(crate) allow_tabs: bool,
     pub(crate) allow_changes: bool,
-    pub(crate) allow_clipboard: bool,
+    pub(crate) allow_read_clipboard: bool,
+    pub(crate) allow_write_clipboard: bool,
 }
 
 impl Default for EditableConfig {
@@ -19,7 +20,8 @@ impl EditableConfig {
             indentation: 4,
             allow_tabs: false,
             allow_changes: true,
-            allow_clipboard: true,
+            allow_read_clipboard: true,
+            allow_write_clipboard: true,
         }
     }
 
@@ -41,9 +43,15 @@ impl EditableConfig {
         self
     }
 
-    /// Allow clipboard keyboard events
-    pub fn with_allow_clipboard(mut self, allow_clipboard: bool) -> Self {
-        self.allow_clipboard = allow_clipboard;
+    /// Allow reading from the clipboard (paste).
+    pub fn with_allow_read_clipboard(mut self, allow_read_clipboard: bool) -> Self {
+        self.allow_read_clipboard = allow_read_clipboard;
+        self
+    }
+
+    /// Allow writing to the clipboard (copy and cut).
+    pub fn with_allow_write_clipboard(mut self, allow_write_clipboard: bool) -> Self {
+        self.allow_write_clipboard = allow_write_clipboard;
         self
     }
 }

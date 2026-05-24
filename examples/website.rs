@@ -212,7 +212,7 @@ impl Component for Navigation {
 struct Counter;
 impl Component for Counter {
     fn render(&self) -> impl IntoElement {
-        use_init_theme(light_theme);
+        use_provide_theme(light_theme);
         let mut count = use_state(|| 4);
 
         rect()
