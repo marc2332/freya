@@ -83,7 +83,6 @@ fn app() -> impl IntoElement {
         .child(main)
 }
 
-/// Filters out non-supported cameras
 fn usable_cameras() -> Vec<CameraInfo> {
     query()
         .unwrap_or_default()
@@ -96,7 +95,7 @@ fn usable_cameras() -> Vec<CameraInfo> {
         .collect()
 }
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq)]
 struct CameraPanel {
     device: CameraIndex,
 }
