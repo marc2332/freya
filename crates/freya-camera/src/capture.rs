@@ -1,13 +1,14 @@
-//! Background capture thread that drives [nokhwa] and forwards decoded frames
-//! to the UI thread.
+//! Background capture thread that drives [nokhwa] and publishes decoded frames.
 
-use async_channel::{
-    Receiver,
-    Sender,
-    bounded,
+use std::sync::{
+    Arc,
+    Mutex,
+    Weak,
 };
+
 use blocking::unblock;
 use bytes::Bytes;
+use freya_core::notify::ArcNotify;
 use nokhwa::{
     Camera,
     pixel_format::RgbAFormat,
@@ -35,34 +36,62 @@ pub struct CameraFrame {
     pub data: Bytes,
 }
 
-/// Messages sent from the capture thread to the consumer.
-pub enum CaptureMessage {
-    Started(StreamInfo),
-    Frame(CameraFrame),
-    Error(CameraError),
+/// Latest values published by the capture thread. New entries overwrite older ones.
+#[derive(Default)]
+pub struct CaptureState {
+    pub frame: Option<CameraFrame>,
+    pub info: Option<StreamInfo>,
+    pub error: Option<CameraError>,
 }
 
-const CHANNEL_CAPACITY: usize = 2;
+/// Handle returned by [`spawn_capture`].
+pub struct CaptureHandle {
+    pub state: Arc<Mutex<CaptureState>>,
+    pub wake: ArcNotify,
+}
 
-/// Spawn a thread that opens the camera and streams decoded frames back.
-///
-/// The thread terminates when the returned receiver is dropped.
-pub fn spawn_capture(config: CameraConfig) -> Receiver<CaptureMessage> {
-    let (tx, rx) = bounded(CHANNEL_CAPACITY);
+/// Producer side of the capture channel.
+struct CaptureProducer {
+    state: Weak<Mutex<CaptureState>>,
+    wake: ArcNotify,
+}
+
+impl CaptureProducer {
+    /// Apply `update` to the slot and wake the consumer. Returns `false` if the consumer is gone.
+    fn publish(&self, update: impl FnOnce(&mut CaptureState)) -> bool {
+        let Some(slot) = self.state.upgrade() else {
+            return false;
+        };
+        update(&mut slot.lock().unwrap());
+        self.wake.notify();
+        true
+    }
+}
+
+/// Spawn the capture thread.
+pub fn spawn_capture(config: CameraConfig) -> CaptureHandle {
+    let handle = CaptureHandle {
+        state: Arc::new(Mutex::new(CaptureState::default())),
+        wake: ArcNotify::new(),
+    };
+
+    let producer = CaptureProducer {
+        state: Arc::downgrade(&handle.state),
+        wake: handle.wake.clone(),
+    };
 
     unblock(move || {
-        if let Err(err) = run_capture(config, &tx) {
-            let _ = tx.send_blocking(CaptureMessage::Error(err));
+        if let Err(err) = run_capture(config, &producer) {
+            producer.publish(|slot| slot.error = Some(err));
         }
     })
     .detach();
 
-    rx
+    handle
 }
 
-fn run_capture(config: CameraConfig, tx: &Sender<CaptureMessage>) -> Result<(), CameraError> {
+fn run_capture(config: CameraConfig, producer: &CaptureProducer) -> Result<(), CameraError> {
     let requested = RequestedFormat::new::<RgbAFormat>(config.format.into());
-
     let mut camera = Camera::new(config.device, requested)?;
     camera.open_stream()?;
 
@@ -73,24 +102,20 @@ fn run_capture(config: CameraConfig, tx: &Sender<CaptureMessage>) -> Result<(), 
         frame_rate: camera.frame_rate(),
     };
 
-    if tx.send_blocking(CaptureMessage::Started(info)).is_err() {
+    if !producer.publish(|slot| slot.info = Some(info)) {
         return Ok(());
     }
 
     loop {
         let buffer = camera.frame()?;
         let decoded = buffer.decode_image::<RgbAFormat>()?;
-
-        let width = decoded.width();
-        let height = decoded.height();
-        let frame = CameraFrame {
-            width,
-            height,
+        let new_frame = CameraFrame {
+            width: decoded.width(),
+            height: decoded.height(),
             data: Bytes::from(decoded.into_raw()),
         };
 
-        if tx.send_blocking(CaptureMessage::Frame(frame)).is_err() {
-            // Receiver was dropped, stop capturing.
+        if !producer.publish(|slot| slot.frame = Some(new_frame)) {
             break;
         }
     }

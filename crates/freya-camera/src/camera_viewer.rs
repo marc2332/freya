@@ -10,10 +10,7 @@ use crate::{
     use_camera::Camera,
 };
 
-/// Camera capture component.
-///
-/// Renders the latest frame produced by a [`Camera`] handle. While the
-/// camera has not yet produced a frame the `placeholder` is rendered instead.
+/// Renders the latest frame produced by a [`Camera`].
 ///
 /// # Example
 ///
@@ -91,7 +88,7 @@ impl LayoutExt for CameraViewer {
     }
 }
 
-impl ContainerSizeExt for CameraViewer {}
+impl ContainerExt for CameraViewer {}
 impl ContainerWithContentExt for CameraViewer {}
 
 impl ImageExt for CameraViewer {

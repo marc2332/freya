@@ -12,11 +12,7 @@ use nokhwa::{
     utils::ApiBackend,
 };
 
-/// Requested capture format.
-///
-/// The actual format used by the device may differ if the requested one is not
-/// supported. Inspect [`StreamInfo`] from the running camera to see what was
-/// negotiated.
+/// Requested capture format. The negotiated values are reported via [`StreamInfo`].
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Default)]
 pub enum CameraFormat {
     /// Highest framerate available, any resolution.

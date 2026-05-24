@@ -26,14 +26,13 @@ use crate::{
     },
     capture::{
         CameraFrame,
-        CaptureMessage,
+        CaptureHandle,
+        CaptureState,
         spawn_capture,
     },
 };
 
-/// A handle to a running camera, produced by [`use_camera`] or
-/// [`Camera::create`].
-/// The camera is closed automatically when the scope where the handle was created is dropped.
+/// Handle to a running camera. Closed when its owning scope is dropped.
 #[derive(Clone, Copy, PartialEq)]
 pub struct Camera {
     /// The latest frame produced by the camera.
@@ -51,24 +50,32 @@ impl Camera {
         let mut info: State<Option<StreamInfo>> = State::create(None);
         let mut error: State<Option<CameraError>> = State::create(None);
 
-        let receiver = spawn_capture(config);
+        let CaptureHandle { state, wake } = spawn_capture(config);
 
         spawn(async move {
-            while let Ok(message) = receiver.recv().await {
-                match message {
-                    CaptureMessage::Started(new_info) => {
-                        *info.write() = Some(new_info);
-                    }
-                    CaptureMessage::Frame(camera_frame) => match build_holder(camera_frame) {
+            loop {
+                wake.notified().await;
+
+                let CaptureState {
+                    frame: latest_frame,
+                    info: latest_info,
+                    error: latest_error,
+                } = std::mem::take(&mut *state.lock().unwrap());
+
+                if let Some(stream_info) = latest_info {
+                    *info.write() = Some(stream_info);
+                }
+                if let Some(capture_error) = latest_error {
+                    tracing::warn!("freya-camera: {capture_error}");
+                    *error.write() = Some(capture_error);
+                }
+                if let Some(camera_frame) = latest_frame {
+                    match build_holder(camera_frame) {
                         Ok(holder) => *frame.write() = Some(holder),
-                        Err(err) => {
-                            tracing::warn!("freya-camera: {err}");
-                            *error.write() = Some(err);
+                        Err(build_error) => {
+                            tracing::warn!("freya-camera: {build_error}");
+                            *error.write() = Some(build_error);
                         }
-                    },
-                    CaptureMessage::Error(err) => {
-                        tracing::warn!("freya-camera: {err}");
-                        *error.write() = Some(err);
                     }
                 }
             }
@@ -78,9 +85,7 @@ impl Camera {
     }
 }
 
-/// Open a camera and return a [`Camera`] handle.
-///
-/// The `init` closure is invoked once on mount to produce the [`CameraConfig`].
+/// Open a camera and return a [`Camera`] handle. `init` runs once on mount.
 ///
 /// # Example
 ///
