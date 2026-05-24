@@ -41,7 +41,26 @@ impl Component for Counter {
 - `#[derive(PartialEq)]` is required - Freya uses it to skip re-rendering unchanged subtrees.
 - Implement `KeyExt` and `ChildrenExt` when the component can be keyed or accept children.
 
-### Function Components (app root or stateless helpers)
+#### ComponentOwned (when `render` needs to own `self`)
+
+`Component::render` takes `&self`, so moving fields into closures forces `let foo = self.foo.clone();` boilerplate. `ComponentOwned::render` takes `self` by value (the framework clones it for you), letting you move `self` directly. Requires `#[derive(Clone)]`. Reach for it only when you'd otherwise clone `self` (or several of its fields) inside `render`.
+
+```rust
+#[derive(PartialEq, Clone)]
+struct Item { state: State<Vec<i32>>, i: usize }
+
+impl ComponentOwned for Item {
+    fn render(mut self) -> impl IntoElement {
+        Button::new()
+            .on_press(move |_| { self.state.write().remove(self.i); })
+            .child("Remove")
+    }
+}
+```
+
+### Function Components (app root only)
+
+The app root is a plain function. Hooks like `use_init_theme`, `use_init_radio_station`, `use_provide_context` belong here.
 
 ```rust
 fn app() -> impl IntoElement {
@@ -49,7 +68,7 @@ fn app() -> impl IntoElement {
 }
 ```
 
-Pass data from `main` via the `App` trait:
+To pass data from `main` into the root, use the `App` trait:
 
 ```rust
 struct MyApp { number: u8 }
@@ -61,7 +80,7 @@ impl App for MyApp {
 }
 ```
 
-### Utility Functions (stateless, no hooks needed)
+### Utility Functions (stateless, no hooks)
 
 ```rust
 fn colored_label(color: Color, text: &str) -> impl IntoElement {
@@ -69,7 +88,19 @@ fn colored_label(color: Color, text: &str) -> impl IntoElement {
 }
 ```
 
-Use plain functions when you only need to reuse a chunk of UI with no internal state. Use a `Component` when you need hooks or render optimization.
+**Reusable UI that uses hooks or props MUST be a `Component`** (struct + `impl Component`). Plain functions are only for the app root and stateless helpers. Functions with hooks won't benefit from diffing/memoization and can't be keyed or accept reactive props cleanly.
+
+## Elements
+
+Built-in element constructors:
+
+- `rect()` - layout primitive (direction, alignment, sizing, background, borders, corners, shadows, padding, scroll).
+- `label()` - single-line text.
+- `paragraph()` - multi-line / rich text via `.text_span(...)` children; also the target for `use_editable`.
+- `image(holder)` - raster image; `holder` from `static_bytes(...)`, `dynamic_bytes(...)`, or asset loaders.
+- `svg(bytes)` - vector image.
+
+`&str` / `String` implement `Into<Label>`, so prefer `rect().child("Hi")` over `rect().child(label().text("Hi"))`.
 
 ## Element Builder Pattern
 
@@ -126,14 +157,92 @@ rect()
     .maybe_child(show.then(|| Footer::new()))
 ```
 
-### Labels from &str and String
+## Events
 
-`&str` and `String` implement `Into<Label>`, so prefer passing them directly instead of constructing a `label()`:
+Attach handlers via builder methods on any element. Handlers receive `Event<T>`; use `move` closures to capture state.
 
 ```rust
-rect().child("Hello")               // preferred
-rect().child(label().text("Hello")) // unnecessary
+rect()
+    .on_press(move |_| { /* left click, tap, or Enter/Space when focused */ })
+    .on_key_down(move |e: Event<KeyboardEventData>| { /* only while focused */ })
+    .on_wheel(move |e| { /* scroll delta */ })
+    .on_pointer_enter(move |_| { /* hover begin (mouse or touch) */ })
 ```
+
+Catalog (all prefixed `on_`):
+
+- **Press**: `press` (left/tap/Enter/Space), `all_press` (any mouse button), `secondary_down` (right-click).
+- **Mouse**: `mouse_up`, `mouse_down`, `mouse_move`.
+- **Pointer** (mouse + touch unified): `pointer_press`, `pointer_down`, `pointer_move`, `pointer_enter`, `pointer_leave`, `pointer_over`, `pointer_out`.
+- **Keyboard** (require focus): `key_down`, `key_up`.
+- **Wheel**: `wheel`.
+- **Touch**: `touch_start`, `touch_end`, `touch_move`, `touch_cancel`.
+- **File drop**: `file_drop`.
+- **Layout**: `sized` (measured size changed).
+- **Global** (no hit-test; use sparingly): `global_pointer_press`, `global_pointer_down`, `global_pointer_move`, `global_key_down`, `global_key_up`, `global_file_hover`, `global_file_hover_cancelled`.
+- **Capture** (run before regular handlers): `capture_global_pointer_press`, `capture_global_pointer_move`.
+
+**Prefer `on_press` over raw mouse/pointer events** for interactive elements: it covers click, tap, and keyboard activation, so accessibility comes free. Use `on_mouse_*` / `on_pointer_*` only when you need pointer-specific behavior (drag handles, canvas tools).
+
+`Event<T>` has `.stop_propagation()` to cancel bubbling and `.map(...)` / `.try_map(...)` to transform inner data.
+
+### Callback props on custom components
+
+Use `EventHandler<T>` for callback props; closures convert via `.into()`.
+
+```rust
+#[derive(PartialEq)]
+struct Confirm { on_accept: EventHandler<()> }
+
+impl Component for Confirm {
+    fn render(&self) -> impl IntoElement {
+        let on_accept = self.on_accept;
+        Button::new().on_press(move |_| on_accept.call(())).child("OK")
+    }
+}
+
+Confirm { on_accept: (move |()| println!("yes")).into() }
+```
+
+`EventHandler<T>` is `Copy`; capture directly in `move` closures.
+
+## Focus and Accessibility
+
+Focusable elements need a stable `AccessibilityId` from `use_a11y()` (one per focusable node), attached via `.a11y_id(...)` and `.a11y_focusable(true)`. Track focus state with `use_focus(id)`.
+
+```rust
+#[derive(PartialEq)]
+struct FocusableBox;
+
+impl Component for FocusableBox {
+    fn render(&self) -> impl IntoElement {
+        let a11y_id = use_a11y();
+        let focus = use_focus(a11y_id);
+
+        rect()
+            .a11y_id(a11y_id)
+            .a11y_focusable(true)
+            .a11y_role(AccessibilityRole::Button)
+            .on_press(move |_| println!("activated"))
+            .maybe(focus() == Focus::Keyboard, |el| {
+                el.border(Border::new().fill(Color::BLUE).width(2.))
+            })
+            .child("Click or Tab to me")
+    }
+}
+```
+
+`Focus` variants:
+- `Focus::Not` - not focused.
+- `Focus::Pointer` - focused by mouse/touch (no focus ring needed).
+- `Focus::Keyboard` - focused via Tab (render a focus ring).
+- `focus.is_focused()` matches `Pointer` or `Keyboard`.
+
+`on_press` already fires on Enter/Space when focused, so keyboard activation is free. For raw key handling, `KeyboardEventExt::is_press_event(&event)` detects the OS activation gesture (Enter/Space; Ctrl+Alt+Space on macOS with VoiceOver).
+
+Other a11y builders: `.a11y_role(...)`, `.a11y_alt("description")`, `.a11y_auto_focus(true)`, `.a11y_member_of(other_id)`, `.a11y_builder(|node| { /* raw accesskit::Node */ })`.
+
+Read the focused id globally via `Platform::get().focused_accessibility_id`.
 
 ## Hooks
 
@@ -160,12 +269,17 @@ rect().on_mouse_up(on_click)
 
 ```rust
 let mut count = use_state(|| 0);
-*count.write() += 1;    // write
-let n = *count.read();  // read
-count.set(5);           // convenience setter
+*count.write() += 1;          // write
+let n = *count.read();        // read
+count.set(5);                 // convenience setter
+count.set_if_modified(5);     // only writes (and notifies) if the new value differs
 ```
 
 `use_state` returns a `Copy` type (`State<T>`). No `.clone()` needed when passing it around.
+
+Avoid `drop()` on guards from `.read()`/`.write()`; guards release on scope exit. Prefer a smaller scope (`{ let v = state.read(); ... }`) or copying the value out (`let n = *count.read();`). Only use explicit `drop(guard)` when you must release a borrow before re-borrowing in the same scope.
+
+Prefer `set_if_modified` over `set` when the new value may equal the current (syncing external/derived values, handlers that may fire unchanged). It skips the write and avoids waking subscribers. Requires `T: PartialEq`. `set_if_modified_and_then(value, || { ... })` runs a callback only on actual change.
 
 Pass local state to child components:
 
@@ -244,16 +358,35 @@ radio.apply(AppAction::Increment);
 
 ### Readable / Writable (type-erased abstractions)
 
-Use `Readable<T>` / `Writable<T>` as component props when the component should accept state from any source:
+`Readable<T>` and `Writable<T>` are type-erased wrappers over any reactive value of type `T`. Use them as component props so the component works regardless of where the state lives: local `State<T>`, a `Memo<T>`, a radio slice, or a plain owned value. Both are `PartialEq` (always equal) and `Clone`, usable directly as component fields.
 
 ```rust
 #[derive(PartialEq)]
 struct NameInput { name: Writable<String> }
 
-// Caller passes either local state or radio slice:
-NameInput { name: local_name.into_writable() }
-NameInput { name: name_slice.into_writable() }
+impl Component for NameInput {
+    fn render(&self) -> impl IntoElement {
+        Input::new(self.name.clone()) // Input is two-way bound to the Writable
+    }
+}
+
+// Caller side: any source converts via `into_writable()` / `into_readable()`
+NameInput { name: local_name.into_writable() }            // from State<String>
+NameInput { name: name_slice.into_writable() }            // from a RadioSliceMut
 ```
+
+Conversions:
+- `State<T>` → `Writable<T>` / `Readable<T>` via `IntoWritable` / `IntoReadable`.
+- `Memo<T>` → `Readable<T>` via `IntoReadable`.
+- `RadioSlice` → `Readable<T>`; `RadioSliceMut` → `Readable<T>` or `Writable<T>`.
+- `Writable<T>` → `Readable<T>` via `From` (downgrade write access).
+- Plain owned `T` → `Readable<T>` via `From` (non-reactive; tests, defaults).
+
+API surface:
+- `Readable<T>`: `read()` (subscribes), `peek()` (no subscription).
+- `Writable<T>`: `read()`, `peek()`, `write()`, plus `WritableUtils` helpers (`set`, `set_if_modified`, `with_mut`, ...). Subscriptions and notifications route to the original source.
+
+Prefer `Readable<T>` for read-only consumers; use `Writable<T>` only when the component must mutate.
 
 ### Context API
 

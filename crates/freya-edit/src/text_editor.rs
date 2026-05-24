@@ -472,7 +472,8 @@ pub trait TextEditor {
         modifiers: &Modifiers,
         allow_tabs: bool,
         allow_changes: bool,
-        allow_clipboard: bool,
+        allow_read_clipboard: bool,
+        allow_write_clipboard: bool,
     ) -> TextEvent {
         let mut event = TextEvent::empty();
 
@@ -603,7 +604,7 @@ pub trait TextEditor {
                 event.insert(TextEvent::TEXT_CHANGED);
             }
             Key::Character(character) => {
-                let meta_or_ctrl = modifiers.ctrl_or_meta();
+                let meta_or_ctrl = modifiers.contains(Modifiers::ctrl_or_meta());
 
                 match character.as_str() {
                     " " if allow_changes => {
@@ -629,7 +630,7 @@ pub trait TextEditor {
                     }
 
                     // Copy selected text
-                    "c" if meta_or_ctrl && allow_clipboard => {
+                    "c" if meta_or_ctrl && allow_write_clipboard => {
                         let selected = self.get_selected_text();
                         if let Some(selected) = selected {
                             Clipboard::set(selected).ok();
@@ -637,7 +638,7 @@ pub trait TextEditor {
                     }
 
                     // Cut selected text
-                    "x" if meta_or_ctrl && allow_changes && allow_clipboard => {
+                    "x" if meta_or_ctrl && allow_changes && allow_write_clipboard => {
                         let selection = self.get_selection_range();
                         if let Some((start, end)) = selection {
                             let text = self.get_selected_text().unwrap();
@@ -649,7 +650,7 @@ pub trait TextEditor {
                     }
 
                     // Paste copied text
-                    "v" if meta_or_ctrl && allow_changes && allow_clipboard => {
+                    "v" if meta_or_ctrl && allow_changes && allow_read_clipboard => {
                         if let Ok(copied_text) = Clipboard::get() {
                             let selection = self.get_selection_range();
                             if let Some((start, end)) = selection {

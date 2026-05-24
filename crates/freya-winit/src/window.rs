@@ -408,8 +408,11 @@ impl AppWindow {
         modifiers: keyboard_types::Modifiers,
         is_pressed: bool,
     ) -> bool {
-        use keyboard_types::Key;
-        if !modifiers.ctrl_or_meta() {
+        use keyboard_types::{
+            Key,
+            Modifiers,
+        };
+        if !modifiers.contains(Modifiers::ctrl_or_meta()) {
             return false;
         }
         let new_zoom = match key {
