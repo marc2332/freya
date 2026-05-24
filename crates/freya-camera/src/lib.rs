@@ -3,7 +3,7 @@
 //! - [`use_camera`](use_camera::use_camera): a hook that streams frames from a
 //!   camera into reactive state.
 //! - [`CameraViewer`](camera_viewer::CameraViewer): a component that renders
-//!   the live feed.
+//!   the captured frames.
 //!
 //! This crate is reexported in `freya::camera`.
 //!

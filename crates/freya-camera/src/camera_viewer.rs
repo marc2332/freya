@@ -10,7 +10,7 @@ use crate::{
     use_camera::Camera,
 };
 
-/// Live camera preview component.
+/// Camera capture component.
 ///
 /// Renders the latest frame produced by a [`Camera`] handle. While the
 /// camera has not yet produced a frame the `placeholder` is rendered instead.
