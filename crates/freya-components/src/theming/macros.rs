@@ -48,9 +48,10 @@ macro_rules! define_theme {
         $( $(#[$field_attrs:meta])* $field_name:ident : $field_ty:ty , )*
     ) => {};
 
+    // Emits the structs and their inherent impls.
     (
+        @types
         $(#[$attrs:meta])*
-        $(for = $for_ty:ident ; theme_field = $theme_field:ident ;)+
         $(%[component$($component_attr_control:tt)?])?
         pub $name:ident {
             $(
@@ -130,14 +131,43 @@ macro_rules! define_theme {
                     }
                 )*)?
             }
+        }
+    };
 
+    (
+        $(#[$attrs:meta])*
+        $(for = $for_ty:ident ; theme_field = $theme_field:ident ;)+
+        $(%[component$($component_attr_control:tt)?])?
+        pub $name:ident {
+            $(
+                %[fields$($cows_attr_control:tt)?]
+                $(
+                    $(#[$field_attrs:meta])*
+                    $field_name:ident: $field_ty:ty,
+                )*
+            )?
+    }) => {
+        $crate::define_theme! {
+            @types
+            $(#[$attrs])*
+            $(%[component$($component_attr_control)?])?
+            pub $name {
+                $(
+                    %[fields$($cows_attr_control)?]
+                    $(
+                        $(#[$field_attrs])*
+                        $field_name: $field_ty,
+                    )*
+                )?
+            }
+        }
+        $crate::theming::macros::paste! {
             pub trait [<$name ThemePartialExt>] {
                 $($(
                     $(#[$field_attrs])*
                     fn $field_name(self, $field_name: impl Into<$field_ty>) -> Self;
                 )*)?
             }
-
         }
         $crate::define_theme! {
             @ext_impls
@@ -145,6 +175,36 @@ macro_rules! define_theme {
             [ $($theme_field)+ ]
             $name ;
             $($( $(#[$field_attrs])* $field_name : $field_ty , )*)?
+        }
+    };
+
+    // Skips the auto-generated `ThemePartialExt` trait.
+    (
+        $(#[$attrs:meta])*
+        %[no_ext]
+        $(%[component$($component_attr_control:tt)?])?
+        pub $name:ident {
+            $(
+                %[fields$($cows_attr_control:tt)?]
+                $(
+                    $(#[$field_attrs:meta])*
+                    $field_name:ident: $field_ty:ty,
+                )*
+            )?
+    }) => {
+        $crate::define_theme! {
+            @types
+            $(#[$attrs])*
+            $(%[component$($component_attr_control)?])?
+            pub $name {
+                $(
+                    %[fields$($cows_attr_control)?]
+                    $(
+                        $(#[$field_attrs])*
+                        $field_name: $field_ty,
+                    )*
+                )?
+            }
         }
     };
 

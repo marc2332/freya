@@ -68,6 +68,7 @@ use crate::{
         macros::Preference,
     },
     tooltip::TooltipThemePreference,
+    typography::TypographyThemePreference,
 };
 
 pub const LIGHT_COLORS: ColorsSheet = ColorsSheet {
@@ -157,6 +158,16 @@ pub const DARK_COLORS: ColorsSheet = ColorsSheet {
 };
 
 fn register_base_component_themes(theme: &mut Theme) {
+    theme.set(
+        "typography",
+        TypographyThemePreference {
+            title: Preference::Specific(24.0),
+            subtitle: Preference::Specific(18.0),
+            body: Preference::Specific(16.0),
+            caption: Preference::Specific(12.0),
+            overline: Preference::Specific(11.0),
+        },
+    );
     theme.set(
         "button_layout",
         ButtonLayoutThemePreference {
