@@ -433,9 +433,7 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
             if clicking_scrollbar.is_some() {
                 e.prevent_default();
                 timeout.reset();
-                if !a11y_id.is_focused() {
-                    a11y_id.request_focus();
-                }
+                a11y_id.request_focus();
             }
         };
 
