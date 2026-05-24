@@ -130,6 +130,6 @@ impl Component for AndroidRoot {
             }
         });
 
-        rect().expanded().child(self.inner.clone())
+        self.inner.clone()
     }
 }
