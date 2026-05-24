@@ -170,12 +170,6 @@ impl Component for CodeEditor {
         let line_height = (font_size * line_height).floor();
         let lines_len = editor_data.metrics.syntax_blocks.len();
 
-        let on_pointer_down = move |e: Event<PointerEventData>| {
-            e.prevent_default();
-            e.stop_propagation();
-            a11y_id.request_focus();
-        };
-
         let on_key_up = {
             let mut editor = editor.clone();
             let font_family = font_family.clone();
@@ -279,7 +273,6 @@ impl Component for CodeEditor {
                 el.on_key_down(on_key_down).on_key_up(on_key_up)
             })
             .on_global_pointer_press(on_global_pointer_press)
-            .on_pointer_down(on_pointer_down)
             .child(
                 VirtualScrollView::new(move |line_index, _| {
                     EditorLineUI {
@@ -292,6 +285,7 @@ impl Component for CodeEditor {
                         show_whitespace,
                         font_family: font_family.clone(),
                         theme: theme.clone(),
+                        a11y_id,
                     }
                     .into()
                 })
