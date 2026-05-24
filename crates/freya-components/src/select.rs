@@ -133,6 +133,8 @@ impl Component for Select {
         let focus = use_focus(a11y_id);
         let mut status = use_state(SelectStatus::default);
         let mut open = use_state(|| false);
+        let mut button_area = use_state(|| None::<Area>);
+        let mut list_size = use_state(|| None::<Size2D>);
         use_provide_context(|| MenuGroup { group_id: a11y_id });
 
         let animation = use_animation(move |conf| {
@@ -217,7 +219,24 @@ impl Component for Select {
             _ => {}
         };
 
-        let (scale, opacity, offset_y) = animation.read().value();
+        let (scale, opacity, slide) = animation.read().value();
+
+        let offset_y = match (button_area(), list_size()) {
+            (Some(button), Some(list)) => {
+                let root_height = Platform::get().root_size.peek().height;
+                let space_below = root_height - button.max_y();
+                let space_above = button.min_y();
+                let flips = list.height > space_below && list.height <= space_above;
+                if flips {
+                    -(button.height() + list.height) - slide
+                } else {
+                    slide
+                }
+            }
+            _ => slide,
+        };
+
+        let opacity = if list_size().is_some() { opacity } else { 0. };
 
         let background = match *status.read() {
             SelectStatus::Hovering => theme.hover_background,
@@ -248,6 +267,9 @@ impl Component for Select {
                     .on_press(on_press)
                     .on_global_key_down(on_global_key_down)
                     .on_global_pointer_press(on_global_pointer_press)
+                    .on_sized(move |e: Event<SizedEventData>| {
+                        button_area.set_if_modified(Some(e.area));
+                    })
                     .width(theme.width)
                     .margin(theme.margin)
                     .background(background)
@@ -269,8 +291,11 @@ impl Component for Select {
                 rect().height(Size::px(0.)).width(Size::px(0.)).child(
                     rect()
                         .width(Size::window_percent(100.))
-                        .margin(Gaps::new(4., 0., 0., 0.))
+                        .margin(Gaps::new(4., 0., 4., 0.))
                         .offset_y(offset_y)
+                        .on_sized(move |e: Event<SizedEventData>| {
+                            list_size.set_if_modified(Some(e.area.size));
+                        })
                         .child(
                             rect()
                                 .layer(Layer::Overlay)
