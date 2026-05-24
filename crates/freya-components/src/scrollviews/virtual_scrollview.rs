@@ -377,6 +377,7 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
                     dragging_content.set(Some(coords));
                     e.prevent_default();
                     timeout.reset();
+                    a11y_id.request_focus();
                     return;
                 } else if let Some(origin) = drag_origin() {
                     let coords = e.global_location();
@@ -397,6 +398,7 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
                         dragging_content.set(Some(coords));
                         e.prevent_default();
                         timeout.reset();
+                        a11y_id.request_focus();
                     }
                     return;
                 }
@@ -519,8 +521,6 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
         let on_pointer_down = move |e: Event<PointerEventData>| {
             if drag_scrolling {
                 drag_origin.set(Some(e.global_location()));
-                a11y_id.request_focus();
-                timeout.reset();
             }
         };
 

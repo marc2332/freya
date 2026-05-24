@@ -130,16 +130,6 @@ impl Component for AndroidRoot {
             }
         });
 
-        let on_global_pointer_down = move |_: Event<PointerEventData>| {
-            let platform = Platform::get();
-            if let Err(err) = platform.hide_keyboard() {
-                tracing::error!("Failed to hide soft keyboard: {err:?}");
-            }
-        };
-
-        rect()
-            .expanded()
-            .on_global_pointer_down(on_global_pointer_down)
-            .child(self.inner.clone())
+        rect().expanded().child(self.inner.clone())
     }
 }

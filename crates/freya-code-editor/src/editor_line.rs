@@ -29,6 +29,7 @@ pub struct EditorLineUI {
     pub(crate) show_whitespace: bool,
     pub(crate) font_family: Cow<'static, str>,
     pub(crate) theme: Readable<EditorTheme>,
+    pub(crate) a11y_id: AccessibilityId,
 }
 
 impl Component for EditorLineUI {
@@ -46,6 +47,7 @@ impl Component for EditorLineUI {
             show_whitespace,
             font_family,
             theme,
+            a11y_id,
         } = self.clone();
 
         let holder = use_state(ParagraphHolder::default);
@@ -59,11 +61,11 @@ impl Component for EditorLineUI {
         let gutter_width = font_size * 5.0;
         let is_line_selected = editor_data.cursor_row() == line_index;
 
-        let on_pointer_down = {
+        let on_tap = {
             let mut editor = editor.clone();
             let font_family = font_family.clone();
-            move |e: Event<PointerEventData>| {
-                editor.write_if(|mut editor_editor| {
+            move |e: Event<StartPressEventData>| {
+                let processed = editor.write_if(|mut editor_editor| {
                     editor_editor.process(
                         font_size,
                         &font_family,
@@ -74,6 +76,9 @@ impl Component for EditorLineUI {
                         },
                     )
                 });
+                if processed {
+                    a11y_id.request_focus();
+                }
             }
         };
 
@@ -137,8 +142,8 @@ impl Component for EditorLineUI {
             .child(
                 paragraph()
                     .holder(holder.read().clone())
-                    .on_pointer_down(on_pointer_down)
                     .on_pointer_move(on_pointer_move)
+                    .on_start_press(on_tap)
                     .cursor_color(theme.cursor)
                     .cursor_style(CursorStyle::Block)
                     .cursor_index(cursor_index)

@@ -7,6 +7,7 @@ use std::{
 };
 
 use paste::paste;
+use ragnarok::CursorPoint;
 use rustc_hash::{
     FxHashMap,
     FxHasher,
@@ -320,13 +321,11 @@ pub trait EventHandlersExt: Sized {
         self.on_pointer_press({
             let on_press = on_press.clone();
             move |e: Event<PointerEventData>| {
-                let event = e.try_map(|d| match d {
-                    PointerEventData::Mouse(m) => Some(PressEventData::Mouse(m)),
-                    PointerEventData::Touch(t) => Some(PressEventData::Touch(t)),
+                let event = e.map(|d| match d {
+                    PointerEventData::Mouse(m) => PressEventData::Mouse(m),
+                    PointerEventData::Touch(t) => PressEventData::Touch(t),
                 });
-                if let Some(event) = event {
-                    on_press.call(event);
-                }
+                on_press.call(event);
             }
         })
         .on_key_down(move |e: Event<KeyboardEventData>| {
@@ -334,6 +333,77 @@ pub trait EventHandlersExt: Sized {
                 on_press.call(e.map(PressEventData::Keyboard))
             }
         })
+    }
+    /// Gets triggered when:
+    /// - **Started clicking**: There is a `MouseDown` event (Left button)
+    /// - **Started touching**: There is a `TouchStart` event
+    fn on_start_press(
+        self,
+        on_start_press: impl Into<EventHandler<Event<StartPressEventData>>>,
+    ) -> Self {
+        let on_start_press = on_start_press.into();
+        if cfg!(target_os = "android") {
+            self.on_pointer_press({
+                let on_start_press = on_start_press.clone();
+                move |e: Event<PointerEventData>| {
+                    let event = e.try_map(|d| match d {
+                        PointerEventData::Mouse(m) if m.button == Some(MouseButton::Left) => {
+                            Some(StartPressEventData::Mouse(m))
+                        }
+                        PointerEventData::Touch(t) => Some(StartPressEventData::Touch(t)),
+                        _ => None,
+                    });
+                    if let Some(event) = event {
+                        on_start_press.call(event);
+                    }
+                }
+            })
+        } else {
+            self.on_pointer_down({
+                let on_start_press = on_start_press.clone();
+                move |e: Event<PointerEventData>| {
+                    let event = e.try_map(|d| match d {
+                        PointerEventData::Mouse(m) if m.button == Some(MouseButton::Left) => {
+                            Some(StartPressEventData::Mouse(m))
+                        }
+                        PointerEventData::Touch(t) => Some(StartPressEventData::Touch(t)),
+                        _ => None,
+                    });
+                    if let Some(event) = event {
+                        on_start_press.call(event);
+                    }
+                }
+            })
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum StartPressEventData {
+    Mouse(MouseEventData),
+    Touch(TouchEventData),
+}
+
+impl StartPressEventData {
+    pub fn global_location(&self) -> CursorPoint {
+        match self {
+            Self::Mouse(m) => m.global_location,
+            Self::Touch(t) => t.global_location,
+        }
+    }
+
+    pub fn element_location(&self) -> CursorPoint {
+        match self {
+            Self::Mouse(m) => m.element_location,
+            Self::Touch(t) => t.element_location,
+        }
+    }
+
+    pub fn button(&self) -> Option<MouseButton> {
+        match self {
+            Self::Mouse(m) => m.button,
+            Self::Touch(_) => None,
+        }
     }
 }
 
