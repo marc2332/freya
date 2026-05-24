@@ -143,7 +143,7 @@ impl Component for EditorLineUI {
                 paragraph()
                     .holder(holder.read().clone())
                     .on_pointer_move(on_pointer_move)
-                    .on_start_press(on_tap)
+                    .on_focus_press(on_tap)
                     .cursor_color(theme.cursor)
                     .cursor_style(CursorStyle::Block)
                     .cursor_index(cursor_index)

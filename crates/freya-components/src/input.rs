@@ -454,7 +454,7 @@ impl Component for Input {
             editable.process_event(EditableEvent::KeyUp { key: &e.key });
         };
 
-        let on_input_start_press = move |e: Event<StartPressEventData>| {
+        let on_input_focus_press = move |e: Event<StartPressEventData>| {
             e.stop_propagation();
             e.prevent_default();
             is_dragging.set(true);
@@ -472,7 +472,7 @@ impl Component for Input {
             a11y_id.request_focus();
         };
 
-        let on_start_press = move |e: Event<StartPressEventData>| {
+        let on_focus_press = move |e: Event<StartPressEventData>| {
             e.stop_propagation();
             e.prevent_default();
             is_dragging.set(true);
@@ -608,7 +608,7 @@ impl Component for Input {
             .maybe(self.enabled, |el| {
                 el.on_key_up(on_key_up)
                     .on_key_down(on_key_down)
-                    .on_start_press(on_input_start_press)
+                    .on_focus_press(on_input_focus_press)
                     .on_ime_preedit(on_ime_preedit)
                     .on_pointer_press(on_pointer_press)
                     .on_global_pointer_press(on_global_pointer_press)
@@ -641,7 +641,7 @@ impl Component for Input {
                             .min_width(Size::func(move |context| {
                                 Some(context.parent - theme_layout.inner_margin.horizontal())
                             }))
-                            .maybe(self.enabled, |el| el.on_start_press(on_start_press))
+                            .maybe(self.enabled, |el| el.on_focus_press(on_focus_press))
                             .margin(theme_layout.inner_margin)
                             .cursor_index(cursor_index)
                             .cursor_color(cursor_color)

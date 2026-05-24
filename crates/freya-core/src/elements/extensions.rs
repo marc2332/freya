@@ -336,15 +336,17 @@ pub trait EventHandlersExt: Sized {
     }
     /// Gets triggered when:
     /// - **Started clicking**: There is a `MouseDown` event (Left button)
-    /// - **Started touching**: There is a `TouchStart` event
-    fn on_start_press(
+    /// - **Touched**: There is a `TouchEnd` event in the same element that there had been a `TouchStart` just before
+    ///
+    /// This event is intended to focus elements.
+    fn on_focus_press(
         self,
-        on_start_press: impl Into<EventHandler<Event<StartPressEventData>>>,
+        on_focus_press: impl Into<EventHandler<Event<StartPressEventData>>>,
     ) -> Self {
-        let on_start_press = on_start_press.into();
+        let on_focus_press = on_focus_press.into();
         if cfg!(target_os = "android") {
             self.on_pointer_press({
-                let on_start_press = on_start_press.clone();
+                let on_focus_press = on_focus_press.clone();
                 move |e: Event<PointerEventData>| {
                     let event = e.try_map(|d| match d {
                         PointerEventData::Mouse(m) if m.button == Some(MouseButton::Left) => {
@@ -354,13 +356,13 @@ pub trait EventHandlersExt: Sized {
                         _ => None,
                     });
                     if let Some(event) = event {
-                        on_start_press.call(event);
+                        on_focus_press.call(event);
                     }
                 }
             })
         } else {
             self.on_pointer_down({
-                let on_start_press = on_start_press.clone();
+                let on_focus_press = on_focus_press.clone();
                 move |e: Event<PointerEventData>| {
                     let event = e.try_map(|d| match d {
                         PointerEventData::Mouse(m) if m.button == Some(MouseButton::Left) => {
@@ -370,7 +372,7 @@ pub trait EventHandlersExt: Sized {
                         _ => None,
                     });
                     if let Some(event) = event {
-                        on_start_press.call(event);
+                        on_focus_press.call(event);
                     }
                 }
             })
