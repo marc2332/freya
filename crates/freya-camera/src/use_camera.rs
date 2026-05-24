@@ -33,10 +33,7 @@ use crate::{
 
 /// A handle to a running camera, produced by [`use_camera`] or
 /// [`Camera::create`].
-///
-/// The handle is `Copy` and can be passed freely to child components, including
-/// [`CameraViewer`](crate::camera_viewer::CameraViewer). The camera is closed
-/// automatically when the scope where the handle was created is dropped.
+/// The camera is closed automatically when the scope where the handle was created is dropped.
 #[derive(Clone, Copy, PartialEq)]
 pub struct Camera {
     /// The latest frame produced by the camera.
