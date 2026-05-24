@@ -345,35 +345,29 @@ pub trait EventHandlersExt: Sized {
     ) -> Self {
         let on_focus_press = on_focus_press.into();
         if cfg!(target_os = "android") {
-            self.on_pointer_press({
-                let on_focus_press = on_focus_press.clone();
-                move |e: Event<PointerEventData>| {
-                    let event = e.try_map(|d| match d {
-                        PointerEventData::Mouse(m) if m.button == Some(MouseButton::Left) => {
-                            Some(StartPressEventData::Mouse(m))
-                        }
-                        PointerEventData::Touch(t) => Some(StartPressEventData::Touch(t)),
-                        _ => None,
-                    });
-                    if let Some(event) = event {
-                        on_focus_press.call(event);
+            self.on_pointer_press(move |e: Event<PointerEventData>| {
+                let event = e.try_map(|d| match d {
+                    PointerEventData::Mouse(m) if m.button == Some(MouseButton::Left) => {
+                        Some(StartPressEventData::Mouse(m))
                     }
+                    PointerEventData::Touch(t) => Some(StartPressEventData::Touch(t)),
+                    _ => None,
+                });
+                if let Some(event) = event {
+                    on_focus_press.call(event);
                 }
             })
         } else {
-            self.on_pointer_down({
-                let on_focus_press = on_focus_press.clone();
-                move |e: Event<PointerEventData>| {
-                    let event = e.try_map(|d| match d {
-                        PointerEventData::Mouse(m) if m.button == Some(MouseButton::Left) => {
-                            Some(StartPressEventData::Mouse(m))
-                        }
-                        PointerEventData::Touch(t) => Some(StartPressEventData::Touch(t)),
-                        _ => None,
-                    });
-                    if let Some(event) = event {
-                        on_focus_press.call(event);
+            self.on_pointer_down(move |e: Event<PointerEventData>| {
+                let event = e.try_map(|d| match d {
+                    PointerEventData::Mouse(m) if m.button == Some(MouseButton::Left) => {
+                        Some(StartPressEventData::Mouse(m))
                     }
+                    PointerEventData::Touch(t) => Some(StartPressEventData::Touch(t)),
+                    _ => None,
+                });
+                if let Some(event) = event {
+                    on_focus_press.call(event);
                 }
             })
         }
