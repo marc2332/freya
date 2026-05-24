@@ -49,10 +49,6 @@ pub struct Camera {
 
 impl Camera {
     /// Open a camera and start streaming frames into reactive state.
-    ///
-    /// Must be called from within a Freya render context (typically through
-    /// [`use_camera`]). The camera is closed when the surrounding scope is
-    /// dropped.
     pub fn create(config: CameraConfig) -> Self {
         let mut frame: State<Option<ImageHolder>> = State::create(None);
         let mut info: State<Option<StreamInfo>> = State::create(None);
