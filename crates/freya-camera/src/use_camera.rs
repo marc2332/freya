@@ -88,8 +88,6 @@ impl Camera {
 /// Open a camera and return a [`Camera`] handle.
 ///
 /// The `init` closure is invoked once on mount to produce the [`CameraConfig`].
-/// To switch to a different camera, recreate the component (for example by
-/// changing its key) so the hook runs again.
 ///
 /// # Example
 ///
