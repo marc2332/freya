@@ -454,7 +454,7 @@ impl Component for Input {
             editable.process_event(EditableEvent::KeyUp { key: &e.key });
         };
 
-        let on_input_focus_press = move |e: Event<StartPressEventData>| {
+        let on_input_focus_press = move |e: Event<FocusPressEventData>| {
             e.stop_propagation();
             e.prevent_default();
             is_dragging.set(true);
@@ -472,7 +472,7 @@ impl Component for Input {
             a11y_id.request_focus();
         };
 
-        let on_focus_press = move |e: Event<StartPressEventData>| {
+        let on_focus_press = move |e: Event<FocusPressEventData>| {
             e.stop_propagation();
             e.prevent_default();
             is_dragging.set(true);

@@ -341,16 +341,16 @@ pub trait EventHandlersExt: Sized {
     /// This event is intended to focus elements.
     fn on_focus_press(
         self,
-        on_focus_press: impl Into<EventHandler<Event<StartPressEventData>>>,
+        on_focus_press: impl Into<EventHandler<Event<FocusPressEventData>>>,
     ) -> Self {
         let on_focus_press = on_focus_press.into();
         if cfg!(target_os = "android") {
             self.on_pointer_press(move |e: Event<PointerEventData>| {
                 let event = e.try_map(|d| match d {
                     PointerEventData::Mouse(m) if m.button == Some(MouseButton::Left) => {
-                        Some(StartPressEventData::Mouse(m))
+                        Some(FocusPressEventData::Mouse(m))
                     }
-                    PointerEventData::Touch(t) => Some(StartPressEventData::Touch(t)),
+                    PointerEventData::Touch(t) => Some(FocusPressEventData::Touch(t)),
                     _ => None,
                 });
                 if let Some(event) = event {
@@ -361,9 +361,9 @@ pub trait EventHandlersExt: Sized {
             self.on_pointer_down(move |e: Event<PointerEventData>| {
                 let event = e.try_map(|d| match d {
                     PointerEventData::Mouse(m) if m.button == Some(MouseButton::Left) => {
-                        Some(StartPressEventData::Mouse(m))
+                        Some(FocusPressEventData::Mouse(m))
                     }
-                    PointerEventData::Touch(t) => Some(StartPressEventData::Touch(t)),
+                    PointerEventData::Touch(t) => Some(FocusPressEventData::Touch(t)),
                     _ => None,
                 });
                 if let Some(event) = event {
@@ -375,12 +375,12 @@ pub trait EventHandlersExt: Sized {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum StartPressEventData {
+pub enum FocusPressEventData {
     Mouse(MouseEventData),
     Touch(TouchEventData),
 }
 
-impl StartPressEventData {
+impl FocusPressEventData {
     pub fn global_location(&self) -> CursorPoint {
         match self {
             Self::Mouse(m) => m.global_location,

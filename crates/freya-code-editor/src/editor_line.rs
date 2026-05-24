@@ -64,7 +64,7 @@ impl Component for EditorLineUI {
         let on_tap = {
             let mut editor = editor.clone();
             let font_family = font_family.clone();
-            move |e: Event<StartPressEventData>| {
+            move |e: Event<FocusPressEventData>| {
                 let processed = editor.write_if(|mut editor_editor| {
                     editor_editor.process(
                         font_size,
