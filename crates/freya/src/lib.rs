@@ -222,6 +222,7 @@ pub mod components {
         },
         tile::*,
         tooltip::*,
+        typography::*,
     };
 }
 
