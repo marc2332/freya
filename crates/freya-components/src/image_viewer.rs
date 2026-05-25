@@ -17,8 +17,18 @@ use freya_core::{
     prelude::*,
 };
 use freya_engine::prelude::{
+    AlphaType,
+    ColorType,
+    Data,
+    ISize,
+    ImageInfo,
     SkData,
     SkImage,
+    raster_from_data,
+};
+use torin::prelude::{
+    Size,
+    Size2D,
 };
 #[cfg(feature = "remote-asset")]
 use ureq::http::Uri;
@@ -148,8 +158,14 @@ impl Hash for ImageSource {
     }
 }
 
+/// Integer-pixel decode target. Shares the unit of [`Size2D`].
+pub type DecodeSize = euclid::Size2D<u32, ()>;
+
 impl ImageSource {
-    pub async fn bytes(&self) -> anyhow::Result<(SkImage, Bytes)> {
+    pub async fn bytes(
+        &self,
+        decode_size: Option<DecodeSize>,
+    ) -> anyhow::Result<(SkImage, Bytes)> {
         let source = self.clone();
         blocking::unblock(move || {
             let bytes = match source {
@@ -162,12 +178,88 @@ impl ImageSource {
                 Self::Path(path) => fs::read(path).map(Bytes::from)?,
                 Self::Bytes(_, bytes) => bytes,
             };
+
+            // The image-crate path drops the codec's color space; only take it
+            // when the caller asked for downsampling.
+            if let Some(target) = decode_size
+                && let Some(image) = Self::downsample(&bytes, target)?
+            {
+                return Ok((image, bytes));
+            }
+
             let image = SkImage::from_encoded(unsafe { SkData::new_bytes(&bytes) })
                 .context("Failed to decode Image.")?;
             let image = image.make_raster_image(None, None).unwrap_or(image);
             Ok((image, bytes))
         })
         .await
+    }
+
+    /// Downscale to fit within `target`, preserving aspect ratio. Returns
+    /// `Ok(None)` when the natural size already fits.
+    fn downsample(bytes: &[u8], target: DecodeSize) -> anyhow::Result<Option<SkImage>> {
+        use std::io::Cursor;
+
+        use image::ImageReader;
+
+        let reader = || {
+            ImageReader::new(Cursor::new(bytes))
+                .with_guessed_format()
+                .context("Failed to guess image format.")
+        };
+
+        let (natural_w, natural_h) = reader()?
+            .into_dimensions()
+            .context("Failed to read image dimensions.")?;
+
+        if natural_w <= target.width && natural_h <= target.height {
+            return Ok(None);
+        }
+
+        let rgba = reader()?
+            .decode()
+            .context("Failed to decode Image.")?
+            .thumbnail(target.width, target.height)
+            .to_rgba8();
+        let (w, h) = rgba.dimensions();
+        let info = ImageInfo::new(
+            ISize::new(w as i32, h as i32),
+            ColorType::RGBA8888,
+            AlphaType::Unpremul,
+            None,
+        );
+        raster_from_data(&info, Data::new_copy(&rgba), (w * 4) as usize)
+            .map(Some)
+            .context("Failed to wrap downsampled image as raster.")
+    }
+}
+
+/// How an [`ImageViewer`] picks its decode dimensions. Decoding at the target
+/// display size keeps the cached raster small.
+#[derive(Default, Clone, Debug, PartialEq)]
+pub enum DecodeMode {
+    /// Use the layout's pixel dimensions; fall back to natural size when
+    /// either dimension isn't [`Size::Pixels`].
+    #[default]
+    FromLayout,
+    /// Decode at a specific maximum size, preserving aspect ratio.
+    Custom(Size2D),
+}
+
+impl DecodeMode {
+    fn resolve(&self, layout: &LayoutData) -> Option<DecodeSize> {
+        let size = match self {
+            Self::FromLayout => match (&layout.width, &layout.height) {
+                (Size::Pixels(w), Size::Pixels(h)) => Size2D::new(w.get(), h.get()),
+                _ => return None,
+            },
+            Self::Custom(size) => *size,
+        };
+        // Round so subpixel layout drift doesn't fragment the cache.
+        Some(DecodeSize::new(
+            size.width.round().max(1.) as u32,
+            size.height.round().max(1.) as u32,
+        ))
     }
 }
 
@@ -211,6 +303,7 @@ pub struct ImageViewer {
     accessibility: AccessibilityData,
     effect: EffectData,
     corner_radius: Option<CornerRadius>,
+    decode_mode: DecodeMode,
 
     children: Vec<Element>,
     loading_placeholder: Option<Element>,
@@ -227,6 +320,7 @@ impl ImageViewer {
             accessibility: AccessibilityData::default(),
             effect: EffectData::default(),
             corner_radius: None,
+            decode_mode: DecodeMode::default(),
             children: Vec::new(),
             loading_placeholder: None,
             key: DiffKey::None,
@@ -284,50 +378,49 @@ impl ImageViewer {
         self.loading_placeholder = Some(placeholder.into());
         self
     }
+
+    /// Pick how the image is decoded. See [`DecodeMode`].
+    pub fn decode_mode(mut self, decode_mode: DecodeMode) -> Self {
+        self.decode_mode = decode_mode;
+        self
+    }
 }
 
 impl Component for ImageViewer {
     fn render(&self) -> impl IntoElement {
-        let asset_config = AssetConfiguration::new(&self.source, AssetAge::default());
+        let target = self.decode_mode.resolve(&self.layout);
+        let asset_config = AssetConfiguration::new((&self.source, target), AssetAge::default());
         let asset = use_asset(&asset_config);
         let mut asset_cacher = use_hook(AssetCacher::get);
+        let source = self.source.clone();
 
-        use_side_effect_with_deps(
-            &(self.source.clone(), asset_config),
-            move |(source, asset_config): &(ImageSource, AssetConfiguration)| {
-                // Fetch asset if still pending or errored. The Loading state
-                // guards against duplicate in-flight fetches.
-                if matches!(
-                    asset_cacher.read_asset(asset_config),
-                    Some(Asset::Pending) | Some(Asset::Error(_))
-                ) {
-                    asset_cacher.update_asset(asset_config.clone(), Asset::Loading);
+        use_side_effect_with_deps(&asset_config, move |asset_config: &AssetConfiguration| {
+            // Fetch asset if still pending or errored. The Loading state
+            // guards against duplicate in-flight fetches.
+            let Some(Asset::Pending | Asset::Error(_)) = asset_cacher.read_asset(asset_config)
+            else {
+                return;
+            };
+            asset_cacher.update_asset(asset_config.clone(), Asset::Loading);
 
-                    let source = source.clone();
-                    let asset_config = asset_config.clone();
-                    spawn_forever(async move {
-                        match source.bytes().await {
-                            Ok((image, bytes)) => {
-                                // Image loaded
-                                let image_holder = ImageHolder {
-                                    bytes,
-                                    image: Rc::new(RefCell::new(image)),
-                                };
-                                asset_cacher.update_asset(
-                                    asset_config,
-                                    Asset::Cached(Rc::new(image_holder)),
-                                );
-                            }
-                            Err(err) => {
-                                // Image errored
-                                asset_cacher
-                                    .update_asset(asset_config, Asset::Error(err.to_string()));
-                            }
-                        }
-                    });
+            let source = source.clone();
+            let asset_config = asset_config.clone();
+            spawn_forever(async move {
+                match source.bytes(target).await {
+                    Ok((image, bytes)) => {
+                        let image_holder = ImageHolder {
+                            bytes,
+                            image: Rc::new(RefCell::new(image)),
+                        };
+                        asset_cacher
+                            .update_asset(asset_config, Asset::Cached(Rc::new(image_holder)));
+                    }
+                    Err(err) => {
+                        asset_cacher.update_asset(asset_config, Asset::Error(err.to_string()));
+                    }
                 }
-            },
-        );
+            });
+        });
 
         match asset {
             Asset::Cached(asset) => {
