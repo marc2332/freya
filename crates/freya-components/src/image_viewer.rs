@@ -111,17 +111,13 @@ impl<H: Hash> From<(H, Bytes)> for ImageSource {
 
 impl<H: Hash> From<(H, &'static [u8])> for ImageSource {
     fn from((id, bytes): (H, &'static [u8])) -> Self {
-        let mut hasher = DefaultHasher::default();
-        id.hash(&mut hasher);
-        Self::Bytes(hasher.finish(), Bytes::from_static(bytes))
+        (id, Bytes::from_static(bytes)).into()
     }
 }
 
 impl<const N: usize, H: Hash> From<(H, &'static [u8; N])> for ImageSource {
     fn from((id, bytes): (H, &'static [u8; N])) -> Self {
-        let mut hasher = DefaultHasher::default();
-        id.hash(&mut hasher);
-        Self::Bytes(hasher.finish(), Bytes::from_static(bytes))
+        (id, Bytes::from_static(bytes)).into()
     }
 }
 
@@ -407,51 +403,55 @@ impl Component for ImageViewer {
         let asset_config = AssetConfiguration::new((&self.source, target), self.asset_age.clone());
         let asset = use_asset(&asset_config);
         let mut asset_cacher = use_hook(AssetCacher::get);
-        let source = self.source.clone();
 
-        use_side_effect_with_deps(&asset_config, move |asset_config: &AssetConfiguration| {
-            // Fetch asset if still pending or errored. The Loading state
-            // guards against duplicate in-flight fetches.
-            let Some(Asset::Pending | Asset::Error(_)) = asset_cacher.read_asset(asset_config)
-            else {
-                return;
-            };
-            asset_cacher.update_asset(asset_config.clone(), Asset::Loading);
+        use_side_effect_with_deps(
+            &(self.source.clone(), asset_config, target),
+            move |(source, asset_config, target): &(
+                ImageSource,
+                AssetConfiguration,
+                Option<DecodeSize>,
+            )| {
+                // Fetch asset if still pending or errored. The Loading state
+                // guards against duplicate in-flight fetches.
+                let Some(Asset::Pending | Asset::Error(_)) = asset_cacher.read_asset(asset_config)
+                else {
+                    return;
+                };
+                asset_cacher.update_asset(asset_config.clone(), Asset::Loading);
 
-            let source = source.clone();
-            let asset_config = asset_config.clone();
-            spawn_forever(async move {
-                match source.bytes(target).await {
-                    Ok((image, bytes)) => {
-                        let image_holder = ImageHolder {
-                            bytes,
-                            image: Rc::new(RefCell::new(image)),
-                        };
-                        asset_cacher
-                            .update_asset(asset_config, Asset::Cached(Rc::new(image_holder)));
+                let source = source.clone();
+                let asset_config = asset_config.clone();
+                let target = *target;
+                spawn_forever(async move {
+                    match source.bytes(target).await {
+                        Ok((image, bytes)) => {
+                            let image_holder = ImageHolder {
+                                bytes,
+                                image: Rc::new(RefCell::new(image)),
+                            };
+                            asset_cacher
+                                .update_asset(asset_config, Asset::Cached(Rc::new(image_holder)));
+                        }
+                        Err(err) => {
+                            asset_cacher.update_asset(asset_config, Asset::Error(err.to_string()));
+                        }
                     }
-                    Err(err) => {
-                        asset_cacher.update_asset(asset_config, Asset::Error(err.to_string()));
-                    }
-                }
-            });
-        });
+                });
+            },
+        );
 
         match asset {
-            Asset::Cached(asset) => {
-                let asset = asset.downcast_ref::<ImageHolder>().unwrap().clone();
-                image(asset)
-                    .accessibility(self.accessibility.clone())
-                    .a11y_role(AccessibilityRole::Image)
-                    .layout(self.layout.clone())
-                    .image_data(self.image_data.clone())
-                    .effect(self.effect.clone())
-                    .children(self.children.clone())
-                    .map(self.corner_radius, |img, corner_radius| {
-                        img.corner_radius(corner_radius)
-                    })
-                    .into_element()
-            }
+            Asset::Cached(asset) => image(asset.downcast_ref::<ImageHolder>().unwrap().clone())
+                .accessibility(self.accessibility.clone())
+                .a11y_role(AccessibilityRole::Image)
+                .layout(self.layout.clone())
+                .image_data(self.image_data.clone())
+                .effect(self.effect.clone())
+                .children(self.children.clone())
+                .map(self.corner_radius, |img, corner_radius| {
+                    img.corner_radius(corner_radius)
+                })
+                .into_element(),
             Asset::Pending | Asset::Loading => rect()
                 .layout(self.layout.clone())
                 .center()
