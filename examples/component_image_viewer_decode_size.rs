@@ -26,19 +26,18 @@ const PRESETS: [(&str, DecodeMode); 4] = [
 
 fn app() -> impl IntoElement {
     let mut preset = use_state(|| 0);
-    let (label, mode) = &PRESETS[preset()];
+    let (label, mode) = PRESETS[preset()];
 
     rect()
         .expanded()
-        .cross_align(Alignment::Center)
-        .main_align(Alignment::Center)
+        .center()
         .spacing(16.)
         .child(format!("Decode mode: {label}"))
         .child(
             ImageViewer::new(SOURCE)
                 .width(Size::px(600.))
                 .height(Size::px(400.))
-                .decode_mode(mode.clone()),
+                .decode_mode(mode),
         )
         .child(
             rect()

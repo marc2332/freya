@@ -223,7 +223,7 @@ impl ImageSource {
 }
 
 /// How an [`ImageViewer`] picks its decode dimensions.
-#[derive(Default, Clone, Debug, PartialEq)]
+#[derive(Default, Clone, Debug, PartialEq, Copy)]
 pub enum DecodeMode {
     /// Use the layout's pixel dimensions when both are [`Size::Pixels`].
     #[default]
