@@ -151,7 +151,7 @@ fn single_line_multiple_editors() {
                 let holder = use_state(ParagraphHolder::default);
                 let cursor_col = editor.cursor_col();
                 let line = line.text.to_string();
-                from_fn((), line, move |line| {
+                from_fn(i, line, move |line| {
                     let on_mouse_down = move |e: Event<MouseEventData>| {
                         editable.process_event(EditableEvent::Down {
                             location: e.element_location,
@@ -307,7 +307,7 @@ fn highlights_single_line_multiple_editors() {
             .on_global_key_down(on_global_key_down)
             .children(editor.lines().enumerate().map(move |(i, line)| {
                 let line = line.to_string();
-                from_fn((), line, move |line| {
+                from_fn(i, line, move |line| {
                     let holder = use_state(ParagraphHolder::default);
 
                     let editor = editable.editor().read();
@@ -616,7 +616,7 @@ fn highlights_shift_click_single_line_multiple_editors() {
                     .enumerate()
                     .map(|(i, line)| {
                         let line = line.text.to_string();
-                        from_fn((), line, move |line| {
+                        from_fn(i, line, move |line| {
                             let holder = use_state(ParagraphHolder::default);
                             let highlights = editable
                                 .editor()
@@ -936,7 +936,7 @@ fn double_click_select_word_single_line_multiple_editors() {
             .on_global_key_down(on_global_key_down)
             .children(editor.lines().enumerate().map(move |(i, line)| {
                 let line = line.text.to_string();
-                from_fn((), line, move |line| {
+                from_fn(i, line, move |line| {
                     let holder = use_state(ParagraphHolder::default);
                     let editor = editable.editor().read();
 
@@ -1023,7 +1023,7 @@ fn triple_click_select_line_single_line_multiple_editors() {
             .on_global_key_down(on_global_key_down)
             .children(editor.lines().enumerate().map(move |(i, line)| {
                 let line = line.text.to_string();
-                from_fn((), line, move |line| {
+                from_fn(i, line, move |line| {
                     let holder = use_state(ParagraphHolder::default);
                     let editor = editable.editor().read();
 
