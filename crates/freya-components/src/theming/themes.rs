@@ -68,6 +68,7 @@ use crate::{
         macros::Preference,
     },
     tooltip::TooltipThemePreference,
+    typography::TypographyThemePreference,
 };
 
 pub const LIGHT_COLORS: ColorsSheet = ColorsSheet {
@@ -157,6 +158,16 @@ pub const DARK_COLORS: ColorsSheet = ColorsSheet {
 };
 
 fn register_base_component_themes(theme: &mut Theme) {
+    theme.set(
+        "typography",
+        TypographyThemePreference {
+            title: Preference::Specific(24.0),
+            subtitle: Preference::Specific(18.0),
+            body: Preference::Specific(16.0),
+            caption: Preference::Specific(12.0),
+            overline: Preference::Specific(11.0),
+        },
+    );
     theme.set(
         "button_layout",
         ButtonLayoutThemePreference {
@@ -386,7 +397,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "input",
         InputColorsThemePreference {
             background: Preference::Reference("surface_tertiary"),
-            hover_background: Preference::Reference("background"),
+            focus_background: Preference::Reference("background"),
             color: Preference::Reference("text_primary"),
             placeholder_color: Preference::Reference("text_secondary"),
             border_fill: Preference::Reference("border"),
@@ -397,7 +408,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "filled_input",
         InputColorsThemePreference {
             background: Preference::Reference("primary"),
-            hover_background: Preference::Reference("tertiary"),
+            focus_background: Preference::Reference("tertiary"),
             color: Preference::Reference("text_inverse"),
             placeholder_color: Preference::Reference("text_inverse"),
             border_fill: Preference::Specific(Color::TRANSPARENT),
@@ -408,7 +419,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "flat_input",
         InputColorsThemePreference {
             background: Preference::Specific(Color::TRANSPARENT),
-            hover_background: Preference::Reference("surface_tertiary"),
+            focus_background: Preference::Reference("surface_tertiary"),
             color: Preference::Reference("text_primary"),
             placeholder_color: Preference::Reference("text_secondary"),
             border_fill: Preference::Specific(Color::TRANSPARENT),

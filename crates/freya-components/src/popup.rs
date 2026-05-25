@@ -75,6 +75,10 @@ impl Component for PopupBackground {
 
 /// Floating popup / dialog.
 ///
+/// The popup is shown whenever it has children, and the close animation plays
+/// when the children are removed. Conditionally attach children with
+/// [`MaybeExt::maybe`] or [`MaybeExt::map`].
+///
 /// # Example
 ///
 /// ```rust
@@ -85,20 +89,22 @@ impl Component for PopupBackground {
 ///     rect()
 ///         .child(
 ///             Popup::new()
-///                 .show(show_popup())
 ///                 .width(Size::px(250.))
 ///                 .on_close_request(move |_| show_popup.set(false))
-///                 .child(PopupTitle::new("Title".to_string()))
-///                 .child(PopupContent::new().child("Hello, World!"))
-///                 .child(
-///                     PopupButtons::new().child(
-///                         Button::new()
-///                             .on_press(move |_| show_popup.set(false))
-///                             .expanded()
-///                             .filled()
-///                             .child("Accept"),
-///                     ),
-///                 ),
+///                 .maybe(show_popup(), |popup| {
+///                     popup
+///                         .child(PopupTitle::new("Title".to_string()))
+///                         .child(PopupContent::new().child("Hello, World!"))
+///                         .child(
+///                             PopupButtons::new().child(
+///                                 Button::new()
+///                                     .on_press(move |_| show_popup.set(false))
+///                                     .expanded()
+///                                     .filled()
+///                                     .child("Accept"),
+///                             ),
+///                         )
+///                 }),
 ///         )
 ///         .child(
 ///             Button::new()
@@ -128,7 +134,6 @@ impl Component for PopupBackground {
 pub struct Popup {
     pub(crate) theme: Option<PopupThemePartial>,
     children: Vec<Element>,
-    show: Readable<bool>,
     on_close_request: Option<EventHandler<()>>,
     close_on_escape_key: bool,
     key: DiffKey,
@@ -151,16 +156,10 @@ impl Popup {
         Self {
             theme: None,
             children: vec![],
-            show: true.into(),
             on_close_request: None,
             close_on_escape_key: true,
             key: DiffKey::None,
         }
-    }
-
-    pub fn show(mut self, show: impl Into<Readable<bool>>) -> Self {
-        self.show = show.into();
-        self
     }
 
     pub fn on_close_request(mut self, on_close_request: impl Into<EventHandler<()>>) -> Self {
@@ -177,7 +176,7 @@ impl ChildrenExt for Popup {
 
 impl Component for Popup {
     fn render(&self) -> impl IntoElement {
-        let show = *self.show.read();
+        let show = !self.children.is_empty();
 
         let background_animation = use_animation_with_dependencies(&show, |conf, show| {
             conf.on_creation(OnCreation::Finish);

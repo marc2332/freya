@@ -244,6 +244,28 @@ impl TerminalHandle {
                     vec![0x1b, b'[', ch as u8]
                 }
             }
+            Key::Named(NamedKey::Home) => {
+                self.scroll(i32::MAX);
+                if self.term.borrow().grid().display_offset() != 0 {
+                    return Ok(true);
+                }
+                if shift || ctrl {
+                    format!("\x1b[1;{}H", modifier()).into_bytes()
+                } else {
+                    b"\x1b[H".to_vec()
+                }
+            }
+            Key::Named(NamedKey::End) => {
+                if self.term.borrow().grid().display_offset() != 0 {
+                    self.scroll_to_bottom();
+                    return Ok(true);
+                }
+                if shift || ctrl {
+                    format!("\x1b[1;{}F", modifier()).into_bytes()
+                } else {
+                    b"\x1b[F".to_vec()
+                }
+            }
             Key::Character(ch) => ch.as_bytes().to_vec(),
             Key::Named(NamedKey::Shift) => {
                 self.shift_pressed(true);
@@ -526,15 +548,14 @@ impl TerminalHandle {
     fn point_and_side_at(&self, row: f32, col: f32) -> (Point, Side) {
         let term = self.term.borrow();
         let col = col.max(0.0);
+        let row = (row.max(0.0) as usize).min(term.screen_lines().saturating_sub(1));
+        let column = (col as usize).min(term.columns().saturating_sub(1));
+        let line = row as i32 - term.grid().display_offset() as i32;
         let side = if col.fract() < 0.5 {
             Side::Left
         } else {
             Side::Right
         };
-        let point = Point::new(
-            Line(row.max(0.0) as i32 - term.grid().display_offset() as i32),
-            Column((col as usize).min(term.columns().saturating_sub(1))),
-        );
-        (point, side)
+        (Point::new(Line(line), Column(column)), side)
     }
 }

@@ -1,7 +1,8 @@
 #![cfg_attr(feature = "docs", feature(doc_cfg))]
 
 pub mod accordion;
-pub mod activable_route_context;
+pub mod activable;
+pub mod activable_context;
 pub mod attached;
 pub mod button;
 pub mod cache;
@@ -45,6 +46,7 @@ pub mod tile;
 #[cfg(feature = "titlebar")]
 pub mod titlebar;
 pub mod tooltip;
+pub mod typography;
 
 #[cfg(feature = "remote-asset")]
 pub use ureq::http::Uri;

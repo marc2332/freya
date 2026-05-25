@@ -184,7 +184,8 @@ impl EditableEvent<'_> {
                                 &modifiers,
                                 config.allow_tabs,
                                 config.allow_changes,
-                                config.allow_clipboard,
+                                config.allow_read_clipboard,
+                                config.allow_write_clipboard,
                             );
                             if event.contains(TextEvent::TEXT_CHANGED) {
                                 *dragging.write() = TextDragging::default();
