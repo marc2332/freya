@@ -65,6 +65,7 @@
 //! ## Features flags
 //!
 //! - `all`: Enables all the features listed below
+//! - `winit`: Reexports [freya_winit] and enables the launch entrypoint. Enabled by default.
 //! - `router`: Reexport [freya_router] under [router]
 //! - `i18n`: Reexport [freya_i18n] under [i18n]
 //! - `remote-asset`: Enables support for **HTTP** asset sources for [ImageViewer](components::ImageViewer) and [GifViewer](components::GifViewer) components.
@@ -97,6 +98,8 @@ pub mod prelude {
         Clipboard,
         ClipboardError,
     };
+    #[cfg_attr(feature = "docs", doc(cfg(feature = "winit")))]
+    #[cfg(feature = "winit")]
     pub use freya_winit::{
         WindowDragExt,
         WinitPlatformExt,
@@ -113,6 +116,8 @@ pub mod prelude {
 
     pub use crate::components::*;
 
+    #[cfg_attr(feature = "docs", doc(cfg(feature = "winit")))]
+    #[cfg(feature = "winit")]
     pub fn launch(launch_config: LaunchConfig) {
         #[cfg(feature = "devtools")]
         let launch_config = launch_config.with_plugin(freya_devtools::DevtoolsPlugin::default());
@@ -223,6 +228,7 @@ pub mod components {
         },
         tile::*,
         tooltip::*,
+        typography::*,
     };
 }
 
@@ -263,6 +269,8 @@ pub mod engine {
     pub use freya_engine::*;
 }
 
+#[cfg_attr(feature = "docs", doc(cfg(feature = "winit")))]
+#[cfg(feature = "winit")]
 pub mod winit {
     pub use freya_winit::winit::*;
 }

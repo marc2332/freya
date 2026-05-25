@@ -4,17 +4,17 @@ use freya_animation::prelude::*;
 use freya_components::theming::hooks::get_theme_or_default;
 use freya_core::prelude::*;
 use torin::prelude::{
-    Area,
+    Point2D,
     Position,
     Size,
+    Size2D,
 };
 
 /// A ripple effect instance
 #[derive(Clone, PartialEq)]
 struct RippleInstance {
     id: u64,
-    x: f32,
-    y: f32,
+    center: Point2D,
 }
 
 /// A container that shows a Material Design-style ripple effect when clicked.
@@ -83,7 +83,7 @@ impl Ripple {
     }
 
     /// Set the color of the ripple effect.
-    /// Default is white with transparency.
+    /// Defaults to the theme's primary color.
     pub fn color(mut self, color: impl Into<Color>) -> Self {
         self.color = Some(color.into());
         self
@@ -99,7 +99,7 @@ impl Ripple {
 
 impl Component for Ripple {
     fn render(&self) -> impl IntoElement {
-        let mut container_area = use_state(Area::default);
+        let mut container_size = use_state(Size2D::zero);
         let mut ripples = use_state::<Vec<RippleInstance>>(Vec::new);
         let mut ripple_counter = use_state(|| 0u64);
 
@@ -110,37 +110,33 @@ impl Component for Ripple {
         let duration = self.duration;
 
         let on_pointer_down = move |e: Event<PointerEventData>| {
-            let location = e.element_location();
             let id = ripple_counter();
             *ripple_counter.write() += 1;
 
             ripples.write().push(RippleInstance {
                 id,
-                x: location.x as f32,
-                y: location.y as f32,
+                center: e.element_location().cast(),
             });
         };
 
-        let area = container_area.read();
-        let max_dimension = area.width().max(area.height());
+        let size = container_size();
+        let max_size = size.width.max(size.height) * 2.5;
 
         rect()
             .layout(self.layout.clone())
             .interactive(false)
             .overflow(Overflow::Clip)
             .on_pointer_down(on_pointer_down)
-            .on_sized(move |e: Event<SizedEventData>| container_area.set(e.area))
+            .on_sized(move |e: Event<SizedEventData>| container_size.set(e.area.size))
             .children(self.children.clone())
             .children(ripples.read().iter().map(|ripple| {
                 RippleCircle {
                     id: ripple.id,
-                    x: ripple.x,
-                    y: ripple.y,
+                    center: ripple.center,
                     color,
                     duration,
-                    max_size: max_dimension * 2.5,
+                    max_size,
                     ripples,
-                    key: DiffKey::U64(ripple.id),
                 }
                 .into()
             }))
@@ -154,19 +150,11 @@ impl Component for Ripple {
 #[derive(Clone, PartialEq)]
 struct RippleCircle {
     id: u64,
-    x: f32,
-    y: f32,
+    center: Point2D,
     color: Color,
     duration: Duration,
     max_size: f32,
     ripples: State<Vec<RippleInstance>>,
-    key: DiffKey,
-}
-
-impl KeyExt for RippleCircle {
-    fn write_key(&mut self) -> &mut DiffKey {
-        &mut self.key
-    }
 }
 
 impl Component for RippleCircle {
@@ -180,12 +168,10 @@ impl Component for RippleCircle {
                 conf.on_creation(OnCreation::Run);
 
                 (
-                    // Scale animation: 0 -> max_size
                     AnimNum::new(0., *max_size)
                         .duration(*duration)
                         .function(Function::Expo)
                         .ease(Ease::Out),
-                    // Opacity animation: 0.35 -> 0
                     AnimNum::new(0.35, 0.)
                         .duration(*duration)
                         .function(Function::Linear)
@@ -194,7 +180,6 @@ impl Component for RippleCircle {
             },
         );
 
-        // Remove ripple when animation finishes
         use_side_effect(move || {
             if !*animation.is_running().read() && *animation.has_run_yet().read() {
                 ripples.write().retain(|r| r.id != id);
@@ -202,16 +187,17 @@ impl Component for RippleCircle {
         });
 
         let (size, opacity) = animation.get().value();
-
-        let half_size = size / 2.0;
-        let left = self.x - half_size;
-        let top = self.y - half_size;
+        let half = size / 2.0;
 
         rect()
-            .position(Position::new_absolute().left(left).top(top))
+            .position(
+                Position::new_absolute()
+                    .left(self.center.x - half)
+                    .top(self.center.y - half),
+            )
             .width(Size::px(size))
             .height(Size::px(size))
-            .corner_radius(CornerRadius::new_all(size / 2.0))
+            .corner_radius(CornerRadius::new_all(half))
             .layer(1)
             .background(self.color.with_a((opacity * 255.0) as u8))
     }
