@@ -35,10 +35,12 @@ use crate::{
         LayoutContext,
         RenderContext,
     },
+    elements::paragraph::paint_paragraph_with_fill,
     events::name::EventName,
     layers::Layer,
     prelude::{
         AccessibilityExt,
+        Color,
         ContainerExt,
         EventHandlersExt,
         KeyExt,
@@ -208,7 +210,13 @@ impl ElementExt for LabelElement {
                 let mut font_families = context.text_style_state.font_families.clone();
                 font_families.extend_from_slice(context.fallback_fonts);
 
-                text_style.set_color(context.text_style_state.color);
+                text_style.set_color(
+                    context
+                        .text_style_state
+                        .color
+                        .as_color()
+                        .unwrap_or(Color::WHITE),
+                );
                 text_style.set_font_size(
                     f32::from(context.text_style_state.font_size) * context.scale_factor as f32,
                 );
@@ -288,9 +296,11 @@ impl ElementExt for LabelElement {
         let layout_data = context.layout_node.data.as_ref().unwrap();
         let paragraph = layout_data.downcast_ref::<SkParagraph>().unwrap();
 
-        paragraph.paint(
+        paint_paragraph_with_fill(
+            paragraph,
             context.canvas,
-            context.layout_node.visible_area().origin.to_tuple(),
+            context.layout_node.visible_area().origin,
+            &context.text_style_state.color,
         );
     }
 }

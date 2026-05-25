@@ -84,6 +84,11 @@ freya-code-editor = { path = "./crates/freya-code-editor", version = "0.4.0-rc.1
   "rust",
 ] }
 freya-android = { path = "./crates/freya-android", version = "0.4.0-rc.19" }
+mundy = { version = "0.2.3", default-features = false, features = [
+  "async-io",
+  "callback",
+  "accent-color",
+] }
 
 # core
 generational-box = "0.7"
@@ -100,6 +105,7 @@ ureq = "3.1.4"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 url = "2.5"
+linkify = "0.11"
 open = "5.1"
 rusqlite = { version = "0.32", features = ["bundled"] }
 
@@ -141,6 +147,9 @@ glutin-winit = "0.5.0"
 # Vulkan
 ash = "^0.38"
 ash-window = "0.13.0"
+
+# Software rendering
+softbuffer = "0.4.8"
 
 # accessibility
 accesskit = "0.24.0"

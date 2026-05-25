@@ -50,6 +50,7 @@ impl MetalDriver {
     pub fn new(
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
+        gpu_resource_cache_limit: usize,
     ) -> (Self, Window) {
         let transparent = window_attributes.transparent;
         let window = event_loop
@@ -105,8 +106,10 @@ impl MetalDriver {
             )
         };
 
-        let gr_context =
+        let mut gr_context =
             direct_contexts::make_metal(&backend, None).expect("Could not create Metal context");
+
+        gr_context.set_resource_cache_limit(gpu_resource_cache_limit);
 
         let driver = Self {
             metal_layer,

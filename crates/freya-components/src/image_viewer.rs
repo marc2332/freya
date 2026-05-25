@@ -162,10 +162,7 @@ impl Hash for ImageSource {
 pub type DecodeSize = euclid::Size2D<u32, ()>;
 
 impl ImageSource {
-    pub async fn bytes(
-        &self,
-        decode_size: Option<DecodeSize>,
-    ) -> anyhow::Result<(SkImage, Bytes)> {
+    pub async fn bytes(&self, decode_size: Option<DecodeSize>) -> anyhow::Result<(SkImage, Bytes)> {
         let source = self.clone();
         blocking::unblock(move || {
             let bytes = match source {
@@ -286,7 +283,7 @@ impl DecodeMode {
 /// # use std::path::PathBuf;
 /// # launch_doc(|| {
 /// #   rect().center().expanded().child(ImageViewer::new(("rust-logo", include_bytes!("../../../examples/rust_logo.png"))))
-/// # }, "./images/gallery_image_viewer.png").with_hook(|t| { t.poll(std::time::Duration::from_millis(1), std::time::Duration::from_millis(50)); t.sync_and_update(); }).with_scale_factor(1.).render();
+/// # }, "./images/gallery_image_viewer.png").with_hook(|t| { t.poll(std::time::Duration::from_millis(1), std::time::Duration::from_millis(300)); t.sync_and_update(); }).with_scale_factor(1.).render();
 /// ```
 ///
 /// # Preview
@@ -297,6 +294,7 @@ impl DecodeMode {
 #[derive(PartialEq)]
 pub struct ImageViewer {
     source: ImageSource,
+    asset_age: AssetAge,
 
     layout: LayoutData,
     image_data: ImageData,
@@ -307,6 +305,7 @@ pub struct ImageViewer {
 
     children: Vec<Element>,
     loading_placeholder: Option<Element>,
+    error_renderer: Option<Callback<String, Element>>,
 
     key: DiffKey,
 }
@@ -315,6 +314,7 @@ impl ImageViewer {
     pub fn new(source: impl Into<ImageSource>) -> Self {
         ImageViewer {
             source: source.into(),
+            asset_age: AssetAge::default(),
             layout: LayoutData::default(),
             image_data: ImageData::default(),
             accessibility: AccessibilityData::default(),
@@ -323,6 +323,7 @@ impl ImageViewer {
             decode_mode: DecodeMode::default(),
             children: Vec::new(),
             loading_placeholder: None,
+            error_renderer: None,
             key: DiffKey::None,
         }
     }
@@ -384,12 +385,26 @@ impl ImageViewer {
         self.decode_mode = decode_mode;
         self
     }
+
+    /// Customize how long the image will remain cached after no longer being used.
+    ///
+    /// Defaults to [`AssetAge::default`] (1h).
+    pub fn asset_age(mut self, asset_age: impl Into<AssetAge>) -> Self {
+        self.asset_age = asset_age.into();
+        self
+    }
+
+    /// Custom element rendered when the image fails to load.
+    pub fn error_renderer(mut self, renderer: impl Into<Callback<String, Element>>) -> Self {
+        self.error_renderer = Some(renderer.into());
+        self
+    }
 }
 
 impl Component for ImageViewer {
     fn render(&self) -> impl IntoElement {
         let target = self.decode_mode.resolve(&self.layout);
-        let asset_config = AssetConfiguration::new((&self.source, target), AssetAge::default());
+        let asset_config = AssetConfiguration::new((&self.source, target), self.asset_age.clone());
         let asset = use_asset(&asset_config);
         let mut asset_cacher = use_hook(AssetCacher::get);
         let source = self.source.clone();
@@ -428,7 +443,6 @@ impl Component for ImageViewer {
                 image(asset)
                     .accessibility(self.accessibility.clone())
                     .a11y_role(AccessibilityRole::Image)
-                    .a11y_focusable(true)
                     .layout(self.layout.clone())
                     .image_data(self.image_data.clone())
                     .effect(self.effect.clone())
@@ -447,7 +461,10 @@ impl Component for ImageViewer {
                         .unwrap_or_else(|| CircularLoader::new().into_element()),
                 )
                 .into(),
-            Asset::Error(err) => err.into(),
+            Asset::Error(err) => match &self.error_renderer {
+                Some(renderer) => renderer.call(err),
+                None => err.into(),
+            },
         }
     }
 

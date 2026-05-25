@@ -12,7 +12,6 @@ define_theme! {
     pub CircularLoader {
         %[fields]
         primary_color: Color,
-        inversed_color: Color,
     }
 }
 
@@ -41,12 +40,19 @@ define_theme! {
 pub struct CircularLoader {
     pub(crate) theme: Option<CircularLoaderThemePartial>,
     size: f32,
+    accessibility: AccessibilityData,
     key: DiffKey,
 }
 
 impl KeyExt for CircularLoader {
     fn write_key(&mut self) -> &mut DiffKey {
         &mut self.key
+    }
+}
+
+impl AccessibilityExt for CircularLoader {
+    fn get_accessibility_data(&mut self) -> &mut AccessibilityData {
+        &mut self.accessibility
     }
 }
 
@@ -61,6 +67,7 @@ impl CircularLoader {
         Self {
             size: 32.,
             theme: None,
+            accessibility: AccessibilityData::default(),
             key: DiffKey::None,
         }
     }
@@ -94,7 +101,7 @@ impl Component for CircularLoader {
             </svg>"#
                 .as_bytes(),
         ))
-        .a11y_focusable(true)
+        .accessibility(self.accessibility.clone())
         .a11y_role(AccessibilityRole::ProgressIndicator)
         .width(Size::px(self.size))
         .height(Size::px(self.size))

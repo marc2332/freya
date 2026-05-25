@@ -19,12 +19,13 @@ features = ["all-publish"]
 no-default-features = true
 
 [features]
-default = ["skia-engine"]
+default = ["skia-engine", "winit"]
 # Enable skia-safe
 skia-engine = ["freya-engine/skia-engine"]
 mocked-engine = ["freya-engine/mocked-engine"]
 # Shortcuts
 all = [
+  "winit",
   "router",
   "i18n",
   "remote-asset",
@@ -55,6 +56,7 @@ all-publish = [
 all-bindings = ["all", "dep:freya-testing", "dep:freya-plotters-backend"]
 all-debug = ["all", "dep:freya-testing", "dep:freya-plotters-backend"]
 all-tests = [
+  "winit",
   "router",
   "i18n",
   "remote-asset",
@@ -71,6 +73,7 @@ all-tests = [
 ]
 docs = ["all-debug"]
 # Features
+winit = ["dep:freya-winit"]
 router = ["dep:freya-router", "freya-components/router"]
 remote-asset = ["freya-components/remote-asset"]
 i18n = ["dep:freya-i18n"]
@@ -78,14 +81,14 @@ engine = []
 devtools = ["dep:freya-devtools", "freya-core/devtools"]
 performance = []
 plot = ["dep:plotters", "dep:freya-plotters-backend"]
-hotreload = ["freya-core/hotreload", "freya-winit/hotreload"]
+hotreload = ["winit", "freya-core/hotreload", "freya-winit/hotreload"]
 gif = ["freya-components/gif"]
 calendar = ["freya-components/calendar"]
 markdown = ["freya-components/markdown"]
 sdk = ["dep:freya-sdk"]
-tray = ["freya-winit/tray", "dep:tray-icon"]
+tray = ["winit", "freya-winit/tray", "dep:tray-icon"]
 material-design = ["dep:freya-material-design"]
-hotpath = ["freya-core/hotpath", "freya-winit/hotpath"]
+hotpath = ["winit", "freya-core/hotpath", "freya-winit/hotpath"]
 icons = ["dep:freya-icons"]
 radio = ["dep:freya-radio"]
 query = ["dep:freya-query"]
@@ -93,10 +96,11 @@ webview = ["dep:freya-webview"]
 titlebar = ["freya-components/titlebar"]
 terminal = ["dep:freya-terminal"]
 code-editor = ["dep:freya-code-editor"]
+zoom-shortcuts = ["winit", "freya-winit/zoom-shortcuts"]
 
 [dependencies]
 freya-core = { workspace = true }
-freya-winit = { workspace = true }
+freya-winit = { workspace = true, optional = true }
 torin = { workspace = true }
 freya-edit = { workspace = true }
 freya-clipboard = { workspace = true }

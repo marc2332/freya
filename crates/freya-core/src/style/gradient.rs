@@ -4,6 +4,10 @@ use std::{
         self,
         Debug,
     },
+    hash::{
+        Hash,
+        Hasher,
+    },
 };
 
 use freya_engine::prelude::*;
@@ -16,6 +20,13 @@ use crate::style::color::Color;
 pub struct GradientStop {
     color: Color,
     offset: f32,
+}
+
+impl Hash for GradientStop {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.color.hash(state);
+        self.offset.to_bits().hash(state);
+    }
 }
 
 impl fmt::Display for GradientStop {
@@ -45,6 +56,13 @@ impl<C: Into<Color>> From<(C, f32)> for GradientStop {
 pub struct LinearGradient {
     stops: Vec<GradientStop>,
     angle: f32,
+}
+
+impl Hash for LinearGradient {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.stops.hash(state);
+        self.angle.to_bits().hash(state);
+    }
 }
 
 impl LinearGradient {
@@ -127,6 +145,12 @@ pub struct RadialGradient {
     stops: Vec<GradientStop>,
 }
 
+impl Hash for RadialGradient {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.stops.hash(state);
+    }
+}
+
 impl RadialGradient {
     /// Create an empty [RadialGradient] with defaults.
     pub fn new() -> Self {
@@ -192,6 +216,19 @@ pub struct ConicGradient {
     stops: Vec<GradientStop>,
     angles: Option<(f32, f32)>,
     angle: Option<f32>,
+}
+
+impl Hash for ConicGradient {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.stops.hash(state);
+        if let Some((start, end)) = self.angles {
+            start.to_bits().hash(state);
+            end.to_bits().hash(state);
+        }
+        if let Some(angle) = self.angle {
+            angle.to_bits().hash(state);
+        }
+    }
 }
 
 impl ConicGradient {

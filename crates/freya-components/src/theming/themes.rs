@@ -68,6 +68,7 @@ use crate::{
         macros::Preference,
     },
     tooltip::TooltipThemePreference,
+    typography::TypographyThemePreference,
 };
 
 pub const LIGHT_COLORS: ColorsSheet = ColorsSheet {
@@ -104,7 +105,6 @@ pub const LIGHT_COLORS: ColorsSheet = ColorsSheet {
     text_highlight: Color::from_rgb(38, 89, 170),
 
     // States
-    hover: Color::from_rgb(235, 235, 235),
     focus: Color::from_rgb(225, 225, 255),
     active: Color::from_rgb(200, 200, 200),
     disabled: Color::from_rgb(210, 210, 210),
@@ -148,7 +148,6 @@ pub const DARK_COLORS: ColorsSheet = ColorsSheet {
     text_highlight: Color::from_rgb(96, 145, 224),
 
     // States
-    hover: Color::from_rgb(80, 80, 80),
     focus: Color::from_rgb(100, 100, 120),
     active: Color::from_rgb(70, 70, 70),
     disabled: Color::from_rgb(50, 50, 50),
@@ -159,6 +158,16 @@ pub const DARK_COLORS: ColorsSheet = ColorsSheet {
 };
 
 fn register_base_component_themes(theme: &mut Theme) {
+    theme.set(
+        "typography",
+        TypographyThemePreference {
+            title: Preference::Specific(24.0),
+            subtitle: Preference::Specific(18.0),
+            body: Preference::Specific(16.0),
+            caption: Preference::Specific(12.0),
+            overline: Preference::Specific(11.0),
+        },
+    );
     theme.set(
         "button_layout",
         ButtonLayoutThemePreference {
@@ -193,7 +202,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "button",
         ButtonColorsThemePreference {
             background: Preference::Reference("surface_tertiary"),
-            hover_background: Preference::Reference("hover"),
+            hover_background: Preference::Reference("surface_secondary"),
             border_fill: Preference::Reference("border"),
             focus_border_fill: Preference::Reference("border_focus"),
             color: Preference::Reference("text_primary"),
@@ -213,7 +222,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "outline_button",
         ButtonColorsThemePreference {
             background: Preference::Reference("surface_tertiary"),
-            hover_background: Preference::Reference("hover"),
+            hover_background: Preference::Reference("surface_secondary"),
             border_fill: Preference::Reference("border"),
             focus_border_fill: Preference::Reference("secondary"),
             color: Preference::Reference("primary"),
@@ -257,7 +266,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "outline_card",
         CardColorsThemePreference {
             background: Preference::Reference("surface_tertiary"),
-            hover_background: Preference::Reference("hover"),
+            hover_background: Preference::Reference("surface_secondary"),
             border_fill: Preference::Reference("border"),
             color: Preference::Reference("text_primary"),
             shadow: Preference::Reference("shadow"),
@@ -334,7 +343,8 @@ fn register_base_component_themes(theme: &mut Theme) {
             color: Preference::Reference("text_primary"),
             background: Preference::Reference("surface_tertiary"),
             active_background: Preference::Reference("surface_secondary"),
-            hover_background: Preference::Reference("hover"),
+            hover_background: Preference::Reference("surface_secondary"),
+            focus_border_fill: Preference::Reference("border_focus"),
             corner_radius: Preference::Specific(CornerRadius::new_all(12.)),
             margin: Preference::Specific(Gaps::new_all(0.)),
             padding: Preference::Specific(Gaps::new(8., 12., 8., 12.)),
@@ -360,7 +370,6 @@ fn register_base_component_themes(theme: &mut Theme) {
         "circular_loader",
         CircularLoaderThemePreference {
             primary_color: Preference::Reference("surface_primary"),
-            inversed_color: Preference::Reference("surface_inverse"),
         },
     );
     theme.set(
@@ -388,7 +397,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "input",
         InputColorsThemePreference {
             background: Preference::Reference("surface_tertiary"),
-            hover_background: Preference::Reference("background"),
+            focus_background: Preference::Reference("background"),
             color: Preference::Reference("text_primary"),
             placeholder_color: Preference::Reference("text_secondary"),
             border_fill: Preference::Reference("border"),
@@ -399,7 +408,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "filled_input",
         InputColorsThemePreference {
             background: Preference::Reference("primary"),
-            hover_background: Preference::Reference("tertiary"),
+            focus_background: Preference::Reference("tertiary"),
             color: Preference::Reference("text_inverse"),
             placeholder_color: Preference::Reference("text_inverse"),
             border_fill: Preference::Specific(Color::TRANSPARENT),
@@ -410,7 +419,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "flat_input",
         InputColorsThemePreference {
             background: Preference::Specific(Color::TRANSPARENT),
-            hover_background: Preference::Reference("surface_tertiary"),
+            focus_background: Preference::Reference("surface_tertiary"),
             color: Preference::Reference("text_primary"),
             placeholder_color: Preference::Reference("text_secondary"),
             border_fill: Preference::Specific(Color::TRANSPARENT),
@@ -478,7 +487,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             margin: Preference::Specific(Gaps::new_all(0.)),
             select_background: Preference::Reference("background"),
             background_button: Preference::Reference("surface_tertiary"),
-            hover_background: Preference::Reference("hover"),
+            hover_background: Preference::Reference("surface_secondary"),
             color: Preference::Reference("text_primary"),
             border_fill: Preference::Reference("border"),
             focus_border_fill: Preference::Reference("border_focus"),
@@ -490,6 +499,10 @@ fn register_base_component_themes(theme: &mut Theme) {
         PopupThemePreference {
             background: Preference::Reference("background"),
             color: Preference::Reference("text_primary"),
+            width: Preference::Specific(Size::px(500.)),
+            height: Preference::Specific(Size::auto()),
+            padding: Preference::Specific(Gaps::new_all(8.)),
+            spacing: Preference::Specific(4.),
         },
     );
     theme.set(
@@ -573,9 +586,9 @@ fn register_base_component_themes(theme: &mut Theme) {
         "button_segment",
         ButtonSegmentThemePreference {
             background: Preference::Reference("surface_tertiary"),
-            hover_background: Preference::Reference("hover"),
+            hover_background: Preference::Reference("surface_secondary"),
             disabled_background: Preference::Reference("disabled"),
-            selected_background: Preference::Reference("hover"),
+            selected_background: Preference::Reference("surface_secondary"),
             focus_background: Preference::Reference("surface_secondary"),
             padding: Preference::Specific(Gaps::new(8., 16., 8., 16.)),
             selected_padding: Preference::Specific(Gaps::new(8., 12., 8., 12.)),
@@ -599,7 +612,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         CalendarThemePreference {
             background: Preference::Reference("surface_tertiary"),
             day_background: Preference::Specific(Color::TRANSPARENT),
-            day_hover_background: Preference::Reference("hover"),
+            day_hover_background: Preference::Reference("surface_secondary"),
             day_selected_background: Preference::Reference("surface_primary"),
             color: Preference::Reference("text_primary"),
             day_other_month_color: Preference::Reference("text_placeholder"),
@@ -607,7 +620,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
             padding: Preference::Specific(Gaps::new_all(12.)),
             day_corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
-            nav_button_hover_background: Preference::Reference("hover"),
+            nav_button_hover_background: Preference::Reference("surface_secondary"),
         },
     );
     #[cfg(feature = "titlebar")]
@@ -615,7 +628,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "titlebar_button",
         TitlebarButtonThemePreference {
             background: Preference::Specific(Color::TRANSPARENT),
-            hover_background: Preference::Reference("hover"),
+            hover_background: Preference::Reference("surface_secondary"),
             corner_radius: Preference::Specific(CornerRadius::new_all(0.0)),
             width: Preference::Specific(Size::Pixels(Length::new(46.0))),
             height: Preference::Specific(Size::Fill),
@@ -637,15 +650,35 @@ fn register_base_component_themes(theme: &mut Theme) {
 }
 
 /// Light theme with all built-in component themes registered.
+///
+/// The primary color tracks the OS-level [`AccentColor`] when available; the
+/// secondary and tertiary colors are derived from it (lightened / darkened).
 pub fn light_theme() -> Theme {
-    let mut theme = Theme::new("light", LIGHT_COLORS);
+    build_theme("light", LIGHT_COLORS)
+}
+
+/// Dark theme with all built-in component themes registered.
+///
+/// The primary color tracks the OS-level [`AccentColor`] when available; the
+/// secondary and tertiary colors are derived from it (lightened / darkened).
+pub fn dark_theme() -> Theme {
+    build_theme("dark", DARK_COLORS)
+}
+
+fn build_theme(name: &'static str, mut colors: ColorsSheet) -> Theme {
+    if let Some(primary) = current_accent_color() {
+        colors.primary = primary;
+        colors.secondary = Color::lerp(primary, Color::WHITE, 0.65);
+        colors.tertiary = Color::lerp(primary, Color::BLACK, 0.23);
+    }
+    let mut theme = Theme::new(name, colors);
     register_base_component_themes(&mut theme);
     theme
 }
 
-/// Dark theme with all built-in component themes registered.
-pub fn dark_theme() -> Theme {
-    let mut theme = Theme::new("dark", DARK_COLORS);
-    register_base_component_themes(&mut theme);
-    theme
+fn current_accent_color() -> Option<Color> {
+    let platform: Platform = try_consume_root_context()?;
+    let accent = platform.accent_color.read().0?;
+    let [r, g, b, _] = accent.to_u8_array();
+    Some(Color::from_rgb(r, g, b))
 }

@@ -258,7 +258,7 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
     for VirtualScrollView<D, B>
 {
     fn render(self: &VirtualScrollView<D, B>) -> impl IntoElement {
-        let focus = use_focus();
+        let a11y_id = use_a11y();
         let mut timeout = use_timeout(|| Duration::from_millis(800));
         let mut pressing_shift = use_state(|| false);
         let mut clicking_scrollbar = use_state::<Option<(Axis, f64)>>(|| None);
@@ -377,6 +377,7 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
                     dragging_content.set(Some(coords));
                     e.prevent_default();
                     timeout.reset();
+                    a11y_id.request_focus();
                     return;
                 } else if let Some(origin) = drag_origin() {
                     let coords = e.global_location();
@@ -397,6 +398,7 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
                         dragging_content.set(Some(coords));
                         e.prevent_default();
                         timeout.reset();
+                        a11y_id.request_focus();
                     }
                     return;
                 }
@@ -431,9 +433,7 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
             if clicking_scrollbar.is_some() {
                 e.prevent_default();
                 timeout.reset();
-                if !focus.is_focused() {
-                    focus.request_focus();
-                }
+                a11y_id.request_focus();
             }
         };
 
@@ -519,15 +519,13 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
         let on_pointer_down = move |e: Event<PointerEventData>| {
             if drag_scrolling {
                 drag_origin.set(Some(e.global_location()));
-                focus.request_focus();
-                timeout.reset();
             }
         };
 
         rect()
             .width(layout.width.clone())
             .height(layout.height.clone())
-            .a11y_id(focus.a11y_id())
+            .a11y_id(a11y_id)
             .a11y_focusable(false)
             .a11y_role(AccessibilityRole::ScrollView)
             .a11y_builder(move |node| {

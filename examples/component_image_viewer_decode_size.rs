@@ -14,8 +14,14 @@ const SOURCE: &str = "https://images.pexels.com/photos/842711/pexels-photo-84271
 const PRESETS: [(&str, DecodeMode); 4] = [
     ("FromLayout (default)", DecodeMode::FromLayout),
     ("Custom 64×64", DecodeMode::Custom(Size2D::new(64., 64.))),
-    ("Custom 256×256", DecodeMode::Custom(Size2D::new(256., 256.))),
-    ("Custom 4000×4000", DecodeMode::Custom(Size2D::new(4000., 4000.))),
+    (
+        "Custom 256×256",
+        DecodeMode::Custom(Size2D::new(256., 256.)),
+    ),
+    (
+        "Custom 4000×4000",
+        DecodeMode::Custom(Size2D::new(4000., 4000.)),
+    ),
 ];
 
 fn app() -> impl IntoElement {

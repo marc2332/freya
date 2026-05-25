@@ -61,6 +61,7 @@ use crate::{
         TermSize,
         spawn_pty,
     },
+    url::url_at,
 };
 
 /// Unique identifier for a terminal instance
@@ -241,6 +242,28 @@ impl TerminalHandle {
                     format!("\x1b[1;{}{ch}", modifier()).into_bytes()
                 } else {
                     vec![0x1b, b'[', ch as u8]
+                }
+            }
+            Key::Named(NamedKey::Home) => {
+                self.scroll(i32::MAX);
+                if self.term.borrow().grid().display_offset() != 0 {
+                    return Ok(true);
+                }
+                if shift || ctrl {
+                    format!("\x1b[1;{}H", modifier()).into_bytes()
+                } else {
+                    b"\x1b[H".to_vec()
+                }
+            }
+            Key::Named(NamedKey::End) => {
+                if self.term.borrow().grid().display_offset() != 0 {
+                    self.scroll_to_bottom();
+                    return Ok(true);
+                }
+                if shift || ctrl {
+                    format!("\x1b[1;{}F", modifier()).into_bytes()
+                } else {
+                    b"\x1b[F".to_vec()
                 }
             }
             Key::Character(ch) => ch.as_bytes().to_vec(),
@@ -508,19 +531,31 @@ impl TerminalHandle {
         self.term.borrow().selection_to_string()
     }
 
+    /// URI at viewport `row`/`col` if the cell carries an OSC 8 hyperlink or
+    /// sits inside a detected plain-text URL. See [`Self::mouse_move`] for the
+    /// fractional coordinate convention.
+    pub fn hyperlink_at(&self, row: f32, col: f32) -> Option<String> {
+        let (point, _) = self.point_and_side_at(row, col);
+        let term = self.term.borrow();
+        let grid = term.grid();
+        if let Some(h) = grid[point].hyperlink() {
+            return Some(h.uri().to_owned());
+        }
+        url_at(&grid[point.line][..], point.column.0)
+    }
+
     /// Grid point and cell half (left vs right) for a pointer at fractional cell coordinates.
     fn point_and_side_at(&self, row: f32, col: f32) -> (Point, Side) {
         let term = self.term.borrow();
         let col = col.max(0.0);
+        let row = (row.max(0.0) as usize).min(term.screen_lines().saturating_sub(1));
+        let column = (col as usize).min(term.columns().saturating_sub(1));
+        let line = row as i32 - term.grid().display_offset() as i32;
         let side = if col.fract() < 0.5 {
             Side::Left
         } else {
             Side::Right
         };
-        let point = Point::new(
-            Line(row.max(0.0) as i32 - term.grid().display_offset() as i32),
-            Column((col as usize).min(term.columns().saturating_sub(1))),
-        );
-        (point, side)
+        (Point::new(Line(line), Column(column)), side)
     }
 }

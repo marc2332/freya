@@ -1,6 +1,13 @@
-use std::fmt::{
-    self,
-    Pointer,
+use std::{
+    fmt::{
+        self,
+        Pointer,
+    },
+    hash::{
+        Hash,
+        Hasher,
+    },
+    mem::discriminant,
 };
 
 use freya_engine::prelude::Paint;
@@ -38,6 +45,14 @@ impl Fill {
         }
     }
 
+    /// Returns the inner [Color] when this is a [Fill::Color].
+    pub fn as_color(&self) -> Option<Color> {
+        match self {
+            Fill::Color(color) => Some(*color),
+            _ => None,
+        }
+    }
+
     pub fn apply_to_paint(&self, paint: &mut Paint, area: Area) {
         match &self {
             Fill::Color(color) => {
@@ -62,6 +77,19 @@ impl Fill {
 impl Default for Fill {
     fn default() -> Self {
         Self::Color(Color::default())
+    }
+}
+
+impl Hash for Fill {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        discriminant(self).hash(state);
+        match self {
+            Fill::Color(color) => color.hash(state),
+            Fill::Shader(shader) => shader.hash(state),
+            Fill::LinearGradient(gradient) => gradient.hash(state),
+            Fill::RadialGradient(gradient) => gradient.hash(state),
+            Fill::ConicGradient(gradient) => gradient.hash(state),
+        }
     }
 }
 
