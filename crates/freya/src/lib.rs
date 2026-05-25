@@ -65,7 +65,7 @@
 //! ## Features flags
 //!
 //! - `all`: Enables all the features listed below
-//! - `winit`: Reexports [freya_winit] and enables [`launch`] and the [`winit`] module. Enabled by default.
+//! - `winit`: Reexports [freya_winit] and enables the launch entrypoint. Enabled by default.
 //! - `router`: Reexport [freya_router] under [router]
 //! - `i18n`: Reexport [freya_i18n] under [i18n]
 //! - `remote-asset`: Enables support for **HTTP** asset sources for [ImageViewer](components::ImageViewer) and [GifViewer](components::GifViewer) components.
