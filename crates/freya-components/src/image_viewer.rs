@@ -196,11 +196,11 @@ impl ImageSource {
                 .context("Failed to guess image format.")
         };
 
-        let (natural_w, natural_h) = reader()?
+        let (natural_width, natural_height) = reader()?
             .into_dimensions()
             .context("Failed to read image dimensions.")?;
 
-        if natural_w <= target.width && natural_h <= target.height {
+        if natural_width <= target.width && natural_height <= target.height {
             return Ok(None);
         }
 
@@ -209,14 +209,14 @@ impl ImageSource {
             .context("Failed to decode Image.")?
             .thumbnail(target.width, target.height)
             .to_rgba8();
-        let (w, h) = rgba.dimensions();
+        let (width, height) = rgba.dimensions();
         let info = ImageInfo::new(
-            ISize::new(w as i32, h as i32),
+            ISize::new(width as i32, height as i32),
             ColorType::RGBA8888,
             AlphaType::Unpremul,
             None,
         );
-        raster_from_data(&info, Data::new_copy(&rgba), (w * 4) as usize)
+        raster_from_data(&info, Data::new_copy(&rgba), (width * 4) as usize)
             .map(Some)
             .context("Failed to wrap downsampled image as raster.")
     }
