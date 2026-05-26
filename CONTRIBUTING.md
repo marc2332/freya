@@ -82,7 +82,7 @@ Freya is split in various crates, each with it's own meaning and purpose, here i
 - `ragnarok`: UI events measurer (e.g what event to figure when the user clicks in a coordinate).
 - `pathgraph`: Map to store nested data structures based on the assumption that you always know its location.
 - `freya-components`: Collection of components ready to be used out of the box with in Freya apps (Button, Switch, Slider, Table, ScrollView, etc)
-- `freya-engine`: Simple re-export and mock of all Skia APIs used in freya so Freya docs can be built on docs.rs.
+- `freya-engine`: Simple re-export of all Skia APIs used in freya.
 - `freya-devtools`: Devtools server and plugin for Freya.
 - `freya-devtools-app`: Standalone Freya app to debug or inspect your Freya apps, its powered by `freya-devtools`.
 - `freya-radio`: Global reactive state management based on Topics.

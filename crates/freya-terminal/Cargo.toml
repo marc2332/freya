@@ -12,12 +12,6 @@ categories = ["gui"]
 [lints]
 workspace = true
 
-[package.metadata.docs.rs]
-features = ["freya-engine/mocked-engine"]
-
-[features]
-skia-engine = ["freya-core/skia-engine"]
-
 [dependencies]
 freya-core = { workspace = true }
 freya-engine = { workspace = true }

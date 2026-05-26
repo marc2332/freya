@@ -84,10 +84,6 @@ pub use skia_safe::{
         Gradient,
         Interpolation,
     },
-    gradient_shader::{
-        Flags,
-        GradientShaderColors,
-    },
     graphics::{
         set_resource_cache_single_allocation_byte_limit,
         set_resource_cache_total_bytes_limit,

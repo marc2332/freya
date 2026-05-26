@@ -12,9 +12,6 @@ repository = "https://github.com/marc2332/freya"
 [lints]
 workspace = true
 
-[package.metadata.docs.rs]
-features = ["mocked-engine"]
-
 [dependencies]
 # Core
 generational-box = { workspace = true }
@@ -73,7 +70,7 @@ cursor-icon = "1.2.0"
 freya = { path = "../freya" }
 freya-testing = { path = "../freya-testing" }
 freya-core = { path = "../freya-core", features = ["debug-integrity", "test"] }
-freya-engine = { path = "../freya-engine", features = ["skia-engine"] }
+freya-engine = { path = "../freya-engine" }
 
 [features]
 hotpath = ["hotpath/hotpath", "ragnarok/hotpath"]
@@ -82,5 +79,3 @@ debug-integrity = []
 devtools = ["serde"]
 serde = ["dep:serde"]
 test = []
-mocked-engine = ["freya-engine/mocked-engine"]
-skia-engine = ["freya-engine/skia-engine"]
