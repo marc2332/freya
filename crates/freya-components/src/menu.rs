@@ -6,6 +6,7 @@ use torin::{
         Alignment,
         Area,
         Position,
+        Size2D,
     },
     size::Size,
 };
@@ -229,15 +230,15 @@ impl ComponentOwned for MenuContainer {
     fn render(self) -> impl IntoElement {
         let a11y_id = use_a11y();
         let theme = get_theme!(self.theme, MenuContainerThemePreference, "menu_container");
-        let mut measured = use_state(|| None::<(Area, f32, f32)>);
+        let mut measured = use_state(|| None::<(Area, Size2D)>);
 
         use_provide_context(move || MenuGroup { group_id: a11y_id });
 
-        let (offset_x, offset_y, opacity) = match *measured.read() {
+        let (offset_x, offset_y, opacity) = match measured() {
             None => (0.0, 0.0, 0.0),
-            Some((area, win_w, win_h)) => (
-                overflow_offset(area.origin.x, area.size.width, win_w),
-                overflow_offset(area.origin.y, area.size.height, win_h),
+            Some((area, root_size)) => (
+                overflow_offset(area.origin.x, area.size.width, root_size.width),
+                overflow_offset(area.origin.y, area.size.height, root_size.height),
                 1.0,
             ),
         };
@@ -250,8 +251,8 @@ impl ComponentOwned for MenuContainer {
             .offset_y(offset_y)
             .on_sized(move |e: Event<SizedEventData>| {
                 if measured.peek().is_none() {
-                    let window = Platform::get().root_size.peek();
-                    measured.set(Some((e.area, window.width, window.height)));
+                    let root_size = *Platform::get().root_size.peek();
+                    measured.set(Some((e.area, root_size)));
                 }
             })
             .child(
