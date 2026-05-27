@@ -101,7 +101,7 @@ impl LinearGradient {
         let offsets: Vec<f32> = self.stops.iter().map(|stop| stop.offset).collect();
 
         let grad_colors = Colors::new(&colors[..], Some(&offsets[..]), TileMode::Clamp, None);
-        let grad = Gradient::new(grad_colors, Flags::default());
+        let grad = Gradient::new(grad_colors, Interpolation::default());
 
         let (dy, dx) = (self.angle.to_radians() + FRAC_PI_2).sin_cos();
         let farthest_corner = SkPoint::new(
@@ -183,7 +183,7 @@ impl RadialGradient {
         let center = bounds.center();
 
         let grad_colors = Colors::new(&colors[..], Some(&offsets[..]), TileMode::Clamp, None);
-        let grad = Gradient::new(grad_colors, Flags::default());
+        let grad = Gradient::new(grad_colors, Interpolation::default());
 
         shaders::radial_gradient(
             (
@@ -278,7 +278,7 @@ impl ConicGradient {
             Matrix::rotate_deg_pivot(-90.0 + self.angle.unwrap_or(0.0), (center.x, center.y));
 
         let grad_colors = Colors::new(&colors[..], Some(&offsets[..]), TileMode::Clamp, None);
-        let grad = Gradient::new(grad_colors, Flags::default());
+        let grad = Gradient::new(grad_colors, Interpolation::default());
 
         let (start_angle, end_angle) = self.angles.unwrap_or((0.0, 360.0));
 

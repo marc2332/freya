@@ -3,6 +3,7 @@ use std::{
         CStr,
         CString,
     },
+    ptr,
     sync::Arc,
 };
 
@@ -15,7 +16,7 @@ use ash::{
         swapchain::Device as DeviceSwapchainFns,
     },
     vk::{
-        API_VERSION_1_1,
+        API_VERSION_1_3,
         AccessFlags,
         ApplicationInfo,
         ColorSpaceKHR,
@@ -406,7 +407,7 @@ fn create_instance(
         .application_version(make_api_version(0, 1, 0, 0))
         .engine_name(&engine_name)
         .engine_version(make_api_version(0, 1, 0, 0))
-        .api_version(API_VERSION_1_1);
+        .api_version(API_VERSION_1_3);
 
     let extension_names = enumerate_required_extensions(display_handle.as_raw())?.to_vec();
 
@@ -622,7 +623,7 @@ fn create_gr_context(
                 }
             }
             .map(|f| f as _)
-            .unwrap()
+            .unwrap_or(ptr::null())
         }
     };
 
@@ -635,7 +636,7 @@ fn create_gr_context(
             &get_proc,
         )
     };
-    backend_context.set_max_api_version(vk::Version::new(1, 1, 0));
+    backend_context.set_max_api_version(vk::Version::new(1, 3, 0));
 
     let context_options = ContextOptions::default();
 

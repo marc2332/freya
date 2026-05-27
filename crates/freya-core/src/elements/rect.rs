@@ -134,7 +134,10 @@ impl RectElement {
 
         // Add either the RRect or smoothed path based on whether smoothing is used.
         if corner_radius.smoothing > 0.0 {
-            shadow_path.add_path(&corner_radius.smoothed_path(rounded_rect.with_outset(outset)));
+            shadow_path.add_path(
+                &corner_radius.smoothed_path(rounded_rect.with_outset(outset)),
+                None,
+            );
         } else {
             shadow_path.add_rrect(rounded_rect.with_outset(outset), None, None);
         }
@@ -311,9 +314,9 @@ impl RectElement {
             let mut path = PathBuilder::new();
             path.set_fill_type(SkPathFillType::EvenOdd);
 
-            path.add_path(&outer_corner_radius.smoothed_path(outer_rrect));
+            path.add_path(&outer_corner_radius.smoothed_path(outer_rrect), None);
 
-            path.add_path(&inner_corner_radius.smoothed_path(inner_rrect));
+            path.add_path(&inner_corner_radius.smoothed_path(inner_rrect), None);
 
             let path = path.detach();
             BorderShape::Path(path)
@@ -496,7 +499,7 @@ impl ElementExt for RectElement {
         // Container
         let rounded_rect = self.render_rect(&area, context.scale_factor as f32);
         if corner_radius.smoothing > 0.0 {
-            path.add_path(&corner_radius.smoothed_path(rounded_rect));
+            path.add_path(&corner_radius.smoothed_path(rounded_rect), None);
         } else {
             path.add_rrect(rounded_rect, None, None);
         }
