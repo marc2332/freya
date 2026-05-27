@@ -48,7 +48,7 @@ define_theme! {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CalendarDate {
     pub year: i32,
     pub month: u32,

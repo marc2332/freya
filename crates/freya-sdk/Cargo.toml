@@ -14,13 +14,9 @@ categories = ["gui"]
 [lints]
 workspace = true
 
-[package.metadata.docs.rs]
-features = ["freya-core/mocked-engine"]
-
 [features]
 tokio = ["dep:tokio"]
 all = ["tokio"]
-skia-engine = ["freya-core/skia-engine"]
 
 [dependencies]
 freya-core = { workspace = true }

@@ -71,9 +71,6 @@ pa-ci:
 ba:
     cargo build --all-targets --workspace -F freya/all-debug
 
-bindings:
-    cargo build --package freya --package freya-testing --features "mocked-engine, all-bindings" --no-default-features
-
 dev-app:
     cargo run --package freya-devtools-app
 

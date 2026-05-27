@@ -14,9 +14,6 @@ categories = ["gui", "asynchronous"]
 [lints]
 workspace = true
 
-[features]
-skia-engine = ["freya-core/skia-engine"]
-
 [dependencies]
 freya = { workspace = true, features = ["router", "radio"] }
 freya-core = { workspace = true, features = ["debug-integrity"] }
