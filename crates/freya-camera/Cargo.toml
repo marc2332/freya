@@ -1,0 +1,26 @@
+[package]
+name = "freya-camera"
+version = "0.4.0-rc.19"
+description = "Camera capture support for Freya."
+edition = "2024"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["freya", "camera", "webcam", "video"]
+categories = ["gui", "multimedia::video"]
+
+[lints]
+workspace = true
+
+[dependencies]
+freya-core = { workspace = true }
+freya-engine = { workspace = true }
+nokhwa = { version = "0.10", features = ["input-native"] }
+blocking = { workspace = true }
+bytes = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+freya = { path = "../freya" }

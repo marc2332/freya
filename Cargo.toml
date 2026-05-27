@@ -44,6 +44,7 @@ members = [
   "./crates/freya-webview",
   "./crates/freya-terminal",
   "./crates/freya-code-editor",
+  "./crates/freya-camera",
   "./crates/freya-android",
   "./examples/ai-chat",
   "./examples/state_query_sqlite",
@@ -83,6 +84,7 @@ freya-terminal = { path = "./crates/freya-terminal", version = "0.4.0-rc.19" }
 freya-code-editor = { path = "./crates/freya-code-editor", version = "0.4.0-rc.19", features = [
   "rust",
 ] }
+freya-camera = { path = "./crates/freya-camera", version = "0.4.0-rc.19" }
 freya-android = { path = "./crates/freya-android", version = "0.4.0-rc.19" }
 mundy = { version = "0.2.3", default-features = false, features = [
   "async-io",
@@ -100,6 +102,7 @@ futures-util = "0.3.31"
 futures-channel = "0.3.31"
 futures-lite = "2.6.1"
 async-io = "2.5.0"
+async-channel = "2.5.0"
 blocking = "1.6.2"
 ureq = "3.1.4"
 serde = { version = "1", features = ["derive"] }
