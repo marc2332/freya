@@ -125,7 +125,7 @@ impl<B: Fn(usize, &()) -> Element> VirtualScrollView<(), B> {
             scroll_with_arrows: true,
             scroll_controller: None,
             invert_scroll_wheel: false,
-            drag_scrolling: cfg!(target_os = "android"),
+            drag_scrolling: true,
             key: DiffKey::None,
         }
     }
@@ -146,7 +146,7 @@ impl<B: Fn(usize, &()) -> Element> VirtualScrollView<(), B> {
             scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
             invert_scroll_wheel: false,
-            drag_scrolling: cfg!(target_os = "android"),
+            drag_scrolling: true,
             key: DiffKey::None,
         }
     }
@@ -169,7 +169,7 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
             scroll_with_arrows: true,
             scroll_controller: None,
             invert_scroll_wheel: false,
-            drag_scrolling: cfg!(target_os = "android"),
+            drag_scrolling: true,
             key: DiffKey::None,
         }
     }
@@ -195,7 +195,7 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
             scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
             invert_scroll_wheel: false,
-            drag_scrolling: cfg!(target_os = "android"),
+            drag_scrolling: true,
             key: DiffKey::None,
         }
     }
@@ -517,7 +517,7 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
         };
 
         let on_pointer_down = move |e: Event<PointerEventData>| {
-            if drag_scrolling {
+            if drag_scrolling && matches!(e.data(), PointerEventData::Touch(_)) {
                 drag_origin.set(Some(e.global_location()));
             }
         };
