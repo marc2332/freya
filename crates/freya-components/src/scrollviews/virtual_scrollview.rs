@@ -516,9 +516,9 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
             }
         };
 
-        let on_touch_start = move |e: Event<TouchEventData>| {
-            if drag_scrolling {
-                drag_origin.set(Some(e.global_location));
+        let on_pointer_down = move |e: Event<PointerEventData>| {
+            if drag_scrolling && matches!(e.data(), PointerEventData::Touch(_)) {
+                drag_origin.set(Some(e.global_location()));
             }
         };
 
@@ -540,7 +540,7 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
             .on_key_down(on_key_down)
             .on_global_key_up(on_global_key_up)
             .on_global_key_down(on_global_key_down)
-            .on_touch_start(on_touch_start)
+            .on_pointer_down(on_pointer_down)
             .child(
                 rect()
                     .width(container_width)
