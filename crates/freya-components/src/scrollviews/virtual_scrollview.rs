@@ -377,6 +377,7 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
                     dragging_content.set(Some(coords));
                     e.prevent_default();
                     timeout.reset();
+                    a11y_id.request_focus();
                     return;
                 } else if let Some(origin) = drag_origin() {
                     let coords = e.global_location();
@@ -397,6 +398,7 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
                         dragging_content.set(Some(coords));
                         e.prevent_default();
                         timeout.reset();
+                        a11y_id.request_focus();
                     }
                     return;
                 }
@@ -431,9 +433,7 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
             if clicking_scrollbar.is_some() {
                 e.prevent_default();
                 timeout.reset();
-                if !a11y_id.is_focused() {
-                    a11y_id.request_focus();
-                }
+                a11y_id.request_focus();
             }
         };
 
@@ -519,8 +519,6 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
         let on_touch_start = move |e: Event<TouchEventData>| {
             if drag_scrolling {
                 drag_origin.set(Some(e.global_location));
-                a11y_id.request_focus();
-                timeout.reset();
             }
         };
 

@@ -46,6 +46,7 @@ pub mod tile;
 #[cfg(feature = "titlebar")]
 pub mod titlebar;
 pub mod tooltip;
+pub mod typography;
 
 #[cfg(feature = "remote-asset")]
 pub use ureq::http::Uri;

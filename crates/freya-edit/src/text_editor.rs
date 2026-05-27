@@ -604,7 +604,7 @@ pub trait TextEditor {
                 event.insert(TextEvent::TEXT_CHANGED);
             }
             Key::Character(character) => {
-                let meta_or_ctrl = modifiers.ctrl_or_meta();
+                let meta_or_ctrl = modifiers.contains(Modifiers::ctrl_or_meta());
 
                 match character.as_str() {
                     " " if allow_changes => {
