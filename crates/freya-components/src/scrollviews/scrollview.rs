@@ -395,9 +395,9 @@ impl Component for ScrollView {
             }
         };
 
-        let on_pointer_down = move |e: Event<PointerEventData>| {
+        let on_touch_start = move |e: Event<TouchEventData>| {
             if drag_scrolling {
-                drag_origin.set(Some(e.global_location()));
+                drag_origin.set(Some(e.global_location));
                 a11y_id.request_focus();
                 timeout.reset();
             }
@@ -423,7 +423,7 @@ impl Component for ScrollView {
             .on_key_down(on_key_down)
             .on_global_key_up(on_global_key_up)
             .on_global_key_down(on_global_key_down)
-            .on_pointer_down(on_pointer_down)
+            .on_touch_start(on_touch_start)
             .child(
                 rect()
                     .width(container_width)

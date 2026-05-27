@@ -129,12 +129,9 @@ pub fn scroll_view_drag_scrolling() {
     assert!(!content[3].is_visible());
 
     // Simulate a touch drag: press down on content, drag upward (scroll down)
-    test.press_cursor((100., 400.));
-    test.sync_and_update();
-    test.move_cursor((100., 100.));
-    test.sync_and_update();
-    test.release_cursor((100., 100.));
-    test.sync_and_update();
+    test.press_touch((100., 400.));
+    test.move_touch((100., 100.));
+    test.release_touch((100., 100.));
 
     // After dragging 300px upward, first item should be hidden and last visible
     assert!(!content[0].is_visible());
@@ -165,12 +162,9 @@ pub fn scroll_view_drag_scrolling_release_stops() {
     let content = scrollview.children()[0].children()[0].children();
 
     // Drag down a small amount, then release
-    test.press_cursor((100., 300.));
-    test.sync_and_update();
-    test.move_cursor((100., 200.));
-    test.sync_and_update();
-    test.release_cursor((100., 200.));
-    test.sync_and_update();
+    test.press_touch((100., 300.));
+    test.move_touch((100., 200.));
+    test.release_touch((100., 200.));
 
     // Scrolled 100px: all four items partially in view since content is 800px, viewport 500px
     assert!(content[0].is_visible());
@@ -178,9 +172,8 @@ pub fn scroll_view_drag_scrolling_release_stops() {
     assert!(content[2].is_visible());
     assert!(!content[3].is_visible());
 
-    // Move cursor further after releasing, should NOT scroll further
-    test.move_cursor((100., 50.));
-    test.sync_and_update();
+    // Move touch further after releasing, should NOT scroll further
+    test.move_touch((100., 50.));
 
     // Visibility should remain unchanged since drag ended on release
     assert!(content[0].is_visible());
@@ -218,12 +211,9 @@ pub fn scroll_view_drag_scrolling_horizontal() {
     assert!(!content[3].is_visible());
 
     // Drag left (scroll right) by 300px
-    test.press_cursor((400., 100.));
-    test.sync_and_update();
-    test.move_cursor((100., 100.));
-    test.sync_and_update();
-    test.release_cursor((100., 100.));
-    test.sync_and_update();
+    test.press_touch((400., 100.));
+    test.move_touch((100., 100.));
+    test.release_touch((100., 100.));
 
     // After dragging 300px, first item hidden, last item visible
     assert!(!content[0].is_visible());
