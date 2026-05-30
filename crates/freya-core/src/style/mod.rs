@@ -17,4 +17,5 @@ pub mod text_decoration;
 pub mod text_height;
 pub mod text_overflow;
 pub mod text_shadow;
+pub mod transform_origin;
 pub mod vertical_align;
