@@ -375,7 +375,10 @@ impl EffectState {
                 }
             }
 
-            self.interactive = effect_data.interactive;
+            // Opt-out only.
+            if effect_data.interactive == Interactive::No {
+                self.interactive = Interactive::No;
+            }
         }
     }
 
