@@ -96,6 +96,9 @@ impl Component for SelectableText {
             .get_visible_selection(EditorLine::SingleParagraph);
 
         let on_pointer_down = move |e: Event<PointerEventData>| {
+            if !e.data().is_primary() {
+                return;
+            }
             e.stop_propagation();
             drag_origin.set(Some(e.global_location() - e.element_location()));
             editable.process_event(EditableEvent::Down {
