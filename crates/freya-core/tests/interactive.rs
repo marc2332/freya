@@ -37,7 +37,6 @@ fn interactive_false_passes_events_through() {
 
     assert!(
         test.find(|_, e| Label::try_downcast(e).filter(|l| l.text.as_ref() == "behind:1 overlay:0"))
-            .is_some(),
-        "click should reach the node behind and nothing in the interactive(false) subtree"
+            .is_some()
     );
 }
