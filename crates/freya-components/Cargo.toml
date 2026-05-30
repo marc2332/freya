@@ -55,7 +55,6 @@ ureq = { workspace = true, optional = true }
 # Image viewer
 blocking = { workspace = true }
 bytes = { version = "1.10.1" }
-image = { workspace = true }
 euclid = { workspace = true }
 
 # Other

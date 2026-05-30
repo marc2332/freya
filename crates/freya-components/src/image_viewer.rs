@@ -17,14 +17,14 @@ use freya_core::{
     prelude::*,
 };
 use freya_engine::prelude::{
-    AlphaType,
-    ColorType,
-    Data,
-    ISize,
-    ImageInfo,
+    FilterMode,
+    MipmapMode,
+    Paint,
+    SamplingOptions,
     SkData,
     SkImage,
-    raster_from_data,
+    SkRect,
+    raster_n32_premul,
 };
 use torin::prelude::{
     Size,
@@ -170,63 +170,48 @@ impl ImageSource {
                 Self::Path(path) => fs::read(path).map(Bytes::from)?,
                 Self::Bytes(_, bytes) => bytes,
             };
-
-            if let Some(target) = decode_size
-                && let Some(image) = Self::downsample(&bytes, target)?
-            {
-                return Ok((image, bytes));
-            }
-
-            let image = SkImage::from_encoded(unsafe { SkData::new_bytes(&bytes) })
+            let encoded = SkImage::from_encoded(unsafe { SkData::new_bytes(&bytes) })
                 .context("Failed to decode Image.")?;
-            let image = image.make_raster_image(None, None).unwrap_or(image);
+            let image = match decode_size.and_then(|t| Self::downsample(&encoded, t)) {
+                Some(scaled) => scaled,
+                None => encoded.make_raster_image(None, None).unwrap_or(encoded),
+            };
             Ok((image, bytes))
         })
         .await
     }
 
-    fn downsample(bytes: &[u8], target: DecodeSize) -> anyhow::Result<Option<SkImage>> {
-        use std::io::Cursor;
-
-        use image::ImageReader;
-
-        let reader = || {
-            ImageReader::new(Cursor::new(bytes))
-                .with_guessed_format()
-                .context("Failed to guess image format.")
-        };
-
-        let (natural_width, natural_height) = reader()?
-            .into_dimensions()
-            .context("Failed to read image dimensions.")?;
-
-        if natural_width <= target.width && natural_height <= target.height {
-            return Ok(None);
+    fn downsample(encoded: &SkImage, target: DecodeSize) -> Option<SkImage> {
+        let natural_w = encoded.width() as f32;
+        let natural_h = encoded.height() as f32;
+        let target_w = target.width as f32;
+        let target_h = target.height as f32;
+        if natural_w <= target_w && natural_h <= target_h {
+            return None;
         }
+        let ratio = (target_w / natural_w).min(target_h / natural_h);
+        let width = (natural_w * ratio).round().max(1.);
+        let height = (natural_h * ratio).round().max(1.);
 
-        let rgba = reader()?
-            .decode()
-            .context("Failed to decode Image.")?
-            .thumbnail(target.width, target.height)
-            .to_rgba8();
-        let (width, height) = rgba.dimensions();
-        let info = ImageInfo::new(
-            ISize::new(width as i32, height as i32),
-            ColorType::RGBA8888,
-            AlphaType::Unpremul,
-            None,
-        );
-        raster_from_data(&info, Data::new_copy(&rgba), (width * 4) as usize)
-            .map(Some)
-            .context("Failed to wrap downsampled image as raster.")
+        let mut surface = raster_n32_premul((width as i32, height as i32))?;
+        let dst = SkRect::from_xywh(0., 0., width, height);
+        let sampling = SamplingOptions::new(FilterMode::Linear, MipmapMode::Linear);
+        let mut paint = Paint::default();
+        paint.set_anti_alias(true);
+        surface
+            .canvas()
+            .draw_image_rect_with_sampling_options(encoded, None, dst, sampling, &paint);
+        Some(surface.image_snapshot())
     }
 }
 
 /// How an [`ImageViewer`] picks its decode dimensions.
 #[derive(Default, Clone, Debug, PartialEq, Copy)]
 pub enum DecodeMode {
-    /// Use the layout's pixel dimensions when both are [`Size::Pixels`].
+    /// Decode at the image's natural size.
     #[default]
+    Source,
+    /// Use the layout's pixel size when both width and height are [`Size::Pixels`].
     FromLayout,
     /// Decode at a specific maximum size, preserving aspect ratio.
     Custom(Size2D),
@@ -235,9 +220,13 @@ pub enum DecodeMode {
 impl DecodeMode {
     fn resolve(&self, layout: &LayoutData) -> Option<DecodeSize> {
         let size = match self {
+            Self::Source => return None,
             Self::FromLayout => match (&layout.width, &layout.height) {
                 (Size::Pixels(w), Size::Pixels(h)) => Size2D::new(w.get(), h.get()),
-                _ => return None,
+                _ => {
+                    tracing::debug!("DecodeMode::FromLayout decoded at natural size.");
+                    return None;
+                }
             },
             Self::Custom(size) => *size,
         };
@@ -392,17 +381,13 @@ impl ImageViewer {
 impl Component for ImageViewer {
     fn render(&self) -> impl IntoElement {
         let target = self.decode_mode.resolve(&self.layout);
-        let asset_config = AssetConfiguration::new((&self.source, target), self.asset_age.clone());
+        let asset_config = AssetConfiguration::new((&self.source, target), self.asset_age);
         let asset = use_asset(&asset_config);
         let mut asset_cacher = use_hook(AssetCacher::get);
 
         use_side_effect_with_deps(
             &(self.source.clone(), asset_config, target),
-            move |(source, asset_config, target): &(
-                ImageSource,
-                AssetConfiguration,
-                Option<DecodeSize>,
-            )| {
+            move |(source, asset_config, target)| {
                 if matches!(
                     asset_cacher.read_asset(asset_config),
                     Some(Asset::Pending) | Some(Asset::Error(_))
