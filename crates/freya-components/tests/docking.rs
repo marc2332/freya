@@ -112,7 +112,7 @@ fn insert_at(root: &mut Node, target_panel: PanelId, tab: TabId, position: Optio
     true
 }
 
-fn make_panel(state: &mut DockingState, tabs: Vec<TabId>) -> PanelId {
+fn new_panel(state: &mut DockingState, tabs: Vec<TabId>) -> PanelId {
     let panel_id = state.reserve_panel_id();
     let panel = Panel::new(panel_id, tabs);
     state.root = Some(match state.root.take() {
@@ -128,7 +128,7 @@ fn make_panel(state: &mut DockingState, tabs: Vec<TabId>) -> PanelId {
 #[test]
 fn find_tab_in_simple_panel() {
     let mut state = DockingState::new();
-    let panel = make_panel(&mut state, vec![10, 11, 12]);
+    let panel = new_panel(&mut state, vec![10, 11, 12]);
     assert_eq!(state.find_tab(11), Some((panel, 1)));
     assert_eq!(state.find_tab(99), None);
 }
@@ -136,8 +136,8 @@ fn find_tab_in_simple_panel() {
 #[test]
 fn move_tab_between_panels() {
     let mut state = DockingState::new();
-    let source_panel = make_panel(&mut state, vec![1, 2, 3]);
-    let target_panel = make_panel(&mut state, vec![4]);
+    let source_panel = new_panel(&mut state, vec![1, 2, 3]);
+    let target_panel = new_panel(&mut state, vec![4]);
 
     assert!(state.move_tab(
         2,
@@ -165,8 +165,8 @@ fn move_tab_between_panels() {
 #[test]
 fn moving_last_tab_collapses_panel() {
     let mut state = DockingState::new();
-    let _source = make_panel(&mut state, vec![1]);
-    let target = make_panel(&mut state, vec![2]);
+    let _source = new_panel(&mut state, vec![1]);
+    let target = new_panel(&mut state, vec![2]);
 
     assert!(state.move_tab(1, DropTarget::Center(target)));
 
@@ -182,7 +182,7 @@ fn moving_last_tab_collapses_panel() {
 #[test]
 fn reorder_within_same_panel() {
     let mut state = DockingState::new();
-    let panel = make_panel(&mut state, vec![1, 2, 3, 4]);
+    let panel = new_panel(&mut state, vec![1, 2, 3, 4]);
 
     assert!(state.move_tab(1, DropTarget::Tab { panel, position: 3 },));
 
@@ -196,7 +196,7 @@ fn reorder_within_same_panel() {
 #[test]
 fn split_creates_new_panel() {
     let mut state = DockingState::new();
-    let panel = make_panel(&mut state, vec![1, 2]);
+    let panel = new_panel(&mut state, vec![1, 2]);
 
     assert!(state.move_tab(
         1,
@@ -231,7 +231,7 @@ fn split_creates_new_panel() {
 #[test]
 fn split_left_places_new_panel_first() {
     let mut state = DockingState::new();
-    let panel = make_panel(&mut state, vec![1, 2]);
+    let panel = new_panel(&mut state, vec![1, 2]);
 
     assert!(state.move_tab(
         2,
@@ -254,7 +254,7 @@ fn split_left_places_new_panel_first() {
 #[test]
 fn split_top_uses_vertical_direction() {
     let mut state = DockingState::new();
-    let panel = make_panel(&mut state, vec![1, 2]);
+    let panel = new_panel(&mut state, vec![1, 2]);
 
     state.move_tab(
         2,
@@ -274,8 +274,8 @@ fn split_top_uses_vertical_direction() {
 #[test]
 fn close_tab_removes_and_compacts() {
     let mut state = DockingState::new();
-    let removed = make_panel(&mut state, vec![1]);
-    let _kept = make_panel(&mut state, vec![2, 3]);
+    let removed = new_panel(&mut state, vec![1]);
+    let _kept = new_panel(&mut state, vec![2, 3]);
 
     state.close_tab(1);
 
@@ -291,7 +291,7 @@ fn close_tab_removes_and_compacts() {
 #[test]
 fn closing_active_tab_promotes_first() {
     let mut state = DockingState::new();
-    let panel = make_panel(&mut state, vec![1, 2, 3]);
+    let panel = new_panel(&mut state, vec![1, 2, 3]);
     state.set_active(panel, 2);
     state.close_tab(2);
 
@@ -316,7 +316,7 @@ fn with_layout_advances_id_counter() {
 #[test]
 fn split_self_then_drop_keeps_tab_in_new_panel() {
     let mut state = DockingState::new();
-    let panel = make_panel(&mut state, vec![1, 2]);
+    let panel = new_panel(&mut state, vec![1, 2]);
 
     state.move_tab(
         1,
