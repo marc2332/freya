@@ -161,6 +161,7 @@ impl<T> From<Writable<T>> for Readable<T> {
                 }
             }),
             peek_fn: Rc::new(move || ReadableRef::Ref((value.peek_fn)())),
+            equal_fn: Rc::new(move |_| true),
         }
     }
 }
