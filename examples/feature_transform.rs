@@ -16,6 +16,7 @@ fn app() -> impl IntoElement {
         .offset_y(25.)
         .scale(0.5)
         .rotate(45.)
+        .transform_origin((0.35, 0.35))
         .child(
             rect()
                 .font_size(50.)

@@ -67,6 +67,7 @@ use crate::{
         text_height::TextHeightBehavior,
         text_overflow::TextOverflow,
         text_shadow::TextShadow,
+        transform_origin::TransformOrigin,
     },
 };
 
@@ -912,6 +913,14 @@ pub trait EffectExt: Sized {
 
     fn scale(mut self, scale: impl Into<Scale>) -> Self {
         self.get_effect().scale = Some(scale.into());
+        self
+    }
+
+    /// Set the point that the scale and rotation effects pivot around.
+    ///
+    /// Defaults to the element's center.
+    fn transform_origin(mut self, transform_origin: impl Into<TransformOrigin>) -> Self {
+        self.get_effect().transform_origin = transform_origin.into();
         self
     }
 }

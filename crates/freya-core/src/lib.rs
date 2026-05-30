@@ -150,6 +150,7 @@ pub mod prelude {
             text_height::*,
             text_overflow::*,
             text_shadow::*,
+            transform_origin::*,
             vertical_align::*,
         },
         user_event::UserEvent,

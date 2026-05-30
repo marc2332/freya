@@ -45,6 +45,7 @@ use crate::{
             Shadow,
             ShadowPosition,
         },
+        transform_origin::TransformOrigin,
     },
     tree::DiffModifies,
 };
@@ -678,6 +679,17 @@ impl Rect {
             .effect
             .get_or_insert_with(Default::default)
             .scale = Some(scale.into());
+        self
+    }
+
+    /// Set the point that the scale and rotation effects pivot around.
+    ///
+    /// Defaults to the element's center.
+    pub fn transform_origin(mut self, transform_origin: impl Into<TransformOrigin>) -> Self {
+        self.element
+            .effect
+            .get_or_insert_with(Default::default)
+            .transform_origin = transform_origin.into();
         self
     }
 
