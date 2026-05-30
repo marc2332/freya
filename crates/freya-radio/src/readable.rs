@@ -33,6 +33,7 @@ impl<T: 'static> RadioReadable<T> for Readable<T> {
                 move || ReadableRef::Ref(slice.read_unchecked())
             }),
             Box::new(move || ReadableRef::Ref(slice.peek_unchecked())),
+            Box::new(|_| true),
         )
     }
 }
@@ -55,6 +56,7 @@ impl<T: 'static, Value: 'static, Channel: RadioChannel<Value> + 'static> IntoRea
                 move || ReadableRef::Ref(this.read_unchecked())
             }),
             Box::new(move || ReadableRef::Ref(self.peek_unchecked())),
+            Box::new(|_| true),
         )
     }
 }
