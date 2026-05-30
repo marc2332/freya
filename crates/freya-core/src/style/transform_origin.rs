@@ -26,7 +26,7 @@ impl OriginValue {
 
 /// Reference point that the scale and rotation effects of an element pivot around.
 ///
-/// Defaults to the element's center, matching the CSS `transform-origin: 50% 50%`.
+/// Defaults to the element's center.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct TransformOrigin {
@@ -113,7 +113,7 @@ impl TransformOrigin {
     }
 }
 
-/// Build a fractional [`TransformOrigin`], where `0.0` is the start and `1.0` the end of each axis.
+/// Shorthand for a fractional [`TransformOrigin`], where `0.0` is the start and `1.0` the end of each axis.
 impl From<(f32, f32)> for TransformOrigin {
     fn from((x, y): (f32, f32)) -> Self {
         Self {
