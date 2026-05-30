@@ -472,6 +472,39 @@ impl TestingRunner {
         self.sync_and_update();
     }
 
+    pub fn press_touch(&mut self, location: impl Into<CursorPoint>) {
+        self.send_event(PlatformEvent::Touch {
+            name: TouchEventName::TouchStart,
+            location: location.into(),
+            finger_id: 0,
+            phase: TouchPhase::Started,
+            force: None,
+        });
+        self.sync_and_update();
+    }
+
+    pub fn move_touch(&mut self, location: impl Into<CursorPoint>) {
+        self.send_event(PlatformEvent::Touch {
+            name: TouchEventName::TouchMove,
+            location: location.into(),
+            finger_id: 0,
+            phase: TouchPhase::Moved,
+            force: None,
+        });
+        self.sync_and_update();
+    }
+
+    pub fn release_touch(&mut self, location: impl Into<CursorPoint>) {
+        self.send_event(PlatformEvent::Touch {
+            name: TouchEventName::TouchEnd,
+            location: location.into(),
+            finger_id: 0,
+            phase: TouchPhase::Ended,
+            force: None,
+        });
+        self.sync_and_update();
+    }
+
     pub fn scroll(&mut self, cursor: impl Into<CursorPoint>, scroll: impl Into<CursorPoint>) {
         let cursor = cursor.into();
         let scroll = scroll.into();

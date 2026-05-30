@@ -1,7 +1,7 @@
 [package]
 name = "freya-plotters-backend"
 description = "Freya's skia-safe backend for plotters"
-version = "0.4.0-rc.19"
+version = "0.4.0-rc.21"
 edition = "2024"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
@@ -12,12 +12,6 @@ categories = ["gui"]
 
 [lints]
 workspace = true
-
-[package.metadata.docs.rs]
-features = ["freya-engine/mocked-engine"]
-
-[features]
-skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
 freya-engine = { workspace = true }

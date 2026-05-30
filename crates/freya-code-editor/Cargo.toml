@@ -1,7 +1,7 @@
 [package]
 name = "freya-code-editor"
 description = "Composable Code Editor APIs for Freya"
-version = "0.4.0-rc.19"
+version = "0.4.0-rc.21"
 edition = "2024"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
@@ -14,12 +14,8 @@ categories = ["gui"]
 [lints]
 workspace = true
 
-[package.metadata.docs.rs]
-features = ["freya-core/mocked-engine"]
-
 [features]
 all = ["rust", "md", "json", "toml", "sql"]
-skia-engine = ["freya-core/skia-engine"]
 rust = ["dep:tree-sitter-rust"]
 md = ["dep:tree-sitter-md"]
 json = ["dep:tree-sitter-json"]

@@ -1,6 +1,6 @@
 [package]
 name = "freya-animation"
-version = "0.4.0-rc.19"
+version = "0.4.0-rc.21"
 description = "Animation APIs for Freya"
 edition = "2024"
 readme = "../../README.md"
@@ -13,12 +13,6 @@ categories = ["gui"]
 
 [lints]
 workspace = true
-
-[package.metadata.docs.rs]
-features = ["freya-core/mocked-engine"]
-
-[features]
-skia-engine = ["freya-core/skia-engine"]
 
 [dependencies]
 freya-core = { workspace = true }

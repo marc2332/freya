@@ -1,6 +1,6 @@
 [package]
 name = "freya-components"
-version = "0.4.0-rc.19"
+version = "0.4.0-rc.21"
 edition = "2024"
 description = "Components for Freya apps"
 license = "MIT"
@@ -15,14 +15,13 @@ categories = ["gui", "asynchronous"]
 workspace = true
 
 [package.metadata.docs.rs]
-features = ["freya-core/mocked-engine", "docs"]
+features = ["docs"]
 
 [features]
 router = ["dep:open", "dep:freya-router"]
 remote-asset = ["dep:ureq"]
 docs = ["dep:embed-doc-image"]
 gif = ["dep:gif"]
-skia-engine = ["freya-engine/skia-engine"]
 calendar = ["dep:chrono"]
 markdown = ["dep:pulldown-cmark"]
 titlebar = ["dep:freya-icons"]

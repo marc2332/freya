@@ -96,7 +96,7 @@ impl Default for ScrollView {
             scroll_with_arrows: true,
             scroll_controller: None,
             invert_scroll_wheel: false,
-            drag_scrolling: cfg!(target_os = "android"),
+            drag_scrolling: true,
             key: DiffKey::None,
         }
     }
@@ -396,7 +396,7 @@ impl Component for ScrollView {
         };
 
         let on_pointer_down = move |e: Event<PointerEventData>| {
-            if drag_scrolling {
+            if drag_scrolling && matches!(e.data(), PointerEventData::Touch(_)) {
                 drag_origin.set(Some(e.global_location()));
             }
         };

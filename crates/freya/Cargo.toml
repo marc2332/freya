@@ -1,6 +1,6 @@
 [package]
 name = "freya"
-version = "0.4.0-rc.19"
+version = "0.4.0-rc.21"
 description = "Cross-platform and non-web GUI Library powered by Skia."
 edition = "2024"
 license = "MIT"
@@ -19,10 +19,7 @@ features = ["all-publish"]
 no-default-features = true
 
 [features]
-default = ["skia-engine", "winit"]
-# Enable skia-safe
-skia-engine = ["freya-engine/skia-engine"]
-mocked-engine = ["freya-engine/mocked-engine"]
+default = ["winit"]
 # Shortcuts
 all = [
   "winit",
@@ -44,16 +41,15 @@ all = [
   "terminal",
   "query",
   "code-editor",
+  "camera",
 ]
 all-publish = [
   "all",
   "docs",
-  "mocked-engine",
   "freya-components/docs",
   "dep:freya-testing",
   "dep:freya-plotters-backend",
 ]
-all-bindings = ["all", "dep:freya-testing", "dep:freya-plotters-backend"]
 all-debug = ["all", "dep:freya-testing", "dep:freya-plotters-backend"]
 all-tests = [
   "winit",
@@ -96,6 +92,7 @@ webview = ["dep:freya-webview"]
 titlebar = ["freya-components/titlebar"]
 terminal = ["dep:freya-terminal"]
 code-editor = ["dep:freya-code-editor"]
+camera = ["dep:freya-camera"]
 zoom-shortcuts = ["winit", "freya-winit/zoom-shortcuts"]
 
 [dependencies]
@@ -117,6 +114,7 @@ freya-query = { workspace = true, optional = true }
 freya-webview = { workspace = true, optional = true }
 freya-terminal = { workspace = true, optional = true }
 freya-code-editor = { workspace = true, optional = true }
+freya-camera = { workspace = true, optional = true }
 
 # Performance
 freya-performance-plugin = { workspace = true }

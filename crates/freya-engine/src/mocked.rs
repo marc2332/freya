@@ -1726,6 +1726,10 @@ impl Image {
         unimplemented!("This is mocked")
     }
 
+    pub fn dimensions(&self) -> ISize {
+        unimplemented!("This is mocked")
+    }
+
     pub fn encode<'a>(
         &self,
         context: impl Into<Option<&'a mut DirectContext>>,
@@ -2189,6 +2193,7 @@ impl Surface {
     }
 }
 
+#[derive(PartialEq)]
 pub struct ISize;
 
 impl ISize {
