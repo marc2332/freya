@@ -104,7 +104,7 @@ impl ragnarok::EventsMeasurer for EventsMeasurerAdapter<'_> {
         self.tree
             .effect_state
             .get(key)
-            .map(|effect_state| effect_state.interactive != Interactive::No)
+            .map(|effect_state| effect_state.interactive == Interactive::Yes)
             .unwrap_or(true)
     }
 
