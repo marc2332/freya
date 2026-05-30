@@ -53,7 +53,7 @@ impl Workspace {
             .and_then(DockNode::first_panel_mut)
             .map(|panel| {
                 panel.tabs.push(tab_id);
-                panel.active = Some(tab_id);
+                panel.active_tab_id = Some(tab_id);
             })
             .is_some();
 
@@ -69,7 +69,7 @@ impl Workspace {
             .tree
             .as_ref()
             .and_then(DockNode::first_panel)
-            .and_then(|panel| panel.active)
+            .and_then(|panel| panel.active_tab_id)
         else {
             return;
         };
@@ -95,7 +95,7 @@ impl Workspace {
         let Some((panel_id, _)) = tree.find_tab(&tab_id) else {
             return false;
         };
-        tree.panel(&panel_id).and_then(|panel| panel.active) == Some(tab_id)
+        tree.panel(&panel_id).and_then(|panel| panel.active_tab_id) == Some(tab_id)
     }
 
     fn collapse_empty(&mut self) {
@@ -161,7 +161,7 @@ impl DockingModel for Workspace {
         if !target.tabs.contains(&tab) {
             return false;
         }
-        target.active = Some(tab);
+        target.active_tab_id = Some(tab);
         true
     }
 }
@@ -250,7 +250,7 @@ fn app() -> impl IntoElement {
                             .direction(Direction::Horizontal)
                             .height(Size::px(48.))
                             .show_scrollbar(false)
-                            .child(rect().padding(4.).spacing(4.).horizontal().cross_align(Alignment::Center).children(ctx.children))
+                            .child(rect().padding(4.).spacing(4.).horizontal().cross_align(Alignment::Center).children(ctx.tab_children))
                             .into_element()
                     },
                 )

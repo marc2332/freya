@@ -48,7 +48,7 @@ impl DockingState {
         if !target.tabs.contains(&tab) {
             return false;
         }
-        target.active = Some(tab);
+        target.active_tab_id = Some(tab);
         true
     }
 
@@ -156,7 +156,7 @@ fn move_tab_between_panels() {
                 && panel.panel_id == target_panel
             {
                 assert_eq!(panel.tabs, vec![2, 4]);
-                assert_eq!(panel.active, Some(2));
+                assert_eq!(panel.active_tab_id, Some(2));
             }
         }
     }
@@ -222,7 +222,7 @@ fn split_creates_new_panel() {
             assert_eq!(left.panel_id, panel);
             assert_eq!(left.tabs, vec![2]);
             assert_eq!(right.tabs, vec![1]);
-            assert_eq!(right.active, Some(1));
+            assert_eq!(right.active_tab_id, Some(1));
         }
         other => panic!("expected split, got {other:?}"),
     }
@@ -297,7 +297,7 @@ fn closing_active_tab_promotes_first() {
 
     if let Some(DockNode::Panel(panel)) = &state.root {
         assert_eq!(panel.tabs, vec![1, 3]);
-        assert_eq!(panel.active, Some(1));
+        assert_eq!(panel.active_tab_id, Some(1));
     }
 }
 

@@ -26,7 +26,7 @@ use crate::{
 pub struct DockPanel<TabId, PanelId> {
     pub panel_id: PanelId,
     pub tabs: Vec<TabId>,
-    pub active: Option<TabId>,
+    pub active_tab_id: Option<TabId>,
 }
 
 impl<TabId, PanelId> DockPanel<TabId, PanelId> {
@@ -35,11 +35,11 @@ impl<TabId, PanelId> DockPanel<TabId, PanelId> {
     where
         TabId: Clone,
     {
-        let active = tabs.first().cloned();
+        let active_tab_id = tabs.first().cloned();
         Self {
             panel_id,
             tabs,
-            active,
+            active_tab_id,
         }
     }
 
@@ -59,7 +59,7 @@ impl<TabId, PanelId> DockPanel<TabId, PanelId> {
             }
             None => position,
         };
-        self.active = Some(tab.clone());
+        self.active_tab_id = Some(tab.clone());
         self.tabs.insert(target.min(self.tabs.len()), tab);
     }
 
@@ -69,7 +69,7 @@ impl<TabId, PanelId> DockPanel<TabId, PanelId> {
         TabId: Clone + PartialEq,
     {
         self.tabs.retain(|item| *item != tab);
-        self.active = Some(tab.clone());
+        self.active_tab_id = Some(tab.clone());
         self.tabs.push(tab);
     }
 }
@@ -158,8 +158,8 @@ where
                     return false;
                 };
                 panel.tabs.remove(position);
-                if panel.active.as_ref() == Some(tab) {
-                    panel.active = panel.tabs.first().cloned();
+                if panel.active_tab_id.as_ref() == Some(tab) {
+                    panel.active_tab_id = panel.tabs.first().cloned();
                 }
                 true
             }
@@ -274,7 +274,7 @@ pub struct ContentContext<TabId, PanelId> {
 pub struct TabBarContext<PanelId> {
     pub panel_id: PanelId,
     /// The tab header elements to lay out in the bar.
-    pub children: Vec<Element>,
+    pub tab_children: Vec<Element>,
     /// Number of tabs open in the panel.
     pub tab_count: usize,
 }
@@ -476,7 +476,7 @@ impl<M: DockingModel> ComponentOwned for DockPanelView<M> {
                 DockPanel {
                     panel_id,
                     tabs,
-                    active,
+                    active_tab_id,
                 },
             controller,
             renderers,
@@ -488,7 +488,7 @@ impl<M: DockingModel> ComponentOwned for DockPanelView<M> {
         let is_dragging = drag().is_some();
         let hover = use_state(|| None::<HoverTarget<M::TabId>>);
 
-        let hovered = is_dragging.then(|| hover()).flatten();
+        let hovered = is_dragging.then(&hover).flatten();
         let tab_count = tabs.len();
         let mut tab_children: Vec<Element> = tabs
             .iter()
@@ -549,13 +549,13 @@ impl<M: DockingModel> ComponentOwned for DockPanelView<M> {
         );
         let tab_bar = renderers.bar.call(TabBarContext {
             panel_id,
-            children: tab_children,
+            tab_children,
             tab_count,
         });
 
         let content = renderers.content.call(ContentContext {
             panel_id,
-            tab_id: active,
+            tab_id: active_tab_id,
             tab_count,
         });
 
