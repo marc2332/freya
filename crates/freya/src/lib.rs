@@ -189,6 +189,7 @@ pub mod components {
         context_menu::*,
         cursor_area::*,
         define_theme,
+        docking::*,
         drag_drop::*,
         draggable_canvas::*,
         element_expansions::*,
