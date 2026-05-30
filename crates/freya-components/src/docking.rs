@@ -488,7 +488,7 @@ impl<M: DockingModel> ComponentOwned for DockPanelView<M> {
         let is_dragging = drag().is_some();
         let hover = use_state(|| None::<HoverTarget<M::TabId>>);
 
-        let hovered = is_dragging.then(&hover).flatten();
+        let hovered = is_dragging.then(&*hover).flatten();
         let tab_count = tabs.len();
         let mut tab_children: Vec<Element> = tabs
             .iter()
