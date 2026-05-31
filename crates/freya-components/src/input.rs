@@ -483,6 +483,7 @@ impl Component for Input {
             e.prevent_default();
             if cfg!(target_os = "android") {
                 if a11y_id.is_focused() {
+                    // Require a second press to enabling dragging on Android
                     is_dragging.set_if_modified(true);
                 }
             } else {
@@ -507,6 +508,7 @@ impl Component for Input {
             e.prevent_default();
             if cfg!(target_os = "android") {
                 if a11y_id.is_focused() {
+                    // Require a second press to enabling dragging on Android
                     is_dragging.set_if_modified(true);
                 }
             } else {
