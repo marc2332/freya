@@ -48,7 +48,7 @@ fn place_tab(
     true
 }
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 struct Workspace {
     tree: Option<DockNode<TabId, PanelId>>,
     next_panel_id: PanelId,
@@ -83,10 +83,7 @@ impl Workspace {
         self.tab_titles.insert(tab_id, format!("Untitled {tab_id}"));
 
         match self.tree.as_mut().and_then(first_panel_mut) {
-            Some(panel) => {
-                panel.tabs.push(tab_id);
-                panel.active_tab_id = Some(tab_id);
-            }
+            Some(panel) => panel.append_tab(tab_id),
             None => {
                 let panel_id = self.next_panel_id;
                 self.next_panel_id += 1;
@@ -203,6 +200,62 @@ fn app() -> impl IntoElement {
     let mut radio = use_radio::<Workspace, AppChannel>(AppChannel::Workspace);
     let workspace = radio.slice_mut_current(|state| state).into_writable();
 
+    let render_content = move |ctx: ContentContext<TabId, PanelId>| {
+        let Some(tab_id) = ctx.tab_id else {
+            return rect()
+                .expanded()
+                .center()
+                .background((25, 25, 25))
+                .color((150, 150, 150))
+                .child("This panel has no open tabs.")
+                .into_element();
+        };
+        let title = radio.read().title(tab_id);
+        rect()
+            .expanded()
+            .padding(Gaps::new_all(16.))
+            .background((25, 25, 25))
+            .child(label().font_size(20.).text(format!("Editing: {title}")))
+            .child("Drag a tab header onto another panel or onto a panel edge to split it.")
+            .into_element()
+    };
+
+    let render_tab = move |ctx: TabContext<TabId>| {
+        let workspace = radio.read();
+        let title = workspace.title(ctx.tab_id);
+        let is_active = workspace.is_active(ctx.tab_id);
+        Activable::new(FloatingTab::new().child(title))
+            .active(is_active)
+            .into_element()
+    };
+
+    let render_drag = move |tab_id: TabId| {
+        let title = radio.read().title(tab_id);
+        rect()
+            .interactive(false)
+            .child(
+                Activable::new(FloatingTab::new().child(label().text(title).max_lines(1)))
+                    .active(true),
+            )
+            .into_element()
+    };
+
+    let render_tab_bar = |ctx: TabBarContext<PanelId>| {
+        ScrollView::new()
+            .direction(Direction::Horizontal)
+            .height(Size::px(48.))
+            .show_scrollbar(false)
+            .child(
+                rect()
+                    .padding(4.)
+                    .spacing(4.)
+                    .horizontal()
+                    .cross_align(Alignment::Center)
+                    .children(ctx.tab_children),
+            )
+            .into_element()
+    };
+
     rect()
         .expanded()
         .background((20, 20, 20))
@@ -231,47 +284,10 @@ fn app() -> impl IntoElement {
             rect().expanded().child(
                 DockingArea::new(
                     workspace,
-                    move |ctx: ContentContext<TabId, PanelId>| {
-                        let Some(tab_id) = ctx.tab_id else {
-                            return rect()
-                                .expanded()
-                                .center()
-                                .background((25, 25, 25))
-                                .color((150, 150, 150))
-                                .child("This panel has no open tabs.")
-                                .into_element();
-                        };
-                        let title = radio.read().title(tab_id);
-                        rect()
-                            .expanded()
-                            .padding(Gaps::new_all(16.))
-                            .background((25, 25, 25))
-                            .child(label().font_size(20.).text(format!("Editing: {title}")))
-                            .child("Drag a tab header onto another panel or onto a panel edge to split it.")
-                            .into_element()
-                    },
-                    move |ctx: TabContext<TabId>| {
-                        let workspace = radio.read();
-                        let title = workspace.title(ctx.tab_id);
-                        let is_active = workspace.is_active(ctx.tab_id);
-                        Activable::new(FloatingTab::new().child(title)).active(is_active).into_element()
-                    },
-                    move |tab_id| {
-                        let title = radio.read().title(tab_id);
-                        rect()
-                            .interactive(false)
-                            .child(Activable::new(FloatingTab::new().child(label().text(title).max_lines(1))).active(true))
-                            .into_element()
-
-                    },
-                    |ctx: TabBarContext<PanelId>| {
-                        ScrollView::new()
-                            .direction(Direction::Horizontal)
-                            .height(Size::px(48.))
-                            .show_scrollbar(false)
-                            .child(rect().padding(4.).spacing(4.).horizontal().cross_align(Alignment::Center).children(ctx.tab_children))
-                            .into_element()
-                    },
+                    render_content,
+                    render_tab,
+                    render_drag,
+                    render_tab_bar,
                 )
                 .preview_element(
                     rect()
