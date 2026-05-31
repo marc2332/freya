@@ -55,6 +55,7 @@ ureq = { workspace = true, optional = true }
 # Image viewer
 blocking = { workspace = true }
 bytes = { version = "1.10.1" }
+euclid = { workspace = true }
 
 # Other
 cfg-if = "1.0"

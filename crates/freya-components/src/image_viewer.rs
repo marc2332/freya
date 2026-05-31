@@ -17,8 +17,18 @@ use freya_core::{
     prelude::*,
 };
 use freya_engine::prelude::{
+    FilterMode,
+    MipmapMode,
+    Paint,
+    SamplingOptions,
     SkData,
     SkImage,
+    SkRect,
+    raster_n32_premul,
+};
+use torin::prelude::{
+    Size,
+    Size2D,
 };
 #[cfg(feature = "remote-asset")]
 use ureq::http::Uri;
@@ -101,17 +111,13 @@ impl<H: Hash> From<(H, Bytes)> for ImageSource {
 
 impl<H: Hash> From<(H, &'static [u8])> for ImageSource {
     fn from((id, bytes): (H, &'static [u8])) -> Self {
-        let mut hasher = DefaultHasher::default();
-        id.hash(&mut hasher);
-        Self::Bytes(hasher.finish(), Bytes::from_static(bytes))
+        (id, Bytes::from_static(bytes)).into()
     }
 }
 
 impl<const N: usize, H: Hash> From<(H, &'static [u8; N])> for ImageSource {
     fn from((id, bytes): (H, &'static [u8; N])) -> Self {
-        let mut hasher = DefaultHasher::default();
-        id.hash(&mut hasher);
-        Self::Bytes(hasher.finish(), Bytes::from_static(bytes))
+        (id, Bytes::from_static(bytes)).into()
     }
 }
 
@@ -148,8 +154,10 @@ impl Hash for ImageSource {
     }
 }
 
+pub type DecodeSize = euclid::Size2D<u32, ()>;
+
 impl ImageSource {
-    pub async fn bytes(&self) -> anyhow::Result<(SkImage, Bytes)> {
+    pub async fn bytes(&self, decode_size: Option<DecodeSize>) -> anyhow::Result<(SkImage, Bytes)> {
         let source = self.clone();
         blocking::unblock(move || {
             let bytes = match source {
@@ -162,12 +170,77 @@ impl ImageSource {
                 Self::Path(path) => fs::read(path).map(Bytes::from)?,
                 Self::Bytes(_, bytes) => bytes,
             };
-            let image = SkImage::from_encoded(unsafe { SkData::new_bytes(&bytes) })
+            let encoded = SkImage::from_encoded(unsafe { SkData::new_bytes(&bytes) })
                 .context("Failed to decode Image.")?;
-            let image = image.make_raster_image(None, None).unwrap_or(image);
+            let image = match decode_size.and_then(|t| Self::downsample(&encoded, t)) {
+                Some(scaled) => scaled,
+                None => encoded.make_raster_image(None, None).unwrap_or(encoded),
+            };
             Ok((image, bytes))
         })
         .await
+    }
+
+    fn downsample(encoded: &SkImage, target: DecodeSize) -> Option<SkImage> {
+        let natural_width = encoded.width() as f32;
+        let natural_height = encoded.height() as f32;
+        let target_width = target.width as f32;
+        let target_height = target.height as f32;
+        if natural_width <= target_width && natural_height <= target_height {
+            return None;
+        }
+        let ratio = (target_width / natural_width).min(target_height / natural_height);
+        let width = (natural_width * ratio).round().max(1.);
+        let height = (natural_height * ratio).round().max(1.);
+
+        let mut surface = raster_n32_premul((width as i32, height as i32))?;
+        let destination = SkRect::from_xywh(0., 0., width, height);
+        let sampling = SamplingOptions::new(FilterMode::Linear, MipmapMode::Linear);
+        let mut paint = Paint::default();
+        paint.set_anti_alias(true);
+        surface.canvas().draw_image_rect_with_sampling_options(
+            encoded,
+            None,
+            destination,
+            sampling,
+            &paint,
+        );
+        Some(surface.image_snapshot())
+    }
+}
+
+/// How an [`ImageViewer`] picks its decode dimensions.
+#[derive(Default, Clone, Debug, PartialEq, Copy)]
+pub enum DecodeMode {
+    /// Default. Layout size scaled by the window scale factor, falling back to natural size when the layout isn't pixel-bound.
+    #[default]
+    FromLayout,
+    /// Decode at the image's natural size.
+    Source,
+    /// Decode at this exact fit-within size.
+    Custom(Size2D),
+}
+
+impl DecodeMode {
+    fn resolve(&self, layout: &LayoutData, scale_factor: f64) -> Option<DecodeSize> {
+        let scale = scale_factor as f32;
+        let size = match self {
+            Self::Source => return None,
+            Self::FromLayout => match (&layout.width, &layout.height) {
+                (Size::Pixels(width), Size::Pixels(height)) => {
+                    Size2D::new(width.get() * scale, height.get() * scale)
+                }
+                _ => {
+                    tracing::debug!("DecodeMode::FromLayout decoded at natural size.");
+                    return None;
+                }
+            },
+            Self::Custom(size) => *size,
+        };
+        Some(DecodeSize::new(
+            size.width.round().max(1.) as u32,
+            size.height.round().max(1.) as u32,
+        ))
     }
 }
 
@@ -212,6 +285,7 @@ pub struct ImageViewer {
     accessibility: AccessibilityData,
     effect: EffectData,
     corner_radius: Option<CornerRadius>,
+    decode_mode: DecodeMode,
 
     children: Vec<Element>,
     loading_placeholder: Option<Element>,
@@ -230,6 +304,7 @@ impl ImageViewer {
             accessibility: AccessibilityData::default(),
             effect: EffectData::default(),
             corner_radius: None,
+            decode_mode: DecodeMode::default(),
             children: Vec::new(),
             loading_placeholder: None,
             error_renderer: None,
@@ -289,6 +364,12 @@ impl ImageViewer {
         self
     }
 
+    /// Pick how the image is decoded. See [`DecodeMode`].
+    pub fn decode_mode(mut self, decode_mode: DecodeMode) -> Self {
+        self.decode_mode = decode_mode;
+        self
+    }
+
     /// Customize how long the image will remain cached after no longer being used.
     ///
     /// Defaults to [`AssetAge::default`] (1h).
@@ -306,15 +387,16 @@ impl ImageViewer {
 
 impl Component for ImageViewer {
     fn render(&self) -> impl IntoElement {
-        let asset_config = AssetConfiguration::new(&self.source, self.asset_age.clone());
+        let target = self
+            .decode_mode
+            .resolve(&self.layout, *Platform::get().scale_factor.read());
+        let asset_config = AssetConfiguration::new((&self.source, target), self.asset_age);
         let asset = use_asset(&asset_config);
         let mut asset_cacher = use_hook(AssetCacher::get);
 
         use_side_effect_with_deps(
-            &(self.source.clone(), asset_config),
-            move |(source, asset_config): &(ImageSource, AssetConfiguration)| {
-                // Fetch asset if still pending or errored. The Loading state
-                // guards against duplicate in-flight fetches.
+            &(self.source.clone(), asset_config, target),
+            move |(source, asset_config, target)| {
                 if matches!(
                     asset_cacher.read_asset(asset_config),
                     Some(Asset::Pending) | Some(Asset::Error(_))
@@ -323,8 +405,9 @@ impl Component for ImageViewer {
 
                     let source = source.clone();
                     let asset_config = asset_config.clone();
+                    let target = *target;
                     spawn_forever(async move {
-                        match source.bytes().await {
+                        match source.bytes(target).await {
                             Ok((image, bytes)) => {
                                 // Image loaded
                                 let image_holder = ImageHolder {

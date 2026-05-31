@@ -19,7 +19,7 @@ use freya_core::{
 
 /// Defines the duration for which an Asset will remain cached after it's user has stopped using it.
 /// The default is 1h (3600s).
-#[derive(Hash, PartialEq, Eq, Clone)]
+#[derive(Hash, PartialEq, Eq, Clone, Copy)]
 pub enum AssetAge {
     /// Asset will be cached for the specified duration
     Duration(Duration),
