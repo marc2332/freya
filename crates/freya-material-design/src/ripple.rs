@@ -124,7 +124,6 @@ impl Component for Ripple {
 
         rect()
             .layout(self.layout.clone())
-            .interactive(false)
             .overflow(Overflow::Clip)
             .on_pointer_down(on_pointer_down)
             .on_sized(move |e: Event<SizedEventData>| container_size.set(e.area.size))
@@ -190,6 +189,7 @@ impl Component for RippleCircle {
         let half = size / 2.0;
 
         rect()
+            .interactive(false)
             .position(
                 Position::new_absolute()
                     .left(self.center.x - half)
