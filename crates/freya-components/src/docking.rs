@@ -117,24 +117,6 @@ where
         }
     }
 
-    /// The first (left-most) panel under this node.
-    pub fn first_panel(&self) -> Option<&DockPanel<TabId, PanelId>> {
-        match self {
-            DockNode::Panel(panel) => Some(panel),
-            DockNode::Split { children, .. } => children.iter().find_map(DockNode::first_panel),
-        }
-    }
-
-    /// Mutable version of [`DockNode::first_panel`].
-    pub fn first_panel_mut(&mut self) -> Option<&mut DockPanel<TabId, PanelId>> {
-        match self {
-            DockNode::Panel(panel) => Some(panel),
-            DockNode::Split { children, .. } => {
-                children.iter_mut().find_map(DockNode::first_panel_mut)
-            }
-        }
-    }
-
     /// Find `tab_id` under this node.
     pub fn find_tab(&self, tab_id: &TabId) -> Option<(PanelId, usize)> {
         match self {

@@ -13,6 +13,41 @@ use freya::{
 type TabId = usize;
 type PanelId = usize;
 
+/// The first (left-most) panel under this node.
+fn first_panel(node: &DockNode<TabId, PanelId>) -> Option<&DockPanel<TabId, PanelId>> {
+    match node {
+        DockNode::Panel(panel) => Some(panel),
+        DockNode::Split { children, .. } => children.iter().find_map(first_panel),
+    }
+}
+
+/// Mutable version of [`first_panel`].
+fn first_panel_mut(node: &mut DockNode<TabId, PanelId>) -> Option<&mut DockPanel<TabId, PanelId>> {
+    match node {
+        DockNode::Panel(panel) => Some(panel),
+        DockNode::Split { children, .. } => children.iter_mut().find_map(first_panel_mut),
+    }
+}
+
+/// Place `tab_id` into `panel_id` at `position`, or append it when `None`, and
+/// remove it from any other panel. Returns `false` if the panel doesn't exist.
+fn place_tab(
+    tree: &mut DockNode<TabId, PanelId>,
+    panel_id: PanelId,
+    tab_id: TabId,
+    position: Option<usize>,
+) -> bool {
+    let Some(panel) = tree.panel_mut(&panel_id) else {
+        return false;
+    };
+    match position {
+        Some(position) => panel.insert_tab(tab_id, position),
+        None => panel.append_tab(tab_id),
+    }
+    tree.remove_tab_except(&tab_id, Some(&panel_id));
+    true
+}
+
 #[derive(Default, Clone)]
 struct Workspace {
     tree: Option<DockNode<TabId, PanelId>>,
@@ -47,38 +82,29 @@ impl Workspace {
         self.next_tab_id += 1;
         self.tab_titles.insert(tab_id, format!("Untitled {tab_id}"));
 
-        let placed = self
-            .tree
-            .as_mut()
-            .and_then(DockNode::first_panel_mut)
-            .map(|panel| {
+        match self.tree.as_mut().and_then(first_panel_mut) {
+            Some(panel) => {
                 panel.tabs.push(tab_id);
                 panel.active_tab_id = Some(tab_id);
-            })
-            .is_some();
-
-        if !placed {
-            let panel_id = self.next_panel_id;
-            self.next_panel_id += 1;
-            self.tree = Some(DockNode::Panel(DockPanel::new(panel_id, vec![tab_id])));
+            }
+            None => {
+                let panel_id = self.next_panel_id;
+                self.next_panel_id += 1;
+                self.tree = Some(DockNode::Panel(DockPanel::new(panel_id, vec![tab_id])));
+            }
         }
     }
 
     fn close_active(&mut self) {
-        let Some(tab_id) = self
-            .tree
-            .as_ref()
-            .and_then(DockNode::first_panel)
-            .and_then(|panel| panel.active_tab_id)
-        else {
+        let Some(tree) = self.tree.as_mut() else {
             return;
         };
-
-        if let Some(tree) = self.tree.as_mut() {
-            tree.remove_tab_except(&tab_id, None);
-        }
-        self.collapse_empty();
+        let Some(tab_id) = first_panel(tree).and_then(|panel| panel.active_tab_id) else {
+            return;
+        };
+        tree.remove_tab_except(&tab_id, None);
         self.tab_titles.remove(&tab_id);
+        self.collapse_empty();
     }
 
     fn title(&self, tab_id: TabId) -> String {
@@ -124,21 +150,9 @@ impl DockingModel for Workspace {
 
         let success = match target {
             DropTarget::Tab { panel_id, position } => {
-                let Some(target) = tree.panel_mut(&panel_id) else {
-                    return false;
-                };
-                target.insert_tab(tab_id, position);
-                tree.remove_tab_except(&tab_id, Some(&panel_id));
-                true
+                place_tab(tree, panel_id, tab_id, Some(position))
             }
-            DropTarget::Center(panel_id) => {
-                let Some(target) = tree.panel_mut(&panel_id) else {
-                    return false;
-                };
-                target.append_tab(tab_id);
-                tree.remove_tab_except(&tab_id, Some(&panel_id));
-                true
-            }
+            DropTarget::Center(panel_id) => place_tab(tree, panel_id, tab_id, None),
             DropTarget::Split { panel_id, side } => {
                 let new_panel_id = self.next_panel_id;
                 let new_panel = DockPanel::new(new_panel_id, vec![tab_id]);
