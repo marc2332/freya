@@ -67,12 +67,12 @@ impl DockingState {
         };
         let success = match target {
             DropTarget::Tab {
-                panel: target_panel,
+                panel_id: target_panel,
                 position,
             } => insert_at(root, target_panel, tab, Some(position)),
             DropTarget::Center(target_panel) => insert_at(root, target_panel, tab, None),
             DropTarget::Split {
-                panel: target_panel,
+                panel_id: target_panel,
                 side,
             } => {
                 let new_panel_id = self.next_panel_id;
@@ -142,7 +142,7 @@ fn move_tab_between_panels() {
     assert!(state.move_tab(
         2,
         DropTarget::Tab {
-            panel: target_panel,
+            panel_id: target_panel,
             position: 0,
         },
     ));
@@ -184,7 +184,13 @@ fn reorder_within_same_panel() {
     let mut state = DockingState::new();
     let panel = new_panel(&mut state, vec![1, 2, 3, 4]);
 
-    assert!(state.move_tab(1, DropTarget::Tab { panel, position: 3 },));
+    assert!(state.move_tab(
+        1,
+        DropTarget::Tab {
+            panel_id,
+            position: 3
+        },
+    ));
 
     if let Some(DockNode::Panel(panel)) = &state.root {
         assert_eq!(panel.tabs, vec![2, 3, 1, 4]);
@@ -201,7 +207,7 @@ fn split_creates_new_panel() {
     assert!(state.move_tab(
         1,
         DropTarget::Split {
-            panel,
+            panel_id,
             side: Side::Right,
         },
     ));
@@ -236,7 +242,7 @@ fn split_left_places_new_panel_first() {
     assert!(state.move_tab(
         2,
         DropTarget::Split {
-            panel,
+            panel_id,
             side: Side::Left,
         },
     ));
@@ -259,7 +265,7 @@ fn split_top_uses_vertical_direction() {
     state.move_tab(
         2,
         DropTarget::Split {
-            panel,
+            panel_id: panel,
             side: Side::Top,
         },
     );
@@ -321,7 +327,7 @@ fn split_self_then_drop_keeps_tab_in_new_panel() {
     state.move_tab(
         1,
         DropTarget::Split {
-            panel,
+            panel_id: panel,
             side: Side::Right,
         },
     );

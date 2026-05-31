@@ -234,9 +234,9 @@ impl Side {
 /// Describes where a dragged tab should be dropped.
 #[derive(Clone, PartialEq, Debug)]
 pub enum DropTarget<PanelId> {
-    Tab { panel: PanelId, position: usize },
+    Tab { panel_id: PanelId, position: usize },
     Center(PanelId),
-    Split { panel: PanelId, side: Side },
+    Split { panel_id: PanelId, side: Side },
 }
 
 pub trait DockingModel: 'static {
@@ -244,19 +244,29 @@ pub trait DockingModel: 'static {
     type TabId: Copy + PartialEq + Hash + 'static;
     /// Id for a panel.
     type PanelId: Copy + PartialEq + 'static;
+    /// The value carried by a drag-and-drop.
+    type DropValue: Clone + PartialEq + 'static + From<Self::TabId>;
 
     /// The current tree of panels and splits, or `None` when it's empty.
     fn root(&self) -> Option<&DockNode<Self::TabId, Self::PanelId>>;
-    /// Apply a drag-and-drop move. Returns `true` if something changed.
-    fn move_tab(&mut self, tab: Self::TabId, target: DropTarget<Self::PanelId>) -> bool;
+    /// Apply a dropped [`Self::DropValue`] at `target`. Returns `true` if
+    /// something changed.
+    fn on_drop(&mut self, value: Self::DropValue, target: DropTarget<Self::PanelId>) -> bool;
     /// Make `tab` the active one in `panel`. Returns `true` if it was found.
     fn set_active(&mut self, panel: Self::PanelId, tab: Self::TabId) -> bool;
 }
 
-/// The payload for a tab being dragged.
-#[derive(Clone, Copy, PartialEq, Debug)]
-struct DockDrag<TabId> {
-    tab: TabId,
+/// The payload carried by a drag in a docking area.
+#[derive(Clone, PartialEq, Debug)]
+pub struct DockDrag<Value> {
+    value: Value,
+}
+
+impl<Value> DockDrag<Value> {
+    /// Wrap a value to be dragged onto a docking area.
+    pub fn new(value: Value) -> Self {
+        Self { value }
+    }
 }
 
 /// Passed to the `render_content` callback.
@@ -484,8 +494,8 @@ impl<M: DockingModel> ComponentOwned for DockPanelView<M> {
             ..
         } = self;
 
-        let drag = use_drag::<DockDrag<M::TabId>>();
-        let is_dragging = drag().is_some();
+        let drag = use_drag::<DockDrag<M::DropValue>>();
+        let is_dragging = drag.read().is_some();
         let hover = use_state(|| None::<HoverTarget<M::TabId>>);
 
         let hovered = is_dragging.then(&*hover).flatten();
@@ -498,9 +508,12 @@ impl<M: DockingModel> ComponentOwned for DockPanelView<M> {
                     tab_id,
                     is_drop_target: hovered == Some(HoverTarget::Tab(tab_id)),
                 });
-                let dragger = DragZone::<DockDrag<M::TabId>>::new(DockDrag { tab: tab_id }, handle)
-                    .drag_element(renderers.drag.call(tab_id))
-                    .into_element();
+                let dragger = DragZone::<DockDrag<M::DropValue>>::new(
+                    DockDrag::new(M::DropValue::from(tab_id)),
+                    handle,
+                )
+                .drag_element(renderers.drag.call(tab_id))
+                .into_element();
 
                 let activatable = rect()
                     .on_press({
@@ -512,13 +525,13 @@ impl<M: DockingModel> ComponentOwned for DockPanelView<M> {
                     .child(dragger)
                     .into_element();
 
-                DropZone::<DockDrag<M::TabId>>::new(activatable, {
+                DropZone::<DockDrag<M::DropValue>>::new(activatable, {
                     let mut controller = controller.clone();
-                    move |payload: DockDrag<M::TabId>| {
-                        controller.write().move_tab(
-                            payload.tab,
+                    move |payload: DockDrag<M::DropValue>| {
+                        controller.write().on_drop(
+                            payload.value,
                             DropTarget::Tab {
-                                panel: panel_id,
+                                panel_id,
                                 position: index,
                             },
                         );
@@ -533,13 +546,13 @@ impl<M: DockingModel> ComponentOwned for DockPanelView<M> {
             .collect();
 
         tab_children.push(
-            DropZone::<DockDrag<M::TabId>>::new(rect().expanded().into_element(), {
+            DropZone::<DockDrag<M::DropValue>>::new(rect().expanded().into_element(), {
                 let mut controller = controller.clone();
-                move |payload: DockDrag<M::TabId>| {
-                    controller.write().move_tab(
-                        payload.tab,
+                move |payload: DockDrag<M::DropValue>| {
+                    controller.write().on_drop(
+                        payload.value,
                         DropTarget::Tab {
-                            panel: panel_id,
+                            panel_id,
                             position: tab_count,
                         },
                     );
@@ -596,12 +609,12 @@ impl<M: DockingModel> ComponentOwned for DockPanelView<M> {
             };
 
             let center_drop =
-                DropZone::<DockDrag<M::TabId>>::new(rect().expanded().into_element(), {
+                DropZone::<DockDrag<M::DropValue>>::new(rect().expanded().into_element(), {
                     let mut controller = controller.clone();
-                    move |payload: DockDrag<M::TabId>| {
+                    move |payload: DockDrag<M::DropValue>| {
                         controller
                             .write()
-                            .move_tab(payload.tab, DropTarget::Center(panel_id));
+                            .on_drop(payload.value, DropTarget::Center(panel_id));
                     }
                 })
                 .on_drag_over(move |hovering| toggle_hover(hover, HoverTarget::Center, hovering))
@@ -660,16 +673,12 @@ fn drop_zone_for_side<M: DockingModel>(
     mut controller: Writable<M>,
     hover: State<Option<HoverTarget<M::TabId>>>,
 ) -> Element {
-    DropZone::<DockDrag<M::TabId>>::new(
+    DropZone::<DockDrag<M::DropValue>>::new(
         rect().expanded().into_element(),
-        move |payload: DockDrag<M::TabId>| {
-            controller.write().move_tab(
-                payload.tab,
-                DropTarget::Split {
-                    panel: panel_id,
-                    side,
-                },
-            );
+        move |payload: DockDrag<M::DropValue>| {
+            controller
+                .write()
+                .on_drop(payload.value, DropTarget::Split { panel_id, side });
         },
     )
     .on_drag_over(move |hovering| toggle_hover(hover, HoverTarget::Edge(side), hovering))

@@ -111,18 +111,22 @@ impl Workspace {
 impl DockingModel for Workspace {
     type TabId = TabId;
     type PanelId = PanelId;
+    type DropValue = TabId;
 
     fn root(&self) -> Option<&DockNode<TabId, PanelId>> {
         self.tree.as_ref()
     }
 
-    fn move_tab(&mut self, tab: TabId, target: DropTarget<PanelId>) -> bool {
+    fn on_drop(&mut self, tab: TabId, target: DropTarget<PanelId>) -> bool {
         let Some(tree) = self.tree.as_mut() else {
             return false;
         };
 
         let success = match target {
-            DropTarget::Tab { panel, position } => {
+            DropTarget::Tab {
+                panel_id: panel,
+                position,
+            } => {
                 let Some(target) = tree.panel_mut(&panel) else {
                     return false;
                 };
@@ -138,7 +142,10 @@ impl DockingModel for Workspace {
                 tree.remove_tab_except(&tab, Some(&panel));
                 true
             }
-            DropTarget::Split { panel, side } => {
+            DropTarget::Split {
+                panel_id: panel,
+                side,
+            } => {
                 let new_panel_id = self.next_panel_id;
                 let new_panel = DockPanel::new(new_panel_id, vec![tab]);
                 if !tree.split_panel(&panel, side, &new_panel) {
