@@ -661,6 +661,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     });
                 }
                 WindowEvent::ScaleFactorChanged { .. } => {
+                    app.sync_scale_factor();
                     app.window.request_redraw();
                     app.process_layout_on_next_render = true;
                     app.tree.layout.reset();

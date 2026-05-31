@@ -212,21 +212,24 @@ impl ImageSource {
 /// How an [`ImageViewer`] picks its decode dimensions.
 #[derive(Default, Clone, Debug, PartialEq, Copy)]
 pub enum DecodeMode {
-    /// Decode at the image's natural size.
+    /// Default. Layout size scaled by the window scale factor, falling back to natural size when the layout isn't pixel-bound.
     #[default]
-    Source,
-    /// Use the layout's pixel size when both width and height are [`Size::Pixels`].
     FromLayout,
-    /// Decode at a specific maximum size, preserving aspect ratio.
+    /// Decode at the image's natural size.
+    Source,
+    /// Decode at this exact fit-within size.
     Custom(Size2D),
 }
 
 impl DecodeMode {
-    fn resolve(&self, layout: &LayoutData) -> Option<DecodeSize> {
+    fn resolve(&self, layout: &LayoutData, scale_factor: f64) -> Option<DecodeSize> {
+        let scale = scale_factor as f32;
         let size = match self {
             Self::Source => return None,
             Self::FromLayout => match (&layout.width, &layout.height) {
-                (Size::Pixels(w), Size::Pixels(h)) => Size2D::new(w.get(), h.get()),
+                (Size::Pixels(width), Size::Pixels(height)) => {
+                    Size2D::new(width.get() * scale, height.get() * scale)
+                }
                 _ => {
                     tracing::debug!("DecodeMode::FromLayout decoded at natural size.");
                     return None;
@@ -384,7 +387,9 @@ impl ImageViewer {
 
 impl Component for ImageViewer {
     fn render(&self) -> impl IntoElement {
-        let target = self.decode_mode.resolve(&self.layout);
+        let target = self
+            .decode_mode
+            .resolve(&self.layout, *Platform::get().scale_factor.read());
         let asset_config = AssetConfiguration::new((&self.source, target), self.asset_age);
         let asset = use_asset(&asset_config);
         let mut asset_cacher = use_hook(AssetCacher::get);

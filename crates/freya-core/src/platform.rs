@@ -41,6 +41,8 @@ pub struct Platform {
     pub focused_accessibility_node: State<accesskit::Node>,
     /// The size of the root window.
     pub root_size: State<Size2D>,
+    /// OS scale factor.
+    pub scale_factor: State<f64>,
     /// The current [`NavigationMode`].
     pub navigation_mode: State<NavigationMode>,
     /// The OS-level [`PreferredTheme`].

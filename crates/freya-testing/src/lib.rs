@@ -201,6 +201,7 @@ impl TestingRunner {
                     accesskit::Role::Window,
                 )),
                 root_size: State::create(size),
+                scale_factor: State::create(scale_factor),
                 navigation_mode: State::create(NavigationMode::NotKeyboard),
                 preferred_theme: State::create(PreferredTheme::Light),
                 is_app_focused: State::create(true),

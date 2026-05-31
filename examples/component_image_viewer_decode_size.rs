@@ -12,8 +12,8 @@ fn main() {
 const SOURCE: &str = "https://images.pexels.com/photos/842711/pexels-photo-842711.jpeg";
 
 const PRESETS: [(&str, DecodeMode); 4] = [
-    ("Source (default)", DecodeMode::Source),
-    ("FromLayout", DecodeMode::FromLayout),
+    ("FromLayout (default)", DecodeMode::FromLayout),
+    ("Source", DecodeMode::Source),
     ("Custom 64×64", DecodeMode::Custom(Size2D::new(64., 64.))),
     (
         "Custom 256×256",
