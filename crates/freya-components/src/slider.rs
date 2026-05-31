@@ -177,6 +177,9 @@ impl Component for Slider {
         let on_pointer_down = {
             let on_moved = self.on_moved.clone();
             move |e: Event<PointerEventData>| {
+                if !e.data().is_primary() {
+                    return;
+                }
                 a11y_id.request_focus();
                 clicking.set(true);
                 e.stop_propagation();
