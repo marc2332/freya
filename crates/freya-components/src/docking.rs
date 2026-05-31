@@ -190,6 +190,7 @@ where
         };
         children.iter_mut().for_each(DockNode::close_empty_panels);
         children.retain(|child| !child.is_empty());
+        // When only one child remains, replace this split node with that child.
         if children.len() == 1 {
             *self = children.remove(0);
         }
