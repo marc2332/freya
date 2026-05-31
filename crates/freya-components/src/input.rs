@@ -481,7 +481,13 @@ impl Component for Input {
         let on_input_focus_press = move |e: Event<FocusPressEventData>| {
             e.stop_propagation();
             e.prevent_default();
-            is_dragging.set(true);
+            if cfg!(target_os = "android") {
+                if a11y_id.is_focused() {
+                    is_dragging.set_if_modified(true);
+                }
+            } else {
+                is_dragging.set_if_modified(true);
+            }
             movement_timeout.reset();
             if !display_placeholder {
                 let area = area.read().to_f64();
@@ -499,7 +505,13 @@ impl Component for Input {
         let on_focus_press = move |e: Event<FocusPressEventData>| {
             e.stop_propagation();
             e.prevent_default();
-            is_dragging.set(true);
+            if cfg!(target_os = "android") {
+                if a11y_id.is_focused() {
+                    is_dragging.set_if_modified(true);
+                }
+            } else {
+                is_dragging.set_if_modified(true);
+            }
             movement_timeout.reset();
             if !display_placeholder {
                 editable.process_event(EditableEvent::Down {
