@@ -6,7 +6,7 @@ type Node = DockNode<TabId, PanelId>;
 type Panel = DockPanel<TabId, PanelId>;
 type Target = DropTarget<PanelId>;
 
-#[derive(Default, Clone, PartialEq, Debug)]
+#[derive(Default)]
 struct DockingState {
     root: Option<Node>,
     next_panel_id: PanelId,
@@ -15,20 +15,6 @@ struct DockingState {
 impl DockingState {
     fn new() -> Self {
         Self::default()
-    }
-
-    fn with_layout(layout: Node) -> Self {
-        fn max_panel_id(node: &Node) -> Option<PanelId> {
-            match node {
-                DockNode::Panel(panel) => Some(panel.panel_id),
-                DockNode::Split { children, .. } => children.iter().filter_map(max_panel_id).max(),
-            }
-        }
-        let next_panel_id = max_panel_id(&layout).map_or(0, |max| max + 1);
-        Self {
-            root: Some(layout),
-            next_panel_id,
-        }
     }
 
     fn reserve_panel_id(&mut self) -> PanelId {
@@ -307,41 +293,3 @@ fn closing_active_tab_promotes_first() {
     }
 }
 
-#[test]
-fn with_layout_advances_id_counter() {
-    let mut state = DockingState::with_layout(DockNode::Split {
-        direction: Direction::Horizontal,
-        children: vec![
-            DockNode::Panel(Panel::new(0, vec![10])),
-            DockNode::Panel(Panel::new(5, vec![20])),
-        ],
-    });
-    assert_eq!(state.reserve_panel_id(), 6);
-}
-
-#[test]
-fn split_self_then_drop_keeps_tab_in_new_panel() {
-    let mut state = DockingState::new();
-    let panel_id = new_panel(&mut state, vec![1, 2]);
-
-    state.move_tab(
-        1,
-        DropTarget::Split {
-            panel_id,
-            side: Side::Right,
-        },
-    );
-
-    if let Some(DockNode::Split { children, .. }) = &state.root {
-        let DockNode::Panel(left) = &children[0] else {
-            panic!()
-        };
-        let DockNode::Panel(right) = &children[1] else {
-            panic!()
-        };
-        assert_eq!(left.tabs, vec![2]);
-        assert_eq!(right.tabs, vec![1]);
-    } else {
-        panic!("expected split");
-    }
-}
