@@ -292,4 +292,3 @@ fn closing_active_tab_promotes_first() {
         assert_eq!(panel.active_tab_id, Some(1));
     }
 }
-
