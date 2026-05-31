@@ -65,7 +65,7 @@ impl Workspace {
     }
 
     fn close_active(&mut self) {
-        let Some(tab) = self
+        let Some(tab_id) = self
             .tree
             .as_ref()
             .and_then(DockNode::first_panel)
@@ -75,10 +75,10 @@ impl Workspace {
         };
 
         if let Some(tree) = self.tree.as_mut() {
-            tree.remove_tab_except(&tab, None);
+            tree.remove_tab_except(&tab_id, None);
         }
         self.collapse_empty();
-        self.tab_titles.remove(&tab);
+        self.tab_titles.remove(&tab_id);
     }
 
     fn title(&self, tab_id: TabId) -> String {
@@ -117,41 +117,35 @@ impl DockingModel for Workspace {
         self.tree.as_ref()
     }
 
-    fn on_drop(&mut self, tab: TabId, target: DropTarget<PanelId>) -> bool {
+    fn on_drop(&mut self, tab_id: TabId, target: DropTarget<PanelId>) -> bool {
         let Some(tree) = self.tree.as_mut() else {
             return false;
         };
 
         let success = match target {
-            DropTarget::Tab {
-                panel_id: panel,
-                position,
-            } => {
-                let Some(target) = tree.panel_mut(&panel) else {
+            DropTarget::Tab { panel_id, position } => {
+                let Some(target) = tree.panel_mut(&panel_id) else {
                     return false;
                 };
-                target.insert_tab(tab, position);
-                tree.remove_tab_except(&tab, Some(&panel));
+                target.insert_tab(tab_id, position);
+                tree.remove_tab_except(&tab_id, Some(&panel_id));
                 true
             }
-            DropTarget::Center(panel) => {
-                let Some(target) = tree.panel_mut(&panel) else {
+            DropTarget::Center(panel_id) => {
+                let Some(target) = tree.panel_mut(&panel_id) else {
                     return false;
                 };
-                target.append_tab(tab);
-                tree.remove_tab_except(&tab, Some(&panel));
+                target.append_tab(tab_id);
+                tree.remove_tab_except(&tab_id, Some(&panel_id));
                 true
             }
-            DropTarget::Split {
-                panel_id: panel,
-                side,
-            } => {
+            DropTarget::Split { panel_id, side } => {
                 let new_panel_id = self.next_panel_id;
-                let new_panel = DockPanel::new(new_panel_id, vec![tab]);
-                if !tree.split_panel(&panel, side, &new_panel) {
+                let new_panel = DockPanel::new(new_panel_id, vec![tab_id]);
+                if !tree.split_panel(&panel_id, side, &new_panel) {
                     return false;
                 }
-                tree.remove_tab_except(&tab, Some(&new_panel_id));
+                tree.remove_tab_except(&tab_id, Some(&new_panel_id));
                 self.next_panel_id += 1;
                 true
             }
@@ -161,14 +155,18 @@ impl DockingModel for Workspace {
         success
     }
 
-    fn set_active(&mut self, panel: PanelId, tab: TabId) -> bool {
-        let Some(target) = self.tree.as_mut().and_then(|tree| tree.panel_mut(&panel)) else {
+    fn set_active(&mut self, panel_id: PanelId, tab_id: TabId) -> bool {
+        let Some(target) = self
+            .tree
+            .as_mut()
+            .and_then(|tree| tree.panel_mut(&panel_id))
+        else {
             return false;
         };
-        if !target.tabs.contains(&tab) {
+        if !target.tabs.contains(&tab_id) {
             return false;
         }
-        target.active_tab_id = Some(tab);
+        target.active_tab_id = Some(tab_id);
         true
     }
 }

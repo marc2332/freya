@@ -43,12 +43,12 @@ impl<TabId, PanelId> DockPanel<TabId, PanelId> {
         }
     }
 
-    /// Insert `tab` at `position`.
-    pub fn insert_tab(&mut self, tab: TabId, position: usize)
+    /// Insert `tab_id` at `position`.
+    pub fn insert_tab(&mut self, tab_id: TabId, position: usize)
     where
         TabId: Clone + PartialEq,
     {
-        let target = match self.tabs.iter().position(|item| *item == tab) {
+        let target = match self.tabs.iter().position(|item| *item == tab_id) {
             Some(existing) => {
                 self.tabs.remove(existing);
                 if position > existing {
@@ -59,18 +59,18 @@ impl<TabId, PanelId> DockPanel<TabId, PanelId> {
             }
             None => position,
         };
-        self.active_tab_id = Some(tab.clone());
-        self.tabs.insert(target.min(self.tabs.len()), tab);
+        self.active_tab_id = Some(tab_id.clone());
+        self.tabs.insert(target.min(self.tabs.len()), tab_id);
     }
 
-    /// Add `tab` at the end.
-    pub fn append_tab(&mut self, tab: TabId)
+    /// Add `tab_id` at the end.
+    pub fn append_tab(&mut self, tab_id: TabId)
     where
         TabId: Clone + PartialEq,
     {
-        self.tabs.retain(|item| *item != tab);
-        self.active_tab_id = Some(tab.clone());
-        self.tabs.push(tab);
+        self.tabs.retain(|item| *item != tab_id);
+        self.active_tab_id = Some(tab_id.clone());
+        self.tabs.push(tab_id);
     }
 }
 
@@ -98,20 +98,22 @@ where
     }
 
     /// Find the panel with the given id.
-    pub fn panel(&self, id: &PanelId) -> Option<&DockPanel<TabId, PanelId>> {
+    pub fn panel(&self, panel_id: &PanelId) -> Option<&DockPanel<TabId, PanelId>> {
         match self {
-            DockNode::Panel(panel) => (&panel.panel_id == id).then_some(panel),
-            DockNode::Split { children, .. } => children.iter().find_map(|child| child.panel(id)),
+            DockNode::Panel(panel) => (&panel.panel_id == panel_id).then_some(panel),
+            DockNode::Split { children, .. } => {
+                children.iter().find_map(|child| child.panel(panel_id))
+            }
         }
     }
 
     /// Mutable version of [`DockNode::panel`].
-    pub fn panel_mut(&mut self, id: &PanelId) -> Option<&mut DockPanel<TabId, PanelId>> {
+    pub fn panel_mut(&mut self, panel_id: &PanelId) -> Option<&mut DockPanel<TabId, PanelId>> {
         match self {
-            DockNode::Panel(panel) => (&panel.panel_id == id).then_some(panel),
-            DockNode::Split { children, .. } => {
-                children.iter_mut().find_map(|child| child.panel_mut(id))
-            }
+            DockNode::Panel(panel) => (&panel.panel_id == panel_id).then_some(panel),
+            DockNode::Split { children, .. } => children
+                .iter_mut()
+                .find_map(|child| child.panel_mut(panel_id)),
         }
     }
 
@@ -133,39 +135,39 @@ where
         }
     }
 
-    /// Find `tab` under this node.
-    pub fn find_tab(&self, tab: &TabId) -> Option<(PanelId, usize)> {
+    /// Find `tab_id` under this node.
+    pub fn find_tab(&self, tab_id: &TabId) -> Option<(PanelId, usize)> {
         match self {
             DockNode::Panel(panel) => panel
                 .tabs
                 .iter()
-                .position(|item| item == tab)
+                .position(|item| item == tab_id)
                 .map(|position| (panel.panel_id, position)),
             DockNode::Split { children, .. } => {
-                children.iter().find_map(|child| child.find_tab(tab))
+                children.iter().find_map(|child| child.find_tab(tab_id))
             }
         }
     }
 
-    /// Remove `tab` from every panel except `except_panel`.
-    pub fn remove_tab_except(&mut self, tab: &TabId, except_panel: Option<&PanelId>) -> bool {
+    /// Remove `tab_id` from every panel except `except_panel_id`.
+    pub fn remove_tab_except(&mut self, tab_id: &TabId, except_panel_id: Option<&PanelId>) -> bool {
         match self {
             DockNode::Panel(panel) => {
-                if except_panel == Some(&panel.panel_id) {
+                if except_panel_id == Some(&panel.panel_id) {
                     return false;
                 }
-                let Some(position) = panel.tabs.iter().position(|item| item == tab) else {
+                let Some(position) = panel.tabs.iter().position(|item| item == tab_id) else {
                     return false;
                 };
                 panel.tabs.remove(position);
-                if panel.active_tab_id.as_ref() == Some(tab) {
+                if panel.active_tab_id.as_ref() == Some(tab_id) {
                     panel.active_tab_id = panel.tabs.first().cloned();
                 }
                 true
             }
             DockNode::Split { children, .. } => children
                 .iter_mut()
-                .any(|child| child.remove_tab_except(tab, except_panel)),
+                .any(|child| child.remove_tab_except(tab_id, except_panel_id)),
         }
     }
 
@@ -252,8 +254,8 @@ pub trait DockingModel: 'static {
     /// Apply a dropped [`Self::DropValue`] at `target`. Returns `true` if
     /// something changed.
     fn on_drop(&mut self, value: Self::DropValue, target: DropTarget<Self::PanelId>) -> bool;
-    /// Make `tab` the active one in `panel`. Returns `true` if it was found.
-    fn set_active(&mut self, panel: Self::PanelId, tab: Self::TabId) -> bool;
+    /// Make `tab_id` the active one in `panel_id`. Returns `true` if it was found.
+    fn set_active(&mut self, panel_id: Self::PanelId, tab_id: Self::TabId) -> bool;
 }
 
 /// The payload carried by a drag in a docking area.

@@ -37,50 +37,50 @@ impl DockingState {
         id
     }
 
-    fn find_tab(&self, tab: TabId) -> Option<(PanelId, usize)> {
-        self.root.as_ref().and_then(|root| root.find_tab(&tab))
+    fn find_tab(&self, tab_id: TabId) -> Option<(PanelId, usize)> {
+        self.root.as_ref().and_then(|root| root.find_tab(&tab_id))
     }
 
-    fn set_active(&mut self, panel: PanelId, tab: TabId) -> bool {
-        let Some(target) = self.root.as_mut().and_then(|root| root.panel_mut(&panel)) else {
+    fn set_active(&mut self, panel_id: PanelId, tab_id: TabId) -> bool {
+        let Some(target) = self
+            .root
+            .as_mut()
+            .and_then(|root| root.panel_mut(&panel_id))
+        else {
             return false;
         };
-        if !target.tabs.contains(&tab) {
+        if !target.tabs.contains(&tab_id) {
             return false;
         }
-        target.active_tab_id = Some(tab);
+        target.active_tab_id = Some(tab_id);
         true
     }
 
-    fn close_tab(&mut self, tab: TabId) -> bool {
+    fn close_tab(&mut self, tab_id: TabId) -> bool {
         let Some(root) = self.root.as_mut() else {
             return false;
         };
-        let removed = root.remove_tab_except(&tab, None);
+        let removed = root.remove_tab_except(&tab_id, None);
         self.compact();
         removed
     }
 
-    fn move_tab(&mut self, tab: TabId, target: Target) -> bool {
+    fn move_tab(&mut self, tab_id: TabId, target: Target) -> bool {
         let Some(root) = self.root.as_mut() else {
             return false;
         };
         let success = match target {
-            DropTarget::Tab {
-                panel_id: target_panel,
-                position,
-            } => insert_at(root, target_panel, tab, Some(position)),
-            DropTarget::Center(target_panel) => insert_at(root, target_panel, tab, None),
-            DropTarget::Split {
-                panel_id: target_panel,
-                side,
-            } => {
+            DropTarget::Tab { panel_id, position } => {
+                insert_at(root, panel_id, tab_id, Some(position))
+            }
+            DropTarget::Center(panel_id) => insert_at(root, panel_id, tab_id, None),
+            DropTarget::Split { panel_id, side } => {
                 let new_panel_id = self.next_panel_id;
-                let new_panel = Panel::new(new_panel_id, vec![tab]);
-                if !root.split_panel(&target_panel, side, &new_panel) {
+                let new_panel = Panel::new(new_panel_id, vec![tab_id]);
+                if !root.split_panel(&panel_id, side, &new_panel) {
                     return false;
                 }
-                root.remove_tab_except(&tab, Some(&new_panel_id));
+                root.remove_tab_except(&tab_id, Some(&new_panel_id));
                 self.next_panel_id += 1;
                 true
             }
@@ -100,15 +100,15 @@ impl DockingState {
     }
 }
 
-fn insert_at(root: &mut Node, target_panel: PanelId, tab: TabId, position: Option<usize>) -> bool {
-    let Some(panel) = root.panel_mut(&target_panel) else {
+fn insert_at(root: &mut Node, panel_id: PanelId, tab_id: TabId, position: Option<usize>) -> bool {
+    let Some(panel) = root.panel_mut(&panel_id) else {
         return false;
     };
     match position {
-        Some(at) => panel.insert_tab(tab, at),
-        None => panel.append_tab(tab),
+        Some(at) => panel.insert_tab(tab_id, at),
+        None => panel.append_tab(tab_id),
     }
-    root.remove_tab_except(&tab, Some(&target_panel));
+    root.remove_tab_except(&tab_id, Some(&panel_id));
     true
 }
 
@@ -128,32 +128,32 @@ fn new_panel(state: &mut DockingState, tabs: Vec<TabId>) -> PanelId {
 #[test]
 fn find_tab_in_simple_panel() {
     let mut state = DockingState::new();
-    let panel = new_panel(&mut state, vec![10, 11, 12]);
-    assert_eq!(state.find_tab(11), Some((panel, 1)));
+    let panel_id = new_panel(&mut state, vec![10, 11, 12]);
+    assert_eq!(state.find_tab(11), Some((panel_id, 1)));
     assert_eq!(state.find_tab(99), None);
 }
 
 #[test]
 fn move_tab_between_panels() {
     let mut state = DockingState::new();
-    let source_panel = new_panel(&mut state, vec![1, 2, 3]);
-    let target_panel = new_panel(&mut state, vec![4]);
+    let source_panel_id = new_panel(&mut state, vec![1, 2, 3]);
+    let target_panel_id = new_panel(&mut state, vec![4]);
 
     assert!(state.move_tab(
         2,
         DropTarget::Tab {
-            panel_id: target_panel,
+            panel_id: target_panel_id,
             position: 0,
         },
     ));
 
-    assert_eq!(state.find_tab(2), Some((target_panel, 0)));
-    let (origin, _) = state.find_tab(1).unwrap();
-    assert_eq!(origin, source_panel);
+    assert_eq!(state.find_tab(2), Some((target_panel_id, 0)));
+    let (origin_panel_id, _) = state.find_tab(1).unwrap();
+    assert_eq!(origin_panel_id, source_panel_id);
     if let Some(DockNode::Split { children, .. }) = &state.root {
         for child in children {
             if let DockNode::Panel(panel) = child
-                && panel.panel_id == target_panel
+                && panel.panel_id == target_panel_id
             {
                 assert_eq!(panel.tabs, vec![2, 4]);
                 assert_eq!(panel.active_tab_id, Some(2));
@@ -165,14 +165,14 @@ fn move_tab_between_panels() {
 #[test]
 fn moving_last_tab_collapses_panel() {
     let mut state = DockingState::new();
-    let _source = new_panel(&mut state, vec![1]);
-    let target = new_panel(&mut state, vec![2]);
+    let _source_panel_id = new_panel(&mut state, vec![1]);
+    let target_panel_id = new_panel(&mut state, vec![2]);
 
-    assert!(state.move_tab(1, DropTarget::Center(target)));
+    assert!(state.move_tab(1, DropTarget::Center(target_panel_id)));
 
     match state.root.as_ref().unwrap() {
         DockNode::Panel(panel) => {
-            assert_eq!(panel.panel_id, target);
+            assert_eq!(panel.panel_id, target_panel_id);
             assert_eq!(panel.tabs, vec![2, 1]);
         }
         other => panic!("expected panel, got {other:?}"),
@@ -182,7 +182,7 @@ fn moving_last_tab_collapses_panel() {
 #[test]
 fn reorder_within_same_panel() {
     let mut state = DockingState::new();
-    let panel = new_panel(&mut state, vec![1, 2, 3, 4]);
+    let panel_id = new_panel(&mut state, vec![1, 2, 3, 4]);
 
     assert!(state.move_tab(
         1,
@@ -202,7 +202,7 @@ fn reorder_within_same_panel() {
 #[test]
 fn split_creates_new_panel() {
     let mut state = DockingState::new();
-    let panel = new_panel(&mut state, vec![1, 2]);
+    let panel_id = new_panel(&mut state, vec![1, 2]);
 
     assert!(state.move_tab(
         1,
@@ -225,7 +225,7 @@ fn split_creates_new_panel() {
             let DockNode::Panel(right) = &children[1] else {
                 panic!("expected panel");
             };
-            assert_eq!(left.panel_id, panel);
+            assert_eq!(left.panel_id, panel_id);
             assert_eq!(left.tabs, vec![2]);
             assert_eq!(right.tabs, vec![1]);
             assert_eq!(right.active_tab_id, Some(1));
@@ -237,7 +237,7 @@ fn split_creates_new_panel() {
 #[test]
 fn split_left_places_new_panel_first() {
     let mut state = DockingState::new();
-    let panel = new_panel(&mut state, vec![1, 2]);
+    let panel_id = new_panel(&mut state, vec![1, 2]);
 
     assert!(state.move_tab(
         2,
@@ -260,12 +260,12 @@ fn split_left_places_new_panel_first() {
 #[test]
 fn split_top_uses_vertical_direction() {
     let mut state = DockingState::new();
-    let panel = new_panel(&mut state, vec![1, 2]);
+    let panel_id = new_panel(&mut state, vec![1, 2]);
 
     state.move_tab(
         2,
         DropTarget::Split {
-            panel_id: panel,
+            panel_id,
             side: Side::Top,
         },
     );
@@ -280,14 +280,14 @@ fn split_top_uses_vertical_direction() {
 #[test]
 fn close_tab_removes_and_compacts() {
     let mut state = DockingState::new();
-    let removed = new_panel(&mut state, vec![1]);
-    let _kept = new_panel(&mut state, vec![2, 3]);
+    let removed_panel_id = new_panel(&mut state, vec![1]);
+    let _kept_panel_id = new_panel(&mut state, vec![2, 3]);
 
     state.close_tab(1);
 
     match state.root.as_ref().unwrap() {
         DockNode::Panel(panel) => {
-            assert_ne!(panel.panel_id, removed);
+            assert_ne!(panel.panel_id, removed_panel_id);
             assert_eq!(panel.tabs, vec![2, 3]);
         }
         other => panic!("expected single panel, got {other:?}"),
@@ -297,8 +297,8 @@ fn close_tab_removes_and_compacts() {
 #[test]
 fn closing_active_tab_promotes_first() {
     let mut state = DockingState::new();
-    let panel = new_panel(&mut state, vec![1, 2, 3]);
-    state.set_active(panel, 2);
+    let panel_id = new_panel(&mut state, vec![1, 2, 3]);
+    state.set_active(panel_id, 2);
     state.close_tab(2);
 
     if let Some(DockNode::Panel(panel)) = &state.root {
@@ -322,12 +322,12 @@ fn with_layout_advances_id_counter() {
 #[test]
 fn split_self_then_drop_keeps_tab_in_new_panel() {
     let mut state = DockingState::new();
-    let panel = new_panel(&mut state, vec![1, 2]);
+    let panel_id = new_panel(&mut state, vec![1, 2]);
 
     state.move_tab(
         1,
         DropTarget::Split {
-            panel_id: panel,
+            panel_id,
             side: Side::Right,
         },
     );
