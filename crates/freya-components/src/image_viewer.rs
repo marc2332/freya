@@ -182,25 +182,29 @@ impl ImageSource {
     }
 
     fn downsample(encoded: &SkImage, target: DecodeSize) -> Option<SkImage> {
-        let natural_w = encoded.width() as f32;
-        let natural_h = encoded.height() as f32;
-        let target_w = target.width as f32;
-        let target_h = target.height as f32;
-        if natural_w <= target_w && natural_h <= target_h {
+        let natural_width = encoded.width() as f32;
+        let natural_height = encoded.height() as f32;
+        let target_width = target.width as f32;
+        let target_height = target.height as f32;
+        if natural_width <= target_width && natural_height <= target_height {
             return None;
         }
-        let ratio = (target_w / natural_w).min(target_h / natural_h);
-        let width = (natural_w * ratio).round().max(1.);
-        let height = (natural_h * ratio).round().max(1.);
+        let ratio = (target_width / natural_width).min(target_height / natural_height);
+        let width = (natural_width * ratio).round().max(1.);
+        let height = (natural_height * ratio).round().max(1.);
 
         let mut surface = raster_n32_premul((width as i32, height as i32))?;
-        let dst = SkRect::from_xywh(0., 0., width, height);
+        let destination = SkRect::from_xywh(0., 0., width, height);
         let sampling = SamplingOptions::new(FilterMode::Linear, MipmapMode::Linear);
         let mut paint = Paint::default();
         paint.set_anti_alias(true);
-        surface
-            .canvas()
-            .draw_image_rect_with_sampling_options(encoded, None, dst, sampling, &paint);
+        surface.canvas().draw_image_rect_with_sampling_options(
+            encoded,
+            None,
+            destination,
+            sampling,
+            &paint,
+        );
         Some(surface.image_snapshot())
     }
 }
@@ -400,6 +404,7 @@ impl Component for ImageViewer {
                     spawn_forever(async move {
                         match source.bytes(target).await {
                             Ok((image, bytes)) => {
+                                // Image loaded
                                 let image_holder = ImageHolder {
                                     bytes,
                                     image: Rc::new(RefCell::new(image)),
@@ -410,6 +415,7 @@ impl Component for ImageViewer {
                                 );
                             }
                             Err(err) => {
+                                // Image errored
                                 asset_cacher
                                     .update_asset(asset_config, Asset::Error(err.to_string()));
                             }
