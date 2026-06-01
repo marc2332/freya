@@ -189,8 +189,8 @@ impl Component for Switch {
 
         let mut hovering = use_state(|| false);
         let mut pressing = use_state(|| false);
-        let focus = use_focus();
-        let focus_status = use_focus_status(focus);
+        let a11y_id = use_a11y();
+        let focus = use_focus(a11y_id);
 
         let toggled = *self.toggled.read();
 
@@ -256,7 +256,7 @@ impl Component for Switch {
             }
         });
 
-        let border = if focus_status() == FocusStatus::Keyboard {
+        let border = if focus() == Focus::Keyboard {
             Border::new()
                 .width(2.)
                 .alignment(BorderAlignment::Inner)
@@ -267,7 +267,7 @@ impl Component for Switch {
         let (offset_x, size, background, thumb) = anim_toggle.get().value();
 
         rect()
-            .a11y_id(focus.a11y_id())
+            .a11y_id(a11y_id)
             .a11y_focusable(self.enabled)
             .a11y_role(AccessibilityRole::Switch)
             .a11y_builder(|builder| builder.set_toggled(Toggled::from(toggled)))
@@ -286,7 +286,7 @@ impl Component for Switch {
                         if let Some(on_toggle) = &on_toggle {
                             on_toggle.call(())
                         }
-                        focus.request_focus();
+                        a11y_id.request_focus();
                     }
                 })
                 .on_pointer_down(move |e: Event<PointerEventData>| {

@@ -206,6 +206,9 @@ impl Component for ColorPicker {
         let on_sv_pointer_down = {
             let mut update_sv = update_sv.clone();
             move |e: Event<PointerEventData>| {
+                if !e.data().is_primary() {
+                    return;
+                }
                 dragging.set(DragTarget::Sv);
                 update_sv(e.global_location());
                 e.stop_propagation();
@@ -216,6 +219,9 @@ impl Component for ColorPicker {
         let on_hue_pointer_down = {
             let mut update_hue = update_hue.clone();
             move |e: Event<PointerEventData>| {
+                if !e.data().is_primary() {
+                    return;
+                }
                 dragging.set(DragTarget::Hue);
                 update_hue(e.global_location());
                 e.stop_propagation();

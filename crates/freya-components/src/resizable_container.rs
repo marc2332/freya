@@ -543,6 +543,9 @@ impl Component for ResizableHandle {
         };
 
         let on_pointer_down = move |e: Event<PointerEventData>| {
+            if !e.data().is_primary() {
+                return;
+            }
             e.stop_propagation();
             e.prevent_default();
             clicking.set(true);

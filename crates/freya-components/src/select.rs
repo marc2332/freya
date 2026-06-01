@@ -129,13 +129,13 @@ impl Select {
 impl Component for Select {
     fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, SelectThemePreference, "select");
-        let focus = use_focus();
-        let focus_status = use_focus_status(focus);
+        let a11y_id = use_a11y();
+        let focus = use_focus(a11y_id);
         let mut status = use_state(SelectStatus::default);
         let mut open = use_state(|| false);
-        use_provide_context(|| MenuGroup {
-            group_id: focus.a11y_id(),
-        });
+        let mut button_area = use_state(|| None::<Area>);
+        let mut list_size = use_state(|| None::<Size2D>);
+        use_provide_context(|| MenuGroup { group_id: a11y_id });
 
         let animation = use_animation(move |conf| {
             conf.on_change(OnChange::Rerun);
@@ -174,20 +174,18 @@ impl Component for Select {
         // Close the select when the focused accessibility node changes and its not the select or any of its children
         use_side_effect(move || {
             let platform = Platform::get();
-            if *platform.navigation_mode.read() == NavigationMode::Keyboard {
-                let should_close = platform
-                    .focused_accessibility_node
-                    .read()
-                    .member_of()
-                    .is_none_or(|member_of| member_of != focus.a11y_id());
-                if should_close {
-                    open.set_if_modified(false);
-                }
+            let should_close = platform
+                .focused_accessibility_node
+                .read()
+                .member_of()
+                .is_none_or(|member_of| member_of != a11y_id);
+            if should_close {
+                open.set_if_modified(false);
             }
         });
 
         let on_press = move |e: Event<PressEventData>| {
-            focus.request_focus();
+            a11y_id.request_focus();
             open.toggle();
             // Prevent global mouse up
             e.prevent_default();
@@ -213,20 +211,37 @@ impl Component for Select {
             Key::Named(NamedKey::Escape) => {
                 open.set_if_modified(false);
             }
-            Key::Named(NamedKey::Enter) if focus.is_focused() => {
+            Key::Named(NamedKey::Enter) if a11y_id.is_focused() => {
                 open.toggle();
             }
             _ => {}
         };
 
-        let (scale, opacity, offset_y) = animation.read().value();
+        let (scale, opacity, slide) = animation.read().value();
+
+        let offset_y = match (button_area(), list_size()) {
+            (Some(button), Some(list)) => {
+                let root_height = Platform::get().root_size.peek().height;
+                let space_below = root_height - button.max_y();
+                let space_above = button.min_y();
+                let flips = list.height > space_below && list.height <= space_above;
+                if flips {
+                    -(button.height() + list.height) - slide
+                } else {
+                    slide
+                }
+            }
+            _ => slide,
+        };
+
+        let opacity = if list_size().is_some() { opacity } else { 0. };
 
         let background = match *status.read() {
             SelectStatus::Hovering => theme.hover_background,
             SelectStatus::Idle => theme.background_button,
         };
 
-        let border = if focus_status() == FocusStatus::Keyboard {
+        let border = if focus() == Focus::Keyboard {
             Border::new()
                 .fill(theme.focus_border_fill)
                 .width(2.)
@@ -241,8 +256,8 @@ impl Component for Select {
         rect()
             .child(
                 rect()
-                    .a11y_id(focus.a11y_id())
-                    .a11y_member_of(focus.a11y_id())
+                    .a11y_id(a11y_id)
+                    .a11y_member_of(a11y_id)
                     .a11y_role(AccessibilityRole::ListBox)
                     .a11y_focusable(Focusable::Enabled)
                     .on_pointer_enter(on_pointer_enter)
@@ -250,6 +265,9 @@ impl Component for Select {
                     .on_press(on_press)
                     .on_global_key_down(on_global_key_down)
                     .on_global_pointer_press(on_global_pointer_press)
+                    .on_sized(move |e: Event<SizedEventData>| {
+                        button_area.set_if_modified(Some(e.area));
+                    })
                     .width(theme.width)
                     .margin(theme.margin)
                     .background(background)
@@ -271,8 +289,11 @@ impl Component for Select {
                 rect().height(Size::px(0.)).width(Size::px(0.)).child(
                     rect()
                         .width(Size::window_percent(100.))
-                        .margin(Gaps::new(4., 0., 0., 0.))
+                        .margin(Gaps::new(4., 0., 4., 0.))
                         .offset_y(offset_y)
+                        .on_sized(move |e: Event<SizedEventData>| {
+                            list_size.set_if_modified(Some(e.area.size));
+                        })
                         .child(
                             rect()
                                 .layer(Layer::Overlay)

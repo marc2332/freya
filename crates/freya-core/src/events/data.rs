@@ -247,6 +247,14 @@ impl PointerEventData {
             Self::Touch(_) => None,
         }
     }
+
+    /// Whether this is a touch event or a primary (left) mouse button event.
+    pub fn is_primary(&self) -> bool {
+        match self {
+            Self::Mouse(m) => m.button == Some(MouseButton::Left),
+            Self::Touch(_) => true,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]

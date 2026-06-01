@@ -50,6 +50,7 @@ use crate::{
         text_height::TextHeightBehavior,
         text_overflow::TextOverflow,
         text_shadow::TextShadow,
+        transform_origin::TransformOrigin,
     },
 };
 
@@ -83,6 +84,7 @@ pub struct EffectData {
     pub overflow: Overflow,
     pub rotation: Option<f32>,
     pub scale: Option<Scale>,
+    pub transform_origin: TransformOrigin,
     pub opacity: Option<f32>,
     pub blur: Option<f32>,
     pub scrollable: bool,
@@ -297,6 +299,8 @@ pub struct EffectState {
     pub scales: Rc<[NodeId]>,
     pub scale: Option<Scale>,
 
+    pub transform_origin: TransformOrigin,
+
     pub opacities: Rc<[f32]>,
 
     pub blur: Option<f32>,
@@ -320,6 +324,7 @@ impl EffectState {
             blur: None,
             rotation: None,
             scale: None,
+            transform_origin: TransformOrigin::default(),
             ..parent_effect_state.clone()
         };
 
@@ -340,6 +345,7 @@ impl EffectState {
         if let Some(effect_data) = effect_data {
             self.overflow = effect_data.overflow;
             self.blur = effect_data.blur;
+            self.transform_origin = effect_data.transform_origin;
 
             if let Some(rotation) = effect_data.rotation {
                 let mut rotations = parent_effect_state.rotations.to_vec();
@@ -375,7 +381,9 @@ impl EffectState {
                 }
             }
 
-            self.interactive = effect_data.interactive;
+            if effect_data.interactive == Interactive::No {
+                self.interactive = Interactive::No;
+            }
         }
     }
 

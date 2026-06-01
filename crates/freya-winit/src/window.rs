@@ -412,12 +412,7 @@ impl AppWindow {
             Key,
             Modifiers,
         };
-        let zoom_modifier = if cfg!(target_os = "macos") {
-            Modifiers::META
-        } else {
-            Modifiers::CONTROL
-        };
-        if !modifiers.contains(zoom_modifier) {
+        if !modifiers.contains(Modifiers::ctrl_or_meta()) {
             return false;
         }
         let new_zoom = match key {

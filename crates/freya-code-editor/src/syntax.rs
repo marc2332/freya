@@ -433,32 +433,32 @@ impl LanguageId {
     fn lang_config(&self, theme: &SyntaxTheme) -> Option<LangConfig> {
         let (language, highlights_query) = match self {
             #[cfg(feature = "rust")]
-            LanguageId::Rust => (
+            LanguageId::Rust => Some((
                 tree_sitter_rust::LANGUAGE.into(),
                 tree_sitter_rust::HIGHLIGHTS_QUERY,
-            ),
+            )),
             #[cfg(feature = "json")]
-            LanguageId::Json => (
+            LanguageId::Json => Some((
                 tree_sitter_json::LANGUAGE.into(),
                 tree_sitter_json::HIGHLIGHTS_QUERY,
-            ),
+            )),
             #[cfg(feature = "toml")]
-            LanguageId::Toml => (
+            LanguageId::Toml => Some((
                 tree_sitter_toml_ng::LANGUAGE.into(),
                 tree_sitter_toml_ng::HIGHLIGHTS_QUERY,
-            ),
+            )),
             #[cfg(feature = "md")]
-            LanguageId::Markdown => (
+            LanguageId::Markdown => Some((
                 tree_sitter_md::LANGUAGE.into(),
                 tree_sitter_md::HIGHLIGHT_QUERY_BLOCK,
-            ),
+            )),
             #[cfg(feature = "sql")]
-            LanguageId::SQL => (
+            LanguageId::SQL => Some((
                 tree_sitter_sequel::LANGUAGE.into(),
                 tree_sitter_sequel::HIGHLIGHTS_QUERY,
-            ),
-            _ => return None,
-        };
+            )),
+            _ => None,
+        }?;
 
         let query = Query::new(&language, highlights_query).ok()?;
         let capture_colors: Vec<Color> = query

@@ -48,6 +48,7 @@ use crate::prelude::*;
 pub struct Readable<T: 'static> {
     pub(crate) read_fn: Rc<dyn Fn() -> ReadableRef<T>>,
     pub(crate) peek_fn: Rc<dyn Fn() -> ReadableRef<T>>,
+    pub(crate) equal_fn: Rc<dyn Fn(&T) -> bool>,
 }
 
 impl<T: 'static> Clone for Readable<T> {
@@ -55,31 +56,24 @@ impl<T: 'static> Clone for Readable<T> {
         Self {
             read_fn: self.read_fn.clone(),
             peek_fn: self.peek_fn.clone(),
+            equal_fn: self.equal_fn.clone(),
         }
     }
 }
 
 impl<T: 'static> PartialEq for Readable<T> {
-    fn eq(&self, _other: &Self) -> bool {
-        true
+    fn eq(&self, other: &Self) -> bool {
+        (self.equal_fn)(&*other.peek())
     }
 }
 
-impl<T> From<T> for Readable<T> {
+impl<T: PartialEq> From<T> for Readable<T> {
     fn from(value: T) -> Self {
         Readable::from_value(value)
     }
 }
 
-impl<T: 'static> Readable<T> {
-    /// Create from local `State<T>`.
-    pub fn from_state(state: State<T>) -> Self {
-        Self {
-            read_fn: Rc::new(move || ReadableRef::Ref(state.read())),
-            peek_fn: Rc::new(move || ReadableRef::Ref(state.peek())),
-        }
-    }
-
+impl<T: 'static + PartialEq> Readable<T> {
     /// Create from an owned value.
     pub fn from_value(value: T) -> Self {
         let value = Rc::new(value);
@@ -88,7 +82,21 @@ impl<T: 'static> Readable<T> {
                 let value = value.clone();
                 move || ReadableRef::Borrowed(value.clone())
             }),
-            peek_fn: Rc::new(move || ReadableRef::Borrowed(value.clone())),
+            peek_fn: Rc::new({
+                let value = value.clone();
+                move || ReadableRef::Borrowed(value.clone())
+            }),
+            equal_fn: Rc::new(move |other| other == &*value),
+        }
+    }
+}
+impl<T: 'static> Readable<T> {
+    /// Create from local `State<T>`.
+    pub fn from_state(state: State<T>) -> Self {
+        Self {
+            read_fn: Rc::new(move || ReadableRef::Ref(state.read())),
+            peek_fn: Rc::new(move || ReadableRef::Ref(state.peek())),
+            equal_fn: Rc::new(move |_| true),
         }
     }
 
@@ -96,10 +104,12 @@ impl<T: 'static> Readable<T> {
     pub fn new(
         read_fn: Box<dyn Fn() -> ReadableRef<T>>,
         peek_fn: Box<dyn Fn() -> ReadableRef<T>>,
+        equal_fn: Box<dyn Fn(&T) -> bool>,
     ) -> Self {
         Self {
             read_fn: Rc::from(read_fn),
             peek_fn: Rc::from(peek_fn),
+            equal_fn: Rc::from(equal_fn),
         }
     }
 
@@ -129,14 +139,26 @@ impl<T: 'static> IntoReadable<T> for State<T> {
     }
 }
 
-impl<T: 'static> IntoReadable<T> for T {
+impl<T: 'static + PartialEq> IntoReadable<T> for T {
     fn into_readable(self) -> Readable<T> {
         Readable::from_value(self)
     }
 }
 
+impl<T: 'static> IntoReadable<T> for Memo<T> {
+    fn into_readable(self) -> Readable<T> {
+        Readable::from_state(self.state)
+    }
+}
+
 impl<T> From<State<T>> for Readable<T> {
     fn from(value: State<T>) -> Self {
+        value.into_readable()
+    }
+}
+
+impl<T> From<Memo<T>> for Readable<T> {
+    fn from(value: Memo<T>) -> Self {
         value.into_readable()
     }
 }

@@ -166,8 +166,13 @@ impl ElementExt for ImageElement {
         }
 
         if self.image_holder != image.image_holder {
-            diff.insert(DiffModifies::LAYOUT);
             diff.insert(DiffModifies::STYLE);
+
+            if self.image_holder.image.borrow().dimensions()
+                != image.image_holder.image.borrow().dimensions()
+            {
+                diff.insert(DiffModifies::LAYOUT);
+            }
         }
 
         if self.effect != image.effect || self.corner_radius != image.corner_radius {

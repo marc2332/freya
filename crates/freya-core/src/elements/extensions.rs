@@ -7,6 +7,7 @@ use std::{
 };
 
 use paste::paste;
+use ragnarok::CursorPoint;
 use rustc_hash::{
     FxHashMap,
     FxHasher,
@@ -66,6 +67,7 @@ use crate::{
         text_height::TextHeightBehavior,
         text_overflow::TextOverflow,
         text_shadow::TextShadow,
+        transform_origin::TransformOrigin,
     },
 };
 
@@ -284,7 +286,7 @@ pub trait EventHandlersExt: Sized {
             }
         })
         .on_key_down(move |e: Event<KeyboardEventData>| {
-            if Focus::is_pressed(&e) {
+            if e.is_press_event() {
                 on_press.call(e.map(PressEventData::Keyboard))
             }
         })
@@ -320,20 +322,85 @@ pub trait EventHandlersExt: Sized {
         self.on_pointer_press({
             let on_press = on_press.clone();
             move |e: Event<PointerEventData>| {
-                let event = e.try_map(|d| match d {
-                    PointerEventData::Mouse(m) => Some(PressEventData::Mouse(m)),
-                    PointerEventData::Touch(t) => Some(PressEventData::Touch(t)),
+                let event = e.map(|d| match d {
+                    PointerEventData::Mouse(m) => PressEventData::Mouse(m),
+                    PointerEventData::Touch(t) => PressEventData::Touch(t),
                 });
-                if let Some(event) = event {
-                    on_press.call(event);
-                }
+                on_press.call(event);
             }
         })
         .on_key_down(move |e: Event<KeyboardEventData>| {
-            if Focus::is_pressed(&e) {
+            if e.is_press_event() {
                 on_press.call(e.map(PressEventData::Keyboard))
             }
         })
+    }
+    /// Gets triggered when:
+    /// - **Started clicking**: There is a `MouseDown` event (Left button)
+    /// - **Touched**: There is a `TouchEnd` event in the same element that there had been a `TouchStart` just before
+    ///
+    /// This event is intended to focus elements such as text inputs following each platform style.
+    fn on_focus_press(
+        self,
+        on_focus_press: impl Into<EventHandler<Event<FocusPressEventData>>>,
+    ) -> Self {
+        let on_focus_press = on_focus_press.into();
+        if cfg!(target_os = "android") {
+            self.on_pointer_press(move |e: Event<PointerEventData>| {
+                let event = e.try_map(|d| match d {
+                    PointerEventData::Mouse(m) if m.button == Some(MouseButton::Left) => {
+                        Some(FocusPressEventData::Mouse(m))
+                    }
+                    PointerEventData::Touch(t) => Some(FocusPressEventData::Touch(t)),
+                    _ => None,
+                });
+                if let Some(event) = event {
+                    on_focus_press.call(event);
+                }
+            })
+        } else {
+            self.on_pointer_down(move |e: Event<PointerEventData>| {
+                let event = e.try_map(|d| match d {
+                    PointerEventData::Mouse(m) if m.button == Some(MouseButton::Left) => {
+                        Some(FocusPressEventData::Mouse(m))
+                    }
+                    PointerEventData::Touch(t) => Some(FocusPressEventData::Touch(t)),
+                    _ => None,
+                });
+                if let Some(event) = event {
+                    on_focus_press.call(event);
+                }
+            })
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum FocusPressEventData {
+    Mouse(MouseEventData),
+    Touch(TouchEventData),
+}
+
+impl FocusPressEventData {
+    pub fn global_location(&self) -> CursorPoint {
+        match self {
+            Self::Mouse(m) => m.global_location,
+            Self::Touch(t) => t.global_location,
+        }
+    }
+
+    pub fn element_location(&self) -> CursorPoint {
+        match self {
+            Self::Mouse(m) => m.element_location,
+            Self::Touch(t) => t.element_location,
+        }
+    }
+
+    pub fn button(&self) -> Option<MouseButton> {
+        match self {
+            Self::Mouse(m) => m.button,
+            Self::Touch(_) => None,
+        }
     }
 }
 
@@ -846,6 +913,14 @@ pub trait EffectExt: Sized {
 
     fn scale(mut self, scale: impl Into<Scale>) -> Self {
         self.get_effect().scale = Some(scale.into());
+        self
+    }
+
+    /// Set the point that the scale and rotation effects pivot around.
+    ///
+    /// Defaults to the element's center.
+    fn transform_origin(mut self, transform_origin: impl Into<TransformOrigin>) -> Self {
+        self.get_effect().transform_origin = transform_origin.into();
         self
     }
 }

@@ -45,7 +45,6 @@ use crate::{
         },
         name::EventName,
     },
-    helpers::from_fn_standalone_borrowed_keyed,
     layers::Layer,
     node_id::NodeId,
     prelude::{
@@ -345,7 +344,7 @@ where
     T: Component,
 {
     fn default_key(&self) -> DiffKey {
-        DiffKey::U64(Self::render as *const () as u64)
+        DiffKey::DefaultU64(Self::render as *const () as u64)
     }
 }
 
@@ -353,7 +352,22 @@ impl<T> MaybeExt for T where T: Component {}
 
 impl<T: Component> From<T> for Element {
     fn from(value: T) -> Self {
-        from_fn_standalone_borrowed_keyed(value.render_key(), value, |v| v.render().into_element())
+        let key = value.render_key();
+        Element::Component {
+            key,
+            #[cfg(feature = "hotreload")]
+            comp: Rc::new(move |props| {
+                let props = (&*props as &dyn Any).downcast_ref::<T>().unwrap();
+                crate::hotreload::subsecond::HotFn::current(|v: &T| v.render().into_element())
+                    .call((props,))
+            }),
+            #[cfg(not(feature = "hotreload"))]
+            comp: Rc::new(move |props| {
+                let props = (&*props as &dyn Any).downcast_ref::<T>().unwrap();
+                props.render().into_element()
+            }),
+            props: Rc::new(value),
+        }
     }
 }
 

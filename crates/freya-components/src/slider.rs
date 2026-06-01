@@ -108,8 +108,8 @@ impl Slider {
 impl Component for Slider {
     fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, SliderThemePreference, "slider");
-        let focus = use_focus();
-        let focus_status = use_focus_status(focus);
+        let a11y_id = use_a11y();
+        let focus = use_focus(a11y_id);
         let mut hovering = use_state(|| false);
         let mut clicking = use_state(|| false);
         let mut size = use_state(Area::default);
@@ -177,7 +177,10 @@ impl Component for Slider {
         let on_pointer_down = {
             let on_moved = self.on_moved.clone();
             move |e: Event<PointerEventData>| {
-                focus.request_focus();
+                if !e.data().is_primary() {
+                    return;
+                }
+                a11y_id.request_focus();
                 clicking.set(true);
                 e.stop_propagation();
                 let coordinates = e.element_location();
@@ -211,7 +214,7 @@ impl Component for Slider {
             }
         };
 
-        let border = if focus_status() == FocusStatus::Keyboard {
+        let border = if focus() == Focus::Keyboard {
             Border::new()
                 .fill(theme.border_fill)
                 .width(2.)
@@ -285,7 +288,7 @@ impl Component for Slider {
             .corner_radius(50.);
 
         rect()
-            .a11y_id(focus.a11y_id())
+            .a11y_id(a11y_id)
             .a11y_focusable(self.enabled)
             .a11y_role(AccessibilityRole::Slider)
             .on_sized(move |e: Event<SizedEventData>| size.set(e.area))

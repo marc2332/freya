@@ -102,7 +102,7 @@ impl ChildrenExt for Accordion {
 
 impl Component for Accordion {
     fn render(self: &Accordion) -> impl IntoElement {
-        let header = use_focus();
+        let header_a11y_id = use_a11y();
         let accordion_theme = get_theme!(&self.theme, AccordionThemePreference, "accordion");
         let cursor_icon = self.cursor_icon;
         let mut open = use_state(|| false);
@@ -116,7 +116,7 @@ impl Component for Accordion {
         let clip_percent = animation.get().value();
 
         rect()
-            .a11y_id(header.a11y_id())
+            .a11y_id(header_a11y_id)
             .a11y_role(AccessibilityRole::Header)
             .a11y_focusable(true)
             .corner_radius(CornerRadius::new_all(8.))
@@ -147,7 +147,7 @@ impl Component for Accordion {
                 rect()
                     .a11y_role(AccessibilityRole::Region)
                     .a11y_builder(|b| {
-                        b.set_labelled_by([header.a11y_id()]);
+                        b.set_labelled_by([header_a11y_id]);
                         if !open() {
                             b.set_hidden();
                         }
