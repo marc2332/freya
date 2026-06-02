@@ -79,13 +79,13 @@ impl<T: PartialEq> From<T> for Readable<T> {
 impl<T: 'static + PartialEq> Readable<T> {
     /// Create from an owned value.
     pub fn from_value(value: T) -> Self {
-        let value = Rc::from(value);
+        let value = Rc::new(value);
         Self {
-            read_fn: Rc::from({
+            read_fn: Rc::new({
                 let value = value.clone();
                 move || ReadableRef::Borrowed(value.clone())
             }),
-            peek_fn: Rc::from({
+            peek_fn: Rc::new({
                 let value = value.clone();
                 move || ReadableRef::Borrowed(value.clone())
             }),
@@ -97,8 +97,8 @@ impl<T: 'static> Readable<T> {
     /// Create from local `State<T>`.
     pub fn from_state(state: State<T>) -> Self {
         Self {
-            read_fn: Rc::from(move || ReadableRef::Ref(state.read())),
-            peek_fn: Rc::from(move || ReadableRef::Ref(state.peek())),
+            read_fn: Rc::new(move || ReadableRef::Ref(state.read())),
+            peek_fn: Rc::new(move || ReadableRef::Ref(state.peek())),
             equal_fn: Rc::new(move |_| true),
         }
     }
@@ -110,9 +110,9 @@ impl<T: 'static> Readable<T> {
         equal_fn: impl Fn(&T) -> bool + 'static,
     ) -> Self {
         Self {
-            read_fn: Rc::from(read_fn),
-            peek_fn: Rc::from(peek_fn),
-            equal_fn: Rc::from(equal_fn),
+            read_fn: Rc::new(read_fn),
+            peek_fn: Rc::new(peek_fn),
+            equal_fn: Rc::new(equal_fn),
         }
     }
 
@@ -147,9 +147,9 @@ impl<T: 'static> Readable<T> {
         equal_fn: impl Fn(&O) -> bool + 'static,
     ) -> Readable<O> {
         let readable = self.clone();
-        let map_fn = Rc::from(map_fn);
+        let map_fn = Rc::new(map_fn);
         Readable {
-            read_fn: Rc::from({
+            read_fn: Rc::new({
                 let map_fn = map_fn.clone();
                 let readable = readable.clone();
                 move || {
@@ -160,14 +160,14 @@ impl<T: 'static> Readable<T> {
                     ReadableRef::Ref(r.map(|r| Ref::map(r, |v| (map_fn)(v))))
                 }
             }),
-            peek_fn: Rc::from(move || {
+            peek_fn: Rc::new(move || {
                 let ReadableRef::Ref(r) = readable.peek() else {
                     unreachable!("Unsupported")
                 };
 
                 ReadableRef::Ref(r.map(|r| Ref::map(r, |v| (map_fn)(v))))
             }),
-            equal_fn: Rc::from(equal_fn),
+            equal_fn: Rc::new(equal_fn),
         }
     }
 }

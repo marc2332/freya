@@ -72,10 +72,10 @@ impl<T: 'static> Writable<T> {
     /// Create from local `State<T>`.
     pub fn from_state(state: State<T>) -> Self {
         Self {
-            peek_fn: Rc::from(move || state.peek()),
-            write_fn: Rc::from(move || state.write_silently()),
-            subscribe_fn: Rc::from(move || state.subscribe()),
-            notify_fn: Rc::from(move || state.notify()),
+            peek_fn: Rc::new(move || state.peek()),
+            write_fn: Rc::new(move || state.write_silently()),
+            subscribe_fn: Rc::new(move || state.subscribe()),
+            notify_fn: Rc::new(move || state.notify()),
         }
     }
 
@@ -87,10 +87,10 @@ impl<T: 'static> Writable<T> {
         notify_fn: impl Fn() + 'static,
     ) -> Self {
         Self {
-            peek_fn: Rc::from(peek_fn),
-            write_fn: Rc::from(write_fn),
-            subscribe_fn: Rc::from(subscribe_fn),
-            notify_fn: Rc::from(notify_fn),
+            peek_fn: Rc::new(peek_fn),
+            write_fn: Rc::new(write_fn),
+            subscribe_fn: Rc::new(subscribe_fn),
+            notify_fn: Rc::new(notify_fn),
         }
     }
 
@@ -152,8 +152,8 @@ impl<T: 'static> Writable<T> {
         write_fn: impl Fn() -> WriteRef<'static, O> + 'static,
     ) -> Writable<O> {
         Writable {
-            peek_fn: Rc::from(peek_fn),
-            write_fn: Rc::from(write_fn),
+            peek_fn: Rc::new(peek_fn),
+            write_fn: Rc::new(write_fn),
             subscribe_fn: self.subscribe_fn.clone(),
             notify_fn: self.notify_fn.clone(),
         }
@@ -179,14 +179,14 @@ impl<T> From<State<T>> for Writable<T> {
 impl<T> From<Writable<T>> for Readable<T> {
     fn from(value: Writable<T>) -> Self {
         Readable {
-            read_fn: Rc::from({
+            read_fn: Rc::new({
                 let value = value.clone();
                 move || {
                     value.subscribe();
                     ReadableRef::Ref((value.peek_fn)())
                 }
             }),
-            peek_fn: Rc::from(move || ReadableRef::Ref((value.peek_fn)())),
+            peek_fn: Rc::new(move || ReadableRef::Ref((value.peek_fn)())),
             equal_fn: Rc::new(move |_| true),
         }
     }
