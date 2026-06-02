@@ -72,19 +72,19 @@ impl<T: 'static> Writable<T> {
     /// Create from local `State<T>`.
     pub fn from_state(state: State<T>) -> Self {
         Self {
-            peek_fn: Rc::new(move || state.peek()),
-            write_fn: Rc::new(move || state.write_silently()),
-            subscribe_fn: Rc::new(move || state.subscribe()),
-            notify_fn: Rc::new(move || state.notify()),
+            peek_fn: Rc::from(move || state.peek()),
+            write_fn: Rc::from(move || state.write_silently()),
+            subscribe_fn: Rc::from(move || state.subscribe()),
+            notify_fn: Rc::from(move || state.notify()),
         }
     }
 
     /// Create a new `Writable` with custom peek, write, subscribe, and notify functions.
     pub fn new(
-        peek_fn: Box<dyn Fn() -> ReadRef<'static, T>>,
-        write_fn: Box<dyn Fn() -> WriteRef<'static, T>>,
-        subscribe_fn: Box<dyn Fn()>,
-        notify_fn: Box<dyn Fn()>,
+        peek_fn: impl Fn() -> ReadRef<'static, T> + 'static,
+        write_fn: impl Fn() -> WriteRef<'static, T> + 'static,
+        subscribe_fn: impl Fn() + 'static,
+        notify_fn: impl Fn() + 'static,
     ) -> Self {
         Self {
             peek_fn: Rc::from(peek_fn),
@@ -132,6 +132,32 @@ impl<T: 'static> Writable<T> {
     fn notify(&self) {
         (self.notify_fn)()
     }
+
+    /// Derive a new `Writable` that reads and writes only a part of the value.
+    ///
+    /// # Example
+    ///
+    /// ```rust, ignore
+    /// let user = use_state(|| (String::from("Alice"), 30));
+    /// let writable: Writable<(String, u32)> = user.into_writable();
+    ///
+    /// let name = writable.map(
+    ///     move || user.peek().map(|user| Ref::map(user, |user| &user.0)),
+    ///     move || user.write_silently().map(|user| RefMut::map(user, |user| &mut user.0)),
+    /// );
+    /// ```
+    pub fn map<O>(
+        &self,
+        peek_fn: impl Fn() -> ReadRef<'static, O> + 'static,
+        write_fn: impl Fn() -> WriteRef<'static, O> + 'static,
+    ) -> Writable<O> {
+        Writable {
+            peek_fn: Rc::from(peek_fn),
+            write_fn: Rc::from(write_fn),
+            subscribe_fn: self.subscribe_fn.clone(),
+            notify_fn: self.notify_fn.clone(),
+        }
+    }
 }
 
 pub trait IntoWritable<T: 'static> {
@@ -153,14 +179,14 @@ impl<T> From<State<T>> for Writable<T> {
 impl<T> From<Writable<T>> for Readable<T> {
     fn from(value: Writable<T>) -> Self {
         Readable {
-            read_fn: Rc::new({
+            read_fn: Rc::from({
                 let value = value.clone();
                 move || {
                     value.subscribe();
                     ReadableRef::Ref((value.peek_fn)())
                 }
             }),
-            peek_fn: Rc::new(move || ReadableRef::Ref((value.peek_fn)())),
+            peek_fn: Rc::from(move || ReadableRef::Ref((value.peek_fn)())),
             equal_fn: Rc::new(move |_| true),
         }
     }
