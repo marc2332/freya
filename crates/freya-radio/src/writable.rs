@@ -22,19 +22,19 @@ impl<T: 'static> RadioWritable<T> for Writable<T> {
         Channel: RadioChannel<Value> + 'static,
     {
         Self::new(
-            Box::new({
+            {
                 let slice = slice.clone();
                 move || slice.peek_unchecked()
-            }),
-            Box::new({
+            },
+            {
                 let slice = slice.clone();
                 move || slice.write_silently()
-            }),
-            Box::new({
+            },
+            {
                 let slice = slice.clone();
                 move || slice.subscribe_if_not()
-            }),
-            Box::new(move || slice.notify()),
+            },
+            move || slice.notify(),
         )
     }
 }
