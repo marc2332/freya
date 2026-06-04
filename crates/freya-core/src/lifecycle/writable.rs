@@ -1,6 +1,9 @@
 //! Type-erased writable state that hides generic type parameters.
 
-use std::rc::Rc;
+use std::{
+    cell::RefCell,
+    rc::Rc,
+};
 
 use crate::prelude::*;
 
@@ -46,7 +49,7 @@ use crate::prelude::*;
 /// ```
 pub struct Writable<T: 'static> {
     pub(crate) peek_fn: Rc<dyn Fn() -> ReadRef<'static, T>>,
-    pub(crate) write_fn: Rc<dyn Fn() -> WriteRef<'static, T>>,
+    pub(crate) write_fn: Rc<RefCell<dyn FnMut() -> WriteRef<'static, T>>>,
     pub(crate) subscribe_fn: Rc<dyn Fn()>,
     pub(crate) notify_fn: Rc<dyn Fn()>,
 }
@@ -73,7 +76,7 @@ impl<T: 'static> Writable<T> {
     pub fn from_state(state: State<T>) -> Self {
         Self {
             peek_fn: Rc::new(move || state.peek()),
-            write_fn: Rc::new(move || state.write_silently()),
+            write_fn: Rc::new(RefCell::new(move || state.write_silently())),
             subscribe_fn: Rc::new(move || state.subscribe()),
             notify_fn: Rc::new(move || state.notify()),
         }
@@ -82,13 +85,13 @@ impl<T: 'static> Writable<T> {
     /// Create a new `Writable` with custom peek, write, subscribe, and notify functions.
     pub fn new(
         peek_fn: impl Fn() -> ReadRef<'static, T> + 'static,
-        write_fn: impl Fn() -> WriteRef<'static, T> + 'static,
+        write_fn: impl FnMut() -> WriteRef<'static, T> + 'static,
         subscribe_fn: impl Fn() + 'static,
         notify_fn: impl Fn() + 'static,
     ) -> Self {
         Self {
             peek_fn: Rc::new(peek_fn),
-            write_fn: Rc::new(write_fn),
+            write_fn: Rc::new(RefCell::new(write_fn)),
             subscribe_fn: Rc::new(subscribe_fn),
             notify_fn: Rc::new(notify_fn),
         }
@@ -111,12 +114,12 @@ impl<T: 'static> Writable<T> {
     #[track_caller]
     pub fn write(&mut self) -> WriteRef<'static, T> {
         self.notify();
-        (self.write_fn)()
+        (self.write_fn.borrow_mut())()
     }
 
     #[track_caller]
     pub fn write_if(&mut self, with: impl FnOnce(WriteRef<'static, T>) -> bool) -> bool {
-        let changed = with((self.write_fn)());
+        let changed = with((self.write_fn.borrow_mut())());
         if changed {
             self.notify();
         }
@@ -138,22 +141,22 @@ impl<T: 'static> Writable<T> {
     /// # Example
     ///
     /// ```rust, ignore
-    /// let user = use_state(|| (String::from("Alice"), 30));
+    /// let mut user = use_state(|| (String::from("Alice"), 30));
     /// let writable: Writable<(String, u32)> = user.into_writable();
     ///
     /// let name = writable.map(
     ///     move || user.peek().map(|user| Ref::map(user, |user| &user.0)),
-    ///     move || user.write_silently().map(|user| RefMut::map(user, |user| &mut user.0)),
+    ///     move || user.write().map(|user| RefMut::map(user, |user| &mut user.0)),
     /// );
     /// ```
     pub fn map<O>(
         &self,
         peek_fn: impl Fn() -> ReadRef<'static, O> + 'static,
-        write_fn: impl Fn() -> WriteRef<'static, O> + 'static,
+        write_fn: impl FnMut() -> WriteRef<'static, O> + 'static,
     ) -> Writable<O> {
         Writable {
             peek_fn: Rc::new(peek_fn),
-            write_fn: Rc::new(write_fn),
+            write_fn: Rc::new(RefCell::new(write_fn)),
             subscribe_fn: self.subscribe_fn.clone(),
             notify_fn: self.notify_fn.clone(),
         }
