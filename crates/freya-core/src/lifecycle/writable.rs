@@ -1,6 +1,12 @@
 //! Type-erased writable state that hides generic type parameters.
 
-use std::rc::Rc;
+use std::{
+    cell::{
+        Ref,
+        RefMut,
+    },
+    rc::Rc,
+};
 
 use crate::prelude::*;
 
@@ -139,21 +145,20 @@ impl<T: 'static> Writable<T> {
     ///
     /// ```rust, ignore
     /// let user = use_state(|| (String::from("Alice"), 30));
-    /// let writable: Writable<(String, u32)> = user.into_writable();
+    /// let user: Writable<(String, u32)> = user.into_writable();
     ///
-    /// let name = writable.map(
-    ///     move || user.peek().map(|user| Ref::map(user, |user| &user.0)),
-    ///     move || user.write_silently().map(|user| RefMut::map(user, |user| &mut user.0)),
-    /// );
+    /// let name = user.map(|user| &user.0, |user| &mut user.0);
     /// ```
     pub fn map<O>(
         &self,
-        peek_fn: impl Fn() -> ReadRef<'static, O> + 'static,
-        write_fn: impl Fn() -> WriteRef<'static, O> + 'static,
+        get: impl Fn(&T) -> &O + 'static,
+        get_mut: impl Fn(&mut T) -> &mut O + 'static,
     ) -> Writable<O> {
+        let peek_fn = self.peek_fn.clone();
+        let write_fn = self.write_fn.clone();
         Writable {
-            peek_fn: Rc::new(peek_fn),
-            write_fn: Rc::new(write_fn),
+            peek_fn: Rc::new(move || (peek_fn)().map(|r| Ref::map(r, |v| get(v)))),
+            write_fn: Rc::new(move || (write_fn)().map(|r| RefMut::map(r, |v| get_mut(v)))),
             subscribe_fn: self.subscribe_fn.clone(),
             notify_fn: self.notify_fn.clone(),
         }
