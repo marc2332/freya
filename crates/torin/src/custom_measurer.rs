@@ -6,8 +6,15 @@ use std::{
 use crate::{
     geometry::Size2D,
     node::Node,
-    prelude::Area,
-    tree_adapter::NodeKey,
+    prelude::{
+        Area,
+        Length,
+    },
+    torin::Torin,
+    tree_adapter::{
+        LayoutNode,
+        NodeKey,
+    },
 };
 
 pub trait LayoutMeasurer<Key: NodeKey> {
@@ -21,6 +28,23 @@ pub trait LayoutMeasurer<Key: NodeKey> {
     fn should_hook_measurement(&mut self, node_id: Key) -> bool;
 
     fn should_measure_inner_children(&mut self, node_id: Key) -> bool;
+
+    /// Whether [LayoutMeasurer::post_measure] should run for this node.
+    fn should_post_measure(&mut self, _node_id: Key) -> bool {
+        false
+    }
+
+    /// Runs after a node and its children are measured. Returns an optional corrected content
+    /// size (re-applied through min/max) and `(x, y)` offsets to move each child's subtree.
+    fn post_measure(
+        &mut self,
+        _node_id: Key,
+        _node_layout: &LayoutNode,
+        _children: &[Key],
+        _layout: &Torin<Key>,
+    ) -> (Option<Size2D>, Vec<(Key, Length, Length)>) {
+        (None, Vec::new())
+    }
 
     fn notify_layout_references(
         &mut self,

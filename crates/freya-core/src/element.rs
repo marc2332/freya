@@ -17,9 +17,11 @@ use torin::{
     prelude::{
         Area,
         LayoutNode,
+        Length,
         Size2D,
     },
     scaled::Scaled,
+    torin::Torin,
 };
 
 use crate::{
@@ -115,6 +117,20 @@ pub trait ElementExt: Any {
         true
     }
 
+    /// Whether this element needs a [ElementExt::post_measure] step after the layout pass.
+    fn needs_post_measure(&self) -> bool {
+        false
+    }
+
+    /// Runs after this node and its children are measured. Returns an optional corrected content
+    /// size and `(x, y)` offsets to move each child's subtree.
+    fn post_measure(
+        &self,
+        _context: PostMeasureContext,
+    ) -> (Option<Size2D>, Vec<(NodeId, Length, Length)>) {
+        (None, Vec::new())
+    }
+
     fn is_point_inside(&self, context: EventMeasurementContext) -> bool {
         context
             .layout_node
@@ -167,6 +183,16 @@ pub struct RenderContext<'a> {
 pub struct EventMeasurementContext<'a> {
     pub cursor: ragnarok::CursorPoint,
     pub layout_node: &'a LayoutNode,
+    pub scale_factor: f64,
+}
+
+pub struct PostMeasureContext<'a> {
+    pub node_layout: &'a LayoutNode,
+    pub children: &'a [NodeId],
+    pub layout: &'a Torin<NodeId>,
+    pub font_collection: &'a mut FontCollection,
+    pub text_style_state: &'a TextStyleState,
+    pub fallback_fonts: &'a [Cow<'static, str>],
     pub scale_factor: f64,
 }
 

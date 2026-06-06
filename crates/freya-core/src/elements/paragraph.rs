@@ -14,22 +14,28 @@ use std::{
 use freya_engine::prelude::{
     BlendMode,
     Canvas,
+    FontCollection,
     FontStyle,
     Paint,
     PaintStyle,
     ParagraphBuilder,
     ParagraphStyle,
+    PlaceholderAlignment,
+    PlaceholderStyle,
     RectHeightStyle,
     RectWidthStyle,
     SaveLayerRec,
     SkParagraph,
     SkRect,
+    TextBaseline,
     TextStyle,
 };
 use rustc_hash::FxHashMap;
 use torin::prelude::{
     Area,
+    Length,
     Point2D,
+    Position,
     Size2D,
 };
 
@@ -48,13 +54,18 @@ use crate::{
         Element,
         ElementExt,
         EventHandlerType,
+        IntoElement,
         LayoutContext,
+        PostMeasureContext,
         RenderContext,
     },
+    elements::rect::rect,
     events::name::EventName,
     layers::Layer,
+    node_id::NodeId,
     prelude::{
         AccessibilityExt,
+        ChildrenExt,
         Color,
         ContainerExt,
         EventHandlersExt,
@@ -91,6 +102,7 @@ pub fn paragraph() -> Paragraph {
     Paragraph {
         key: DiffKey::None,
         element: ParagraphElement::default(),
+        children: Vec::new(),
     }
 }
 
@@ -120,10 +132,18 @@ impl Default for ParagraphHolder {
     }
 }
 
+/// Marks the order of a [Paragraph]'s content.
+#[derive(PartialEq, Clone)]
+pub enum ParagraphContent {
+    Span,
+    Element,
+}
+
 #[derive(PartialEq, Clone)]
 pub struct ParagraphElement {
     pub layout: LayoutData,
     pub spans: Vec<Span<'static>>,
+    pub contents: Vec<ParagraphContent>,
     pub accessibility: AccessibilityData,
     pub text_style_data: TextStyleData,
     pub cursor_style_data: CursorStyleData,
@@ -146,6 +166,7 @@ impl Default for ParagraphElement {
         Self {
             layout: Default::default(),
             spans: Default::default(),
+            contents: Default::default(),
             accessibility,
             text_style_data: Default::default(),
             cursor_style_data: Default::default(),
@@ -193,7 +214,7 @@ impl ElementExt for ParagraphElement {
 
         let mut diff = DiffModifies::empty();
 
-        if self.spans != paragraph.spans {
+        if self.spans != paragraph.spans || self.contents != paragraph.contents {
             diff.insert(DiffModifies::STYLE);
             diff.insert(DiffModifies::LAYOUT);
         }
@@ -275,94 +296,26 @@ impl ElementExt for ParagraphElement {
             .text_cache
             .utilize(context.node_id, &cached_paragraph)
             .unwrap_or_else(|| {
-                let mut paragraph_style = ParagraphStyle::default();
-                let mut text_style = TextStyle::default();
-
-                let mut font_families = context.text_style_state.font_families.clone();
-                font_families.extend_from_slice(context.fallback_fonts);
-
-                text_style.set_color(
-                    context
+                let width = if self.max_lines == Some(1)
+                    && context.text_style_state.text_align == TextAlign::default()
+                    && context
                         .text_style_state
-                        .color
-                        .as_color()
-                        .unwrap_or(Color::WHITE),
-                );
-                text_style.set_font_size(
-                    f32::from(context.text_style_state.font_size) * context.scale_factor as f32,
-                );
-                text_style.set_font_families(&font_families);
-                text_style.set_font_style(FontStyle::new(
-                    context.text_style_state.font_weight.into(),
-                    context.text_style_state.font_width.into(),
-                    context.text_style_state.font_slant.into(),
-                ));
+                        .text_overflow
+                        .get_ellipsis()
+                        .is_none()
+                {
+                    f32::MAX
+                } else {
+                    context.area_size.width + 1.0
+                };
 
-                if context.text_style_state.text_height.needs_custom_height() {
-                    text_style.set_height_override(true);
-                    text_style.set_half_leading(true);
-                }
-
-                if let Some(line_height) = self.line_height {
-                    text_style.set_height_override(true);
-                    text_style.set_height(line_height);
-                }
-
-                for text_shadow in context.text_style_state.text_shadows.iter() {
-                    text_style.add_shadow((*text_shadow).into());
-                }
-
-                if let Some(ellipsis) = context.text_style_state.text_overflow.get_ellipsis() {
-                    paragraph_style.set_ellipsis(ellipsis);
-                }
-
-                paragraph_style.set_text_style(&text_style);
-                paragraph_style.set_max_lines(self.max_lines);
-                paragraph_style.set_text_align(context.text_style_state.text_align.into());
-
-                let mut paragraph_builder =
-                    ParagraphBuilder::new(&paragraph_style, &*context.font_collection);
-
-                for span in &self.spans {
-                    let text_style_state =
-                        TextStyleState::from_data(context.text_style_state, &span.text_style_data);
-                    let mut text_style = TextStyle::new();
-                    let mut font_families = context.text_style_state.font_families.clone();
-                    font_families.extend_from_slice(context.fallback_fonts);
-
-                    for text_shadow in text_style_state.text_shadows.iter() {
-                        text_style.add_shadow((*text_shadow).into());
-                    }
-
-                    text_style.set_color(text_style_state.color.as_color().unwrap_or(Color::WHITE));
-                    text_style.set_font_size(
-                        f32::from(text_style_state.font_size) * context.scale_factor as f32,
-                    );
-                    text_style.set_font_families(&font_families);
-                    text_style.set_font_style(FontStyle::new(
-                        text_style_state.font_weight.into(),
-                        text_style_state.font_width.into(),
-                        text_style_state.font_slant.into(),
-                    ));
-                    text_style.set_decoration_type(text_style_state.text_decoration.into());
-                    if let Some(line_height) = self.line_height {
-                        text_style.set_height_override(true);
-                        text_style.set_height(line_height);
-                    }
-                    paragraph_builder.push_style(&text_style);
-                    paragraph_builder.add_text(&span.text);
-                }
-
-                let mut paragraph = paragraph_builder.build();
-                paragraph.layout(
-                    if self.max_lines == Some(1)
-                        && context.text_style_state.text_align == TextAlign::default()
-                        && !paragraph_style.ellipsized()
-                    {
-                        f32::MAX
-                    } else {
-                        context.area_size.width + 1.0
-                    },
+                let paragraph = self.build_paragraph(
+                    context.text_style_state,
+                    context.fallback_fonts,
+                    context.scale_factor,
+                    context.font_collection,
+                    width,
+                    &[],
                 );
                 context
                     .text_cache
@@ -387,7 +340,82 @@ impl ElementExt for ParagraphElement {
     }
 
     fn should_measure_inner_children(&self) -> bool {
-        false
+        self.has_inline_content()
+    }
+
+    fn needs_post_measure(&self) -> bool {
+        self.has_inline_content()
+    }
+
+    fn post_measure(
+        &self,
+        context: PostMeasureContext,
+    ) -> (Option<Size2D>, Vec<(NodeId, Length, Length)>) {
+        if context.children.is_empty() {
+            return (None, Vec::new());
+        }
+
+        let placeholders: Vec<Size2D> = context
+            .children
+            .iter()
+            .map(|child| {
+                context
+                    .layout
+                    .get(child)
+                    .map(|node| node.area.size)
+                    .unwrap()
+            })
+            .collect();
+
+        let width = self
+            .sk_paragraph
+            .0
+            .borrow()
+            .as_ref()
+            .map(|holder| holder.paragraph.max_width())
+            .unwrap();
+
+        let paragraph = self.build_paragraph(
+            context.text_style_state,
+            context.fallback_fonts,
+            context.scale_factor,
+            context.font_collection,
+            width,
+            &placeholders,
+        );
+        let rects = paragraph.get_rects_for_placeholders();
+        let paragraph_height = paragraph.height();
+        // The size with the placeholders in place, so the node is sized around the inline children.
+        let content_size = Size2D::new(paragraph.longest_line(), paragraph_height);
+
+        self.sk_paragraph
+            .0
+            .borrow_mut()
+            .replace(ParagraphHolderInner {
+                paragraph: Rc::new(paragraph),
+                scale_factor: context.scale_factor,
+            });
+
+        let visible_area = context.node_layout.visible_area();
+        let vertical_offset = match self.vertical_align {
+            VerticalAlign::Start => 0.0,
+            VerticalAlign::Center => (visible_area.height() - paragraph_height).max(0.0) / 2.0,
+        };
+        let origin = visible_area.origin;
+
+        let offsets = context
+            .children
+            .iter()
+            .zip(rects.iter())
+            .filter_map(|(child_id, rect)| {
+                let current = context.layout.get(child_id)?.area.origin;
+                let offset_x = origin.x + rect.rect.left - current.x;
+                let offset_y = origin.y + vertical_offset + rect.rect.top - current.y;
+                Some((*child_id, Length::new(offset_x), Length::new(offset_y)))
+            })
+            .collect();
+
+        (Some(content_size), offsets)
     }
 
     fn events_handlers(&'_ self) -> Option<Cow<'_, FxHashMap<EventName, EventHandlerType>>> {
@@ -595,14 +623,167 @@ impl ElementExt for ParagraphElement {
     }
 }
 
+impl ParagraphElement {
+    fn has_inline_content(&self) -> bool {
+        self.contents
+            .iter()
+            .any(|content| matches!(content, ParagraphContent::Element))
+    }
+
+    /// Builds the Skia paragraph from the content, reserving a placeholder (sized from
+    /// `placeholders`, in order) for each inline child, laid out against `width`.
+    fn build_paragraph(
+        &self,
+        text_style_state: &TextStyleState,
+        fallback_fonts: &[Cow<'static, str>],
+        scale_factor: f64,
+        font_collection: &FontCollection,
+        width: f32,
+        placeholders: &[Size2D],
+    ) -> SkParagraph {
+        let mut paragraph_style = ParagraphStyle::default();
+
+        if let Some(ellipsis) = text_style_state.text_overflow.get_ellipsis() {
+            paragraph_style.set_ellipsis(ellipsis);
+        }
+
+        paragraph_style.set_text_style(&base_text_style(
+            text_style_state,
+            fallback_fonts,
+            scale_factor,
+            self.line_height,
+        ));
+        paragraph_style.set_max_lines(self.max_lines);
+        paragraph_style.set_text_align(text_style_state.text_align.into());
+
+        let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
+
+        let mut spans = self.spans.iter();
+        let mut placeholders = placeholders.iter();
+        for content in &self.contents {
+            match content {
+                ParagraphContent::Span => {
+                    let Some(span) = spans.next() else { continue };
+                    paragraph_builder.push_style(&span_text_style(
+                        text_style_state,
+                        fallback_fonts,
+                        scale_factor,
+                        span,
+                        self.line_height,
+                    ));
+                    paragraph_builder.add_text(&span.text);
+                }
+                ParagraphContent::Element => {
+                    let Some(size) = placeholders.next() else {
+                        continue;
+                    };
+                    paragraph_builder.add_placeholder(&PlaceholderStyle::new(
+                        size.width,
+                        size.height,
+                        PlaceholderAlignment::Middle,
+                        TextBaseline::Alphabetic,
+                        0.0,
+                    ));
+                }
+            }
+        }
+
+        let mut paragraph = paragraph_builder.build();
+        paragraph.layout(width);
+        paragraph
+    }
+}
+
 impl From<Paragraph> for Element {
     fn from(value: Paragraph) -> Self {
+        let elements = value
+            .children
+            .into_iter()
+            .map(|child| {
+                rect()
+                    .position(Position::new_absolute())
+                    .child(child)
+                    .into_element()
+            })
+            .collect();
+
         Element::Element {
             key: value.key,
             element: Rc::new(value.element),
-            elements: vec![],
+            elements,
         }
     }
+}
+
+/// Builds the paragraph-level base [TextStyle] from the inherited text style state.
+fn base_text_style(
+    text_style_state: &TextStyleState,
+    fallback_fonts: &[Cow<'static, str>],
+    scale_factor: f64,
+    line_height: Option<f32>,
+) -> TextStyle {
+    let mut text_style = TextStyle::default();
+
+    let mut font_families = text_style_state.font_families.clone();
+    font_families.extend_from_slice(fallback_fonts);
+
+    text_style.set_color(text_style_state.color.as_color().unwrap_or(Color::WHITE));
+    text_style.set_font_size(f32::from(text_style_state.font_size) * scale_factor as f32);
+    text_style.set_font_families(&font_families);
+    text_style.set_font_style(FontStyle::new(
+        text_style_state.font_weight.into(),
+        text_style_state.font_width.into(),
+        text_style_state.font_slant.into(),
+    ));
+
+    if text_style_state.text_height.needs_custom_height() {
+        text_style.set_height_override(true);
+        text_style.set_half_leading(true);
+    }
+
+    if let Some(line_height) = line_height {
+        text_style.set_height_override(true);
+        text_style.set_height(line_height);
+    }
+
+    for text_shadow in text_style_state.text_shadows.iter() {
+        text_style.add_shadow((*text_shadow).into());
+    }
+
+    text_style
+}
+
+/// Builds the [TextStyle] for a single [Span], layering its overrides over the inherited state.
+fn span_text_style(
+    text_style_state: &TextStyleState,
+    fallback_fonts: &[Cow<'static, str>],
+    scale_factor: f64,
+    span: &Span,
+    line_height: Option<f32>,
+) -> TextStyle {
+    let span_style = TextStyleState::from_data(text_style_state, &span.text_style_data);
+    let mut text_style = TextStyle::new();
+    let mut font_families = text_style_state.font_families.clone();
+    font_families.extend_from_slice(fallback_fonts);
+
+    for text_shadow in span_style.text_shadows.iter() {
+        text_style.add_shadow((*text_shadow).into());
+    }
+
+    text_style.set_color(span_style.color.as_color().unwrap_or(Color::WHITE));
+    text_style.set_font_size(f32::from(span_style.font_size) * scale_factor as f32);
+    text_style.set_font_families(&font_families);
+    text_style.set_font_style(FontStyle::new(
+        span_style.font_weight.into(),
+        span_style.font_width.into(),
+        span_style.font_slant.into(),
+    ));
+    text_style.set_decoration_type(span_style.text_decoration.into());
+    if let Some(line_height) = line_height {
+        text_style.set_height_override(true);
+        text_style.set_height(line_height);
+    }
+    text_style
 }
 
 /// Paints a paragraph with a [Fill] as the text color. Non-color fills are masked
@@ -661,6 +842,7 @@ impl LayerExt for Paragraph {
 pub struct Paragraph {
     key: DiffKey,
     element: ParagraphElement,
+    children: Vec<Element>,
 }
 
 impl LayoutExt for Paragraph {
@@ -670,6 +852,33 @@ impl LayoutExt for Paragraph {
 }
 
 impl ContainerExt for Paragraph {}
+
+/// Children added to a [Paragraph] flow inline at the point they were added, each laid out at
+/// its own measured size, so give them an explicit `width` and `height`.
+impl ChildrenExt for Paragraph {
+    fn get_children(&mut self) -> &mut Vec<Element> {
+        &mut self.children
+    }
+
+    fn child<C: IntoElement>(mut self, child: C) -> Self {
+        self.element.contents.push(ParagraphContent::Element);
+        self.children.push(child.into_element());
+        self
+    }
+
+    fn children(self, children: impl IntoIterator<Item = Element>) -> Self {
+        children
+            .into_iter()
+            .fold(self, |paragraph, child| paragraph.child(child))
+    }
+
+    fn maybe_child<C: IntoElement>(self, child: Option<C>) -> Self {
+        match child {
+            Some(child) => self.child(child),
+            None => self,
+        }
+    }
+}
 
 impl AccessibilityExt for Paragraph {
     fn get_accessibility_data(&mut self) -> &mut AccessibilityData {
@@ -691,19 +900,24 @@ impl Paragraph {
     }
 
     pub fn spans_iter(mut self, spans: impl Iterator<Item = Span<'static>>) -> Self {
-        let spans = spans.collect::<Vec<Span>>();
         // TODO: Accessible paragraphs
         // self.element.accessibility.builder.set_value(text.clone());
-        self.element.spans.extend(spans);
+        for span in spans {
+            self.push_span(span);
+        }
         self
     }
 
     pub fn span(mut self, span: impl Into<Span<'static>>) -> Self {
-        let span = span.into();
         // TODO: Accessible paragraphs
         // self.element.accessibility.builder.set_value(text.clone());
-        self.element.spans.push(span);
+        self.push_span(span.into());
         self
+    }
+
+    fn push_span(&mut self, span: Span<'static>) {
+        self.element.contents.push(ParagraphContent::Span);
+        self.element.spans.push(span);
     }
 
     pub fn cursor_color(mut self, cursor_color: impl Into<Color>) -> Self {

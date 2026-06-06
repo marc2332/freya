@@ -61,6 +61,29 @@ where
     L: LayoutMeasurer<Key>,
     D: TreeAdapter<Key>,
 {
+    /// Translate a single Node's cached areas by the given offset, notifying layout references.
+    fn translate_node(&mut self, node_id: Key, offset_x: Length, offset_y: Length) {
+        let Some((area, visible_area, inner_sizes)) =
+            self.layout.get_mut(&node_id).map(|layout_node| {
+                layout_node.area.origin.x += offset_x.get();
+                layout_node.area.origin.y += offset_y.get();
+                layout_node.inner_area.origin.x += offset_x.get();
+                layout_node.inner_area.origin.y += offset_y.get();
+                (
+                    layout_node.area,
+                    layout_node.visible_area(),
+                    layout_node.inner_sizes,
+                )
+            })
+        else {
+            return;
+        };
+
+        if let Some(measurer) = self.measurer {
+            measurer.notify_layout_references(node_id, area, visible_area, inner_sizes);
+        }
+    }
+
     /// Translate all the children of the given Node by the specified X and Y offsets.
     fn recursive_translate(&mut self, node_id: Key, offset_x: Length, offset_y: Length) {
         let mut buffer = self.tree_adapter.children_of(&node_id);
@@ -76,27 +99,30 @@ where
             };
 
             if translate {
-                let layout_node = self
-                    .layout
-                    .get_mut(&child)
-                    .expect("Cached node does not exist when translating");
-                layout_node.area.origin.x += offset_x.get();
-                layout_node.area.origin.y += offset_y.get();
-                layout_node.inner_area.origin.x += offset_x.get();
-                layout_node.inner_area.origin.y += offset_y.get();
-
-                if let Some(measurer) = self.measurer {
-                    measurer.notify_layout_references(
-                        child,
-                        layout_node.area,
-                        layout_node.visible_area(),
-                        layout_node.inner_sizes,
-                    );
-                }
-
+                self.translate_node(child, offset_x, offset_y);
                 buffer.extend(self.tree_adapter.children_of(&child));
             }
         }
+    }
+
+    /// Run the measurer's post-measure step once a Node's subtree is measured. Applies the child
+    /// offsets it returns and gives back its corrected content size, if any.
+    fn apply_post_measure(&mut self, node_id: Key, node_layout: &LayoutNode) -> Option<Size2D> {
+        let (size, offsets) = {
+            let measurer = self.measurer.as_mut()?;
+            if !measurer.should_post_measure(node_id) {
+                return None;
+            }
+            let children = self.tree_adapter.children_of(&node_id);
+            measurer.post_measure(node_id, node_layout, &children, self.layout)
+        };
+
+        for (child_id, offset_x, offset_y) in offsets {
+            self.translate_node(child_id, offset_x, offset_y);
+            self.recursive_translate(child_id, offset_x, offset_y);
+        }
+
+        size
     }
 
     /// Measure a Node and all its children.
@@ -388,7 +414,7 @@ where
                 }
             }
 
-            let layout_node = LayoutNode {
+            let mut layout_node = LayoutNode {
                 area,
                 margin: node.margin,
                 offset_x: node.offset_x,
@@ -412,6 +438,40 @@ where
                     layout_node.visible_area(),
                     inner_sizes,
                 );
+            }
+
+            if must_cache_children
+                && phase == Phase::Final
+                && let Some(content_size) = self.apply_post_measure(node_id, &layout_node)
+            {
+                // The post-measure produced a content size that accounts for inline children
+                // (e.g. Skia placeholders), so re-apply the Node's sizing to its inner-sized axes.
+                if node.width.inner_sized() {
+                    layout_node.area.size.width = node.width.min_max(
+                        content_size.width,
+                        initial_parent_area.size.width,
+                        available_parent_area.size.width,
+                        node.margin.left(),
+                        node.margin.horizontal(),
+                        &node.minimum_width,
+                        &node.maximum_width,
+                        self.layout_metadata.root_area.width(),
+                        phase,
+                    );
+                }
+                if node.height.inner_sized() {
+                    layout_node.area.size.height = node.height.min_max(
+                        content_size.height,
+                        initial_parent_area.size.height,
+                        available_parent_area.size.height,
+                        node.margin.top(),
+                        node.margin.vertical(),
+                        &node.minimum_height,
+                        &node.maximum_height,
+                        self.layout_metadata.root_area.height(),
+                        phase,
+                    );
+                }
             }
 
             (must_cache_children, layout_node)

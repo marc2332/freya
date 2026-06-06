@@ -90,10 +90,12 @@ impl Component for Link {
         };
 
         let on_pointer_enter = move |_| {
+            Cursor::set(CursorIcon::Pointer);
             is_hovering.set(true);
         };
 
         let on_pointer_leave = move |_| {
+            Cursor::set(CursorIcon::default());
             is_hovering.set(false);
         };
 
