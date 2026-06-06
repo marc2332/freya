@@ -96,7 +96,6 @@ Freya is split in various crates, each with it's own meaning and purpose, here i
 - `freya-icons`: Provides lots of SVG icons as Freya components.
 - `freya-sdk`: Contains generic utility APIs for Freya, like integrations with Tokio.
 - `freya-query`: Fully-typed, async, reusable cached data management for Freya apps.
-- `freya-webview`: WebView support for Freya using WRY.
 - `freya-terminal`: Terminal emulator integration for embedding interactive terminals in Freya apps.
 - `freya-material-design`: Material Design Components for Freya apps.
 - `freya-plotters-backend`: Freya's skia-safe backend for plotters.

@@ -41,7 +41,6 @@ members = [
   "./crates/freya-material-design",
   "./crates/freya-plotters-backend",
   "./crates/freya-query",
-  "./crates/freya-webview",
   "./crates/freya-terminal",
   "./crates/freya-code-editor",
   "./crates/freya-camera",
@@ -79,7 +78,6 @@ freya-sdk = { path = "./crates/freya-sdk", features = [
 freya-material-design = { path = "./crates/freya-material-design", version = "0.4.0-rc.22" }
 freya-plotters-backend = { path = "./crates/freya-plotters-backend", version = "0.4.0-rc.22" }
 freya-query = { path = "./crates/freya-query", version = "0.4.0-rc.22" }
-freya-webview = { path = "./crates/freya-webview", version = "0.4.0-rc.22" }
 freya-terminal = { path = "./crates/freya-terminal", version = "0.4.0-rc.22" }
 freya-code-editor = { path = "./crates/freya-code-editor", version = "0.4.0-rc.22", features = [
   "rust",
@@ -187,7 +185,6 @@ freya-query = { workspace = true }
 freya-icons = { workspace = true }
 freya-sdk = { workspace = true }
 freya-devtools = { workspace = true, features = ["server", "client"] }
-freya-webview = { workspace = true }
 freya-terminal = { workspace = true }
 freya-code-editor = { workspace = true }
 

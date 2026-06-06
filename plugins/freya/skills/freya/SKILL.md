@@ -840,15 +840,6 @@ use freya::material_design::*;
 Button::new().ripple().child("Click me")
 ```
 
-## WebView
-
-Enable with `features = ["webview"]`. Embeds a browser view into your UI:
-
-```rust
-use freya::webview::*;
-WebView::new("https://example.com").expanded()
-```
-
 ## Terminal
 
 Enable with `features = ["terminal"]`. Spawns a PTY process and renders it as a terminal:
@@ -899,7 +890,6 @@ freya = { version = "...", features = ["router", "radio"] }
 | `markdown` | `Markdown` renderer component |
 | `icons` | SVG icon library via Lucide (`freya-icons`) |
 | `material-design` | Material Design theme (`freya-material-design`) |
-| `webview` | Embed a WebView (`freya-webview`) |
 | `terminal` | Terminal emulator (`freya-terminal`) |
 | `code-editor` | Code editing APIs (`freya-code-editor`) |
 | `camera` | Webcam capture (`freya-camera`) |

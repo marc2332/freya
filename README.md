@@ -615,55 +615,6 @@ fn app() -> impl IntoElement {
   <img src="https://github.com/user-attachments/assets/fdc8e4e9-321a-4ad2-8190-ad6772fc9dc0">
 </div>
 
-### WebView Integration
-
-Integrate web content into your native applications with Freya's WebView support. Embed web applications, or simply display web-based content alongside your native UI components.
-Enable with the `webview` feature.
-
-<details>
-<summary>Code</summary>
-
-```rust
-use freya::prelude::*;
-use freya::webview::*;
-
-fn app() -> impl IntoElement {
-    // Multi-tab webview implementation
-    let mut tabs = use_state(|| vec![Tab {
-        id: WebViewId::new(),
-        title: "Tab 1".to_string(),
-        url: "https://duckduckgo.com".to_string(),
-    }]);
-    let mut active_tab = use_state(|| tabs.read()[0].id);
-
-    rect()
-        .expanded()
-        .height(Size::fill())
-        .background((35, 35, 35))
-        .child(
-            rect()
-                .width(Size::fill())
-                .height(Size::px(45.))
-                .padding(4.)
-                .background((50, 50, 50))
-                .horizontal()
-                .cross_align(Alignment::Center)
-                .spacing(4.)
-                .children(tabs.read().iter().map(|tab| {
-                    // Tab implementation...
-                }))
-        )
-        .child(WebView::new("https://duckduckgo.com").expanded())
-}
-```
-
-</details>
-
-<div align="center">
-  <img src="https://github.com/user-attachments/assets/60d6db71-fa22-4bbb-a4ad-1ff00a056614">
-</div>
-
-
 ### Terminal Emulation
 
 Freya includes terminal emulation capabilities with full PTY (pseudo-terminal) support. Create integrated terminal applications, SSH clients, or development tools.
