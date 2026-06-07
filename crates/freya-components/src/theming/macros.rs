@@ -236,14 +236,9 @@ macro_rules! define_theme {
     };
 }
 
-/// Reads a theme entry from the active theme, applies an optional partial
-/// override, and resolves it against the active colors, falling back to a
-/// `default` callback when the key is not registered.
-///
-/// This is meant for themes that live outside the components crate and therefore
-/// can't be registered by the built-in light and dark themes (e.g.
-/// `freya-markdown`, `freya-code-editor`). [`get_theme!`] is the special case of
-/// this where the default panics.
+/// Like [`get_theme!`](crate::get_theme), but falls back to a `default` callback
+/// instead of panicking when the key is not registered. Useful for themes that
+/// live outside the components crate.
 #[macro_export]
 macro_rules! get_theme_or_default {
     ($theme_prop:expr, $theme_type:ty, $theme_key:expr, $default:expr) => {{
