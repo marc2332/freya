@@ -39,8 +39,7 @@
 //!
 //! ## Android
 //!
-//! Android support is highly experimental. Soft keyboard and IME support are not yet implemented,
-//! so `Input` components and anything relying on keyboard input will not work properly yet.
+//! Android support is highly experimental.
 //!
 //! Building for Android requires the Android SDK, the NDK and `cargo-ndk`. See the
 //! [`android`](https://github.com/marc2332/freya/tree/main/examples/android) example for a complete
