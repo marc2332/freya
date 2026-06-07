@@ -20,7 +20,7 @@ fn main() {
 }
 
 fn app() -> Element {
-    use_init_theme(dark_theme);
+    use_init_theme(|| dark_theme().with_dark_code_editor());
 
     rect()
         .background((24, 24, 27))
@@ -48,17 +48,12 @@ struct Home;
 impl Component for Home {
     fn render(&self) -> impl IntoElement {
         let editor_a11y_id = use_a11y();
-        let editor_theme = use_state(|| EditorTheme {
-            background: Color::TRANSPARENT,
-            line_selected_background: Color::TRANSPARENT,
-            ..Default::default()
-        });
         let editor = use_state(move || {
             let rope = Rope::from_str(CODE);
             let mut editor = CodeEditorData::new(rope, LanguageId::Rust);
-            editor.set_theme(SyntaxTheme {
+            editor.set_theme(EditorSyntaxTheme {
                 comment: (230, 230, 230).into(),
-                ..Default::default()
+                ..EditorSyntaxTheme::dark()
             });
             editor.parse();
             editor.measure(14., "Jetbrains Mono");
@@ -141,7 +136,8 @@ impl Component for Home {
                                     .cross_align(Alignment::Center)
                                     .child(
                                         CodeEditor::new(editor, editor_a11y_id)
-                                            .theme(editor_theme)
+                                            .background(Color::TRANSPARENT)
+                                            .line_selected_background(Color::TRANSPARENT)
                                             .read_only(true)
                                             .gutter(false)
                                             .line_height(1.2)

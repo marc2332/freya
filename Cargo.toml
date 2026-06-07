@@ -25,6 +25,7 @@ members = [
   "./crates/freya-edit",
   "./crates/freya-winit",
   "./crates/freya-components",
+  "./crates/freya-markdown",
   "./crates/pathgraph",
   "./crates/freya-animation",
   "./crates/freya-router",
@@ -60,6 +61,7 @@ freya-clipboard = { path = "./crates/freya-clipboard", version = "0.4.0-rc.22" }
 freya-edit = { path = "./crates/freya-edit", version = "0.4.0-rc.22" }
 freya-winit = { path = "./crates/freya-winit", version = "0.4.0-rc.22" }
 freya-components = { path = "./crates/freya-components", version = "0.4.0-rc.22" }
+freya-markdown = { path = "./crates/freya-markdown", version = "0.4.0-rc.22" }
 pathgraph = { path = "./crates/pathgraph/", version = "0.4.0-rc.22" }
 freya-animation = { path = "./crates/freya-animation", version = "0.4.0-rc.22" }
 freya-router = { path = "./crates/freya-router", version = "0.4.0-rc.22" }

@@ -4,7 +4,7 @@ use ropey::Rope;
 use tree_sitter::InputEdit;
 
 use crate::{
-    editor_theme::SyntaxTheme,
+    editor_theme::EditorSyntaxTheme,
     languages::LanguageId,
     syntax::*,
 };
@@ -59,7 +59,7 @@ impl EditorMetrics {
         rope: &Rope,
         language_id: LanguageId,
         edit: Option<InputEdit>,
-        theme: &SyntaxTheme,
+        theme: &EditorSyntaxTheme,
     ) {
         self.highlighter.set_language(language_id, theme);
         self.highlighter

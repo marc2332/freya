@@ -17,7 +17,7 @@ use ropey::Rope;
 use tree_sitter::InputEdit;
 
 use crate::{
-    editor_theme::SyntaxTheme,
+    editor_theme::EditorSyntaxTheme,
     languages::LanguageId,
     metrics::EditorMetrics,
     syntax::InputEditExt,
@@ -33,7 +33,7 @@ pub struct CodeEditorData {
     pub(crate) scrolls: (i32, i32),
     pub(crate) pending_edit: Option<InputEdit>,
     pub language_id: LanguageId,
-    theme: SyntaxTheme,
+    theme: EditorSyntaxTheme,
 }
 
 impl CodeEditorData {
@@ -48,7 +48,7 @@ impl CodeEditorData {
             scrolls: (0, 0),
             pending_edit: None,
             language_id,
-            theme: SyntaxTheme::default(),
+            theme: EditorSyntaxTheme::default(),
         }
     }
 
@@ -71,7 +71,7 @@ impl CodeEditorData {
             .measure_longest_line(font_size, font_family, &self.rope);
     }
 
-    pub fn set_theme(&mut self, theme: SyntaxTheme) {
+    pub fn set_theme(&mut self, theme: EditorSyntaxTheme) {
         self.theme = theme;
     }
 

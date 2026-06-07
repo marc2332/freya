@@ -34,6 +34,7 @@ all = [
   "calendar",
   "sdk",
   "markdown",
+  "markdown-code-editor",
   "icons",
   "radio",
   "webview",
@@ -70,8 +71,12 @@ all-tests = [
 docs = ["all-debug"]
 # Features
 winit = ["dep:freya-winit"]
-router = ["dep:freya-router", "freya-components/router"]
-remote-asset = ["freya-components/remote-asset"]
+router = [
+  "dep:freya-router",
+  "freya-components/router",
+  "freya-markdown?/router",
+]
+remote-asset = ["freya-components/remote-asset", "freya-markdown?/remote-asset"]
 i18n = ["dep:freya-i18n"]
 engine = []
 devtools = ["dep:freya-devtools", "freya-core/devtools"]
@@ -80,7 +85,8 @@ plot = ["dep:plotters", "dep:freya-plotters-backend"]
 hotreload = ["winit", "freya-core/hotreload", "freya-winit/hotreload"]
 gif = ["freya-components/gif"]
 calendar = ["freya-components/calendar"]
-markdown = ["freya-components/markdown"]
+markdown = ["dep:freya-markdown"]
+markdown-code-editor = ["markdown", "code-editor", "freya-markdown/code-editor"]
 sdk = ["dep:freya-sdk"]
 tray = ["winit", "freya-winit/tray", "dep:tray-icon"]
 material-design = ["dep:freya-material-design"]
@@ -102,6 +108,7 @@ torin = { workspace = true }
 freya-edit = { workspace = true }
 freya-clipboard = { workspace = true }
 freya-components = { workspace = true }
+freya-markdown = { workspace = true, optional = true }
 freya-animation = { workspace = true }
 freya-engine = { workspace = true }
 freya-devtools = { workspace = true, optional = true, features = ["server"] }

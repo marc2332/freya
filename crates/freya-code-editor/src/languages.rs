@@ -31,13 +31,15 @@ impl Display for LanguageId {
 }
 
 impl LanguageId {
+    /// Resolves a language identifier, accepting both file extensions (`rs`)
+    /// and language names (`rust`).
     pub fn parse(id: &str) -> Self {
         match id {
-            "rs" => LanguageId::Rust,
-            "py" => LanguageId::Python,
-            "js" => LanguageId::JavaScript,
-            "ts" => LanguageId::TypeScript,
-            "md" => LanguageId::Markdown,
+            "rust" | "rs" => LanguageId::Rust,
+            "python" | "py" => LanguageId::Python,
+            "javascript" | "js" => LanguageId::JavaScript,
+            "typescript" | "ts" => LanguageId::TypeScript,
+            "markdown" | "md" => LanguageId::Markdown,
             "toml" => LanguageId::Toml,
             "json" => LanguageId::Json,
             "sql" => LanguageId::SQL,

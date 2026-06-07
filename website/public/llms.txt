@@ -18,6 +18,7 @@ Important notes:
 - **Animations**: Easily animate your UI whether its a size or a color. You have full control over its behavior.
 - **Text Editing**: Freya supports from simple to rich text editing. You can even make cloned editors, virtualized editors, etc.
 - **Code Editor**: A dedicated code editor component available in `freya-code-editor`.
+- **Markdown**: Render Markdown documents with the `MarkdownViewer` component available in `freya-markdown`.
 - **Cross-platform**: Your app will render and behave the same in Windows, Linux and MacOS.
 - **Efficient Global State**: Efficiently manage a global state based on topics subscription using `freya-radio`.
 - **Icons**: Easily add icons to your app using `freya-icons`, currently only supports Lucide.
@@ -93,6 +94,7 @@ fn app() -> impl IntoElement {
 - [Testing](https://docs.rs/freya-testing/0.4.0-rc.22/freya_testing/): Testing framework
 - [Terminal](https://docs.rs/freya-terminal/0.4.0-rc.22/freya_terminal/): Terminal emulator integration
 - [Code Editor](https://docs.rs/freya-code-editor/0.4.0-rc.22/freya_code_editor/): Code editor component
+- [Markdown](https://docs.rs/freya-markdown/0.4.0-rc.22/freya_markdown/): Markdown rendering component
 - [Camera](https://docs.rs/freya-camera/0.4.0-rc.22/freya_camera/): Camera capture integration
 
 ## Examples
