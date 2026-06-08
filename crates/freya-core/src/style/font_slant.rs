@@ -1,11 +1,15 @@
 use freya_engine::prelude::Slant as SkSlant;
 
+/// Slant (style) of a font.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Default)]
 pub enum FontSlant {
+    /// Regular, non-slanted text. This is the default.
     #[default]
     Upright = 0,
+    /// Italic text, using the font's dedicated italic glyphs.
     Italic = 1,
+    /// Oblique text, a slanted version of the upright glyphs.
     Oblique = 2,
 }
 

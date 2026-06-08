@@ -636,28 +636,23 @@ impl From<Rect> for Element {
 }
 
 impl Rect {
-    pub fn empty() -> Self {
-        Self {
-            element: RectElement::default(),
-            elements: Vec::default(),
-            key: DiffKey::None,
-        }
-    }
-
     pub fn try_downcast(element: &dyn ElementExt) -> Option<RectElement> {
         (element as &dyn Any).downcast_ref::<RectElement>().cloned()
     }
 
+    /// Set the color of text rendered inside the rect and inherited by its children. See [`Color`].
     pub fn color(mut self, color: impl Into<Color>) -> Self {
         self.element.text_style_data.color = Some(Fill::Color(color.into()));
         self
     }
 
+    /// Set the size of text rendered inside the rect and inherited by its children. See [`FontSize`].
     pub fn font_size(mut self, font_size: impl Into<FontSize>) -> Self {
         self.element.text_style_data.font_size = Some(font_size.into());
         self
     }
 
+    /// Set whether content overflowing the rect's bounds is clipped. See [`Overflow`].
     pub fn overflow<S: Into<Overflow>>(mut self, overflow: S) -> Self {
         self.element
             .effect
@@ -666,6 +661,7 @@ impl Rect {
         self
     }
 
+    /// Rotate the rect by the given angle in degrees.
     pub fn rotate<R: Into<Option<f32>>>(mut self, rotation: R) -> Self {
         self.element
             .effect
@@ -674,6 +670,7 @@ impl Rect {
         self
     }
 
+    /// Scale the rect. See [`Scale`].
     pub fn scale(mut self, scale: impl Into<Scale>) -> Self {
         self.element
             .effect
@@ -693,6 +690,7 @@ impl Rect {
         self
     }
 
+    /// Set the rect's opacity, from `0.0` (transparent) to `1.0` (opaque).
     pub fn opacity(mut self, opacity: impl Into<f32>) -> Self {
         self.element
             .effect
@@ -701,6 +699,7 @@ impl Rect {
         self
     }
 
+    /// Apply a gaussian blur of the given radius to the rect.
     pub fn blur(mut self, blur: impl Into<f32>) -> Self {
         self.element
             .effect

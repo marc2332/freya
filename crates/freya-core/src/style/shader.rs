@@ -23,6 +23,12 @@ struct SharedRuntimeEffect(RuntimeEffect);
 unsafe impl Send for SharedRuntimeEffect {}
 unsafe impl Sync for SharedRuntimeEffect {}
 
+/// A custom paint source backed by an SkSL shader.
+///
+/// Build it with [`ShaderFill::new`], passing the SkSL source, a compiled
+/// [`RuntimeEffect`] and a provider closure that supplies the shader's uniforms
+/// for a given bounds. Use it as a [`Fill`](crate::style::fill::Fill) for
+/// backgrounds or text.
 #[derive(Clone)]
 pub struct ShaderFill {
     sksl: Arc<str>,

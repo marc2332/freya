@@ -8,6 +8,9 @@ use torin::scaled::Scaled;
 
 use crate::prelude::Color;
 
+/// Width of each side of a [`Border`], in pixels.
+///
+/// Implements `From<f32>`, applied to all sides.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Default, Clone, Copy, Debug, PartialEq)]
 pub struct BorderWidth {
@@ -47,12 +50,16 @@ impl fmt::Display for BorderWidth {
     }
 }
 
+/// Where a [`Border`] is drawn relative to the element's edge.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Default, Clone, Copy, Debug, PartialEq)]
 pub enum BorderAlignment {
+    /// Draw the border inside the element's bounds. This is the default.
     #[default]
     Inner,
+    /// Draw the border outside the element's bounds.
     Outer,
+    /// Draw the border centered on the element's edge, half inside and half outside.
     Center,
 }
 
@@ -61,6 +68,18 @@ pub enum BorderShape {
     Path(SkPath),
 }
 
+/// An outline drawn around an element, with a [`fill`](Border::fill) color,
+/// a [`width`](Border::width) per side and an [`alignment`](Border::alignment).
+///
+/// Start from [`Border::new`] and chain the methods you need:
+///
+/// ```
+/// # use freya::prelude::*;
+/// let border = Border::new()
+///     .fill(Color::RED)
+///     .width(2.0)
+///     .alignment(BorderAlignment::Inner);
+/// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Default, Clone, Debug, PartialEq)]
 pub struct Border {
@@ -70,20 +89,24 @@ pub struct Border {
 }
 
 impl Border {
+    /// Create a new [`Border`] with default values.
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Set the [`Color`] the border is painted with.
     pub fn fill(mut self, color: impl Into<Color>) -> Self {
         self.fill = color.into();
         self
     }
 
+    /// Set the [`BorderWidth`] of the border, in pixels.
     pub fn width(mut self, width: impl Into<BorderWidth>) -> Self {
         self.width = width.into();
         self
     }
 
+    /// Set how the border is aligned to the element's edge. See [`BorderAlignment`].
     pub fn alignment(mut self, alignment: impl Into<BorderAlignment>) -> Self {
         self.alignment = alignment.into();
         self

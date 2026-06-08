@@ -19,12 +19,27 @@ pub struct PositionSides {
     pub left: Option<f32>,
 }
 
+/// How an element is placed relative to its parent or the window.
+///
+/// Build one of the variants and set the sides you need with the chainable
+/// [`top`](Position::top), [`right`](Position::right), [`bottom`](Position::bottom) and
+/// [`left`](Position::left) methods:
+///
+/// ```
+/// # use torin::prelude::*;
+/// let stacked = Position::new_stacked(); // default, follows normal layout flow
+/// let absolute = Position::new_absolute().top(10.0).left(20.0); // offset from the parent
+/// let global = Position::new_global().bottom(0.0).right(0.0); // offset from the window
+/// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(PartialEq, Clone, Debug)]
 pub enum Position {
+    /// Placed by the normal layout flow alongside its siblings. This is the default.
     Stacked(Box<PositionSides>),
 
+    /// Taken out of the flow and positioned by offsets relative to its parent.
     Absolute(Box<PositionSides>),
+    /// Taken out of the flow and positioned by offsets relative to the window.
     Global(Box<PositionSides>),
 }
 
@@ -35,6 +50,7 @@ impl Default for Position {
 }
 
 impl Position {
+    /// Create an [`Absolute`](Position::Absolute) position, offset relative to the parent.
     pub fn new_absolute() -> Self {
         Self::Absolute(Box::new(PositionSides {
             top: None,
@@ -44,6 +60,7 @@ impl Position {
         }))
     }
 
+    /// Create a [`Global`](Position::Global) position, offset relative to the window.
     pub fn new_global() -> Self {
         Self::Global(Box::new(PositionSides {
             top: None,
@@ -53,6 +70,7 @@ impl Position {
         }))
     }
 
+    /// Create a [`Stacked`](Position::Stacked) position that follows the normal layout flow.
     pub fn new_stacked() -> Self {
         Self::Stacked(Box::new(PositionSides {
             top: None,
@@ -62,24 +80,28 @@ impl Position {
         }))
     }
 
+    /// Set the offset from the top edge.
     #[must_use]
     pub fn top(mut self, value: f32) -> Self {
         self.position_mut().top = Some(value);
         self
     }
 
+    /// Set the offset from the right edge.
     #[must_use]
     pub fn right(mut self, value: f32) -> Self {
         self.position_mut().right = Some(value);
         self
     }
 
+    /// Set the offset from the bottom edge.
     #[must_use]
     pub fn bottom(mut self, value: f32) -> Self {
         self.position_mut().bottom = Some(value);
         self
     }
 
+    /// Set the offset from the left edge.
     #[must_use]
     pub fn left(mut self, value: f32) -> Self {
         self.position_mut().left = Some(value);
