@@ -63,7 +63,11 @@ use crate::{
 /// }
 /// ```
 pub fn rect() -> Rect {
-    Rect::empty()
+    Rect {
+        element: RectElement::default(),
+        elements: Vec::default(),
+        key: DiffKey::None,
+    }
 }
 
 #[derive(PartialEq, Clone)]
