@@ -251,37 +251,36 @@ fn app() -> impl IntoElement {
 struct AppBottomBar;
 impl Component for AppBottomBar {
     fn render(&self) -> impl IntoElement {
-        NativeRouter::new().child(
-            rect()
-                .content(Content::flex())
-                .child(
-                    rect()
-                        .width(Size::fill())
-                        .height(Size::flex(1.))
-                        .center()
-                        .child(outlet::<Route>()),
-                )
-                .child(
-                    rect()
-                        .horizontal()
-                        .width(Size::fill())
-                        .main_align(Alignment::center())
-                        .padding(8.)
-                        .spacing(8.)
-                        .child(
-                            Link::new(Route::Home)
-                                .child(FloatingTab::new().child("Home"))
-                                .activable_route(Route::Home)
-                                .exact(true),
-                        )
-                        .child(
-                            Link::new(Route::Settings)
-                                .child(FloatingTab::new().child("Settings"))
-                                .activable_route(Route::Settings)
-                                .exact(true),
-                        ),
-                ),
-        )
+        rect()
+            .native_router()
+            .content(Content::flex())
+            .child(
+                rect()
+                    .width(Size::fill())
+                    .height(Size::flex(1.))
+                    .center()
+                    .child(outlet::<Route>()),
+            )
+            .child(
+                rect()
+                    .horizontal()
+                    .width(Size::fill())
+                    .main_align(Alignment::center())
+                    .padding(8.)
+                    .spacing(8.)
+                    .child(
+                        Link::new(Route::Home)
+                            .child(FloatingTab::new().child("Home"))
+                            .activable_route(Route::Home)
+                            .exact(true),
+                    )
+                    .child(
+                        Link::new(Route::Settings)
+                            .child(FloatingTab::new().child("Settings"))
+                            .activable_route(Route::Settings)
+                            .exact(true),
+                    ),
+            )
     }
 }
 
