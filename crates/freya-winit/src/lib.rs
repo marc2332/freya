@@ -83,7 +83,7 @@ pub fn launch(mut launch_config: LaunchConfig) {
 
     let mut font_collection = FontCollection::new();
     let def_mgr = FontMgr::default();
-    let font_mgr = FontMgr::custom_empty().unwrap_or_else(FontMgr::default);
+    let font_mgr = FontMgr::custom_empty().unwrap_or_default();
     let mut provider = TypefaceFontProvider::new();
     for (font_name, font_data) in launch_config.embedded_fonts {
         let typeface = font_mgr
