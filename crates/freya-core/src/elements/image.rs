@@ -81,32 +81,47 @@ pub fn image(image_holder: ImageHolder) -> Image {
     }
 }
 
+/// How an image is positioned within its bounds once it has been scaled.
 #[derive(Default, Clone, Debug, PartialEq)]
 pub enum ImageCover {
+    /// Anchor the image to the top-left of the bounds. This is the default.
     #[default]
     Fill,
+    /// Center the image within the bounds.
     Center,
 }
 
+/// How an image is scaled to fit its bounds while preserving its aspect ratio.
 #[derive(Default, Clone, Debug, PartialEq)]
 pub enum AspectRatio {
+    /// Scale so the whole image fits inside the bounds. This is the default.
     #[default]
     Min,
+    /// Scale so the image covers the whole bounds, cropping the overflow.
     Max,
+    /// Keep the image at its natural size.
     Fit,
+    /// Stretch the image to the bounds, ignoring its aspect ratio.
     None,
 }
 
+/// The filtering algorithm used when an image is scaled.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub enum SamplingMode {
+    /// Nearest-neighbor, fastest and sharpest, best for pixel art.
     Nearest,
+    /// Bilinear filtering.
     Bilinear,
+    /// Trilinear filtering with mipmaps. This is the default.
     #[default]
     Trilinear,
+    /// Mitchell-Netravali cubic resampling, a smooth high-quality filter.
     Mitchell,
+    /// Catmull-Rom cubic resampling, a sharper high-quality filter.
     CatmullRom,
 }
 
+/// A decoded image shared by reference, ready to be rendered by an [`image()`].
 #[derive(Clone)]
 pub struct ImageHolder {
     pub image: Rc<RefCell<SkImage>>,
@@ -119,6 +134,7 @@ impl PartialEq for ImageHolder {
     }
 }
 
+/// How an [`image()`] is scaled and sampled, grouping [`SamplingMode`], [`AspectRatio`] and [`ImageCover`].
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct ImageData {
     pub sampling_mode: SamplingMode,
@@ -377,6 +393,7 @@ impl Image {
             .cloned()
     }
 
+    /// Round the image's corners, clipping it to the rounded shape. See [`CornerRadius`].
     pub fn corner_radius(mut self, corner_radius: impl Into<CornerRadius>) -> Self {
         self.element.corner_radius = Some(corner_radius.into());
         self
