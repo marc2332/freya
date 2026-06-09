@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-/// Size of text in pixels. Defaults to `16`.
+/// Defaults to `16`.
 ///
 /// Implements `From<i32>` and `From<f32>`.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
