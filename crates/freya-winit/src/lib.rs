@@ -83,12 +83,13 @@ pub fn launch(mut launch_config: LaunchConfig) {
 
     let mut font_collection = FontCollection::new();
     let def_mgr = FontMgr::default();
+    let font_mgr = FontMgr::custom_empty().unwrap_or_else(FontMgr::default);
     let mut provider = TypefaceFontProvider::new();
     for (font_name, font_data) in launch_config.embedded_fonts {
-        let ft_type = def_mgr
+        let typeface = font_mgr
             .new_from_data(&font_data, None)
             .unwrap_or_else(|| panic!("Failed to load font {font_name}."));
-        provider.register_typeface(ft_type, Some(font_name.as_ref()));
+        provider.register_typeface(typeface, Some(font_name.as_ref()));
     }
     let font_mgr: FontMgr = provider.into();
     font_collection.set_default_font_manager(def_mgr, None);
