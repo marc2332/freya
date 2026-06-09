@@ -16,24 +16,20 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    use_init_theme(dark_theme);
+    use_init_theme(|| dark_theme().with_dark_code_editor());
     let a11y_id = use_a11y();
-    let custom_theme = use_state(|| EditorTheme {
-        background: (20, 20, 20).into(),
-        ..Default::default()
-    });
     let editor = use_state(move || {
         let path = PathBuf::from("./crates/freya-code-editor/src/editor_ui.rs");
         let rope = Rope::from_str(&std::fs::read_to_string(&path).unwrap());
         let mut editor = CodeEditorData::new(rope, LanguageId::Rust);
-        editor.set_theme(SyntaxTheme {
+        editor.set_theme(EditorSyntaxTheme {
             comment: (230, 230, 230).into(),
-            ..Default::default()
+            ..EditorSyntaxTheme::dark()
         });
         editor.parse();
         editor.measure(14., "Jetbrains Mono");
         editor
     });
 
-    CodeEditor::new(editor, a11y_id).theme(custom_theme)
+    CodeEditor::new(editor, a11y_id).background((20, 20, 20))
 }

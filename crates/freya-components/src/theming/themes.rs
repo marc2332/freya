@@ -12,8 +12,6 @@ use torin::{
 use crate::calendar::CalendarThemePreference;
 #[cfg(feature = "router")]
 use crate::link::LinkThemePreference;
-#[cfg(feature = "markdown")]
-use crate::markdown::MarkdownViewerThemePreference;
 #[cfg(feature = "titlebar")]
 use crate::titlebar::TitlebarButtonThemePreference;
 use crate::{
@@ -515,27 +513,6 @@ fn register_base_component_themes(theme: &mut Theme) {
             divider_fill: Preference::Reference("surface_primary"),
             corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
             color: Preference::Reference("text_primary"),
-        },
-    );
-    #[cfg(feature = "markdown")]
-    theme.set(
-        "markdown_viewer",
-        MarkdownViewerThemePreference {
-            color: Preference::Reference("text_primary"),
-            background_code: Preference::Reference("surface_tertiary"),
-            color_code: Preference::Reference("text_primary"),
-            background_blockquote: Preference::Reference("surface_tertiary"),
-            border_blockquote: Preference::Reference("surface_primary"),
-            background_divider: Preference::Reference("border"),
-            heading_h1: Preference::Specific(32.0),
-            heading_h2: Preference::Specific(28.0),
-            heading_h3: Preference::Specific(24.0),
-            heading_h4: Preference::Specific(20.0),
-            heading_h5: Preference::Specific(18.0),
-            heading_h6: Preference::Specific(16.0),
-            paragraph_size: Preference::Specific(16.0),
-            code_font_size: Preference::Specific(14.0),
-            table_font_size: Preference::Specific(14.0),
         },
     );
     theme.set(

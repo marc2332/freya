@@ -236,15 +236,18 @@ macro_rules! define_theme {
     };
 }
 
+/// Like [`get_theme!`](crate::get_theme), but falls back to a `default` callback
+/// instead of panicking when the key is not registered. Useful for themes that
+/// live outside the components crate.
 #[macro_export]
-macro_rules! get_theme {
-    ($theme_prop:expr, $theme_type:ty, $theme_key:expr) => {{
+macro_rules! get_theme_or_default {
+    ($theme_prop:expr, $theme_type:ty, $theme_key:expr, $default:expr) => {{
         let theme = $crate::theming::hooks::get_theme_or_default();
         let theme = theme.read();
         let mut requested_theme = theme
             .get::<$theme_type>($theme_key)
             .cloned()
-            .expect(concat!("Theme key not found: ", $theme_key));
+            .unwrap_or_else($default);
 
         if let Some(theme_override) = $theme_prop {
             requested_theme.apply_optional(&theme_override);
@@ -252,6 +255,15 @@ macro_rules! get_theme {
 
         requested_theme.resolve(&theme.colors)
     }};
+}
+
+#[macro_export]
+macro_rules! get_theme {
+    ($theme_prop:expr, $theme_type:ty, $theme_key:expr) => {
+        $crate::get_theme_or_default!($theme_prop, $theme_type, $theme_key, || {
+            ::core::panic!(concat!("Theme key not found: ", $theme_key))
+        })
+    };
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

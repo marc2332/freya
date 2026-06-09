@@ -157,7 +157,7 @@ pub mod components {
     pub use freya_components::gif_viewer::*;
     #[cfg_attr(feature = "docs", doc(cfg(feature = "markdown")))]
     #[cfg(feature = "markdown")]
-    pub use freya_components::markdown::*;
+    pub use freya_markdown::*;
     cfg_if::cfg_if! {
         if #[cfg(feature = "router")] {
             #[cfg_attr(feature = "docs", doc(cfg(feature = "router")))]

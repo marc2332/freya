@@ -220,6 +220,23 @@ fn app() -> impl IntoElement {
 </div>
 
 
+### Markdown
+
+Render Markdown documents with the `MarkdownViewer` component.
+Enable with the `markdown` feature.
+
+<details>
+<summary>Code</summary>
+
+```rust
+fn app() -> impl IntoElement {
+    MarkdownViewer::new("# Hello World\n\nThis is **bold** and *italic* text.")
+}
+```
+
+</details>
+
+
 ### Routing & Navigation
 
 Define routes, manage navigation state, and transition between different views.

@@ -143,7 +143,6 @@ impl Component for EditorDemo {
         let editor = use_state(move || {
             let rope = Rope::from_str(SAMPLE_CODE);
             let mut editor = CodeEditorData::new(rope, LanguageId::Rust);
-            editor.set_theme(SyntaxTheme::default());
             editor.parse();
             editor.measure(14., "Jetbrains Mono");
             editor
