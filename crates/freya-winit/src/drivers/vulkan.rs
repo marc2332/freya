@@ -411,14 +411,9 @@ fn create_instance(
 
     let extension_names = enumerate_required_extensions(display_handle.as_raw())?.to_vec();
 
-    // Enable the Vulkan validation layer extension:
-    // const VALIDATION_LAYER_NAME: &CStr = c"VK_LAYER_KHRONOS_validation";
-    // let validation_layer_name_ptr = VALIDATION_LAYER_NAME.as_ptr();
-
     let create_info = InstanceCreateInfo::default()
         .application_info(&app_info)
         .enabled_extension_names(&extension_names);
-    // .enabled_layer_names(std::slice::from_ref(&validation_layer_name_ptr));
 
     Ok(unsafe { entry.create_instance(&create_info, None)? })
 }

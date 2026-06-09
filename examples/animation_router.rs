@@ -160,7 +160,7 @@ struct AppContainer;
 
 impl Component for AppContainer {
     fn render(&self) -> impl IntoElement {
-        NativeRouter::new().child(AnimatedRouter::<Route>::new(
+        rect().native_router().child(AnimatedRouter::<Route>::new(
             rect()
                 .content(Content::Flex)
                 .child(
