@@ -296,7 +296,7 @@ pub trait EventHandlersExt: Sized {
         ime_preedit => EventName::ImePreedit;
     }
 
-    /// Fires when the element's measured size or position changes. Requires the element to be a [`LayoutExt`].
+    /// Fires when the element's measured size or position changes.
     fn on_sized(mut self, on_sized: impl Into<EventHandler<Event<SizedEventData>>>) -> Self
     where
         Self: LayoutExt,
