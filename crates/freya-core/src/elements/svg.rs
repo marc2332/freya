@@ -358,16 +358,19 @@ impl Svg {
         (element as &dyn Any).downcast_ref::<SvgElement>().cloned()
     }
 
+    /// Override the SVG's `currentColor`, used by elements that inherit their color. See [`Color`].
     pub fn color(mut self, color: impl Into<Color>) -> Self {
         self.element.color = Some(color.into());
         self
     }
 
+    /// Override the fill color of the SVG's shapes. See [`Color`].
     pub fn fill(mut self, fill: impl Into<Color>) -> Self {
         self.element.fill = Some(fill.into());
         self
     }
 
+    /// Override the stroke color of the SVG's shapes. See [`Color`].
     pub fn stroke(mut self, stroke: impl Into<Color>) -> Self {
         self.element.stroke = Some(stroke.into());
         self
@@ -379,6 +382,7 @@ impl Svg {
         self
     }
 
+    /// Rotate the SVG by the given angle in degrees.
     pub fn rotate(mut self, rotation: impl Into<f32>) -> Self {
         self.element
             .effect

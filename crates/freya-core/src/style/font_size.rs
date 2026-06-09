@@ -1,5 +1,8 @@
 use std::ops::Deref;
 
+/// Defaults to `16`.
+///
+/// Implements `From<i32>` and `From<f32>`.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Hash, Debug, PartialEq, Clone, Copy)]
 pub struct FontSize(i32);

@@ -265,17 +265,25 @@ impl LayerState {
     }
 }
 
+/// Whether content overflowing an element's bounds is shown or clipped.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
 pub enum Overflow {
+    /// Let children paint outside the element's bounds. This is the default.
     #[default]
     None,
+    /// Clip children to the element's bounds.
     Clip,
 }
 
+/// Whether an element (and its descendants) responds to pointer events.
+///
+/// Converts from a `bool`, where `true` is [`Interactive::Yes`].
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
 pub enum Interactive {
+    /// The element receives pointer events. This is the default.
     #[default]
     Yes,
+    /// The element ignores pointer events, letting them pass through.
     No,
 }
 
