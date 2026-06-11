@@ -272,7 +272,7 @@ enum Status {
 
 impl Component for GifViewer {
     fn render(&self) -> impl IntoElement {
-        let asset_config = AssetConfiguration::new(&self.source, self.asset_age.clone());
+        let asset_config = AssetConfiguration::new(&self.source, self.asset_age);
         let asset_data = use_asset(&asset_config);
         let mut status = use_state(|| Status::Decoding);
         let mut cached_frames = use_state::<Option<Rc<CachedGifFrames>>>(|| None);

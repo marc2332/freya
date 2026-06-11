@@ -202,6 +202,7 @@ impl AppWindow {
                 _ => PreferredTheme::Light,
             };
             let is_app_focused = window.has_focus();
+            let scale_factor = window.scale_factor();
             move || Platform {
                 focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
                 focused_accessibility_node: State::create(accesskit::Node::new(
@@ -211,6 +212,7 @@ impl AppWindow {
                     window_size.width as f32,
                     window_size.height as f32,
                 )),
+                scale_factor: State::create(scale_factor),
                 navigation_mode: State::create(NavigationMode::NotKeyboard),
                 preferred_theme: State::create(theme),
                 is_app_focused: State::create(is_app_focused),
@@ -385,6 +387,14 @@ impl AppWindow {
         self.window.scale_factor() * self.user_zoom as f64
     }
 
+    /// Republishes the effective scale factor on [`Platform`] so consumers
+    /// (e.g. `ImageViewer`) pick it up on their next render.
+    pub fn sync_scale_factor(&mut self) {
+        self.platform
+            .scale_factor
+            .set(self.effective_scale_factor());
+    }
+
     /// Sets `user_zoom`, clamped to `[MIN_USER_ZOOM, MAX_USER_ZOOM]`. On change,
     /// resets layout/text caches and requests a redraw, mirroring `ScaleFactorChanged`.
     pub fn set_user_zoom(&mut self, zoom: f32) {
@@ -393,6 +403,7 @@ impl AppWindow {
             return;
         }
         self.user_zoom = clamped;
+        self.sync_scale_factor();
         self.process_layout_on_next_render = true;
         self.tree.layout.reset();
         self.tree.text_cache.reset();
