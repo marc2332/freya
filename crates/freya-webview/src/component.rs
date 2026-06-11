@@ -16,6 +16,36 @@ use crate::{
     registry::WebViewCallback,
 };
 
+/// Embeds a native WebView pointing to a given URL as a regular element in your UI.
+///
+/// # Requirements
+///
+/// The [`WebViewPlugin`](crate::plugin::WebViewPlugin) must be registered in your `LaunchConfig`
+/// for this component to work, otherwise it will panic:
+///
+/// ```rust,no_run
+/// # use freya::prelude::*;
+/// # use freya_webview::prelude::*;
+/// launch(
+///     LaunchConfig::new()
+///         .with_plugin(WebViewPlugin::new())
+///         .with_window(WindowConfig::new(app)),
+/// );
+/// # fn app() -> impl IntoElement { rect() }
+/// ```
+///
+/// WebViews are not supported on every platform, see the [crate-level docs](crate#platform-compatibility)
+/// for details.
+///
+/// # Example
+///
+/// ```rust,no_run
+/// # use freya::prelude::*;
+/// # use freya_webview::prelude::*;
+/// fn app() -> impl IntoElement {
+///     WebView::new("https://example.com").expanded()
+/// }
+/// ```
 #[derive(Clone)]
 pub struct WebView {
     webview_id: WebViewId,
@@ -50,11 +80,14 @@ impl WebView {
         }
     }
 
+    /// Set the URL the WebView will load.
     pub fn url(mut self, url: impl Into<String>) -> Self {
         self.url = url.into();
         self
     }
 
+    /// Set a custom [`WebViewId`] so the WebView can be referenced later, e.g. with
+    /// [`WebViewManager::close`](crate::lifecycle::WebViewManager::close).
     pub fn id(mut self, id: WebViewId) -> Self {
         self.webview_id = id;
         self
@@ -66,6 +99,8 @@ impl WebView {
         self
     }
 
+    /// Customize the underlying [`wry::WebViewBuilder`] right before the WebView is built, for
+    /// example to set a custom user agent or inject initialization scripts.
     pub fn on_created(
         mut self,
         on_created: impl Fn(wry::WebViewBuilder) -> wry::WebViewBuilder + Send + 'static,

@@ -111,6 +111,8 @@ pub struct ParagraphHolderInner {
     pub scale_factor: f64,
 }
 
+/// A shared slot that receives the laid-out paragraph, so callers can hit-test and measure
+/// text after layout. Pass it to a [`paragraph()`] with [`Paragraph::holder`].
 #[derive(Clone)]
 pub struct ParagraphHolder(pub Rc<RefCell<Option<ParagraphHolderInner>>>);
 
@@ -899,6 +901,7 @@ impl Paragraph {
             .cloned()
     }
 
+    /// Append every [`Span`] yielded by the iterator to the paragraph.
     pub fn spans_iter(mut self, spans: impl Iterator<Item = Span<'static>>) -> Self {
         // TODO: Accessible paragraphs
         // self.element.accessibility.builder.set_value(text.clone());
@@ -908,6 +911,7 @@ impl Paragraph {
         self
     }
 
+    /// Append a single [`Span`] of styled text to the paragraph.
     pub fn span(mut self, span: impl Into<Span<'static>>) -> Self {
         // TODO: Accessible paragraphs
         // self.element.accessibility.builder.set_value(text.clone());
@@ -920,31 +924,37 @@ impl Paragraph {
         self.element.spans.push(span);
     }
 
+    /// Set the color of the text cursor. See [`Color`].
     pub fn cursor_color(mut self, cursor_color: impl Into<Color>) -> Self {
         self.element.cursor_style_data.color = cursor_color.into();
         self
     }
 
+    /// Set the color used to highlight selected text. See [`Color`].
     pub fn highlight_color(mut self, highlight_color: impl Into<Color>) -> Self {
         self.element.cursor_style_data.highlight_color = highlight_color.into();
         self
     }
 
+    /// Set the shape of the text cursor. See [`CursorStyle`].
     pub fn cursor_style(mut self, cursor_style: impl Into<CursorStyle>) -> Self {
         self.element.cursor_style = cursor_style.into();
         self
     }
 
+    /// Attach a [`ParagraphHolder`] that receives the laid-out paragraph for hit-testing and measurement.
     pub fn holder(mut self, holder: ParagraphHolder) -> Self {
         self.element.sk_paragraph = holder;
         self
     }
 
+    /// Place the text cursor at the given character index. Pass `None` to hide it.
     pub fn cursor_index(mut self, cursor_index: impl Into<Option<usize>>) -> Self {
         self.element.cursor_index = cursor_index.into();
         self
     }
 
+    /// Highlight the given `(start, end)` character ranges, used for text selection.
     pub fn highlights(mut self, highlights: impl Into<Option<Vec<(usize, usize)>>>) -> Self {
         if let Some(highlights) = highlights.into() {
             self.element.highlights = highlights;
@@ -952,11 +962,13 @@ impl Paragraph {
         self
     }
 
+    /// Limit the paragraph to at most this many lines, truncating the rest. Pass `None` for no limit.
     pub fn max_lines(mut self, max_lines: impl Into<Option<usize>>) -> Self {
         self.element.max_lines = max_lines.into();
         self
     }
 
+    /// Override the height of each line as a multiple of the font size. Pass `None` for the default.
     pub fn line_height(mut self, line_height: impl Into<Option<f32>>) -> Self {
         self.element.line_height = line_height.into();
         self
@@ -979,6 +991,16 @@ impl Paragraph {
     }
 }
 
+/// A run of text with its own style, used to build a [`paragraph()`].
+///
+/// Create it with [`Span::new`] (or from a `&str`/`String`) and style it with the
+/// [`TextStyleExt`] methods such as [`font_size`](TextStyleExt::font_size) and
+/// [`color`](TextStyleExt::color):
+///
+/// ```
+/// # use freya_core::prelude::*;
+/// let span = Span::new("Hello").font_size(24.0).color(Color::RED);
+/// ```
 #[derive(Clone, PartialEq, Hash)]
 pub struct Span<'a> {
     pub text_style_data: TextStyleData,
@@ -1004,6 +1026,7 @@ impl From<String> for Span<'static> {
 }
 
 impl<'a> Span<'a> {
+    /// Create a [`Span`] from the given text, with the default text style.
     pub fn new(text: impl Into<Cow<'a, str>>) -> Self {
         Self {
             text: text.into(),
