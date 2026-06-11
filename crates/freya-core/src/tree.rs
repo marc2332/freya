@@ -25,7 +25,7 @@ use torin::{
         Area,
         LayoutMeasurer,
         LayoutNode,
-        Length,
+        PostMeasure,
         Size2D,
     },
     torin::{
@@ -749,7 +749,7 @@ impl LayoutMeasurer<NodeId> for LayoutMeasurerAdapter<'_> {
         node_layout: &LayoutNode,
         children: &[NodeId],
         layout: &Torin<NodeId>,
-    ) -> (Option<Size2D>, Vec<(NodeId, Length, Length)>) {
+    ) -> PostMeasure<NodeId> {
         self.elements
             .get(&node_id)
             .unwrap()

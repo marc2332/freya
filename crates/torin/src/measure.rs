@@ -105,10 +105,21 @@ where
         }
     }
 
+    /// Set the hidden state of a Node and all its descendants.
+    fn set_hidden(&mut self, node_id: Key, hidden: bool) {
+        let mut buffer = vec![node_id];
+        while let Some(child) = buffer.pop() {
+            if let Some(layout_node) = self.layout.get_mut(&child) {
+                layout_node.hidden = hidden;
+            }
+            buffer.extend(self.tree_adapter.children_of(&child));
+        }
+    }
+
     /// Run the measurer's post-measure step once a Node's subtree is measured. Applies the child
-    /// offsets it returns and gives back its corrected content size, if any.
+    /// offsets and hidden states it returns and gives back its corrected content size, if any.
     fn apply_post_measure(&mut self, node_id: Key, node_layout: &LayoutNode) -> Option<Size2D> {
-        let (size, offsets) = {
+        let post_measure = {
             let measurer = self.measurer.as_mut()?;
             if !measurer.should_post_measure(node_id) {
                 return None;
@@ -117,12 +128,17 @@ where
             measurer.post_measure(node_id, node_layout, &children, self.layout)
         };
 
-        for (child_id, offset_x, offset_y) in offsets {
+        for (child_id, offset_x, offset_y) in post_measure.offsets {
+            self.set_hidden(child_id, false);
             self.translate_node(child_id, offset_x, offset_y);
             self.recursive_translate(child_id, offset_x, offset_y);
         }
 
-        size
+        for child_id in post_measure.hidden_children {
+            self.set_hidden(child_id, true);
+        }
+
+        post_measure.content_size
     }
 
     /// Measure a Node and all its children.
@@ -420,32 +436,17 @@ where
                 offset_x: node.offset_x,
                 offset_y: node.offset_y,
                 inner_area,
+                hidden: false,
                 data: node_data,
                 inner_sizes,
             };
-
-            // In case of any layout listener, notify it with the new areas.
-            if must_cache_children
-                && phase == Phase::Final
-                && node.has_layout_references
-                && let Some(measurer) = self.measurer
-            {
-                inner_sizes.width += node.padding.horizontal();
-                inner_sizes.height += node.padding.vertical();
-                measurer.notify_layout_references(
-                    node_id,
-                    layout_node.area,
-                    layout_node.visible_area(),
-                    inner_sizes,
-                );
-            }
 
             if must_cache_children
                 && phase == Phase::Final
                 && let Some(content_size) = self.apply_post_measure(node_id, &layout_node)
             {
-                // The post-measure produced a content size that accounts for inline children
-                // (e.g. Skia placeholders), so re-apply the Node's sizing to its inner-sized axes.
+                // The post-measure content size accounts for inline children, so re-apply the
+                // sizing of inner-sized axes. The inner area keeps holding the available space.
                 if node.width.inner_sized() {
                     layout_node.area.size.width = node.width.min_max(
                         content_size.width,
@@ -472,6 +473,22 @@ where
                         phase,
                     );
                 }
+            }
+
+            // In case of any layout listener, notify it with the new areas.
+            if must_cache_children
+                && phase == Phase::Final
+                && node.has_layout_references
+                && let Some(measurer) = self.measurer
+            {
+                inner_sizes.width += node.padding.horizontal();
+                inner_sizes.height += node.padding.vertical();
+                measurer.notify_layout_references(
+                    node_id,
+                    layout_node.area,
+                    layout_node.visible_area(),
+                    inner_sizes,
+                );
             }
 
             (must_cache_children, layout_node)

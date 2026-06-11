@@ -38,6 +38,9 @@ pub struct LayoutNode {
     pub offset_x: Length,
     pub offset_y: Length,
 
+    /// Hidden Nodes are not painted and do not receive events.
+    pub hidden: bool,
+
     /// Associated data
     #[cfg_attr(feature = "serde", serde(skip_deserializing, skip_serializing))]
     pub data: Option<Rc<dyn Any>>,
@@ -50,6 +53,7 @@ impl PartialEq for LayoutNode {
             && self.margin == other.margin
             && self.offset_x == other.offset_x
             && self.offset_y == other.offset_y
+            && self.hidden == other.hidden
     }
 }
 

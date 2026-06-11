@@ -17,6 +17,26 @@ use crate::{
     },
 };
 
+/// Result of a [LayoutMeasurer::post_measure] step.
+pub struct PostMeasure<Key: NodeKey> {
+    /// Corrected content size, re-applied through the Node's min/max sizing.
+    pub content_size: Option<Size2D>,
+    /// `(x, y)` offsets to move each visible child's subtree by.
+    pub offsets: Vec<(Key, Length, Length)>,
+    /// Children whose subtree must be hidden from painting and events.
+    pub hidden_children: Vec<Key>,
+}
+
+impl<Key: NodeKey> Default for PostMeasure<Key> {
+    fn default() -> Self {
+        Self {
+            content_size: None,
+            offsets: Vec::new(),
+            hidden_children: Vec::new(),
+        }
+    }
+}
+
 pub trait LayoutMeasurer<Key: NodeKey> {
     fn measure(
         &mut self,
@@ -34,16 +54,15 @@ pub trait LayoutMeasurer<Key: NodeKey> {
         false
     }
 
-    /// Runs after a node and its children are measured. Returns an optional corrected content
-    /// size (re-applied through min/max) and `(x, y)` offsets to move each child's subtree.
+    /// Runs after a node and its children are measured.
     fn post_measure(
         &mut self,
         _node_id: Key,
         _node_layout: &LayoutNode,
         _children: &[Key],
         _layout: &Torin<Key>,
-    ) -> (Option<Size2D>, Vec<(Key, Length, Length)>) {
-        (None, Vec::new())
+    ) -> PostMeasure<Key> {
+        PostMeasure::default()
     }
 
     fn notify_layout_references(

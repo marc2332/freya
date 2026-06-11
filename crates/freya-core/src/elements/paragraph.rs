@@ -36,6 +36,7 @@ use torin::prelude::{
     Length,
     Point2D,
     Position,
+    PostMeasure,
     Size2D,
 };
 
@@ -349,12 +350,9 @@ impl ElementExt for ParagraphElement {
         self.has_inline_content()
     }
 
-    fn post_measure(
-        &self,
-        context: PostMeasureContext,
-    ) -> (Option<Size2D>, Vec<(NodeId, Length, Length)>) {
+    fn post_measure(&self, context: PostMeasureContext) -> PostMeasure<NodeId> {
         if context.children.is_empty() {
-            return (None, Vec::new());
+            return PostMeasure::default();
         }
 
         let placeholders: Vec<Size2D> = context
@@ -405,19 +403,28 @@ impl ElementExt for ParagraphElement {
         };
         let origin = visible_area.origin;
 
-        let offsets = context
-            .children
-            .iter()
-            .zip(rects.iter())
-            .filter_map(|(child_id, rect)| {
-                let current = context.layout.get(child_id)?.area.origin;
-                let offset_x = origin.x + rect.rect.left - current.x;
-                let offset_y = origin.y + vertical_offset + rect.rect.top - current.y;
-                Some((*child_id, Length::new(offset_x), Length::new(offset_y)))
-            })
-            .collect();
+        let mut offsets = Vec::new();
+        let mut hidden_children = Vec::new();
+        for (index, child_id) in context.children.iter().enumerate() {
+            let Some(current) = context.layout.get(child_id).map(|node| node.area.origin) else {
+                continue;
+            };
+            match rects.get(index) {
+                Some(rect) => {
+                    let offset_x = origin.x + rect.rect.left - current.x;
+                    let offset_y = origin.y + vertical_offset + rect.rect.top - current.y;
+                    offsets.push((*child_id, Length::new(offset_x), Length::new(offset_y)));
+                }
+                // Children whose placeholder got cut off by max_lines or ellipsis are hidden.
+                None => hidden_children.push(*child_id),
+            }
+        }
 
-        (Some(content_size), offsets)
+        PostMeasure {
+            content_size: Some(content_size),
+            offsets,
+            hidden_children,
+        }
     }
 
     fn events_handlers(&'_ self) -> Option<Cow<'_, FxHashMap<EventName, EventHandlerType>>> {

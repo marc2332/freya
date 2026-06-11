@@ -14,10 +14,13 @@ fn app() -> impl IntoElement {
 
     let logo = ("rust-logo", include_bytes!("./rust_logo.png"));
 
-    rect().expanded().center().padding(40.).child(
+    rect().expanded().padding(40.).child(
         paragraph()
+            .expanded()
             .font_size(16.)
             .line_height(1.5)
+            .text_overflow(TextOverflow::Ellipsis)
+            .max_lines(4)
             .span("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed ")
             .child(
                 ImageViewer::new(logo)

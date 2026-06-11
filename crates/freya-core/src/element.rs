@@ -17,7 +17,7 @@ use torin::{
     prelude::{
         Area,
         LayoutNode,
-        Length,
+        PostMeasure,
         Size2D,
     },
     scaled::Scaled,
@@ -122,13 +122,9 @@ pub trait ElementExt: Any {
         false
     }
 
-    /// Runs after this node and its children are measured. Returns an optional corrected content
-    /// size and `(x, y)` offsets to move each child's subtree.
-    fn post_measure(
-        &self,
-        _context: PostMeasureContext,
-    ) -> (Option<Size2D>, Vec<(NodeId, Length, Length)>) {
-        (None, Vec::new())
+    /// Runs after this node and its children are measured.
+    fn post_measure(&self, _context: PostMeasureContext) -> PostMeasure<NodeId> {
+        PostMeasure::default()
     }
 
     fn is_point_inside(&self, context: EventMeasurementContext) -> bool {
