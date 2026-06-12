@@ -588,8 +588,6 @@ impl Tree {
         scale_factor: f64,
         fallback_fonts: &[Cow<'static, str>],
     ) {
-        let mut events = Vec::new();
-
         let mut tree_adapter = TreeAdapterFreya {
             elements: &self.elements,
             parents: &self.parents,
@@ -598,10 +596,12 @@ impl Tree {
             scale_factor,
         };
 
+        let mut events = Vec::new();
+
         let layout_adapter = LayoutMeasurerAdapter {
             elements: &self.elements,
             text_style_state: &self.text_style_state,
-            font_collection: &mut *font_collection,
+            font_collection,
             font_manager,
             events: &mut events,
             scale_factor,
@@ -616,7 +616,6 @@ impl Tree {
             &mut Some(layout_adapter),
             &mut tree_adapter,
         );
-
         events_sender
             .unbounded_send(EventsChunk::Batch(events))
             .unwrap();
