@@ -522,6 +522,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "markdown_viewer",
         MarkdownViewerThemePreference {
             color: Preference::Reference("text_primary"),
+            color_link: Preference::Reference("text_highlight"),
             background_code: Preference::Reference("surface_tertiary"),
             color_code: Preference::Reference("text_primary"),
             background_blockquote: Preference::Reference("surface_tertiary"),

@@ -52,6 +52,10 @@ impl ragnarok::EventsMeasurer for EventsMeasurerAdapter<'_> {
             return false;
         };
 
+        if layout_node.hidden {
+            return false;
+        }
+
         // Make sure the cursor is inside the element
         if !element.is_point_inside(EventMeasurementContext {
             cursor,

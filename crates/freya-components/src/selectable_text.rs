@@ -1,5 +1,3 @@
-use std::borrow::Cow;
-
 use freya_core::prelude::*;
 use freya_edit::*;
 
@@ -13,9 +11,16 @@ pub enum SelectableTextStatus {
     Hovering,
 }
 
+/// A piece of a [SelectableText]: styled text or an inline element flowing between the text.
+#[derive(Clone, PartialEq)]
+enum SelectableContent {
+    Span(Span<'static>),
+    Child(Element),
+}
+
 #[derive(Clone, PartialEq)]
 pub struct SelectableText {
-    value: Cow<'static, str>,
+    contents: Vec<SelectableContent>,
     layout: LayoutData,
     accessibility: AccessibilityData,
     text_style_data: TextStyleData,
@@ -50,10 +55,16 @@ impl TextStyleExt for SelectableText {
     }
 }
 
+impl Default for SelectableText {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SelectableText {
-    pub fn new(value: impl Into<Cow<'static, str>>) -> Self {
+    pub fn new() -> Self {
         Self {
-            value: value.into(),
+            contents: Vec::new(),
             layout: LayoutData::default(),
             accessibility: AccessibilityData::default(),
             text_style_data: TextStyleData::default(),
@@ -61,6 +72,19 @@ impl SelectableText {
             line_height: None,
             key: DiffKey::None,
         }
+    }
+
+    /// Append a styled [Span] to the text.
+    pub fn span(mut self, span: impl Into<Span<'static>>) -> Self {
+        self.contents.push(SelectableContent::Span(span.into()));
+        self
+    }
+
+    /// Append an inline element that flows between the text.
+    pub fn child(mut self, child: impl IntoElement) -> Self {
+        self.contents
+            .push(SelectableContent::Child(child.into_element()));
+        self
     }
 
     pub fn max_lines(mut self, max_lines: impl Into<Option<usize>>) -> Self {
@@ -72,21 +96,34 @@ impl SelectableText {
         self.line_height = line_height.into();
         self
     }
+
+    /// The text the editor selects over. Each inline element is one object-replacement character
+    /// so selection offsets stay aligned with the paragraph's placeholders.
+    fn editor_text(&self) -> String {
+        self.contents
+            .iter()
+            .map(|content| match content {
+                SelectableContent::Span(span) => span.text.as_ref(),
+                SelectableContent::Child(_) => " ",
+            })
+            .collect()
+    }
 }
 
 impl Component for SelectableText {
     fn render(&self) -> impl IntoElement {
+        let value = self.editor_text();
         let holder = use_state(ParagraphHolder::default);
         let mut editable = use_editable(
-            || self.value.to_string(),
+            || self.editor_text(),
             move || EditableConfig::new().with_allow_changes(false),
         );
         let mut status = use_state(SelectableTextStatus::default);
         let a11y_id = use_a11y();
         let mut drag_origin = use_state(|| None);
 
-        if self.value.as_ref() != editable.editor().read().rope() {
-            editable.editor_mut().write().set(self.value.as_ref());
+        if value.as_str() != editable.editor().read().rope() {
+            editable.editor_mut().write().set(value.as_str());
             editable.editor_mut().write().editor_history().clear();
         }
 
@@ -171,7 +208,7 @@ impl Component for SelectableText {
             }
         };
 
-        paragraph()
+        let mut paragraph = paragraph()
             .layout(self.layout.clone())
             .accessibility(self.accessibility.clone())
             .text_style(self.text_style_data.clone())
@@ -190,8 +227,16 @@ impl Component for SelectableText {
             .on_pointer_leave(on_pointer_leave)
             .on_global_pointer_press(on_global_pointer_press)
             .on_key_down(on_key_down)
-            .on_key_up(on_key_up)
-            .span(Span::new(editable.editor().read().to_string()))
+            .on_key_up(on_key_up);
+
+        for content in &self.contents {
+            paragraph = match content {
+                SelectableContent::Span(span) => paragraph.span(span.clone()),
+                SelectableContent::Child(child) => paragraph.child(child.clone()),
+            };
+        }
+
+        paragraph
     }
 
     fn render_key(&self) -> DiffKey {

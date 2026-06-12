@@ -37,11 +37,16 @@ impl RenderPipeline<'_> {
         for i16 in itertools::sorted(self.tree.layers.keys()) {
             let nodes = self.tree.layers.get(i16).unwrap();
             'rendering: for node_id in nodes {
+                let layout_node = self.tree.layout.get(node_id).unwrap();
+
+                if layout_node.hidden {
+                    continue 'rendering;
+                }
+
                 let layer = self.canvas.save();
 
                 let element = self.tree.elements.get(node_id).unwrap();
                 let text_style_state = self.tree.text_style_state.get(node_id).unwrap();
-                let layout_node = self.tree.layout.get(node_id).unwrap();
                 let effect_state = self.tree.effect_state.get(node_id);
 
                 if let Some(effect_state) = effect_state {
