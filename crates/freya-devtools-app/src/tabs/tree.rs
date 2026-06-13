@@ -3,13 +3,19 @@ use std::collections::HashSet;
 use freya::prelude::*;
 use freya_core::integration::NodeId;
 use freya_devtools::NodeInfo;
-use freya_radio::prelude::use_radio;
+use freya_radio::prelude::{
+    Radio,
+    use_radio,
+};
 use freya_router::prelude::RouterContext;
 
 use crate::{
     Route,
     node::NodeElement,
-    state::DevtoolsChannel,
+    state::{
+        DevtoolsChannel,
+        DevtoolsState,
+    },
 };
 
 #[derive(Clone, PartialEq)]
@@ -45,6 +51,26 @@ impl NodesTree {
         }
 
         result
+    }
+
+    /// Expands or collapses a node and all of its descendants.
+    fn set_subtree_expanded(
+        mut radio: Radio<DevtoolsState, DevtoolsChannel>,
+        window_id: u64,
+        node_id: NodeId,
+        expanded: bool,
+    ) {
+        let mut state = radio.write();
+        let Some(window_nodes) = state.nodes.get(&window_id) else {
+            return;
+        };
+        for descendant in Self::collect_descendants(window_nodes, node_id) {
+            if expanded {
+                state.expanded_nodes.insert((window_id, descendant));
+            } else {
+                state.expanded_nodes.remove(&(window_id, descendant));
+            }
+        }
     }
 }
 
@@ -127,49 +153,23 @@ impl Component for NodesTree {
                         }
                     }),
                     on_expand_all: EventHandler::new(move |_| {
-                        let mut radio = radio.write();
-
-                        if let Some((_, window_nodes)) =
-                            radio.nodes.iter().find(|(id, _)| **id == window_id)
-                        {
-                            let descendants = NodesTree::collect_descendants(window_nodes, node_id);
-                            for nid in descendants {
-                                radio.expanded_nodes.insert((window_id, nid));
-                            }
-                        }
+                        NodesTree::set_subtree_expanded(radio, window_id, node_id, true);
                     }),
                     on_collapse_all: EventHandler::new(move |_| {
-                        let mut radio = radio.write();
-
-                        if let Some((_, window_nodes)) =
-                            radio.nodes.iter().find(|(id, _)| **id == window_id)
-                        {
-                            let descendants = NodesTree::collect_descendants(window_nodes, node_id);
-                            for nid in descendants {
-                                radio.expanded_nodes.remove(&(window_id, nid));
-                            }
-                        }
+                        NodesTree::set_subtree_expanded(radio, window_id, node_id, false);
                     }),
                     on_selected: EventHandler::new(move |_| {
                         on_selected.call((window_id, node_id));
-                        match RouterContext::get().current::<Route>() {
-                            Route::NodeInspectorStyle { .. } => {
-                                let _ = RouterContext::get()
-                                    .push(Route::NodeInspectorStyle { node_id, window_id });
-                            }
+                        let route = match RouterContext::get().current::<Route>() {
                             Route::NodeInspectorTextStyle { .. } => {
-                                let _ = RouterContext::get()
-                                    .push(Route::NodeInspectorTextStyle { node_id, window_id });
+                                Route::NodeInspectorTextStyle { node_id, window_id }
                             }
                             Route::NodeInspectorLayout { .. } => {
-                                let _ = RouterContext::get()
-                                    .push(Route::NodeInspectorLayout { node_id, window_id });
+                                Route::NodeInspectorLayout { node_id, window_id }
                             }
-                            _ => {
-                                let _ = RouterContext::get()
-                                    .push(Route::NodeInspectorStyle { node_id, window_id });
-                            }
-                        }
+                            _ => Route::NodeInspectorStyle { node_id, window_id },
+                        };
+                        let _ = RouterContext::get().push(route);
                     }),
                     on_hover: EventHandler::new(move |node_id| {
                         on_hover.call((window_id, node_id));
