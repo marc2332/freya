@@ -97,7 +97,7 @@ impl SelectableText {
         self
     }
 
-    /// The text the editor selects over. Each inline element is one object-replacement character
+    /// The text the editor selects over. Each inline element becomes a single space
     /// so selection offsets stay aligned with the paragraph's placeholders.
     fn editor_text(&self) -> String {
         self.contents
