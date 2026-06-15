@@ -25,13 +25,33 @@ use crate::{
     },
 };
 
+/// A paint source for backgrounds and text: a solid [`Color`], a gradient or a custom shader.
+///
+/// A plain [`Color`] converts into a [`Fill`] automatically, so most APIs that take an
+/// `impl Into<Fill>` accept a color directly. For gradients, build a
+/// [`LinearGradient`], [`RadialGradient`] or [`ConicGradient`] and wrap it in the
+/// matching variant:
+///
+/// ```
+/// # use freya::prelude::*;
+/// let gradient = Fill::LinearGradient(Box::new(
+///     LinearGradient::new()
+///         .stop((Color::RED, 0.0))
+///         .stop((Color::BLUE, 100.0)),
+/// ));
+/// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, PartialEq)]
 pub enum Fill {
+    /// A solid [`Color`].
     Color(Color),
+    /// A custom SkSL shader. See [`ShaderFill`].
     Shader(Box<ShaderFill>),
+    /// A [`LinearGradient`].
     LinearGradient(Box<LinearGradient>),
+    /// A [`RadialGradient`].
     RadialGradient(Box<RadialGradient>),
+    /// A [`ConicGradient`].
     ConicGradient(Box<ConicGradient>),
 }
 

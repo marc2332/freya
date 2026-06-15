@@ -36,51 +36,50 @@ pub enum Route {
 struct AppLayout;
 impl Component for AppLayout {
     fn render(&self) -> impl IntoElement {
-        NativeRouter::new().child(
-            rect()
-                .content(Content::flex())
-                .child(
-                    rect()
-                        .horizontal()
-                        .width(Size::fill())
-                        .height(Size::px(50.))
-                        .background((230, 230, 230))
-                        .padding(12.)
-                        .spacing(12.)
-                        .cross_align(Alignment::center())
-                        .content(Content::Flex)
-                        .child(
-                            ActivableRoute::new(
-                                Route::Home,
-                                Link::new(Route::Home).child(Button::new().flat().child("Home")),
-                            )
-                            .exact(true),
+        rect()
+            .native_router()
+            .content(Content::flex())
+            .child(
+                rect()
+                    .horizontal()
+                    .width(Size::fill())
+                    .height(Size::px(50.))
+                    .background((230, 230, 230))
+                    .padding(12.)
+                    .spacing(12.)
+                    .cross_align(Alignment::center())
+                    .content(Content::Flex)
+                    .child(
+                        ActivableRoute::new(
+                            Route::Home,
+                            Link::new(Route::Home).child(Button::new().flat().child("Home")),
                         )
-                        .child(
-                            ActivableRoute::new(
-                                Route::About,
-                                Link::new(Route::About).child(Button::new().flat().child("About")),
-                            )
-                            .exact(true),
+                        .exact(true),
+                    )
+                    .child(
+                        ActivableRoute::new(
+                            Route::About,
+                            Link::new(Route::About).child(Button::new().flat().child("About")),
                         )
-                        .child(rect().width(Size::flex(1.)))
-                        .child(
-                            Button::new()
-                                .flat()
-                                .on_press(|_| {
-                                    RouterContext::get().go_back();
-                                })
-                                .child("Go Back"),
-                        ),
-                )
-                .child(
-                    rect()
-                        .expanded()
-                        .background((240, 240, 240))
-                        .padding(12.)
-                        .child(Outlet::<Route>::new()),
-                ),
-        )
+                        .exact(true),
+                    )
+                    .child(rect().width(Size::flex(1.)))
+                    .child(
+                        Button::new()
+                            .flat()
+                            .on_press(|_| {
+                                RouterContext::get().go_back();
+                            })
+                            .child("Go Back"),
+                    ),
+            )
+            .child(
+                rect()
+                    .expanded()
+                    .background((240, 240, 240))
+                    .padding(12.)
+                    .child(Outlet::<Route>::new()),
+            )
     }
 }
 

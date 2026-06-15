@@ -15,6 +15,14 @@ use torin::prelude::Area;
 
 use crate::style::color::Color;
 
+/// A single color stop within a gradient, placed at an `offset` percentage (`0.0..=100.0`).
+///
+/// Build it from a `(color, offset)` tuple or with [`GradientStop::new`]:
+///
+/// ```
+/// # use freya::prelude::*;
+/// let stop = GradientStop::new(Color::RED, 50.0);
+/// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct GradientStop {
@@ -37,6 +45,7 @@ impl fmt::Display for GradientStop {
 }
 
 impl GradientStop {
+    /// Create a [`GradientStop`] of the given [`Color`] at the given offset percentage (`0.0..=100.0`).
     pub fn new(color: impl Into<Color>, offset: f32) -> Self {
         Self {
             color: color.into(),
@@ -51,6 +60,17 @@ impl<C: Into<Color>> From<(C, f32)> for GradientStop {
     }
 }
 
+/// A gradient that transitions colors along a straight line at a given [`angle`](LinearGradient::angle).
+///
+/// Start from [`LinearGradient::new`] and add [`GradientStop`]s:
+///
+/// ```
+/// # use freya::prelude::*;
+/// let gradient = LinearGradient::new()
+///     .angle(90.0)
+///     .stop((Color::RED, 0.0))
+///     .stop((Color::BLUE, 100.0));
+/// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct LinearGradient {
@@ -139,6 +159,16 @@ impl fmt::Display for LinearGradient {
     }
 }
 
+/// A gradient that transitions colors outward in a circle from the element's center.
+///
+/// Start from [`RadialGradient::new`] and add [`GradientStop`]s:
+///
+/// ```
+/// # use freya::prelude::*;
+/// let gradient = RadialGradient::new()
+///     .stop((Color::WHITE, 0.0))
+///     .stop((Color::BLACK, 100.0));
+/// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct RadialGradient {
@@ -210,6 +240,18 @@ impl fmt::Display for RadialGradient {
     }
 }
 
+/// A gradient that transitions colors by sweeping around the element's center.
+///
+/// Start from [`ConicGradient::new`], add [`GradientStop`]s and optionally set the
+/// rotation [`angle`](ConicGradient::angle) and the start/end [`angles`](ConicGradient::angles):
+///
+/// ```
+/// # use freya::prelude::*;
+/// let gradient = ConicGradient::new()
+///     .angle(45.0)
+///     .stop((Color::RED, 0.0))
+///     .stop((Color::BLUE, 100.0));
+/// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ConicGradient {

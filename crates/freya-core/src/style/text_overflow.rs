@@ -1,9 +1,13 @@
+/// How text that does not fit its bounds is truncated.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Default, Clone, Debug, PartialEq, Hash)]
 pub enum TextOverflow {
+    /// Cut the text off at the edge. This is the default.
     #[default]
     Clip,
+    /// Replace the cut-off text with an ellipsis (`…`).
     Ellipsis,
+    /// Replace the cut-off text with a custom string.
     Custom(String),
 }
 

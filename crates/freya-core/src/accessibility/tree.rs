@@ -1,5 +1,8 @@
+use std::any::Any;
+
 use accesskit::{
     Action,
+    Affine,
     Node,
     Rect,
     Role,
@@ -22,7 +25,11 @@ use crate::{
         focusable::Focusable,
         id::AccessibilityId,
     },
-    elements::label::Label,
+    data::Overflow,
+    elements::{
+        label::LabelElement,
+        paragraph::ParagraphElement,
+    },
     events::emittable::EmmitableEvent,
     integration::{
         EventName,
@@ -31,8 +38,11 @@ use crate::{
     node_id::NodeId,
     prelude::{
         AccessibilityFocusMovement,
+        Color,
         EventType,
-        Paragraph,
+        FontSlant,
+        TextAlign,
+        TextDecoration,
         WheelEventData,
         WheelSource,
     },
@@ -377,19 +387,18 @@ impl AccessibilityTree {
         // Set inner text
         if let Some(children) = tree.children.get(&node_id) {
             for child in children {
-                let children_element = tree.elements.get(child).unwrap();
-                // TODO: Maybe support paragraphs too, or use a new trait
-                if let Some(label) = Label::try_downcast(children_element.as_ref()) {
-                    accessibility_data.builder.set_label(label.text);
-                } else if let Some(paragraph) = Paragraph::try_downcast(children_element.as_ref()) {
+                let child_element = tree.elements.get(child).unwrap().as_ref() as &dyn Any;
+                if let Some(label) = child_element.downcast_ref::<LabelElement>() {
+                    accessibility_data.builder.set_label(label.text.as_ref());
+                } else if let Some(paragraph) = child_element.downcast_ref::<ParagraphElement>() {
                     accessibility_data.builder.set_label(
                         paragraph
                             .spans
                             .iter()
-                            .map(|span| span.text.to_string())
+                            .map(|span| span.text.as_ref())
                             .collect::<String>(),
                     );
-                };
+                }
             }
         }
 
@@ -398,117 +407,85 @@ impl AccessibilityTree {
         // to focus the current element if it supports it.
         if accessibility_data.a11y_focusable.is_enabled() {
             accessibility_data.builder.add_action(Action::Focus);
-            // accessibility_data.builder.add_action(Action::Click);
         }
 
-        // // Rotation transform
-        // if let Some((_, rotation)) = transform_state
-        //     .rotations
-        //     .iter()
-        //     .find(|(id, _)| id == &node_ref.id())
-        // {
-        //     let rotation = rotation.to_radians() as f64;
-        //     let (s, c) = rotation.sin_cos();
-        //     builder.set_transform(Affine::new([c, s, -s, c, 0.0, 0.0]));
-        // }
+        let builder = &mut accessibility_data.builder;
 
-        // // Clipping overflow
-        // if style_state.overflow == OverflowMode::Clip {
-        //     builder.set_clips_children();
-        // }
+        if let Some(effect_state) = tree.effect_state.get(&node_id) {
+            if let Some(rotation) = effect_state.rotation {
+                let rotation = (rotation as f64).to_radians();
+                let (sin, cos) = rotation.sin_cos();
+                builder.set_transform(Affine::new([cos, sin, -sin, cos, 0.0, 0.0]));
+            }
 
-        // Foreground/Background color
-        // builder.set_foreground_color(font_style_state.color.into());
-        // if let Fill::Color(color) = style_state.background {
-        //     builder.set_background_color(color.into());
-        // }
+            if effect_state.overflow == Overflow::Clip {
+                builder.set_clips_children();
+            }
+        }
 
-        // // If the node is a block-level element in the layout, indicate that it will cause a linebreak.
-        // if !node_type.is_text() {
-        //     if let NodeType::Element(node) = &*node_type {
-        //         // This should be impossible currently but i'm checking for it just in case.
-        //         // In the future, inline text spans should have their own own accessibility node,
-        //         // but that's not a concern yet.
-        //         if node.tag != TagName::Text {
-        //             builder.set_is_line_breaking_object();
-        //         }
-        //     }
-        // }
+        if let Some(background) = element.style().background.as_color() {
+            builder.set_background_color(color_to_accesskit(background));
+        }
 
-        // Font size
-        // builder.set_font_size(font_style_state.font_size as _);
+        let element = element.as_ref() as &dyn Any;
+        let is_text_element = element.is::<LabelElement>() || element.is::<ParagraphElement>();
+        if !is_text_element {
+            builder.set_is_line_breaking_object();
+        }
 
-        // // If the font family has changed since the parent node, then we inform accesskit of this change.
-        // if let Some(parent_node) = node_ref.parent() {
-        //     if parent_node.get::<FontStyleState>().unwrap().font_family
-        //         != font_style_state.font_family
-        //     {
-        //         builder.set_font_family(font_style_state.font_family.join(", "));
-        //     }
-        // } else {
-        //     // Element has no parent elements, so we set the initial font style.
-        //     builder.set_font_family(font_style_state.font_family.join(", "));
-        // }
+        if let Some(text_style) = tree.text_style_state.get(&node_id) {
+            if let Some(color) = text_style.color.as_color() {
+                builder.set_foreground_color(color_to_accesskit(color));
+            }
 
-        // // Set bold flag for weights above 700
-        // if font_style_state.font_weight > 700.into() {
-        //     builder.set_bold();
-        // }
+            builder.set_font_size(f32::from(text_style.font_size));
+            builder.set_font_weight(f32::from(text_style.font_weight));
+            builder.set_font_family(text_style.font_families.join(", "));
 
-        // // Text alignment
-        // builder.set_text_align(match font_style_state.text_align {
-        //     TextAlign::Center => accesskit::TextAlign::Center,
-        //     TextAlign::Justify => accesskit::TextAlign::Justify,
-        //     // TODO: change representation of `Start` and `End` once RTL text/writing modes are supported.
-        //     TextAlign::Left | TextAlign::Start => accesskit::TextAlign::Left,
-        //     TextAlign::Right | TextAlign::End => accesskit::TextAlign::Right,
-        // });
+            if matches!(
+                text_style.font_slant,
+                FontSlant::Italic | FontSlant::Oblique
+            ) {
+                builder.set_italic();
+            }
 
-        // // TODO: Adjust this once text direction support other than RTL is properly added
-        // builder.set_text_direction(TextDirection::LeftToRight);
+            builder.set_text_align(match text_style.text_align {
+                TextAlign::Center => accesskit::TextAlign::Center,
+                TextAlign::Justify => accesskit::TextAlign::Justify,
+                // TODO: change the representation of `Start` and `End` once writing modes are supported.
+                TextAlign::Left | TextAlign::Start => accesskit::TextAlign::Left,
+                TextAlign::Right | TextAlign::End => accesskit::TextAlign::Right,
+            });
 
-        // // Set italic property for italic/oblique font slants
-        // match font_style_state.font_slant {
-        //     FontSlant::Italic | FontSlant::Oblique => builder.set_italic(),
-        //     _ => {}
-        // }
+            // TODO: adjust this once text directions other than left to right are supported.
+            builder.set_text_direction(accesskit::TextDirection::LeftToRight);
 
-        // // Text decoration
-        // if font_style_state
-        //     .text_decoration
-        //     .contains(TextDecoration::LINE_THROUGH)
-        // {
-        //     builder.set_strikethrough(skia_decoration_style_to_accesskit(
-        //         font_style_state.text_decoration_style,
-        //     ));
-        // }
-        // if font_style_state
-        //     .text_decoration
-        //     .contains(TextDecoration::UNDERLINE)
-        // {
-        //     builder.set_underline(skia_decoration_style_to_accesskit(
-        //         font_style_state.text_decoration_style,
-        //     ));
-        // }
-        // if font_style_state
-        //     .text_decoration
-        //     .contains(TextDecoration::OVERLINE)
-        // {
-        //     builder.set_overline(skia_decoration_style_to_accesskit(
-        //         font_style_state.text_decoration_style,
-        //     ));
-        // }
+            let decoration = accesskit::TextDecoration {
+                style: accesskit::TextDecorationStyle::Solid,
+                color: text_style
+                    .color
+                    .as_color()
+                    .map(color_to_accesskit)
+                    .unwrap_or(color_to_accesskit(Color::BLACK)),
+            };
+            match text_style.text_decoration {
+                TextDecoration::Underline => builder.set_underline(decoration),
+                TextDecoration::Overline => builder.set_overline(decoration),
+                TextDecoration::LineThrough => builder.set_strikethrough(decoration),
+                TextDecoration::None => {}
+            }
+        }
 
         accessibility_data.builder
     }
 }
 
-// fn skia_decoration_style_to_accesskit(style: TextDecorationStyle) -> accesskit::TextDecoration {
-//     match style {
-//         TextDecorationStyle::Solid => accesskit::TextDecoration::Solid,
-//         TextDecorationStyle::Dotted => accesskit::TextDecoration::Dotted,
-//         TextDecorationStyle::Dashed => accesskit::TextDecoration::Dashed,
-//         TextDecorationStyle::Double => accesskit::TextDecoration::Double,
-//         TextDecorationStyle::Wavy => accesskit::TextDecoration::Wavy,
-//     }
-// }
+/// Convert a Freya [Color] into its [accesskit::Color] equivalent.
+fn color_to_accesskit(color: Color) -> accesskit::Color {
+    accesskit::Color {
+        red: color.r(),
+        green: color.g(),
+        blue: color.b(),
+        alpha: color.a(),
+    }
+}

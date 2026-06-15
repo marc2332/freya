@@ -138,6 +138,7 @@ pub mod prelude {
             corner_radius::*,
             cursor::*,
             fill::*,
+            font_size::*,
             font_slant::*,
             font_weight::*,
             font_width::*,
