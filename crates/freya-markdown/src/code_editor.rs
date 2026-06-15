@@ -3,33 +3,21 @@ use std::borrow::Cow;
 use freya_code_editor::prelude::{
     CodeEditor,
     CodeEditorData,
-    LanguageId,
+    EditorLanguage,
     Rope,
 };
 use freya_core::prelude::*;
 use torin::prelude::*;
 
-/// Resolves a fenced code block info string into a [`LanguageId`].
-///
-/// Markdown fences use language names (`rust`, `python`) rather than the file
-/// extensions [`LanguageId::parse`] expects, and may carry extra attributes after
-/// the language (e.g. ` ```rust,ignore `), so both forms are handled here.
-fn language_from_fence(fence: &str) -> LanguageId {
-    // Fences may carry attributes after the language, e.g. ```rust,ignore
-    let name = fence
-        .split([',', ' '])
-        .next()
-        .unwrap_or(fence)
-        .trim()
-        .to_ascii_lowercase();
-
-    LanguageId::parse(&name)
-}
+/// Resolves a code fence's language string (e.g. `rust`, `python`) into an
+/// [`EditorLanguage`] for syntax highlighting, or `None` to leave it unhighlighted.
+pub type LanguageResolver = Callback<String, Option<EditorLanguage>>;
 
 #[derive(PartialEq)]
 pub(crate) struct CodeBlockEditor {
     code: NoArgCallback<Cow<'static, str>>,
     language: Option<String>,
+    resolver: Option<LanguageResolver>,
     font_size: f32,
     font_family: Cow<'static, str>,
     key: DiffKey,
@@ -39,12 +27,14 @@ impl CodeBlockEditor {
     pub(crate) fn new(
         code: impl Into<NoArgCallback<Cow<'static, str>>>,
         language: Option<String>,
+        resolver: Option<LanguageResolver>,
         font_size: f32,
         font_family: Cow<'static, str>,
     ) -> Self {
         Self {
             code: code.into(),
             language,
+            resolver,
             font_size,
             font_family,
             key: DiffKey::None,
@@ -62,6 +52,7 @@ impl Component for CodeBlockEditor {
     fn render(&self) -> impl IntoElement {
         let code = self.code.clone();
         let language = self.language.clone();
+        let resolver = self.resolver.clone();
         let font_size = self.font_size;
         let font_family = self.font_family.clone();
 
@@ -71,11 +62,10 @@ impl Component for CodeBlockEditor {
             let font_family = font_family.clone();
             move || {
                 let code = code.call();
-                let language_id = language
-                    .as_deref()
-                    .map(language_from_fence)
-                    .unwrap_or_default();
-                let mut editor = CodeEditorData::new(Rope::from_str(&code), language_id);
+                let language = language
+                    .zip(resolver)
+                    .and_then(|(fence, resolve)| resolve.call(fence));
+                let mut editor = CodeEditorData::new(Rope::from_str(&code), language);
                 editor.parse();
                 editor.measure(font_size, &font_family);
                 editor

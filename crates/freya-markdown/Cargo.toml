@@ -22,7 +22,7 @@ code-editor = ["dep:freya-code-editor"]
 [dependencies]
 freya-core = { workspace = true }
 freya-components = { workspace = true }
-freya-code-editor = { workspace = true, optional = true, features = ["all"] }
+freya-code-editor = { workspace = true, optional = true }
 torin = { workspace = true }
 
 pulldown-cmark = "0.13"

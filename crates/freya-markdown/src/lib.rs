@@ -120,6 +120,8 @@ pub struct MarkdownViewer {
     key: DiffKey,
     pub(crate) theme: Option<MarkdownViewerThemePartial>,
     code_editor_font_family: Cow<'static, str>,
+    #[cfg(feature = "code-editor")]
+    language_resolver: Option<code_editor::LanguageResolver>,
 }
 
 impl MarkdownViewer {
@@ -130,12 +132,27 @@ impl MarkdownViewer {
             key: DiffKey::None,
             theme: None,
             code_editor_font_family: Cow::Borrowed("Jetbrains Mono"),
+            #[cfg(feature = "code-editor")]
+            language_resolver: None,
         }
     }
 
     /// Sets the font family used for code blocks. Defaults to `"Jetbrains Mono"`.
     pub fn code_editor_font_family(mut self, font_family: impl Into<Cow<'static, str>>) -> Self {
         self.code_editor_font_family = font_family.into();
+        self
+    }
+
+    /// Sets a resolver mapping a code fence's language string to an [`EditorLanguage`]
+    /// for syntax highlighting. Without it, code blocks render without highlighting.
+    ///
+    /// [`EditorLanguage`]: freya_code_editor::prelude::EditorLanguage
+    #[cfg(feature = "code-editor")]
+    pub fn code_editor_language(
+        mut self,
+        resolver: impl Into<code_editor::LanguageResolver>,
+    ) -> Self {
+        self.language_resolver = Some(resolver.into());
         self
     }
 }
@@ -633,6 +650,7 @@ impl Component for MarkdownViewer {
                     let element = CodeBlockEditor::new(
                         move || Cow::Owned(code.clone()),
                         language,
+                        self.language_resolver.clone(),
                         code_font_size,
                         self.code_editor_font_family.clone(),
                     )

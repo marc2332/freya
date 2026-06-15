@@ -3,10 +3,23 @@
     windows_subsystem = "windows"
 )]
 
-use freya::prelude::*;
+use freya::{
+    code_editor::EditorLanguage,
+    prelude::*,
+};
 
 fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
+}
+
+fn resolve_language(language: String) -> Option<EditorLanguage> {
+    match language.as_str() {
+        "rust" => Some(EditorLanguage::new(
+            tree_sitter_rust::LANGUAGE,
+            tree_sitter_rust::HIGHLIGHTS_QUERY,
+        )),
+        _ => None,
+    }
 }
 
 const MARKDOWN_CONTENT: &str = r#"
@@ -114,6 +127,10 @@ fn app() -> impl IntoElement {
         ScrollView::new()
             .width(Size::fill())
             .height(Size::fill())
-            .child(MarkdownViewer::new(MARKDOWN_CONTENT).padding(18.)),
+            .child(
+                MarkdownViewer::new(MARKDOWN_CONTENT)
+                    .code_editor_language(resolve_language)
+                    .padding(18.),
+            ),
     )
 }

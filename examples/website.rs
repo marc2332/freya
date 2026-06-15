@@ -50,7 +50,11 @@ impl Component for Home {
         let editor_a11y_id = use_a11y();
         let editor = use_state(move || {
             let rope = Rope::from_str(CODE);
-            let mut editor = CodeEditorData::new(rope, LanguageId::Rust);
+            let language = EditorLanguage::new(
+                tree_sitter_rust::LANGUAGE,
+                tree_sitter_rust::HIGHLIGHTS_QUERY,
+            );
+            let mut editor = CodeEditorData::new(rope, language);
             editor.set_theme(EditorSyntaxTheme {
                 comment: (230, 230, 230).into(),
                 ..EditorSyntaxTheme::dark()
