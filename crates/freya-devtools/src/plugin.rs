@@ -43,7 +43,6 @@ use crate::{
 };
 
 pub(crate) type Websockets = HashMap<u32, WebSocketSender<TcpStream>>;
-pub(crate) type SharedWebsockets = Arc<async_lock::Mutex<Websockets>>;
 
 #[derive(Clone)]
 pub struct WindowState {
@@ -51,12 +50,12 @@ pub struct WindowState {
     pub nodes: Vec<NodeInfo>,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct DevtoolsPlugin {
-    windows: Arc<Mutex<HashMap<u64, WindowState>>>,
-    websockets: SharedWebsockets,
-    highlighted_node: Arc<Mutex<Option<NodeId>>>,
-    hovered_node: Arc<Mutex<Option<NodeId>>>,
+    pub(crate) windows: Arc<Mutex<HashMap<u64, WindowState>>>,
+    pub(crate) websockets: Arc<async_lock::Mutex<Websockets>>,
+    pub(crate) highlighted_node: Arc<Mutex<Option<NodeId>>>,
+    pub(crate) hovered_node: Arc<Mutex<Option<NodeId>>>,
 }
 
 impl DevtoolsPlugin {
@@ -66,15 +65,15 @@ impl DevtoolsPlugin {
         outer_color: freya_core::prelude::Color,
         inner_color: freya_core::prelude::Color,
     ) {
-        let mut paint_outer = Paint::default();
-        paint_outer.set_anti_alias(true);
-        paint_outer.set_style(PaintStyle::Fill);
-        paint_outer.set_color(outer_color);
-
-        let mut paint_inner = Paint::default();
-        paint_inner.set_anti_alias(true);
-        paint_inner.set_style(PaintStyle::Fill);
-        paint_inner.set_color(inner_color);
+        let fill_paint = |color| {
+            let mut paint = Paint::default();
+            paint.set_anti_alias(true);
+            paint.set_style(PaintStyle::Fill);
+            paint.set_color(color);
+            paint
+        };
+        let paint_outer = fill_paint(outer_color);
+        let paint_inner = fill_paint(inner_color);
 
         let x = area.min_x();
         let y = area.min_y();
@@ -96,8 +95,8 @@ impl DevtoolsPlugin {
     }
 
     /// Serializes and broadcasts a message to all connected devtools clients.
-    fn broadcast(&self, message: OutgoingMessage) {
-        let Ok(serialized) = serde_json::to_string(&message) else {
+    fn broadcast(&self, message: &OutgoingMessage) {
+        let Ok(serialized) = serde_json::to_string(message) else {
             return;
         };
         let outgoing_message = Message::Text(serialized.into());
@@ -130,20 +129,9 @@ impl DevtoolsPlugin {
         };
 
         if start_server {
-            let nodes = self.windows.clone();
-            let websockets = self.websockets.clone();
-            let highlighted_node = self.highlighted_node.clone();
-            let hovered_node = self.hovered_node.clone();
+            let plugin = self.clone();
             smol::spawn(async move {
-                if let Err(err) = run_server(
-                    nodes,
-                    websockets,
-                    highlighted_node,
-                    hovered_node,
-                    plugin_handle,
-                )
-                .await
-                {
+                if let Err(err) = run_server(plugin, plugin_handle).await {
                     eprintln!("Devtools server error: {err:?}");
                 }
             })
@@ -186,15 +174,17 @@ impl DevtoolsPlugin {
             });
         });
 
-        self.broadcast(OutgoingMessage {
+        let message = OutgoingMessage {
             action: OutgoingMessageAction::Update {
                 window_id,
-                nodes: new_nodes.clone(),
+                nodes: new_nodes,
             },
-        });
+        };
+        self.broadcast(&message);
 
+        let OutgoingMessageAction::Update { nodes, .. } = message.action;
         if let Some(window_state) = self.windows.lock().unwrap().get_mut(&window_id) {
-            window_state.nodes = new_nodes;
+            window_state.nodes = nodes;
         }
     }
 }
@@ -209,7 +199,7 @@ impl FreyaPlugin for DevtoolsPlugin {
             PluginEvent::WindowClosed { window, .. } => {
                 let window_id: u64 = window.id().into();
                 self.windows.lock().unwrap().remove(&window_id);
-                self.broadcast(OutgoingMessage {
+                self.broadcast(&OutgoingMessage {
                     action: OutgoingMessageAction::Update {
                         window_id,
                         nodes: vec![],

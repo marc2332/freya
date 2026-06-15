@@ -320,6 +320,7 @@ impl<Key: NodeKey> Torin<Key> {
                 margin: Gaps::default(),
                 offset_x: Length::default(),
                 offset_y: Length::default(),
+                hidden: false,
                 data: None,
             });
         let root = tree_adapter.get_node(&root_id).unwrap();

@@ -4,7 +4,6 @@ use freya_core::{
         Border,
         Color,
         CornerRadius,
-        CursorMode,
         Fill,
         FontSlant,
         Shadow,
@@ -13,7 +12,6 @@ use freya_core::{
         TextHeightBehavior,
         TextOverflow,
         TextShadow,
-        VerticalAlign,
     },
 };
 use serde::{
@@ -58,14 +56,8 @@ pub struct NodeState {
     pub accessibility: AccessibilityData,
 }
 
-pub trait NodeStateAttributes {
-    fn layout_attributes(&'_ self) -> Vec<(&'_ str, AttributeType<'_>)>;
-    fn text_style_attributes(&'_ self) -> Vec<(&'_ str, AttributeType<'_>)>;
-    fn style_attributes(&'_ self) -> Vec<(&'_ str, AttributeType<'_>)>;
-}
-
-impl NodeStateAttributes for NodeState {
-    fn layout_attributes(&'_ self) -> Vec<(&'_ str, AttributeType<'_>)> {
+impl NodeState {
+    pub fn layout_attributes(&'_ self) -> Vec<(&'_ str, AttributeType<'_>)> {
         vec![
             ("width", AttributeType::Size(&self.layout.width)),
             ("height", AttributeType::Size(&self.layout.height)),
@@ -114,7 +106,7 @@ impl NodeStateAttributes for NodeState {
             ("spacing", AttributeType::Length(self.layout.spacing)),
         ]
     }
-    fn style_attributes(&'_ self) -> Vec<(&'_ str, AttributeType<'_>)> {
+    pub fn style_attributes(&'_ self) -> Vec<(&'_ str, AttributeType<'_>)> {
         let mut attributes = vec![
             ("background", AttributeType::from(&self.style.background)),
             (
@@ -136,7 +128,7 @@ impl NodeStateAttributes for NodeState {
         attributes
     }
 
-    fn text_style_attributes(&'_ self) -> Vec<(&'_ str, AttributeType<'_>)> {
+    pub fn text_style_attributes(&'_ self) -> Vec<(&'_ str, AttributeType<'_>)> {
         let mut attributes = vec![
             ("color", AttributeType::from(&self.text_style.color)),
             (
@@ -191,12 +183,10 @@ impl NodeStateAttributes for NodeState {
 
 pub enum AttributeType<'a> {
     Color(Color),
-    OptionalColor(Option<Color>),
     Fill(Fill),
     Size(&'a Size),
     VisibleSize(&'a VisibleSize),
     Measure(f32),
-    OptionalMeasure(Option<f32>),
     Measures(Gaps),
     CornerRadius(CornerRadius),
     Direction(&'a Direction),
@@ -213,9 +203,6 @@ pub enum AttributeType<'a> {
     FontSlant(FontSlant),
     TextDecoration(TextDecoration),
     Length(Length),
-    Layer(i16),
-    CursorMode(CursorMode),
-    VerticalAlign(VerticalAlign),
 }
 
 impl<'a> From<&'a Fill> for AttributeType<'a> {

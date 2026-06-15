@@ -9,25 +9,6 @@ use freya_code_editor::prelude::{
 use freya_core::prelude::*;
 use torin::prelude::*;
 
-pub(crate) fn render_code_block(
-    idx: usize,
-    code: String,
-    language: Option<String>,
-    _background_code: Color,
-    _color_code: Color,
-    code_font_size: f32,
-    font_family: Cow<'static, str>,
-) -> Element {
-    CodeBlockEditor::new(
-        move || Cow::Owned(code.clone()),
-        language,
-        code_font_size,
-        font_family,
-    )
-    .key(idx)
-    .into()
-}
-
 /// Resolves a fenced code block info string into a [`LanguageId`].
 ///
 /// Markdown fences use language names (`rust`, `python`) rather than the file
@@ -46,7 +27,7 @@ fn language_from_fence(fence: &str) -> LanguageId {
 }
 
 #[derive(PartialEq)]
-struct CodeBlockEditor {
+pub(crate) struct CodeBlockEditor {
     code: NoArgCallback<Cow<'static, str>>,
     language: Option<String>,
     font_size: f32,
@@ -55,7 +36,7 @@ struct CodeBlockEditor {
 }
 
 impl CodeBlockEditor {
-    fn new(
+    pub(crate) fn new(
         code: impl Into<NoArgCallback<Cow<'static, str>>>,
         language: Option<String>,
         font_size: f32,
