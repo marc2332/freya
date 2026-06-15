@@ -9,8 +9,7 @@ use freya_code_editor::prelude::{
 use freya_core::prelude::*;
 use torin::prelude::*;
 
-/// Resolves a code fence's language string (e.g. `rust`, `python`) into an
-/// [`EditorLanguage`] for syntax highlighting, or `None` to leave it unhighlighted.
+/// Maps a code block's language string to an [`EditorLanguage`], or `None` to skip highlighting.
 pub type LanguageResolver = Callback<String, Option<EditorLanguage>>;
 
 #[derive(PartialEq)]
@@ -64,7 +63,7 @@ impl Component for CodeBlockEditor {
                 let code = code.call();
                 let language = language
                     .zip(resolver)
-                    .and_then(|(fence, resolve)| resolve.call(fence));
+                    .and_then(|(language, resolve)| resolve.call(language));
                 let mut editor = CodeEditorData::new(Rope::from_str(&code), language);
                 editor.parse();
                 editor.measure(font_size, &font_family);

@@ -143,10 +143,7 @@ impl MarkdownViewer {
         self
     }
 
-    /// Sets a resolver mapping a code fence's language string to an [`EditorLanguage`]
-    /// for syntax highlighting. Without it, code blocks render without highlighting.
-    ///
-    /// [`EditorLanguage`]: freya_code_editor::prelude::EditorLanguage
+    /// Sets a resolver mapping a code block's language to an `EditorLanguage` for highlighting.
     #[cfg(feature = "code-editor")]
     pub fn code_editor_language(
         mut self,
