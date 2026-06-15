@@ -73,6 +73,7 @@ define_theme! {
 /// - Links
 /// - Blockquotes
 /// - Horizontal rules
+/// - Custom inline elements (see [`MarkdownViewer::inline_element`])
 ///
 /// # Example
 ///
@@ -88,6 +89,7 @@ pub struct MarkdownViewer {
     layout: LayoutData,
     key: DiffKey,
     pub(crate) theme: Option<MarkdownViewerThemePartial>,
+    inline_element: Option<Callback<String, Option<Element>>>,
 }
 
 impl MarkdownViewer {
@@ -97,7 +99,30 @@ impl MarkdownViewer {
             layout: LayoutData::default(),
             key: DiffKey::None,
             theme: None,
+            inline_element: None,
         }
+    }
+
+    /// Set a handler for custom inline elements.
+    ///
+    /// Each raw inline HTML tag in a paragraph (for example `<rust-logo/>`) is passed to the
+    /// `handler`, which returns the element to inline, or `None` to keep the tag as plain text.
+    ///
+    /// ```rust
+    /// # use freya::prelude::*;
+    /// fn app() -> impl IntoElement {
+    ///     MarkdownViewer::new("Made with Rust <rust-logo/> btw")
+    ///         .inline_element(|html| html.starts_with("<rust-logo").then(|| "🦀"))
+    /// }
+    /// ```
+    pub fn inline_element<ReturnedElement: IntoElement + 'static>(
+        mut self,
+        handler: impl Fn(String) -> Option<ReturnedElement> + 'static,
+    ) -> Self {
+        self.inline_element = Some(Callback::new(move |html| {
+            handler(html).map(IntoElement::into_element)
+        }));
+        self
     }
 }
 
@@ -168,6 +193,8 @@ enum Inline {
         title: Option<String>,
         text: Vec<TextSpan>,
     },
+    /// A raw inline HTML tag, resolved at render time by [`MarkdownViewer::inline_element`].
+    Html(String),
 }
 
 /// Represents styled text spans within markdown.
@@ -456,6 +483,12 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                     current_spans.push(span);
                 }
             }
+            Event::InlineHtml(html) => {
+                if in_paragraph && !in_link {
+                    current_content.extend(current_spans.drain(..).map(Inline::Span));
+                    current_content.push(Inline::Html(html.to_string()));
+                }
+            }
             Event::Rule => {
                 elements.push(MarkdownElement::HorizontalRule);
             }
@@ -503,11 +536,18 @@ fn render_content(
     text_color: Color,
     link_color: Color,
     code_color: Color,
+    inline_element: Option<&Callback<String, Option<Element>>>,
 ) -> Paragraph {
     let mut result = paragraph().font_size(base_font_size);
     for item in content {
         result = match item {
             Inline::Span(span) => result.span(styled_span(span, text_color, code_color)),
+            Inline::Html(raw) => {
+                match inline_element.and_then(|handler| handler.call(raw.clone())) {
+                    Some(element) => result.child(element),
+                    None => result.span(Span::new(raw.clone()).color(text_color)),
+                }
+            }
             #[cfg(feature = "router")]
             Inline::Link { url, title, text } => {
                 let mut tooltip = LinkTooltip::Default;
@@ -577,11 +617,16 @@ impl Component for MarkdownViewer {
                         .key(idx)
                         .into()
                 }
-                MarkdownElement::Paragraph { content } => {
-                    render_content(&content, paragraph_size, color, color_link, color_code)
-                        .key(idx)
-                        .into()
-                }
+                MarkdownElement::Paragraph { content } => render_content(
+                    &content,
+                    paragraph_size,
+                    color,
+                    color_link,
+                    color_code,
+                    self.inline_element.as_ref(),
+                )
+                .key(idx)
+                .into(),
                 MarkdownElement::CodeBlock { code, .. } => rect()
                     .key(idx)
                     .width(Size::fill())
