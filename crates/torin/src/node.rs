@@ -313,5 +313,6 @@ impl Node {
         self.cross_alignment.is_not_start()
             || self.main_alignment.is_not_start()
             || self.has_layout_references
+            || self.content == Content::Flex
     }
 }

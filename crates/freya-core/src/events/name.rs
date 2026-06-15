@@ -48,6 +48,8 @@ pub enum EventName {
 
 use std::collections::HashSet;
 
+use ragnarok::NameOfEvent as _;
+
 impl PartialOrd for EventName {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
@@ -65,8 +67,12 @@ impl Ord for EventName {
             e if e.is_exclusive_left() => std::cmp::Ordering::Less,
             // Over events have priority over enter events
             e if e.is_non_exclusive_enter() => std::cmp::Ordering::Less,
+            // Non-capture globals fire last
+            e if e.is_global() => std::cmp::Ordering::Greater,
             e => {
-                if e == other {
+                if other.is_global() {
+                    std::cmp::Ordering::Less
+                } else if e == other {
                     std::cmp::Ordering::Equal
                 } else {
                     std::cmp::Ordering::Greater

@@ -6,6 +6,7 @@ use std::{
 pub enum DiffKey {
     Root,
     U64(u64),
+    DefaultU64(u64),
     #[default]
     None,
 }
@@ -37,19 +38,19 @@ impl<T: std::hash::Hash> From<&T> for DiffKey {
 
 impl<A, R> From<fn(&A) -> R> for DiffKey {
     fn from(value: fn(&A) -> R) -> Self {
-        Self::U64(value as *const () as u64)
+        Self::DefaultU64(value as *const () as u64)
     }
 }
 
 #[allow(coherence_leak_check)]
 impl<A, R> From<fn(A) -> R> for DiffKey {
     fn from(value: fn(A) -> R) -> Self {
-        Self::U64(value as *const () as u64)
+        Self::DefaultU64(value as *const () as u64)
     }
 }
 
 impl<R> From<fn() -> R> for DiffKey {
     fn from(value: fn() -> R) -> Self {
-        Self::U64(value as *const () as u64)
+        Self::DefaultU64(value as *const () as u64)
     }
 }

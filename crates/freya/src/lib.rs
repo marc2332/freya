@@ -35,9 +35,10 @@
 //! ### Basics
 //! - [UI and Components](self::_docs::ui_and_components)
 //! - [Elements](self::elements)
+//! - [Events](self::_docs::events)
 //! - [Hooks](self::_docs::hooks)
 //! - [State](self::_docs::state_management)
-//! - [Remote Data](self::_docs::remote_data)
+//! - [Async](self::_docs::_async)
 //! - [Layers](self::_docs::layers)
 //! - [Platforms](self::_docs::platforms)
 //! - [Development Setup](self::_docs::development_setup)
@@ -56,19 +57,24 @@
 //! - [Testing](freya_testing)
 //! - [WebView](freya_webview)
 //! - [Terminal](freya_terminal)
+//! - [Camera](freya_camera)
+//! - [Video](freya_video)
+//! - [Freya Query](freya_query)
 //! - [Tokio Integration](self::_docs::tokio_integration)
 //! - [Devtools](self::_docs::devtools)
+//! - [Hot Reload](self::_docs::hot_reload)
 //!
 //! ## Features flags
 //!
 //! - `all`: Enables all the features listed below
+//! - `winit`: Reexports [freya_winit] and enables the launch entrypoint. Enabled by default.
 //! - `router`: Reexport [freya_router] under [router]
 //! - `i18n`: Reexport [freya_i18n] under [i18n]
 //! - `remote-asset`: Enables support for **HTTP** asset sources for [ImageViewer](components::ImageViewer) and [GifViewer](components::GifViewer) components.
 //! - `tray`: Enables tray support using the [tray_icon] crate.
 //! - `sdk`: Reexport [freya_sdk] under [sdk].
 //! - `gif`: Enables the [GifViewer](components::GifViewer) component.
-//! - `video`: Enables the [VideoViewer](components::VideoViewer) component.
+//! - `video`: Reexport [freya_video] under [video].
 //! - `plot`: Reexport of plotters under [plot].
 //! - `material-design`: Reexport [freya_material_design] under [material_design].
 //! - `calendar`: Enables the [Calendar](components::Calendar) component.
@@ -80,12 +86,15 @@
 //! - `titlebar`: Enables the [TitlebarButton](components::TitlebarButton) component.
 //! - `terminal`: Reexport [freya_terminal] under [terminal].
 //! - `code-editor`: Reexport [freya_code_editor] under [code_editor].
+//! - `camera`: Reexport [freya_camera] under [camera].
 //!
 //! ## Misc features
 //! - `devtools`: Enables devtools support.
 //! - `performance`: Reexports the performance overlay plugin. The plugin is auto-added in debug builds.
 //! - `vulkan`: Enables Vulkan rendering support.
 //! - `hotpath`: Enables Freya's internal usage of hotpath.
+//! - `hotreload`: Enables hot reload support via the `dx` CLI from `dioxus-cli`. See [Hot Reload](self::_docs::hot_reload).
+//! - `zoom-shortcuts`: Enables `Ctrl`/`Cmd` + `+`/`-`/`0` to zoom the app.
 
 pub mod prelude {
     pub use freya_core::prelude::*;
@@ -93,6 +102,8 @@ pub mod prelude {
         Clipboard,
         ClipboardError,
     };
+    #[cfg_attr(feature = "docs", doc(cfg(feature = "winit")))]
+    #[cfg(feature = "winit")]
     pub use freya_winit::{
         WindowDragExt,
         WinitPlatformExt,
@@ -109,6 +120,8 @@ pub mod prelude {
 
     pub use crate::components::*;
 
+    #[cfg_attr(feature = "docs", doc(cfg(feature = "winit")))]
+    #[cfg(feature = "winit")]
     pub fn launch(launch_config: LaunchConfig) {
         #[cfg(feature = "devtools")]
         let launch_config = launch_config.with_plugin(freya_devtools::DevtoolsPlugin::default());
@@ -147,9 +160,6 @@ pub mod components {
     #[cfg_attr(feature = "docs", doc(cfg(feature = "markdown")))]
     #[cfg(feature = "markdown")]
     pub use freya_components::markdown::*;
-    #[cfg_attr(feature = "docs", doc(cfg(feature = "video")))]
-    #[cfg(feature = "video")]
-    pub use freya_video::*;
     cfg_if::cfg_if! {
         if #[cfg(feature = "router")] {
             #[cfg_attr(feature = "docs", doc(cfg(feature = "router")))]
@@ -169,7 +179,8 @@ pub mod components {
     pub use freya_components::titlebar::*;
     pub use freya_components::{
         accordion::*,
-        activable_route_context::*,
+        activable::*,
+        activable_context::*,
         attached::*,
         button::*,
         canvas::*,
@@ -180,6 +191,7 @@ pub mod components {
         context_menu::*,
         cursor_area::*,
         define_theme,
+        docking::*,
         drag_drop::*,
         draggable_canvas::*,
         element_expansions::*,
@@ -221,6 +233,7 @@ pub mod components {
         },
         tile::*,
         tooltip::*,
+        typography::*,
     };
 }
 
@@ -261,6 +274,8 @@ pub mod engine {
     pub use freya_engine::*;
 }
 
+#[cfg_attr(feature = "docs", doc(cfg(feature = "winit")))]
+#[cfg(feature = "winit")]
 pub mod winit {
     pub use freya_winit::winit::*;
 }
@@ -326,6 +341,24 @@ pub mod terminal {
 #[cfg_attr(feature = "docs", doc(cfg(feature = "code-editor")))]
 pub mod code_editor {
     pub use freya_code_editor::prelude::*;
+}
+
+/// Reexport `freya-camera` when the `camera` feature is enabled.
+#[cfg(feature = "camera")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "camera")))]
+pub mod camera {
+    pub use freya_camera::{
+        init,
+        nokhwa,
+        prelude::*,
+    };
+}
+
+/// Reexport `freya-video` when the `video` feature is enabled.
+#[cfg(feature = "video")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "video")))]
+pub mod video {
+    pub use freya_video::*;
 }
 
 #[cfg(feature = "performance")]

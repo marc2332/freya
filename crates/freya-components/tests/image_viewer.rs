@@ -2,6 +2,10 @@ use freya::{
     elements::image::Image,
     prelude::*,
 };
+use freya_components::cache::{
+    AssetAge,
+    AssetCacher,
+};
 use freya_testing::prelude::*;
 
 #[test]
@@ -84,6 +88,68 @@ pub fn image_viewer_source_change() {
 }
 
 #[test]
+pub fn image_viewer_asset_age_zero_clears_cache_on_unmount() {
+    fn app() -> impl IntoElement {
+        let mut show = use_state(|| true);
+        let cacher = use_hook(AssetCacher::get);
+
+        rect()
+            .child(format!("size:{}", cacher.size()))
+            .child(
+                Button::new()
+                    .on_press(move |_| *show.write() = false)
+                    .child("hide"),
+            )
+            .maybe(show(), |r| {
+                r.child(
+                    ImageViewer::new((
+                        "rust-logo-zero-age",
+                        include_bytes!("../../../examples/rust_logo.png"),
+                    ))
+                    .asset_age(AssetAge::zero())
+                    .width(Size::px(300.))
+                    .height(Size::px(300.)),
+                )
+            })
+    }
+
+    let mut test = launch_test(app);
+    test.sync_and_update();
+
+    test.poll(
+        std::time::Duration::from_millis(1),
+        std::time::Duration::from_millis(70),
+    );
+    test.sync_and_update();
+
+    let read_size = |test: &mut TestingRunner| {
+        test.find_many(|node, element| Label::try_downcast(element).map(|_| node))
+            .into_iter()
+            .find_map(|l| {
+                Label::try_downcast(&*l.element())
+                    .unwrap()
+                    .text
+                    .strip_prefix("size:")
+                    .map(|s| s.to_string())
+            })
+            .unwrap()
+    };
+
+    assert_eq!(read_size(&mut test), "1");
+
+    test.click_cursor((20.0, 30.0));
+    test.sync_and_update();
+
+    test.poll(
+        std::time::Duration::from_millis(1),
+        std::time::Duration::from_millis(70),
+    );
+    test.sync_and_update();
+
+    assert_eq!(read_size(&mut test), "0");
+}
+
+#[test]
 pub fn image_viewer_load_and_render() {
     fn image_viewer_app() -> impl IntoElement {
         let source: ImageSource = (
@@ -125,5 +191,37 @@ pub fn image_viewer_load_and_render() {
     assert!(
         image_element.is_some(),
         "Image element should be rendered after loading"
+    );
+}
+
+#[test]
+pub fn image_viewer_custom_error_renderer() {
+    fn image_viewer_app() -> impl IntoElement {
+        let source: ImageSource = std::path::PathBuf::from("/non/existent/image.png").into();
+
+        ImageViewer::new(source)
+            .width(Size::px(300.))
+            .height(Size::px(300.))
+            .error_renderer(|err: String| label().text(format!("custom-error: {err}")).into())
+    }
+
+    let mut test = launch_test(image_viewer_app);
+    test.sync_and_update();
+
+    test.poll(
+        std::time::Duration::from_millis(1),
+        std::time::Duration::from_millis(70),
+    );
+    test.sync_and_update();
+
+    let custom_label = test.find(|node, element| {
+        Label::try_downcast(element)
+            .filter(|label| label.text.as_ref().starts_with("custom-error:"))
+            .map(|_| node)
+    });
+
+    assert!(
+        custom_label.is_some(),
+        "Custom error renderer should be invoked when the image fails to load"
     );
 }

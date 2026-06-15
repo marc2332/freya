@@ -177,7 +177,10 @@ impl DrawingBackend for PlotSkiaBackend<'_> {
         vert: I,
         style: &S,
     ) -> Result<(), DrawingErrorKind<Self::ErrorType>> {
-        let vert_buf: Vec<_> = vert.into_iter().collect();
+        let mut vert = vert.into_iter();
+        let Some(first) = vert.next() else {
+            return Ok(());
+        };
 
         let mut paint = Paint::default();
         let color = style.color();
@@ -187,15 +190,13 @@ impl DrawingBackend for PlotSkiaBackend<'_> {
             color.rgb.1,
             color.rgb.2,
         ));
-        let mut path = PathBuilder::new();
-        let first = vert_buf[0];
-        path.move_to(first);
 
-        for pos in &vert_buf[1..] {
-            path.line_to(*pos);
+        let mut path = PathBuilder::new();
+        path.move_to(first);
+        for pos in vert {
+            path.line_to(pos);
         }
-        let path = path.detach();
-        self.canvas.draw_path(&path, &paint);
+        self.canvas.draw_path(&path.detach(), &paint);
 
         Ok(())
     }

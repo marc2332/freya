@@ -1,6 +1,9 @@
 //! Type-erased readable state that hides generic type parameters.
 
-use std::rc::Rc;
+use std::{
+    cell::Ref,
+    rc::Rc,
+};
 
 use crate::prelude::*;
 
@@ -48,6 +51,7 @@ use crate::prelude::*;
 pub struct Readable<T: 'static> {
     pub(crate) read_fn: Rc<dyn Fn() -> ReadableRef<T>>,
     pub(crate) peek_fn: Rc<dyn Fn() -> ReadableRef<T>>,
+    pub(crate) equal_fn: Rc<dyn Fn(&T) -> bool>,
 }
 
 impl<T: 'static> Clone for Readable<T> {
@@ -55,31 +59,24 @@ impl<T: 'static> Clone for Readable<T> {
         Self {
             read_fn: self.read_fn.clone(),
             peek_fn: self.peek_fn.clone(),
+            equal_fn: self.equal_fn.clone(),
         }
     }
 }
 
 impl<T: 'static> PartialEq for Readable<T> {
-    fn eq(&self, _other: &Self) -> bool {
-        true
+    fn eq(&self, other: &Self) -> bool {
+        (self.equal_fn)(&*other.peek())
     }
 }
 
-impl<T> From<T> for Readable<T> {
+impl<T: PartialEq> From<T> for Readable<T> {
     fn from(value: T) -> Self {
         Readable::from_value(value)
     }
 }
 
-impl<T: 'static> Readable<T> {
-    /// Create from local `State<T>`.
-    pub fn from_state(state: State<T>) -> Self {
-        Self {
-            read_fn: Rc::new(move || ReadableRef::Ref(state.read())),
-            peek_fn: Rc::new(move || ReadableRef::Ref(state.peek())),
-        }
-    }
-
+impl<T: 'static + PartialEq> Readable<T> {
     /// Create from an owned value.
     pub fn from_value(value: T) -> Self {
         let value = Rc::new(value);
@@ -88,18 +85,34 @@ impl<T: 'static> Readable<T> {
                 let value = value.clone();
                 move || ReadableRef::Borrowed(value.clone())
             }),
-            peek_fn: Rc::new(move || ReadableRef::Borrowed(value.clone())),
+            peek_fn: Rc::new({
+                let value = value.clone();
+                move || ReadableRef::Borrowed(value.clone())
+            }),
+            equal_fn: Rc::new(move |other| other == &*value),
+        }
+    }
+}
+impl<T: 'static> Readable<T> {
+    /// Create from local `State<T>`.
+    pub fn from_state(state: State<T>) -> Self {
+        Self {
+            read_fn: Rc::new(move || ReadableRef::Ref(state.read())),
+            peek_fn: Rc::new(move || ReadableRef::Ref(state.peek())),
+            equal_fn: Rc::new(move |_| true),
         }
     }
 
     /// Create a new `Readable` with custom read and peek functions.
     pub fn new(
-        read_fn: Box<dyn Fn() -> ReadableRef<T>>,
-        peek_fn: Box<dyn Fn() -> ReadableRef<T>>,
+        read_fn: impl Fn() -> ReadableRef<T> + 'static,
+        peek_fn: impl Fn() -> ReadableRef<T> + 'static,
+        equal_fn: impl Fn(&T) -> bool + 'static,
     ) -> Self {
         Self {
-            read_fn: Rc::from(read_fn),
-            peek_fn: Rc::from(peek_fn),
+            read_fn: Rc::new(read_fn),
+            peek_fn: Rc::new(peek_fn),
+            equal_fn: Rc::new(equal_fn),
         }
     }
 
@@ -117,6 +130,46 @@ impl<T: 'static> Readable<T> {
     pub fn peek(&self) -> ReadableRef<T> {
         (self.peek_fn)()
     }
+
+    /// Derive a new `Readable` that exposes only a part of the value.
+    ///
+    /// # Example
+    ///
+    /// ```rust, ignore
+    /// let user = use_state(|| (String::from("Alice"), 30));
+    /// let user: Readable<(String, u32)> = user.into_readable();
+    ///
+    /// let name = user.map(|user| &user.0, |name| name == "Alice");
+    /// ```
+    pub fn map<O>(
+        &self,
+        map_fn: impl Fn(&T) -> &O + 'static,
+        equal_fn: impl Fn(&O) -> bool + 'static,
+    ) -> Readable<O> {
+        let readable = self.clone();
+        let map_fn = Rc::new(map_fn);
+        Readable {
+            read_fn: Rc::new({
+                let map_fn = map_fn.clone();
+                let readable = readable.clone();
+                move || {
+                    let ReadableRef::Ref(r) = readable.read() else {
+                        unreachable!("Unsupported")
+                    };
+
+                    ReadableRef::Ref(r.map(|r| Ref::map(r, |v| (map_fn)(v))))
+                }
+            }),
+            peek_fn: Rc::new(move || {
+                let ReadableRef::Ref(r) = readable.peek() else {
+                    unreachable!("Unsupported")
+                };
+
+                ReadableRef::Ref(r.map(|r| Ref::map(r, |v| (map_fn)(v))))
+            }),
+            equal_fn: Rc::new(equal_fn),
+        }
+    }
 }
 
 pub trait IntoReadable<T: 'static> {
@@ -129,14 +182,26 @@ impl<T: 'static> IntoReadable<T> for State<T> {
     }
 }
 
-impl<T: 'static> IntoReadable<T> for T {
+impl<T: 'static + PartialEq> IntoReadable<T> for T {
     fn into_readable(self) -> Readable<T> {
         Readable::from_value(self)
     }
 }
 
+impl<T: 'static> IntoReadable<T> for Memo<T> {
+    fn into_readable(self) -> Readable<T> {
+        Readable::from_state(self.state)
+    }
+}
+
 impl<T> From<State<T>> for Readable<T> {
     fn from(value: State<T>) -> Self {
+        value.into_readable()
+    }
+}
+
+impl<T> From<Memo<T>> for Readable<T> {
+    fn from(value: Memo<T>) -> Self {
         value.into_readable()
     }
 }

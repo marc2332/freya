@@ -33,6 +33,13 @@ impl Default for AssetAge {
     }
 }
 
+impl AssetAge {
+    /// Asset will be cleaned as soon as it stops being used.
+    pub fn zero() -> Self {
+        Self::Duration(Duration::ZERO)
+    }
+}
+
 impl From<Duration> for AssetAge {
     fn from(value: Duration) -> Self {
         Self::Duration(value)

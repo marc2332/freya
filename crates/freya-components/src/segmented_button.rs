@@ -80,6 +80,7 @@ pub struct ButtonSegment {
     on_press: Option<EventHandler<Event<PressEventData>>>,
     selected: bool,
     enabled: bool,
+    cursor_icon: CursorIcon,
     key: DiffKey,
 }
 
@@ -97,6 +98,7 @@ impl ButtonSegment {
             on_press: None,
             selected: false,
             enabled: true,
+            cursor_icon: CursorIcon::default(),
             key: DiffKey::None,
         }
     }
@@ -131,6 +133,12 @@ impl ButtonSegment {
         self.on_press = Some(on_press.into());
         self
     }
+
+    /// Override the cursor icon shown when hovering over this component while enabled.
+    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+        self.cursor_icon = cursor_icon.into();
+        self
+    }
 }
 
 impl ChildrenExt for ButtonSegment {
@@ -149,8 +157,8 @@ impl Component for ButtonSegment {
     fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, ButtonSegmentThemePreference, "button_segment");
         let mut status = use_state(|| ButtonSegmentStatus::Idle);
-        let focus = use_focus();
-        let focus_status = use_focus_status(focus);
+        let a11y_id = use_a11y();
+        let focus = use_focus(a11y_id);
 
         let ButtonSegmentTheme {
             background,
@@ -167,6 +175,7 @@ impl Component for ButtonSegment {
         } = theme;
 
         let enabled = use_reactive(&self.enabled);
+        let cursor_icon = self.cursor_icon;
         use_drop(move || {
             if status() == ButtonSegmentStatus::Hovering && enabled() {
                 Cursor::set(CursorIcon::default());
@@ -175,7 +184,7 @@ impl Component for ButtonSegment {
 
         let on_press = self.on_press.clone();
         let on_press = move |e: Event<PressEventData>| {
-            focus.request_focus();
+            a11y_id.request_focus();
             if let Some(on_press) = &on_press {
                 on_press.call(e);
             }
@@ -184,7 +193,7 @@ impl Component for ButtonSegment {
         let on_pointer_enter = move |_| {
             status.set(ButtonSegmentStatus::Hovering);
             if enabled() {
-                Cursor::set(CursorIcon::Pointer);
+                Cursor::set(cursor_icon);
             } else {
                 Cursor::set(CursorIcon::NotAllowed);
             }
@@ -209,14 +218,14 @@ impl Component for ButtonSegment {
         } else {
             padding
         };
-        let background = if *focus_status.read() == FocusStatus::Keyboard {
+        let background = if *focus.read() == Focus::Keyboard {
             focus_background
         } else {
             background
         };
 
         rect()
-            .a11y_id(focus.a11y_id())
+            .a11y_id(a11y_id)
             .a11y_focusable(self.enabled)
             .a11y_role(AccessibilityRole::Button)
             .maybe(self.enabled, |rect| rect.on_press(on_press))

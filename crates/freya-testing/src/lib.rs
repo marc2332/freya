@@ -203,6 +203,8 @@ impl TestingRunner {
                 root_size: State::create(size),
                 navigation_mode: State::create(NavigationMode::NotKeyboard),
                 preferred_theme: State::create(PreferredTheme::Light),
+                is_app_focused: State::create(true),
+                accent_color: State::create(AccentColor::default()),
                 sender: Rc::new(move |user_event| {
                     match user_event {
                         UserEvent::RequestRedraw => {
@@ -466,6 +468,39 @@ impl TestingRunner {
             name: MouseEventName::MouseUp,
             cursor,
             button: Some(MouseButton::Left),
+        });
+        self.sync_and_update();
+    }
+
+    pub fn press_touch(&mut self, location: impl Into<CursorPoint>) {
+        self.send_event(PlatformEvent::Touch {
+            name: TouchEventName::TouchStart,
+            location: location.into(),
+            finger_id: 0,
+            phase: TouchPhase::Started,
+            force: None,
+        });
+        self.sync_and_update();
+    }
+
+    pub fn move_touch(&mut self, location: impl Into<CursorPoint>) {
+        self.send_event(PlatformEvent::Touch {
+            name: TouchEventName::TouchMove,
+            location: location.into(),
+            finger_id: 0,
+            phase: TouchPhase::Moved,
+            force: None,
+        });
+        self.sync_and_update();
+    }
+
+    pub fn release_touch(&mut self, location: impl Into<CursorPoint>) {
+        self.send_event(PlatformEvent::Touch {
+            name: TouchEventName::TouchEnd,
+            location: location.into(),
+            finger_id: 0,
+            phase: TouchPhase::Ended,
+            force: None,
         });
         self.sync_and_update();
     }

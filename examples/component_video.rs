@@ -5,7 +5,10 @@
 
 use std::time::Duration;
 
-use freya::prelude::*;
+use freya::{
+    prelude::*,
+    video::*,
+};
 
 fn main() {
     ensure_ffmpeg().expect("failed to prepare ffmpeg");

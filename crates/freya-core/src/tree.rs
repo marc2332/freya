@@ -425,7 +425,7 @@ impl Tree {
                 if flags.intersects(DiffModifies::LAYER) {
                     handle_cascade(&mut layer_cascades);
                 }
-                if flags.intersects(DiffModifies::EFFECT) {
+                if flags.intersects(DiffModifies::EFFECT | DiffModifies::LAYER) {
                     let element = self.elements.get(&node_id).unwrap();
                     // Has data or the parent has state
                     let run_cascade = element.effect().is_some()

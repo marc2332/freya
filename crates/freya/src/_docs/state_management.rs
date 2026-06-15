@@ -402,6 +402,7 @@
 //!
 //! Sources that can be converted to `Readable`:
 //! - [`State<T>`](crate::prelude::State) from `use_state` via [`IntoReadable`](crate::prelude::IntoReadable)
+//! - [`Memo<T>`](crate::prelude::Memo) from `use_memo` via [`IntoReadable`](crate::prelude::IntoReadable)
 //! - [`RadioSlice`](freya_radio::prelude::RadioSlice) from Freya Radio via [`IntoReadable`](crate::prelude::IntoReadable)
 //! - [`Writable<T>`](crate::prelude::Writable) via [`From<Writable<T>>`](crate::prelude::Readable)
 //!
@@ -458,7 +459,7 @@
 //!   - Apps that require precise updates for max performance
 //!   - Multi-window applications
 //!
-//! - **Use Freya Query** ([`remote_data`](crate::_docs::remote_data)) for:
+//! - **Use Freya Query** ([`async`](crate::_docs::_async)) for:
 //!   - Async data from external sources (HTTP APIs, databases)
 //!   - Cached, deduplicated, and automatically refreshed data
 //!

@@ -97,13 +97,15 @@ impl ragnarok::EventsMeasurer for EventsMeasurerAdapter<'_> {
 
     fn is_node_transparent(&self, key: &Self::Key) -> bool {
         let element = self.tree.elements.get(key).unwrap();
-        if element.style().background == Fill::Color(Color::TRANSPARENT) {
-            return true;
-        }
-        if let Some(effect_state) = self.tree.effect_state.get(key) {
-            return effect_state.interactive == Interactive::No;
-        }
-        false
+        element.style().background == Fill::Color(Color::TRANSPARENT)
+    }
+
+    fn is_node_interactive(&self, key: &Self::Key) -> bool {
+        self.tree
+            .effect_state
+            .get(key)
+            .map(|effect_state| effect_state.interactive == Interactive::Yes)
+            .unwrap_or(true)
     }
 
     fn try_area_of(&self, key: &Self::Key) -> Option<ragnarok::Area> {

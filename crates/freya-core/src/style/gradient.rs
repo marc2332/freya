@@ -4,6 +4,10 @@ use std::{
         self,
         Debug,
     },
+    hash::{
+        Hash,
+        Hasher,
+    },
 };
 
 use freya_engine::prelude::*;
@@ -11,11 +15,26 @@ use torin::prelude::Area;
 
 use crate::style::color::Color;
 
+/// A single color stop within a gradient, placed at an `offset` percentage (`0.0..=100.0`).
+///
+/// Build it from a `(color, offset)` tuple or with [`GradientStop::new`]:
+///
+/// ```
+/// # use freya::prelude::*;
+/// let stop = GradientStop::new(Color::RED, 50.0);
+/// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct GradientStop {
     color: Color,
     offset: f32,
+}
+
+impl Hash for GradientStop {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.color.hash(state);
+        self.offset.to_bits().hash(state);
+    }
 }
 
 impl fmt::Display for GradientStop {
@@ -26,6 +45,7 @@ impl fmt::Display for GradientStop {
 }
 
 impl GradientStop {
+    /// Create a [`GradientStop`] of the given [`Color`] at the given offset percentage (`0.0..=100.0`).
     pub fn new(color: impl Into<Color>, offset: f32) -> Self {
         Self {
             color: color.into(),
@@ -40,11 +60,29 @@ impl<C: Into<Color>> From<(C, f32)> for GradientStop {
     }
 }
 
+/// A gradient that transitions colors along a straight line at a given [`angle`](LinearGradient::angle).
+///
+/// Start from [`LinearGradient::new`] and add [`GradientStop`]s:
+///
+/// ```
+/// # use freya::prelude::*;
+/// let gradient = LinearGradient::new()
+///     .angle(90.0)
+///     .stop((Color::RED, 0.0))
+///     .stop((Color::BLUE, 100.0));
+/// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct LinearGradient {
     stops: Vec<GradientStop>,
     angle: f32,
+}
+
+impl Hash for LinearGradient {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.stops.hash(state);
+        self.angle.to_bits().hash(state);
+    }
 }
 
 impl LinearGradient {
@@ -74,7 +112,7 @@ impl LinearGradient {
         self
     }
 
-    pub fn into_shader(&self, bounds: Area) -> Option<Shader> {
+    pub fn prepare_shader(&self, bounds: Area) -> Option<Shader> {
         let colors: Vec<SkColor4f> = self
             .stops
             .iter()
@@ -83,7 +121,7 @@ impl LinearGradient {
         let offsets: Vec<f32> = self.stops.iter().map(|stop| stop.offset).collect();
 
         let grad_colors = Colors::new(&colors[..], Some(&offsets[..]), TileMode::Clamp, None);
-        let grad = Gradient::new(grad_colors, Flags::default());
+        let grad = Gradient::new(grad_colors, Interpolation::default());
 
         let (dy, dx) = (self.angle.to_radians() + FRAC_PI_2).sin_cos();
         let farthest_corner = SkPoint::new(
@@ -121,10 +159,26 @@ impl fmt::Display for LinearGradient {
     }
 }
 
+/// A gradient that transitions colors outward in a circle from the element's center.
+///
+/// Start from [`RadialGradient::new`] and add [`GradientStop`]s:
+///
+/// ```
+/// # use freya::prelude::*;
+/// let gradient = RadialGradient::new()
+///     .stop((Color::WHITE, 0.0))
+///     .stop((Color::BLACK, 100.0));
+/// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct RadialGradient {
     stops: Vec<GradientStop>,
+}
+
+impl Hash for RadialGradient {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.stops.hash(state);
+    }
 }
 
 impl RadialGradient {
@@ -148,7 +202,7 @@ impl RadialGradient {
         self
     }
 
-    pub fn into_shader(&self, bounds: Area) -> Option<Shader> {
+    pub fn prepare_shader(&self, bounds: Area) -> Option<Shader> {
         let colors: Vec<SkColor4f> = self
             .stops
             .iter()
@@ -159,7 +213,7 @@ impl RadialGradient {
         let center = bounds.center();
 
         let grad_colors = Colors::new(&colors[..], Some(&offsets[..]), TileMode::Clamp, None);
-        let grad = Gradient::new(grad_colors, Flags::default());
+        let grad = Gradient::new(grad_colors, Interpolation::default());
 
         shaders::radial_gradient(
             (
@@ -186,12 +240,37 @@ impl fmt::Display for RadialGradient {
     }
 }
 
+/// A gradient that transitions colors by sweeping around the element's center.
+///
+/// Start from [`ConicGradient::new`], add [`GradientStop`]s and optionally set the
+/// rotation [`angle`](ConicGradient::angle) and the start/end [`angles`](ConicGradient::angles):
+///
+/// ```
+/// # use freya::prelude::*;
+/// let gradient = ConicGradient::new()
+///     .angle(45.0)
+///     .stop((Color::RED, 0.0))
+///     .stop((Color::BLUE, 100.0));
+/// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ConicGradient {
     stops: Vec<GradientStop>,
     angles: Option<(f32, f32)>,
     angle: Option<f32>,
+}
+
+impl Hash for ConicGradient {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.stops.hash(state);
+        if let Some((start, end)) = self.angles {
+            start.to_bits().hash(state);
+            end.to_bits().hash(state);
+        }
+        if let Some(angle) = self.angle {
+            angle.to_bits().hash(state);
+        }
+    }
 }
 
 impl ConicGradient {
@@ -227,7 +306,7 @@ impl ConicGradient {
         self
     }
 
-    pub fn into_shader(&self, bounds: Area) -> Option<Shader> {
+    pub fn prepare_shader(&self, bounds: Area) -> Option<Shader> {
         let colors: Vec<SkColor4f> = self
             .stops
             .iter()
@@ -241,7 +320,7 @@ impl ConicGradient {
             Matrix::rotate_deg_pivot(-90.0 + self.angle.unwrap_or(0.0), (center.x, center.y));
 
         let grad_colors = Colors::new(&colors[..], Some(&offsets[..]), TileMode::Clamp, None);
-        let grad = Gradient::new(grad_colors, Flags::default());
+        let grad = Gradient::new(grad_colors, Interpolation::default());
 
         let (start_angle, end_angle) = self.angles.unwrap_or((0.0, 360.0));
 

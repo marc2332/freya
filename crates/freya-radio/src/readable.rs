@@ -28,11 +28,12 @@ impl<T: 'static> RadioReadable<T> for Readable<T> {
         Channel: RadioChannel<Value> + 'static,
     {
         Self::new(
-            Box::new({
+            {
                 let slice = slice.clone();
                 move || ReadableRef::Ref(slice.read_unchecked())
-            }),
-            Box::new(move || ReadableRef::Ref(slice.peek_unchecked())),
+            },
+            move || ReadableRef::Ref(slice.peek_unchecked()),
+            |_| true,
         )
     }
 }
@@ -50,11 +51,12 @@ impl<T: 'static, Value: 'static, Channel: RadioChannel<Value> + 'static> IntoRea
 {
     fn into_readable(self) -> Readable<T> {
         Readable::new(
-            Box::new({
+            {
                 let this = self.clone();
                 move || ReadableRef::Ref(this.read_unchecked())
-            }),
-            Box::new(move || ReadableRef::Ref(self.peek_unchecked())),
+            },
+            move || ReadableRef::Ref(self.peek_unchecked()),
+            |_| true,
         )
     }
 }

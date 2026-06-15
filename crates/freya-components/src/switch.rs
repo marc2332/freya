@@ -99,6 +99,7 @@ pub struct Switch {
     toggled: Readable<bool>,
     on_toggle: Option<EventHandler<()>>,
     enabled: bool,
+    cursor_icon: CursorIcon,
     key: DiffKey,
 }
 
@@ -123,6 +124,7 @@ impl Switch {
             theme_layout: None,
             layout_variant: SwitchLayoutVariant::Normal,
             enabled: true,
+            cursor_icon: CursorIcon::default(),
             key: DiffKey::None,
         }
     }
@@ -161,6 +163,12 @@ impl Switch {
     pub fn expanded(self) -> Self {
         self.layout_variant(SwitchLayoutVariant::Expanded)
     }
+
+    /// Override the cursor icon shown when hovering over this component while enabled.
+    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+        self.cursor_icon = cursor_icon.into();
+        self
+    }
 }
 
 impl Component for Switch {
@@ -181,8 +189,8 @@ impl Component for Switch {
 
         let mut hovering = use_state(|| false);
         let mut pressing = use_state(|| false);
-        let focus = use_focus();
-        let focus_status = use_focus_status(focus);
+        let a11y_id = use_a11y();
+        let focus = use_focus(a11y_id);
 
         let toggled = *self.toggled.read();
 
@@ -241,13 +249,14 @@ impl Component for Switch {
         let press_size = anim_press.get().value();
 
         let enabled = use_reactive(&self.enabled);
+        let cursor_icon = self.cursor_icon;
         use_drop(move || {
             if hovering() && enabled() {
                 Cursor::set(CursorIcon::default());
             }
         });
 
-        let border = if focus_status() == FocusStatus::Keyboard {
+        let border = if focus() == Focus::Keyboard {
             Border::new()
                 .width(2.)
                 .alignment(BorderAlignment::Inner)
@@ -258,7 +267,7 @@ impl Component for Switch {
         let (offset_x, size, background, thumb) = anim_toggle.get().value();
 
         rect()
-            .a11y_id(focus.a11y_id())
+            .a11y_id(a11y_id)
             .a11y_focusable(self.enabled)
             .a11y_role(AccessibilityRole::Switch)
             .a11y_builder(|builder| builder.set_toggled(Toggled::from(toggled)))
@@ -277,7 +286,7 @@ impl Component for Switch {
                         if let Some(on_toggle) = &on_toggle {
                             on_toggle.call(())
                         }
-                        focus.request_focus();
+                        a11y_id.request_focus();
                     }
                 })
                 .on_pointer_down(move |e: Event<PointerEventData>| {
@@ -290,7 +299,7 @@ impl Component for Switch {
             .on_pointer_enter(move |_| {
                 hovering.set(true);
                 if enabled() {
-                    Cursor::set(CursorIcon::Pointer);
+                    Cursor::set(cursor_icon);
                 } else {
                     Cursor::set(CursorIcon::NotAllowed);
                 }

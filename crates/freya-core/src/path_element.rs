@@ -173,6 +173,33 @@ impl PathElement {
                         }
                     }
 
+                    #[cfg(debug_assertions)]
+                    {
+                        let mut seen = FxHashMap::<&DiffKey, &[u32]>::default();
+                        for child in e1 {
+                            let (PathElement::Element {
+                                key,
+                                path: child_path,
+                                ..
+                            }
+                            | PathElement::Component {
+                                key,
+                                path: child_path,
+                                ..
+                            }) = child;
+                            if matches!(key, DiffKey::None | DiffKey::DefaultU64(_)) {
+                                continue;
+                            }
+                            if let Some(prev) = seen.insert(key, child_path) {
+                                panic!(
+                                    "freya diff: duplicate sibling key {:?} under parent {:?} \
+                                     (paths {:?} and {:?})",
+                                    key, path, prev, child_path,
+                                );
+                            }
+                        }
+                    }
+
                     let mut previous_keys = FxHashMap::<&DiffKey, VecDeque<usize>>::default();
 
                     for (i, e) in e2.iter().enumerate() {

@@ -82,7 +82,7 @@ impl Component for SelectableText {
             move || EditableConfig::new().with_allow_changes(false),
         );
         let mut status = use_state(SelectableTextStatus::default);
-        let focus = use_focus();
+        let a11y_id = use_a11y();
         let mut drag_origin = use_state(|| None);
 
         if self.value.as_ref() != editable.editor().read().rope() {
@@ -96,6 +96,9 @@ impl Component for SelectableText {
             .get_visible_selection(EditorLine::SingleParagraph);
 
         let on_pointer_down = move |e: Event<PointerEventData>| {
+            if !e.data().is_primary() {
+                return;
+            }
             e.stop_propagation();
             drag_origin.set(Some(e.global_location() - e.element_location()));
             editable.process_event(EditableEvent::Down {
@@ -103,11 +106,11 @@ impl Component for SelectableText {
                 editor_line: EditorLine::SingleParagraph,
                 holder: &holder.read(),
             });
-            focus.request_focus();
+            a11y_id.request_focus();
         };
 
         let on_global_pointer_move = move |e: Event<PointerEventData>| {
-            if focus.is_focused()
+            if a11y_id.is_focused()
                 && let Some(drag_origin) = drag_origin()
             {
                 let mut element_location = e.element_location();
@@ -152,7 +155,7 @@ impl Component for SelectableText {
 
         let on_global_pointer_press = move |_: Event<PointerEventData>| {
             match *status.read() {
-                SelectableTextStatus::Idle if focus.is_focused() => {
+                SelectableTextStatus::Idle if a11y_id.is_focused() => {
                     editable.process_event(EditableEvent::Release);
                 }
                 SelectableTextStatus::Hovering => {
@@ -163,8 +166,8 @@ impl Component for SelectableText {
 
             if drag_origin.read().is_some() {
                 drag_origin.set(None);
-            } else if focus.is_focused() {
-                focus.request_unfocus();
+            } else if a11y_id.is_focused() {
+                a11y_id.request_unfocus();
             }
         };
 
@@ -174,7 +177,7 @@ impl Component for SelectableText {
             .text_style(self.text_style_data.clone())
             .max_lines(self.max_lines)
             .line_height(self.line_height)
-            .a11y_id(focus.a11y_id())
+            .a11y_id(a11y_id)
             .a11y_focusable(true)
             .holder(holder.read().clone())
             .cursor_color(Color::BLACK)

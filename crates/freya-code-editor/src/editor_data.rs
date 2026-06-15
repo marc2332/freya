@@ -182,7 +182,7 @@ impl CodeEditorData {
                     }
                     // Handle editing
                     _ => {
-                        let event = self.process_key(key, &modifiers, true, true, true);
+                        let event = self.process_key(key, &modifiers, true, true, true, true);
                         if event.contains(TextEvent::TEXT_CHANGED) {
                             self.parse();
                             self.measure(font_size, font_family);

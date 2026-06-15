@@ -354,6 +354,10 @@ impl EventsMeasurer for TestMeasurer {
         false
     }
 
+    fn is_node_interactive(&self, _key: &Self::Key) -> bool {
+        true
+    }
+
     fn try_area_of(&self, key: &Self::Key) -> Option<ragnarok::Area> {
         self.areas.get(key).cloned()
     }

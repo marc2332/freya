@@ -47,7 +47,7 @@ fn app() -> Element {
 struct Home;
 impl Component for Home {
     fn render(&self) -> impl IntoElement {
-        let editor_focus = use_focus();
+        let editor_a11y_id = use_a11y();
         let editor_theme = use_state(|| EditorTheme {
             background: Color::TRANSPARENT,
             line_selected_background: Color::TRANSPARENT,
@@ -140,7 +140,7 @@ impl Component for Home {
                                     .height(Size::fill())
                                     .cross_align(Alignment::Center)
                                     .child(
-                                        CodeEditor::new(editor, editor_focus.a11y_id())
+                                        CodeEditor::new(editor, editor_a11y_id)
                                             .theme(editor_theme)
                                             .read_only(true)
                                             .gutter(false)
@@ -212,7 +212,7 @@ impl Component for Navigation {
 struct Counter;
 impl Component for Counter {
     fn render(&self) -> impl IntoElement {
-        use_init_theme(light_theme);
+        use_provide_theme(light_theme);
         let mut count = use_state(|| 4);
 
         rect()

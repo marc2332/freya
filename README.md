@@ -251,37 +251,36 @@ fn app() -> impl IntoElement {
 struct AppBottomBar;
 impl Component for AppBottomBar {
     fn render(&self) -> impl IntoElement {
-        NativeRouter::new().child(
-            rect()
-                .content(Content::flex())
-                .child(
-                    rect()
-                        .width(Size::fill())
-                        .height(Size::flex(1.))
-                        .center()
-                        .child(outlet::<Route>()),
-                )
-                .child(
-                    rect()
-                        .horizontal()
-                        .width(Size::fill())
-                        .main_align(Alignment::center())
-                        .padding(8.)
-                        .spacing(8.)
-                        .child(
-                            Link::new(Route::Home)
-                                .child(FloatingTab::new().child("Home"))
-                                .activable_route(Route::Home)
-                                .exact(true),
-                        )
-                        .child(
-                            Link::new(Route::Settings)
-                                .child(FloatingTab::new().child("Settings"))
-                                .activable_route(Route::Settings)
-                                .exact(true),
-                        ),
-                ),
-        )
+        rect()
+            .native_router()
+            .content(Content::flex())
+            .child(
+                rect()
+                    .width(Size::fill())
+                    .height(Size::flex(1.))
+                    .center()
+                    .child(outlet::<Route>()),
+            )
+            .child(
+                rect()
+                    .horizontal()
+                    .width(Size::fill())
+                    .main_align(Alignment::center())
+                    .padding(8.)
+                    .spacing(8.)
+                    .child(
+                        Link::new(Route::Home)
+                            .child(FloatingTab::new().child("Home"))
+                            .activable_route(Route::Home)
+                            .exact(true),
+                    )
+                    .child(
+                        Link::new(Route::Settings)
+                            .child(FloatingTab::new().child("Settings"))
+                            .activable_route(Route::Settings)
+                            .exact(true),
+                    ),
+            )
     }
 }
 
@@ -724,9 +723,16 @@ Make sure to have [Development Setup](https://docs.rs/freya/0.3/freya/_docs/deve
 
 > ⚠️ If you happen to be on Windows using `windows-gnu` and get compile errors, maybe go check this [issue](https://github.com/marc2332/freya/issues/794).
 
-Clone this repo and run:
+Clone this repo (this project uses git submodules, so make sure to clone with `--recurse-submodules`):
 
-> **Note:** After cloning, make sure to initialize and update the git submodules: `git submodule update --init --recursive`
+```shell
+git clone --recurse-submodules https://github.com/marc2332/freya.git
+cd freya
+```
+
+> **Already cloned without submodules?** Run `git submodule update --init --recursive` to fetch them.
+
+Then run an example:
 
 ```shell
 cargo run --example counter
@@ -742,7 +748,7 @@ freya = { git = "https://github.com/marc2332/freya", branch = "main" }
 Release candidates:
 
 ```toml
-freya = "0.4.0-rc.19"
+freya = "0.4.0-rc.23"
 ```
 
 ### Contributing 🧙‍♂️
@@ -757,7 +763,7 @@ If you are interested in supporting the development of this project feel free to
 
 Thanks to my sponsors for supporting this project! 😄 
 
-<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;github.com&#x2F;piny4man.png" width="60px" alt="User avatar: " /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;github.com&#x2F;gqf2008.png" width="60px" alt="User avatar: 高庆丰" /></a><a href="https://github.com/lino-levan"><img src="https:&#x2F;&#x2F;github.com&#x2F;lino-levan.png" width="60px" alt="User avatar: Lino Le Van" /></a><a href="https://github.com/d3rpp"><img src="https:&#x2F;&#x2F;github.com&#x2F;d3rpp.png" width="60px" alt="User avatar: Huddy Buddy" /></a><a href="https://github.com/DrigsterI"><img src="https:&#x2F;&#x2F;github.com&#x2F;DrigsterI.png" width="60px" alt="User avatar: Gabriel Jõe" /></a><a href="https://github.com/markalexander"><img src="https:&#x2F;&#x2F;github.com&#x2F;markalexander.png" width="60px" alt="User avatar: Mark" /></a><!-- sponsors -->
+<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;github.com&#x2F;piny4man.png" width="60px" alt="User avatar: " /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;github.com&#x2F;gqf2008.png" width="60px" alt="User avatar: 高庆丰" /></a><a href="https://github.com/d3rpp"><img src="https:&#x2F;&#x2F;github.com&#x2F;d3rpp.png" width="60px" alt="User avatar: Huddy Buddy" /></a><a href="https://github.com/DrigsterI"><img src="https:&#x2F;&#x2F;github.com&#x2F;DrigsterI.png" width="60px" alt="User avatar: Gabriel Jõe" /></a><a href="https://github.com/markalexander"><img src="https:&#x2F;&#x2F;github.com&#x2F;markalexander.png" width="60px" alt="User avatar: Mark" /></a><!-- sponsors -->
 
 ### Special thanks 💪
 

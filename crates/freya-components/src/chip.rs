@@ -71,6 +71,7 @@ pub struct Chip {
     on_press: Option<EventHandler<Event<PressEventData>>>,
     selected: bool,
     enabled: bool,
+    cursor_icon: CursorIcon,
     key: DiffKey,
 }
 
@@ -82,6 +83,7 @@ impl Default for Chip {
             on_press: None,
             selected: false,
             enabled: true,
+            cursor_icon: CursorIcon::default(),
             key: DiffKey::None,
         }
     }
@@ -117,6 +119,12 @@ impl Chip {
         self.on_press = Some(handler.into());
         self
     }
+
+    /// Override the cursor icon shown when hovering over this component while enabled.
+    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+        self.cursor_icon = cursor_icon.into();
+        self
+    }
 }
 
 impl ChildrenExt for Chip {
@@ -135,8 +143,8 @@ impl Component for Chip {
     fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, ChipThemePreference, "chip");
         let mut status = use_state(|| ChipStatus::Idle);
-        let focus = use_focus();
-        let focus_status = use_focus_status(focus);
+        let a11y_id = use_a11y();
+        let focus = use_focus(a11y_id);
 
         let ChipTheme {
             background,
@@ -159,6 +167,7 @@ impl Component for Chip {
         } = theme;
 
         let enabled = use_reactive(&self.enabled);
+        let cursor_icon = self.cursor_icon;
         use_drop(move || {
             if status() == ChipStatus::Hovering && enabled() {
                 Cursor::set(CursorIcon::default());
@@ -167,7 +176,7 @@ impl Component for Chip {
 
         let on_press = self.on_press.clone();
         let on_press = move |e: Event<PressEventData>| {
-            focus.request_focus();
+            a11y_id.request_focus();
             if let Some(on_press) = &on_press {
                 on_press.call(e);
             }
@@ -176,7 +185,7 @@ impl Component for Chip {
         let on_pointer_enter = move |_| {
             status.set(ChipStatus::Hovering);
             if enabled() {
-                Cursor::set(CursorIcon::Pointer);
+                Cursor::set(cursor_icon);
             } else {
                 Cursor::set(CursorIcon::NotAllowed);
             }
@@ -209,7 +218,7 @@ impl Component for Chip {
             _ if self.selected => Some(selected_icon_fill),
             _ => None,
         };
-        let border = if self.enabled && focus_status() == FocusStatus::Keyboard {
+        let border = if self.enabled && focus() == Focus::Keyboard {
             Border::new()
                 .fill(focus_border_fill)
                 .width(2.)
@@ -222,7 +231,7 @@ impl Component for Chip {
         };
 
         rect()
-            .a11y_id(focus.a11y_id())
+            .a11y_id(a11y_id)
             .a11y_focusable(self.enabled)
             .a11y_role(AccessibilityRole::Button)
             .maybe(self.enabled, |rect| rect.on_press(on_press))

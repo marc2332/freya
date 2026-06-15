@@ -31,9 +31,9 @@
 //! sudo dnf install openssl-devel clang-devel systemd-devel gtk3-devel @development-tools -y
 //! ```
 //!
-//! #### NixOS
+//! #### Nix
 //!
-//! Copy this [flake.nix](https://github.com/kuba375/freya-flake) into your project root. Then you can enter a dev shell by `nix develop`.
+//! A [flake.nix](https://github.com/marc2332/freya/blob/main/flake.nix) is included in the repository. Run `nix develop` to enter a dev shell with all required dependencies.
 //!
 //! Don't hesitate to contribute so other distros can be added here.
 //!

@@ -1,6 +1,7 @@
 use freya_animation::prelude::*;
 use freya_core::prelude::*;
 use torin::{
+    gaps::Gaps,
     prelude::{
         Alignment,
         Position,
@@ -19,6 +20,10 @@ define_theme! {
         %[fields]
         background: Color,
         color: Color,
+        width: Size,
+        height: Size,
+        padding: Gaps,
+        spacing: f32,
     }
 }
 
@@ -70,6 +75,10 @@ impl Component for PopupBackground {
 
 /// Floating popup / dialog.
 ///
+/// The popup is shown whenever it has children, and the close animation plays
+/// when the children are removed. Conditionally attach children with
+/// [`MaybeExt::maybe`] or [`MaybeExt::map`].
+///
 /// # Example
 ///
 /// ```rust
@@ -80,20 +89,22 @@ impl Component for PopupBackground {
 ///     rect()
 ///         .child(
 ///             Popup::new()
-///                 .show(show_popup())
 ///                 .width(Size::px(250.))
 ///                 .on_close_request(move |_| show_popup.set(false))
-///                 .child(PopupTitle::new("Title".to_string()))
-///                 .child(PopupContent::new().child("Hello, World!"))
-///                 .child(
-///                     PopupButtons::new().child(
-///                         Button::new()
-///                             .on_press(move |_| show_popup.set(false))
-///                             .expanded()
-///                             .filled()
-///                             .child("Accept"),
-///                     ),
-///                 ),
+///                 .maybe(show_popup(), |popup| {
+///                     popup
+///                         .child(PopupTitle::new("Title".to_string()))
+///                         .child(PopupContent::new().child("Hello, World!"))
+///                         .child(
+///                             PopupButtons::new().child(
+///                                 Button::new()
+///                                     .on_press(move |_| show_popup.set(false))
+///                                     .expanded()
+///                                     .filled()
+///                                     .child("Accept"),
+///                             ),
+///                         )
+///                 }),
 ///         )
 ///         .child(
 ///             Button::new()
@@ -123,10 +134,8 @@ impl Component for PopupBackground {
 pub struct Popup {
     pub(crate) theme: Option<PopupThemePartial>,
     children: Vec<Element>,
-    show: Readable<bool>,
     on_close_request: Option<EventHandler<()>>,
     close_on_escape_key: bool,
-    width: Size,
     key: DiffKey,
 }
 
@@ -147,26 +156,14 @@ impl Popup {
         Self {
             theme: None,
             children: vec![],
-            show: true.into(),
             on_close_request: None,
             close_on_escape_key: true,
-            width: Size::px(500.),
             key: DiffKey::None,
         }
     }
 
-    pub fn show(mut self, show: impl Into<Readable<bool>>) -> Self {
-        self.show = show.into();
-        self
-    }
-
     pub fn on_close_request(mut self, on_close_request: impl Into<EventHandler<()>>) -> Self {
         self.on_close_request = Some(on_close_request.into());
-        self
-    }
-
-    pub fn width(mut self, width: impl Into<Size>) -> Self {
-        self.width = width.into();
         self
     }
 }
@@ -179,7 +176,7 @@ impl ChildrenExt for Popup {
 
 impl Component for Popup {
     fn render(&self) -> impl IntoElement {
-        let show = *self.show.read();
+        let show = !self.children.is_empty();
 
         let background_animation = use_animation_with_dependencies(&show, |conf, show| {
             conf.on_creation(OnCreation::Finish);
@@ -209,8 +206,14 @@ impl Component for Popup {
 
         let should_render = show || *background_animation.is_running().read();
 
-        let PopupTheme { background, color } =
-            get_theme!(&self.theme, PopupThemePreference, "popup");
+        let PopupTheme {
+            background,
+            color,
+            width,
+            height,
+            padding,
+            spacing,
+        } = get_theme!(&self.theme, PopupThemePreference, "popup");
 
         let request_to_close = {
             let handler = self.on_close_request.clone();
@@ -254,10 +257,10 @@ impl Component for Popup {
                         .background(background)
                         .color(color)
                         .shadow(Shadow::new().y(4.).blur(5.).color((0, 0, 0, 30)))
-                        .width(self.width.clone())
-                        .height(Size::auto())
-                        .spacing(4.)
-                        .padding(8.)
+                        .width(width)
+                        .height(height)
+                        .spacing(spacing)
+                        .padding(padding)
                         .on_global_key_down(on_global_key_down)
                         .children(self.children.clone())
                         .into(),

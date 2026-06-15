@@ -82,6 +82,7 @@ pub struct Card {
     style_variant: CardStyleVariant,
     layout_variant: CardLayoutVariant,
     hoverable: bool,
+    cursor_icon: CursorIcon,
 }
 
 impl Default for Card {
@@ -134,6 +135,7 @@ impl Card {
             on_press: None,
             elements: Vec::default(),
             hoverable: false,
+            cursor_icon: CursorIcon::default(),
             key: DiffKey::None,
         }
     }
@@ -198,15 +200,22 @@ impl Card {
     pub fn compact(self) -> Self {
         self.layout_variant(CardLayoutVariant::Compact)
     }
+
+    /// Override the cursor icon shown when hovering over this component while hoverable.
+    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+        self.cursor_icon = cursor_icon.into();
+        self
+    }
 }
 
 impl Component for Card {
     fn render(&self) -> impl IntoElement {
         let mut hovering = use_state(|| false);
-        let focus = use_focus();
-        let focus_status = use_focus_status(focus);
+        let a11y_id = use_a11y();
+        let focus = use_focus(a11y_id);
 
         let is_hoverable = self.hoverable;
+        let cursor_icon = self.cursor_icon;
 
         use_drop(move || {
             if hovering() && is_hoverable {
@@ -235,7 +244,7 @@ impl Component for Card {
             ),
         };
 
-        let border = if focus_status() == FocusStatus::Keyboard {
+        let border = if focus() == Focus::Keyboard {
             Border::new()
                 .fill(theme_colors.border_fill)
                 .width(2.)
@@ -262,7 +271,7 @@ impl Component for Card {
         rect()
             .layout(self.layout.clone())
             .overflow(Overflow::Clip)
-            .a11y_id(focus.a11y_id())
+            .a11y_id(a11y_id)
             .a11y_focusable(is_hoverable)
             .a11y_role(AccessibilityRole::GenericContainer)
             .accessibility(self.accessibility.clone())
@@ -274,14 +283,14 @@ impl Component for Card {
             .map(shadow, |rect, shadow| rect.shadow(shadow))
             .map(self.on_press.clone(), |rect, on_press| {
                 rect.on_press(move |e: Event<PressEventData>| {
-                    focus.request_focus();
+                    a11y_id.request_focus();
                     on_press.call(e);
                 })
             })
             .maybe(is_hoverable, |rect| {
                 rect.on_pointer_enter(move |_| {
                     hovering.set(true);
-                    Cursor::set(CursorIcon::Pointer);
+                    Cursor::set(cursor_icon);
                 })
                 .on_pointer_leave(move |_| {
                     if hovering() {

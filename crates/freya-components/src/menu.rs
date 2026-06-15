@@ -6,6 +6,7 @@ use torin::{
         Alignment,
         Area,
         Position,
+        Size2D,
     },
     size::Size,
 };
@@ -16,6 +17,10 @@ use crate::{
 };
 
 define_theme! {
+    for = MenuContainer; theme_field = theme;
+    for = Menu; theme_field = theme;
+    for = SubMenu; theme_field = theme;
+
     %[component]
     pub MenuContainer {
         %[fields]
@@ -28,6 +33,9 @@ define_theme! {
 }
 
 define_theme! {
+    for = MenuItem; theme_field = theme;
+    for = MenuButton; theme_field = theme;
+
     %[component]
     pub MenuItem {
         %[fields]
@@ -85,7 +93,7 @@ define_theme! {
 /// #                   .child(MenuButton::new().child("Save"))
 /// #           }))
 /// #   )
-/// # }, "./images/gallery_menu.png").render();
+/// # }, "./images/gallery_menu.png").with_hook(|t| { t.poll(std::time::Duration::from_millis(1), std::time::Duration::from_millis(100)); }).render();
 /// ```
 ///
 /// # Preview
@@ -95,6 +103,7 @@ define_theme! {
 )]
 #[derive(Default, Clone, PartialEq)]
 pub struct Menu {
+    pub(crate) theme: Option<MenuContainerThemePartial>,
     children: Vec<Element>,
     on_close: Option<EventHandler<()>>,
     key: DiffKey,
@@ -124,6 +133,11 @@ impl Menu {
         self.on_close = Some(f.into());
         self
     }
+
+    pub fn theme(mut self, theme: MenuContainerThemePartial) -> Self {
+        self.theme = Some(theme);
+        self
+    }
 }
 
 impl ComponentOwned for Menu {
@@ -131,9 +145,21 @@ impl ComponentOwned for Menu {
         // Provide the menus ID generator
         use_provide_context(|| State::create(ROOT_MENU.0));
         // Provide the menus stack
-        use_provide_context::<State<Vec<MenuId>>>(|| State::create(vec![ROOT_MENU]));
+        let mut menus =
+            use_provide_context::<State<Vec<MenuId>>>(|| State::create(vec![ROOT_MENU]));
         // Provide this the ROOT Menu ID
         use_provide_context(|| ROOT_MENU);
+
+        let on_close = self.on_close.clone();
+        let on_global_key_down = move |e: Event<KeyboardEventData>| {
+            if e.key == Key::Named(NamedKey::Escape) {
+                if menus.read().len() > 1 {
+                    menus.write().pop();
+                } else if let Some(on_close) = &on_close {
+                    on_close.call(());
+                }
+            }
+        };
 
         rect()
             .layer(Layer::Overlay)
@@ -146,7 +172,12 @@ impl ComponentOwned for Menu {
                     on_close.call(());
                 }
             })
-            .child(MenuContainer::new().children(self.children))
+            .on_global_key_down(on_global_key_down)
+            .child(
+                MenuContainer::new()
+                    .map(self.theme, |el, theme| el.theme(theme))
+                    .children(self.children),
+            )
     }
     fn render_key(&self) -> DiffKey {
         self.key.clone().or(self.default_key())
@@ -188,23 +219,26 @@ impl MenuContainer {
     pub fn new() -> Self {
         Self::default()
     }
+
+    pub fn theme(mut self, theme: MenuContainerThemePartial) -> Self {
+        self.theme = Some(theme);
+        self
+    }
 }
 
 impl ComponentOwned for MenuContainer {
     fn render(self) -> impl IntoElement {
-        let focus = use_focus();
+        let a11y_id = use_a11y();
         let theme = get_theme!(self.theme, MenuContainerThemePreference, "menu_container");
-        let mut measured = use_state(|| None::<(Area, f32, f32)>);
+        let mut measured = use_state(|| None::<(Area, Size2D)>);
 
-        use_provide_context(move || MenuGroup {
-            group_id: focus.a11y_id(),
-        });
+        use_provide_context(move || MenuGroup { group_id: a11y_id });
 
-        let (offset_x, offset_y, opacity) = match *measured.read() {
+        let (offset_x, offset_y, opacity) = match measured() {
             None => (0.0, 0.0, 0.0),
-            Some((area, win_w, win_h)) => (
-                overflow_offset(area.origin.x, area.size.width, win_w),
-                overflow_offset(area.origin.y, area.size.height, win_h),
+            Some((area, root_size)) => (
+                overflow_offset(area.origin.x, area.size.width, root_size.width),
+                overflow_offset(area.origin.y, area.size.height, root_size.height),
                 1.0,
             ),
         };
@@ -217,14 +251,14 @@ impl ComponentOwned for MenuContainer {
             .offset_y(offset_y)
             .on_sized(move |e: Event<SizedEventData>| {
                 if measured.peek().is_none() {
-                    let window = Platform::get().root_size.peek();
-                    measured.set(Some((e.area, window.width, window.height)));
+                    let root_size = *Platform::get().root_size.peek();
+                    measured.set(Some((e.area, root_size)));
                 }
             })
             .child(
                 rect()
-                    .a11y_id(focus.a11y_id())
-                    .a11y_member_of(focus.a11y_id())
+                    .a11y_id(a11y_id)
+                    .a11y_member_of(a11y_id)
                     .a11y_focusable(true)
                     .a11y_role(AccessibilityRole::Menu)
                     .shadow((0.0, 4.0, 10.0, 0., theme.shadow))
@@ -351,8 +385,8 @@ impl ComponentOwned for MenuItem {
     fn render(self) -> impl IntoElement {
         let theme = get_theme!(self.theme, MenuItemThemePreference, "menu_item");
         let mut hovering = use_state(|| false);
-        let focus = use_focus();
-        let focus_status = use_focus_status(focus);
+        let a11y_id = use_a11y();
+        let focus = use_focus(a11y_id);
         let MenuGroup { group_id } = use_consume::<MenuGroup>();
 
         let background = if self.selected {
@@ -363,7 +397,7 @@ impl ComponentOwned for MenuItem {
             theme.background
         };
 
-        let border = if focus_status() == FocusStatus::Keyboard {
+        let border = if focus() == Focus::Keyboard {
             Border::new()
                 .fill(theme.select_border_fill)
                 .width(2.)
@@ -392,13 +426,13 @@ impl ComponentOwned for MenuItem {
                 on_press.call(e);
             }
             if *prevent_default.borrow() {
-                focus.request_focus();
+                a11y_id.request_focus();
             }
         };
 
         rect()
             .a11y_role(AccessibilityRole::MenuItem)
-            .a11y_id(focus.a11y_id())
+            .a11y_id(a11y_id)
             .a11y_focusable(true)
             .a11y_member_of(group_id)
             .min_width(Size::px(105.))
@@ -437,6 +471,7 @@ impl ComponentOwned for MenuItem {
 /// ```
 #[derive(Default, Clone, PartialEq)]
 pub struct MenuButton {
+    pub(crate) theme: Option<MenuItemThemePartial>,
     children: Vec<Element>,
     on_press: Option<EventHandler<Event<PressEventData>>>,
     key: DiffKey,
@@ -463,6 +498,12 @@ impl MenuButton {
         self.on_press = Some(on_press.into());
         self
     }
+
+    /// Set a theme override for the inner [`MenuItem`].
+    pub fn theme(mut self, theme: MenuItemThemePartial) -> Self {
+        self.theme = Some(theme);
+        self
+    }
 }
 
 impl ComponentOwned for MenuButton {
@@ -471,8 +512,9 @@ impl ComponentOwned for MenuButton {
         let parent_menu_id = use_consume::<MenuId>();
 
         MenuItem::new()
+            .map(self.theme, |el, theme| el.theme(theme))
             .on_pointer_enter(move |_| close_menus_until(&mut menus, parent_menu_id))
-            .map(self.on_press.clone(), |el, on_press| el.on_press(on_press))
+            .map(self.on_press, |el, on_press| el.on_press(on_press))
             .children(self.children)
     }
 
@@ -495,6 +537,7 @@ impl ComponentOwned for MenuButton {
 /// ```
 #[derive(Default, Clone, PartialEq)]
 pub struct SubMenu {
+    pub(crate) theme: Option<MenuContainerThemePartial>,
     label: Option<Element>,
     items: Vec<Element>,
     key: DiffKey,
@@ -513,6 +556,12 @@ impl SubMenu {
 
     pub fn label(mut self, label: impl IntoElement) -> Self {
         self.label = Some(label.into_element());
+        self
+    }
+
+    /// Set a theme override for the inner [`MenuContainer`].
+    pub fn theme(mut self, theme: MenuContainerThemePartial) -> Self {
+        self.theme = Some(theme);
         self
     }
 }
@@ -558,9 +607,11 @@ impl ComponentOwned for SubMenu {
                     .width(Size::px(0.))
                     .height(Size::px(0.))
                     .child(
-                        rect()
-                            .width(Size::window_percent(100.))
-                            .child(MenuContainer::new().children(self.items)),
+                        rect().width(Size::window_percent(100.)).child(
+                            MenuContainer::new()
+                                .map(self.theme, |el, theme| el.theme(theme))
+                                .children(self.items),
+                        ),
                     )
             }))
     }

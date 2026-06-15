@@ -35,10 +35,12 @@ use crate::{
         LayoutContext,
         RenderContext,
     },
+    elements::paragraph::paint_paragraph_with_fill,
     events::name::EventName,
     layers::Layer,
     prelude::{
         AccessibilityExt,
+        Color,
         ContainerExt,
         EventHandlersExt,
         KeyExt,
@@ -82,8 +84,11 @@ impl From<String> for Element {
     }
 }
 
+/// Whether text sizes itself to its content or expands to the available width.
 pub enum TextWidth {
+    /// Shrink to fit the text content.
     Fit,
+    /// Expand to the maximum available width.
     Max,
 }
 
@@ -208,7 +213,13 @@ impl ElementExt for LabelElement {
                 let mut font_families = context.text_style_state.font_families.clone();
                 font_families.extend_from_slice(context.fallback_fonts);
 
-                text_style.set_color(context.text_style_state.color);
+                text_style.set_color(
+                    context
+                        .text_style_state
+                        .color
+                        .as_color()
+                        .unwrap_or(Color::WHITE),
+                );
                 text_style.set_font_size(
                     f32::from(context.text_style_state.font_size) * context.scale_factor as f32,
                 );
@@ -288,9 +299,11 @@ impl ElementExt for LabelElement {
         let layout_data = context.layout_node.data.as_ref().unwrap();
         let paragraph = layout_data.downcast_ref::<SkParagraph>().unwrap();
 
-        paragraph.paint(
+        paint_paragraph_with_fill(
+            paragraph,
             context.canvas,
-            context.layout_node.visible_area().origin.to_tuple(),
+            context.layout_node.visible_area().origin,
+            &context.text_style_state.color,
         );
     }
 }
@@ -349,17 +362,20 @@ impl Label {
             .cloned()
     }
 
+    /// Set the text content of the label.
     pub fn text(mut self, text: impl Into<Cow<'static, str>>) -> Self {
         let text = text.into();
         self.element.text = text;
         self
     }
 
+    /// Limit the label to at most this many lines, truncating the rest. Pass `None` for no limit.
     pub fn max_lines(mut self, max_lines: impl Into<Option<usize>>) -> Self {
         self.element.max_lines = max_lines.into();
         self
     }
 
+    /// Override the height of each line as a multiple of the font size. Pass `None` for the default.
     pub fn line_height(mut self, line_height: impl Into<Option<f32>>) -> Self {
         self.element.line_height = line_height.into();
         self

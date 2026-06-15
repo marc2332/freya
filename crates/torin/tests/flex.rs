@@ -501,6 +501,89 @@ pub fn flex_root_candidate_resolution() {
     );
 }
 
+/// Regression test: adding a new child to a flex container and invalidating
+/// only the new child must trigger a redistribution of the existing siblings.
+#[test]
+pub fn flex_new_child_redistributes_existing_siblings() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
+        0,
+        None,
+        vec![1],
+        Node::from_size_and_content(
+            Size::Pixels(Length::new(200.0)),
+            Size::Pixels(Length::new(200.0)),
+            Content::Flex,
+        ),
+    );
+    mocked_tree.add(
+        1,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(100.0)),
+            Size::Flex(Length::new(1.0)),
+            Direction::Vertical,
+        ),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        &mut measurer,
+        &mut mocked_tree,
+    );
+
+    assert_eq!(
+        layout.get(&1).unwrap().area,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 200.0)),
+    );
+
+    // Add a new flex sibling and only invalidate it.
+    mocked_tree.add(
+        0,
+        None,
+        vec![1, 2],
+        Node::from_size_and_content(
+            Size::Pixels(Length::new(200.0)),
+            Size::Pixels(Length::new(200.0)),
+            Content::Flex,
+        ),
+    );
+    mocked_tree.add(
+        2,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(100.0)),
+            Size::Flex(Length::new(1.0)),
+            Direction::Vertical,
+        ),
+    );
+
+    layout.invalidate(2);
+
+    layout.find_best_root(&mut mocked_tree);
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        &mut measurer,
+        &mut mocked_tree,
+    );
+
+    assert_eq!(
+        layout.get(&1).unwrap().area,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 100.0)),
+    );
+    assert_eq!(
+        layout.get(&2).unwrap().area,
+        Rect::new(Point2D::new(0.0, 100.0), Size2D::new(100.0, 100.0)),
+    );
+}
+
 /// Simulates text wrapping: height grows as available width shrinks.
 struct TextLikeMeasurer {
     text_nodes: Vec<usize>,

@@ -253,8 +253,6 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
             task.cancel();
         }
 
-        let peek_has_run_yet = *self.has_run_yet.peek();
-
         let mut ticker = RenderingTicker::get();
         let platform = Platform::get();
         let animation_clock = AnimationClock::get();
@@ -262,17 +260,15 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
         // Prepare the animations with the the proper direction
         animated_value.write().prepare(direction);
 
+        has_run_yet.set_if_modified(true);
+        is_running.set_if_modified(true);
+        *runs.write() += 1;
+
         let animation_task = spawn(async move {
             platform.send(UserEvent::RequestRedraw);
 
             let mut index = 0u128;
             let mut prev_frame = Instant::now();
-
-            if !peek_has_run_yet {
-                *has_run_yet.write() = true;
-            }
-            *runs.write() += 1;
-            is_running.set(true);
 
             loop {
                 // Wait for the event loop to tick

@@ -3,6 +3,7 @@ use std::{
         CStr,
         CString,
     },
+    ptr,
     sync::Arc,
 };
 
@@ -15,7 +16,7 @@ use ash::{
         swapchain::Device as DeviceSwapchainFns,
     },
     vk::{
-        API_VERSION_1_1,
+        API_VERSION_1_3,
         AccessFlags,
         ApplicationInfo,
         ColorSpaceKHR,
@@ -116,6 +117,7 @@ impl VulkanDriver {
     pub fn new(
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
+        gpu_resource_cache_limit: usize,
     ) -> Result<(Self, Window), Box<dyn std::error::Error>> {
         let transparent = window_attributes.transparent;
         let window = event_loop.create_window(window_attributes)?;
@@ -163,6 +165,7 @@ impl VulkanDriver {
             device.clone(),
             queue,
             queue_family_index,
+            gpu_resource_cache_limit,
         )?;
 
         let (image_available_semaphore, render_finished_semaphore, in_flight_fence) =
@@ -404,18 +407,13 @@ fn create_instance(
         .application_version(make_api_version(0, 1, 0, 0))
         .engine_name(&engine_name)
         .engine_version(make_api_version(0, 1, 0, 0))
-        .api_version(API_VERSION_1_1);
+        .api_version(API_VERSION_1_3);
 
     let extension_names = enumerate_required_extensions(display_handle.as_raw())?.to_vec();
-
-    // Enable the Vulkan validation layer extension:
-    // const VALIDATION_LAYER_NAME: &CStr = c"VK_LAYER_KHRONOS_validation";
-    // let validation_layer_name_ptr = VALIDATION_LAYER_NAME.as_ptr();
 
     let create_info = InstanceCreateInfo::default()
         .application_info(&app_info)
         .enabled_extension_names(&extension_names);
-    // .enabled_layer_names(std::slice::from_ref(&validation_layer_name_ptr));
 
     Ok(unsafe { entry.create_instance(&create_info, None)? })
 }
@@ -603,6 +601,7 @@ fn create_gr_context(
     device: Arc<Device>,
     queue: Queue,
     queue_family_index: u32,
+    gpu_resource_cache_limit: usize,
 ) -> Result<DirectContext, Box<dyn std::error::Error>> {
     let get_proc = unsafe {
         |gpo: vk::GetProcOf| {
@@ -619,7 +618,7 @@ fn create_gr_context(
                 }
             }
             .map(|f| f as _)
-            .unwrap()
+            .unwrap_or(ptr::null())
         }
     };
 
@@ -632,12 +631,16 @@ fn create_gr_context(
             &get_proc,
         )
     };
-    backend_context.set_max_api_version(vk::Version::new(1, 1, 0));
+    backend_context.set_max_api_version(vk::Version::new(1, 3, 0));
 
     let context_options = ContextOptions::default();
 
-    direct_contexts::make_vulkan(&backend_context, &context_options)
-        .ok_or_else(|| "Failed to create Vulkan Skia context".into())
+    let mut gr_context = direct_contexts::make_vulkan(&backend_context, &context_options)
+        .ok_or("Failed to create Vulkan Skia context")?;
+
+    gr_context.set_resource_cache_limit(gpu_resource_cache_limit);
+
+    Ok(gr_context)
 }
 
 fn create_sync_objects(

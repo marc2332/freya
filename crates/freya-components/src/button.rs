@@ -140,6 +140,7 @@ pub struct Button {
     layout_variant: ButtonLayoutVariant,
     enabled: bool,
     focusable: bool,
+    cursor_icon: CursorIcon,
 }
 
 impl Default for Button {
@@ -173,6 +174,7 @@ impl Button {
             elements: Vec::default(),
             enabled: true,
             focusable: true,
+            cursor_icon: CursorIcon::default(),
             key: DiffKey::None,
         }
     }
@@ -260,6 +262,12 @@ impl Button {
     pub fn flat(self) -> Self {
         self.style_variant(ButtonStyleVariant::Flat)
     }
+
+    /// Override the cursor icon shown when hovering over the button while enabled.
+    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+        self.cursor_icon = cursor_icon.into();
+        self
+    }
 }
 
 impl CornerRadiusExt for Button {
@@ -271,10 +279,11 @@ impl CornerRadiusExt for Button {
 impl Component for Button {
     fn render(&self) -> impl IntoElement {
         let mut hovering = use_state(|| false);
-        let focus = use_focus();
-        let focus_status = use_focus_status(focus);
+        let a11y_id = use_a11y();
+        let focus = use_focus(a11y_id);
 
         let enabled = use_reactive(&self.enabled);
+        let cursor_icon = self.cursor_icon;
         use_drop(move || {
             if hovering() {
                 Cursor::set(CursorIcon::default());
@@ -319,7 +328,7 @@ impl Component for Button {
             ),
         };
 
-        let border = if focus_status() == FocusStatus::Keyboard {
+        let border = if focus() == Focus::Keyboard {
             Border::new()
                 .fill(theme_colors.focus_border_fill)
                 .width(2.)
@@ -338,7 +347,7 @@ impl Component for Button {
 
         rect()
             .overflow(Overflow::Clip)
-            .a11y_id(focus.a11y_id())
+            .a11y_id(a11y_id)
             .a11y_focusable(self.enabled && self.focusable)
             .a11y_role(AccessibilityRole::Button)
             .background(background.mul_if(!self.enabled, 0.9))
@@ -359,7 +368,7 @@ impl Component for Button {
                     let on_press = self.on_press.clone();
                     let on_secondary_down = self.on_secondary_down.clone();
                     move |e: Event<PressEventData>| {
-                        focus.request_focus();
+                        a11y_id.request_focus();
                         match e.data() {
                             PressEventData::Mouse(data) => match data.button {
                                 Some(MouseButton::Left) => {
@@ -389,7 +398,7 @@ impl Component for Button {
             })
             .on_pointer_enter(move |_| {
                 if enabled() {
-                    Cursor::set(CursorIcon::Pointer);
+                    Cursor::set(cursor_icon);
                 } else {
                     Cursor::set(CursorIcon::NotAllowed);
                 }

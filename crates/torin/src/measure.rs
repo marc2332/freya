@@ -79,7 +79,7 @@ where
                 let layout_node = self
                     .layout
                     .get_mut(&child)
-                    .expect("Cached node does not exist");
+                    .expect("Cached node does not exist when translating");
                 layout_node.area.origin.x += offset_x.get();
                 layout_node.area.origin.y += offset_y.get();
                 layout_node.inner_area.origin.x += offset_x.get();
@@ -368,6 +368,7 @@ where
                 // now that the final size is known, and translate cached children accordingly.
                 if !node.position.is_stacked()
                     && (node.width.inner_sized() || node.height.inner_sized())
+                    && must_cache_children
                 {
                     let new_origin = node.position.get_origin(
                         &available_parent_area,

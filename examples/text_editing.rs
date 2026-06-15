@@ -14,10 +14,10 @@ fn main() {
 fn app() -> impl IntoElement {
     let holder = use_state(ParagraphHolder::default);
     let mut editable = use_editable(|| "Hello, World!".to_string(), EditableConfig::new);
-    let focus = use_focus();
+    let a11y_id = use_a11y();
 
     paragraph()
-        .a11y_id(focus.a11y_id())
+        .a11y_id(a11y_id)
         .cursor_index(editable.editor().read().cursor_pos())
         .highlights(
             editable
@@ -28,7 +28,7 @@ fn app() -> impl IntoElement {
                 .unwrap_or_default(),
         )
         .on_mouse_down(move |e: Event<MouseEventData>| {
-            focus.request_focus();
+            a11y_id.request_focus();
             editable.process_event(EditableEvent::Down {
                 location: e.element_location,
                 editor_line: EditorLine::SingleParagraph,

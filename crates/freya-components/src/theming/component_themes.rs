@@ -93,7 +93,6 @@ pub struct ColorsSheet {
     pub text_highlight: Color,
 
     // States / Interaction
-    pub hover: Color,
     pub focus: Color,
     pub active: Color,
     pub disabled: Color,

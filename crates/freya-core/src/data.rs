@@ -50,6 +50,7 @@ use crate::{
         text_height::TextHeightBehavior,
         text_overflow::TextOverflow,
         text_shadow::TextShadow,
+        transform_origin::TransformOrigin,
     },
 };
 
@@ -83,6 +84,7 @@ pub struct EffectData {
     pub overflow: Overflow,
     pub rotation: Option<f32>,
     pub scale: Option<Scale>,
+    pub transform_origin: TransformOrigin,
     pub opacity: Option<f32>,
     pub blur: Option<f32>,
     pub scrollable: bool,
@@ -119,7 +121,7 @@ impl Default for CursorStyleData {
 #[derive(Debug, Clone, PartialEq, Hash)]
 pub struct TextStyleState {
     pub font_size: FontSize,
-    pub color: Color,
+    pub color: Fill,
     pub text_align: TextAlign,
     pub font_families: Vec<Cow<'static, str>>,
     pub text_height: TextHeightBehavior,
@@ -135,7 +137,7 @@ impl Default for TextStyleState {
     fn default() -> Self {
         Self {
             font_size: FontSize::default(),
-            color: Color::BLACK,
+            color: Fill::Color(Color::BLACK),
             text_align: TextAlign::default(),
             font_families: Vec::new(),
             text_height: TextHeightBehavior::default(),
@@ -151,7 +153,7 @@ impl Default for TextStyleState {
 
 impl TextStyleState {
     pub fn from_data(parent: &TextStyleState, data: &TextStyleData) -> Self {
-        let color = data.color.unwrap_or(parent.color);
+        let color = data.color.as_ref().unwrap_or(&parent.color).clone();
 
         let text_align = data.text_align.unwrap_or_default();
         let text_height = data.text_height.unwrap_or_default();
@@ -205,7 +207,7 @@ impl TextStyleState {
 
 #[derive(Debug, Clone, PartialEq, Default, Hash)]
 pub struct TextStyleData {
-    pub color: Option<Color>,
+    pub color: Option<Fill>,
     pub font_size: Option<FontSize>,
     pub font_families: Vec<Cow<'static, str>>,
     pub text_align: Option<TextAlign>,
@@ -256,24 +258,32 @@ impl LayerState {
                 .saturating_add(1),
             Layer::Overlay => parent_layer.layer.saturating_add(i16::MAX / 16),
             Layer::RelativeOverlay(relative_layer) => {
-                (relative_layer.min(1) as i16).saturating_mul(i16::MAX / 16)
+                (relative_layer.max(1) as i16).saturating_mul(i16::MAX / 16)
             }
         };
         layers.insert_node_in_layer(node_id, self.layer);
     }
 }
 
+/// Whether content overflowing an element's bounds is shown or clipped.
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
 pub enum Overflow {
+    /// Let children paint outside the element's bounds. This is the default.
     #[default]
     None,
+    /// Clip children to the element's bounds.
     Clip,
 }
 
+/// Whether an element (and its descendants) responds to pointer events.
+///
+/// Converts from a `bool`, where `true` is [`Interactive::Yes`].
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
 pub enum Interactive {
+    /// The element receives pointer events. This is the default.
     #[default]
     Yes,
+    /// The element ignores pointer events, letting them pass through.
     No,
 }
 
@@ -296,6 +306,8 @@ pub struct EffectState {
 
     pub scales: Rc<[NodeId]>,
     pub scale: Option<Scale>,
+
+    pub transform_origin: TransformOrigin,
 
     pub opacities: Rc<[f32]>,
 
@@ -320,6 +332,7 @@ impl EffectState {
             blur: None,
             rotation: None,
             scale: None,
+            transform_origin: TransformOrigin::default(),
             ..parent_effect_state.clone()
         };
 
@@ -340,6 +353,7 @@ impl EffectState {
         if let Some(effect_data) = effect_data {
             self.overflow = effect_data.overflow;
             self.blur = effect_data.blur;
+            self.transform_origin = effect_data.transform_origin;
 
             if let Some(rotation) = effect_data.rotation {
                 let mut rotations = parent_effect_state.rotations.to_vec();
@@ -375,7 +389,9 @@ impl EffectState {
                 }
             }
 
-            self.interactive = effect_data.interactive;
+            if effect_data.interactive == Interactive::No {
+                self.interactive = Interactive::No;
+            }
         }
     }
 

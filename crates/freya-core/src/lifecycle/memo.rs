@@ -31,8 +31,16 @@ pub fn use_memo<T: 'static + PartialEq>(callback: impl FnMut() -> T + 'static) -
 }
 
 pub struct Memo<T> {
-    state: State<T>,
+    pub(crate) state: State<T>,
 }
+
+impl<T: 'static> PartialEq for Memo<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.state == other.state
+    }
+}
+
+impl<T: 'static> Eq for Memo<T> {}
 
 impl<T> Clone for Memo<T> {
     fn clone(&self) -> Self {

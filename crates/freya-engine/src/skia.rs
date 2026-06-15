@@ -84,10 +84,6 @@ pub use skia_safe::{
         Gradient,
         Interpolation,
     },
-    gradient_shader::{
-        Flags,
-        GradientShaderColors,
-    },
     graphics::{
         set_resource_cache_single_allocation_byte_limit,
         set_resource_cache_total_bytes_limit,
@@ -99,7 +95,10 @@ pub use skia_safe::{
     rrect::Corner,
     runtime_effect::Uniform,
     shaders,
-    surfaces::raster_n32_premul,
+    surfaces::{
+        raster_n32_premul,
+        wrap_pixels,
+    },
     svg,
     textlayout::{
         Decoration,

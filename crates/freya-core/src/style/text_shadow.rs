@@ -4,6 +4,14 @@ use freya_engine::prelude::*;
 
 use crate::style::color::Color;
 
+/// A shadow cast behind text, with a [`Color`], an `(x, y)` offset and a blur sigma.
+///
+/// Build it with [`TextShadow::new`]:
+///
+/// ```
+/// # use freya::prelude::*;
+/// let shadow = TextShadow::new(Color::BLACK, (1.0, 1.0), 2.0);
+/// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Copy, Clone, Debug, PartialEq, Default)]
 pub struct TextShadow {
@@ -22,6 +30,7 @@ impl Hash for TextShadow {
 }
 
 impl TextShadow {
+    /// Create a [`TextShadow`] with the given [`Color`], `(x, y)` offset and blur sigma.
     pub fn new(color: Color, offset: (f32, f32), blur_sigma: f64) -> Self {
         Self {
             color,

@@ -30,6 +30,7 @@ where
     fn is_node_parent_of(&self, key: &Self::Key, parent: Self::Key) -> bool;
     fn is_listening_to(&self, key: &Self::Key, name: &Self::Name) -> bool;
     fn is_node_transparent(&self, key: &Self::Key) -> bool;
+    fn is_node_interactive(&self, key: &Self::Key) -> bool;
 
     fn try_area_of(&self, key: &Self::Key) -> Option<Area>;
 

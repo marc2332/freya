@@ -3,17 +3,9 @@
   "extends": [
     "config:base"
   ],
+  "dependencyDashboard": true,
+  "dependencyDashboardApproval": true,
   "packageRules": [
-    {
-      "matchPackagePatterns": [
-        "*"
-      ],
-      "matchUpdateTypes": [
-        "minor"
-      ],
-      "groupName": "all non-major dependencies",
-      "groupSlug": "all-minor"
-    },
     {
       "matchPackagePatterns": [
         "*"

@@ -45,6 +45,7 @@ use crate::{
             Shadow,
             ShadowPosition,
         },
+        transform_origin::TransformOrigin,
     },
     tree::DiffModifies,
 };
@@ -62,7 +63,11 @@ use crate::{
 /// }
 /// ```
 pub fn rect() -> Rect {
-    Rect::empty()
+    Rect {
+        element: RectElement::default(),
+        elements: Vec::default(),
+        key: DiffKey::None,
+    }
 }
 
 #[derive(PartialEq, Clone)]
@@ -134,7 +139,10 @@ impl RectElement {
 
         // Add either the RRect or smoothed path based on whether smoothing is used.
         if corner_radius.smoothing > 0.0 {
-            shadow_path.add_path(&corner_radius.smoothed_path(rounded_rect.with_outset(outset)));
+            shadow_path.add_path(
+                &corner_radius.smoothed_path(rounded_rect.with_outset(outset)),
+                None,
+            );
         } else {
             shadow_path.add_rrect(rounded_rect.with_outset(outset), None, None);
         }
@@ -311,9 +319,9 @@ impl RectElement {
             let mut path = PathBuilder::new();
             path.set_fill_type(SkPathFillType::EvenOdd);
 
-            path.add_path(&outer_corner_radius.smoothed_path(outer_rrect));
+            path.add_path(&outer_corner_radius.smoothed_path(outer_rrect), None);
 
-            path.add_path(&inner_corner_radius.smoothed_path(inner_rrect));
+            path.add_path(&inner_corner_radius.smoothed_path(inner_rrect), None);
 
             let path = path.detach();
             BorderShape::Path(path)
@@ -496,7 +504,7 @@ impl ElementExt for RectElement {
         // Container
         let rounded_rect = self.render_rect(&area, context.scale_factor as f32);
         if corner_radius.smoothing > 0.0 {
-            path.add_path(&corner_radius.smoothed_path(rounded_rect));
+            path.add_path(&corner_radius.smoothed_path(rounded_rect), None);
         } else {
             path.add_rrect(rounded_rect, None, None);
         }
@@ -632,28 +640,23 @@ impl From<Rect> for Element {
 }
 
 impl Rect {
-    pub fn empty() -> Self {
-        Self {
-            element: RectElement::default(),
-            elements: Vec::default(),
-            key: DiffKey::None,
-        }
-    }
-
     pub fn try_downcast(element: &dyn ElementExt) -> Option<RectElement> {
         (element as &dyn Any).downcast_ref::<RectElement>().cloned()
     }
 
+    /// Set the color of text rendered inside the rect and inherited by its children. See [`Color`].
     pub fn color(mut self, color: impl Into<Color>) -> Self {
-        self.element.text_style_data.color = Some(color.into());
+        self.element.text_style_data.color = Some(Fill::Color(color.into()));
         self
     }
 
+    /// Set the size of text rendered inside the rect and inherited by its children. See [`FontSize`].
     pub fn font_size(mut self, font_size: impl Into<FontSize>) -> Self {
         self.element.text_style_data.font_size = Some(font_size.into());
         self
     }
 
+    /// Set whether content overflowing the rect's bounds is clipped. See [`Overflow`].
     pub fn overflow<S: Into<Overflow>>(mut self, overflow: S) -> Self {
         self.element
             .effect
@@ -662,6 +665,7 @@ impl Rect {
         self
     }
 
+    /// Rotate the rect by the given angle in degrees.
     pub fn rotate<R: Into<Option<f32>>>(mut self, rotation: R) -> Self {
         self.element
             .effect
@@ -670,6 +674,7 @@ impl Rect {
         self
     }
 
+    /// Scale the rect. See [`Scale`].
     pub fn scale(mut self, scale: impl Into<Scale>) -> Self {
         self.element
             .effect
@@ -678,6 +683,18 @@ impl Rect {
         self
     }
 
+    /// Set the point that the scale and rotation effects pivot around.
+    ///
+    /// Defaults to the element's center.
+    pub fn transform_origin(mut self, transform_origin: impl Into<TransformOrigin>) -> Self {
+        self.element
+            .effect
+            .get_or_insert_with(Default::default)
+            .transform_origin = transform_origin.into();
+        self
+    }
+
+    /// Set the rect's opacity, from `0.0` (transparent) to `1.0` (opaque).
     pub fn opacity(mut self, opacity: impl Into<f32>) -> Self {
         self.element
             .effect
@@ -686,6 +703,7 @@ impl Rect {
         self
     }
 
+    /// Apply a gaussian blur of the given radius to the rect.
     pub fn blur(mut self, blur: impl Into<f32>) -> Self {
         self.element
             .effect

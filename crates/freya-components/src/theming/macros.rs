@@ -15,11 +15,45 @@ macro_rules! define_theme {
     (NOTHING=) => {};
 
     (
+        @ext_impls
+        [ $head_ty:ident $($rest_ty:ident)* ]
+        [ $head_field:ident $($rest_field:ident)* ]
+        $name:ident ;
+        $( $(#[$field_attrs:meta])* $field_name:ident : $field_ty:ty , )*
+    ) => {
+        $crate::theming::macros::paste! {
+            impl [<$name ThemePartialExt>] for $head_ty {
+                $(
+                    $(#[$field_attrs])*
+                    fn $field_name(mut self, $field_name: impl Into<$field_ty>) -> Self {
+                        self.$head_field = Some(self.$head_field.unwrap_or_default().$field_name($field_name));
+                        self
+                    }
+                )*
+            }
+        }
+        $crate::define_theme! {
+            @ext_impls
+            [ $($rest_ty)* ]
+            [ $($rest_field)* ]
+            $name ;
+            $( $(#[$field_attrs])* $field_name : $field_ty , )*
+        }
+    };
+
+    (
+        @ext_impls
+        [] []
+        $name:ident ;
+        $( $(#[$field_attrs:meta])* $field_name:ident : $field_ty:ty , )*
+    ) => {};
+
+    // Emits the structs and their inherent impls.
+    (
+        @types
         $(#[$attrs:meta])*
-        for = $for_ty:ident ;
-        theme_field = $theme_field:ident ;
         $(%[component$($component_attr_control:tt)?])?
-        $vis:vis $name:ident $(<$lifetime:lifetime>)? {
+        pub $name:ident {
             $(
                 %[fields$($cows_attr_control:tt)?]
                 $(
@@ -33,7 +67,7 @@ macro_rules! define_theme {
             #[derive(Default, Clone, Debug, PartialEq)]
             #[doc = "You can use this to change a theme for only one component, with the `theme` property."]
             $(#[$attrs])*
-            $vis struct [<$name ThemePartial>] $(<$lifetime>)? {
+            pub struct [<$name ThemePartial>] {
                 $($(
                     $(#[$field_attrs])*
                     pub $field_name: Option<$crate::theming::macros::Preference<$field_ty>>,
@@ -43,7 +77,7 @@ macro_rules! define_theme {
             #[derive(Clone, Debug, PartialEq)]
             $(#[doc = "Theming properties for the `" $name "` component."] $($component_attr_control)?)?
             $(#[$attrs])*
-            $vis struct [<$name ThemePreference>] $(<$lifetime>)? {
+            pub struct [<$name ThemePreference>] {
                 $($(
                     $(#[$field_attrs])*
                     pub $field_name: $crate::theming::macros::Preference<$field_ty>,
@@ -53,16 +87,16 @@ macro_rules! define_theme {
             #[derive(Clone, Debug, PartialEq)]
             $(#[doc = "Theming properties for the `" $name "` component."] $($component_attr_control)?)?
             $(#[$attrs])*
-            $vis struct [<$name Theme>] $(<$lifetime>)? {
+            pub struct [<$name Theme>] {
                 $($(
                     $(#[$field_attrs])*
                     pub $field_name: $field_ty,
                 )*)?
             }
 
-            impl $(<$lifetime>)? [<$name ThemePreference>] $(<$lifetime>)? {
+            impl [<$name ThemePreference>] {
                 #[doc = "Checks each field in `optional` and if it's `Some`, it overwrites the corresponding `self` field."]
-                pub fn apply_optional(&mut self, optional: & $($lifetime)? [<$name ThemePartial>]) {
+                pub fn apply_optional(&mut self, optional: &[<$name ThemePartial>]) {
 
                     $($(
                         if let Some($field_name) = &optional.$field_name {
@@ -84,7 +118,7 @@ macro_rules! define_theme {
                 }
             }
 
-            impl $(<$lifetime>)? [<$name ThemePartial>] $(<$lifetime>)? {
+            impl [<$name ThemePartial>] {
                 pub fn new() -> Self {
                     Self::default()
                 }
@@ -93,23 +127,6 @@ macro_rules! define_theme {
                     $(#[$field_attrs])*
                     pub fn $field_name(mut self, $field_name: impl Into<$field_ty>) -> Self {
                         self.$field_name = Some($crate::theming::macros::Preference::Specific($field_name.into()));
-                        self
-                    }
-                )*)?
-            }
-
-            pub trait [<$name ThemePartialExt>] {
-                $($(
-                    $(#[$field_attrs])*
-                    fn $field_name(self, $field_name: impl Into<$field_ty>) -> Self;
-                )*)?
-            }
-
-            impl $(<$lifetime>)? [<$name ThemePartialExt>] for $for_ty $(<$lifetime>)? {
-                $($(
-                    $(#[$field_attrs])*
-                    fn $field_name(mut self, $field_name: impl Into<$field_ty>) -> Self {
-                        self.$theme_field = Some(self.$theme_field.unwrap_or_default().$field_name($field_name));
                         self
                     }
                 )*)?
@@ -119,8 +136,9 @@ macro_rules! define_theme {
 
     (
         $(#[$attrs:meta])*
+        $(for = $for_ty:ident ; theme_field = $theme_field:ident ;)+
         $(%[component$($component_attr_control:tt)?])?
-        $vis:vis $name:ident $(<$lifetime:lifetime>)? {
+        pub $name:ident {
             $(
                 %[fields$($cows_attr_control:tt)?]
                 $(
@@ -129,90 +147,90 @@ macro_rules! define_theme {
                 )*
             )?
     }) => {
-        $crate::define_theme!(NOTHING=$($($component_attr_control)?)?);
+        $crate::define_theme! {
+            @types
+            $(#[$attrs])*
+            $(%[component$($component_attr_control)?])?
+            pub $name {
+                $(
+                    %[fields$($cows_attr_control)?]
+                    $(
+                        $(#[$field_attrs])*
+                        $field_name: $field_ty,
+                    )*
+                )?
+            }
+        }
         $crate::theming::macros::paste! {
-            #[derive(Default, Clone, Debug, PartialEq)]
-            #[doc = "You can use this to change a theme for only one component, with the `theme` property."]
-            $(#[$attrs])*
-            $vis struct [<$name ThemePartial>] $(<$lifetime>)? {
-                $($(
-                    $(#[$field_attrs])*
-                    pub $field_name: Option<$crate::theming::macros::Preference<$field_ty>>,
-                )*)?
-            }
-
-            #[derive(Clone, Debug, PartialEq)]
-            $(#[doc = "Theming properties for the `" $name "` component."] $($component_attr_control)?)?
-            $(#[$attrs])*
-            $vis struct [<$name ThemePreference>] $(<$lifetime>)? {
-                $($(
-                    $(#[$field_attrs])*
-                    pub $field_name: $crate::theming::macros::Preference<$field_ty>,
-                )*)?
-            }
-
-            #[derive(Clone, Debug, PartialEq)]
-            $(#[doc = "Theming properties for the `" $name "` component."] $($component_attr_control)?)?
-            $(#[$attrs])*
-            $vis struct [<$name Theme>] $(<$lifetime>)? {
-                $($(
-                    $(#[$field_attrs])*
-                    pub $field_name: $field_ty,
-                )*)?
-            }
-
-            impl $(<$lifetime>)? [<$name ThemePreference>] $(<$lifetime>)? {
-                #[doc = "Checks each field in `optional` and if it's `Some`, it overwrites the corresponding `self` field."]
-                pub fn apply_optional(&mut self, optional: & $($lifetime)? [<$name ThemePartial>]) {
-                    $($(
-                        if let Some($field_name) = &optional.$field_name {
-                            self.$field_name = $field_name.clone();
-                        }
-                    )*)?
-                }
-
-                #[doc = "Checks each field in `optional` and if it's `Some`, it overwrites the corresponding `self` field."]
-                pub fn resolve(&mut self, colors_sheet: &$crate::theming::component_themes::ColorsSheet) -> [<$name Theme>] {
-                    use $crate::theming::macros::ResolvablePreference;
-                    [<$name Theme>] {
-                        $(
-                            $(
-                                $field_name: self.$field_name.resolve(colors_sheet),
-                            )*
-                        )?
-                    }
-                }
-            }
-
-            impl $(<$lifetime>)? [<$name ThemePartial>] $(<$lifetime>)? {
-                pub fn new() -> Self {
-                    Self::default()
-                }
-
-                $($(
-                    $(#[$field_attrs])*
-                    pub fn $field_name(mut self, $field_name: impl Into<$field_ty>) -> Self {
-                        self.$field_name = Some($crate::theming::macros::Preference::Specific($field_name.into()));
-                        self
-                    }
-                )*)?
-            }
-
             pub trait [<$name ThemePartialExt>] {
                 $($(
                     $(#[$field_attrs])*
                     fn $field_name(self, $field_name: impl Into<$field_ty>) -> Self;
                 )*)?
             }
+        }
+        $crate::define_theme! {
+            @ext_impls
+            [ $($for_ty)+ ]
+            [ $($theme_field)+ ]
+            $name ;
+            $($( $(#[$field_attrs])* $field_name : $field_ty , )*)?
+        }
+    };
 
-            impl $(<$lifetime>)? [<$name ThemePartialExt>] for $name $(<$lifetime>)? {
-                $($(
-                    $(#[$field_attrs])*
-                    fn $field_name(mut self, $field_name: impl Into<$field_ty>) -> Self {
-                        self.theme = Some(self.theme.unwrap_or_default().$field_name($field_name));
-                        self
-                    }
-                )*)?
+    // Skips the auto-generated `ThemePartialExt` trait.
+    (
+        $(#[$attrs:meta])*
+        %[no_ext]
+        $(%[component$($component_attr_control:tt)?])?
+        pub $name:ident {
+            $(
+                %[fields$($cows_attr_control:tt)?]
+                $(
+                    $(#[$field_attrs:meta])*
+                    $field_name:ident: $field_ty:ty,
+                )*
+            )?
+    }) => {
+        $crate::define_theme! {
+            @types
+            $(#[$attrs])*
+            $(%[component$($component_attr_control)?])?
+            pub $name {
+                $(
+                    %[fields$($cows_attr_control)?]
+                    $(
+                        $(#[$field_attrs])*
+                        $field_name: $field_ty,
+                    )*
+                )?
+            }
+        }
+    };
+
+    (
+        $(#[$attrs:meta])*
+        $(%[component$($component_attr_control:tt)?])?
+        pub $name:ident {
+            $(
+                %[fields$($cows_attr_control:tt)?]
+                $(
+                    $(#[$field_attrs:meta])*
+                    $field_name:ident: $field_ty:ty,
+                )*
+            )?
+    }) => {
+        $crate::define_theme! {
+            for = $name; theme_field = theme;
+            $(%[component$($component_attr_control)?])?
+            pub $name {
+                $(
+                    %[fields$($cows_attr_control)?]
+                    $(
+                        $(#[$field_attrs])*
+                        $field_name: $field_ty,
+                    )*
+                )?
             }
         }
     };
@@ -289,7 +307,6 @@ impl ResolvablePreference<Color> for Preference<Color> {
                 "text_highlight" => colors_sheet.text_highlight,
 
                 // States
-                "hover" => colors_sheet.hover,
                 "focus" => colors_sheet.focus,
                 "active" => colors_sheet.active,
                 "disabled" => colors_sheet.disabled,

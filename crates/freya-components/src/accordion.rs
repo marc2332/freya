@@ -67,6 +67,7 @@ pub struct Accordion {
     pub(crate) theme: Option<AccordionThemePartial>,
     header: Option<Element>,
     children: Vec<Element>,
+    cursor_icon: CursorIcon,
     key: DiffKey,
 }
 
@@ -85,6 +86,12 @@ impl Accordion {
         self.header = Some(header.into());
         self
     }
+
+    /// Override the cursor icon shown when hovering over this component.
+    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+        self.cursor_icon = cursor_icon.into();
+        self
+    }
 }
 
 impl ChildrenExt for Accordion {
@@ -95,8 +102,9 @@ impl ChildrenExt for Accordion {
 
 impl Component for Accordion {
     fn render(self: &Accordion) -> impl IntoElement {
-        let header = use_focus();
+        let header_a11y_id = use_a11y();
         let accordion_theme = get_theme!(&self.theme, AccordionThemePreference, "accordion");
+        let cursor_icon = self.cursor_icon;
         let mut open = use_state(|| false);
         let mut animation = use_animation(move |_conf| {
             AnimNum::new(0., 100.)
@@ -108,7 +116,7 @@ impl Component for Accordion {
         let clip_percent = animation.get().value();
 
         rect()
-            .a11y_id(header.a11y_id())
+            .a11y_id(header_a11y_id)
             .a11y_role(AccessibilityRole::Header)
             .a11y_focusable(true)
             .corner_radius(CornerRadius::new_all(8.))
@@ -122,7 +130,7 @@ impl Component for Accordion {
                     .alignment(BorderAlignment::Inner),
             )
             .on_pointer_enter(move |_| {
-                Cursor::set(CursorIcon::Pointer);
+                Cursor::set(cursor_icon);
             })
             .on_pointer_leave(move |_| {
                 Cursor::set(CursorIcon::default());
@@ -139,7 +147,7 @@ impl Component for Accordion {
                 rect()
                     .a11y_role(AccessibilityRole::Region)
                     .a11y_builder(|b| {
-                        b.set_labelled_by([header.a11y_id()]);
+                        b.set_labelled_by([header_a11y_id]);
                         if !open() {
                             b.set_hidden();
                         }

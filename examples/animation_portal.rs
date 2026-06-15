@@ -31,43 +31,45 @@ Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliqu
 
 fn popup(mut show_popup: State<Option<i32>>) -> impl IntoElement {
     Popup::new()
-        .show(show_popup().is_some())
         .on_close_request(move |_| show_popup.set(None))
-        .child(PopupTitle::new("Title".to_string()))
-        .maybe_child(show_popup().map(|i| {
-            PopupContent::new().child(
-                rect()
-                    .horizontal()
-                    .spacing(8.)
-                    .child(
-                        Portal::new(i)
-                            .width(Size::px(200.))
-                            .height(Size::px(200.))
-                            .function(Function::Expo)
-                            .duration(Duration::from_millis(500))
-                            .child(card(i)),
-                    )
-                    .child(LOREM_IPSUM),
-            )
-        }))
-        .child(
-            PopupButtons::new()
+        .map(show_popup(), |popup, i| {
+            popup
+                .child(PopupTitle::new("Title".to_string()))
                 .child(
-                    Button::new()
-                        .expanded()
-                        .rounded()
-                        .on_press(move |_| show_popup.set(None))
-                        .child("Cancel"),
+                    PopupContent::new().child(
+                        rect()
+                            .horizontal()
+                            .spacing(8.)
+                            .child(
+                                Portal::new(i)
+                                    .width(Size::px(200.))
+                                    .height(Size::px(200.))
+                                    .function(Function::Expo)
+                                    .duration(Duration::from_millis(500))
+                                    .child(card(i)),
+                            )
+                            .child(LOREM_IPSUM),
+                    ),
                 )
                 .child(
-                    Button::new()
-                        .filled()
-                        .expanded()
-                        .rounded()
-                        .on_press(move |_| show_popup.set(None))
-                        .child("Accept"),
-                ),
-        )
+                    PopupButtons::new()
+                        .child(
+                            Button::new()
+                                .expanded()
+                                .rounded()
+                                .on_press(move |_| show_popup.set(None))
+                                .child("Cancel"),
+                        )
+                        .child(
+                            Button::new()
+                                .filled()
+                                .expanded()
+                                .rounded()
+                                .on_press(move |_| show_popup.set(None))
+                                .child("Accept"),
+                        ),
+                )
+        })
 }
 
 fn app() -> impl IntoElement {

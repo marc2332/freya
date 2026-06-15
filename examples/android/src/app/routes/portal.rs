@@ -57,40 +57,39 @@ fn portal_card(i: i32) -> impl IntoElement {
 }
 
 fn portal_popup(mut show_popup: State<Option<i32>>) -> impl IntoElement {
-    let show = show_popup().is_some();
-    let i = show_popup().unwrap_or(0);
-
     Popup::new()
-        .show(show)
         .on_close_request(move |_| show_popup.set(None))
         .width(Size::px(350.))
-        .child(PopupTitle::new(format!("Card {i}")))
-        .child(
-            PopupContent::new().child(
-                Portal::new(i)
-                    .width(Size::px(250.))
-                    .height(Size::px(150.))
-                    .function(Function::Expo)
-                    .duration(Duration::from_millis(500))
-                    .child(portal_card(i)),
-            ),
-        )
-        .child(
-            PopupButtons::new()
+        .map(show_popup(), |popup, i| {
+            popup
+                .child(PopupTitle::new(format!("Card {i}")))
                 .child(
-                    Button::new()
-                        .expanded()
-                        .rounded_full()
-                        .on_press(move |_| show_popup.set(None))
-                        .child("Close"),
+                    PopupContent::new().child(
+                        Portal::new(i)
+                            .width(Size::px(250.))
+                            .height(Size::px(150.))
+                            .function(Function::Expo)
+                            .duration(Duration::from_millis(500))
+                            .child(portal_card(i)),
+                    ),
                 )
                 .child(
-                    Button::new()
-                        .filled()
-                        .expanded()
-                        .rounded_full()
-                        .on_press(move |_| show_popup.set(None))
-                        .child("Accept"),
-                ),
-        )
+                    PopupButtons::new()
+                        .child(
+                            Button::new()
+                                .expanded()
+                                .rounded_full()
+                                .on_press(move |_| show_popup.set(None))
+                                .child("Close"),
+                        )
+                        .child(
+                            Button::new()
+                                .filled()
+                                .expanded()
+                                .rounded_full()
+                                .on_press(move |_| show_popup.set(None))
+                                .child("Accept"),
+                        ),
+                )
+        })
 }

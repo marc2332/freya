@@ -1,11 +1,16 @@
 use freya_engine::prelude::*;
 
+/// Controls whether the extra leading height of the first and last lines is kept or trimmed.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Default)]
 pub enum TextHeightBehavior {
+    /// Keep the leading on both the first ascent and the last descent.
     All = 0,
+    /// Trim the leading above the first line.
     DisableFirstAscent = 1,
+    /// Trim the leading below the last line.
     DisableLastDescent = 2,
+    /// Trim the leading on both the first and last lines. This is the default.
     #[default]
     DisableAll = 3,
 }

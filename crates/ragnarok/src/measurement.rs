@@ -72,6 +72,9 @@ pub fn measure_potential_events<
         .sorted_by(|(layer, _), (layer_b, _)| layer.cmp(layer_b))
     {
         for node_id in layer_nodes {
+            if !events_measurer.is_node_interactive(node_id) {
+                continue;
+            }
             for source_event in source_events {
                 let Some(cursor) = source_event.try_location() else {
                     if focus_id == Some(*node_id) {

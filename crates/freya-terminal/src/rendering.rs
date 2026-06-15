@@ -29,7 +29,10 @@ use freya_engine::prelude::{
 use rustc_hash::FxHasher;
 use torin::prelude::Area;
 
-use crate::colors::map_ansi_color;
+use crate::{
+    colors::map_ansi_color,
+    url::link_ranges,
+};
 
 /// Cached per-row drawing primitives keyed by a hash of the row contents.
 pub(crate) enum CachedRow {
@@ -74,10 +77,11 @@ impl Renderer<'_> {
         );
     }
 
-    /// Render one row: cell backgrounds, glyphs, then any selection overlay.
+    /// Render one row: cell backgrounds, glyphs, hyperlink underlines, then any selection overlay.
     pub fn render_row(&mut self, row_idx: usize, row: &[Cell], y: f32) {
         self.render_cell_backgrounds(row, y);
         self.render_text_row(row, y);
+        self.render_hyperlink_underlines(row, y);
         self.render_selection(row_idx, row.len(), y);
     }
 
@@ -201,6 +205,20 @@ impl Renderer<'_> {
             SkRect::new(left, y.round(), right, (y + self.line_height).round()),
             self.paint,
         );
+    }
+
+    /// Draw a thin underline beneath OSC 8 hyperlink runs and detected plain-text URLs.
+    fn render_hyperlink_underlines(&mut self, row: &[Cell], y: f32) {
+        let underline_y = (y + self.line_height - 2.0).round();
+        self.paint.set_color(self.foreground);
+        for (start, end) in link_ranges(row) {
+            let left = self.area.min_x() + (start as f32) * self.char_width;
+            let right = self.area.min_x() + (end as f32) * self.char_width;
+            self.canvas.draw_rect(
+                SkRect::new(left, underline_y, right, underline_y + 1.0),
+                self.paint,
+            );
+        }
     }
 
     fn render_selection(&mut self, row_idx: usize, row_len: usize, y: f32) {
