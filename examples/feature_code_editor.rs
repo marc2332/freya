@@ -25,7 +25,11 @@ fn app() -> impl IntoElement {
     let editor = use_state(move || {
         let path = PathBuf::from("./crates/freya-code-editor/src/editor_ui.rs");
         let rope = Rope::from_str(&std::fs::read_to_string(&path).unwrap());
-        let mut editor = CodeEditorData::new(rope, LanguageId::Rust);
+        let language = EditorLanguage::new(
+            tree_sitter_rust::LANGUAGE,
+            tree_sitter_rust::HIGHLIGHTS_QUERY,
+        );
+        let mut editor = CodeEditorData::new(rope, language);
         editor.set_theme(SyntaxTheme {
             comment: (230, 230, 230).into(),
             ..Default::default()

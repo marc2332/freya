@@ -81,9 +81,7 @@ freya-plotters-backend = { path = "./crates/freya-plotters-backend", version = "
 freya-query = { path = "./crates/freya-query", version = "0.4.0-rc.23" }
 freya-webview = { path = "./crates/freya-webview", version = "0.4.0-rc.23" }
 freya-terminal = { path = "./crates/freya-terminal", version = "0.4.0-rc.23" }
-freya-code-editor = { path = "./crates/freya-code-editor", version = "0.4.0-rc.23", features = [
-  "rust",
-] }
+freya-code-editor = { path = "./crates/freya-code-editor", version = "0.4.0-rc.23" }
 freya-camera = { path = "./crates/freya-camera", version = "0.4.0-rc.23" }
 freya-android = { path = "./crates/freya-android", version = "0.4.0-rc.23" }
 mundy = { version = "0.2.3", default-features = false, features = [
@@ -190,6 +188,7 @@ freya-devtools = { workspace = true, features = ["server", "client"] }
 freya-webview = { workspace = true }
 freya-terminal = { workspace = true }
 freya-code-editor = { workspace = true }
+tree-sitter-rust = "0.24"
 
 freya-skia-safe = { workspace = true }
 

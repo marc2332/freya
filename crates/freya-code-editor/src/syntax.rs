@@ -17,7 +17,7 @@ use tree_sitter::{
 
 use crate::{
     editor_theme::SyntaxTheme,
-    languages::LanguageId,
+    languages::EditorLanguage,
 };
 
 #[allow(dead_code)]
@@ -122,7 +122,6 @@ pub struct SyntaxHighlighter {
     tree: Option<Tree>,
     config: Option<LangConfig>,
     cursor: QueryCursor,
-    language_id: LanguageId,
 }
 
 impl Default for SyntaxHighlighter {
@@ -138,18 +137,13 @@ impl SyntaxHighlighter {
             tree: None,
             config: None,
             cursor: QueryCursor::new(),
-            language_id: LanguageId::Unknown,
         }
     }
 
-    pub fn set_language(&mut self, language_id: LanguageId, theme: &SyntaxTheme) {
-        if self.language_id == language_id {
-            return;
-        }
-        self.language_id = language_id;
+    /// Configures the language used for highlighting, or disables it with `None`.
+    pub fn set_language(&mut self, language: Option<&EditorLanguage>, theme: &SyntaxTheme) {
         self.tree = None;
-
-        self.config = language_id.lang_config(theme);
+        self.config = language.and_then(|language| language.lang_config(theme));
         if let Some(cfg) = &self.config {
             let _ = self.parser.set_language(&cfg.language);
         }
@@ -429,38 +423,10 @@ impl<'a> Iterator for RopeChunkIter<'a> {
     }
 }
 
-impl LanguageId {
+impl EditorLanguage {
     fn lang_config(&self, theme: &SyntaxTheme) -> Option<LangConfig> {
-        let (language, highlights_query) = match self {
-            #[cfg(feature = "rust")]
-            LanguageId::Rust => Some((
-                tree_sitter_rust::LANGUAGE.into(),
-                tree_sitter_rust::HIGHLIGHTS_QUERY,
-            )),
-            #[cfg(feature = "json")]
-            LanguageId::Json => Some((
-                tree_sitter_json::LANGUAGE.into(),
-                tree_sitter_json::HIGHLIGHTS_QUERY,
-            )),
-            #[cfg(feature = "toml")]
-            LanguageId::Toml => Some((
-                tree_sitter_toml_ng::LANGUAGE.into(),
-                tree_sitter_toml_ng::HIGHLIGHTS_QUERY,
-            )),
-            #[cfg(feature = "md")]
-            LanguageId::Markdown => Some((
-                tree_sitter_md::LANGUAGE.into(),
-                tree_sitter_md::HIGHLIGHT_QUERY_BLOCK,
-            )),
-            #[cfg(feature = "sql")]
-            LanguageId::SQL => Some((
-                tree_sitter_sequel::LANGUAGE.into(),
-                tree_sitter_sequel::HIGHLIGHTS_QUERY,
-            )),
-            _ => None,
-        }?;
-
-        let query = Query::new(&language, highlights_query).ok()?;
+        let language = self.language.clone();
+        let query = Query::new(&language, self.highlights_query.as_ref()).ok()?;
         let capture_colors: Vec<Color> = query
             .capture_names()
             .iter()

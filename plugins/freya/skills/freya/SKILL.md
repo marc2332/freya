@@ -808,11 +808,15 @@ Use `use_editable` to manage a text editor with cursor, selection, keyboard shor
 
 ## Code Editor
 
-Enable with `features = ["code-editor"]`. `CodeEditorData` holds a `Rope`-backed buffer with tree-sitter syntax highlighting. Pass it to the `CodeEditor` component:
+Enable with `features = ["code-editor"]`. `CodeEditorData` holds a `Rope`-backed buffer with tree-sitter syntax highlighting. You bring your own tree-sitter grammar and highlights query via `EditorLanguage`, so any language can be supported (add the grammar crate, e.g. `tree-sitter-rust`, as a dependency). Pass `None` to disable highlighting. Then pass the data to the `CodeEditor` component:
 
 ```rust
 let editor = use_state(|| {
-    let mut e = CodeEditorData::new(Rope::from_str(src), LanguageId::Rust);
+    let language = EditorLanguage::new(
+        tree_sitter_rust::LANGUAGE,
+        tree_sitter_rust::HIGHLIGHTS_QUERY,
+    );
+    let mut e = CodeEditorData::new(Rope::from_str(src), language);
     e.parse();
     e.measure(14., "Jetbrains Mono");
     e
