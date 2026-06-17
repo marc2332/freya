@@ -133,7 +133,7 @@ fn app() -> impl IntoElement {
                 MarkdownViewer::new(MARKDOWN_CONTENT)
                     .code_editor_language(resolve_language)
                     .padding(18.)
-                    .inline_element(|html| {
+                    .inline_element(|html: String| {
                         if html.starts_with("<counter") {
                             Some(Counter.into_element())
                         } else if html.starts_with("<badge") {

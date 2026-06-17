@@ -149,7 +149,7 @@ impl MarkdownViewer {
     /// # use freya::prelude::*;
     /// fn app() -> impl IntoElement {
     ///     MarkdownViewer::new("Made with Rust <rust-logo/> btw")
-    ///         .inline_element(|html| html.starts_with("<rust-logo").then(|| "🦀"))
+    ///         .inline_element(|html: String| html.starts_with("<rust-logo").then(|| "🦀"))
     /// }
     /// ```
     pub fn inline_element<ReturnedElement: IntoElement + 'static>(
