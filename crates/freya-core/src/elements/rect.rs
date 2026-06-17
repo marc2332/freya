@@ -644,9 +644,9 @@ impl Rect {
         (element as &dyn Any).downcast_ref::<RectElement>().cloned()
     }
 
-    /// Set the color of text rendered inside the rect and inherited by its children. See [`Color`].
-    pub fn color(mut self, color: impl Into<Color>) -> Self {
-        self.element.text_style_data.color = Some(Fill::Color(color.into()));
+    /// Set the fill of text rendered inside the rect and inherited by its children. See [`Fill`].
+    pub fn color(mut self, color: impl Into<Fill>) -> Self {
+        self.element.text_style_data.color = Some(color.into());
         self
     }
 
