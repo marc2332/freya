@@ -184,7 +184,10 @@ Catalog (all prefixed `on_`):
 
 **Prefer `on_press` over raw mouse/pointer events** for interactive elements: it covers click, tap, and keyboard activation, so accessibility comes free. Use `on_mouse_*` / `on_pointer_*` only when you need pointer-specific behavior (drag handles, canvas tools).
 
-`Event<T>` has `.stop_propagation()` to cancel bubbling and `.map(...)` / `.try_map(...)` to transform inner data.
+`Event<T>` has two cancellation methods, plus `.map(...)` / `.try_map(...)` to transform inner data:
+
+- `.stop_propagation()`: don't bubble this event to ancestor handlers. No effect on events that don't bubble (move/enter/leave, capture, global).
+- `.prevent_default()`: don't fire the follow-up events this one triggers (e.g. in `on_mouse_up`, suppresses the `on_pointer_press` and `on_global_pointer_press` that would follow).
 
 ### Callback props on custom components
 

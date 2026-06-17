@@ -18,7 +18,7 @@ fn app() -> impl IntoElement {
             rect()
                 .height(Size::px(220.))
                 .width(Size::px(220.))
-                .background_linear_gradient(
+                .background(
                     LinearGradient::new()
                         .angle(250.)
                         .stop(((255, 100, 50), 15.))
@@ -30,7 +30,7 @@ fn app() -> impl IntoElement {
             rect()
                 .height(Size::px(220.))
                 .width(Size::px(220.))
-                .background_radial_gradient(
+                .background(
                     RadialGradient::new()
                         .stop(((255, 100, 50), 15.))
                         .stop(((255, 0, 0), 50.))
@@ -41,7 +41,7 @@ fn app() -> impl IntoElement {
             rect()
                 .height(Size::px(220.))
                 .width(Size::px(220.))
-                .background_conic_gradient(
+                .background(
                     ConicGradient::new()
                         .angle(250.)
                         .stop(((255, 100, 50), 15.))

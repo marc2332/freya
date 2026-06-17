@@ -264,8 +264,8 @@ impl Component for WidgetsDemo {
 }
 
 fn ripple_card(
-    bg: impl Into<Color>,
-    fg: impl Into<Color>,
+    bg: impl Into<Fill>,
+    fg: impl Into<Fill>,
     ripple_color: Option<impl Into<Color>>,
     text: &str,
 ) -> impl IntoElement {
