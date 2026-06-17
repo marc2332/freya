@@ -154,10 +154,11 @@ impl MarkdownViewer {
     /// ```
     pub fn inline_element<ReturnedElement: IntoElement + 'static>(
         mut self,
-        handler: impl Fn(String) -> Option<ReturnedElement> + 'static,
+        handler: impl Into<Callback<String, Option<ReturnedElement>>>,
     ) -> Self {
+        let handler = handler.into();
         self.inline_element = Some(Callback::new(move |html| {
-            handler(html).map(IntoElement::into_element)
+            handler.call(html).map(IntoElement::into_element)
         }));
         self
     }
