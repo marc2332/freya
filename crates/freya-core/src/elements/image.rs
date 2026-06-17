@@ -7,6 +7,7 @@ use std::{
     rc::Rc,
 };
 
+use bytes::Bytes;
 use freya_engine::prelude::{
     ClipOp,
     CubicResampler,
@@ -123,11 +124,12 @@ pub enum SamplingMode {
 #[derive(Clone)]
 pub struct ImageHolder {
     pub image: SkImage,
+    pub bytes: Bytes,
 }
 
 impl ImageHolder {
-    pub fn new(image: SkImage) -> Self {
-        Self { image }
+    pub fn new(image: SkImage, bytes: Bytes) -> Self {
+        Self { image, bytes }
     }
 }
 

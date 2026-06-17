@@ -34,12 +34,16 @@ use ffmpeg_sidecar::{
         OutputVideoFrame,
     },
 };
-use freya_core::prelude::{
-    OwnedTaskHandle,
-    ScopeId,
-    provide_context_for_scope_id,
-    spawn,
-    try_consume_root_context,
+use freya_core::{
+    elements::image::ImageHolder,
+    prelude::{
+        Bytes,
+        OwnedTaskHandle,
+        ScopeId,
+        provide_context_for_scope_id,
+        spawn,
+        try_consume_root_context,
+    },
 };
 use freya_engine::prelude::{
     AlphaType,
@@ -47,7 +51,6 @@ use freya_engine::prelude::{
     Data,
     ISize,
     ImageInfo,
-    SkImage,
     raster_from_data,
 };
 
@@ -95,18 +98,18 @@ impl VideoSource {
 }
 
 /// Single decoded frame, backed by a Skia image.
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct VideoFrame {
-    pub(crate) image: SkImage,
+    pub(crate) image: ImageHolder,
 }
 
 impl VideoFrame {
-    pub fn image(&self) -> &SkImage {
+    pub fn image(&self) -> &ImageHolder {
         &self.image
     }
 
     /// Wrap a raw RGBA frame as a Skia raster image.
-    fn from_raw(frame: &OutputVideoFrame) -> Option<Self> {
+    fn from_raw(frame: OutputVideoFrame) -> Option<Self> {
         let row_bytes = frame.width.checked_mul(4)? as usize;
         let info = ImageInfo::new(
             ISize::new(frame.width as i32, frame.height as i32),
@@ -114,14 +117,11 @@ impl VideoFrame {
             AlphaType::Unpremul,
             None,
         );
-        let image = raster_from_data(&info, Data::new_copy(&frame.data), row_bytes)?;
+        // Safety: `data` outlives the SkImage via `ImageHolder.bytes` below.
+        let data = unsafe { Data::new_bytes(&frame.data) };
+        let image = raster_from_data(&info, data, row_bytes)?;
+        let image = ImageHolder::new(image, Bytes::from(frame.data));
         Some(Self { image })
-    }
-}
-
-impl PartialEq for VideoFrame {
-    fn eq(&self, other: &Self) -> bool {
-        self.image.unique_id() == other.image.unique_id()
     }
 }
 
@@ -235,7 +235,7 @@ impl VideoClient {
                 Timer::after(frame_offset - elapsed).await;
             }
 
-            let Some(frame) = VideoFrame::from_raw(&frame) else {
+            let Some(frame) = VideoFrame::from_raw(frame) else {
                 tracing::warn!("Dropping frame: failed to wrap raw RGBA as Skia image");
                 continue;
             };

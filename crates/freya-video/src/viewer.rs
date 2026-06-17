@@ -2,7 +2,6 @@ use freya_components::loader::CircularLoader;
 use freya_core::{
     elements::image::{
         ImageData,
-        ImageHolder,
         image,
     },
     integration::*,
@@ -67,7 +66,7 @@ impl AccessibilityExt for VideoViewer {
 impl Component for VideoViewer {
     fn render(&self) -> impl IntoElement {
         match (self.player.frame(), self.player.state()) {
-            (Some(frame), _) => image(ImageHolder::new(frame.image))
+            (Some(frame), _) => image(frame.image)
                 .accessibility(self.accessibility.clone())
                 .a11y_role(AccessibilityRole::Video)
                 .a11y_focusable(true)

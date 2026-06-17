@@ -149,7 +149,7 @@ impl Hash for ImageSource {
 
 impl ImageSource {
     /// Fetch the source's encoded bytes and decode them into a Skia image.
-    pub async fn load(&self) -> anyhow::Result<SkImage> {
+    pub async fn load(&self) -> anyhow::Result<(SkImage, Bytes)> {
         let source = self.clone();
         blocking::unblock(move || {
             let bytes = match source {
@@ -164,7 +164,8 @@ impl ImageSource {
             };
             let image = SkImage::from_encoded(unsafe { SkData::new_bytes(&bytes) })
                 .context("Failed to decode Image.")?;
-            Ok(image.make_raster_image(None, None).unwrap_or(image))
+            let image = image.make_raster_image(None, None).unwrap_or(image);
+            Ok((image, bytes))
         })
         .await
     }
@@ -324,10 +325,10 @@ impl Component for ImageViewer {
                     let asset_config = asset_config.clone();
                     spawn_forever(async move {
                         match source.load().await {
-                            Ok(image) => {
+                            Ok((image, bytes)) => {
                                 asset_cacher.update_asset(
                                     asset_config,
-                                    Asset::Cached(Rc::new(ImageHolder::new(image))),
+                                    Asset::Cached(Rc::new(ImageHolder::new(image, bytes))),
                                 );
                             }
                             Err(err) => {

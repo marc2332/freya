@@ -115,8 +115,10 @@ fn build_holder(frame: CameraFrame) -> Result<ImageHolder, CameraError> {
         None,
     );
     let row_bytes = (width as usize) * 4;
-    let image = raster_from_data(&info, Data::new_copy(&data), row_bytes)
+    // Safety: `data` outlives the SkImage via `ImageHolder.bytes` below.
+    let sk_data = unsafe { Data::new_bytes(&data) };
+    let image = raster_from_data(&info, sk_data, row_bytes)
         .ok_or_else(|| CameraError::GeneralError("failed to create raster image".to_string()))?;
 
-    Ok(ImageHolder::new(image))
+    Ok(ImageHolder::new(image, data))
 }
