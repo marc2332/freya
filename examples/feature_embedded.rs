@@ -54,7 +54,6 @@ fn app() -> impl IntoElement {
 }
 
 /// A self contained Freya renderer built directly from `freya_core`.
-/// Owns the reactive [`Runner`], the render [`Tree`] and the font stack.
 struct EmbeddedFreya {
     runner: Runner,
     tree: Tree,
