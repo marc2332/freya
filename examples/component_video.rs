@@ -48,8 +48,7 @@ fn app() -> impl IntoElement {
         .theme_background()
         .theme_color()
         .expanded()
-        .cross_align(Alignment::Center)
-        .main_align(Alignment::Center)
+        .center()
         .spacing(8.)
         .content(Content::Flex)
         .child(
