@@ -185,8 +185,7 @@ impl Default for EditorSyntaxTheme {
     }
 }
 
-/// Wraps a resolved chrome theme into a preference of `Specific` values, so it can
-/// be registered in a [`Theme`] and merged with per-instance partial overrides.
+/// Wraps a resolved [`EditorTheme`] into a preference of `Specific` values.
 impl From<EditorTheme> for EditorThemePreference {
     fn from(theme: EditorTheme) -> Self {
         Self {
@@ -202,11 +201,7 @@ impl From<EditorTheme> for EditorThemePreference {
     }
 }
 
-/// Registers code editor themes into a [`Theme`].
-///
-/// The built-in light and dark themes do not include the code editor (its themes
-/// live in this crate, which depends on the components crate), so apps opt in via
-/// these builders, e.g. `dark_theme().with_dark_code_editor()`.
+/// Registers code editor themes into a [`Theme`], e.g. `dark_theme().with_dark_code_editor()`.
 pub trait CodeEditorThemeExt {
     fn with_dark_code_editor(self) -> Self;
     fn with_light_code_editor(self) -> Self;

@@ -237,8 +237,7 @@ macro_rules! define_theme {
 }
 
 /// Like [`get_theme!`](crate::get_theme), but falls back to a `default` callback
-/// instead of panicking when the key is not registered. Useful for themes that
-/// live outside the components crate.
+/// instead of panicking when the key is not registered.
 #[macro_export]
 macro_rules! get_theme_or_default {
     ($theme_prop:expr, $theme_type:ty, $theme_key:expr, $default:expr) => {{
