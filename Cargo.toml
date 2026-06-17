@@ -172,6 +172,7 @@ tokio = { version = "1.0", default-features = false }
 [dev-dependencies]
 freya = { workspace = true, features = ["all"] }
 freya-core = { workspace = true, features = ["debug-integrity", "test"] }
+freya-engine = { workspace = true }
 torin = { workspace = true }
 ragnarok = { workspace = true }
 freya-edit = { workspace = true }

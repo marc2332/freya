@@ -5,23 +5,26 @@
 
 use std::borrow::Cow;
 
-use freya::{
-    engine::prelude::{
-        EncodedImageFormat,
-        FontCollection,
-        FontMgr,
-        TypefaceFontProvider,
-        raster_n32_premul,
-    },
+use freya_core::{
+    integration::*,
     prelude::*,
 };
-use freya_core::integration::*;
+use freya_engine::prelude::{
+    EncodedImageFormat,
+    FontCollection,
+    FontMgr,
+    TypefaceFontProvider,
+    raster_n32_premul,
+};
 use futures_channel::mpsc::{
     UnboundedReceiver,
     UnboundedSender,
     unbounded,
 };
-use torin::prelude::Size2D;
+use torin::prelude::{
+    Size,
+    Size2D,
+};
 
 /// Reads the shared `progress` state, updated once per frame, to animate.
 fn app() -> impl IntoElement {
