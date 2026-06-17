@@ -147,7 +147,7 @@ impl Component for EditorDemo {
                 tree_sitter_rust::HIGHLIGHTS_QUERY,
             );
             let mut editor = CodeEditorData::new(rope, language);
-            editor.set_theme(SyntaxTheme::default());
+            editor.set_theme(EditorSyntaxTheme::default());
             editor.parse();
             editor.measure(14., "Jetbrains Mono");
             editor

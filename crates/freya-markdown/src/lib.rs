@@ -3,6 +3,30 @@ use std::{
     mem,
 };
 
+#[cfg(feature = "remote-asset")]
+use freya_components::Uri;
+#[cfg(feature = "remote-asset")]
+use freya_components::image_viewer::{
+    ImageSource,
+    ImageViewer,
+};
+#[cfg(feature = "router")]
+use freya_components::link::{
+    Link,
+    LinkTooltip,
+};
+use freya_components::{
+    define_theme,
+    get_theme_or_default,
+    table::{
+        Table,
+        TableBody,
+        TableCell,
+        TableHead,
+        TableRow,
+    },
+    theming::macros::Preference,
+};
 use freya_core::prelude::*;
 use pulldown_cmark::{
     Event,
@@ -14,28 +38,10 @@ use pulldown_cmark::{
 };
 use torin::prelude::*;
 
-#[cfg(feature = "remote-asset")]
-use crate::Uri;
-#[cfg(feature = "remote-asset")]
-use crate::image_viewer::{
-    ImageSource,
-    ImageViewer,
-};
-#[cfg(feature = "router")]
-use crate::link::{
-    Link,
-    LinkTooltip,
-};
-use crate::{
-    define_theme,
-    table::{
-        Table,
-        TableBody,
-        TableCell,
-        TableHead,
-        TableRow,
-    },
-};
+#[cfg(feature = "code-editor")]
+mod code_editor;
+#[cfg(feature = "code-editor")]
+use code_editor::CodeBlockEditor;
 
 define_theme! {
     %[component]
@@ -60,6 +66,27 @@ define_theme! {
     }
 }
 
+fn markdown_theme_preference() -> MarkdownViewerThemePreference {
+    MarkdownViewerThemePreference {
+        color: Preference::Reference("text_primary"),
+        color_link: Preference::Reference("text_highlight"),
+        background_code: Preference::Reference("surface_tertiary"),
+        color_code: Preference::Reference("text_primary"),
+        background_blockquote: Preference::Reference("surface_tertiary"),
+        border_blockquote: Preference::Reference("surface_primary"),
+        background_divider: Preference::Reference("border"),
+        heading_h1: Preference::Specific(32.0),
+        heading_h2: Preference::Specific(28.0),
+        heading_h3: Preference::Specific(24.0),
+        heading_h4: Preference::Specific(20.0),
+        heading_h5: Preference::Specific(18.0),
+        heading_h6: Preference::Specific(16.0),
+        paragraph_size: Preference::Specific(16.0),
+        code_font_size: Preference::Specific(14.0),
+        table_font_size: Preference::Specific(14.0),
+    }
+}
+
 /// Markdown viewer component.
 ///
 /// Renders markdown content with support for:
@@ -74,6 +101,10 @@ define_theme! {
 /// - Blockquotes
 /// - Horizontal rules
 /// - Custom inline elements (see [`MarkdownViewer::inline_element`])
+///
+/// With the `code-editor` feature enabled, code blocks are rendered with the
+/// `CodeEditor` component for syntax highlighting. Otherwise they fall back to
+/// plain monospace text.
 ///
 /// # Example
 ///
@@ -90,6 +121,9 @@ pub struct MarkdownViewer {
     key: DiffKey,
     pub(crate) theme: Option<MarkdownViewerThemePartial>,
     inline_element: Option<Callback<String, Option<Element>>>,
+    code_editor_font_family: Cow<'static, str>,
+    #[cfg(feature = "code-editor")]
+    language_resolver: Option<code_editor::LanguageResolver>,
 }
 
 impl MarkdownViewer {
@@ -100,6 +134,9 @@ impl MarkdownViewer {
             key: DiffKey::None,
             theme: None,
             inline_element: None,
+            code_editor_font_family: Cow::Borrowed("Jetbrains Mono"),
+            #[cfg(feature = "code-editor")]
+            language_resolver: None,
         }
     }
 
@@ -124,6 +161,22 @@ impl MarkdownViewer {
         }));
         self
     }
+
+    /// Sets the font family used for code blocks. Defaults to `"Jetbrains Mono"`.
+    pub fn code_editor_font_family(mut self, font_family: impl Into<Cow<'static, str>>) -> Self {
+        self.code_editor_font_family = font_family.into();
+        self
+    }
+
+    /// Sets a resolver mapping a code block's language to an `EditorLanguage` for highlighting.
+    #[cfg(feature = "code-editor")]
+    pub fn code_editor_language(
+        mut self,
+        resolver: impl Into<code_editor::LanguageResolver>,
+    ) -> Self {
+        self.language_resolver = Some(resolver.into());
+        self
+    }
 }
 
 impl KeyExt for MarkdownViewer {
@@ -140,7 +193,6 @@ impl LayoutExt for MarkdownViewer {
 
 impl ContainerExt for MarkdownViewer {}
 
-/// Represents different markdown elements for rendering.
 #[allow(dead_code)]
 #[derive(Clone)]
 enum MarkdownElement {
@@ -153,7 +205,6 @@ enum MarkdownElement {
     },
     CodeBlock {
         code: String,
-        #[allow(dead_code)]
         language: Option<String>,
     },
     UnorderedList {
@@ -220,7 +271,6 @@ impl TextSpan {
     }
 }
 
-/// Parse markdown content into a list of elements.
 fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
     let mut options = Options::empty();
     options.insert(Options::ENABLE_STRIKETHROUGH);
@@ -579,7 +629,10 @@ impl Component for MarkdownViewer {
         let MarkdownViewerTheme {
             color,
             color_link,
+            #[cfg(not(feature = "code-editor"))]
             background_code,
+            #[cfg(feature = "code-editor")]
+                background_code: _,
             color_code,
             background_blockquote,
             border_blockquote,
@@ -593,10 +646,11 @@ impl Component for MarkdownViewer {
             paragraph_size,
             code_font_size,
             table_font_size,
-        } = crate::get_theme!(
+        } = get_theme_or_default!(
             &self.theme,
             MarkdownViewerThemePreference,
-            "markdown_viewer"
+            "markdown_viewer",
+            markdown_theme_preference
         );
 
         let mut container = rect().vertical().layout(self.layout.clone()).spacing(12.);
@@ -627,20 +681,42 @@ impl Component for MarkdownViewer {
                 )
                 .key(idx)
                 .into(),
-                MarkdownElement::CodeBlock { code, .. } => rect()
-                    .key(idx)
-                    .width(Size::fill())
-                    .background(background_code)
-                    .corner_radius(6.)
-                    .padding(Gaps::new_all(12.))
-                    .child(
-                        label()
-                            .text(code)
-                            .font_family("monospace")
-                            .font_size(code_font_size)
-                            .color(color_code),
+                MarkdownElement::CodeBlock {
+                    code,
+                    #[cfg(feature = "code-editor")]
+                    language,
+                    #[cfg(not(feature = "code-editor"))]
+                        language: _,
+                } => {
+                    #[cfg(feature = "code-editor")]
+                    let element = CodeBlockEditor::new(
+                        move || Cow::Owned(code.clone()),
+                        language,
+                        self.language_resolver.clone(),
+                        code_font_size,
+                        self.code_editor_font_family.clone(),
                     )
-                    .into(),
+                    .key(idx)
+                    .into();
+
+                    #[cfg(not(feature = "code-editor"))]
+                    let element = rect()
+                        .key(idx)
+                        .width(Size::fill())
+                        .background(background_code)
+                        .corner_radius(6.)
+                        .padding(Gaps::new_all(12.))
+                        .child(
+                            label()
+                                .text(code)
+                                .font_family(self.code_editor_font_family.clone())
+                                .font_size(code_font_size)
+                                .color(color_code),
+                        )
+                        .into();
+
+                    element
+                }
                 MarkdownElement::UnorderedList { items } => {
                     let mut list = rect()
                         .key(idx)

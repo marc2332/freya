@@ -79,7 +79,7 @@
 //! - `icons`: Reexport of [freya_icons] under [icons].
 //! - `radio`: Reexport [freya_radio] under [radio].
 //! - `query`: Reexport [freya_query] under [query].
-//! - `markdown`: Enables the [MarkdownViewer](components::MarkdownViewer) component.
+//! - `markdown`: Reexport [freya_markdown] under [markdown].
 //! - `webview`: Reexport [freya_webview] under [webview].
 //! - `titlebar`: Enables the [TitlebarButton](components::TitlebarButton) component.
 //! - `terminal`: Reexport [freya_terminal] under [terminal].
@@ -117,6 +117,9 @@ pub mod prelude {
     };
 
     pub use crate::components::*;
+    #[cfg_attr(feature = "docs", doc(cfg(feature = "markdown")))]
+    #[cfg(feature = "markdown")]
+    pub use crate::markdown::*;
 
     #[cfg_attr(feature = "docs", doc(cfg(feature = "winit")))]
     #[cfg(feature = "winit")]
@@ -155,9 +158,6 @@ pub mod components {
     #[cfg_attr(feature = "docs", doc(cfg(feature = "gif")))]
     #[cfg(feature = "gif")]
     pub use freya_components::gif_viewer::*;
-    #[cfg_attr(feature = "docs", doc(cfg(feature = "markdown")))]
-    #[cfg(feature = "markdown")]
-    pub use freya_components::markdown::*;
     cfg_if::cfg_if! {
         if #[cfg(feature = "router")] {
             #[cfg_attr(feature = "docs", doc(cfg(feature = "router")))]
@@ -356,6 +356,13 @@ pub mod camera {
 #[cfg_attr(feature = "docs", doc(cfg(feature = "performance")))]
 pub mod performance {
     pub use freya_performance_plugin::*;
+}
+
+/// Reexport `freya-markdown` when the `markdown` feature is enabled.
+#[cfg(feature = "markdown")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "markdown")))]
+pub mod markdown {
+    pub use freya_markdown::*;
 }
 
 #[cfg(target_os = "android")]

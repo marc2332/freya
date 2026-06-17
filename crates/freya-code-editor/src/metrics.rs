@@ -4,7 +4,7 @@ use ropey::Rope;
 use tree_sitter::InputEdit;
 
 use crate::{
-    editor_theme::SyntaxTheme,
+    editor_theme::EditorSyntaxTheme,
     syntax::*,
 };
 
@@ -53,7 +53,7 @@ impl EditorMetrics {
         self.longest_width = max_chars as f32 * char_width;
     }
 
-    pub fn run_parser(&mut self, rope: &Rope, edit: Option<InputEdit>, theme: &SyntaxTheme) {
+    pub fn run_parser(&mut self, rope: &Rope, edit: Option<InputEdit>, theme: &EditorSyntaxTheme) {
         self.highlighter
             .parse(rope, &mut self.syntax_blocks, edit, theme);
     }
