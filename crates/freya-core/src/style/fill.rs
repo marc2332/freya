@@ -10,7 +10,10 @@ use std::{
     mem::discriminant,
 };
 
-use freya_engine::prelude::Paint;
+use freya_engine::prelude::{
+    Paint,
+    SkColor,
+};
 use torin::prelude::Area;
 
 use crate::{
@@ -27,18 +30,16 @@ use crate::{
 
 /// A paint source for backgrounds and text: a solid [`Color`], a gradient or a custom shader.
 ///
-/// A plain [`Color`] converts into a [`Fill`] automatically, so most APIs that take an
-/// `impl Into<Fill>` accept a color directly. For gradients, build a
-/// [`LinearGradient`], [`RadialGradient`] or [`ConicGradient`] and wrap it in the
-/// matching variant:
+/// A [`Color`], [`LinearGradient`], [`RadialGradient`], [`ConicGradient`] or [`ShaderFill`]
+/// all convert into a [`Fill`] automatically, so APIs that take an `impl Into<Fill>` accept
+/// any of them directly:
 ///
 /// ```
 /// # use freya::prelude::*;
-/// let gradient = Fill::LinearGradient(Box::new(
-///     LinearGradient::new()
-///         .stop((Color::RED, 0.0))
-///         .stop((Color::BLUE, 100.0)),
-/// ));
+/// let gradient: Fill = LinearGradient::new()
+///     .stop((Color::RED, 0.0))
+///     .stop((Color::BLUE, 100.0))
+///     .into();
 /// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, PartialEq)]
@@ -116,6 +117,60 @@ impl Hash for Fill {
 impl From<Color> for Fill {
     fn from(color: Color) -> Self {
         Fill::Color(color)
+    }
+}
+
+impl From<(u8, u8, u8)> for Fill {
+    fn from(color: (u8, u8, u8)) -> Self {
+        Fill::Color(color.into())
+    }
+}
+
+impl From<(u8, u8, u8, f32)> for Fill {
+    fn from(color: (u8, u8, u8, f32)) -> Self {
+        Fill::Color(color.into())
+    }
+}
+
+impl From<(u8, u8, u8, u8)> for Fill {
+    fn from(color: (u8, u8, u8, u8)) -> Self {
+        Fill::Color(color.into())
+    }
+}
+
+impl From<u32> for Fill {
+    fn from(color: u32) -> Self {
+        Fill::Color(color.into())
+    }
+}
+
+impl From<SkColor> for Fill {
+    fn from(color: SkColor) -> Self {
+        Fill::Color(color.into())
+    }
+}
+
+impl From<LinearGradient> for Fill {
+    fn from(gradient: LinearGradient) -> Self {
+        Fill::LinearGradient(Box::new(gradient))
+    }
+}
+
+impl From<RadialGradient> for Fill {
+    fn from(gradient: RadialGradient) -> Self {
+        Fill::RadialGradient(Box::new(gradient))
+    }
+}
+
+impl From<ConicGradient> for Fill {
+    fn from(gradient: ConicGradient) -> Self {
+        Fill::ConicGradient(Box::new(gradient))
+    }
+}
+
+impl From<ShaderFill> for Fill {
+    fn from(shader: ShaderFill) -> Self {
+        Fill::Shader(Box::new(shader))
     }
 }
 

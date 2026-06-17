@@ -1,6 +1,9 @@
 use std::time::Duration;
 
-use freya_core::prelude::Color;
+use freya_core::prelude::{
+    Color,
+    Fill,
+};
 
 use crate::{
     easing::{
@@ -74,6 +77,12 @@ impl AnimColor {
 impl From<&AnimColor> for Color {
     fn from(value: &AnimColor) -> Self {
         value.value()
+    }
+}
+
+impl From<&AnimColor> for Fill {
+    fn from(value: &AnimColor) -> Self {
+        Fill::Color(value.value())
     }
 }
 

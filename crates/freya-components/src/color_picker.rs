@@ -139,7 +139,7 @@ impl Component for ColorPicker {
             .width(Size::fill())
             .corner_radius(4.)
             .on_sized(move |e: Event<SizedEventData>| hue_area.set(e.area))
-            .background_linear_gradient(
+            .background(
                 LinearGradient::new()
                     .angle(-90.)
                     .stop(((255, 0, 0), 0.))
@@ -159,7 +159,7 @@ impl Component for ColorPicker {
             .child(
                 rect()
                     .expanded()
-                    .background_linear_gradient(
+                    .background(
                         // left: white -> right: hue color
                         LinearGradient::new()
                             .angle(-90.)
@@ -170,7 +170,7 @@ impl Component for ColorPicker {
                         rect()
                             .position(Position::new_absolute())
                             .expanded()
-                            .background_linear_gradient(
+                            .background(
                                 // top: transparent -> bottom: black
                                 LinearGradient::new()
                                     .stop(((255, 255, 255, 0.0), 0.))
