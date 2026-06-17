@@ -120,6 +120,7 @@ impl EmbeddedFreya {
 
     /// Renders the current tree onto a raster surface and writes it as a PNG.
     fn save_frame(&mut self, path: impl AsRef<std::path::Path>) {
+        // This renders on the CPU, but real Freya apps use GPU backends like OpenGL, Vulkan or Metal.
         let mut surface = raster_n32_premul((self.size.width as i32, self.size.height as i32))
             .expect("Failed to create the raster surface.");
 
