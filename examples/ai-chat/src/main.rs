@@ -111,7 +111,9 @@ fn app() -> impl IntoElement {
                             .color((255, 255, 255))
                             .text_align(text_align)
                             .child(if is_user {
-                                SelectableText::new(msg.content.clone()).into_element()
+                                SelectableText::new()
+                                    .span(msg.content.clone())
+                                    .into_element()
                             } else {
                                 MarkdownViewer::new(msg.content.clone()).into_element()
                             }),

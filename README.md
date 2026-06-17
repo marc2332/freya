@@ -190,7 +190,7 @@ fn app() -> impl IntoElement {
 
 ### Code Editor
 
-Create and control text Code Editors. It is state agnostic so as long as it can be turned into a `Writable` it will work. Uses Rope for text editing and tree-sitter for syntax highlighting. 
+Create and control text Code Editors. It is state agnostic so as long as it can be turned into a `Writable` it will work. Uses Rope for text editing and tree-sitter for syntax highlighting. You bring your own tree-sitter grammar and its highlights query, so any language can be supported.
 Enable with the `code-editor` feature.
 
 <details>
@@ -203,7 +203,11 @@ fn app() -> impl IntoElement {
     let editor = use_state(|| {
         let path = PathBuf::from("./crates/freya-code-editor/src/editor_ui.rs");
         let rope = Rope::from_str(&std::fs::read_to_string(&path).unwrap());
-        let mut editor = CodeEditorData::new(rope, LanguageId::Rust);
+        let language = EditorLanguage::new(
+            tree_sitter_rust::LANGUAGE,
+            tree_sitter_rust::HIGHLIGHTS_QUERY,
+        );
+        let mut editor = CodeEditorData::new(rope, language);
         editor.parse();
         editor.measure(14., "Jetbrains Mono");
         editor
@@ -218,6 +222,23 @@ fn app() -> impl IntoElement {
 <div align="center">
   <img src="https://github.com/user-attachments/assets/4d6c4571-ae74-4c24-a05f-9c715b6b3438">
 </div>
+
+
+### Markdown
+
+Render Markdown documents with the `MarkdownViewer` component.
+Enable with the `markdown` feature.
+
+<details>
+<summary>Code</summary>
+
+```rust
+fn app() -> impl IntoElement {
+    MarkdownViewer::new("# Hello World\n\nThis is **bold** and *italic* text.")
+}
+```
+
+</details>
 
 
 ### Routing & Navigation

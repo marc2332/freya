@@ -3,6 +3,30 @@ use std::{
     mem,
 };
 
+#[cfg(feature = "remote-asset")]
+use freya_components::Uri;
+#[cfg(feature = "remote-asset")]
+use freya_components::image_viewer::{
+    ImageSource,
+    ImageViewer,
+};
+#[cfg(feature = "router")]
+use freya_components::link::{
+    Link,
+    LinkTooltip,
+};
+use freya_components::{
+    define_theme,
+    get_theme_or_default,
+    table::{
+        Table,
+        TableBody,
+        TableCell,
+        TableHead,
+        TableRow,
+    },
+    theming::macros::Preference,
+};
 use freya_core::prelude::*;
 use pulldown_cmark::{
     Event,
@@ -14,34 +38,17 @@ use pulldown_cmark::{
 };
 use torin::prelude::*;
 
-#[cfg(feature = "remote-asset")]
-use crate::Uri;
-#[cfg(feature = "remote-asset")]
-use crate::image_viewer::{
-    ImageSource,
-    ImageViewer,
-};
-#[cfg(feature = "router")]
-use crate::link::{
-    Link,
-    LinkTooltip,
-};
-use crate::{
-    define_theme,
-    table::{
-        Table,
-        TableBody,
-        TableCell,
-        TableHead,
-        TableRow,
-    },
-};
+#[cfg(feature = "code-editor")]
+mod code_editor;
+#[cfg(feature = "code-editor")]
+use code_editor::CodeBlockEditor;
 
 define_theme! {
     %[component]
     pub MarkdownViewer {
         %[fields]
         color: Color,
+        color_link: Color,
         background_code: Color,
         color_code: Color,
         background_blockquote: Color,
@@ -59,6 +66,27 @@ define_theme! {
     }
 }
 
+fn markdown_theme_preference() -> MarkdownViewerThemePreference {
+    MarkdownViewerThemePreference {
+        color: Preference::Reference("text_primary"),
+        color_link: Preference::Reference("text_highlight"),
+        background_code: Preference::Reference("surface_tertiary"),
+        color_code: Preference::Reference("text_primary"),
+        background_blockquote: Preference::Reference("surface_tertiary"),
+        border_blockquote: Preference::Reference("surface_primary"),
+        background_divider: Preference::Reference("border"),
+        heading_h1: Preference::Specific(32.0),
+        heading_h2: Preference::Specific(28.0),
+        heading_h3: Preference::Specific(24.0),
+        heading_h4: Preference::Specific(20.0),
+        heading_h5: Preference::Specific(18.0),
+        heading_h6: Preference::Specific(16.0),
+        paragraph_size: Preference::Specific(16.0),
+        code_font_size: Preference::Specific(14.0),
+        table_font_size: Preference::Specific(14.0),
+    }
+}
+
 /// Markdown viewer component.
 ///
 /// Renders markdown content with support for:
@@ -72,6 +100,11 @@ define_theme! {
 /// - Links
 /// - Blockquotes
 /// - Horizontal rules
+/// - Custom inline elements (see [`MarkdownViewer::inline_element`])
+///
+/// With the `code-editor` feature enabled, code blocks are rendered with the
+/// `CodeEditor` component for syntax highlighting. Otherwise they fall back to
+/// plain monospace text.
 ///
 /// # Example
 ///
@@ -87,6 +120,10 @@ pub struct MarkdownViewer {
     layout: LayoutData,
     key: DiffKey,
     pub(crate) theme: Option<MarkdownViewerThemePartial>,
+    inline_element: Option<Callback<String, Option<Element>>>,
+    code_editor_font_family: Cow<'static, str>,
+    #[cfg(feature = "code-editor")]
+    language_resolver: Option<code_editor::LanguageResolver>,
 }
 
 impl MarkdownViewer {
@@ -96,7 +133,50 @@ impl MarkdownViewer {
             layout: LayoutData::default(),
             key: DiffKey::None,
             theme: None,
+            inline_element: None,
+            code_editor_font_family: Cow::Borrowed("Jetbrains Mono"),
+            #[cfg(feature = "code-editor")]
+            language_resolver: None,
         }
+    }
+
+    /// Set a handler for custom inline elements.
+    ///
+    /// Each raw inline HTML tag in a paragraph (for example `<rust-logo/>`) is passed to the
+    /// `handler`, which returns the element to inline, or `None` to keep the tag as plain text.
+    ///
+    /// ```rust
+    /// # use freya::prelude::*;
+    /// fn app() -> impl IntoElement {
+    ///     MarkdownViewer::new("Made with Rust <rust-logo/> btw")
+    ///         .inline_element(|html: String| html.starts_with("<rust-logo").then(|| "🦀"))
+    /// }
+    /// ```
+    pub fn inline_element<ReturnedElement: IntoElement + 'static>(
+        mut self,
+        handler: impl Into<Callback<String, Option<ReturnedElement>>>,
+    ) -> Self {
+        let handler = handler.into();
+        self.inline_element = Some(Callback::new(move |html| {
+            handler.call(html).map(IntoElement::into_element)
+        }));
+        self
+    }
+
+    /// Sets the font family used for code blocks. Defaults to `"Jetbrains Mono"`.
+    pub fn code_editor_font_family(mut self, font_family: impl Into<Cow<'static, str>>) -> Self {
+        self.code_editor_font_family = font_family.into();
+        self
+    }
+
+    /// Sets a resolver mapping a code block's language to an `EditorLanguage` for highlighting.
+    #[cfg(feature = "code-editor")]
+    pub fn code_editor_language(
+        mut self,
+        resolver: impl Into<code_editor::LanguageResolver>,
+    ) -> Self {
+        self.language_resolver = Some(resolver.into());
+        self
     }
 }
 
@@ -114,7 +194,6 @@ impl LayoutExt for MarkdownViewer {
 
 impl ContainerExt for MarkdownViewer {}
 
-/// Represents different markdown elements for rendering.
 #[allow(dead_code)]
 #[derive(Clone)]
 enum MarkdownElement {
@@ -123,11 +202,10 @@ enum MarkdownElement {
         spans: Vec<TextSpan>,
     },
     Paragraph {
-        spans: Vec<TextSpan>,
+        content: Vec<Inline>,
     },
     CodeBlock {
         code: String,
-        #[allow(dead_code)]
         language: Option<String>,
     },
     UnorderedList {
@@ -157,6 +235,20 @@ enum MarkdownElement {
     HorizontalRule,
 }
 
+/// A piece of a paragraph's content: styled text or an inline link flowing within the text.
+#[derive(Clone)]
+enum Inline {
+    Span(TextSpan),
+    #[cfg_attr(not(feature = "router"), allow(dead_code))]
+    Link {
+        url: String,
+        title: Option<String>,
+        text: Vec<TextSpan>,
+    },
+    /// A raw inline HTML tag, resolved at render time by [`MarkdownViewer::inline_element`].
+    Html(String),
+}
+
 /// Represents styled text spans within markdown.
 #[derive(Clone, Debug)]
 struct TextSpan {
@@ -180,7 +272,6 @@ impl TextSpan {
     }
 }
 
-/// Parse markdown content into a list of elements.
 fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
     let mut options = Options::empty();
     options.insert(Options::ENABLE_STRIKETHROUGH);
@@ -189,6 +280,7 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
     let parser = Parser::new_ext(content, options);
     let mut elements = Vec::new();
     let mut current_spans: Vec<TextSpan> = Vec::new();
+    let mut current_content: Vec<Inline> = Vec::new();
     let mut list_items: Vec<Vec<TextSpan>> = Vec::new();
     let mut current_list_item: Vec<TextSpan> = Vec::new();
 
@@ -232,6 +324,7 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                     } else {
                         in_paragraph = true;
                         current_spans.clear();
+                        current_content.clear();
                     }
                 }
                 Tag::CodeBlock(kind) => {
@@ -311,8 +404,9 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                         current_list_item.append(&mut current_spans)
                     } else if in_paragraph {
                         in_paragraph = false;
+                        current_content.extend(current_spans.drain(..).map(Inline::Span));
                         elements.push(MarkdownElement::Paragraph {
-                            spans: mem::take(&mut current_spans),
+                            content: mem::take(&mut current_content),
                         });
                     }
                 }
@@ -365,11 +459,14 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                 TagEnd::Link => {
                     in_link = false;
                     if let Some(url) = link_url.take() {
-                        elements.push(MarkdownElement::Link {
-                            url,
-                            title: link_title.take(),
-                            text: mem::take(&mut link_spans),
-                        });
+                        let title = link_title.take();
+                        let text = mem::take(&mut link_spans);
+                        if in_paragraph {
+                            current_content.extend(current_spans.drain(..).map(Inline::Span));
+                            current_content.push(Inline::Link { url, title, text });
+                        } else {
+                            elements.push(MarkdownElement::Link { url, title, text });
+                        }
                     }
                 }
                 _ => {}
@@ -437,6 +534,12 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                     current_spans.push(span);
                 }
             }
+            Event::InlineHtml(html) => {
+                if in_paragraph && !in_link {
+                    current_content.extend(current_spans.drain(..).map(Inline::Span));
+                    current_content.push(Inline::Html(html.to_string()));
+                }
+            }
             Event::Rule => {
                 elements.push(MarkdownElement::HorizontalRule);
             }
@@ -447,6 +550,22 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
     elements
 }
 
+/// Build a styled [Span] from a markdown text span.
+fn styled_span(span: &TextSpan, text_color: Color, code_color: Color) -> Span<'static> {
+    let mut styled = Span::new(span.text.clone());
+    if span.bold {
+        styled = styled.font_weight(FontWeight::BOLD);
+    }
+    if span.italic {
+        styled = styled.font_slant(FontSlant::Italic);
+    }
+    if span.code {
+        styled.font_family("monospace").color(code_color)
+    } else {
+        styled.color(text_color)
+    }
+}
+
 /// Render text spans as a paragraph element.
 fn render_spans(
     spans: &[TextSpan],
@@ -454,22 +573,54 @@ fn render_spans(
     text_color: Color,
     code_color: Color,
 ) -> Paragraph {
-    paragraph()
-        .font_size(base_font_size)
-        .spans_iter(spans.iter().map(|span| {
-            let mut styled = Span::new(span.text.clone());
-            if span.bold {
-                styled = styled.font_weight(FontWeight::BOLD);
+    paragraph().font_size(base_font_size).spans_iter(
+        spans
+            .iter()
+            .map(|span| styled_span(span, text_color, code_color)),
+    )
+}
+
+/// Render a paragraph's content, flowing inline links (colored with `link_color`) between the text.
+fn render_content(
+    content: &[Inline],
+    base_font_size: f32,
+    text_color: Color,
+    link_color: Color,
+    code_color: Color,
+    inline_element: Option<&Callback<String, Option<Element>>>,
+) -> Paragraph {
+    let mut result = paragraph().font_size(base_font_size);
+    for item in content {
+        result = match item {
+            Inline::Span(span) => result.span(styled_span(span, text_color, code_color)),
+            Inline::Html(raw) => {
+                match inline_element.and_then(|handler| handler.call(raw.clone())) {
+                    Some(element) => result.child(element),
+                    None => result.span(Span::new(raw.clone()).color(text_color)),
+                }
             }
-            if span.italic {
-                styled = styled.font_slant(FontSlant::Italic);
+            #[cfg(feature = "router")]
+            Inline::Link { url, title, text } => {
+                let mut tooltip = LinkTooltip::Default;
+                if let Some(title) = title
+                    && !title.is_empty()
+                {
+                    tooltip = LinkTooltip::Custom(title.clone());
+                }
+                result.child(Link::new(url.clone()).tooltip(tooltip).child(render_spans(
+                    text,
+                    base_font_size,
+                    link_color,
+                    code_color,
+                )))
             }
-            if span.code {
-                styled.font_family("monospace").color(code_color)
-            } else {
-                styled.color(text_color)
-            }
-        }))
+            #[cfg(not(feature = "router"))]
+            Inline::Link { text, .. } => text.iter().fold(result, |paragraph, span| {
+                paragraph.span(styled_span(span, link_color, code_color))
+            }),
+        };
+    }
+    result
 }
 
 impl Component for MarkdownViewer {
@@ -478,7 +629,11 @@ impl Component for MarkdownViewer {
 
         let MarkdownViewerTheme {
             color,
+            color_link,
+            #[cfg(not(feature = "code-editor"))]
             background_code,
+            #[cfg(feature = "code-editor")]
+                background_code: _,
             color_code,
             background_blockquote,
             border_blockquote,
@@ -492,10 +647,11 @@ impl Component for MarkdownViewer {
             paragraph_size,
             code_font_size,
             table_font_size,
-        } = crate::get_theme!(
+        } = get_theme_or_default!(
             &self.theme,
             MarkdownViewerThemePreference,
-            "markdown_viewer"
+            "markdown_viewer",
+            markdown_theme_preference
         );
 
         let mut container = rect().vertical().layout(self.layout.clone()).spacing(12.);
@@ -516,25 +672,52 @@ impl Component for MarkdownViewer {
                         .key(idx)
                         .into()
                 }
-                MarkdownElement::Paragraph { spans } => {
-                    render_spans(&spans, paragraph_size, color, color_code)
-                        .key(idx)
-                        .into()
-                }
-                MarkdownElement::CodeBlock { code, .. } => rect()
-                    .key(idx)
-                    .width(Size::fill())
-                    .background(background_code)
-                    .corner_radius(6.)
-                    .padding(Gaps::new_all(12.))
-                    .child(
-                        label()
-                            .text(code)
-                            .font_family("monospace")
-                            .font_size(code_font_size)
-                            .color(color_code),
+                MarkdownElement::Paragraph { content } => render_content(
+                    &content,
+                    paragraph_size,
+                    color,
+                    color_link,
+                    color_code,
+                    self.inline_element.as_ref(),
+                )
+                .key(idx)
+                .into(),
+                MarkdownElement::CodeBlock {
+                    code,
+                    #[cfg(feature = "code-editor")]
+                    language,
+                    #[cfg(not(feature = "code-editor"))]
+                        language: _,
+                } => {
+                    #[cfg(feature = "code-editor")]
+                    let element = CodeBlockEditor::new(
+                        move || Cow::Owned(code.clone()),
+                        language,
+                        self.language_resolver.clone(),
+                        code_font_size,
+                        self.code_editor_font_family.clone(),
                     )
-                    .into(),
+                    .key(idx)
+                    .into();
+
+                    #[cfg(not(feature = "code-editor"))]
+                    let element = rect()
+                        .key(idx)
+                        .width(Size::fill())
+                        .background(background_code)
+                        .corner_radius(6.)
+                        .padding(Gaps::new_all(12.))
+                        .child(
+                            label()
+                                .text(code)
+                                .font_family(self.code_editor_font_family.clone())
+                                .font_size(code_font_size)
+                                .color(color_code),
+                        )
+                        .into();
+
+                    element
+                }
                 MarkdownElement::UnorderedList { items } => {
                     let mut list = rect()
                         .key(idx)
@@ -617,7 +800,7 @@ impl Component for MarkdownViewer {
 
                     Link::new(url)
                         .tooltip(tooltip)
-                        .child(render_spans(&text, paragraph_size, color, color_code))
+                        .child(render_spans(&text, paragraph_size, color_link, color_code))
                         .key(idx)
                         .into()
                 }

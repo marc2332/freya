@@ -38,6 +38,8 @@ impl TreeAdapter<NodeId> for TreeAdapterFreya<'_> {
         }
         self.elements.get(node_id).map(|node| {
             let mut layout_node = node.layout().layout.clone();
+            // Elements with a post-measure step must relayout when their children change.
+            layout_node.depends_on_inner = node.needs_post_measure();
             layout_node.scale(self.scale_factor as f32);
             layout_node
         })

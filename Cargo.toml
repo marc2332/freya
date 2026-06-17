@@ -26,6 +26,7 @@ members = [
   "./crates/freya-winit",
   "./crates/freya-components",
   "./crates/freya-video",
+  "./crates/freya-markdown",
   "./crates/pathgraph",
   "./crates/freya-animation",
   "./crates/freya-router",
@@ -62,6 +63,7 @@ freya-edit = { path = "./crates/freya-edit", version = "0.4.0-rc.23" }
 freya-winit = { path = "./crates/freya-winit", version = "0.4.0-rc.23" }
 freya-components = { path = "./crates/freya-components", version = "0.4.0-rc.23" }
 freya-video = { path = "./crates/freya-video", version = "0.4.0-rc.23" }
+freya-markdown = { path = "./crates/freya-markdown", version = "0.4.0-rc.23" }
 pathgraph = { path = "./crates/pathgraph/", version = "0.4.0-rc.23" }
 freya-animation = { path = "./crates/freya-animation", version = "0.4.0-rc.23" }
 freya-router = { path = "./crates/freya-router", version = "0.4.0-rc.23" }
@@ -83,9 +85,7 @@ freya-plotters-backend = { path = "./crates/freya-plotters-backend", version = "
 freya-query = { path = "./crates/freya-query", version = "0.4.0-rc.23" }
 freya-webview = { path = "./crates/freya-webview", version = "0.4.0-rc.23" }
 freya-terminal = { path = "./crates/freya-terminal", version = "0.4.0-rc.23" }
-freya-code-editor = { path = "./crates/freya-code-editor", version = "0.4.0-rc.23", features = [
-  "rust",
-] }
+freya-code-editor = { path = "./crates/freya-code-editor", version = "0.4.0-rc.23" }
 freya-camera = { path = "./crates/freya-camera", version = "0.4.0-rc.23" }
 freya-android = { path = "./crates/freya-android", version = "0.4.0-rc.23" }
 mundy = { version = "0.2.3", default-features = false, features = [
@@ -180,6 +180,7 @@ tokio = { version = "1.0", default-features = false }
 [dev-dependencies]
 freya = { workspace = true, features = ["all"] }
 freya-core = { workspace = true, features = ["debug-integrity", "test"] }
+freya-engine = { workspace = true }
 torin = { workspace = true }
 ragnarok = { workspace = true }
 freya-edit = { workspace = true }
@@ -196,6 +197,7 @@ freya-devtools = { workspace = true, features = ["server", "client"] }
 freya-webview = { workspace = true }
 freya-terminal = { workspace = true }
 freya-code-editor = { workspace = true }
+tree-sitter-rust = "0.24"
 
 freya-skia-safe = { workspace = true }
 

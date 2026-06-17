@@ -101,6 +101,7 @@ Freya is split in various crates, each with it's own meaning and purpose, here i
 - `freya-material-design`: Material Design Components for Freya apps.
 - `freya-plotters-backend`: Freya's skia-safe backend for plotters.
 - `freya-code-editor`: Set of APIs to create text Code Editors in Freya.
+- `freya-markdown`: Markdown rendering component for Freya.
 - `freya-camera`: Camera capture support for Freya.
 
 ## Examples

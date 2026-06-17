@@ -63,7 +63,6 @@ use crate::{
         font_weight::FontWeight,
         font_width::FontWidth,
         scale::Scale,
-        shader::ShaderFill,
         text_height::TextHeightBehavior,
         text_overflow::TextOverflow,
         text_shadow::TextShadow,
@@ -731,33 +730,9 @@ where
         self
     }
 
-    /// Set the text color to a solid [`Color`].
-    fn color(mut self, color: impl Into<Color>) -> Self {
-        self.get_text_style_data().color = Some(Fill::Color(color.into()));
-        self
-    }
-
-    /// Paint the text with a [`ConicGradient`].
-    fn color_conic_gradient<S: Into<ConicGradient>>(mut self, color: S) -> Self {
-        self.get_text_style_data().color = Some(Fill::ConicGradient(Box::new(color.into())));
-        self
-    }
-
-    /// Paint the text with a [`LinearGradient`].
-    fn color_linear_gradient<S: Into<LinearGradient>>(mut self, color: S) -> Self {
-        self.get_text_style_data().color = Some(Fill::LinearGradient(Box::new(color.into())));
-        self
-    }
-
-    /// Paint the text with a [`RadialGradient`].
-    fn color_radial_gradient<S: Into<RadialGradient>>(mut self, color: S) -> Self {
-        self.get_text_style_data().color = Some(Fill::RadialGradient(Box::new(color.into())));
-        self
-    }
-
-    /// Paint the text with a custom shader. See [`ShaderFill`].
-    fn color_shader(mut self, color: impl Into<ShaderFill>) -> Self {
-        self.get_text_style_data().color = Some(Fill::Shader(Box::new(color.into())));
+    /// Paint the text with any [`Fill`]: a [`Color`], a gradient or a shader.
+    fn color(mut self, color: impl Into<Fill>) -> Self {
+        self.get_text_style_data().color = Some(color.into());
         self
     }
 
@@ -834,33 +809,9 @@ where
     /// Returns a mutable reference to the element's style data.
     fn get_style(&mut self) -> &mut StyleState;
 
-    /// Set the background to a solid [`Color`].
-    fn background<S: Into<Color>>(mut self, background: S) -> Self {
-        self.get_style().background = Fill::Color(background.into());
-        self
-    }
-
-    /// Paint the background with a [`ConicGradient`].
-    fn background_conic_gradient<S: Into<ConicGradient>>(mut self, background: S) -> Self {
-        self.get_style().background = Fill::ConicGradient(Box::new(background.into()));
-        self
-    }
-
-    /// Paint the background with a [`LinearGradient`].
-    fn background_linear_gradient<S: Into<LinearGradient>>(mut self, background: S) -> Self {
-        self.get_style().background = Fill::LinearGradient(Box::new(background.into()));
-        self
-    }
-
-    /// Paint the background with a [`RadialGradient`].
-    fn background_radial_gradient<S: Into<RadialGradient>>(mut self, background: S) -> Self {
-        self.get_style().background = Fill::RadialGradient(Box::new(background.into()));
-        self
-    }
-
-    /// Paint the background with a custom shader. See [`ShaderFill`].
-    fn background_shader(mut self, background: impl Into<ShaderFill>) -> Self {
-        self.get_style().background = Fill::Shader(Box::new(background.into()));
+    /// Paint the background with any [`Fill`]: a [`Color`], a gradient or a shader.
+    fn background(mut self, background: impl Into<Fill>) -> Self {
+        self.get_style().background = background.into();
         self
     }
 

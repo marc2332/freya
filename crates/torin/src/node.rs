@@ -60,6 +60,10 @@ pub struct Node {
     pub has_layout_references: bool,
 
     pub spacing: Length,
+
+    /// A Node might need to relayout when its children change even if its own size
+    /// is fixed, like paragraphs with inline elements.
+    pub depends_on_inner: bool,
 }
 
 impl Scaled for Node {
@@ -104,6 +108,7 @@ impl Node {
             && self.content == other.content
             && self.has_layout_references == other.has_layout_references
             && self.spacing == other.spacing
+            && self.depends_on_inner == other.depends_on_inner
     }
 
     pub fn inner_layout_eq(&self, other: &Self) -> bool {
@@ -305,7 +310,10 @@ impl Node {
 
     /// Has properties that depend on the inner Nodes?
     pub fn does_depend_on_inner(&self) -> bool {
-        self.width.inner_sized() || self.height.inner_sized() || self.do_inner_depend_on_parent()
+        self.width.inner_sized()
+            || self.height.inner_sized()
+            || self.depends_on_inner
+            || self.do_inner_depend_on_parent()
     }
 
     /// Has properties that make its children dependant on it?

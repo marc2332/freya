@@ -1,6 +1,5 @@
 use freya::prelude::*;
 use freya_core::integration::NodeId;
-use freya_devtools::NodeStateAttributes;
 
 use crate::{
     components::attribute::attributes_list,

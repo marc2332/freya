@@ -9,6 +9,7 @@ bacon.toml
 .direnv
 **/.DS_Store
 *demo-*.png
+embedded-frames
 other
 state_query_sqlite_data
 CLAUDE.md
