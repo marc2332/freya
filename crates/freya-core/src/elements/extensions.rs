@@ -864,6 +864,12 @@ where
         self
     }
 
+    /// Paint the background with a custom fill. See [`Fill`].
+    fn background_fill(mut self, background: impl Into<Fill>) -> Self {
+        self.get_style().background = background;
+        self
+    }
+
     /// Add an outline around the element. See [`Border`].
     fn border(mut self, border: impl Into<Option<Border>>) -> Self {
         if let Some(border) = border.into() {
