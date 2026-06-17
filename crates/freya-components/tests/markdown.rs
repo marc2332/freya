@@ -34,7 +34,7 @@ fn custom_inline_element() {
     fn app() -> impl IntoElement {
         rect().child(
             MarkdownViewer::new("Status: <badge/> ready")
-                .inline_element(|html| html.starts_with("<badge").then(|| "New")),
+                .inline_element(|html: String| html.starts_with("<badge").then(|| "New")),
         )
     }
 
