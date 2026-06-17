@@ -23,7 +23,7 @@ use futures_channel::mpsc::{
 };
 use torin::prelude::Size2D;
 
-/// Reads the shared `progress` state the host updates once per frame to animate.
+/// Reads the shared `progress` state, updated once per frame, to animate.
 fn app() -> impl IntoElement {
     let progress = use_consume::<State<f32>>();
     let value = progress();
@@ -50,7 +50,7 @@ fn app() -> impl IntoElement {
         )
 }
 
-/// A self contained Freya host built directly from `freya_core`.
+/// A self contained Freya renderer built directly from `freya_core`.
 /// Owns the reactive [`Runner`], the render [`Tree`] and the font stack.
 struct EmbeddedFreya {
     runner: Runner,
@@ -69,7 +69,7 @@ struct EmbeddedFreya {
 }
 
 impl EmbeddedFreya {
-    /// Builds the host and provides the shared `progress` state at the root.
+    /// Builds the renderer and provides the shared `progress` state at the root.
     fn new(size: Size2D, scale_factor: f64) -> Self {
         let (events_sender, events_receiver) = unbounded();
 
