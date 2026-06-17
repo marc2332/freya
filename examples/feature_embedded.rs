@@ -77,7 +77,7 @@ impl EmbeddedFreya {
         let (events_sender, events_receiver) = unbounded();
 
         let mut runner = Runner::new(|| app().into_element());
-        let progress = runner.provide_root_context(|| State::create(0.0_f32));
+        let progress = runner.provide_root_context(|| State::create(0.0));
 
         let mut font_collection = FontCollection::new();
         let default_font_manager = FontMgr::default();
