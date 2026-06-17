@@ -31,19 +31,19 @@ pub struct VideoPlayer {
     frame: State<Option<VideoFrame>>,
     playback: State<PlaybackState>,
     forwarder: State<Option<OwnedTaskHandle>>,
-    source: State<Option<VideoSource>>,
+    source: State<VideoSource>,
     position: State<Duration>,
     duration: State<Option<Duration>>,
     client: State<Option<VideoClient>>,
 }
 
 impl VideoPlayer {
-    pub fn create() -> Self {
+    pub fn create(source: VideoSource) -> Self {
         Self {
             frame: State::create(None),
             playback: State::create(PlaybackState::Idle),
             forwarder: State::create(None),
-            source: State::create(None),
+            source: State::create(source),
             position: State::create(Duration::ZERO),
             duration: State::create(None),
             client: State::create(None),
@@ -126,10 +126,7 @@ impl VideoPlayer {
         self.client.set(None);
         self.playback.set(PlaybackState::Loading);
 
-        let Some(source) = self.source.peek().clone() else {
-            self.forwarder.set(None);
-            return;
-        };
+        let source = self.source.peek().clone();
         let player = *self;
         let handle = spawn(async move {
             Timer::after(SEEK_DEBOUNCE).await;
@@ -175,8 +172,7 @@ impl VideoPlayer {
 pub fn use_video(init: impl FnOnce() -> VideoSource + 'static) -> VideoPlayer {
     use_hook(move || {
         let source = init();
-        let mut player = VideoPlayer::create();
-        player.source.set(Some(source.clone()));
+        let mut player = VideoPlayer::create(source.clone());
         player.playback.set(PlaybackState::Loading);
         let handle = spawn(player.run(source, Duration::ZERO)).owned();
         player.forwarder.set(Some(handle));
