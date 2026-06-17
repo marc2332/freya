@@ -866,7 +866,7 @@ where
 
     /// Paint the background with a custom fill. See [`Fill`].
     fn background_fill(mut self, background: impl Into<Fill>) -> Self {
-        self.get_style().background = background;
+        self.get_style().background = background.into();
         self
     }
 
