@@ -808,7 +808,7 @@ pub(crate) fn paint_paragraph_with_fill(
         return;
     }
 
-    let width = paragraph.longest_line().max(paragraph.max_width());
+    let width = paragraph.longest_line();
     let height = paragraph.height();
     let area = Area::new(origin, Size2D::new(width, height));
     let bounds_rect = SkRect::from_xywh(area.min_x(), area.min_y(), width, height);
