@@ -6,7 +6,6 @@ pub use self::{
     client::{
         VideoClient,
         VideoEvent,
-        VideoFrame,
         VideoSource,
     },
     player::{

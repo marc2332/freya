@@ -1,5 +1,6 @@
 use std::{
     io::{
+        BufReader,
         Read as _,
         Write as _,
     },
@@ -45,14 +46,7 @@ use freya_core::{
         try_consume_root_context,
     },
 };
-use freya_engine::prelude::{
-    AlphaType,
-    ColorType,
-    Data,
-    ISize,
-    ImageInfo,
-    raster_from_data,
-};
+use freya_engine::prelude::AlphaType;
 
 /// Source of a video to decode.
 #[derive(PartialEq, Eq, Clone, Debug, Hash)]
@@ -97,34 +91,6 @@ impl VideoSource {
     }
 }
 
-/// Single decoded frame, backed by a Skia image.
-#[derive(Clone, PartialEq)]
-pub struct VideoFrame {
-    pub(crate) image: ImageHolder,
-}
-
-impl VideoFrame {
-    pub fn image(&self) -> &ImageHolder {
-        &self.image
-    }
-
-    /// Wrap a raw RGBA frame as a Skia raster image.
-    fn from_raw(frame: OutputVideoFrame) -> Option<Self> {
-        let row_bytes = frame.width.checked_mul(4)? as usize;
-        let info = ImageInfo::new(
-            ISize::new(frame.width as i32, frame.height as i32),
-            ColorType::RGBA8888,
-            AlphaType::Unpremul,
-            None,
-        );
-        // Safety: `data` outlives the SkImage via `ImageHolder.bytes` below.
-        let data = unsafe { Data::new_bytes(&frame.data) };
-        let image = raster_from_data(&info, data, row_bytes)?;
-        let image = ImageHolder::new(image, Bytes::from(frame.data));
-        Some(Self { image })
-    }
-}
-
 /// Max decoded frames buffered ahead of the pacing loop.
 const FRAME_BUFFER: usize = 2;
 
@@ -142,7 +108,7 @@ const PAUSE_POLL: Duration = Duration::from_millis(32);
 pub enum VideoEvent {
     Duration(Duration),
     Frame {
-        frame: VideoFrame,
+        frame: ImageHolder,
         position: Duration,
     },
     Ended,
@@ -157,10 +123,10 @@ pub struct VideoClient {
 }
 
 impl VideoClient {
-    /// Start decoding `source` at `start_offset`.
-    pub fn new(source: VideoSource, start_offset: Duration) -> Self {
+    /// Start decoding `source` at `start_offset`, optionally paused.
+    pub fn new(source: VideoSource, start_offset: Duration, start_paused: bool) -> Self {
         let (sender, receiver) = async_channel::bounded(EVENTS_BUFFER);
-        let paused = Arc::new(AtomicBool::new(false));
+        let paused = Arc::new(AtomicBool::new(start_paused));
         let task = spawn(Self::run(source, start_offset, paused.clone(), sender)).owned();
         Self {
             events: receiver,
@@ -184,11 +150,6 @@ impl VideoClient {
         self.paused.store(false, Ordering::Relaxed);
     }
 
-    /// Whether playback is currently paused.
-    pub fn is_paused(&self) -> bool {
-        self.paused.load(Ordering::Relaxed)
-    }
-
     /// Decode `source` and emit pacing-corrected frames into `events`.
     async fn run(
         source: VideoSource,
@@ -209,9 +170,14 @@ impl VideoClient {
         let _quitter = child.take_stdin().map(FfmpegQuitter);
 
         let audio = AudioPlayback::start(&source, start_offset);
+        if paused.load(Ordering::Relaxed) {
+            if let Some(audio) = audio.as_ref() {
+                audio.sink.pause();
+            }
+        }
 
         let (sender, receiver) = async_channel::bounded::<DecoderEvent>(FRAME_BUFFER);
-        let decoder = blocking::unblock(move || run_decoder(child, sender));
+        let decoder = blocking::unblock(move || Self::run_decoder(child, sender));
 
         let mut wall_start: Option<Instant> = None;
         let mut paused_for = Duration::ZERO;
@@ -225,8 +191,11 @@ impl VideoClient {
                 DecoderEvent::Frame(frame) => frame,
             };
 
-            // Bank pause time so the wall-clock pacing stays correct on resume.
-            paused_for += wait_for_resume(&paused, audio.as_ref()).await;
+            // Let the first frame through so a paused seek still shows a preview;
+            // afterwards honor pause and bank its time to keep wall-clock pacing correct.
+            if wall_start.is_some() {
+                paused_for += Self::wait_for_resume(&paused, audio.as_ref()).await;
+            }
 
             let wall_start = *wall_start.get_or_insert_with(Instant::now);
             let frame_offset = Duration::from_secs_f32(frame.timestamp.max(0.0));
@@ -235,8 +204,8 @@ impl VideoClient {
                 Timer::after(frame_offset - elapsed).await;
             }
 
-            let Some(frame) = VideoFrame::from_raw(frame) else {
-                tracing::warn!("Dropping frame: failed to wrap raw RGBA as Skia image");
+            let Some(frame) = Self::decode_frame(frame) else {
+                tracing::warn!("Dropping frame: failed to decode raw RGBA into a Skia image");
                 continue;
             };
             if events
@@ -262,24 +231,61 @@ impl VideoClient {
             }
         }
     }
-}
 
-/// Shared audio output handle.
-fn audio_handle() -> Option<Rc<rodio::OutputStreamHandle>> {
-    if let Some(handle) = try_consume_root_context::<Rc<rodio::OutputStreamHandle>>() {
-        return Some(handle);
+    /// Wrap a raw RGBA frame as a Skia raster image.
+    fn decode_frame(frame: OutputVideoFrame) -> Option<ImageHolder> {
+        ImageHolder::from_rgba(
+            frame.width,
+            frame.height,
+            Bytes::from(frame.data),
+            AlphaType::Unpremul,
+        )
     }
 
-    let (stream, handle) = rodio::OutputStream::try_default()
-        .map_err(|err| tracing::info!("No audio output device: {err}"))
-        .ok()?;
-    let stream = Rc::new(stream);
-    let handle = Rc::new(handle);
+    /// If paused, suspend audio and spin until resumed. Returns the paused-for delta.
+    async fn wait_for_resume(paused: &AtomicBool, audio: Option<&AudioPlayback>) -> Duration {
+        if !paused.load(Ordering::Relaxed) {
+            return Duration::ZERO;
+        }
+        if let Some(audio) = audio {
+            audio.sink.pause();
+        }
+        let pause_start = Instant::now();
+        while paused.load(Ordering::Relaxed) {
+            Timer::after(PAUSE_POLL).await;
+        }
+        if let Some(audio) = audio {
+            audio.sink.play();
+        }
+        pause_start.elapsed()
+    }
 
-    provide_context_for_scope_id(stream, ScopeId::ROOT);
-    provide_context_for_scope_id(handle.clone(), ScopeId::ROOT);
+    fn run_decoder(
+        mut child: FfmpegChild,
+        sender: async_channel::Sender<DecoderEvent>,
+    ) -> anyhow::Result<()> {
+        for event in child.iter()? {
+            let item = match event {
+                FfmpegEvent::ParsedDuration(d) if d.duration.is_finite() && d.duration >= 0.0 => {
+                    DecoderEvent::Duration(Duration::from_secs_f64(d.duration))
+                }
+                FfmpegEvent::OutputFrame(frame) => DecoderEvent::Frame(frame),
+                _ => continue,
+            };
+            // Parks the thread when the bounded channel is full, which backpressures
+            // ffmpeg via its stdout pipe. Err = receiver dropped (decode cancelled).
+            if sender.send_blocking(item).is_err() {
+                tracing::warn!("Decoder consumer dropped, stopping ffmpeg ingest");
+                break;
+            }
+        }
 
-    Some(handle)
+        // Reap regardless of how we exited the iter (ffmpeg-sidecar#72).
+        let _ = child.kill();
+        let _ = child.wait();
+
+        Ok(())
+    }
 }
 
 enum DecoderEvent {
@@ -298,7 +304,7 @@ impl Drop for FfmpegQuitter {
 }
 
 /// PCM audio samples streamed from an ffmpeg process.
-struct PcmSource(ChildStdout);
+struct PcmSource(BufReader<ChildStdout>);
 
 impl Iterator for PcmSource {
     type Item = i16;
@@ -335,7 +341,7 @@ struct AudioPlayback {
 impl AudioPlayback {
     /// Start an audio-only ffmpeg pipeline feeding into rodio.
     fn start(source: &VideoSource, start_offset: Duration) -> Option<Self> {
-        let handle = audio_handle()?;
+        let handle = Self::handle()?;
         let mut cmd = source.ffmpeg_command(start_offset);
         cmd.args([
             "-vn",
@@ -356,56 +362,29 @@ impl AudioPlayback {
         let sink = rodio::Sink::try_new(&handle)
             .map_err(|err| tracing::warn!("Failed to create audio sink: {err}"))
             .ok()?;
-        sink.append(PcmSource(stdout));
+        sink.append(PcmSource(BufReader::new(stdout)));
         Some(Self {
             _quitter: quitter,
             sink,
             _child: child,
         })
     }
-}
 
-/// If paused, suspend audio and spin until resumed. Returns the paused-for delta.
-async fn wait_for_resume(paused: &AtomicBool, audio: Option<&AudioPlayback>) -> Duration {
-    if !paused.load(Ordering::Relaxed) {
-        return Duration::ZERO;
-    }
-    if let Some(audio) = audio {
-        audio.sink.pause();
-    }
-    let pause_start = Instant::now();
-    while paused.load(Ordering::Relaxed) {
-        Timer::after(PAUSE_POLL).await;
-    }
-    if let Some(audio) = audio {
-        audio.sink.play();
-    }
-    pause_start.elapsed()
-}
-
-fn run_decoder(
-    mut child: FfmpegChild,
-    sender: async_channel::Sender<DecoderEvent>,
-) -> anyhow::Result<()> {
-    for event in child.iter()? {
-        let item = match event {
-            FfmpegEvent::ParsedDuration(d) if d.duration.is_finite() && d.duration >= 0.0 => {
-                DecoderEvent::Duration(Duration::from_secs_f64(d.duration))
-            }
-            FfmpegEvent::OutputFrame(frame) => DecoderEvent::Frame(frame),
-            _ => continue,
-        };
-        // Parks the thread when the bounded channel is full, which backpressures
-        // ffmpeg via its stdout pipe. Err = receiver dropped (decode cancelled).
-        if sender.send_blocking(item).is_err() {
-            tracing::warn!("Decoder consumer dropped, stopping ffmpeg ingest");
-            break;
+    /// Shared audio output handle, created once and cached in the root context.
+    fn handle() -> Option<Rc<rodio::OutputStreamHandle>> {
+        if let Some(handle) = try_consume_root_context::<Rc<rodio::OutputStreamHandle>>() {
+            return Some(handle);
         }
+
+        let (stream, handle) = rodio::OutputStream::try_default()
+            .map_err(|err| tracing::info!("No audio output device: {err}"))
+            .ok()?;
+        let stream = Rc::new(stream);
+        let handle = Rc::new(handle);
+
+        provide_context_for_scope_id(stream, ScopeId::ROOT);
+        provide_context_for_scope_id(handle.clone(), ScopeId::ROOT);
+
+        Some(handle)
     }
-
-    // Reap regardless of how we exited the iter (ffmpeg-sidecar#72).
-    let _ = child.kill();
-    let _ = child.wait();
-
-    Ok(())
 }

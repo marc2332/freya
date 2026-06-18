@@ -66,7 +66,7 @@ impl AccessibilityExt for VideoViewer {
 impl Component for VideoViewer {
     fn render(&self) -> impl IntoElement {
         match (self.player.frame(), self.player.state()) {
-            (Some(frame), _) => image(frame.image)
+            (Some(frame), _) => image(frame)
                 .accessibility(self.accessibility.clone())
                 .a11y_role(AccessibilityRole::Video)
                 .a11y_focusable(true)

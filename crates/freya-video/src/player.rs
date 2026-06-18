@@ -1,12 +1,14 @@
 use std::time::Duration;
 
 use async_io::Timer;
-use freya_core::prelude::*;
+use freya_core::{
+    elements::image::ImageHolder,
+    prelude::*,
+};
 
 use crate::{
     VideoClient,
     VideoEvent,
-    VideoFrame,
     VideoSource,
 };
 
@@ -28,7 +30,7 @@ const SEEK_DEBOUNCE: Duration = Duration::from_millis(150);
 /// Reactive handle to a video decoding pipeline.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct VideoPlayer {
-    frame: State<Option<VideoFrame>>,
+    frame: State<Option<ImageHolder>>,
     playback: State<PlaybackState>,
     forwarder: State<Option<OwnedTaskHandle>>,
     source: State<VideoSource>,
@@ -51,7 +53,7 @@ impl VideoPlayer {
     }
 
     /// Latest decoded frame, if any.
-    pub fn frame(&self) -> Option<VideoFrame> {
+    pub fn frame(&self) -> Option<ImageHolder> {
         self.frame.read().clone()
     }
 
@@ -120,8 +122,9 @@ impl VideoPlayer {
         }
     }
 
-    /// Seek to `position`.
+    /// Seek to `position`, preserving whether playback is currently paused.
     pub fn seek(&mut self, position: Duration) {
+        let start_paused = self.state() == PlaybackState::Paused;
         self.position.set(position);
         self.client.set(None);
         self.playback.set(PlaybackState::Loading);
@@ -130,15 +133,15 @@ impl VideoPlayer {
         let player = *self;
         let handle = spawn(async move {
             Timer::after(SEEK_DEBOUNCE).await;
-            player.run(source, position).await;
+            player.run(source, position, start_paused).await;
         })
         .owned();
         self.forwarder.set(Some(handle));
     }
 
     /// Drive this player from a [`VideoClient`] decoding `source`.
-    async fn run(mut self, source: VideoSource, start_offset: Duration) {
-        let client = VideoClient::new(source, start_offset);
+    async fn run(mut self, source: VideoSource, start_offset: Duration, start_paused: bool) {
+        let client = VideoClient::new(source, start_offset, start_paused);
         let events = client.events().clone();
         self.client.set(Some(client));
 
@@ -151,7 +154,11 @@ impl VideoPlayer {
                     self.frame.set(Some(frame));
                     self.position.set(position);
                     if self.state() == PlaybackState::Loading {
-                        self.playback.set(PlaybackState::Playing);
+                        self.playback.set(if start_paused {
+                            PlaybackState::Paused
+                        } else {
+                            PlaybackState::Playing
+                        });
                     }
                 }
                 VideoEvent::Ended => {
@@ -174,7 +181,7 @@ pub fn use_video(init: impl FnOnce() -> VideoSource + 'static) -> VideoPlayer {
         let source = init();
         let mut player = VideoPlayer::create(source.clone());
         player.playback.set(PlaybackState::Loading);
-        let handle = spawn(player.run(source, Duration::ZERO)).owned();
+        let handle = spawn(player.run(source, Duration::ZERO, false)).owned();
         player.forwarder.set(Some(handle));
         player
     })

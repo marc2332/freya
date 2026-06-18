@@ -9,14 +9,20 @@ use std::{
 
 use bytes::Bytes;
 use freya_engine::prelude::{
+    AlphaType,
     ClipOp,
+    ColorType,
     CubicResampler,
+    Data,
     FilterMode,
+    ISize,
+    ImageInfo,
     MipmapMode,
     Paint,
     SamplingOptions,
     SkImage,
     SkRect,
+    raster_from_data,
 };
 use rustc_hash::FxHashMap;
 use torin::prelude::Size2D;
@@ -130,6 +136,24 @@ pub struct ImageHolder {
 impl ImageHolder {
     pub fn new(image: SkImage, bytes: Bytes) -> Self {
         Self { image, bytes }
+    }
+
+    /// Build a holder from a raw `RGBA8888` pixel buffer, validating its length.
+    pub fn from_rgba(width: u32, height: u32, bytes: Bytes, alpha_type: AlphaType) -> Option<Self> {
+        let row_bytes = (width as usize).checked_mul(4)?;
+        if bytes.len() < row_bytes.checked_mul(height as usize)? {
+            return None;
+        }
+        let info = ImageInfo::new(
+            ISize::new(width as i32, height as i32),
+            ColorType::RGBA8888,
+            alpha_type,
+            None,
+        );
+        // Safety: `bytes` outlives the SkImage because the returned holder owns it.
+        let data = unsafe { Data::new_bytes(&bytes) };
+        let image = raster_from_data(&info, data, row_bytes)?;
+        Some(Self::new(image, bytes))
     }
 }
 

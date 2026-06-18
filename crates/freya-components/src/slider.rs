@@ -226,22 +226,17 @@ impl Component for Slider {
                 .alignment(BorderAlignment::Inner)
         };
 
-        let (slider_width, slider_height, inner_slider_width, inner_slider_height) =
-            if direction_is_vertical {
-                (
-                    Size::auto(),
-                    self.size.clone(),
-                    Size::px(6.),
-                    self.size.clone(),
-                )
-            } else {
-                (
-                    self.size.clone(),
-                    Size::auto(),
-                    self.size.clone(),
-                    Size::px(6.),
-                )
-            };
+        let (slider_width, slider_height) = if direction_is_vertical {
+            (Size::auto(), self.size.clone())
+        } else {
+            (self.size.clone(), Size::auto())
+        };
+
+        let (inner_slider_width, inner_slider_height) = if direction_is_vertical {
+            (Size::px(6.), self.size.clone())
+        } else {
+            (self.size.clone(), Size::px(6.))
+        };
 
         let track_size = Size::func_data(
             move |ctx| Some(value as f32 / 100. * (ctx.parent - 15.)),
