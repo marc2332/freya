@@ -30,38 +30,36 @@ pub enum Route {
 struct AppSideBar;
 impl Component for AppSideBar {
     fn render(&self) -> impl IntoElement {
-        NativeRouter::new().child(
-            rect()
-                .horizontal()
-                .child(
-                    ScrollView::new().width(Size::px(200.)).child(
-                        rect()
-                            .theme_background()
-                            .padding(8.)
-                            .height(Size::fill())
-                            .child(
-                                ActivableRoute::new(
-                                    Route::Home,
-                                    Link::new(Route::Home).child(SideBarItem::new().child("Home")),
-                                )
-                                .exact(true),
+        rect()
+            .native_router()
+            .horizontal()
+            .child(
+                ScrollView::new().width(Size::px(200.)).child(
+                    rect()
+                        .theme_background()
+                        .padding(8.)
+                        .height(Size::fill())
+                        .child(
+                            ActivableRoute::new(
+                                Route::Home,
+                                Link::new(Route::Home).child(SideBarItem::new().child("Home")),
                             )
-                            .child(ActivableRoute::new(
-                                Route::Settings,
-                                Link::new(Route::Settings)
-                                    .child(SideBarItem::new().child("Settings")),
-                            ))
-                            .child(
-                                SideBarItem::new()
-                                    .on_press(|_| {
-                                        println!("Pressed 🦀");
-                                    })
-                                    .child("Crab 🦀"),
-                            ),
-                    ),
-                )
-                .child(rect().expanded().center().child(Outlet::<Route>::new())),
-        )
+                            .exact(true),
+                        )
+                        .child(ActivableRoute::new(
+                            Route::Settings,
+                            Link::new(Route::Settings).child(SideBarItem::new().child("Settings")),
+                        ))
+                        .child(
+                            SideBarItem::new()
+                                .on_press(|_| {
+                                    println!("Pressed 🦀");
+                                })
+                                .child("Crab 🦀"),
+                        ),
+                ),
+            )
+            .child(rect().expanded().center().child(Outlet::<Route>::new()))
     }
 }
 

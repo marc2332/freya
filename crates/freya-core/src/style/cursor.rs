@@ -1,9 +1,13 @@
+/// Shape of the text cursor drawn in a [`paragraph`](crate::elements::paragraph).
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Default, Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum CursorStyle {
+    /// A thin vertical line between glyphs. This is the default.
     #[default]
     Line = 0,
+    /// A filled block covering the glyph.
     Block = 1,
+    /// A line under the glyph.
     Underline = 2,
 }
 

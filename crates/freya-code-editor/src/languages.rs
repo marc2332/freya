@@ -1,47 +1,33 @@
-use std::fmt::Display;
+use std::borrow::Cow;
 
-#[derive(Default, Clone, Debug, PartialEq, Copy)]
-pub enum LanguageId {
-    Rust,
-    Python,
-    JavaScript,
-    TypeScript,
-    Markdown,
-    Toml,
-    Json,
-    SQL,
-    #[default]
-    Unknown,
+use tree_sitter::Language;
+
+/// A language definition used for syntax highlighting.
+///
+/// Bring your own tree-sitter grammar and its highlights query, so the editor
+/// can highlight any language without the crate depending on specific grammars.
+///
+/// ```no_run
+/// # use freya_code_editor::prelude::EditorLanguage;
+/// let language = EditorLanguage::new(
+///     tree_sitter_rust::LANGUAGE,
+///     tree_sitter_rust::HIGHLIGHTS_QUERY,
+/// );
+/// ```
+#[derive(Clone)]
+pub struct EditorLanguage {
+    pub language: Language,
+    pub highlights_query: Cow<'static, str>,
 }
 
-impl Display for LanguageId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Rust => f.write_str("Rust"),
-            Self::Python => f.write_str("Python"),
-            Self::JavaScript => f.write_str("JavaScript"),
-            Self::TypeScript => f.write_str("TypeScript"),
-            Self::Markdown => f.write_str("Markdown"),
-            Self::Toml => f.write_str("TOML"),
-            Self::Json => f.write_str("JSON"),
-            Self::SQL => f.write_str("SQL"),
-            Self::Unknown => f.write_str("Unknown"),
-        }
-    }
-}
-
-impl LanguageId {
-    pub fn parse(id: &str) -> Self {
-        match id {
-            "rs" => LanguageId::Rust,
-            "py" => LanguageId::Python,
-            "js" => LanguageId::JavaScript,
-            "ts" => LanguageId::TypeScript,
-            "md" => LanguageId::Markdown,
-            "toml" => LanguageId::Toml,
-            "json" => LanguageId::Json,
-            "sql" => LanguageId::SQL,
-            _ => LanguageId::Unknown,
+impl EditorLanguage {
+    pub fn new(
+        language: impl Into<Language>,
+        highlights_query: impl Into<Cow<'static, str>>,
+    ) -> Self {
+        Self {
+            language: language.into(),
+            highlights_query: highlights_query.into(),
         }
     }
 }

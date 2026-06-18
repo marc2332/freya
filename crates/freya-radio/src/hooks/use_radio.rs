@@ -160,7 +160,7 @@ impl<Value, Channel> RadioStation<Value, Channel>
 where
     Channel: RadioChannel<Value>,
 {
-    pub(crate) fn create(init_value: Value) -> Self {
+    pub fn create(init_value: Value) -> Self {
         RadioStation {
             value: State::create(init_value),
             listeners: State::create(HashMap::default()),
@@ -325,7 +325,7 @@ impl<Value, Channel> RadioAntenna<Value, Channel>
 where
     Channel: RadioChannel<Value>,
 {
-    pub(crate) fn new(
+    pub fn new(
         channel: Channel,
         station: RadioStation<Value, Channel>,
     ) -> RadioAntenna<Value, Channel> {
@@ -496,7 +496,7 @@ impl<Value, Channel> Radio<Value, Channel>
 where
     Channel: RadioChannel<Value>,
 {
-    pub(crate) fn new(antenna: State<RadioAntenna<Value, Channel>>) -> Radio<Value, Channel> {
+    pub fn new(antenna: State<RadioAntenna<Value, Channel>>) -> Radio<Value, Channel> {
         Radio { antenna }
     }
 

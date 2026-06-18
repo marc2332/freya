@@ -37,11 +37,16 @@ impl RenderPipeline<'_> {
         for i16 in itertools::sorted(self.tree.layers.keys()) {
             let nodes = self.tree.layers.get(i16).unwrap();
             'rendering: for node_id in nodes {
+                let layout_node = self.tree.layout.get(node_id).unwrap();
+
+                if layout_node.hidden {
+                    continue 'rendering;
+                }
+
                 let layer = self.canvas.save();
 
                 let element = self.tree.elements.get(node_id).unwrap();
                 let text_style_state = self.tree.text_style_state.get(node_id).unwrap();
-                let layout_node = self.tree.layout.get(node_id).unwrap();
                 let effect_state = self.tree.effect_state.get(node_id);
 
                 if let Some(effect_state) = effect_state {
@@ -52,12 +57,12 @@ impl RenderPipeline<'_> {
                         let layout_node = self.tree.layout.get(id).unwrap();
                         let effect = self.tree.effect_state.get(id).unwrap();
                         let area = layout_node.visible_area();
-                        let center = area.center();
+                        let origin = effect.transform_origin.origin(&area);
                         let scale = effect.scale.unwrap();
 
-                        visible_area = visible_area.translate(-center.to_vector());
+                        visible_area = visible_area.translate(-origin.to_vector());
                         visible_area = visible_area.scale(scale.x, scale.y);
-                        visible_area = visible_area.translate(center.to_vector());
+                        visible_area = visible_area.translate(origin.to_vector());
                     }
 
                     hotpath::measure_block!("Element Clipping", {
@@ -74,15 +79,15 @@ impl RenderPipeline<'_> {
                                 let scale_layout_node = self.tree.layout.get(id).unwrap();
                                 let scale_effect = self.tree.effect_state.get(id).unwrap();
                                 let area = scale_layout_node.visible_area();
-                                let center = area.center();
+                                let origin = scale_effect.transform_origin.origin(&area);
                                 let scale = scale_effect.scale.unwrap();
 
                                 transformed_clip_area =
-                                    transformed_clip_area.translate(-center.to_vector());
+                                    transformed_clip_area.translate(-origin.to_vector());
                                 transformed_clip_area =
                                     transformed_clip_area.scale(scale.x, scale.y);
                                 transformed_clip_area =
-                                    transformed_clip_area.translate(center.to_vector());
+                                    transformed_clip_area.translate(origin.to_vector());
                             }
 
                             // No need to render this element as it is completely clipped
@@ -106,12 +111,13 @@ impl RenderPipeline<'_> {
                         let layout_node = self.tree.layout.get(id).unwrap();
                         let effect = self.tree.effect_state.get(id).unwrap();
                         let area = layout_node.visible_area();
+                        let origin = effect.transform_origin.origin(&area);
                         let mut matrix = SkMatrix::new_identity();
                         matrix.set_rotate(
                             effect.rotation.unwrap(),
                             Some(SkPoint {
-                                x: area.min_x() + area.width() / 2.0,
-                                y: area.min_y() + area.height() / 2.0,
+                                x: origin.x,
+                                y: origin.y,
                             }),
                         );
                         self.canvas.concat(&matrix);
@@ -142,12 +148,12 @@ impl RenderPipeline<'_> {
                         let layout_node = self.tree.layout.get(id).unwrap();
                         let effect = self.tree.effect_state.get(id).unwrap();
                         let area = layout_node.visible_area();
-                        let center = area.center();
+                        let origin = effect.transform_origin.origin(&area);
                         let scale = effect.scale.unwrap();
 
-                        self.canvas.translate((center.x, center.y));
+                        self.canvas.translate((origin.x, origin.y));
                         self.canvas.scale((scale.x, scale.y));
-                        self.canvas.translate((-center.x, -center.y));
+                        self.canvas.translate((-origin.x, -origin.y));
                     }
                 }
 

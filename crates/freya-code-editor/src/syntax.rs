@@ -16,12 +16,12 @@ use tree_sitter::{
 };
 
 use crate::{
-    editor_theme::SyntaxTheme,
-    languages::LanguageId,
+    editor_theme::EditorSyntaxTheme,
+    languages::EditorLanguage,
 };
 
 #[allow(dead_code)]
-fn capture_color(name: &str, theme: &SyntaxTheme) -> Color {
+fn capture_color(name: &str, theme: &EditorSyntaxTheme) -> Color {
     match name {
         "attribute" => theme.attribute,
         "boolean" => theme.boolean,
@@ -61,7 +61,7 @@ fn capture_color(name: &str, theme: &SyntaxTheme) -> Color {
 
 /// Tries exact match, then strips trailing dot-segments for hierarchical fallback.
 #[allow(dead_code)]
-fn resolve_capture_color(name: &str, theme: &SyntaxTheme) -> Color {
+fn resolve_capture_color(name: &str, theme: &EditorSyntaxTheme) -> Color {
     let color = capture_color(name, theme);
     if color != theme.text {
         return color;
@@ -122,7 +122,6 @@ pub struct SyntaxHighlighter {
     tree: Option<Tree>,
     config: Option<LangConfig>,
     cursor: QueryCursor,
-    language_id: LanguageId,
 }
 
 impl Default for SyntaxHighlighter {
@@ -138,18 +137,13 @@ impl SyntaxHighlighter {
             tree: None,
             config: None,
             cursor: QueryCursor::new(),
-            language_id: LanguageId::Unknown,
         }
     }
 
-    pub fn set_language(&mut self, language_id: LanguageId, theme: &SyntaxTheme) {
-        if self.language_id == language_id {
-            return;
-        }
-        self.language_id = language_id;
+    /// Configures the language used for highlighting, or disables it with `None`.
+    pub fn set_language(&mut self, language: Option<&EditorLanguage>, theme: &EditorSyntaxTheme) {
         self.tree = None;
-
-        self.config = language_id.lang_config(theme);
+        self.config = language.and_then(|language| language.lang_config(theme));
         if let Some(cfg) = &self.config {
             let _ = self.parser.set_language(&cfg.language);
         }
@@ -166,7 +160,7 @@ impl SyntaxHighlighter {
         rope: &Rope,
         syntax_blocks: &mut SyntaxBlocks,
         edit: Option<InputEdit>,
-        theme: &SyntaxTheme,
+        theme: &EditorSyntaxTheme,
     ) {
         syntax_blocks.clear();
 
@@ -247,7 +241,7 @@ fn build_syntax_blocks(
     cursor: &mut QueryCursor,
     rope: &Rope,
     syntax_blocks: &mut SyntaxBlocks,
-    theme: &SyntaxTheme,
+    theme: &EditorSyntaxTheme,
 ) {
     let root = tree.root_node();
     cursor.set_byte_range(0..usize::MAX);
@@ -277,7 +271,7 @@ fn build_lines_from_spans(
     rope: &Rope,
     spans: &[Span],
     syntax_blocks: &mut SyntaxBlocks,
-    theme: &SyntaxTheme,
+    theme: &EditorSyntaxTheme,
 ) {
     let total_lines = rope.len_lines();
     let mut span_idx = 0;
@@ -371,7 +365,7 @@ fn build_lines_from_spans(
     }
 }
 
-fn build_plain_blocks(rope: &Rope, syntax_blocks: &mut SyntaxBlocks, theme: &SyntaxTheme) {
+fn build_plain_blocks(rope: &Rope, syntax_blocks: &mut SyntaxBlocks, theme: &EditorSyntaxTheme) {
     for (n, line) in rope.lines().enumerate() {
         let mut line_blocks = SmallVec::default();
         let start = rope.line_to_char(n);
@@ -429,38 +423,10 @@ impl<'a> Iterator for RopeChunkIter<'a> {
     }
 }
 
-impl LanguageId {
-    fn lang_config(&self, theme: &SyntaxTheme) -> Option<LangConfig> {
-        let (language, highlights_query) = match self {
-            #[cfg(feature = "rust")]
-            LanguageId::Rust => Some((
-                tree_sitter_rust::LANGUAGE.into(),
-                tree_sitter_rust::HIGHLIGHTS_QUERY,
-            )),
-            #[cfg(feature = "json")]
-            LanguageId::Json => Some((
-                tree_sitter_json::LANGUAGE.into(),
-                tree_sitter_json::HIGHLIGHTS_QUERY,
-            )),
-            #[cfg(feature = "toml")]
-            LanguageId::Toml => Some((
-                tree_sitter_toml_ng::LANGUAGE.into(),
-                tree_sitter_toml_ng::HIGHLIGHTS_QUERY,
-            )),
-            #[cfg(feature = "md")]
-            LanguageId::Markdown => Some((
-                tree_sitter_md::LANGUAGE.into(),
-                tree_sitter_md::HIGHLIGHT_QUERY_BLOCK,
-            )),
-            #[cfg(feature = "sql")]
-            LanguageId::SQL => Some((
-                tree_sitter_sequel::LANGUAGE.into(),
-                tree_sitter_sequel::HIGHLIGHTS_QUERY,
-            )),
-            _ => None,
-        }?;
-
-        let query = Query::new(&language, highlights_query).ok()?;
+impl EditorLanguage {
+    fn lang_config(&self, theme: &EditorSyntaxTheme) -> Option<LangConfig> {
+        let language = self.language.clone();
+        let query = Query::new(&language, self.highlights_query.as_ref()).ok()?;
         let capture_colors: Vec<Color> = query
             .capture_names()
             .iter()

@@ -28,7 +28,7 @@ pub struct EditorLineUI {
     pub(crate) gutter: bool,
     pub(crate) show_whitespace: bool,
     pub(crate) font_family: Cow<'static, str>,
-    pub(crate) theme: Readable<EditorTheme>,
+    pub(crate) theme: EditorTheme,
     pub(crate) a11y_id: AccessibilityId,
 }
 
@@ -53,7 +53,6 @@ impl Component for EditorLineUI {
         let holder = use_state(ParagraphHolder::default);
 
         let editor_data = editor.read();
-        let theme = theme.read();
 
         let longest_width = editor_data.metrics.longest_width;
         let line = editor_data.metrics.syntax_blocks.get_line(line_index);

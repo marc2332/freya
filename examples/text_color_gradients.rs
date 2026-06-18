@@ -14,7 +14,7 @@ fn app() -> impl IntoElement {
             .text("Gradient text")
             .font_size(64.)
             .font_weight(FontWeight::EXTRA_BOLD)
-            .color_linear_gradient(
+            .color(
                 LinearGradient::new()
                     .angle(90.)
                     .stop(((255, 100, 50), 0.))

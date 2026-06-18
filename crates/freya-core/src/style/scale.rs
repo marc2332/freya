@@ -1,3 +1,6 @@
+/// A scale factor applied to an element on each axis, where `1.0` is the original size.
+///
+/// Implements `From<f32>` (uniform) and `From<(f32, f32)>` (`x`, `y`).
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Default, Clone, PartialEq, Copy)]
 pub struct Scale {

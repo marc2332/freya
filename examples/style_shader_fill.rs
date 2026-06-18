@@ -51,7 +51,7 @@ fn app() -> impl IntoElement {
 
     rect()
         .expanded()
-        .background_shader(ShaderFill::new(SHADER, effect, move |effect, bounds| {
+        .background(ShaderFill::new(SHADER, effect, move |effect, bounds| {
             effect.make_shader(
                 Data::new_copy(
                     &[

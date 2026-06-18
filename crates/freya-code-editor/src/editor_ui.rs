@@ -1,9 +1,12 @@
 use std::borrow::Cow;
 
-use freya_components::scrollviews::{
-    ScrollController,
-    ScrollEvent,
-    VirtualScrollView,
+use freya_components::{
+    get_theme_or_default,
+    scrollviews::{
+        ScrollController,
+        ScrollEvent,
+        VirtualScrollView,
+    },
 };
 use freya_core::prelude::*;
 use freya_edit::EditableEvent;
@@ -12,8 +15,9 @@ use crate::{
     editor_data::CodeEditorData,
     editor_line::EditorLineUI,
     editor_theme::{
-        DEFAULT_EDITOR_THEME,
         EditorTheme,
+        EditorThemePartial,
+        EditorThemePreference,
     },
 };
 
@@ -28,7 +32,7 @@ pub struct CodeEditor {
     font_family: Cow<'static, str>,
     a11y_id: AccessibilityId,
     a11y_auto_focus: bool,
-    theme: Readable<EditorTheme>,
+    pub(crate) theme: Option<EditorThemePartial>,
     on_pre_key_down: Callback<Event<KeyboardEventData>, bool>,
 }
 
@@ -47,7 +51,7 @@ impl CodeEditor {
             font_family: Cow::Borrowed("Jetbrains Mono"),
             a11y_id,
             a11y_auto_focus: false,
-            theme: DEFAULT_EDITOR_THEME.into(),
+            theme: None,
             on_pre_key_down: Callback::new(|e: Event<KeyboardEventData>| {
                 e.stop_propagation();
                 if let Key::Named(NamedKey::Tab) = &e.key {
@@ -99,12 +103,6 @@ impl CodeEditor {
         self
     }
 
-    /// Sets the editor theme.
-    pub fn theme(mut self, theme: impl IntoReadable<EditorTheme>) -> Self {
-        self.theme = theme.into_readable();
-        self
-    }
-
     /// Sets a pre-handler called for each key event. Return `true` to let the editor process it,
     /// `false` to skip. The callback may call `stop_propagation()` / `prevent_default()` directly.
     pub fn on_pre_key_down(
@@ -131,6 +129,10 @@ impl Component for CodeEditor {
             theme,
             on_pre_key_down,
         } = self.clone();
+
+        let theme = get_theme_or_default!(&theme, EditorThemePreference, "code_editor", || {
+            EditorTheme::light().into()
+        });
 
         let editor_data = editor.read();
 
@@ -268,7 +270,7 @@ impl Component for CodeEditor {
             .a11y_id(a11y_id)
             .a11y_role(AccessibilityRole::TextInput)
             .expanded()
-            .background(theme.read().background)
+            .background(theme.background)
             .maybe(!read_only, |el| {
                 el.on_key_down(on_key_down).on_key_up(on_key_up)
             })

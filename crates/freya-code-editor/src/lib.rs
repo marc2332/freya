@@ -7,6 +7,8 @@ pub mod languages;
 pub mod metrics;
 pub mod syntax;
 
+pub use tree_sitter;
+
 pub mod prelude {
     pub use ropey::Rope;
 
@@ -18,13 +20,15 @@ pub mod prelude {
         editor_data::CodeEditorData,
         editor_line::EditorLineUI,
         editor_theme::{
-            DEFAULT_EDITOR_THEME,
-            DEFAULT_SYNTAX_THEME,
+            CodeEditorThemeExt,
+            EditorSyntaxTheme,
             EditorTheme,
-            SyntaxTheme,
+            EditorThemePartial,
+            EditorThemePartialExt,
+            EditorThemePreference,
         },
         editor_ui::CodeEditor,
-        languages::LanguageId,
+        languages::EditorLanguage,
         metrics::EditorMetrics,
         syntax::{
             InputEditExt,

@@ -1,5 +1,13 @@
 use freya_engine::prelude::Width as SkWidth;
 
+/// Horizontal width (condensed to expanded) of a font. Defaults to [`FontWidth::NORMAL`].
+///
+/// Use one of the named constants. It also implements `From<i32>` (`1..=9`).
+///
+/// ```
+/// # use freya::prelude::*;
+/// let width = FontWidth::CONDENSED;
+/// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub struct FontWidth(i32);

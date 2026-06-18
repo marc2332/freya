@@ -81,6 +81,9 @@ impl Component for DraggableCanvas {
         };
 
         let on_pointer_down = move |e: Event<PointerEventData>| {
+            if !e.data().is_primary() {
+                return;
+            }
             dragging_position.set(Some((offset() - e.element_location()).to_point()));
             e.stop_propagation();
         };
@@ -188,6 +191,9 @@ impl Component for Draggable {
         };
 
         let on_pointer_down = move |e: Event<PointerEventData>| {
+            if !e.data().is_primary() {
+                return;
+            }
             dragging_position.set(Some((e.global_location() - position()).to_point()));
             e.stop_propagation();
             let mut registry = registry.write();
@@ -320,6 +326,9 @@ impl Component for ResizableDraggable {
         };
 
         let on_pointer_down = move |e: Event<PointerEventData>| {
+            if !e.data().is_primary() {
+                return;
+            }
             // Don't start dragging if a resize was just initiated on a handle
             if resizing.read().is_some() {
                 return;
@@ -374,6 +383,9 @@ impl Component for ResizableDraggable {
                 }
             })
             .on_pointer_down(move |e: Event<PointerEventData>| {
+                if !e.data().is_primary() {
+                    return;
+                }
                 e.stop_propagation();
                 resizing.set(Some((ResizeEdge::Right, e.global_location())));
                 let mut registry = registry.write();
@@ -396,6 +408,9 @@ impl Component for ResizableDraggable {
                 }
             })
             .on_pointer_down(move |e: Event<PointerEventData>| {
+                if !e.data().is_primary() {
+                    return;
+                }
                 e.stop_propagation();
                 resizing.set(Some((ResizeEdge::Bottom, e.global_location())));
                 let mut registry = registry.write();
@@ -418,6 +433,9 @@ impl Component for ResizableDraggable {
                 }
             })
             .on_pointer_down(move |e: Event<PointerEventData>| {
+                if !e.data().is_primary() {
+                    return;
+                }
                 e.stop_propagation();
                 resizing.set(Some((ResizeEdge::BottomRight, e.global_location())));
                 let mut registry = registry.write();

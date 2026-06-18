@@ -50,6 +50,9 @@ impl ComponentOwned for ScrollThumb {
             .on_pointer_over(on_pointer_over)
             .on_pointer_out(on_pointer_out)
             .on_pointer_down(move |e: Event<PointerEventData>| {
+                if !e.data().is_primary() {
+                    return;
+                }
                 if self.axis == Axis::X {
                     self.clicking_scrollbar
                         .set(Some((self.axis, e.element_location().x)));

@@ -84,8 +84,11 @@ impl From<String> for Element {
     }
 }
 
+/// Whether text sizes itself to its content or expands to the available width.
 pub enum TextWidth {
+    /// Shrink to fit the text content.
     Fit,
+    /// Expand to the maximum available width.
     Max,
 }
 
@@ -359,17 +362,20 @@ impl Label {
             .cloned()
     }
 
+    /// Set the text content of the label.
     pub fn text(mut self, text: impl Into<Cow<'static, str>>) -> Self {
         let text = text.into();
         self.element.text = text;
         self
     }
 
+    /// Limit the label to at most this many lines, truncating the rest. Pass `None` for no limit.
     pub fn max_lines(mut self, max_lines: impl Into<Option<usize>>) -> Self {
         self.element.max_lines = max_lines.into();
         self
     }
 
+    /// Override the height of each line as a multiple of the font size. Pass `None` for the default.
     pub fn line_height(mut self, line_height: impl Into<Option<f32>>) -> Self {
         self.element.line_height = line_height.into();
         self

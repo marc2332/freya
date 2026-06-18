@@ -16,6 +16,7 @@ pub mod color_picker;
 pub mod context_menu;
 pub mod cursor_area;
 pub mod cursor_blink;
+pub mod docking;
 pub mod drag_drop;
 pub mod draggable_canvas;
 pub mod element_expansions;
@@ -63,12 +64,6 @@ cfg_if::cfg_if! {
 cfg_if::cfg_if! {
     if #[cfg(feature = "gif")] {
         pub mod gif_viewer;
-    }
-}
-
-cfg_if::cfg_if! {
-    if #[cfg(feature = "markdown")] {
-        pub mod markdown;
     }
 }
 

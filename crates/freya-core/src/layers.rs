@@ -10,10 +10,17 @@ use rustc_hash::{
 
 use crate::node_id::NodeId;
 
+/// The painting layer of an element, controlling what it draws on top of.
+///
+/// Converts from an `i16`, which becomes a [`Layer::Relative`] offset.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Layer {
+    /// Offset from the parent's layer. `0` (the default) keeps the normal stacking order;
+    /// negative values move behind siblings and positive values in front.
     Relative(i16),
+    /// Paint far above everything else, for overlays such as popups and tooltips.
     Overlay,
+    /// Paint on an overlay layer offset by the given multiplier, to stack overlays among themselves.
     RelativeOverlay(u8),
 }
 

@@ -50,4 +50,8 @@ impl Component for Activable {
 
         self.child.clone()
     }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
+    }
 }

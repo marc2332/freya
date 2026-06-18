@@ -159,7 +159,7 @@ impl Component for Skeleton {
                                 .position(Position::new_absolute().left(value))
                                 .width(Size::px(theme.shimmer_width))
                                 .height(Size::fill())
-                                .background_linear_gradient(
+                                .background(
                                     LinearGradient::new()
                                         .angle(-90.)
                                         .stop((theme.background, 0.))

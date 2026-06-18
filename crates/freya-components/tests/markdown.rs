@@ -30,6 +30,45 @@ fn parse_heading_and_paragraph() {
 }
 
 #[test]
+fn custom_inline_element() {
+    fn app() -> impl IntoElement {
+        rect().child(
+            MarkdownViewer::new("Status: <badge/> ready")
+                .inline_element(|html: String| html.starts_with("<badge").then(|| "New")),
+        )
+    }
+
+    let mut test = launch_test(app);
+    test.sync_and_update();
+
+    let labels = test.find_many(|node, element| Label::try_downcast(element).map(|_| node));
+    assert!(
+        labels
+            .iter()
+            .any(|label| Label::try_downcast(&*label.element()).unwrap().text == "New"),
+        "custom inline badge element was not rendered"
+    );
+}
+
+#[test]
+fn unknown_inline_element_falls_back_to_raw_text() {
+    fn app() -> impl IntoElement {
+        rect().child(MarkdownViewer::new("Before <unknown/> after"))
+    }
+
+    let mut test = launch_test(app);
+    test.sync_and_update();
+
+    let paragraphs = test.find_many(|node, element| Paragraph::try_downcast(element).map(|_| node));
+    assert!(paragraphs.iter().any(|paragraph| {
+        let para = Paragraph::try_downcast(&*paragraph.element()).unwrap();
+        para.spans
+            .iter()
+            .any(|span| span.text.contains("<unknown/>"))
+    }));
+}
+
+#[test]
 fn theme_font_sizes_applied() {
     let content = "# H1\n\n## H2\n\nParagraph text\n\n```rust\nlet x = 1;\n```\n\n- Item 1\n\n|H|C|\n|--|--|\n|Cell|Data|";
 

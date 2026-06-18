@@ -17,8 +17,8 @@ use ropey::Rope;
 use tree_sitter::InputEdit;
 
 use crate::{
-    editor_theme::SyntaxTheme,
-    languages::LanguageId,
+    editor_theme::EditorSyntaxTheme,
+    languages::EditorLanguage,
     metrics::EditorMetrics,
     syntax::InputEditExt,
 };
@@ -32,13 +32,13 @@ pub struct CodeEditorData {
     pub(crate) dragging: TextDragging,
     pub(crate) scrolls: (i32, i32),
     pub(crate) pending_edit: Option<InputEdit>,
-    pub language_id: LanguageId,
-    theme: SyntaxTheme,
+    pub language: Option<EditorLanguage>,
+    theme: EditorSyntaxTheme,
 }
 
 impl CodeEditorData {
-    pub fn new(rope: Rope, language_id: LanguageId) -> Self {
-        Self {
+    pub fn new(rope: Rope, language: impl Into<Option<EditorLanguage>>) -> Self {
+        let mut data = Self {
             rope,
             selection: TextSelection::new_cursor(0),
             history: EditorHistory::new(Duration::from_secs(1)),
@@ -47,9 +47,24 @@ impl CodeEditorData {
             dragging: TextDragging::default(),
             scrolls: (0, 0),
             pending_edit: None,
-            language_id,
-            theme: SyntaxTheme::default(),
-        }
+            language: language.into(),
+            theme: EditorSyntaxTheme::default(),
+        };
+        data.configure_highlighter();
+        data
+    }
+
+    /// Reconfigures the highlighter with the current language and theme.
+    fn configure_highlighter(&mut self) {
+        self.metrics
+            .highlighter
+            .set_language(self.language.as_ref(), &self.theme);
+    }
+
+    /// Sets the language used for syntax highlighting, or disables it with `None`.
+    pub fn set_language(&mut self, language: impl Into<Option<EditorLanguage>>) {
+        self.language = language.into();
+        self.configure_highlighter();
     }
 
     pub fn is_edited(&self) -> bool {
@@ -62,8 +77,7 @@ impl CodeEditorData {
 
     pub fn parse(&mut self) {
         let edit = self.pending_edit.take();
-        self.metrics
-            .run_parser(&self.rope, self.language_id, edit, &self.theme);
+        self.metrics.run_parser(&self.rope, edit, &self.theme);
     }
 
     pub fn measure(&mut self, font_size: f32, font_family: &str) {
@@ -71,8 +85,9 @@ impl CodeEditorData {
             .measure_longest_line(font_size, font_family, &self.rope);
     }
 
-    pub fn set_theme(&mut self, theme: SyntaxTheme) {
+    pub fn set_theme(&mut self, theme: EditorSyntaxTheme) {
         self.theme = theme;
+        self.configure_highlighter();
     }
 
     pub fn process(

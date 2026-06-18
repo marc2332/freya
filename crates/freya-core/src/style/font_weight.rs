@@ -1,5 +1,13 @@
 use freya_engine::prelude::Weight as SkWeight;
 
+/// Thickness of a font, from `100` (thin) to `1000`. Defaults to [`FontWeight::NORMAL`] (`400`).
+///
+/// Use one of the named constants. It also implements `From<i32>`.
+///
+/// ```
+/// # use freya::prelude::*;
+/// let weight = FontWeight::BOLD;
+/// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, PartialOrd)]
 pub struct FontWeight(i32);

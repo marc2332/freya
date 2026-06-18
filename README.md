@@ -190,7 +190,7 @@ fn app() -> impl IntoElement {
 
 ### Code Editor
 
-Create and control text Code Editors. It is state agnostic so as long as it can be turned into a `Writable` it will work. Uses Rope for text editing and tree-sitter for syntax highlighting. 
+Create and control text Code Editors. It is state agnostic so as long as it can be turned into a `Writable` it will work. Uses Rope for text editing and tree-sitter for syntax highlighting. You bring your own tree-sitter grammar and its highlights query, so any language can be supported.
 Enable with the `code-editor` feature.
 
 <details>
@@ -203,7 +203,11 @@ fn app() -> impl IntoElement {
     let editor = use_state(|| {
         let path = PathBuf::from("./crates/freya-code-editor/src/editor_ui.rs");
         let rope = Rope::from_str(&std::fs::read_to_string(&path).unwrap());
-        let mut editor = CodeEditorData::new(rope, LanguageId::Rust);
+        let language = EditorLanguage::new(
+            tree_sitter_rust::LANGUAGE,
+            tree_sitter_rust::HIGHLIGHTS_QUERY,
+        );
+        let mut editor = CodeEditorData::new(rope, language);
         editor.parse();
         editor.measure(14., "Jetbrains Mono");
         editor
@@ -218,6 +222,23 @@ fn app() -> impl IntoElement {
 <div align="center">
   <img src="https://github.com/user-attachments/assets/4d6c4571-ae74-4c24-a05f-9c715b6b3438">
 </div>
+
+
+### Markdown
+
+Render Markdown documents with the `MarkdownViewer` component.
+Enable with the `markdown` feature.
+
+<details>
+<summary>Code</summary>
+
+```rust
+fn app() -> impl IntoElement {
+    MarkdownViewer::new("# Hello World\n\nThis is **bold** and *italic* text.")
+}
+```
+
+</details>
 
 
 ### Routing & Navigation
@@ -251,37 +272,36 @@ fn app() -> impl IntoElement {
 struct AppBottomBar;
 impl Component for AppBottomBar {
     fn render(&self) -> impl IntoElement {
-        NativeRouter::new().child(
-            rect()
-                .content(Content::flex())
-                .child(
-                    rect()
-                        .width(Size::fill())
-                        .height(Size::flex(1.))
-                        .center()
-                        .child(outlet::<Route>()),
-                )
-                .child(
-                    rect()
-                        .horizontal()
-                        .width(Size::fill())
-                        .main_align(Alignment::center())
-                        .padding(8.)
-                        .spacing(8.)
-                        .child(
-                            Link::new(Route::Home)
-                                .child(FloatingTab::new().child("Home"))
-                                .activable_route(Route::Home)
-                                .exact(true),
-                        )
-                        .child(
-                            Link::new(Route::Settings)
-                                .child(FloatingTab::new().child("Settings"))
-                                .activable_route(Route::Settings)
-                                .exact(true),
-                        ),
-                ),
-        )
+        rect()
+            .native_router()
+            .content(Content::flex())
+            .child(
+                rect()
+                    .width(Size::fill())
+                    .height(Size::flex(1.))
+                    .center()
+                    .child(outlet::<Route>()),
+            )
+            .child(
+                rect()
+                    .horizontal()
+                    .width(Size::fill())
+                    .main_align(Alignment::center())
+                    .padding(8.)
+                    .spacing(8.)
+                    .child(
+                        Link::new(Route::Home)
+                            .child(FloatingTab::new().child("Home"))
+                            .activable_route(Route::Home)
+                            .exact(true),
+                    )
+                    .child(
+                        Link::new(Route::Settings)
+                            .child(FloatingTab::new().child("Settings"))
+                            .activable_route(Route::Settings)
+                            .exact(true),
+                    ),
+            )
     }
 }
 
@@ -749,7 +769,7 @@ freya = { git = "https://github.com/marc2332/freya", branch = "main" }
 Release candidates:
 
 ```toml
-freya = "0.4.0-rc.21"
+freya = "0.4.0-rc.23"
 ```
 
 ### Contributing 🧙‍♂️
@@ -764,7 +784,7 @@ If you are interested in supporting the development of this project feel free to
 
 Thanks to my sponsors for supporting this project! 😄 
 
-<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;github.com&#x2F;piny4man.png" width="60px" alt="User avatar: " /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;github.com&#x2F;gqf2008.png" width="60px" alt="User avatar: 高庆丰" /></a><a href="https://github.com/lino-levan"><img src="https:&#x2F;&#x2F;github.com&#x2F;lino-levan.png" width="60px" alt="User avatar: Lino Le Van" /></a><a href="https://github.com/d3rpp"><img src="https:&#x2F;&#x2F;github.com&#x2F;d3rpp.png" width="60px" alt="User avatar: Huddy Buddy" /></a><a href="https://github.com/DrigsterI"><img src="https:&#x2F;&#x2F;github.com&#x2F;DrigsterI.png" width="60px" alt="User avatar: Gabriel Jõe" /></a><a href="https://github.com/markalexander"><img src="https:&#x2F;&#x2F;github.com&#x2F;markalexander.png" width="60px" alt="User avatar: Mark" /></a><!-- sponsors -->
+<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;github.com&#x2F;piny4man.png" width="60px" alt="User avatar: " /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;github.com&#x2F;gqf2008.png" width="60px" alt="User avatar: 高庆丰" /></a><a href="https://github.com/d3rpp"><img src="https:&#x2F;&#x2F;github.com&#x2F;d3rpp.png" width="60px" alt="User avatar: Huddy Buddy" /></a><a href="https://github.com/DrigsterI"><img src="https:&#x2F;&#x2F;github.com&#x2F;DrigsterI.png" width="60px" alt="User avatar: Gabriel Jõe" /></a><a href="https://github.com/markalexander"><img src="https:&#x2F;&#x2F;github.com&#x2F;markalexander.png" width="60px" alt="User avatar: Mark" /></a><!-- sponsors -->
 
 ### Special thanks 💪
 

@@ -108,6 +108,7 @@ pub use skia_safe::{
         Paragraph,
         ParagraphBuilder,
         ParagraphStyle,
+        PlaceholderAlignment,
         PlaceholderStyle,
         PositionWithAffinity,
         RectHeightStyle,
