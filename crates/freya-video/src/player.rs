@@ -191,10 +191,12 @@ impl VideoPlayer {
     }
 }
 
-/// Create a [`VideoPlayer`] and start playing `init()`.
-pub fn use_video(init: impl FnOnce() -> VideoSource + 'static) -> VideoPlayer {
+/// Create a [`VideoPlayer`] and start playing `video_source()`.
+pub fn use_video<Source: Into<VideoSource>>(
+    video_source: impl FnOnce() -> Source + 'static,
+) -> VideoPlayer {
     use_hook(move || {
-        let source = init();
+        let source = video_source().into();
         let mut player = VideoPlayer::create(source.clone());
         player.playback.set(PlaybackState::Loading);
         let handle = spawn(player.run(source, Duration::ZERO, false)).owned();

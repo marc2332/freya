@@ -21,7 +21,6 @@ fn app() -> impl IntoElement {
         std::env::args()
             .nth(1)
             .expect("pass a video path as the first argument")
-            .into()
     });
 
     let state = player.state();

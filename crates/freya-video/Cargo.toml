@@ -27,3 +27,8 @@ blocking = { workspace = true }
 
 tracing = { workspace = true }
 anyhow = { workspace = true }
+
+[dev-dependencies]
+freya-testing = { workspace = true }
+torin = { workspace = true }
+ureq = { workspace = true }
