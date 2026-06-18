@@ -387,8 +387,7 @@ impl AppWindow {
         self.window.scale_factor() * self.user_zoom as f64
     }
 
-    /// Republishes the effective scale factor on [`Platform`] so consumers
-    /// (e.g. `ImageViewer`) pick it up on their next render.
+    /// Syncs the effective scale factor on [`Platform`].
     pub fn sync_scale_factor(&mut self) {
         self.platform
             .scale_factor
