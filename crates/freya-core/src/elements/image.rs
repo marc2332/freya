@@ -106,7 +106,7 @@ pub enum AspectRatio {
 }
 
 /// The filtering algorithm used when an image is scaled.
-#[derive(Clone, Debug, PartialEq, Default)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Default)]
 pub enum SamplingMode {
     /// Nearest-neighbor, fastest and sharpest, best for pixel art.
     Nearest,
@@ -119,6 +119,19 @@ pub enum SamplingMode {
     Mitchell,
     /// Catmull-Rom cubic resampling, a sharper high-quality filter.
     CatmullRom,
+}
+
+impl SamplingMode {
+    /// The Skia [`SamplingOptions`] backing this filtering algorithm.
+    pub fn sampling_options(&self) -> SamplingOptions {
+        match self {
+            Self::Nearest => SamplingOptions::new(FilterMode::Nearest, MipmapMode::None),
+            Self::Bilinear => SamplingOptions::new(FilterMode::Linear, MipmapMode::None),
+            Self::Trilinear => SamplingOptions::new(FilterMode::Linear, MipmapMode::Linear),
+            Self::Mitchell => SamplingOptions::from(CubicResampler::mitchell()),
+            Self::CatmullRom => SamplingOptions::from(CubicResampler::catmull_rom()),
+        }
+    }
 }
 
 /// A decoded image shared by reference, ready to be rendered by an [`image()`].
@@ -299,13 +312,7 @@ impl ElementExt for ImageElement {
             .canvas
             .clip_rrect(clip_rrect, ClipOp::Intersect, true);
 
-        let sampling = match self.image_data.sampling_mode {
-            SamplingMode::Nearest => SamplingOptions::new(FilterMode::Nearest, MipmapMode::None),
-            SamplingMode::Bilinear => SamplingOptions::new(FilterMode::Linear, MipmapMode::None),
-            SamplingMode::Trilinear => SamplingOptions::new(FilterMode::Linear, MipmapMode::Linear),
-            SamplingMode::Mitchell => SamplingOptions::from(CubicResampler::mitchell()),
-            SamplingMode::CatmullRom => SamplingOptions::from(CubicResampler::catmull_rom()),
-        };
+        let sampling = self.image_data.sampling_mode.sampling_options();
 
         let mut paint = Paint::default();
         paint.set_anti_alias(true);

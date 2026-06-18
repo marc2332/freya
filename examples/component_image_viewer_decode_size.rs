@@ -40,9 +40,9 @@ fn app() -> impl IntoElement {
             rect()
                 .horizontal()
                 .spacing(12.)
-                .children(PRESETS.iter().enumerate().map(|(i, (label, _))| {
+                .children(PRESETS.iter().enumerate().map(|(index, (label, _))| {
                     Button::new()
-                        .on_press(move |_| *preset.write() = i)
+                        .on_press(move |_| *preset.write() = index)
                         .child(*label)
                         .into()
                 })),

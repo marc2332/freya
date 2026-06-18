@@ -17,10 +17,7 @@ use freya_core::{
     prelude::*,
 };
 use freya_engine::prelude::{
-    FilterMode,
-    MipmapMode,
     Paint,
-    SamplingOptions,
     SkData,
     SkImage,
     SkRect,
@@ -157,7 +154,11 @@ impl Hash for ImageSource {
 pub type DecodeSize = euclid::Size2D<u32, ()>;
 
 impl ImageSource {
-    pub async fn bytes(&self, decode_size: Option<DecodeSize>) -> anyhow::Result<(SkImage, Bytes)> {
+    pub async fn bytes(
+        &self,
+        decode_size: Option<DecodeSize>,
+        sampling_mode: SamplingMode,
+    ) -> anyhow::Result<(SkImage, Bytes)> {
         let source = self.clone();
         blocking::unblock(move || {
             let bytes = match source {
@@ -172,7 +173,9 @@ impl ImageSource {
             };
             let encoded = SkImage::from_encoded(unsafe { SkData::new_bytes(&bytes) })
                 .context("Failed to decode Image.")?;
-            let image = match decode_size.and_then(|t| Self::downsample(&encoded, t)) {
+            let image = match decode_size
+                .and_then(|target| Self::downsample(&encoded, target, &sampling_mode))
+            {
                 Some(scaled) => scaled,
                 None => encoded.make_raster_image(None, None).unwrap_or(encoded),
             };
@@ -181,7 +184,11 @@ impl ImageSource {
         .await
     }
 
-    fn downsample(encoded: &SkImage, target: DecodeSize) -> Option<SkImage> {
+    fn downsample(
+        encoded: &SkImage,
+        target: DecodeSize,
+        sampling_mode: &SamplingMode,
+    ) -> Option<SkImage> {
         let natural_width = encoded.width() as f32;
         let natural_height = encoded.height() as f32;
         let target_width = target.width as f32;
@@ -195,7 +202,7 @@ impl ImageSource {
 
         let mut surface = raster_n32_premul((width as i32, height as i32))?;
         let destination = SkRect::from_xywh(0., 0., width, height);
-        let sampling = SamplingOptions::new(FilterMode::Linear, MipmapMode::Linear);
+        let sampling = sampling_mode.sampling_options();
         let mut paint = Paint::default();
         paint.set_anti_alias(true);
         surface.canvas().draw_image_rect_with_sampling_options(
@@ -212,12 +219,13 @@ impl ImageSource {
 /// How an [`ImageViewer`] picks its decode dimensions.
 #[derive(Default, Clone, Debug, PartialEq, Copy)]
 pub enum DecodeMode {
-    /// Default. Layout size scaled by the window scale factor, falling back to natural size when the layout isn't pixel-bound.
+    /// Default. Decodes to the pixel-sized layout scaled by the window scale factor,
+    /// falling back to the natural size for any other sizing (fill, percentages, auto).
     #[default]
     FromLayout,
     /// Decode at the image's natural size.
     Source,
-    /// Decode at this exact fit-within size.
+    /// Decode to fit within the given size, preserving aspect ratio and never upscaling.
     Custom(Size2D),
 }
 
@@ -230,10 +238,7 @@ impl DecodeMode {
                 (Size::Pixels(width), Size::Pixels(height)) => {
                     Size2D::new(width.get() * scale, height.get() * scale)
                 }
-                _ => {
-                    tracing::debug!("DecodeMode::FromLayout decoded at natural size.");
-                    return None;
-                }
+                _ => return None,
             },
             Self::Custom(size) => *size,
         };
@@ -390,13 +395,15 @@ impl Component for ImageViewer {
         let target = self
             .decode_mode
             .resolve(&self.layout, *Platform::get().scale_factor.read());
-        let asset_config = AssetConfiguration::new((&self.source, target), self.asset_age);
+        let sampling_mode = self.image_data.sampling_mode.clone();
+        let asset_config =
+            AssetConfiguration::new((&self.source, target, &sampling_mode), self.asset_age);
         let asset = use_asset(&asset_config);
         let mut asset_cacher = use_hook(AssetCacher::get);
 
         use_side_effect_with_deps(
-            &(self.source.clone(), asset_config, target),
-            move |(source, asset_config, target)| {
+            &(self.source.clone(), asset_config, target, sampling_mode),
+            move |(source, asset_config, target, sampling_mode)| {
                 if matches!(
                     asset_cacher.read_asset(asset_config),
                     Some(Asset::Pending) | Some(Asset::Error(_))
@@ -406,8 +413,9 @@ impl Component for ImageViewer {
                     let source = source.clone();
                     let asset_config = asset_config.clone();
                     let target = *target;
+                    let sampling_mode = sampling_mode.clone();
                     spawn_forever(async move {
-                        match source.bytes(target).await {
+                        match source.bytes(target, sampling_mode).await {
                             Ok((image, bytes)) => {
                                 // Image loaded
                                 let image_holder = ImageHolder {
