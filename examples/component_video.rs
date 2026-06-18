@@ -28,6 +28,7 @@ fn app() -> impl IntoElement {
     let progress = player.progress();
     let position = player.position();
     let duration = player.duration();
+    let volume = player.volume();
 
     let toggle_label = match state {
         PlaybackState::Playing => freya::icons::lucide::pause(),
@@ -90,7 +91,18 @@ fn app() -> impl IntoElement {
                     .value(progress)
                     .size(Size::flex(1.)),
                 )
-                .child(label().text(time_label).max_lines(1)),
+                .child(label().text(time_label).max_lines(1))
+                .child(
+                    svg(freya::icons::lucide::volume_2())
+                        .color((200, 200, 200))
+                        .width(Size::px(16.))
+                        .height(Size::px(16.)),
+                )
+                .child(
+                    Slider::new(move |per: f64| player.set_volume((per / 100.0) as f32))
+                        .value(volume as f64 * 100.0)
+                        .size(Size::px(90.)),
+                ),
         )
 }
 

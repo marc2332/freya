@@ -36,6 +36,7 @@ pub struct VideoPlayer {
     source: State<VideoSource>,
     position: State<Duration>,
     duration: State<Option<Duration>>,
+    volume: State<f32>,
     client: State<Option<VideoClient>>,
 }
 
@@ -48,6 +49,7 @@ impl VideoPlayer {
             source: State::create(source),
             position: State::create(Duration::ZERO),
             duration: State::create(None),
+            volume: State::create(1.0),
             client: State::create(None),
         }
     }
@@ -70,6 +72,20 @@ impl VideoPlayer {
     /// Total duration, if known.
     pub fn duration(&self) -> Option<Duration> {
         *self.duration.read()
+    }
+
+    /// Audio volume in `0.0..=1.0`, where `1.0` is the original level.
+    pub fn volume(&self) -> f32 {
+        *self.volume.read()
+    }
+
+    /// Set the audio volume, clamped to `0.0..=1.0`.
+    pub fn set_volume(&mut self, volume: f32) {
+        let volume = volume.clamp(0.0, 1.0);
+        self.volume.set(volume);
+        if let Some(client) = self.client.peek().as_ref() {
+            client.set_volume(volume);
+        }
     }
 
     /// Playback progress in `0.0..=100.0`.
@@ -141,7 +157,7 @@ impl VideoPlayer {
 
     /// Drive this player from a [`VideoClient`] decoding `source`.
     async fn run(mut self, source: VideoSource, start_offset: Duration, start_paused: bool) {
-        let client = VideoClient::new(source, start_offset, start_paused);
+        let client = VideoClient::new(source, start_offset, start_paused, *self.volume.peek());
         let events = client.events().clone();
         self.client.set(Some(client));
 

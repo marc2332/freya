@@ -17,6 +17,7 @@ use std::{
         Arc,
         atomic::{
             AtomicBool,
+            AtomicU32,
             Ordering,
         },
     },
@@ -47,6 +48,10 @@ use freya_core::{
     },
 };
 use freya_engine::prelude::AlphaType;
+use rodio::cpal::traits::{
+    DeviceTrait,
+    HostTrait,
+};
 
 /// Source of a video to decode.
 #[derive(PartialEq, Eq, Clone, Debug, Hash)]
@@ -77,11 +82,9 @@ impl From<String> for VideoSource {
 }
 
 impl VideoSource {
-    /// Common ffmpeg command for this source: input + optional `-ss` seek.
+    /// Base ffmpeg command for this source with an optional `-ss` seek.
     fn ffmpeg_command(&self, start_offset: Duration) -> FfmpegCommand {
         let mut cmd = FfmpegCommand::new();
-        // `-ss` before `-i` = fast keyframe-aligned input seek; output timestamps
-        // reset to 0, which is what the pacing loop expects.
         let start_secs = start_offset.as_secs_f32();
         if start_secs > 0.0 {
             cmd.args(["-ss", &start_secs.to_string()]);
@@ -97,10 +100,10 @@ const FRAME_BUFFER: usize = 2;
 /// Max outgoing events buffered before the pacing loop blocks.
 const EVENTS_BUFFER: usize = 2;
 
-const AUDIO_SAMPLE_RATE: u32 = 48_000;
-const AUDIO_CHANNELS: u16 = 2;
+/// Audio format used when the output device's default config can't be queried.
+const FALLBACK_AUDIO_CONFIG: (u32, u16) = (48_000, 2);
 
-/// Polling interval while paused: trades resume latency for idle CPU.
+/// Polling interval while paused, trading resume latency for idle CPU.
 const PAUSE_POLL: Duration = Duration::from_millis(32);
 
 /// Event emitted by a [`VideoClient`].
@@ -119,18 +122,33 @@ pub enum VideoEvent {
 pub struct VideoClient {
     events: async_channel::Receiver<VideoEvent>,
     paused: Arc<AtomicBool>,
+    volume: Arc<AtomicU32>,
     _task: OwnedTaskHandle,
 }
 
 impl VideoClient {
-    /// Start decoding `source` at `start_offset`, optionally paused.
-    pub fn new(source: VideoSource, start_offset: Duration, start_paused: bool) -> Self {
+    /// Start decoding `source` at `start_offset`, optionally paused, at `volume`.
+    pub fn new(
+        source: VideoSource,
+        start_offset: Duration,
+        start_paused: bool,
+        volume: f32,
+    ) -> Self {
         let (sender, receiver) = async_channel::bounded(EVENTS_BUFFER);
         let paused = Arc::new(AtomicBool::new(start_paused));
-        let task = spawn(Self::run(source, start_offset, paused.clone(), sender)).owned();
+        let volume = Arc::new(AtomicU32::new(volume.to_bits()));
+        let task = spawn(Self::run(
+            source,
+            start_offset,
+            paused.clone(),
+            volume.clone(),
+            sender,
+        ))
+        .owned();
         Self {
             events: receiver,
             paused,
+            volume,
             _task: task,
         }
     }
@@ -150,11 +168,17 @@ impl VideoClient {
         self.paused.store(false, Ordering::Relaxed);
     }
 
+    /// Set the audio volume, where `1.0` is the original level.
+    pub fn set_volume(&self, volume: f32) {
+        self.volume.store(volume.to_bits(), Ordering::Relaxed);
+    }
+
     /// Decode `source` and emit pacing-corrected frames into `events`.
     async fn run(
         source: VideoSource,
         start_offset: Duration,
         paused: Arc<AtomicBool>,
+        volume: Arc<AtomicU32>,
         events: async_channel::Sender<VideoEvent>,
     ) {
         let mut cmd = source.ffmpeg_command(start_offset);
@@ -169,7 +193,11 @@ impl VideoClient {
         };
         let _quitter = child.take_stdin().map(FfmpegQuitter);
 
-        let audio = AudioPlayback::start(&source, start_offset);
+        let audio = AudioPlayback::start(
+            &source,
+            start_offset,
+            f32::from_bits(volume.load(Ordering::Relaxed)),
+        );
         if paused.load(Ordering::Relaxed)
             && let Some(audio) = audio.as_ref()
         {
@@ -191,10 +219,15 @@ impl VideoClient {
                 DecoderEvent::Frame(frame) => frame,
             };
 
-            // Let the first frame through so a paused seek still shows a preview;
-            // afterwards honor pause and bank its time to keep wall-clock pacing correct.
+            // Show the first frame even when paused, so a seek reveals a preview.
             if wall_start.is_some() {
                 paused_for += Self::wait_for_resume(&paused, audio.as_ref()).await;
+            }
+
+            if let Some(audio) = audio.as_ref() {
+                audio
+                    .sink
+                    .set_volume(f32::from_bits(volume.load(Ordering::Relaxed)));
             }
 
             let wall_start = *wall_start.get_or_insert_with(Instant::now);
@@ -272,15 +305,13 @@ impl VideoClient {
                 FfmpegEvent::OutputFrame(frame) => DecoderEvent::Frame(frame),
                 _ => continue,
             };
-            // Parks the thread when the bounded channel is full, which backpressures
-            // ffmpeg via its stdout pipe. Err = receiver dropped (decode cancelled).
             if sender.send_blocking(item).is_err() {
                 tracing::warn!("Decoder consumer dropped, stopping ffmpeg ingest");
                 break;
             }
         }
 
-        // Reap regardless of how we exited the iter (ffmpeg-sidecar#72).
+        // Always reap the child to avoid a zombie process (ffmpeg-sidecar#72).
         let _ = child.kill();
         let _ = child.wait();
 
@@ -304,14 +335,18 @@ impl Drop for FfmpegQuitter {
 }
 
 /// PCM audio samples streamed from an ffmpeg process.
-struct PcmSource(BufReader<ChildStdout>);
+struct PcmSource {
+    reader: BufReader<ChildStdout>,
+    sample_rate: u32,
+    channels: u16,
+}
 
 impl Iterator for PcmSource {
     type Item = i16;
 
     fn next(&mut self) -> Option<i16> {
         let mut buf = [0u8; 2];
-        self.0.read_exact(&mut buf).ok()?;
+        self.reader.read_exact(&mut buf).ok()?;
         Some(i16::from_le_bytes(buf))
     }
 }
@@ -321,10 +356,10 @@ impl rodio::Source for PcmSource {
         None
     }
     fn channels(&self) -> u16 {
-        AUDIO_CHANNELS
+        self.channels
     }
     fn sample_rate(&self) -> u32 {
-        AUDIO_SAMPLE_RATE
+        self.sample_rate
     }
     fn total_duration(&self) -> Option<Duration> {
         None
@@ -339,18 +374,19 @@ struct AudioPlayback {
 }
 
 impl AudioPlayback {
-    /// Start an audio-only ffmpeg pipeline feeding into rodio.
-    fn start(source: &VideoSource, start_offset: Duration) -> Option<Self> {
+    /// Start an audio-only ffmpeg pipeline feeding into rodio at `volume`.
+    fn start(source: &VideoSource, start_offset: Duration, volume: f32) -> Option<Self> {
         let handle = Self::handle()?;
+        let (sample_rate, channels) = Self::output_config();
         let mut cmd = source.ffmpeg_command(start_offset);
         cmd.args([
             "-vn",
             "-f",
             "s16le",
             "-ar",
-            &AUDIO_SAMPLE_RATE.to_string(),
+            &sample_rate.to_string(),
             "-ac",
-            &AUDIO_CHANNELS.to_string(),
+            &channels.to_string(),
         ])
         .pipe_stdout();
         let mut child = cmd
@@ -362,7 +398,12 @@ impl AudioPlayback {
         let sink = rodio::Sink::try_new(&handle)
             .map_err(|err| tracing::warn!("Failed to create audio sink: {err}"))
             .ok()?;
-        sink.append(PcmSource(BufReader::new(stdout)));
+        sink.set_volume(volume);
+        sink.append(PcmSource {
+            reader: BufReader::new(stdout),
+            sample_rate,
+            channels,
+        });
         Some(Self {
             _quitter: quitter,
             sink,
@@ -386,5 +427,14 @@ impl AudioPlayback {
         provide_context_for_scope_id(handle.clone(), ScopeId::ROOT);
 
         Some(handle)
+    }
+
+    /// Default output device's sample rate and channels, to avoid a second resample.
+    fn output_config() -> (u32, u16) {
+        rodio::cpal::default_host()
+            .default_output_device()
+            .and_then(|device| device.default_output_config().ok())
+            .map(|config| (config.sample_rate().0, config.channels()))
+            .unwrap_or(FALLBACK_AUDIO_CONFIG)
     }
 }
