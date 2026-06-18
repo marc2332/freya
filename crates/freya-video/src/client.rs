@@ -170,10 +170,10 @@ impl VideoClient {
         let _quitter = child.take_stdin().map(FfmpegQuitter);
 
         let audio = AudioPlayback::start(&source, start_offset);
-        if paused.load(Ordering::Relaxed) {
-            if let Some(audio) = audio.as_ref() {
-                audio.sink.pause();
-            }
+        if paused.load(Ordering::Relaxed)
+            && let Some(audio) = audio.as_ref()
+        {
+            audio.sink.pause();
         }
 
         let (sender, receiver) = async_channel::bounded::<DecoderEvent>(FRAME_BUFFER);
