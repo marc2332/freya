@@ -84,7 +84,7 @@ fn app() -> impl IntoElement {
                         if let Some(duration) = player.duration() {
                             let target =
                                 Duration::from_secs_f64(duration.as_secs_f64() * per / 100.0);
-                            player.seek(target);
+                            player.seek(target, Duration::from_millis(150));
                         }
                     })
                     .value(progress)

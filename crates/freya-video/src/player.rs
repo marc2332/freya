@@ -24,9 +24,6 @@ pub enum PlaybackState {
     Errored,
 }
 
-/// Wait window before a seek actually spawns ffmpeg.
-const SEEK_DEBOUNCE: Duration = Duration::from_millis(150);
-
 /// Reactive handle to a video decoding pipeline.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct VideoPlayer {
@@ -44,7 +41,7 @@ impl VideoPlayer {
     pub fn create(source: VideoSource) -> Self {
         Self {
             frame: State::create(None),
-            playback: State::create(PlaybackState::Idle),
+            playback: State::create(PlaybackState::default()),
             forwarder: State::create(None),
             source: State::create(source),
             position: State::create(Duration::ZERO),
@@ -133,13 +130,13 @@ impl VideoPlayer {
         match self.state() {
             PlaybackState::Playing => self.pause(),
             PlaybackState::Paused => self.play(),
-            PlaybackState::Ended => self.seek(Duration::ZERO),
+            PlaybackState::Ended => self.seek(Duration::ZERO, Duration::ZERO),
             _ => {}
         }
     }
 
-    /// Seek to `position`, preserving whether playback is currently paused.
-    pub fn seek(&mut self, position: Duration) {
+    /// Seek to `position`, ignoring further seeks that arrive within `debounce`.
+    pub fn seek(&mut self, position: Duration, debounce: Duration) {
         let start_paused = self.state() == PlaybackState::Paused;
         self.position.set(position);
         self.client.set(None);
@@ -148,7 +145,7 @@ impl VideoPlayer {
         let source = self.source.peek().clone();
         let player = *self;
         let handle = spawn(async move {
-            Timer::after(SEEK_DEBOUNCE).await;
+            Timer::after(debounce).await;
             player.run(source, position, start_paused).await;
         })
         .owned();

@@ -58,7 +58,7 @@ fn app() -> impl IntoElement {
         .child(Button::new().on_press(move |_| player.play()).child("play"))
         .child(
             Button::new()
-                .on_press(move |_| player.seek(Duration::from_secs(2)))
+                .on_press(move |_| player.seek(Duration::from_secs(2), Duration::ZERO))
                 .child("seek"),
         )
         .child(Button::new().on_press(move |_| player.stop()).child("stop"))
