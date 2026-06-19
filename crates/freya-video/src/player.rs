@@ -135,7 +135,7 @@ impl VideoPlayer {
         }
     }
 
-    /// Seek to `position`, ignoring further seeks that arrive within `debounce`.
+    /// Seek to `position` after `debounce`, where a newer seek within the wait replaces it.
     pub fn seek(&mut self, position: Duration, debounce: Duration) {
         let start_paused = self.state() == PlaybackState::Paused;
         self.position.set(position);
