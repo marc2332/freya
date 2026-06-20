@@ -24,6 +24,7 @@ fn app() -> impl IntoElement {
     });
 
     let state = player.state();
+    let frame = player.frame();
     let progress = player.progress();
     let position = player.position();
     let duration = player.duration();
@@ -56,7 +57,7 @@ fn app() -> impl IntoElement {
                 .width(Size::fill())
                 .height(Size::flex(1.))
                 .center()
-                .child(match (player.frame(), player.state()) {
+                .child(match (frame, state) {
                     (Some(frame), _) => image(frame)
                         .expanded()
                         .aspect_ratio(AspectRatio::Min)
