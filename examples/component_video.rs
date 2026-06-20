@@ -71,7 +71,7 @@ fn app() -> impl IntoElement {
                         .image_cover(ImageCover::Center)
                         .overflow(Overflow::Clip)
                         .into(),
-                    (_, PlaybackState::Errored) => "Failer to load video.".into_element(),
+                    (_, PlaybackState::Errored) => "Failed to load video.".into_element(),
                     _ => CircularLoader::new().into(),
                 }),
         )
