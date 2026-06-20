@@ -29,6 +29,7 @@ tracing = { workspace = true }
 anyhow = { workspace = true }
 
 [dev-dependencies]
+freya = { path = "../freya" }
 freya-testing = { workspace = true }
 torin = { workspace = true }
 ureq = { workspace = true }

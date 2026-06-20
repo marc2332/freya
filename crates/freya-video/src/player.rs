@@ -105,13 +105,17 @@ impl VideoPlayer {
         self.position.set(Duration::ZERO);
     }
 
-    /// Resume playback.
+    /// Resume playback, or start from the current position when idle.
     pub fn play(&mut self) {
-        if self.state() == PlaybackState::Paused {
-            self.playback.set(PlaybackState::Playing);
-            if let Some(client) = self.client.peek().as_ref() {
-                client.play();
+        match self.state() {
+            PlaybackState::Paused => {
+                self.playback.set(PlaybackState::Playing);
+                if let Some(client) = self.client.peek().as_ref() {
+                    client.play();
+                }
             }
+            PlaybackState::Idle => self.seek(self.position(), Duration::ZERO),
+            _ => {}
         }
     }
 
@@ -189,15 +193,27 @@ impl VideoPlayer {
 }
 
 /// Create a [`VideoPlayer`] and start playing `video_source()`.
+///
+/// # Example
+///
+/// ```rust, no_run
+/// use freya::{
+///     prelude::*,
+///     video::*,
+/// };
+///
+/// fn app() -> impl IntoElement {
+///     let player = use_video(|| "video.mp4");
+///
+///     VideoViewer::new(player)
+/// }
+/// ```
 pub fn use_video<Source: Into<VideoSource>>(
     video_source: impl FnOnce() -> Source + 'static,
 ) -> VideoPlayer {
     use_hook(move || {
-        let source = video_source().into();
-        let mut player = VideoPlayer::create(source.clone());
-        player.playback.set(PlaybackState::Loading);
-        let handle = spawn(player.run(source, Duration::ZERO, false)).owned();
-        player.forwarder.set(Some(handle));
+        let mut player = VideoPlayer::create(video_source().into());
+        player.play();
         player
     })
 }
