@@ -52,11 +52,28 @@ fn app() -> impl IntoElement {
         .spacing(8.)
         .content(Content::Flex)
         .child(
-            VideoViewer::new(player)
+            rect()
                 .width(Size::fill())
                 .height(Size::flex(1.))
-                .aspect_ratio(AspectRatio::Min)
-                .image_cover(ImageCover::Center),
+                .center()
+                .child(match (player.frame(), player.state()) {
+                    (Some(frame), PlaybackState::Loading) => image(frame)
+                        .expanded()
+                        .aspect_ratio(AspectRatio::Min)
+                        .image_cover(ImageCover::Center)
+                        .overflow(Overflow::Clip)
+                        .center()
+                        .child(CircularLoader::new())
+                        .into(),
+                    (Some(frame), _) => image(frame)
+                        .expanded()
+                        .aspect_ratio(AspectRatio::Min)
+                        .image_cover(ImageCover::Center)
+                        .overflow(Overflow::Clip)
+                        .into(),
+                    (_, PlaybackState::Errored) => "Failer to load video.".into_element(),
+                    _ => CircularLoader::new().into(),
+                }),
         )
         .child(
             rect()

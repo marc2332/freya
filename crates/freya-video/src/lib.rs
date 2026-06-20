@@ -2,7 +2,8 @@
 //!
 //! - [`use_video`]: a hook that decodes a video into reactive state and returns a
 //!   [`VideoPlayer`] to control playback.
-//! - [`VideoViewer`]: a component that renders the current frame.
+//!
+//! Render the current frame yourself with the `image()` element from `player.frame()`.
 //!
 //! Call [`ensure_ffmpeg`] once before `launch()` to auto-download an ffmpeg binary.
 //!
@@ -12,6 +13,7 @@
 //!
 //! ```rust, no_run
 //! use freya::{
+//!     elements::image::image,
 //!     prelude::*,
 //!     video::*,
 //! };
@@ -19,13 +21,12 @@
 //! fn app() -> impl IntoElement {
 //!     let player = use_video(|| "video.mp4");
 //!
-//!     VideoViewer::new(player)
+//!     rect().maybe_child(player.frame().map(image))
 //! }
 //! ```
 
 mod client;
 mod player;
-mod viewer;
 
 pub use self::{
     client::{
@@ -38,7 +39,6 @@ pub use self::{
         VideoPlayer,
         use_video,
     },
-    viewer::VideoViewer,
 };
 
 /// Download an ffmpeg binary if one isn't already available on `PATH`.

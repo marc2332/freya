@@ -65,7 +65,6 @@ pub mod prelude {
         data::*,
         debug::*,
         diff_key::DiffKey,
-        element::RenderContext,
         element::{
             App,
             Component,
@@ -73,14 +72,15 @@ pub mod prelude {
             ComponentOwned,
             Element,
             IntoElement,
+            RenderContext,
         },
         elements::{
             extensions::*,
             image::{
                 AspectRatio,
                 ImageCover,
-                // The image element is hidden on purpose as its a "low level" element, users should rather use the `ImageViewer` component.
                 SamplingMode,
+                image,
             },
             label::{
                 Label,
@@ -108,12 +108,16 @@ pub mod prelude {
             EventHandler,
             NoArgCallback,
         },
-        events::data::*,
-        events::modifiers::*,
-        events::*,
+        events::{
+            data::*,
+            modifiers::*,
+            *,
+        },
         events_combos::*,
-        hooks::previous_and_current::*,
-        hooks::use_id::*,
+        hooks::{
+            previous_and_current::*,
+            use_id::*,
+        },
         layers::Layer,
         lifecycle::{
             base::*,

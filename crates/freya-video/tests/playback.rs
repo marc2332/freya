@@ -13,12 +13,12 @@ use freya_core::elements::{
     image::{
         Image,
         ImageHolder,
+        image,
     },
     label::Label,
 };
 use freya_testing::prelude::*;
 use freya_video::{
-    VideoViewer,
     ensure_ffmpeg,
     use_video,
 };
@@ -46,9 +46,10 @@ fn app() -> impl IntoElement {
     let mut player = use_video(sample_video_path);
     rect()
         .child(
-            VideoViewer::new(player)
+            rect()
                 .width(Size::fill())
-                .height(Size::px(200.)),
+                .height(Size::px(200.))
+                .maybe_child(player.frame().map(image)),
         )
         .child(
             Button::new()

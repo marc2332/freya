@@ -198,6 +198,7 @@ impl VideoPlayer {
 ///
 /// ```rust, no_run
 /// use freya::{
+///     elements::image::image,
 ///     prelude::*,
 ///     video::*,
 /// };
@@ -205,7 +206,7 @@ impl VideoPlayer {
 /// fn app() -> impl IntoElement {
 ///     let player = use_video(|| "video.mp4");
 ///
-///     VideoViewer::new(player)
+///     rect().maybe_child(player.frame().map(image))
 /// }
 /// ```
 pub fn use_video<Source: Into<VideoSource>>(
