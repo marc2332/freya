@@ -284,7 +284,7 @@ impl<Q: MutationCapability> UseMutation<Q> {
     pub fn read(&self) -> MutationReader<Q> {
         let storage = consume_context::<MutationsStorage<Q>>();
         let map = storage.storage.peek();
-        let mutation_data = map.get(&self.mutation.peek()).cloned().unwrap();
+        let mutation_data = map.get(&self.mutation.read()).cloned().unwrap();
 
         // Subscribe if possible
         if let Some(mut reactive_context) = ReactiveContext::try_current() {

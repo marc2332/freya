@@ -3,6 +3,7 @@ use std::{
     rc::Rc,
 };
 
+use freya::prelude::Size;
 use freya_query::prelude::*;
 use freya_testing::prelude::*;
 
@@ -92,5 +93,85 @@ fn mutation_basic() {
             .unwrap()
             .text
             .contains("John")
+    );
+}
+
+#[derive(Clone, PartialEq, Hash, Eq)]
+struct CheckUser {
+    user_id: usize,
+}
+
+impl MutationCapability for CheckUser {
+    type Ok = ();
+    type Err = ();
+    type Keys = ();
+
+    async fn run(&self, _keys: &Self::Keys) -> Result<Self::Ok, Self::Err> {
+        match self.user_id {
+            0 => Ok(()),
+            _ => Err(()),
+        }
+    }
+}
+
+#[test]
+fn mutation_reactive_context_reruns_on_identity_change() {
+    fn app() -> impl IntoElement {
+        let mut observed = use_consume::<State<Vec<bool>>>();
+        let mut user_id = use_state(|| 0usize);
+
+        let mutation = use_mutation(Mutation::new(CheckUser {
+            user_id: *user_id.read(),
+        }));
+
+        // Records every settled result this reactive context sees.
+        use_side_effect(move || {
+            let reader = mutation.read();
+            let state = reader.state();
+            if state.is_ok() || state.is_err() {
+                observed.write().push(state.is_ok());
+            }
+        });
+
+        // Runs the mutation again whenever the identity changes.
+        use_after_side_effect(move || {
+            let _ = user_id.read();
+            mutation.mutate(());
+        });
+
+        rect()
+            .width(Size::fill())
+            .height(Size::fill())
+            .on_press(move |_| {
+                *user_id.write() = 1;
+            })
+    }
+
+    let (mut test, observed) = TestingRunner::new(
+        app,
+        (200., 200.).into(),
+        |runner| runner.provide_root_context(|| State::create(Vec::<bool>::new())),
+        1.,
+    );
+
+    test.sync_and_update();
+    test.poll(
+        std::time::Duration::from_millis(10),
+        std::time::Duration::from_millis(200),
+    );
+
+    assert_eq!(&*observed.peek(), &[true]);
+
+    // Changing the identity re-runs the mutation with user `1`, which fails.
+    test.click_cursor((100.0, 100.0));
+    test.poll(
+        std::time::Duration::from_millis(10),
+        std::time::Duration::from_millis(200),
+    );
+
+    assert_eq!(
+        &*observed.peek(),
+        &[true, false],
+        "the reactive context was not notified when the mutation re-ran"
     );
 }
