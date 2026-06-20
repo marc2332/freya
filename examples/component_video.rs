@@ -57,14 +57,6 @@ fn app() -> impl IntoElement {
                 .height(Size::flex(1.))
                 .center()
                 .child(match (player.frame(), player.state()) {
-                    (Some(frame), PlaybackState::Loading) => image(frame)
-                        .expanded()
-                        .aspect_ratio(AspectRatio::Min)
-                        .image_cover(ImageCover::Center)
-                        .overflow(Overflow::Clip)
-                        .center()
-                        .child(CircularLoader::new())
-                        .into(),
                     (Some(frame), _) => image(frame)
                         .expanded()
                         .aspect_ratio(AspectRatio::Min)
