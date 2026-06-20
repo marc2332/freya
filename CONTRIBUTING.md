@@ -103,6 +103,7 @@ Freya is split in various crates, each with it's own meaning and purpose, here i
 - `freya-code-editor`: Set of APIs to create text Code Editors in Freya.
 - `freya-markdown`: Markdown rendering component for Freya.
 - `freya-camera`: Camera capture support for Freya.
+- `freya-video`: Video playback APIs for Freya.
 
 ## Examples
 All important examples are located in the  `./examples` folder although you might also find some in the form of docs comments in the code itself.
