@@ -11,22 +11,37 @@ use freya_core::{
     prelude::*,
 };
 use freya_engine::prelude::{
+    Canvas as SkiaCanvas,
     ClipOp,
+    FontCollection,
     Paint,
     PaintStyle,
     SkRect,
 };
+use torin::prelude::Size2D;
 
-type Callback = Rc<RefCell<dyn FnMut(&mut RenderContext)>>;
+/// Drawing context passed to a [`Canvas`]'s render callback.
+pub struct CanvasContext<'a> {
+    /// Skia canvas to draw onto.
+    pub canvas: &'a SkiaCanvas,
+    /// Font collection used for text rendering.
+    pub font_collection: &'a mut FontCollection,
+    /// Drawing area size in logical coordinates.
+    pub size: Size2D,
+    /// Resolved text styling inherited by the canvas, for drawing themed text.
+    pub text_style_state: &'a TextStyleState,
+}
+
+type Callback = Rc<RefCell<dyn FnMut(&mut CanvasContext)>>;
 
 pub struct RenderCallback(Callback);
 
 impl RenderCallback {
-    pub fn new(callback: impl FnMut(&mut RenderContext) + 'static) -> Self {
+    pub fn new(callback: impl FnMut(&mut CanvasContext) + 'static) -> Self {
         Self(Rc::new(RefCell::new(callback)))
     }
 
-    pub fn call(&self, data: &mut RenderContext) {
+    pub fn call(&self, data: &mut CanvasContext) {
         (self.0.borrow_mut())(data)
     }
 }
@@ -43,7 +58,7 @@ impl PartialEq for RenderCallback {
     }
 }
 
-impl<H: FnMut(&mut RenderContext) + 'static> From<H> for RenderCallback {
+impl<H: FnMut(&mut CanvasContext) + 'static> From<H> for RenderCallback {
     fn from(value: H) -> Self {
         RenderCallback::new(value)
     }
@@ -134,7 +149,7 @@ impl ElementExt for CanvasElement {
         );
     }
 
-    fn render(&self, mut context: RenderContext) {
+    fn render(&self, context: RenderContext) {
         let style = self.style();
         let area = context.layout_node.visible_area();
 
@@ -148,11 +163,18 @@ impl ElementExt for CanvasElement {
             &paint,
         );
 
+        context.canvas.translate((area.min_x(), area.min_y()));
         context
             .canvas
             .scale((context.scale_factor as f32, context.scale_factor as f32));
-        context.canvas.translate((area.min_x(), area.min_y()));
-        self.on_render.call(&mut context);
+
+        let mut canvas_context = CanvasContext {
+            canvas: context.canvas,
+            font_collection: context.font_collection,
+            size: area.size / context.scale_factor as f32,
+            text_style_state: context.text_style_state,
+        };
+        self.on_render.call(&mut canvas_context);
         context.canvas.restore();
     }
 }

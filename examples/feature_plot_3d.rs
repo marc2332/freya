@@ -32,19 +32,22 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn on_render(ctx: &mut RenderContext, (cursor_x, cursor_y): (f64, f64)) {
+fn on_render(ctx: &mut CanvasContext, (cursor_x, cursor_y): (f64, f64)) {
+    let width = ctx.size.width as f64;
+    let height = ctx.size.height as f64;
+
     let backend = PlotSkiaBackend::new(
         ctx.canvas,
         ctx.font_collection,
-        ctx.layout_node.area.size.to_i32().to_tuple(),
+        (ctx.size.width as i32, ctx.size.height as i32),
     )
     .into_drawing_area();
 
     backend.fill(&WHITE).unwrap();
 
-    let pitch = std::f64::consts::PI * (0.5 - cursor_y / ctx.layout_node.area.height() as f64);
-    let yaw = std::f64::consts::PI * 2.0 * (cursor_x / ctx.layout_node.area.width() as f64 - 0.5);
-    let scale = 0.4 + 0.6 * (1.0 - cursor_y / ctx.layout_node.area.height() as f64);
+    let pitch = std::f64::consts::PI * (0.5 - cursor_y / height);
+    let yaw = std::f64::consts::PI * 2.0 * (cursor_x / width - 0.5);
+    let scale = 0.4 + 0.6 * (1.0 - cursor_y / height);
 
     let x_axis = (-3.0..3.0).step(0.1);
     let z_axis = (-3.0..3.0).step(0.1);
