@@ -130,6 +130,7 @@ pub enum SamplingMode {
 #[derive(Clone)]
 pub struct ImageHolder {
     pub image: SkImage,
+    /// Backing data of the [`SkImage`], kept alive for as long as the image is used.
     pub bytes: Bytes,
 }
 
