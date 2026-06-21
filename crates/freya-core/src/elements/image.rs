@@ -3,21 +3,26 @@
 use std::{
     any::Any,
     borrow::Cow,
-    cell::RefCell,
     collections::HashMap,
     rc::Rc,
 };
 
 use bytes::Bytes;
 use freya_engine::prelude::{
+    AlphaType,
     ClipOp,
+    ColorType,
     CubicResampler,
+    Data,
     FilterMode,
+    ISize,
+    ImageInfo,
     MipmapMode,
     Paint,
     SamplingOptions,
     SkImage,
     SkRect,
+    raster_from_data,
 };
 use rustc_hash::FxHashMap;
 use torin::prelude::Size2D;
@@ -137,13 +142,38 @@ impl SamplingMode {
 /// A decoded image shared by reference, ready to be rendered by an [`image()`].
 #[derive(Clone)]
 pub struct ImageHolder {
-    pub image: Rc<RefCell<SkImage>>,
+    pub image: SkImage,
+    /// Backing data of the [`SkImage`], kept alive for as long as the image is used.
     pub bytes: Bytes,
+}
+
+impl ImageHolder {
+    pub fn new(image: SkImage, bytes: Bytes) -> Self {
+        Self { image, bytes }
+    }
+
+    /// Build a holder from a raw `RGBA8888` pixel buffer, validating its length.
+    pub fn from_rgba(width: u32, height: u32, bytes: Bytes, alpha_type: AlphaType) -> Option<Self> {
+        let row_bytes = (width as usize).checked_mul(4)?;
+        if bytes.len() < row_bytes.checked_mul(height as usize)? {
+            return None;
+        }
+        let info = ImageInfo::new(
+            ISize::new(width as i32, height as i32),
+            ColorType::RGBA8888,
+            alpha_type,
+            None,
+        );
+        // Safety: `bytes` outlives the SkImage because the returned holder owns it.
+        let data = unsafe { Data::new_bytes(&bytes) };
+        let image = raster_from_data(&info, data, row_bytes)?;
+        Some(Self::new(image, bytes))
+    }
 }
 
 impl PartialEq for ImageHolder {
     fn eq(&self, other: &Self) -> bool {
-        Rc::ptr_eq(&self.image, &other.image)
+        self.image.unique_id() == other.image.unique_id()
     }
 }
 
@@ -197,9 +227,7 @@ impl ElementExt for ImageElement {
         if self.image_holder != image.image_holder {
             diff.insert(DiffModifies::STYLE);
 
-            if self.image_holder.image.borrow().dimensions()
-                != image.image_holder.image.borrow().dimensions()
-            {
+            if self.image_holder.image.dimensions() != image.image_holder.image.dimensions() {
                 diff.insert(DiffModifies::LAYOUT);
             }
         }
@@ -247,13 +275,13 @@ impl ElementExt for ImageElement {
     }
 
     fn measure(&self, context: LayoutContext) -> Option<(Size2D, Rc<dyn Any>)> {
-        let image = self.image_holder.image.borrow();
+        let image = &self.image_holder.image;
 
         let image_width = image.width() as f32;
         let image_height = image.height() as f32;
 
-        let width_ratio = context.area_size.width / image.width() as f32;
-        let height_ratio = context.area_size.height / image.height() as f32;
+        let width_ratio = context.area_size.width / image_width;
+        let height_ratio = context.area_size.height / image_height;
 
         let size = match self.image_data.aspect_ratio {
             AspectRatio::Max => {
@@ -288,7 +316,6 @@ impl ElementExt for ImageElement {
             .unwrap();
 
         let area = context.layout_node.visible_area();
-        let image = self.image_holder.image.borrow();
 
         let mut rect = SkRect::new(
             area.min_x(),
@@ -317,9 +344,13 @@ impl ElementExt for ImageElement {
         let mut paint = Paint::default();
         paint.set_anti_alias(true);
 
-        context
-            .canvas
-            .draw_image_rect_with_sampling_options(&*image, None, rect, sampling, &paint);
+        context.canvas.draw_image_rect_with_sampling_options(
+            &self.image_holder.image,
+            None,
+            rect,
+            sampling,
+            &paint,
+        );
 
         context.canvas.restore();
     }

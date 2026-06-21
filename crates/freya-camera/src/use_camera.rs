@@ -1,22 +1,10 @@
 //! [`use_camera`] hook and the [`Camera`] handle.
 
-use std::{
-    cell::RefCell,
-    rc::Rc,
-};
-
 use freya_core::{
     elements::image::ImageHolder,
     prelude::*,
 };
-use freya_engine::prelude::{
-    AlphaType,
-    ColorType,
-    Data,
-    ISize,
-    ImageInfo,
-    raster_from_data,
-};
+use freya_engine::prelude::AlphaType;
 
 use crate::{
     camera::{
@@ -113,20 +101,6 @@ fn build_holder(frame: CameraFrame) -> Result<ImageHolder, CameraError> {
         data,
     } = frame;
 
-    let info = ImageInfo::new(
-        ISize::new(width as i32, height as i32),
-        ColorType::RGBA8888,
-        AlphaType::Opaque,
-        None,
-    );
-    let row_bytes = (width as usize) * 4;
-    // Safety: `data` outlives the SkImage via `ImageHolder.bytes` below.
-    let sk_data = unsafe { Data::new_bytes(&data) };
-    let image = raster_from_data(&info, sk_data, row_bytes)
-        .ok_or_else(|| CameraError::GeneralError("failed to create raster image".to_string()))?;
-
-    Ok(ImageHolder {
-        image: Rc::new(RefCell::new(image)),
-        bytes: data,
-    })
+    ImageHolder::from_rgba(width, height, data, AlphaType::Opaque)
+        .ok_or_else(|| CameraError::GeneralError("failed to create raster image".to_string()))
 }
