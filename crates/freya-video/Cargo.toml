@@ -16,7 +16,6 @@ workspace = true
 
 [dependencies]
 freya-core = { workspace = true }
-freya-components = { workspace = true }
 freya-engine = { workspace = true }
 
 ffmpeg-sidecar = { workspace = true }
@@ -30,6 +29,7 @@ anyhow = { workspace = true }
 
 [dev-dependencies]
 freya = { path = "../freya" }
+freya-components = { workspace = true }
 freya-testing = { workspace = true }
 torin = { workspace = true }
 ureq = { workspace = true }

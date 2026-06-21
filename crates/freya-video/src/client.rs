@@ -38,6 +38,7 @@ use ffmpeg_sidecar::{
 };
 use freya_core::{
     elements::image::ImageHolder,
+    notify::ArcNotify,
     prelude::{
         Bytes,
         OwnedTaskHandle,
@@ -103,9 +104,6 @@ const EVENTS_BUFFER: usize = 2;
 /// Audio format used when the output device's default config can't be queried.
 const FALLBACK_AUDIO_CONFIG: (u32, u16) = (48_000, 2);
 
-/// Polling interval while paused, trading resume latency for idle CPU.
-const PAUSE_POLL: Duration = Duration::from_millis(32);
-
 /// Event emitted by a [`VideoClient`].
 #[derive(Clone)]
 pub enum VideoEvent {
@@ -122,6 +120,7 @@ pub enum VideoEvent {
 pub struct VideoClient {
     events: async_channel::Receiver<VideoEvent>,
     paused: Arc<AtomicBool>,
+    resumed: ArcNotify,
     volume: Arc<AtomicU32>,
     _task: OwnedTaskHandle,
 }
@@ -136,11 +135,13 @@ impl VideoClient {
     ) -> Self {
         let (sender, receiver) = async_channel::bounded(EVENTS_BUFFER);
         let paused = Arc::new(AtomicBool::new(start_paused));
+        let resumed = ArcNotify::new();
         let volume = Arc::new(AtomicU32::new(volume.to_bits()));
         let task = spawn(Self::run(
             source,
             start_offset,
             paused.clone(),
+            resumed.clone(),
             volume.clone(),
             sender,
         ))
@@ -148,6 +149,7 @@ impl VideoClient {
         Self {
             events: receiver,
             paused,
+            resumed,
             volume,
             _task: task,
         }
@@ -163,9 +165,10 @@ impl VideoClient {
         self.paused.store(true, Ordering::Relaxed);
     }
 
-    /// Resume playback.
+    /// Resume playback, waking the pacing loop if it is waiting.
     pub fn play(&self) {
         self.paused.store(false, Ordering::Relaxed);
+        self.resumed.notify();
     }
 
     /// Set the audio volume, where `1.0` is the original level.
@@ -178,6 +181,7 @@ impl VideoClient {
         source: VideoSource,
         start_offset: Duration,
         paused: Arc<AtomicBool>,
+        resumed: ArcNotify,
         volume: Arc<AtomicU32>,
         events: async_channel::Sender<VideoEvent>,
     ) {
@@ -221,7 +225,7 @@ impl VideoClient {
 
             // Show the first frame even when paused, so a seek reveals a preview.
             if wall_start.is_some() {
-                paused_for += Self::wait_for_resume(&paused, audio.as_ref()).await;
+                paused_for += Self::wait_for_resume(&paused, &resumed, audio.as_ref()).await;
             }
 
             if let Some(audio) = audio.as_ref() {
@@ -275,8 +279,12 @@ impl VideoClient {
         )
     }
 
-    /// If paused, suspend audio and spin until resumed. Returns the paused-for delta.
-    async fn wait_for_resume(paused: &AtomicBool, audio: Option<&AudioPlayback>) -> Duration {
+    /// If paused, suspend audio and await a resume notification. Returns the paused-for delta.
+    async fn wait_for_resume(
+        paused: &AtomicBool,
+        resumed: &ArcNotify,
+        audio: Option<&AudioPlayback>,
+    ) -> Duration {
         if !paused.load(Ordering::Relaxed) {
             return Duration::ZERO;
         }
@@ -285,7 +293,7 @@ impl VideoClient {
         }
         let pause_start = Instant::now();
         while paused.load(Ordering::Relaxed) {
-            Timer::after(PAUSE_POLL).await;
+            resumed.notified().await;
         }
         if let Some(audio) = audio {
             audio.sink.play();
