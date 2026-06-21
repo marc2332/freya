@@ -30,11 +30,27 @@ half4 main(float2 fragCoord) {
 "#;
 
 fn app() -> impl IntoElement {
-    let (now, effect) = use_hook(|| {
-        // Create the effect once and reuse in the shader render function
-        (
-            std::time::Instant::now(),
+    let shader_fill = use_hook(|| {
+        // Create the shader fill once and reuse it in every tick
+        let now = std::time::Instant::now();
+        ShaderFill::new(
+            SHADER,
             RuntimeEffect::make_for_shader(SHADER, None).expect("shader compilation failed"),
+            move |effect, bounds| {
+                effect.make_shader(
+                    Data::new_copy(
+                        &[
+                            bounds.width().to_le_bytes(),
+                            bounds.height().to_le_bytes(),
+                            0.0f32.to_le_bytes(),
+                            now.elapsed().as_secs_f32().to_le_bytes(),
+                        ]
+                        .concat(),
+                    ),
+                    &[],
+                    None,
+                )
+            },
         )
     });
 
@@ -49,21 +65,5 @@ fn app() -> impl IntoElement {
         }
     });
 
-    rect()
-        .expanded()
-        .background(ShaderFill::new(SHADER, effect, move |effect, bounds| {
-            effect.make_shader(
-                Data::new_copy(
-                    &[
-                        bounds.width().to_le_bytes(),
-                        bounds.height().to_le_bytes(),
-                        0.0f32.to_le_bytes(),
-                        now.elapsed().as_secs_f32().to_le_bytes(),
-                    ]
-                    .concat(),
-                ),
-                &[],
-                None,
-            )
-        }))
+    rect().expanded().background(shader_fill)
 }
