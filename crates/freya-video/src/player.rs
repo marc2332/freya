@@ -139,6 +139,12 @@ impl VideoPlayer {
         }
     }
 
+    /// Replace the video source and start playing it from the beginning.
+    pub fn set_source(&mut self, source: impl Into<VideoSource>) {
+        self.source.set(source.into());
+        self.seek(Duration::ZERO, Duration::ZERO);
+    }
+
     /// Seek to `position` after `debounce`, where a newer seek within the wait replaces it.
     pub fn seek(&mut self, position: Duration, debounce: Duration) {
         let start_paused = self.state() == PlaybackState::Paused;
