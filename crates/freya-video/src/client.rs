@@ -42,8 +42,7 @@ use freya_core::{
     prelude::{
         Bytes,
         OwnedTaskHandle,
-        ScopeId,
-        provide_context_for_scope_id,
+        provide_root_context,
         spawn,
         try_consume_root_context,
     },
@@ -431,8 +430,8 @@ impl AudioPlayback {
         let stream = Rc::new(stream);
         let handle = Rc::new(handle);
 
-        provide_context_for_scope_id(stream, ScopeId::ROOT);
-        provide_context_for_scope_id(handle.clone(), ScopeId::ROOT);
+        provide_root_context(stream);
+        provide_root_context(handle.clone());
 
         Some(handle)
     }
