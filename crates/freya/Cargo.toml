@@ -43,6 +43,7 @@ all = [
   "query",
   "code-editor",
   "camera",
+  "zoom-shortcuts",
 ]
 all-publish = [
   "all",
@@ -67,6 +68,7 @@ all-tests = [
   "webview",
   "titlebar",
   "query",
+  "zoom-shortcuts",
 ]
 docs = ["all-debug"]
 # Features

@@ -14,9 +14,8 @@ fn main() {
 
 fn app() -> impl IntoElement {
     canvas(RenderCallback::new(|context| {
-        let area = context.layout_node.visible_area();
-        let center_x = area.center().x;
-        let center_y = area.center().y;
+        let center_x = context.size.width / 2.0;
+        let center_y = context.size.height / 2.0;
 
         let mut paint = Paint::default();
         paint.set_anti_alias(true);

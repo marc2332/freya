@@ -583,7 +583,7 @@ impl<Q: QueryCapability> UseQuery<Q> {
     pub fn read(&self) -> QueryReader<Q> {
         let storage = consume_context::<QueriesStorage<Q>>();
         let map = storage.storage.peek();
-        let query_data = map.get(&self.query.peek()).cloned().unwrap();
+        let query_data = map.get(&self.query.read()).cloned().unwrap();
 
         // Subscribe if possible
         if let Some(mut reactive_context) = ReactiveContext::try_current() {
