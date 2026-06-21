@@ -543,7 +543,10 @@ where
         // Parent Node is dirty.
         parent_is_dirty: bool,
     ) {
-        let children = self.tree_adapter.children_of(parent_node_id);
+        let mut children = self.tree_adapter.children_of(parent_node_id);
+        if parent_node.direction.is_reverse() {
+            children.reverse();
+        }
 
         let initial_area = *inner_area;
 
@@ -643,12 +646,12 @@ where
 
                 if parent_node.content.is_flex() {
                     match parent_node.direction {
-                        Direction::Vertical => {
+                        Direction::Vertical | Direction::VerticalReverse => {
                             if let Some(ff) = child_data.height.flex_grow() {
                                 initial_phase_flex_grows.insert(*child_id, ff);
                             }
                         }
-                        Direction::Horizontal => {
+                        Direction::Horizontal | Direction::HorizontalReverse => {
                             if let Some(ff) = child_data.width.flex_grow() {
                                 initial_phase_flex_grows.insert(*child_id, ff);
                             }
@@ -947,7 +950,7 @@ where
     ) {
         if let Some(initial_phase_size) = initial_phase_size {
             match direction {
-                Direction::Vertical => {
+                Direction::Vertical | Direction::VerticalReverse => {
                     if adapted_available_area.height() - initial_phase_size.height < 0. {
                         let advance = inner_sizes.width + wrap_spacing;
                         available_area.origin.y = initial_available_area.origin.y;
@@ -959,7 +962,7 @@ where
                         parent_area.size.width += advance;
                     }
                 }
-                Direction::Horizontal => {
+                Direction::Horizontal | Direction::HorizontalReverse => {
                     if adapted_available_area.width() - initial_phase_size.width < 0. {
                         let advance = inner_sizes.height + wrap_spacing;
                         available_area.origin.x = initial_available_area.origin.x;
@@ -1095,7 +1098,7 @@ where
         };
 
         match parent_node.direction {
-            Direction::Horizontal => {
+            Direction::Horizontal | Direction::HorizontalReverse => {
                 // Move the available area
                 available_area.origin.x = child_area.max_x() + spacing.get();
                 available_area.size.width -= child_area.size.width + spacing.get();
@@ -1124,7 +1127,7 @@ where
                     parent_area.size.width += child_area.size.width + spacing.get();
                 }
             }
-            Direction::Vertical => {
+            Direction::Vertical | Direction::VerticalReverse => {
                 // Move the available area
                 available_area.origin.y = child_area.max_y() + spacing.get();
                 available_area.size.height -= child_area.size.height + spacing.get();
@@ -1182,11 +1185,11 @@ where
 
         let axis = AlignAxis::new(&parent_node.direction, alignment_direction);
         let (is_vertical_not_start, is_horizontal_not_start) = match parent_node.direction {
-            Direction::Vertical => (
+            Direction::Vertical | Direction::VerticalReverse => (
                 parent_node.main_alignment.is_not_start(),
                 parent_node.cross_alignment.is_not_start() || parent_node.content.is_fit(),
             ),
-            Direction::Horizontal => (
+            Direction::Horizontal | Direction::HorizontalReverse => (
                 parent_node.cross_alignment.is_not_start() || parent_node.content.is_fit(),
                 parent_node.main_alignment.is_not_start(),
             ),

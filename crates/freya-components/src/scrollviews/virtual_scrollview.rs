@@ -274,11 +274,11 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
         let drag_scrolling = self.drag_scrolling;
 
         let (inner_width, inner_height) = match direction {
-            Direction::Vertical => (
+            Direction::Vertical | Direction::VerticalReverse => (
                 size.read().inner_sizes.width,
                 self.item_size * self.length as f32,
             ),
-            Direction::Horizontal => (
+            Direction::Horizontal | Direction::HorizontalReverse => (
                 self.item_size * self.length as f32,
                 size.read().inner_sizes.height,
             ),
@@ -500,14 +500,14 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
             .collect::<Vec<Element>>();
 
         let (offset_x, offset_y) = match direction {
-            Direction::Vertical => {
+            Direction::Vertical | Direction::VerticalReverse => {
                 let offset_y_min =
                     (-corrected_scrolled_y / self.item_size).floor() * self.item_size;
                 let offset_y = -(-corrected_scrolled_y - offset_y_min);
 
                 (corrected_scrolled_x, offset_y)
             }
-            Direction::Horizontal => {
+            Direction::Horizontal | Direction::HorizontalReverse => {
                 let offset_x_min =
                     (-corrected_scrolled_x / self.item_size).floor() * self.item_size;
                 let offset_x = -(-corrected_scrolled_x - offset_x_min);

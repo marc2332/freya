@@ -521,6 +521,18 @@ where
         self.get_layout().layout.direction = Direction::horizontal();
         self
     }
+
+    /// Stack children vertically in reverse order. Shorthand for [`direction`](Self::direction) set to [`Direction::VerticalReverse`].
+    fn vertical_reverse(mut self) -> Self {
+        self.get_layout().layout.direction = Direction::vertical_reverse();
+        self
+    }
+
+    /// Stack children horizontally in reverse order. Shorthand for [`direction`](Self::direction) set to [`Direction::HorizontalReverse`].
+    fn horizontal_reverse(mut self) -> Self {
+        self.get_layout().layout.direction = Direction::horizontal_reverse();
+        self
+    }
 }
 
 /// Methods for setting an element's width and height.

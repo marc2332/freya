@@ -90,21 +90,21 @@ impl ScrollController {
             match request {
                 ScrollRequest {
                     position: ScrollPosition::Start,
-                    direction: Direction::Vertical,
+                    direction: Direction::Vertical | Direction::VerticalReverse,
                     ..
                 } => {
                     self.on_scroll.write().call(ScrollEvent::Y(0));
                 }
                 ScrollRequest {
                     position: ScrollPosition::Start,
-                    direction: Direction::Horizontal,
+                    direction: Direction::Horizontal | Direction::HorizontalReverse,
                     ..
                 } => {
                     self.on_scroll.write().call(ScrollEvent::X(0));
                 }
                 ScrollRequest {
                     position: ScrollPosition::End,
-                    direction: Direction::Vertical,
+                    direction: Direction::Vertical | Direction::VerticalReverse,
                     init,
                     ..
                 } => {
@@ -118,7 +118,7 @@ impl ScrollController {
                 }
                 ScrollRequest {
                     position: ScrollPosition::End,
-                    direction: Direction::Horizontal,
+                    direction: Direction::Horizontal | Direction::HorizontalReverse,
                     init,
                     ..
                 } => {

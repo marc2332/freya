@@ -221,11 +221,11 @@ fn calculate_extreme_corners(area: &Area, center: Point2D) -> (Point2D, Point2D)
 impl AlignAxis {
     pub fn new(direction: &Direction, alignment_direction: AlignmentDirection) -> Self {
         match direction {
-            Direction::Vertical => match alignment_direction {
+            Direction::Vertical | Direction::VerticalReverse => match alignment_direction {
                 AlignmentDirection::Main => AlignAxis::Height,
                 AlignmentDirection::Cross => AlignAxis::Width,
             },
-            Direction::Horizontal => match alignment_direction {
+            Direction::Horizontal | Direction::HorizontalReverse => match alignment_direction {
                 AlignmentDirection::Main => AlignAxis::Width,
                 AlignmentDirection::Cross => AlignAxis::Height,
             },
