@@ -37,7 +37,7 @@ use ffmpeg_sidecar::{
     },
 };
 use freya_core::{
-    elements::image::ImageHolder,
+    elements::image::ImageHandle,
     notify::ArcNotify,
     prelude::{
         Bytes,
@@ -108,7 +108,7 @@ const FALLBACK_AUDIO_CONFIG: (u32, u16) = (48_000, 2);
 pub enum VideoEvent {
     Duration(Duration),
     Frame {
-        frame: ImageHolder,
+        frame: ImageHandle,
         position: Duration,
     },
     Ended,
@@ -269,8 +269,8 @@ impl VideoClient {
     }
 
     /// Wrap a raw RGBA frame as a Skia raster image.
-    fn decode_frame(frame: OutputVideoFrame) -> Option<ImageHolder> {
-        ImageHolder::from_rgba(
+    fn decode_frame(frame: OutputVideoFrame) -> Option<ImageHandle> {
+        ImageHandle::from_rgba(
             frame.width,
             frame.height,
             Bytes::from(frame.data),

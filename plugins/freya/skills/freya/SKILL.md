@@ -97,7 +97,7 @@ Built-in element constructors:
 - `rect()` - layout primitive (direction, alignment, sizing, background, borders, corners, shadows, padding, scroll).
 - `label()` - single-line text.
 - `paragraph()` - multi-line / rich text via `.text_span(...)` children; also the target for `use_editable`.
-- `image(holder)` - raster image; `holder` from `static_bytes(...)`, `dynamic_bytes(...)`, or asset loaders.
+- `image(handle)` - raster image; `handle` from `static_bytes(...)`, `dynamic_bytes(...)`, or asset loaders.
 - `svg(bytes)` - vector image.
 
 `&str` / `String` implement `Into<Label>`, so prefer `rect().child("Hi")` over `rect().child(label().text("Hi"))`.

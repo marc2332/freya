@@ -117,8 +117,8 @@ impl EffectExt for CameraViewer {
 
 impl Component for CameraViewer {
     fn render(&self) -> impl IntoElement {
-        if let Some(holder) = self.camera.frame.read().clone() {
-            return image(holder)
+        if let Some(handle) = self.camera.frame.read().clone() {
+            return image(handle)
                 .accessibility(self.accessibility.clone())
                 .a11y_role(AccessibilityRole::Image)
                 .a11y_focusable(true)

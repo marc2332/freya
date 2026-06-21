@@ -12,7 +12,7 @@ use freya_components::button::Button;
 use freya_core::elements::{
     image::{
         Image,
-        ImageHolder,
+        ImageHandle,
         image,
     },
     label::Label,
@@ -65,13 +65,13 @@ fn app() -> impl IntoElement {
         .child(Button::new().on_press(move |_| player.stop()).child("stop"))
 }
 
-fn current_frame(test: &mut TestingRunner) -> Option<ImageHolder> {
+fn current_frame(test: &mut TestingRunner) -> Option<ImageHandle> {
     test.poll(Duration::from_millis(16), Duration::from_millis(250));
     test.sync_and_update();
-    test.find(|_, element| Image::try_downcast(element).map(|image| image.image_holder))
+    test.find(|_, element| Image::try_downcast(element).map(|image| image.image_handle))
 }
 
-fn wait_for_new_frame(test: &mut TestingRunner, previous: &ImageHolder) -> bool {
+fn wait_for_new_frame(test: &mut TestingRunner, previous: &ImageHandle) -> bool {
     (0..100).any(|_| current_frame(test).is_some_and(|frame| &frame != previous))
 }
 

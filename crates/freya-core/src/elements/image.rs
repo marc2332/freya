@@ -67,13 +67,13 @@ use crate::{
 /// You most likely want to use a higher level than this, like the component `ImageViewer`.
 ///
 /// See the available methods in [Image].
-pub fn image(image_holder: ImageHolder) -> Image {
+pub fn image(image_handle: ImageHandle) -> Image {
     let mut accessibility = AccessibilityData::default();
     accessibility.builder.set_role(accesskit::Role::Image);
     Image {
         key: DiffKey::None,
         element: ImageElement {
-            image_holder,
+            image_handle,
             accessibility,
             layout: LayoutData::default(),
             event_handlers: HashMap::default(),
@@ -141,18 +141,18 @@ impl SamplingMode {
 
 /// A decoded image shared by reference, ready to be rendered by an [`image()`].
 #[derive(Clone)]
-pub struct ImageHolder {
+pub struct ImageHandle {
     pub image: SkImage,
     /// Backing data of the [`SkImage`], kept alive for as long as the image is used.
     pub bytes: Bytes,
 }
 
-impl ImageHolder {
+impl ImageHandle {
     pub fn new(image: SkImage, bytes: Bytes) -> Self {
         Self { image, bytes }
     }
 
-    /// Build a holder from a raw `RGBA8888` pixel buffer, validating its length.
+    /// Build a handle from a raw `RGBA8888` pixel buffer, validating its length.
     pub fn from_rgba(width: u32, height: u32, bytes: Bytes, alpha_type: AlphaType) -> Option<Self> {
         let row_bytes = (width as usize).checked_mul(4)?;
         if bytes.len() < row_bytes.checked_mul(height as usize)? {
@@ -164,14 +164,14 @@ impl ImageHolder {
             alpha_type,
             None,
         );
-        // Safety: `bytes` outlives the SkImage because the returned holder owns it.
+        // Safety: `bytes` outlives the SkImage because the returned handle owns it.
         let data = unsafe { Data::new_bytes(&bytes) };
         let image = raster_from_data(&info, data, row_bytes)?;
         Some(Self::new(image, bytes))
     }
 }
 
-impl PartialEq for ImageHolder {
+impl PartialEq for ImageHandle {
     fn eq(&self, other: &Self) -> bool {
         self.image.unique_id() == other.image.unique_id()
     }
@@ -190,7 +190,7 @@ pub struct ImageElement {
     pub accessibility: AccessibilityData,
     pub layout: LayoutData,
     pub event_handlers: FxHashMap<EventName, EventHandlerType>,
-    pub image_holder: ImageHolder,
+    pub image_handle: ImageHandle,
     pub image_data: ImageData,
     pub relative_layer: Layer,
     pub effect: Option<EffectData>,
@@ -224,10 +224,10 @@ impl ElementExt for ImageElement {
             diff.insert(DiffModifies::LAYOUT);
         }
 
-        if self.image_holder != image.image_holder {
+        if self.image_handle != image.image_handle {
             diff.insert(DiffModifies::STYLE);
 
-            if self.image_holder.image.dimensions() != image.image_holder.image.dimensions() {
+            if self.image_handle.image.dimensions() != image.image_handle.image.dimensions() {
                 diff.insert(DiffModifies::LAYOUT);
             }
         }
@@ -275,7 +275,7 @@ impl ElementExt for ImageElement {
     }
 
     fn measure(&self, context: LayoutContext) -> Option<(Size2D, Rc<dyn Any>)> {
-        let image = &self.image_holder.image;
+        let image = &self.image_handle.image;
 
         let image_width = image.width() as f32;
         let image_height = image.height() as f32;
@@ -345,7 +345,7 @@ impl ElementExt for ImageElement {
         paint.set_anti_alias(true);
 
         context.canvas.draw_image_rect_with_sampling_options(
-            &self.image_holder.image,
+            &self.image_handle.image,
             None,
             rect,
             sampling,

@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use async_io::Timer;
 use freya_core::{
-    elements::image::ImageHolder,
+    elements::image::ImageHandle,
     prelude::*,
 };
 
@@ -27,7 +27,7 @@ pub enum PlaybackState {
 /// Reactive handle to a video decoding pipeline.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct VideoPlayer {
-    frame: State<Option<ImageHolder>>,
+    frame: State<Option<ImageHandle>>,
     playback: State<PlaybackState>,
     forwarder: State<Option<OwnedTaskHandle>>,
     source: State<VideoSource>,
@@ -52,7 +52,7 @@ impl VideoPlayer {
     }
 
     /// Latest decoded frame, if any.
-    pub fn frame(&self) -> Option<ImageHolder> {
+    pub fn frame(&self) -> Option<ImageHandle> {
         self.frame.read().clone()
     }
 

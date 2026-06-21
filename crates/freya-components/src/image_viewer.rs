@@ -419,7 +419,7 @@ impl Component for ImageViewer {
                             Ok((image, bytes)) => {
                                 asset_cacher.update_asset(
                                     asset_config,
-                                    Asset::Cached(Rc::new(ImageHolder::new(image, bytes))),
+                                    Asset::Cached(Rc::new(ImageHandle::new(image, bytes))),
                                 );
                             }
                             Err(err) => {
@@ -434,7 +434,7 @@ impl Component for ImageViewer {
 
         match asset {
             Asset::Cached(asset) => {
-                let asset = asset.downcast_ref::<ImageHolder>().unwrap().clone();
+                let asset = asset.downcast_ref::<ImageHandle>().unwrap().clone();
                 image(asset)
                     .accessibility(self.accessibility.clone())
                     .a11y_role(AccessibilityRole::Image)

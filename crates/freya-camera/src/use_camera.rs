@@ -1,7 +1,7 @@
 //! [`use_camera`] hook and the [`Camera`] handle.
 
 use freya_core::{
-    elements::image::ImageHolder,
+    elements::image::ImageHandle,
     prelude::*,
 };
 use freya_engine::prelude::AlphaType;
@@ -24,7 +24,7 @@ use crate::{
 #[derive(Clone, Copy, PartialEq)]
 pub struct Camera {
     /// The latest frame produced by the camera.
-    pub frame: State<Option<ImageHolder>>,
+    pub frame: State<Option<ImageHandle>>,
     /// The resolution and frame rate negotiated with the device.
     pub info: State<Option<StreamInfo>>,
     /// The most recent error, if any.
@@ -34,7 +34,7 @@ pub struct Camera {
 impl Camera {
     /// Open a camera and start streaming frames into reactive state.
     pub fn create(config: CameraConfig) -> Self {
-        let mut frame: State<Option<ImageHolder>> = State::create(None);
+        let mut frame: State<Option<ImageHandle>> = State::create(None);
         let mut info: State<Option<StreamInfo>> = State::create(None);
         let mut error: State<Option<CameraError>> = State::create(None);
 
@@ -58,8 +58,8 @@ impl Camera {
                     *error.write() = Some(capture_error);
                 }
                 if let Some(camera_frame) = latest_frame {
-                    match build_holder(camera_frame) {
-                        Ok(holder) => *frame.write() = Some(holder),
+                    match build_handle(camera_frame) {
+                        Ok(handle) => *frame.write() = Some(handle),
                         Err(build_error) => {
                             tracing::warn!("freya-camera: {build_error}");
                             *error.write() = Some(build_error);
@@ -93,14 +93,14 @@ pub fn use_camera(init: impl FnOnce() -> CameraConfig) -> Camera {
     use_hook(|| Camera::create(init()))
 }
 
-/// Build an [`ImageHolder`] from a raw `RGBA8` camera frame.
-fn build_holder(frame: CameraFrame) -> Result<ImageHolder, CameraError> {
+/// Build an [`ImageHandle`] from a raw `RGBA8` camera frame.
+fn build_handle(frame: CameraFrame) -> Result<ImageHandle, CameraError> {
     let CameraFrame {
         width,
         height,
         data,
     } = frame;
 
-    ImageHolder::from_rgba(width, height, data, AlphaType::Opaque)
+    ImageHandle::from_rgba(width, height, data, AlphaType::Opaque)
         .ok_or_else(|| CameraError::GeneralError("failed to create raster image".to_string()))
 }
