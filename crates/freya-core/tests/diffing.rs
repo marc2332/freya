@@ -1906,3 +1906,102 @@ fn crash_l971_leftover_empty_slot() {
     tree.verify_tree_integrity();
     assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 }
+
+fn replay_keyed_list(history: &[Vec<u8>]) {
+    fn app() -> Element {
+        let layout = consume_context::<State<Vec<u8>>>();
+        rect()
+            .children(layout.read().iter().map(|key| rect().key(*key).into()))
+            .into()
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+    let mut layout = runner.provide_root_context(|| State::create(Vec::<u8>::new()));
+    let mutations = runner.sync_and_update();
+    tree.apply_mutations(mutations);
+
+    for step in history {
+        layout.set(step.clone());
+        let mutations = runner.sync_and_update();
+        tree.apply_mutations(mutations);
+        tree.verify_tree_integrity();
+
+        for (parent, children) in &tree.children {
+            for child in children {
+                assert_ne!(
+                    *child,
+                    NodeId::PLACEHOLDER,
+                    "placeholder in {parent:?} after {step:?}"
+                );
+                assert!(
+                    tree.accessibility_state.contains_key(child),
+                    "orphan child {child:?} of {parent:?} after {step:?}"
+                );
+            }
+        }
+
+        let mut expected = Vec::new();
+        runner
+            .scopes
+            .get(&ScopeId::ROOT)
+            .unwrap()
+            .borrow()
+            .nodes
+            .traverse(&[0], |path, node| {
+                if let [_, index] = *path {
+                    expected.push((index, node.node_id));
+                }
+            });
+        expected.sort_by_key(|(index, _)| *index);
+        let expected = expected
+            .into_iter()
+            .map(|(_, node_id)| node_id)
+            .collect::<Vec<_>>();
+
+        assert_eq!(
+            tree.children.get(&2u64.into()).cloned().unwrap_or_default(),
+            expected,
+            "children drifted from the source tree after {step:?}"
+        );
+        assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+    }
+}
+
+#[test]
+fn tree_keyed_list_minimal_orphan_repro() {
+    replay_keyed_list(&[vec![1, 4, 0, 2], vec![2, 0, 3, 4], vec![4]]);
+}
+
+#[test]
+fn tree_keyed_list_reorders() {
+    fn permutations(keys: &[u8]) -> Vec<Vec<u8>> {
+        if keys.is_empty() {
+            return vec![Vec::new()];
+        }
+        let mut output = Vec::new();
+        for index in 0..keys.len() {
+            let mut rest = keys.to_vec();
+            let first = rest.remove(index);
+            for mut permutation in permutations(&rest) {
+                permutation.insert(0, first);
+                output.push(permutation);
+            }
+        }
+        output
+    }
+
+    let layouts = (0..=4)
+        .flat_map(|size| permutations(&(0..size).collect::<Vec<u8>>()))
+        .collect::<Vec<_>>();
+
+    let mut history = Vec::new();
+    for from in &layouts {
+        for to in &layouts {
+            history.push(from.clone());
+            history.push(to.clone());
+        }
+    }
+
+    replay_keyed_list(&history);
+}

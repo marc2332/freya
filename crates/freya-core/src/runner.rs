@@ -1290,7 +1290,7 @@ impl Runner {
 
             let (parent_node_id, paths) = moved_nodes.get_mut(&parent).unwrap();
 
-            for (from, to) in movements.into_iter().sorted_by_key(|e| e.0).rev() {
+            for (from, to) in movements.into_iter().sorted_by_key(|e| e.1) {
                 let path_node = paths.remove(&from).unwrap();
 
                 let PathNode { node_id, scope_id } = path_node;

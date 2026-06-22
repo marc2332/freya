@@ -280,14 +280,8 @@ impl Tree {
                     movements.into_iter().sorted_by_key(|m| m.index)
                 {
                     let from = parent.iter().position(|id| *id == node_id).unwrap();
-
-                    if from < to as usize {
-                        parent.insert(to as usize, node_id);
-                        parent.remove(from);
-                    } else {
-                        parent.remove(from);
-                        parent.insert(to as usize, node_id);
-                    }
+                    parent.remove(from);
+                    parent.insert(to as usize, node_id);
                 }
                 let mut diff = DiffModifies::empty();
                 diff.insert(DiffModifies::REORDER_LAYOUT);
