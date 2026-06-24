@@ -3,11 +3,6 @@ use torin::{
     test_utils::*,
 };
 
-fn backward(mut node: Node) -> Node {
-    node.order = Order::Backward;
-    node
-}
-
 fn stacked_tree(parent: Node) -> (Torin<usize>, Option<NoopMeasurer>, TestingTree) {
     let (layout, measurer) = test_utils();
 
@@ -29,22 +24,15 @@ fn stacked_tree(parent: Node) -> (Torin<usize>, Option<NoopMeasurer>, TestingTre
     (layout, measurer, mocked_tree)
 }
 
-fn leaf(width: f32) -> Node {
-    Node::from_size_and_direction(
-        Size::Pixels(Length::new(width)),
-        Size::Pixels(Length::new(100.0)),
-        Direction::Vertical,
-    )
-}
-
 #[test]
 pub fn backward_order_stacks_horizontal_children_in_reverse() {
     let (mut layout, mut measurer, mut mocked_tree) =
-        stacked_tree(backward(Node::from_size_and_direction(
+        stacked_tree(Node::from_size_and_direction_and_order(
             Size::Pixels(Length::new(300.0)),
             Size::Pixels(Length::new(100.0)),
             Direction::Horizontal,
-        )));
+            Order::Backward,
+        ));
 
     layout.measure(
         0,
@@ -67,11 +55,12 @@ pub fn backward_order_stacks_horizontal_children_in_reverse() {
 #[test]
 pub fn backward_order_stacks_vertical_children_in_reverse() {
     let (mut layout, mut measurer, mut mocked_tree) =
-        stacked_tree(backward(Node::from_size_and_direction(
+        stacked_tree(Node::from_size_and_direction_and_order(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(300.0)),
             Direction::Vertical,
-        )));
+            Order::Backward,
+        ));
 
     layout.measure(
         0,
@@ -95,19 +84,17 @@ pub fn backward_order_stacks_vertical_children_in_reverse() {
 pub fn backward_order_composes_with_center_alignment() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_tree = TestingTree::default();
-    mocked_tree.add(
-        0,
-        None,
-        vec![1, 2],
-        backward(Node::from_size_and_alignments_and_direction(
-            Size::Pixels(Length::new(300.0)),
-            Size::Pixels(Length::new(100.0)),
-            Alignment::Center,
-            Alignment::Start,
-            Direction::Horizontal,
-        )),
+    let mut parent = Node::from_size_and_alignments_and_direction(
+        Size::Pixels(Length::new(300.0)),
+        Size::Pixels(Length::new(100.0)),
+        Alignment::Center,
+        Alignment::Start,
+        Direction::Horizontal,
     );
+    parent.order = Order::Backward;
+
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(0, None, vec![1, 2], parent);
     for id in 1..=2 {
         mocked_tree.add(
             id,
@@ -140,16 +127,17 @@ pub fn backward_order_composes_with_center_alignment() {
 
 #[test]
 pub fn backward_order_keeps_spacing_between_children() {
-    let (mut layout, mut measurer, mut mocked_tree) = stacked_tree(backward(
-        Node::from_size_and_alignments_and_direction_and_spacing(
-            Size::Pixels(Length::new(320.0)),
-            Size::Pixels(Length::new(100.0)),
-            Alignment::Start,
-            Alignment::Start,
-            Direction::Horizontal,
-            Length::new(10.0),
-        ),
-    ));
+    let mut parent = Node::from_size_and_alignments_and_direction_and_spacing(
+        Size::Pixels(Length::new(320.0)),
+        Size::Pixels(Length::new(100.0)),
+        Alignment::Start,
+        Alignment::Start,
+        Direction::Horizontal,
+        Length::new(10.0),
+    );
+    parent.order = Order::Backward;
+
+    let (mut layout, mut measurer, mut mocked_tree) = stacked_tree(parent);
 
     layout.measure(
         0,
@@ -182,7 +170,16 @@ pub fn backward_order_composes_with_flex() {
     root.direction = Direction::Horizontal;
     root.order = Order::Backward;
     mocked_tree.add(0, None, vec![1, 2, 3], root);
-    mocked_tree.add(1, Some(0), vec![], leaf(50.0));
+    mocked_tree.add(
+        1,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(50.0)),
+            Size::Pixels(Length::new(100.0)),
+            Direction::Vertical,
+        ),
+    );
     mocked_tree.add(
         2,
         Some(0),
@@ -193,7 +190,16 @@ pub fn backward_order_composes_with_flex() {
             Direction::Vertical,
         ),
     );
-    mocked_tree.add(3, Some(0), vec![], leaf(50.0));
+    mocked_tree.add(
+        3,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(50.0)),
+            Size::Pixels(Length::new(100.0)),
+            Direction::Vertical,
+        ),
+    );
 
     layout.measure(
         0,

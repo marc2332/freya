@@ -131,6 +131,22 @@ impl Node {
         }
     }
 
+    /// Construct a new Node given a size, a direction and an order
+    pub fn from_size_and_direction_and_order(
+        width: Size,
+        height: Size,
+        direction: Direction,
+        order: Order,
+    ) -> Self {
+        Self {
+            width,
+            height,
+            direction,
+            order,
+            ..Default::default()
+        }
+    }
+
     /// Construct a new Node given some sizes
     pub fn from_sizes(
         width: Size,

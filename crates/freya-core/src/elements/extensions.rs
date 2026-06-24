@@ -505,7 +505,7 @@ where
     }
 
     /// Stack children in reverse order along the direction axis. Shorthand for [`order`](Self::order) set to [`Order::Backward`].
-    fn backwards_order(mut self) -> Self {
+    fn backward_order(mut self) -> Self {
         self.get_layout().layout.order = Order::backward();
         self
     }

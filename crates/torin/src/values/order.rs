@@ -20,7 +20,7 @@ impl Order {
     }
 
     /// Whether children are laid out in reverse order.
-    pub fn is_reverse(&self) -> bool {
+    pub fn is_backward(&self) -> bool {
         matches!(self, Self::Backward)
     }
 

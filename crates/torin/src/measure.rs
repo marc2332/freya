@@ -544,7 +544,7 @@ where
         parent_is_dirty: bool,
     ) {
         let mut children = self.tree_adapter.children_of(parent_node_id);
-        if parent_node.order.is_reverse() {
+        if parent_node.order.is_backward() {
             children.reverse();
         }
 

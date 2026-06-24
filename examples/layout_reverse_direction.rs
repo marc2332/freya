@@ -37,7 +37,7 @@ fn app() -> impl IntoElement {
             "horizontal + reversed",
             rect()
                 .horizontal()
-                .backwards_order()
+                .backward_order()
                 .spacing(5.)
                 .children(cards())
                 .into(),
@@ -50,7 +50,7 @@ fn app() -> impl IntoElement {
             "vertical + reversed",
             rect()
                 .vertical()
-                .backwards_order()
+                .backward_order()
                 .spacing(5.)
                 .children(cards())
                 .into(),
