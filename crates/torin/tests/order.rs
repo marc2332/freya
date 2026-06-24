@@ -3,6 +3,11 @@ use torin::{
     test_utils::*,
 };
 
+fn backward(mut node: Node) -> Node {
+    node.order = Order::Backward;
+    node
+}
+
 fn stacked_tree(parent: Node) -> (Torin<usize>, Option<NoopMeasurer>, TestingTree) {
     let (layout, measurer) = test_utils();
 
@@ -33,12 +38,13 @@ fn leaf(width: f32) -> Node {
 }
 
 #[test]
-pub fn horizontal_reverse_stacks_children_in_reverse_order() {
-    let (mut layout, mut measurer, mut mocked_tree) = stacked_tree(Node::from_size_and_direction(
-        Size::Pixels(Length::new(300.0)),
-        Size::Pixels(Length::new(100.0)),
-        Direction::HorizontalReverse,
-    ));
+pub fn backward_order_stacks_horizontal_children_in_reverse() {
+    let (mut layout, mut measurer, mut mocked_tree) =
+        stacked_tree(backward(Node::from_size_and_direction(
+            Size::Pixels(Length::new(300.0)),
+            Size::Pixels(Length::new(100.0)),
+            Direction::Horizontal,
+        )));
 
     layout.measure(
         0,
@@ -47,7 +53,6 @@ pub fn horizontal_reverse_stacks_children_in_reverse_order() {
         &mut mocked_tree,
     );
 
-    // The last child is placed first, so the first child ends up at the far end.
     assert_eq!(layout.get(&3).unwrap().area.origin, Point2D::new(0.0, 0.0));
     assert_eq!(
         layout.get(&2).unwrap().area.origin,
@@ -60,12 +65,13 @@ pub fn horizontal_reverse_stacks_children_in_reverse_order() {
 }
 
 #[test]
-pub fn vertical_reverse_stacks_children_in_reverse_order() {
-    let (mut layout, mut measurer, mut mocked_tree) = stacked_tree(Node::from_size_and_direction(
-        Size::Pixels(Length::new(100.0)),
-        Size::Pixels(Length::new(300.0)),
-        Direction::VerticalReverse,
-    ));
+pub fn backward_order_stacks_vertical_children_in_reverse() {
+    let (mut layout, mut measurer, mut mocked_tree) =
+        stacked_tree(backward(Node::from_size_and_direction(
+            Size::Pixels(Length::new(100.0)),
+            Size::Pixels(Length::new(300.0)),
+            Direction::Vertical,
+        )));
 
     layout.measure(
         0,
@@ -86,7 +92,7 @@ pub fn vertical_reverse_stacks_children_in_reverse_order() {
 }
 
 #[test]
-pub fn reverse_composes_with_center_alignment() {
+pub fn backward_order_composes_with_center_alignment() {
     let (mut layout, mut measurer) = test_utils();
 
     let mut mocked_tree = TestingTree::default();
@@ -94,13 +100,13 @@ pub fn reverse_composes_with_center_alignment() {
         0,
         None,
         vec![1, 2],
-        Node::from_size_and_alignments_and_direction(
+        backward(Node::from_size_and_alignments_and_direction(
             Size::Pixels(Length::new(300.0)),
             Size::Pixels(Length::new(100.0)),
             Alignment::Center,
             Alignment::Start,
-            Direction::HorizontalReverse,
-        ),
+            Direction::Horizontal,
+        )),
     );
     for id in 1..=2 {
         mocked_tree.add(
@@ -122,7 +128,6 @@ pub fn reverse_composes_with_center_alignment() {
         &mut mocked_tree,
     );
 
-    // The 100px wide block is centered (origin x = 100), with the children reversed inside it.
     assert_eq!(
         layout.get(&2).unwrap().area.origin,
         Point2D::new(100.0, 0.0)
@@ -134,16 +139,17 @@ pub fn reverse_composes_with_center_alignment() {
 }
 
 #[test]
-pub fn reverse_keeps_spacing_between_children() {
-    let (mut layout, mut measurer, mut mocked_tree) =
-        stacked_tree(Node::from_size_and_alignments_and_direction_and_spacing(
+pub fn backward_order_keeps_spacing_between_children() {
+    let (mut layout, mut measurer, mut mocked_tree) = stacked_tree(backward(
+        Node::from_size_and_alignments_and_direction_and_spacing(
             Size::Pixels(Length::new(320.0)),
             Size::Pixels(Length::new(100.0)),
             Alignment::Start,
             Alignment::Start,
-            Direction::HorizontalReverse,
+            Direction::Horizontal,
             Length::new(10.0),
-        ));
+        ),
+    ));
 
     layout.measure(
         0,
@@ -164,7 +170,7 @@ pub fn reverse_keeps_spacing_between_children() {
 }
 
 #[test]
-pub fn reverse_composes_with_flex() {
+pub fn backward_order_composes_with_flex() {
     let (mut layout, mut measurer) = test_utils();
 
     let mut mocked_tree = TestingTree::default();
@@ -173,7 +179,8 @@ pub fn reverse_composes_with_flex() {
         Size::Pixels(Length::new(100.0)),
         Content::Flex,
     );
-    root.direction = Direction::HorizontalReverse;
+    root.direction = Direction::Horizontal;
+    root.order = Order::Backward;
     mocked_tree.add(0, None, vec![1, 2, 3], root);
     mocked_tree.add(1, Some(0), vec![], leaf(50.0));
     mocked_tree.add(
@@ -195,7 +202,6 @@ pub fn reverse_composes_with_flex() {
         &mut mocked_tree,
     );
 
-    // The flex child still grows to the leftover 200px; only the order is reversed.
     assert_eq!(layout.get(&3).unwrap().area.origin, Point2D::new(0.0, 0.0));
     assert_eq!(layout.get(&2).unwrap().area.width(), 200.0);
     assert_eq!(layout.get(&2).unwrap().area.origin, Point2D::new(50.0, 0.0));

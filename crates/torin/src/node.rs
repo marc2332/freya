@@ -5,6 +5,7 @@ use crate::{
     direction::Direction,
     gaps::Gaps,
     geometry::Length,
+    order::Order,
     prelude::{
         Content,
         Position,
@@ -50,6 +51,9 @@ pub struct Node {
 
     /// Direction in which it's inner Nodes will be stacked
     pub direction: Direction,
+
+    /// Order in which it's inner Nodes will be stacked along the direction axis
+    pub order: Order,
 
     /// Position config
     pub position: Position,
@@ -104,6 +108,7 @@ impl Node {
             && self.padding == other.padding
             && self.margin == other.margin
             && self.direction == other.direction
+            && self.order == other.order
             && self.position == other.position
             && self.content == other.content
             && self.has_layout_references == other.has_layout_references

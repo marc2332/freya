@@ -147,6 +147,7 @@ pub mod prelude {
             CursorPoint,
             Size2D,
         },
+        order::Order,
         position::Position,
         size::Size,
         visible_size::VisibleSize,

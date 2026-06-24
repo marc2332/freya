@@ -19,6 +19,7 @@ use torin::{
         Alignment,
         Direction,
         Length,
+        Order,
         Position,
         VisibleSize,
     },
@@ -490,6 +491,24 @@ where
         self.get_layout().layout.content = content;
         self
     }
+
+    /// Set the order children are stacked in along the direction axis. See [`Order`].
+    fn order(mut self, order: impl Into<Order>) -> Self {
+        self.get_layout().layout.order = order.into();
+        self
+    }
+
+    /// Stack children in their natural order along the direction axis. Shorthand for [`order`](Self::order) set to [`Order::Forward`].
+    fn forward_order(mut self) -> Self {
+        self.get_layout().layout.order = Order::forward();
+        self
+    }
+
+    /// Stack children in reverse order along the direction axis. Shorthand for [`order`](Self::order) set to [`Order::Backward`].
+    fn backwards_order(mut self) -> Self {
+        self.get_layout().layout.order = Order::backward();
+        self
+    }
     /// Center children on both axes. Shorthand for [`main_align`](Self::main_align) and [`cross_align`](Self::cross_align) set to [`Alignment::Center`].
     fn center(mut self) -> Self {
         self.get_layout().layout.main_alignment = Alignment::Center;
@@ -519,18 +538,6 @@ where
     /// Stack children horizontally. Shorthand for [`direction`](Self::direction) set to [`Direction::Horizontal`].
     fn horizontal(mut self) -> Self {
         self.get_layout().layout.direction = Direction::horizontal();
-        self
-    }
-
-    /// Stack children vertically in reverse order. Shorthand for [`direction`](Self::direction) set to [`Direction::VerticalReverse`].
-    fn vertical_reverse(mut self) -> Self {
-        self.get_layout().layout.direction = Direction::vertical_reverse();
-        self
-    }
-
-    /// Stack children horizontally in reverse order. Shorthand for [`direction`](Self::direction) set to [`Direction::HorizontalReverse`].
-    fn horizontal_reverse(mut self) -> Self {
-        self.get_layout().layout.direction = Direction::horizontal_reverse();
         self
     }
 }

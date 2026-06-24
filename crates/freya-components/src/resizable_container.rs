@@ -421,8 +421,8 @@ impl Component for ResizablePanel {
         let main_size = sizing.to_layout_size(size);
 
         let (width, height) = match registry.direction {
-            Direction::Horizontal | Direction::HorizontalReverse => (main_size, Size::fill()),
-            Direction::Vertical | Direction::VerticalReverse => (Size::fill(), main_size),
+            Direction::Horizontal => (main_size, Size::fill()),
+            Direction::Vertical => (Size::fill(), main_size),
         };
 
         rect()
@@ -492,7 +492,7 @@ impl Component for ResizableHandle {
         });
 
         let cursor = match direction {
-            Direction::Horizontal | Direction::HorizontalReverse => CursorIcon::ColResize,
+            Direction::Horizontal => CursorIcon::ColResize,
             _ => CursorIcon::RowResize,
         };
 
@@ -524,10 +524,10 @@ impl Component for ResizableHandle {
                     let mut registry = registry.write();
 
                     let (pixel_displacement, container_axis_size) = match registry.direction {
-                        Direction::Horizontal | Direction::HorizontalReverse => {
+                        Direction::Horizontal => {
                             (coords.x as f32 - handle.min_x(), container.width())
                         }
-                        Direction::Vertical | Direction::VerticalReverse => {
+                        Direction::Vertical => {
                             (coords.y as f32 - handle.min_y(), container.height())
                         }
                     };
@@ -562,8 +562,8 @@ impl Component for ResizableHandle {
 
         let handle_size = Size::px(ResizableContext::HANDLE_SIZE);
         let (width, height) = match direction {
-            Direction::Horizontal | Direction::HorizontalReverse => (handle_size, Size::fill()),
-            Direction::Vertical | Direction::VerticalReverse => (Size::fill(), handle_size),
+            Direction::Horizontal => (handle_size, Size::fill()),
+            Direction::Vertical => (Size::fill(), handle_size),
         };
 
         let background = match *status.read() {
