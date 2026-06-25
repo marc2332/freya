@@ -134,13 +134,14 @@ impl AssetCacher {
     }
 
     /// Update an [Asset] given a [AssetConfiguration].
+    ///
+    /// Does nothing if the entry is not present.
     pub fn update_asset(&mut self, asset_config: AssetConfiguration, new_asset: Asset) {
         let mut registry = self.registry.write();
 
-        let asset = registry.entry(asset_config).or_insert_with(|| AssetState {
-            asset: Asset::Pending,
-            users: AssetUsers::Listeners(Rc::default()),
-        });
+        let Some(asset) = registry.get_mut(&asset_config) else {
+            return;
+        };
 
         asset.asset = new_asset;
 
@@ -252,7 +253,7 @@ pub fn use_asset(asset_config: &AssetConfiguration) -> Asset {
                 && prev != asset_config
             {
                 // Try to clean the previous asset
-                asset_cacher.try_clean(asset_config);
+                asset_cacher.try_clean(prev);
             }
             prev.replace(asset_config.clone());
         }
