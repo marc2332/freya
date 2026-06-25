@@ -259,11 +259,7 @@ pub fn asset_load_completing_after_unmount_does_not_leak() {
                     })
                     .child("late-load"),
             )
-            .maybe(show(), move |r| {
-                r.child(Tile {
-                    config: config.clone(),
-                })
-            })
+            .maybe(show(), move |r| r.child(Tile { config }))
     }
 
     let read_size = |test: &mut TestingRunner| {

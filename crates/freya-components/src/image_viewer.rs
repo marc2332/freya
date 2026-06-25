@@ -181,10 +181,10 @@ impl ImageSource {
             };
             let image = SkImage::from_encoded(unsafe { SkData::new_bytes(&bytes) })
                 .context("Failed to decode Image.")?;
-            let image = image.make_raster_image(None, None).unwrap_or_else(|| image);
+            let image = image.make_raster_image(None, None).unwrap_or(image);
             let image = decode_size
                 .and_then(|target| Self::downsample(&image, target, &sampling_mode))
-                .unwrap_or_else(|| image);
+                .unwrap_or(image);
             Ok((image, bytes))
         })
         .await
