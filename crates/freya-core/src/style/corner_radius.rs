@@ -56,10 +56,18 @@ impl CornerRadius {
         self.fill_top(value);
     }
 
+    /// Return a copy of this [`CornerRadius`] with the given `smoothing` (clamped to `0.0..=1.0`).
+    pub fn with_smoothing(mut self, smoothing: f32) -> Self {
+        self.smoothing = smoothing.clamp(0.0, 1.0);
+        self
+    }
+
     // https://github.com/aloisdeniel/figma_squircle/blob/main/lib/src/path_smooth_corners.dart
     pub fn smoothed_path(&self, rect: RRect) -> Path {
         let mut path = PathBuilder::new();
 
+        let left = rect.rect().left();
+        let top = rect.rect().top();
         let width = rect.width();
         let height = rect.height();
 
@@ -170,6 +178,7 @@ impl CornerRadius {
         }
 
         path.detach()
+            .make_transform(&Matrix::translate((left, top)))
     }
 
     pub fn pretty(&self) -> String {
