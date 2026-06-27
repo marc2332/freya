@@ -166,6 +166,7 @@ impl Component for Select {
 
         let (scale, opacity, slide) = animation.read().value();
 
+        // Clear the list size when the select dropdown is not rendered
         if !open() && opacity == 0. && list_size().is_some() {
             let _ = list_size.take();
         }
