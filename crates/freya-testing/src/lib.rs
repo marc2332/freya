@@ -157,6 +157,8 @@ pub struct TestingRunner {
     events_receiver: futures_channel::mpsc::UnboundedReceiver<EventsChunk>,
     events_sender: futures_channel::mpsc::UnboundedSender<EventsChunk>,
 
+    requested_focus_strategy: Rc<RefCell<Option<AccessibilityFocusStrategy>>>,
+
     font_manager: FontMgr,
     font_collection: FontCollection,
 
@@ -193,8 +195,11 @@ impl TestingRunner {
         let tree = Tree::default();
         let tree = Rc::new(RefCell::new(tree));
 
+        let requested_focus_strategy: Rc<RefCell<Option<AccessibilityFocusStrategy>>> =
+            Rc::new(RefCell::new(None));
+
         let platform = runner.provide_root_context({
-            let tree = tree.clone();
+            let requested_focus_strategy = requested_focus_strategy.clone();
             || Platform {
                 focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
                 focused_accessibility_node: State::create(accesskit::Node::new(
@@ -212,7 +217,7 @@ impl TestingRunner {
                             // Nothing
                         }
                         UserEvent::FocusAccessibilityNode(strategy) => {
-                            tree.borrow_mut().accessibility_diff.request_focus(strategy);
+                            requested_focus_strategy.borrow_mut().replace(strategy);
                         }
                         UserEvent::SetCursorIcon(_) => {
                             // Nothing
@@ -261,6 +266,8 @@ impl TestingRunner {
             nodes_state,
             events_receiver,
             events_sender,
+
+            requested_focus_strategy,
 
             font_manager,
             font_collection,
@@ -321,6 +328,13 @@ impl TestingRunner {
     }
 
     pub fn sync_and_update(&mut self) {
+        if let Some(strategy) = self.requested_focus_strategy.borrow_mut().take() {
+            self.tree
+                .borrow_mut()
+                .accessibility_diff
+                .request_focus(strategy);
+        }
+
         while let Ok(events_chunk) = self.events_receiver.try_recv() {
             match events_chunk {
                 EventsChunk::Processed(processed_events) => {

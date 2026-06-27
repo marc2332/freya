@@ -187,8 +187,9 @@ pub fn input_escape_unfocus_test() {
     });
     assert!(label.is_some());
 
-    // Press Escape to unfocus
+    // Press Escape to unfocus.
     test.press_key(Key::Named(NamedKey::Escape));
+    test.sync_and_update();
 
     // Type more text, should not be captured since the input lost focus
     test.write_text("world");
