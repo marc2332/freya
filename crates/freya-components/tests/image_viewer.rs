@@ -39,6 +39,7 @@ pub fn image_viewer_source_change() {
     let mut test = launch_test(image_viewer_app);
     test.sync_and_update();
 
+    // Wait for the first image to load
     test.poll(
         std::time::Duration::from_millis(1),
         std::time::Duration::from_millis(70),
@@ -51,6 +52,7 @@ pub fn image_viewer_source_change() {
         "Image element should be rendered after initial load"
     );
 
+    // Click the button to change the source
     let button = test
         .find(|node, element| {
             Label::try_downcast(element)
@@ -65,6 +67,7 @@ pub fn image_viewer_source_change() {
     ));
     test.sync_and_update();
 
+    // The new source should be loading, showing the loader again
     let loader_rect = test.find(|node, element| {
         Rect::try_downcast(element)
             .filter(|rect| rect.layout.main_alignment == Alignment::Center)
@@ -75,6 +78,7 @@ pub fn image_viewer_source_change() {
         "Should show loading indicator after source change"
     );
 
+    // Wait for the new image to load
     test.poll(
         std::time::Duration::from_millis(1),
         std::time::Duration::from_millis(70),
@@ -167,6 +171,7 @@ pub fn image_viewer_load_and_render() {
     let mut test = launch_test(image_viewer_app);
     test.sync_and_update();
 
+    // Initially should show a loading indicator (CircularLoader)
     let loader_rect = test.find(|node, element| {
         Rect::try_downcast(element)
             .filter(|rect| rect.layout.main_alignment == Alignment::Center)
@@ -178,12 +183,14 @@ pub fn image_viewer_load_and_render() {
         "Should show loading indicator initially"
     );
 
+    // Wait a bit for the image to load and render
     test.poll(
         std::time::Duration::from_millis(1),
         std::time::Duration::from_millis(70),
     );
     test.sync_and_update();
 
+    // After loading, the Image element should be rendered
     let image_element = test.find(|node, element| Image::try_downcast(element).map(|_| node));
 
     assert!(

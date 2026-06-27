@@ -154,10 +154,8 @@ impl Hash for ImageSource {
 
 pub type DecodeSize = euclid::Size2D<u32, ()>;
 
-/// Maximum number of images decoded at once.
-const DECODE_CONCURRENCY: usize = 4;
-
-static DECODE_LIMIT: LazyLock<Semaphore> = LazyLock::new(|| Semaphore::new(DECODE_CONCURRENCY));
+/// Limit the amount of images that are loaded in parallel.
+static DECODE_LIMIT: LazyLock<Semaphore> = LazyLock::new(|| Semaphore::new(4));
 
 impl ImageSource {
     /// Fetch the source's encoded bytes and decode them into a Skia image.
