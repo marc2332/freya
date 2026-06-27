@@ -61,10 +61,7 @@ pub fn image_viewer_source_change() {
         })
         .unwrap();
     let button_area = button.layout().area;
-    test.click_cursor((
-        button_area.min_x() as f64 + button_area.size.width as f64 / 2.0,
-        button_area.min_y() as f64 + button_area.size.height as f64 / 2.0,
-    ));
+    test.click_cursor(button_area.center().to_f64());
     test.sync_and_update();
 
     // The new source should be loading, showing the loader again
@@ -291,10 +288,7 @@ pub fn asset_load_completing_after_unmount_does_not_leak() {
             })
             .unwrap();
         let area = button.layout().area;
-        test.click_cursor((
-            area.min_x() as f64 + area.size.width as f64 / 2.0,
-            area.min_y() as f64 + area.size.height as f64 / 2.0,
-        ));
+        test.click_cursor(area.center().to_f64());
     };
 
     let mut test = launch_test(app);
@@ -401,10 +395,7 @@ pub fn image_viewer_source_change_clears_previous_asset() {
         })
         .unwrap();
     let button_area = button.layout().area;
-    test.click_cursor((
-        button_area.min_x() as f64 + button_area.size.width as f64 / 2.0,
-        button_area.min_y() as f64 + button_area.size.height as f64 / 2.0,
-    ));
+    test.click_cursor(button_area.center().to_f64());
     test.sync_and_update();
     test.poll(
         std::time::Duration::from_millis(1),
