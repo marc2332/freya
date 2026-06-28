@@ -121,6 +121,81 @@
 //! }
 //! ```
 //!
+//! ## Lists and Keys
+//!
+//! When you render a dynamic list, Freya needs to match each element to its previous version across
+//! renders. Without any hint it pairs them up by index, which is fine until items are inserted,
+//! removed or reordered. When that happens index-based matching can missassociate an element with the
+//! wrong previous one, making local state or layout jump to another item.
+//!
+//! The [`key`](freya_core::elements::extensions::KeyExt::key) method gives an element a stable
+//! identity so Freya can reconcile it correctly no matter where it ends up in the list.
+//!
+//! ```rust
+//! # use freya::prelude::*;
+//! fn app() -> impl IntoElement {
+//!     let items = use_state(|| Vec::<String>::new());
+//!
+//!     rect().children(
+//!         items
+//!             .read()
+//!             .iter()
+//!             .enumerate()
+//!             .map(|(index, item)| label().key(index).text(item.clone()).into()),
+//!     )
+//! }
+//! ```
+//!
+//! The key can be derived from any [`Hash`](std::hash::Hash) value. Whenever items can be inserted,
+//! removed or reordered, prefer a value that uniquely and stably identifies the item.
+//!
+//! A custom [`Component`](freya_core::prelude::Component) can expose the same `.key` method by
+//! implementing [`KeyExt`](freya_core::elements::extensions::KeyExt) over a stored
+//! [`DiffKey`](freya_core::prelude::DiffKey) and forwarding it from
+//! [`render_key`](freya_core::prelude::Component::render_key).
+//!
+//! ```rust
+//! # use freya::prelude::*;
+//! #[derive(PartialEq)]
+//! struct Task {
+//!     title: String,
+//!     key: DiffKey,
+//! }
+//!
+//! impl Task {
+//!     fn new(title: String) -> Self {
+//!         Self {
+//!             title,
+//!             key: DiffKey::None,
+//!         }
+//!     }
+//! }
+//!
+//! impl KeyExt for Task {
+//!     fn write_key(&mut self) -> &mut DiffKey {
+//!         &mut self.key
+//!     }
+//! }
+//!
+//! impl Component for Task {
+//!     fn render(&self) -> impl IntoElement {
+//!         label().text(self.title.clone())
+//!     }
+//!
+//!     // Use the key set through `.key(..)` and fall back to the default one when none was given.
+//!     fn render_key(&self) -> DiffKey {
+//!         self.key.clone().or(self.default_key())
+//!     }
+//! }
+//!
+//! fn app(ids: Vec<u64>) -> impl IntoElement {
+//!     rect().children(
+//!         ids.iter()
+//!             .map(|id| Task::new(format!("Task {id}")).key(*id).into()),
+//!     )
+//! }
+//! ```
+//!
 //! ## Components vs Utility Functions
 //!
 //! Not every piece of reusable UI needs to be a full [Component](freya_core::prelude::Component).
