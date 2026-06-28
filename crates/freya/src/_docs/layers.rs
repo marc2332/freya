@@ -6,7 +6,7 @@
 //!
 //! - [`Layer::Relative(i16)`](freya_core::prelude::Layer::Relative) *(default)*: relative layer to the parent's layer. `0` keeps the normal stacking order, negative values move behind siblings and positive values in front.
 //! - [`Layer::Overlay`](freya_core::prelude::Layer::Overlay): adds a big layer jump relative to the parent's layer. You may stack multiple overlays on top of each other.
-//! - [`Layer::OverlayLayer(u8)`](freya_core::prelude::Layer::OverlayLayer): paint on a specific, numbered overlay layer, regardless of the parent's layer. There are up to 16 layers you can use, anything above will be capped at 16.
+//! - [`Layer::OverlayLevel(u8)`](freya_core::prelude::Layer::OverlayLevel): paint on a specific, numbered overlay level, regardless of the parent's layer. There are up to 16 levels you can use, anything above will be capped at 16.
 //!
 //! ```rust,no_run
 //! # use freya::prelude::*;

@@ -21,9 +21,9 @@ pub enum Layer {
     /// Adds a big layer jump relative to the parents layer.
     /// You may stack multiple overlays on top of each other.
     Overlay,
-    /// Paint on a specific, numbered overlay layer, regardless of the parent's layer.
-    /// There are up to 16 layers you can use, anything above will be capped at 16.
-    OverlayLayer(u8),
+    /// Paint on a specific, numbered overlay level, regardless of the parent's layer.
+    /// There are up to 16 levels you can use, anything above will be capped at 16.
+    OverlayLevel(u8),
 }
 
 impl Default for Layer {
