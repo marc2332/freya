@@ -164,6 +164,13 @@ impl Component for Select {
             }
         });
 
+        let (scale, opacity, slide) = animation.read().value();
+
+        // Clear the list size when the select dropdown is not rendered
+        if !open() && opacity == 0. && list_size().is_some() {
+            let _ = list_size.take();
+        }
+
         let cursor_icon = self.cursor_icon;
         use_drop(move || {
             if status() == SelectStatus::Hovering {
@@ -171,15 +178,12 @@ impl Component for Select {
             }
         });
 
-        // Close the select when the focused accessibility node changes and its not the select or any of its children
+        // Close the select when the focus leaves it.
         use_side_effect(move || {
             let platform = Platform::get();
-            let should_close = platform
-                .focused_accessibility_node
-                .read()
-                .member_of()
-                .is_none_or(|member_of| member_of != a11y_id);
-            if should_close {
+            let focus_within =
+                platform.focused_accessibility_node.read().member_of() == Some(a11y_id);
+            if !focus_within && list_size.peek().is_some() {
                 open.set_if_modified(false);
             }
         });
@@ -216,8 +220,6 @@ impl Component for Select {
             }
             _ => {}
         };
-
-        let (scale, opacity, slide) = animation.read().value();
 
         let offset_y = match (button_area(), list_size()) {
             (Some(button), Some(list)) => {

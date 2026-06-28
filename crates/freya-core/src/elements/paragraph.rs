@@ -325,7 +325,7 @@ impl ElementExt for ParagraphElement {
                     .insert(context.node_id, &cached_paragraph, paragraph)
             });
 
-        let size = Size2D::new(paragraph.longest_line(), paragraph.height());
+        let size = Size2D::new(paragraph.longest_line(), paragraph.height()).max(Size2D::zero());
 
         self.sk_paragraph
             .0
