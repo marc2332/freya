@@ -28,6 +28,7 @@ use crate::{
     menu::{
         Menu,
         MenuButton,
+        overflow_offset,
     },
 };
 
@@ -121,6 +122,7 @@ impl Component for ColorPicker {
         let mut dragging = use_state(DragTarget::default);
         let mut area = use_state(Area::default);
         let mut hue_area = use_state(Area::default);
+        let mut popup_area = use_state(|| None::<Area>);
 
         let is_open = open();
 
@@ -269,6 +271,19 @@ impl Component for ColorPicker {
 
         let (scale, opacity) = animation.read().value();
 
+        let (offset_x, offset_y) = match popup_area() {
+            Some(area) => {
+                let root_size = *Platform::get().root_size.peek();
+                (
+                    overflow_offset(area.origin.x, area.size.width, root_size.width),
+                    overflow_offset(area.origin.y, area.size.height, root_size.height),
+                )
+            }
+            None => (0., 0.),
+        };
+
+        let opacity = if popup_area().is_some() { opacity } else { 0. };
+
         let popup = rect()
             .on_global_pointer_move(on_global_pointer_move)
             .on_global_pointer_press(on_global_pointer_press)
@@ -355,13 +370,21 @@ impl Component for ColorPicker {
             .horizontal()
             .spacing(8.)
             .child(preview)
-            .maybe_child((opacity > 0.).then(|| {
+            .maybe_child((is_open || opacity > 0.).then(|| {
                 rect()
                     .layer(Layer::Overlay)
                     .width(Size::px(0.))
                     .height(Size::px(0.))
+                    .offset_x(offset_x)
+                    .offset_y(offset_y)
                     .opacity(opacity)
-                    .child(rect().scale(scale).child(popup))
+                    .child(rect().scale(scale).child(popup.on_sized(
+                        move |e: Event<SizedEventData>| {
+                            if popup_area.peek().is_none() {
+                                popup_area.set(Some(e.area));
+                            }
+                        },
+                    )))
             }))
     }
 
