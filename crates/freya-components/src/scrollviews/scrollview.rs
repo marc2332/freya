@@ -162,6 +162,7 @@ impl LayoutExt for ScrollView {
 }
 
 impl ContainerSizeExt for ScrollView {}
+impl ContainerPositionExt for ScrollView {}
 
 impl Component for ScrollView {
     fn render(self: &ScrollView) -> impl IntoElement {
