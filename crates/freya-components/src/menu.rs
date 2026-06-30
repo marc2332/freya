@@ -623,7 +623,7 @@ impl ComponentOwned for SubMenu {
 
 /// Returns a negative offset to shift an element back within the window boundary,
 /// or `0.0` if it already fits.
-pub(crate) fn overflow_offset(origin: f32, size: f32, window: f32) -> f32 {
+fn overflow_offset(origin: f32, size: f32, window: f32) -> f32 {
     let overflow = origin + size - window;
     if overflow > 0.0 {
         -overflow.min(origin)

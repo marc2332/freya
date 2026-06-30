@@ -28,7 +28,6 @@ use crate::{
     menu::{
         Menu,
         MenuButton,
-        overflow_offset,
     },
 };
 
@@ -275,20 +274,21 @@ impl Component for ColorPicker {
 
         let (offset_x, offset_y, opacity) = match popup_area() {
             Some(popup) => {
-                let root_size = *Platform::get().root_size.peek();
-                let popup_width = popup.size.width;
+                let window = Area::from_size(*Platform::get().root_size.peek());
+                let clamped = popup
+                    .origin
+                    .min(window.max() - popup.size.to_vector())
+                    .max(window.origin);
 
-                let offset_x = if popup.max_x() <= root_size.width {
-                    0.
-                } else if popup.min_x() - PREVIEW_WIDTH >= popup_width {
-                    -(PREVIEW_WIDTH + popup_width)
+                let offset_x = if popup.max_x() > window.max_x()
+                    && popup.min_x() - PREVIEW_WIDTH >= popup.width()
+                {
+                    -(PREVIEW_WIDTH + popup.width())
                 } else {
-                    overflow_offset(popup.min_x(), popup_width, root_size.width)
+                    clamped.x - popup.origin.x
                 };
 
-                let offset_y = overflow_offset(popup.min_y(), popup.size.height, root_size.height);
-
-                (offset_x, offset_y, opacity)
+                (offset_x, clamped.y - popup.origin.y, opacity)
             }
             None => (0., 0., 0.),
         };
@@ -386,13 +386,11 @@ impl Component for ColorPicker {
                     .offset_x(offset_x)
                     .offset_y(offset_y)
                     .opacity(opacity)
-                    .child(rect().scale(scale).child(popup.on_sized(
-                        move |e: Event<SizedEventData>| {
-                            if popup_area.peek().is_none() {
-                                popup_area.set(Some(e.area));
-                            }
-                        },
-                    )))
+                    .child(popup.scale(scale).on_sized(move |e: Event<SizedEventData>| {
+                        if popup_area.peek().is_none() {
+                            popup_area.set(Some(e.area));
+                        }
+                    }))
             }))
     }
 
