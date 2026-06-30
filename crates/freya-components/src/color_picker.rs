@@ -106,6 +106,8 @@ impl ColorPicker {
     }
 }
 
+const PREVIEW_WIDTH: f32 = 40.;
+
 /// Which part of the color picker is being dragged, if any.
 #[derive(Clone, Copy, PartialEq, Default)]
 enum DragTarget {
@@ -127,7 +129,7 @@ impl Component for ColorPicker {
         let is_open = open();
 
         let preview = rect()
-            .width(Size::px(40.))
+            .width(Size::px(PREVIEW_WIDTH))
             .height(Size::px(24.))
             .corner_radius(4.)
             .background(self.value)
@@ -271,18 +273,25 @@ impl Component for ColorPicker {
 
         let (scale, opacity) = animation.read().value();
 
-        let (offset_x, offset_y) = match popup_area() {
-            Some(area) => {
+        let (offset_x, offset_y, opacity) = match popup_area() {
+            Some(popup) => {
                 let root_size = *Platform::get().root_size.peek();
-                (
-                    overflow_offset(area.origin.x, area.size.width, root_size.width),
-                    overflow_offset(area.origin.y, area.size.height, root_size.height),
-                )
-            }
-            None => (0., 0.),
-        };
+                let popup_width = popup.size.width;
 
-        let opacity = if popup_area().is_some() { opacity } else { 0. };
+                let offset_x = if popup.max_x() <= root_size.width {
+                    0.
+                } else if popup.min_x() - PREVIEW_WIDTH >= popup_width {
+                    -(PREVIEW_WIDTH + popup_width)
+                } else {
+                    overflow_offset(popup.min_x(), popup_width, root_size.width)
+                };
+
+                let offset_y = overflow_offset(popup.min_y(), popup.size.height, root_size.height);
+
+                (offset_x, offset_y, opacity)
+            }
+            None => (0., 0., 0.),
+        };
 
         let popup = rect()
             .on_global_pointer_move(on_global_pointer_move)
@@ -368,7 +377,6 @@ impl Component for ColorPicker {
 
         rect()
             .horizontal()
-            .spacing(8.)
             .child(preview)
             .maybe_child((is_open || opacity > 0.).then(|| {
                 rect()
