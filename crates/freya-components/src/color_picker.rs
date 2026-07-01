@@ -386,11 +386,15 @@ impl Component for ColorPicker {
                     .offset_x(offset_x)
                     .offset_y(offset_y)
                     .opacity(opacity)
-                    .child(popup.scale(scale).on_sized(move |e: Event<SizedEventData>| {
-                        if popup_area.peek().is_none() {
-                            popup_area.set(Some(e.area));
-                        }
-                    }))
+                    .child(
+                        popup
+                            .scale(scale)
+                            .on_sized(move |e: Event<SizedEventData>| {
+                                if popup_area.peek().is_none() {
+                                    popup_area.set(Some(e.area));
+                                }
+                            }),
+                    )
             }))
     }
 
