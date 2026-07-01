@@ -699,6 +699,48 @@ VirtualScrollView::new(|i, _| {
 
 Missing `.key()` in dynamic lists causes element misidentification during reorders.
 
+A custom component can expose the same `.key` method by implementing `KeyExt` over a stored `DiffKey` and forwarding it from `render_key`, so it reconciles like a built-in element:
+
+```rust
+#[derive(PartialEq)]
+struct Task {
+    title: String,
+    key: DiffKey,
+}
+
+impl Task {
+    fn new(title: String) -> Self {
+        Self {
+            title,
+            key: DiffKey::None,
+        }
+    }
+}
+
+impl KeyExt for Task {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
+}
+
+impl Component for Task {
+    fn render(&self) -> impl IntoElement {
+        label().text(self.title.clone())
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
+    }
+}
+
+fn app(ids: Vec<u64>) -> impl IntoElement {
+    rect().children(
+        ids.iter()
+            .map(|id| Task::new(format!("Task {id}")).key(*id).into()),
+    )
+}
+```
+
 ## Internationalization (freya-i18n)
 
 Enable with `features = ["i18n"]`. Uses [Fluent](https://projectfluent.org/) (`.ftl` files) for translations.
