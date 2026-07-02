@@ -1,24 +1,28 @@
 use std::cell::RefCell;
 
 use freya::prelude::*;
+use freya_core::elements::svg::SvgRender;
 use freya_testing::prelude::*;
+use torin::prelude::LayoutNode;
 
-use crate::elements::svg::SvgRender;
+const LOGO: &[u8] = include_bytes!("../../../logo.svg");
 
-const LOGO: &[u8] = include_bytes!("../../../../../logo.svg");
-
-/// Identity of the cached raster for the SVG node, or `None` if not yet rasterized.
-fn cached_image_id(test: &TestingRunner) -> Option<u32> {
-    let data = test
-        .find(|node, element| Svg::try_downcast(element).map(|_| node.layout().data.clone()))
-        .flatten()?;
-    let svg_render = data.downcast_ref::<RefCell<SvgRender>>()?;
-    let image_id = svg_render
+/// Identity of the raster cached on `layout_node`, or `None` if not yet rasterized.
+fn cached_raster_id(layout_node: &LayoutNode) -> Option<u32> {
+    layout_node
+        .data
+        .as_ref()?
+        .downcast_ref::<RefCell<SvgRender>>()?
         .borrow()
         .raster
         .as_ref()
-        .map(|(_, image)| image.unique_id());
-    image_id
+        .map(|(_, image)| image.unique_id())
+}
+
+/// Identity of the cached raster for the SVG node, or `None` if not yet rasterized.
+fn cached_image_id(test: &TestingRunner) -> Option<u32> {
+    test.find(|node, element| Svg::try_downcast(element).map(|_| cached_raster_id(&node.layout())))
+        .flatten()
 }
 
 #[test]

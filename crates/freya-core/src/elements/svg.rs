@@ -121,7 +121,7 @@ pub fn svg(bytes: impl Into<SvgBytes>) -> Svg {
 
 /// The render params that affect an SVG's rasterized pixels.
 #[derive(PartialEq, Debug)]
-struct SvgRasterKey {
+pub struct SvgRasterKey {
     size: Size2D,
     color: Color,
     fill: Option<Color>,
@@ -130,9 +130,9 @@ struct SvgRasterKey {
 }
 
 /// Per-node SVG state: the parsed DOM plus its last rasterization, reused across frames.
-struct SvgRender {
+pub struct SvgRender {
     dom: svg::Dom,
-    raster: Option<(SvgRasterKey, SkImage)>,
+    pub raster: Option<(SvgRasterKey, SkImage)>,
 }
 
 impl SvgRender {
@@ -459,6 +459,3 @@ impl Svg {
         self
     }
 }
-
-#[cfg(test)]
-mod tests;
