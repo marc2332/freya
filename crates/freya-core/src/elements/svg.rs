@@ -11,9 +11,14 @@ use std::{
 use bytes::Bytes;
 use freya_engine::prelude::{
     ClipOp,
+    FilterMode,
     LocalResourceProvider,
+    MipmapMode,
     Paint,
+    SamplingOptions,
+    SkImage,
     SkRect,
+    raster_n32_premul,
     svg,
 };
 use rustc_hash::FxHashMap;
@@ -111,6 +116,46 @@ pub fn svg(bytes: impl Into<SvgBytes>) -> Svg {
             fill: None,
             relative_layer: Layer::default(),
         },
+    }
+}
+
+/// The render params that affect an SVG's rasterized pixels.
+#[derive(PartialEq, Debug)]
+struct SvgRasterKey {
+    size: Size2D,
+    color: Color,
+    fill: Option<Color>,
+    stroke: Option<Color>,
+    stroke_width: Option<f32>,
+}
+
+/// Per-node SVG state: the parsed DOM plus its last rasterization, reused across frames.
+struct SvgRender {
+    dom: svg::Dom,
+    raster: Option<(SvgRasterKey, SkImage)>,
+}
+
+impl SvgRender {
+    /// Returns the rasterized image for `key`, re-rasterizing through `style` only on a cache miss.
+    fn image(&mut self, key: SvgRasterKey, style: impl FnOnce(&mut svg::Dom)) -> Option<&SkImage> {
+        let width = key.size.width.round() as i32;
+        let height = key.size.height.round() as i32;
+        if width <= 0 || height <= 0 {
+            return None;
+        }
+
+        if self
+            .raster
+            .as_ref()
+            .is_none_or(|(cached, _)| *cached != key)
+        {
+            style(&mut self.dom);
+            let mut surface = raster_n32_premul((width, height))?;
+            self.dom.render(surface.canvas());
+            self.raster = Some((key, surface.image_snapshot()));
+        }
+
+        self.raster.as_ref().map(|(_, image)| image)
     }
 }
 
@@ -248,7 +293,10 @@ impl ElementExt for SvgElement {
             }
             Some((
                 Size2D::new(root.width().value, root.height().value),
-                Rc::new(RefCell::new(svg_dom)),
+                Rc::new(RefCell::new(SvgRender {
+                    dom: svg_dom,
+                    raster: None,
+                })),
             ))
         } else {
             tracing::error!("Invalid SVG");
@@ -266,40 +314,60 @@ impl ElementExt for SvgElement {
     }
 
     fn render(&self, context: RenderContext) {
-        let mut paint = Paint::default();
-        paint.set_anti_alias(true);
-
-        if let Some(svg_dom) = context
+        let Some(svg_render) = context
             .layout_node
             .data
             .as_ref()
-            .and_then(|data| data.downcast_ref::<RefCell<svg::Dom>>())
-        {
-            let svg_dom = svg_dom.borrow();
+            .and_then(|data| data.downcast_ref::<RefCell<SvgRender>>())
+        else {
+            return;
+        };
 
-            let mut root = svg_dom.root();
-            context.canvas.save();
-            context
-                .canvas
-                .translate(context.layout_node.visible_area().origin.to_tuple());
+        let area = context.layout_node.visible_area();
+        let inherited_color = context
+            .text_style_state
+            .color
+            .as_color()
+            .unwrap_or(Color::BLACK);
+        let color = self.color.unwrap_or(inherited_color);
 
-            let inherited_color = context
-                .text_style_state
-                .color
-                .as_color()
-                .unwrap_or(Color::BLACK);
-            root.set_color(self.color.unwrap_or(inherited_color).into());
-            if let Some(fill) = self.fill {
-                root.set_fill(svg::Paint::from_color(fill.into()));
-            }
-            if let Some(stroke) = self.stroke {
-                root.set_stroke(svg::Paint::from_color(stroke.into()));
-            }
-            if let Some(stroke_width) = self.stroke_width {
-                root.set_stroke_width(svg::Length::new(stroke_width, svg::LengthUnit::PX));
-            }
-            svg_dom.render(context.canvas);
-            context.canvas.restore();
+        let key = SvgRasterKey {
+            size: area.size,
+            color,
+            fill: self.fill,
+            stroke: self.stroke,
+            stroke_width: self.stroke_width,
+        };
+
+        let mut svg_render = svg_render.borrow_mut();
+        let Some(image) = svg_render.image(key, |dom| self.apply_style(dom, color)) else {
+            return;
+        };
+
+        let mut paint = Paint::default();
+        paint.set_anti_alias(true);
+        context.canvas.draw_image_with_sampling_options(
+            image,
+            (area.min_x(), area.min_y()),
+            SamplingOptions::new(FilterMode::Linear, MipmapMode::None),
+            Some(&paint),
+        );
+    }
+}
+
+impl SvgElement {
+    /// Applies the element's color and style overrides onto the SVG DOM root.
+    fn apply_style(&self, dom: &mut svg::Dom, color: Color) {
+        let mut root = dom.root();
+        root.set_color(color.into());
+        if let Some(fill) = self.fill {
+            root.set_fill(svg::Paint::from_color(fill.into()));
+        }
+        if let Some(stroke) = self.stroke {
+            root.set_stroke(svg::Paint::from_color(stroke.into()));
+        }
+        if let Some(stroke_width) = self.stroke_width {
+            root.set_stroke_width(svg::Length::new(stroke_width, svg::LengthUnit::PX));
         }
     }
 }
@@ -391,3 +459,6 @@ impl Svg {
         self
     }
 }
+
+#[cfg(test)]
+mod tests;
