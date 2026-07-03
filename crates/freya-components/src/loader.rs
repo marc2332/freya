@@ -94,8 +94,7 @@ impl Component for CircularLoader {
             AnimNum::new(0.0, 360.0).time(650)
         });
 
-        SvgViewer::new((
-            "circular_loader",
+        SvgViewer::new(
             r#"<svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
                 <circle class="spin" cx="300" cy="300" fill="none"
                 r="250" stroke-width="64" stroke="{color}"
@@ -103,7 +102,7 @@ impl Component for CircularLoader {
                 stroke-linecap="round" />
             </svg>"#
                 .as_bytes(),
-        ))
+        )
         .show_loader(false)
         .asset_age(AssetAge::zero())
         .accessibility(self.accessibility.clone())

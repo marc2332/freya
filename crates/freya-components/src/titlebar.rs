@@ -85,7 +85,7 @@ impl Component for TitlebarButton {
             }
         };
 
-        let icon = SvgViewer::new((icon_svg, icon_svg.as_bytes()))
+        let icon = SvgViewer::new(icon_svg.as_bytes())
             .width(Size::px(12.))
             .height(Size::px(12.));
 

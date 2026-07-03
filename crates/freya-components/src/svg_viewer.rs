@@ -115,7 +115,7 @@ async fn rasterize(
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     SvgViewer::new(("ferris", include_bytes!("../../../examples/ferris.svg")))
+///     SvgViewer::new(include_bytes!("../../../examples/ferris.svg"))
 ///         .width(Size::px(300.))
 ///         .height(Size::px(300.))
 /// }
