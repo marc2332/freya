@@ -98,7 +98,7 @@ Built-in element constructors:
 - `label()` - single-line text.
 - `paragraph()` - multi-line / rich text via `.text_span(...)` children; also the target for `use_editable`.
 - `image(handle)` - raster image; `handle` from `static_bytes(...)`, `dynamic_bytes(...)`, or asset loaders.
-- `svg(bytes)` - vector image.
+- `SvgViewer::new(source)` - vector image (SVG); `source` from `(id, bytes)`, a `PathBuf`, or a URL.
 
 `&str` / `String` implement `Into<Label>`, so prefer `rect().child("Hi")` over `rect().child(label().text("Hi"))`.
 
@@ -587,7 +587,7 @@ Built-in elements expose helpers that read the active theme - prefer these over 
 
 - `rect().theme_background()`, `rect().theme_color()`
 - `label().theme_color()`, `paragraph().theme_color()`
-- `svg(...).theme_color()` / `.theme_accent_color()` / `.theme_fill()` / `.theme_stroke()` / `.theme_accent_fill()` / `.theme_accent_stroke()`
+- `SvgViewer::new(...).theme_color()` / `.theme_accent_color()` / `.theme_fill()` / `.theme_stroke()` / `.theme_accent_fill()` / `.theme_accent_stroke()`
 
 ### Custom themes
 
@@ -844,7 +844,7 @@ Enable with `features = ["icons"]`. Uses Lucide icons rendered as SVGs:
 ```rust
 use freya::icons;
 
-svg(icons::lucide::antenna()).color((120, 50, 255)).expanded()
+SvgViewer::new(icons::lucide::antenna()).color((120, 50, 255)).expanded()
 ```
 
 ## Rich Text Editing

@@ -19,7 +19,7 @@ features = ["docs"]
 
 [features]
 router = ["dep:open", "dep:freya-router"]
-remote-asset = ["dep:ureq"]
+remote-asset = ["dep:reqwest"]
 docs = ["dep:embed-doc-image"]
 gif = ["dep:gif"]
 calendar = ["dep:chrono"]
@@ -34,6 +34,7 @@ freya-edit = { workspace = true }
 freya-sdk = { workspace = true }
 freya-icons = { workspace = true, optional = true }
 tracing = { workspace = true }
+rustc-hash = { workspace = true }
 
 # Theming
 paste = "1.0.15"
@@ -49,7 +50,7 @@ freya-router = { workspace = true, optional = true }
 async-io = { workspace = true }
 
 # Remote Image
-ureq = { workspace = true, optional = true }
+reqwest = { workspace = true, optional = true }
 
 # Image viewer
 blocking = { workspace = true }

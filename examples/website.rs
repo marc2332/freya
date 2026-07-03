@@ -73,7 +73,7 @@ impl Component for Home {
                     .direction(Direction::Horizontal)
                     .cross_align(Alignment::Center)
                     .spacing(12.0)
-                    .child(svg(Bytes::from_static(include_bytes!("./website/freya_icon.svg"))).width(Size::px(150.)).height(Size::px(150.)))
+                    .child(SvgViewer::new(include_bytes!("./website/freya_icon.svg")).width(Size::px(150.)).height(Size::px(150.)))
                     .child(
                         rect()
                             .spacing(16.0)
@@ -188,18 +188,14 @@ impl Component for Navigation {
             .cross_align(Alignment::Center)
             .color((214, 211, 209))
             .child(
-                svg(Bytes::from_static(include_bytes!(
-                    "./website/freya_icon.svg"
-                )))
-                .width(Size::px(50.))
-                .height(Size::px(50.)),
+                SvgViewer::new(include_bytes!("./website/freya_icon.svg"))
+                    .width(Size::px(50.))
+                    .height(Size::px(50.)),
             )
             .child(
-                svg(Bytes::from_static(include_bytes!(
-                    "./website/freya_logo.svg"
-                )))
-                .width(Size::px(50.))
-                .height(Size::px(50.)),
+                SvgViewer::new(include_bytes!("./website/freya_logo.svg"))
+                    .width(Size::px(50.))
+                    .height(Size::px(50.)),
             )
             .child(Link::new("https://freyaui.dev/blog").child("Blog"))
             .child(Link::new("https://book.freyaui.dev/").child("Book"))

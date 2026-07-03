@@ -11,7 +11,7 @@ fn main() {
 
 fn app() -> impl IntoElement {
     rect().expanded().center().child(
-        svg(include_bytes!("./ferris.svg"))
+        SvgViewer::new(include_bytes!("./ferris.svg"))
             .width(Size::px(300.))
             .height(Size::px(300.)),
     )

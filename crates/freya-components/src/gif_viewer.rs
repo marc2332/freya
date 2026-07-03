@@ -48,10 +48,15 @@ use freya_engine::prelude::{
     raster_n32_premul,
 };
 use gif::DisposalMethod;
-use torin::prelude::Size2D;
 #[cfg(feature = "remote-asset")]
-use ureq::http::Uri;
+use reqwest::{
+    Url as Uri,
+    blocking::Client,
+};
+use torin::prelude::Size2D;
 
+#[cfg(feature = "remote-asset")]
+use crate::http::Http;
 use crate::{
     cache::*,
     loader::CircularLoader,
@@ -138,7 +143,7 @@ impl From<Uri> for GifSource {
 #[cfg(feature = "remote-asset")]
 impl From<&'static str> for GifSource {
     fn from(src: &'static str) -> Self {
-        Self::Uri(Uri::from_static(src))
+        Self::Uri(Uri::parse(src).expect("Invalid URL"))
     }
 }
 
@@ -160,16 +165,15 @@ impl Hash for GifSource {
 }
 
 impl GifSource {
-    pub async fn bytes(&self) -> anyhow::Result<Bytes> {
+    pub async fn bytes(
+        &self,
+        #[cfg(feature = "remote-asset")] client: Client,
+    ) -> anyhow::Result<Bytes> {
         let source = self.clone();
         blocking::unblock(move || {
             let bytes = match source {
                 #[cfg(feature = "remote-asset")]
-                Self::Uri(uri) => ureq::get(uri)
-                    .call()?
-                    .body_mut()
-                    .read_to_vec()
-                    .map(Bytes::from)?,
+                Self::Uri(uri) => client.get(uri).send()?.error_for_status()?.bytes()?,
                 Self::Path(path) => fs::read(path).map(Bytes::from)?,
                 Self::Bytes(_, bytes) => bytes,
             };
@@ -379,8 +383,14 @@ impl Component for GifViewer {
                         asset_cacher.update_asset(asset_config.clone(), Asset::Loading);
 
                         let asset_config = asset_config.clone();
+                        #[cfg(feature = "remote-asset")]
+                        let client = Http::get();
                         let asset_task = spawn(async move {
-                            match source.bytes().await {
+                            #[cfg(feature = "remote-asset")]
+                            let fetched = source.bytes(client).await;
+                            #[cfg(not(feature = "remote-asset"))]
+                            let fetched = source.bytes().await;
+                            match fetched {
                                 Ok(bytes) => {
                                     // Cache the GIF bytes
                                     asset_cacher

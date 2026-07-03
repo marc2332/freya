@@ -24,13 +24,18 @@ use freya_engine::prelude::{
     SkRect,
     raster_n32_premul,
 };
+#[cfg(feature = "remote-asset")]
+use reqwest::{
+    Url as Uri,
+    blocking::Client,
+};
 use torin::prelude::{
     Size,
     Size2D,
 };
-#[cfg(feature = "remote-asset")]
-use ureq::http::Uri;
 
+#[cfg(feature = "remote-asset")]
+use crate::http::Http;
 use crate::{
     cache::*,
     loader::CircularLoader,
@@ -119,6 +124,26 @@ impl<const N: usize, H: Hash> From<(H, &'static [u8; N])> for ImageSource {
     }
 }
 
+impl From<Bytes> for ImageSource {
+    fn from(bytes: Bytes) -> Self {
+        let mut hasher = DefaultHasher::default();
+        bytes.hash(&mut hasher);
+        Self::Bytes(hasher.finish(), bytes)
+    }
+}
+
+impl From<&'static [u8]> for ImageSource {
+    fn from(bytes: &'static [u8]) -> Self {
+        Bytes::from_static(bytes).into()
+    }
+}
+
+impl<const N: usize> From<&'static [u8; N]> for ImageSource {
+    fn from(bytes: &'static [u8; N]) -> Self {
+        Bytes::from_static(bytes).into()
+    }
+}
+
 #[cfg_attr(feature = "docs", doc(cfg(feature = "remote-asset")))]
 #[cfg(feature = "remote-asset")]
 impl From<Uri> for ImageSource {
@@ -131,7 +156,7 @@ impl From<Uri> for ImageSource {
 #[cfg(feature = "remote-asset")]
 impl From<&'static str> for ImageSource {
     fn from(src: &'static str) -> Self {
-        Self::Uri(Uri::from_static(src))
+        Self::Uri(Uri::parse(src).expect("Invalid URL"))
     }
 }
 
@@ -158,25 +183,33 @@ pub type DecodeSize = euclid::Size2D<u32, ()>;
 static DECODE_LIMIT: LazyLock<Semaphore> = LazyLock::new(|| Semaphore::new(4));
 
 impl ImageSource {
+    /// Read the source's raw encoded bytes. Blocking, meant to run inside `unblock`.
+    pub(crate) fn fetch(
+        self,
+        #[cfg(feature = "remote-asset")] client: &Client,
+    ) -> anyhow::Result<Bytes> {
+        Ok(match self {
+            #[cfg(feature = "remote-asset")]
+            Self::Uri(uri) => client.get(uri).send()?.error_for_status()?.bytes()?,
+            Self::Path(path) => fs::read(path).map(Bytes::from)?,
+            Self::Bytes(_, bytes) => bytes,
+        })
+    }
+
     /// Fetch the source's encoded bytes and decode them into a Skia image.
     pub async fn load(
         &self,
         decode_size: Option<DecodeSize>,
         sampling_mode: SamplingMode,
+        #[cfg(feature = "remote-asset")] client: Client,
     ) -> anyhow::Result<(SkImage, Bytes)> {
         let source = self.clone();
         let _decode_permit = DECODE_LIMIT.acquire().await;
         blocking::unblock(move || {
-            let bytes = match source {
-                #[cfg(feature = "remote-asset")]
-                Self::Uri(uri) => ureq::get(uri)
-                    .call()?
-                    .body_mut()
-                    .read_to_vec()
-                    .map(Bytes::from)?,
-                Self::Path(path) => fs::read(path).map(Bytes::from)?,
-                Self::Bytes(_, bytes) => bytes,
-            };
+            #[cfg(feature = "remote-asset")]
+            let bytes = source.fetch(&client)?;
+            #[cfg(not(feature = "remote-asset"))]
+            let bytes = source.fetch()?;
             let image = SkImage::from_encoded(unsafe { SkData::new_bytes(&bytes) })
                 .context("Failed to decode Image.")?;
             let image = image.make_raster_image(None, None).unwrap_or(image);
@@ -418,8 +451,14 @@ impl Component for ImageViewer {
                     let asset_config = asset_config.clone();
                     let target = *target;
                     let sampling_mode = sampling_mode.clone();
+                    #[cfg(feature = "remote-asset")]
+                    let client = Http::get();
                     spawn_forever(async move {
-                        match source.load(target, sampling_mode).await {
+                        #[cfg(feature = "remote-asset")]
+                        let loaded = source.load(target, sampling_mode, client).await;
+                        #[cfg(not(feature = "remote-asset"))]
+                        let loaded = source.load(target, sampling_mode).await;
+                        match loaded {
                             Ok((image, bytes)) => {
                                 asset_cacher.update_asset(
                                     asset_config,

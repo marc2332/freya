@@ -219,6 +219,7 @@ pub mod components {
         sidebar::*,
         skeleton::*,
         slider::*,
+        svg_viewer::*,
         switch::*,
         table::*,
         theming::{

@@ -232,7 +232,11 @@ impl ElementExt for ImageElement {
             }
         }
 
-        if self.effect != image.effect || self.corner_radius != image.corner_radius {
+        if self.effect != image.effect {
+            diff.insert(DiffModifies::EFFECT);
+        }
+
+        if self.corner_radius != image.corner_radius {
             diff.insert(DiffModifies::STYLE);
         }
 

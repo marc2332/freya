@@ -101,7 +101,7 @@ fn tab(route: Route, label: &'static str, icon: fn() -> Bytes) -> ActivableRoute
                     .center()
                     .spacing(2.)
                     .child(
-                        svg(icon())
+                        SvgViewer::new(icon())
                             .stroke(theme.read().colors.text_primary)
                             .width(Size::px(18.))
                             .height(Size::px(18.)),

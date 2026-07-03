@@ -30,7 +30,7 @@ fn app() -> impl IntoElement {
     let duration = player.duration();
     let volume = player.volume();
 
-    let toggle_label = match state {
+    let toggle_icon = match state {
         PlaybackState::Playing => freya::icons::lucide::pause(),
         PlaybackState::Errored => freya::icons::lucide::bug(),
         PlaybackState::Loading => freya::icons::lucide::loader(),
@@ -83,7 +83,7 @@ fn app() -> impl IntoElement {
                         .flat()
                         .on_press(move |_| player.toggle())
                         .child(
-                            svg(toggle_label)
+                            SvgViewer::new(toggle_icon)
                                 .color((200, 200, 200))
                                 .width(Size::px(16.))
                                 .height(Size::px(16.)),
@@ -102,7 +102,7 @@ fn app() -> impl IntoElement {
                 )
                 .child(label().text(time_label).max_lines(1))
                 .child(
-                    svg(freya::icons::lucide::volume_2())
+                    SvgViewer::new(freya::icons::lucide::volume_2())
                         .color((200, 200, 200))
                         .width(Size::px(16.))
                         .height(Size::px(16.)),

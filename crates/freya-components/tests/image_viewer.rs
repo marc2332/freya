@@ -125,6 +125,11 @@ pub fn image_viewer_asset_age_zero_clears_cache_on_unmount() {
     test.sync_and_update();
 
     let read_size = |test: &mut TestingRunner| {
+        test.poll(
+            std::time::Duration::from_millis(1),
+            std::time::Duration::from_millis(50),
+        );
+        test.sync_and_update();
         test.find_many(|node, element| Label::try_downcast(element).map(|_| node))
             .into_iter()
             .find_map(|l| {
@@ -267,6 +272,11 @@ pub fn asset_load_completing_after_unmount_does_not_leak() {
     }
 
     let read_size = |test: &mut TestingRunner| {
+        test.poll(
+            std::time::Duration::from_millis(1),
+            std::time::Duration::from_millis(50),
+        );
+        test.sync_and_update();
         test.find_many(|node, element| Label::try_downcast(element).map(|_| node))
             .into_iter()
             .find_map(|l| {
@@ -361,6 +371,11 @@ pub fn image_viewer_source_change_clears_previous_asset() {
     }
 
     let read_size = |test: &mut TestingRunner| {
+        test.poll(
+            std::time::Duration::from_millis(1),
+            std::time::Duration::from_millis(50),
+        );
+        test.sync_and_update();
         test.find_many(|node, element| Label::try_downcast(element).map(|_| node))
             .into_iter()
             .find_map(|l| {

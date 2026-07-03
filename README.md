@@ -425,7 +425,7 @@ use freya::prelude::*;
 use freya::icons;
 
 fn app() -> impl IntoElement {
-    svg(icons::lucide::antenna())
+    SvgViewer::new(icons::lucide::antenna())
         .color((120, 50, 255))
         .expanded()
 }
