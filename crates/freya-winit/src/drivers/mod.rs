@@ -18,6 +18,7 @@ use winit::{
 
 /// Unrecoverable graphics error requiring a driver rebuild.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)]
 pub enum DriverError {
     /// The GPU device was lost.
     DeviceLost,
