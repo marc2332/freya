@@ -88,7 +88,7 @@ impl OpenGLDriver {
 
         let display_builder = DisplayBuilder::new().with_window_attributes(Some(window_attributes));
         let (window, gl_config) = display_builder.build(event_loop, template, |configs| {
-            pick_gl_config(configs, transparent)
+            Self::pick_config(configs, transparent)
         })?;
 
         let window = window.ok_or("OpenGL display builder returned no window")?;
@@ -111,7 +111,7 @@ impl OpenGLDriver {
 
         // No window attributes, so only a config is built.
         let (_, gl_config) = DisplayBuilder::new().build(event_loop, template, |configs| {
-            pick_gl_config(configs, transparent)
+            Self::pick_config(configs, transparent)
         })?;
 
         Self::build(&gl_config, window, gpu_resource_cache_limit)
@@ -268,20 +268,21 @@ impl OpenGLDriver {
 
         self.surface = surface;
     }
-}
 
-fn pick_gl_config(configs: Box<dyn Iterator<Item = Config> + '_>, transparent: bool) -> Config {
-    configs
-        .reduce(|accum, config| {
-            let transparency_check = transparent
-                && config.supports_transparency().unwrap_or(false)
-                && !accum.supports_transparency().unwrap_or(false);
+    /// Pick the OpenGL config, preferring transparency then fewer samples.
+    fn pick_config(configs: Box<dyn Iterator<Item = Config> + '_>, transparent: bool) -> Config {
+        configs
+            .reduce(|accum, config| {
+                let transparency_check = transparent
+                    && config.supports_transparency().unwrap_or(false)
+                    && !accum.supports_transparency().unwrap_or(false);
 
-            if transparency_check || config.num_samples() < accum.num_samples() {
-                config
-            } else {
-                accum
-            }
-        })
-        .expect("at least one OpenGL config")
+                if transparency_check || config.num_samples() < accum.num_samples() {
+                    config
+                } else {
+                    accum
+                }
+            })
+            .expect("at least one OpenGL config")
+    }
 }
