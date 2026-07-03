@@ -49,10 +49,7 @@ use freya_engine::prelude::{
 };
 use gif::DisposalMethod;
 #[cfg(feature = "remote-asset")]
-use reqwest::{
-    Url,
-    blocking::Client,
-};
+use reqwest::Url;
 use torin::prelude::Size2D;
 
 #[cfg(feature = "remote-asset")]
