@@ -18,8 +18,6 @@ use freya_engine::prelude::{
     raster_n32_premul,
     svg,
 };
-#[cfg(feature = "remote-asset")]
-use reqwest::blocking::Client;
 use rustc_hash::FxHashMap;
 use torin::prelude::{
     Size,
@@ -67,10 +65,12 @@ async fn rasterize(
     source: ImageSource,
     size: DecodeSize,
     style: SvgStyle,
-    #[cfg(feature = "remote-asset")] client: Client,
 ) -> anyhow::Result<SkImage> {
     #[cfg(feature = "remote-asset")]
-    let bytes = blocking::unblock(move || source.fetch(&client)).await?;
+    let bytes = {
+        let client = Http::get();
+        blocking::unblock(move || source.fetch(&client)).await?
+    };
     #[cfg(not(feature = "remote-asset"))]
     let bytes = blocking::unblock(move || source.fetch()).await?;
 
@@ -281,14 +281,8 @@ impl Component for SvgViewer {
                     let source = source.clone();
                     let asset_config = asset_config.clone();
                     let style = *style;
-                    #[cfg(feature = "remote-asset")]
-                    let client = Http::get();
                     spawn_forever(async move {
-                        #[cfg(feature = "remote-asset")]
-                        let rasterized = rasterize(source, target, style, client).await;
-                        #[cfg(not(feature = "remote-asset"))]
-                        let rasterized = rasterize(source, target, style).await;
-                        match rasterized {
+                        match rasterize(source, target, style).await {
                             Ok(image) => {
                                 asset_cacher.update_asset(
                                     asset_config,

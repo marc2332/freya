@@ -4,7 +4,7 @@ use std::{
 };
 
 #[cfg(feature = "remote-asset")]
-use freya_components::Uri;
+use freya_components::Url;
 #[cfg(feature = "remote-asset")]
 use freya_components::image_viewer::{
     ImageSource,
@@ -767,7 +767,7 @@ impl Component for MarkdownViewer {
                     list.into()
                 }
                 #[cfg(feature = "remote-asset")]
-                MarkdownElement::Image { url, alt } => match url.parse::<Uri>() {
+                MarkdownElement::Image { url, alt } => match url.parse::<Url>() {
                     Ok(uri) => {
                         let source: ImageSource = uri.into();
                         ImageViewer::new(source)

@@ -171,7 +171,7 @@ pub mod components {
     }
     #[cfg_attr(feature = "docs", doc(cfg(feature = "remote-asset")))]
     #[cfg(feature = "remote-asset")]
-    pub use freya_components::Uri;
+    pub use freya_components::Url;
     #[cfg_attr(feature = "docs", doc(cfg(feature = "calendar")))]
     #[cfg(feature = "calendar")]
     pub use freya_components::calendar::*;

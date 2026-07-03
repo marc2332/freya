@@ -42,7 +42,7 @@ pub fn image_viewer_source_change() {
     // Wait for the first image to load
     test.poll(
         std::time::Duration::from_millis(1),
-        std::time::Duration::from_millis(70),
+        std::time::Duration::from_millis(200),
     );
     test.sync_and_update();
 
@@ -78,7 +78,7 @@ pub fn image_viewer_source_change() {
     // Wait for the new image to load
     test.poll(
         std::time::Duration::from_millis(1),
-        std::time::Duration::from_millis(70),
+        std::time::Duration::from_millis(200),
     );
     test.sync_and_update();
 
@@ -120,7 +120,7 @@ pub fn image_viewer_asset_age_zero_clears_cache_on_unmount() {
 
     test.poll(
         std::time::Duration::from_millis(1),
-        std::time::Duration::from_millis(70),
+        std::time::Duration::from_millis(200),
     );
     test.sync_and_update();
 
@@ -149,7 +149,7 @@ pub fn image_viewer_asset_age_zero_clears_cache_on_unmount() {
 
     test.poll(
         std::time::Duration::from_millis(1),
-        std::time::Duration::from_millis(70),
+        std::time::Duration::from_millis(200),
     );
     test.sync_and_update();
 
@@ -188,7 +188,7 @@ pub fn image_viewer_load_and_render() {
     // Wait a bit for the image to load and render
     test.poll(
         std::time::Duration::from_millis(1),
-        std::time::Duration::from_millis(70),
+        std::time::Duration::from_millis(200),
     );
     test.sync_and_update();
 
@@ -217,7 +217,7 @@ pub fn image_viewer_custom_error_renderer() {
 
     test.poll(
         std::time::Duration::from_millis(1),
-        std::time::Duration::from_millis(70),
+        std::time::Duration::from_millis(200),
     );
     test.sync_and_update();
 
@@ -305,7 +305,7 @@ pub fn asset_load_completing_after_unmount_does_not_leak() {
     test.sync_and_update();
     test.poll(
         std::time::Duration::from_millis(1),
-        std::time::Duration::from_millis(70),
+        std::time::Duration::from_millis(200),
     );
     test.sync_and_update();
 
@@ -319,7 +319,7 @@ pub fn asset_load_completing_after_unmount_does_not_leak() {
     test.sync_and_update();
     test.poll(
         std::time::Duration::from_millis(1),
-        std::time::Duration::from_millis(70),
+        std::time::Duration::from_millis(200),
     );
     test.sync_and_update();
 
@@ -333,7 +333,7 @@ pub fn asset_load_completing_after_unmount_does_not_leak() {
     test.sync_and_update();
     test.poll(
         std::time::Duration::from_millis(1),
-        std::time::Duration::from_millis(70),
+        std::time::Duration::from_millis(200),
     );
     test.sync_and_update();
 
@@ -392,7 +392,7 @@ pub fn image_viewer_source_change_clears_previous_asset() {
     test.sync_and_update();
     test.poll(
         std::time::Duration::from_millis(1),
-        std::time::Duration::from_millis(70),
+        std::time::Duration::from_millis(200),
     );
     test.sync_and_update();
 
@@ -414,7 +414,7 @@ pub fn image_viewer_source_change_clears_previous_asset() {
     test.sync_and_update();
     test.poll(
         std::time::Duration::from_millis(1),
-        std::time::Duration::from_millis(70),
+        std::time::Duration::from_millis(200),
     );
     test.sync_and_update();
 

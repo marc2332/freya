@@ -26,7 +26,7 @@ use freya_engine::prelude::{
 };
 #[cfg(feature = "remote-asset")]
 use reqwest::{
-    Url as Uri,
+    Url,
     blocking::Client,
 };
 use torin::prelude::{
@@ -97,7 +97,7 @@ pub enum ImageSource {
     ///
     /// Requires the `remote-asset` feature.
     #[cfg(feature = "remote-asset")]
-    Uri(Uri),
+    Uri(Url),
 
     Path(PathBuf),
 
@@ -146,8 +146,8 @@ impl<const N: usize> From<&'static [u8; N]> for ImageSource {
 
 #[cfg_attr(feature = "docs", doc(cfg(feature = "remote-asset")))]
 #[cfg(feature = "remote-asset")]
-impl From<Uri> for ImageSource {
-    fn from(uri: Uri) -> Self {
+impl From<Url> for ImageSource {
+    fn from(uri: Url) -> Self {
         Self::Uri(uri)
     }
 }
@@ -156,7 +156,7 @@ impl From<Uri> for ImageSource {
 #[cfg(feature = "remote-asset")]
 impl From<&'static str> for ImageSource {
     fn from(src: &'static str) -> Self {
-        Self::Uri(Uri::parse(src).expect("Invalid URL"))
+        Self::Uri(Url::parse(src).expect("Invalid URL"))
     }
 }
 
@@ -201,9 +201,10 @@ impl ImageSource {
         &self,
         decode_size: Option<DecodeSize>,
         sampling_mode: SamplingMode,
-        #[cfg(feature = "remote-asset")] client: Client,
     ) -> anyhow::Result<(SkImage, Bytes)> {
         let source = self.clone();
+        #[cfg(feature = "remote-asset")]
+        let client = Http::get();
         let _decode_permit = DECODE_LIMIT.acquire().await;
         blocking::unblock(move || {
             #[cfg(feature = "remote-asset")]
@@ -451,14 +452,8 @@ impl Component for ImageViewer {
                     let asset_config = asset_config.clone();
                     let target = *target;
                     let sampling_mode = sampling_mode.clone();
-                    #[cfg(feature = "remote-asset")]
-                    let client = Http::get();
                     spawn_forever(async move {
-                        #[cfg(feature = "remote-asset")]
-                        let loaded = source.load(target, sampling_mode, client).await;
-                        #[cfg(not(feature = "remote-asset"))]
-                        let loaded = source.load(target, sampling_mode).await;
-                        match loaded {
+                        match source.load(target, sampling_mode).await {
                             Ok((image, bytes)) => {
                                 asset_cacher.update_asset(
                                     asset_config,
