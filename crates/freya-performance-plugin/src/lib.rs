@@ -137,6 +137,12 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
             } => {
                 self.get_metrics(window.id()).graphics_driver = graphics_driver;
             }
+            PluginEvent::GraphicsDriverChanged {
+                window,
+                graphics_driver,
+            } => {
+                self.get_metrics(window.id()).graphics_driver = graphics_driver;
+            }
             PluginEvent::AfterRedraw { window, .. } => {
                 let metrics = self.get_metrics(window.id());
                 let now = Instant::now();

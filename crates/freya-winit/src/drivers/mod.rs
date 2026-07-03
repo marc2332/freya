@@ -16,6 +16,15 @@ use winit::{
     },
 };
 
+/// Unrecoverable graphics error requiring a driver rebuild.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DriverError {
+    /// The GPU device was lost.
+    DeviceLost,
+    /// The GPU or host ran out of memory.
+    OutOfMemory,
+}
+
 #[allow(clippy::large_enum_variant)]
 pub enum GraphicsDriver {
     #[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
@@ -122,20 +131,57 @@ impl GraphicsDriver {
         }
     }
 
+    /// Rebuild the driver on the existing window, skipping Vulkan.
+    pub fn recover_reusing_window(
+        event_loop: &ActiveEventLoop,
+        window: &Window,
+        gpu_resource_cache_limit: usize,
+        transparent: bool,
+    ) -> Self {
+        #[cfg(target_os = "macos")]
+        let _ = (event_loop, gpu_resource_cache_limit, transparent);
+
+        #[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
+        match gl::OpenGLDriver::from_window(
+            event_loop,
+            window,
+            gpu_resource_cache_limit,
+            transparent,
+        ) {
+            Ok(driver) => return Self::OpenGl(driver),
+            Err(err) => {
+                tracing::warn!("OpenGL recovery failed, falling back to software: {err}");
+            }
+        }
+
+        let driver = software::SoftwareDriver::from_window(window)
+            .expect("Failed to initialize software renderer fallback");
+        Self::Software(driver)
+    }
+
     pub fn present(
         &mut self,
         _size: PhysicalSize<u32>,
         window: &Window,
         render: impl FnOnce(&mut SkiaSurface),
-    ) {
+    ) -> Result<(), DriverError> {
         match self {
             #[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
-            Self::OpenGl(gl) => gl.present(window, render),
+            Self::OpenGl(gl) => {
+                gl.present(window, render);
+                Ok(())
+            }
             #[cfg(target_os = "macos")]
-            Self::Metal(mtl) => mtl.present(_size, window, render),
+            Self::Metal(mtl) => {
+                mtl.present(_size, window, render);
+                Ok(())
+            }
             #[cfg(any(target_os = "linux", target_os = "windows"))]
             Self::Vulkan(vk) => vk.present(_size, window, render),
-            Self::Software(sw) => sw.present(_size, window, render),
+            Self::Software(sw) => {
+                sw.present(_size, window, render);
+                Ok(())
+            }
         }
     }
 
@@ -159,7 +205,12 @@ impl GraphicsDriver {
             #[cfg(target_os = "macos")]
             Self::Metal(mtl) => mtl.resize(size),
             #[cfg(any(target_os = "linux", target_os = "windows"))]
-            Self::Vulkan(vk) => vk.resize(size),
+            Self::Vulkan(vk) => {
+                // Recovered on the next present, so just log it.
+                if let Err(error) = vk.resize(size) {
+                    tracing::warn!("Vulkan resize failed ({error:?}), recovering on next present");
+                }
+            }
             Self::Software(sw) => sw.resize(size),
         }
     }

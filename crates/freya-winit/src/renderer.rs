@@ -58,7 +58,10 @@ use crate::{
         CloseDecision,
         WindowConfig,
     },
-    drivers::GraphicsDriver,
+    drivers::{
+        DriverError,
+        GraphicsDriver,
+    },
     integration::is_ime_role,
     plugins::{
         PluginEvent,
@@ -657,6 +660,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
         window_id: winit::window::WindowId,
         event: winit::event::WindowEvent,
     ) {
+        let mut needs_recovery = false;
         if let Some(app) = &mut self.windows.get_mut(&window_id) {
             app.accessibility_adapter.process_event(&app.window, &event);
             match event {
@@ -726,6 +730,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 }
                 WindowEvent::RedrawRequested => {
                     let scale_factor = app.effective_scale_factor();
+                    let present_result: Result<(), DriverError>;
                     hotpath::measure_block!("RedrawRequested", {
                         if app.process_layout_on_next_render {
                             self.plugins.send(
@@ -760,7 +765,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             );
                         }
 
-                        app.driver.present(
+                        present_result = app.driver.present(
                             app.window.inner_size().cast(),
                             &app.window,
                             |surface| {
@@ -873,6 +878,13 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             PluginHandle::new(&self.proxy),
                         );
                     });
+
+                    if let Err(error) = present_result {
+                        tracing::warn!(
+                            "Graphics driver lost ({error:?}), rebuilding on the same window"
+                        );
+                        needs_recovery = true;
+                    }
                 }
                 WindowEvent::Resized(size) => {
                     app.driver.resize(size);
@@ -1174,6 +1186,31 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 }
                 _ => {}
             }
+        }
+
+        // Rebuild on the same window to keep input and accessibility working.
+        if needs_recovery && let Some(mut app) = self.windows.remove(&window_id) {
+            let transparent = app.window_attributes.transparent;
+            // Drop the lost driver first to release its GPU surface.
+            drop(app.driver);
+            app.driver = GraphicsDriver::recover_reusing_window(
+                event_loop,
+                &app.window,
+                self.gpu_resource_cache_limit,
+                transparent,
+            );
+            tracing::info!("Recovered onto the {} driver", app.driver.name());
+            self.plugins.send(
+                PluginEvent::GraphicsDriverChanged {
+                    window: &app.window,
+                    graphics_driver: app.driver.name(),
+                },
+                PluginHandle::new(&self.proxy),
+            );
+            app.process_layout_on_next_render = true;
+            app.tree.layout.reset();
+            app.window.request_redraw();
+            self.windows.insert(window_id, app);
         }
     }
 }

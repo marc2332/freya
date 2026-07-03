@@ -21,6 +21,7 @@ use gl::{
 };
 use glutin::{
     config::{
+        Config,
         ConfigTemplateBuilder,
         GlConfig,
     },
@@ -87,23 +88,40 @@ impl OpenGLDriver {
 
         let display_builder = DisplayBuilder::new().with_window_attributes(Some(window_attributes));
         let (window, gl_config) = display_builder.build(event_loop, template, |configs| {
-            configs
-                .reduce(|accum, config| {
-                    let transparency_check = transparent
-                        && config.supports_transparency().unwrap_or(false)
-                        && !accum.supports_transparency().unwrap_or(false);
-
-                    if transparency_check || config.num_samples() < accum.num_samples() {
-                        config
-                    } else {
-                        accum
-                    }
-                })
-                .expect("at least one OpenGL config")
+            pick_gl_config(configs, transparent)
         })?;
 
         let window = window.ok_or("OpenGL display builder returned no window")?;
 
+        let driver = Self::build(&gl_config, &window, gpu_resource_cache_limit)?;
+
+        Ok((driver, window))
+    }
+
+    /// Build the driver on an existing window instead of creating a new one.
+    pub fn from_window(
+        event_loop: &ActiveEventLoop,
+        window: &Window,
+        gpu_resource_cache_limit: usize,
+        transparent: bool,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        let template = ConfigTemplateBuilder::new()
+            .with_alpha_size(8)
+            .with_transparency(transparent);
+
+        // No window attributes, so only a config is built.
+        let (_, gl_config) = DisplayBuilder::new().build(event_loop, template, |configs| {
+            pick_gl_config(configs, transparent)
+        })?;
+
+        Self::build(&gl_config, window, gpu_resource_cache_limit)
+    }
+
+    fn build(
+        gl_config: &Config,
+        window: &Window,
+        gpu_resource_cache_limit: usize,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
         let window_handle = window.window_handle()?;
 
         let context_attributes = ContextAttributesBuilder::new()
@@ -118,12 +136,12 @@ impl OpenGLDriver {
         let not_current_gl_context = unsafe {
             match gl_config
                 .display()
-                .create_context(&gl_config, &context_attributes)
+                .create_context(gl_config, &context_attributes)
             {
                 Ok(ctx) => ctx,
                 Err(_) => gl_config
                     .display()
-                    .create_context(&gl_config, &fallback_context_attributes)?,
+                    .create_context(gl_config, &fallback_context_attributes)?,
             }
         };
 
@@ -138,7 +156,7 @@ impl OpenGLDriver {
         let gl_surface = unsafe {
             gl_config
                 .display()
-                .create_window_surface(&gl_config, &attrs)?
+                .create_window_surface(gl_config, &attrs)?
         };
 
         let gl_context = not_current_gl_context.make_current(&gl_surface)?;
@@ -208,7 +226,7 @@ impl OpenGLDriver {
             surface,
         };
 
-        Ok((driver, window))
+        Ok(driver)
     }
 
     pub fn present(&mut self, window: &Window, render: impl FnOnce(&mut SkiaSurface)) {
@@ -250,4 +268,20 @@ impl OpenGLDriver {
 
         self.surface = surface;
     }
+}
+
+fn pick_gl_config(configs: Box<dyn Iterator<Item = Config> + '_>, transparent: bool) -> Config {
+    configs
+        .reduce(|accum, config| {
+            let transparency_check = transparent
+                && config.supports_transparency().unwrap_or(false)
+                && !accum.supports_transparency().unwrap_or(false);
+
+            if transparency_check || config.num_samples() < accum.num_samples() {
+                config
+            } else {
+                accum
+            }
+        })
+        .expect("at least one OpenGL config")
 }
