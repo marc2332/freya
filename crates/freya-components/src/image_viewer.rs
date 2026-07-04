@@ -336,6 +336,7 @@ impl LayoutExt for ImageViewer {
 
 impl ContainerSizeExt for ImageViewer {}
 impl ContainerWithContentExt for ImageViewer {}
+impl ContainerPositionExt for ImageViewer {}
 
 impl ImageExt for ImageViewer {
     fn get_image_data(&mut self) -> &mut ImageData {

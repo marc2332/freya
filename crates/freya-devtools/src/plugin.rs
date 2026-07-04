@@ -237,6 +237,7 @@ impl FreyaPlugin for DevtoolsPlugin {
                 animation_clock,
                 ..
             } => {
+                window.set_title(&format!("{} (Devtools enabled)", window.title()));
                 self.init(window.id(), animation_clock, plugin_handle);
             }
             _ => {}
