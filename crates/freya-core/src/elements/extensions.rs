@@ -550,8 +550,8 @@ where
 
 impl<T: ContainerExt> ContainerSizeExt for T {}
 
-/// Methods controlling an element's position and size constraints.
-pub trait ContainerExt
+/// Method for setting how an element is placed relative to its parent or the window.
+pub trait ContainerPositionExt
 where
     Self: LayoutExt,
 {
@@ -560,7 +560,15 @@ where
         self.get_layout().layout.position = position.into();
         self
     }
+}
 
+impl<T: ContainerExt> ContainerPositionExt for T {}
+
+/// Methods controlling an element's spacing and size constraints.
+pub trait ContainerExt
+where
+    Self: LayoutExt,
+{
     /// Set the inner spacing between the element's edges and its content. See [`Gaps`].
     fn padding(mut self, padding: impl Into<Gaps>) -> Self {
         self.get_layout().layout.padding = padding.into();

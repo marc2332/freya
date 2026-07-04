@@ -4,9 +4,9 @@
 //!
 //! Use the `.layer()` method with one of three variants:
 //!
-//! - [`Layer::Relative(i16)`](freya_core::prelude::Layer::Relative) *(default)*: offset relative to the parent's layer. Positive values render higher, negative values render lower.
-//! - [`Layer::Overlay`](freya_core::prelude::Layer::Overlay): jumps to a very high layer, useful for modals or tooltips that must appear above everything.
-//! - [`Layer::RelativeOverlay(u8)`](freya_core::prelude::Layer::RelativeOverlay): similar to `Overlay` but you have multiple overlay layers options.
+//! - [`Layer::Relative(i16)`](freya_core::prelude::Layer::Relative) *(default)*: relative layer to the parent's layer. `0` keeps the normal stacking order, negative values move behind siblings and positive values in front.
+//! - [`Layer::Overlay`](freya_core::prelude::Layer::Overlay): adds a big layer jump relative to the parent's layer. You may stack multiple overlays on top of each other.
+//! - [`Layer::OverlayLevel(u8)`](freya_core::prelude::Layer::OverlayLevel): paint on a specific, numbered overlay level, regardless of the parent's layer. There are up to 16 levels you can use, anything above will be capped at 16.
 //!
 //! ```rust,no_run
 //! # use freya::prelude::*;
