@@ -32,6 +32,13 @@ use crate::scrollviews::{
 
 /// Scrollable area with bidirectional support and scrollbars.
 ///
+/// It renders all of its children and scrolls over them, which makes it a good fit for small or
+/// medium amounts of content. For large data sets prefer
+/// [`VirtualScrollView`](crate::scrollviews::VirtualScrollView), which only renders the visible
+/// items. It scrolls vertically by default, use [`direction`](ScrollView::direction) for a
+/// horizontal layout. To drive the scroll position from code, build it with
+/// [`new_controlled`](ScrollView::new_controlled) and a [`ScrollController`].
+///
 /// # Example
 ///
 /// ```rust
@@ -103,10 +110,12 @@ impl Default for ScrollView {
 }
 
 impl ScrollView {
+    /// Creates an uncontrolled scroll view that manages its own scroll position.
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Creates a scroll view driven by the given [`ScrollController`].
     pub fn new_controlled(scroll_controller: ScrollController) -> Self {
         Self {
             scroll_controller: Some(scroll_controller),
@@ -114,41 +123,49 @@ impl ScrollView {
         }
     }
 
+    /// Toggles whether the scrollbars are shown when the content overflows.
     pub fn show_scrollbar(mut self, show_scrollbar: bool) -> Self {
         self.show_scrollbar = show_scrollbar;
         self
     }
 
+    /// Sets the layout direction the children flow and scroll in.
     pub fn direction(mut self, direction: Direction) -> Self {
         self.layout.direction = direction;
         self
     }
 
+    /// Sets the gap between children along the scroll direction.
     pub fn spacing(mut self, spacing: impl Into<f32>) -> Self {
         self.layout.spacing = Length::new(spacing.into());
         self
     }
 
+    /// Toggles whether the arrow keys scroll the view while it is focused.
     pub fn scroll_with_arrows(mut self, scroll_with_arrows: impl Into<bool>) -> Self {
         self.scroll_with_arrows = scroll_with_arrows.into();
         self
     }
 
+    /// Inverts the direction of the mouse wheel relative to the content.
     pub fn invert_scroll_wheel(mut self, invert_scroll_wheel: impl Into<bool>) -> Self {
         self.invert_scroll_wheel = invert_scroll_wheel.into();
         self
     }
 
+    /// Toggles scrolling by dragging the content, useful mainly for touch input.
     pub fn drag_scrolling(mut self, drag_scrolling: bool) -> Self {
         self.drag_scrolling = drag_scrolling;
         self
     }
 
+    /// Caps the width of the scroll view.
     pub fn max_width(mut self, max_width: impl Into<Size>) -> Self {
         self.layout.maximum_width = max_width.into();
         self
     }
 
+    /// Caps the height of the scroll view.
     pub fn max_height(mut self, max_height: impl Into<Size>) -> Self {
         self.layout.maximum_height = max_height.into();
         self
