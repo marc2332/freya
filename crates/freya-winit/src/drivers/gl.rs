@@ -107,9 +107,9 @@ impl OpenGLDriver {
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let template = ConfigTemplateBuilder::new()
             .with_alpha_size(8)
-            .with_transparency(transparent);
+            .with_transparency(transparent)
+            .compatible_with_native_window(window.window_handle()?.as_raw());
 
-        // No window attributes, so only a config is built.
         let (_, gl_config) = DisplayBuilder::new().build(event_loop, template, |configs| {
             Self::pick_config(configs, transparent)
         })?;
