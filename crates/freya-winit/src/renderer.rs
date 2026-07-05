@@ -1191,14 +1191,13 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
 
         // Rebuild on the same window to keep input and accessibility working.
         if needs_recovery && let Some(mut app) = self.windows.remove(&window_id) {
-            let transparent = app.window_attributes.transparent;
             // Drop the lost driver first to release its GPU surface.
             drop(app.driver);
             app.driver = GraphicsDriver::recover_reusing_window(
                 event_loop,
                 &app.window,
                 self.gpu_resource_cache_limit,
-                transparent,
+                app.window_attributes.transparent,
             );
             tracing::info!("Recovered onto the {} driver", app.driver.name());
             self.plugins.send(
@@ -1208,8 +1207,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 },
                 PluginHandle::new(&self.proxy),
             );
-            app.process_layout_on_next_render = true;
-            app.tree.layout.reset();
             app.window.request_redraw();
             self.windows.insert(window_id, app);
         }
