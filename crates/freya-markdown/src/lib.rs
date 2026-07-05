@@ -774,7 +774,6 @@ impl Component for MarkdownViewer {
                             .a11y_alt(alt)
                             .key(idx)
                             .width(Size::fill())
-                            .height(Size::px(300.))
                             .into()
                     }
                     Err(_) => label()
