@@ -6,10 +6,7 @@ use std::{
 #[cfg(feature = "remote-asset")]
 use freya_components::Uri;
 #[cfg(feature = "remote-asset")]
-use freya_components::image_viewer::{
-    ImageSource,
-    ImageViewer,
-};
+use freya_components::image_viewer::ImageViewer;
 #[cfg(feature = "router")]
 use freya_components::link::{
     Link,
@@ -216,14 +213,13 @@ enum MarkdownElement {
         items: Vec<Vec<TextSpan>>,
     },
     Image {
-        #[cfg_attr(not(feature = "remote-asset"), allow(dead_code))]
         url: String,
         alt: String,
     },
     Link {
         url: String,
         title: Option<String>,
-        text: Vec<TextSpan>,
+        content: Vec<Inline>,
     },
     Blockquote {
         spans: Vec<TextSpan>,
@@ -235,15 +231,19 @@ enum MarkdownElement {
     HorizontalRule,
 }
 
-/// A piece of a paragraph's content: styled text or an inline link flowing within the text.
+/// A piece of a paragraph's content: styled text, an image or an inline link flowing within the text.
 #[derive(Clone)]
 enum Inline {
     Span(TextSpan),
+    Image {
+        url: String,
+        alt: String,
+    },
     #[cfg_attr(not(feature = "router"), allow(dead_code))]
     Link {
         url: String,
         title: Option<String>,
-        text: Vec<TextSpan>,
+        content: Vec<Inline>,
     },
     /// A raw inline HTML tag, resolved at render time by [`MarkdownViewer::inline_element`].
     Html(String),
@@ -303,7 +303,12 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
     let mut in_link = false;
     let mut link_url: Option<String> = None;
     let mut link_title: Option<String> = None;
-    let mut link_spans: Vec<TextSpan> = Vec::new();
+    let mut link_content: Vec<Inline> = Vec::new();
+
+    let mut in_image = false;
+    let mut image_url = String::new();
+    let mut image_title = String::new();
+    let mut image_alt = String::new();
 
     let mut bold = false;
     let mut italic = false;
@@ -360,10 +365,10 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                 Tag::Image {
                     dest_url, title, ..
                 } => {
-                    elements.push(MarkdownElement::Image {
-                        url: dest_url.to_string(),
-                        alt: title.to_string(),
-                    });
+                    in_image = true;
+                    image_url = dest_url.to_string();
+                    image_title = title.to_string();
+                    image_alt.clear();
                 }
                 Tag::Link {
                     dest_url, title, ..
@@ -371,7 +376,7 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                     in_link = true;
                     link_url = Some(dest_url.to_string());
                     link_title = Some(title.to_string());
-                    link_spans.clear();
+                    link_content.clear();
                 }
                 Tag::Table(_) => {
                     table_headers.clear();
@@ -456,16 +461,41 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                     in_table_cell = false;
                     current_table_row.push(mem::take(&mut current_cell_spans));
                 }
+                TagEnd::Image => {
+                    in_image = false;
+                    let url = mem::take(&mut image_url);
+                    let alt = if image_alt.is_empty() {
+                        mem::take(&mut image_title)
+                    } else {
+                        mem::take(&mut image_alt)
+                    };
+                    if in_link {
+                        link_content.push(Inline::Image { url, alt });
+                    } else if in_paragraph {
+                        current_content.extend(current_spans.drain(..).map(Inline::Span));
+                        current_content.push(Inline::Image { url, alt });
+                    } else {
+                        elements.push(MarkdownElement::Image { url, alt });
+                    }
+                }
                 TagEnd::Link => {
                     in_link = false;
                     if let Some(url) = link_url.take() {
                         let title = link_title.take();
-                        let text = mem::take(&mut link_spans);
+                        let content = mem::take(&mut link_content);
                         if in_paragraph {
                             current_content.extend(current_spans.drain(..).map(Inline::Span));
-                            current_content.push(Inline::Link { url, title, text });
+                            current_content.push(Inline::Link {
+                                url,
+                                title,
+                                content,
+                            });
                         } else {
-                            elements.push(MarkdownElement::Link { url, title, text });
+                            elements.push(MarkdownElement::Link {
+                                url,
+                                title,
+                                content,
+                            });
                         }
                     }
                 }
@@ -474,6 +504,8 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
             Event::Text(text) => {
                 if in_code_block {
                     code_block_content.push_str(text.trim());
+                } else if in_image {
+                    image_alt.push_str(&text);
                 } else if in_table_cell {
                     let span = TextSpan {
                         text: text.to_string(),
@@ -496,13 +528,17 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                     } else if in_list_item && !in_paragraph {
                         current_list_item.push(span);
                     } else if in_link {
-                        link_spans.push(span);
+                        link_content.push(Inline::Span(span));
                     } else {
                         current_spans.push(span);
                     }
                 }
             }
             Event::Code(code) => {
+                if in_image {
+                    image_alt.push_str(&code);
+                    continue;
+                }
                 let span = TextSpan {
                     text: code.to_string(),
                     bold,
@@ -517,19 +553,23 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                 } else if in_list_item {
                     current_list_item.push(span);
                 } else if in_link {
-                    link_spans.push(span);
+                    link_content.push(Inline::Span(span));
                 } else {
                     current_spans.push(span);
                 }
             }
             Event::SoftBreak | Event::HardBreak => {
+                if in_image {
+                    image_alt.push(' ');
+                    continue;
+                }
                 let span = TextSpan::new(" ");
                 if in_blockquote {
                     blockquote_spans.push(span);
                 } else if in_list_item {
                     current_list_item.push(span);
                 } else if in_link {
-                    link_spans.push(span);
+                    link_content.push(Inline::Span(span));
                 } else {
                     current_spans.push(span);
                 }
@@ -580,7 +620,32 @@ fn render_spans(
     )
 }
 
-/// Render a paragraph's content, flowing inline links (colored with `link_color`) between the text.
+/// Render a markdown image.
+#[cfg(feature = "remote-asset")]
+fn render_image(url: &str, alt: &str, text_color: Color) -> Element {
+    match url.parse::<Uri>() {
+        Ok(uri) => ImageViewer::new(uri)
+            .a11y_alt(alt)
+            .aspect_ratio(AspectRatio::Fit)
+            .into(),
+        Err(_) => label()
+            .text(format!("[Invalid image URL: {}]", url))
+            .color(text_color)
+            .into(),
+    }
+}
+
+/// Render a markdown image as its alt text when remote assets are disabled.
+#[cfg(not(feature = "remote-asset"))]
+fn render_image(_url: &str, alt: &str, text_color: Color) -> Element {
+    label()
+        .text(format!("[Image: {}]", alt))
+        .color(text_color)
+        .into()
+}
+
+/// Render a paragraph's content, flowing inline links (colored with `link_color`) and images
+/// between the text.
 fn render_content(
     content: &[Inline],
     base_font_size: f32,
@@ -593,6 +658,7 @@ fn render_content(
     for item in content {
         result = match item {
             Inline::Span(span) => result.span(styled_span(span, text_color, code_color)),
+            Inline::Image { url, alt } => result.child(render_image(url, alt, text_color)),
             Inline::Html(raw) => {
                 match inline_element.and_then(|handler| handler.call(raw.clone())) {
                     Some(element) => result.child(element),
@@ -600,24 +666,36 @@ fn render_content(
                 }
             }
             #[cfg(feature = "router")]
-            Inline::Link { url, title, text } => {
+            Inline::Link {
+                url,
+                title,
+                content,
+            } => {
                 let mut tooltip = LinkTooltip::Default;
                 if let Some(title) = title
                     && !title.is_empty()
                 {
                     tooltip = LinkTooltip::Custom(title.clone());
                 }
-                result.child(Link::new(url.clone()).tooltip(tooltip).child(render_spans(
-                    text,
+                result.child(Link::new(url.clone()).tooltip(tooltip).child(render_content(
+                    content,
                     base_font_size,
                     link_color,
+                    link_color,
                     code_color,
+                    inline_element,
                 )))
             }
             #[cfg(not(feature = "router"))]
-            Inline::Link { text, .. } => text.iter().fold(result, |paragraph, span| {
-                paragraph.span(styled_span(span, link_color, code_color))
-            }),
+            Inline::Link { content, .. } => {
+                content.iter().fold(result, |paragraph, item| match item {
+                    Inline::Span(span) => paragraph.span(styled_span(span, link_color, code_color)),
+                    Inline::Image { url, alt } => {
+                        paragraph.child(render_image(url, alt, text_color))
+                    }
+                    _ => paragraph,
+                })
+            }
         };
     }
     result
@@ -766,30 +844,16 @@ impl Component for MarkdownViewer {
 
                     list.into()
                 }
-                #[cfg(feature = "remote-asset")]
-                MarkdownElement::Image { url, alt } => match url.parse::<Uri>() {
-                    Ok(uri) => {
-                        let source: ImageSource = uri.into();
-                        ImageViewer::new(source)
-                            .a11y_alt(alt)
-                            .key(idx)
-                            .width(Size::fill())
-                            .into()
-                    }
-                    Err(_) => label()
-                        .key(idx)
-                        .text(format!("[Invalid image URL: {}]", url))
-                        .color(color)
-                        .into(),
-                },
-                #[cfg(not(feature = "remote-asset"))]
-                MarkdownElement::Image { alt, .. } => label()
+                MarkdownElement::Image { url, alt } => rect()
                     .key(idx)
-                    .text(format!("[Image: {}]", alt))
-                    .color(color)
+                    .child(render_image(&url, &alt, color))
                     .into(),
                 #[cfg(feature = "router")]
-                MarkdownElement::Link { url, title, text } => {
+                MarkdownElement::Link {
+                    url,
+                    title,
+                    content,
+                } => {
                     let mut tooltip = LinkTooltip::Default;
                     if let Some(title) = title
                         && !title.is_empty()
@@ -799,16 +863,28 @@ impl Component for MarkdownViewer {
 
                     Link::new(url)
                         .tooltip(tooltip)
-                        .child(render_spans(&text, paragraph_size, color_link, color_code))
+                        .child(render_content(
+                            &content,
+                            paragraph_size,
+                            color_link,
+                            color_link,
+                            color_code,
+                            self.inline_element.as_ref(),
+                        ))
                         .key(idx)
                         .into()
                 }
                 #[cfg(not(feature = "router"))]
-                MarkdownElement::Link { text, .. } => {
-                    render_spans(&text, paragraph_size, color, color_code)
-                        .key(idx)
-                        .into()
-                }
+                MarkdownElement::Link { content, .. } => render_content(
+                    &content,
+                    paragraph_size,
+                    color,
+                    color_link,
+                    color_code,
+                    self.inline_element.as_ref(),
+                )
+                .key(idx)
+                .into(),
                 MarkdownElement::Blockquote { spans } => rect()
                     .key(idx)
                     .width(Size::fill())
