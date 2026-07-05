@@ -2,6 +2,7 @@ use std::time::Duration;
 
 use freya::prelude::*;
 use freya_testing::prelude::*;
+use torin::prelude::Size2D;
 
 #[test]
 pub fn color_picker_sv_selects_correct_color() {
@@ -357,5 +358,82 @@ pub fn color_picker_can_reach_pure_red() {
         actual.b() <= 5,
         "blue channel should be ~0, got {}",
         actual.b()
+    );
+}
+
+#[test]
+pub fn color_picker_popup_stays_in_window_when_picker_moves() {
+    fn picker_that_can_move() -> impl IntoElement {
+        let mut color = use_state(|| Color::RED);
+        let mut aligned_right = use_state(|| false);
+
+        rect()
+            .expanded()
+            .on_global_key_down(move |event: Event<KeyboardEventData>| {
+                if event.key == Key::Named(NamedKey::ArrowRight) {
+                    aligned_right.toggle();
+                }
+            })
+            .width(Size::fill())
+            .main_align(if aligned_right() {
+                Alignment::End
+            } else {
+                Alignment::Start
+            })
+            .horizontal()
+            .child(ColorPicker::new(move |new_color| color.set(new_color)).value(color()))
+    }
+
+    let window = Size2D::new(400., 500.);
+    let mut test = TestingRunner::new(picker_that_can_move, window, |_| {}, 1.0).0;
+    test.sync_and_update();
+
+    // Open the popup while the picker sits at the left edge
+    let preview = test
+        .find(|node, element| {
+            Rect::try_downcast(element)
+                .filter(|_| {
+                    let area = node.layout().area;
+                    (area.size.width - 40.0).abs() < 1.0 && (area.size.height - 24.0).abs() < 1.0
+                })
+                .map(|_| node)
+        })
+        .unwrap()
+        .layout()
+        .area;
+
+    test.click_cursor((
+        preview.min_x() as f64 + preview.size.width as f64 / 2.0,
+        preview.min_y() as f64 + preview.size.height as f64 / 2.0,
+    ));
+    test.sync_and_update();
+    test.poll_n(Duration::from_millis(5), 100);
+    test.sync_and_update();
+
+    // Move the picker to the right edge while the popup stays open
+    test.press_key(Key::Named(NamedKey::ArrowRight));
+    test.sync_and_update();
+    test.poll_n(Duration::from_millis(5), 100);
+    test.sync_and_update();
+
+    let popup = test
+        .find(|node, element| {
+            Rect::try_downcast(element)
+                .filter(|_| (node.layout().area.size.width - 220.0).abs() < 5.0)
+                .map(|_| node)
+        })
+        .unwrap()
+        .layout()
+        .area;
+
+    assert!(
+        popup.max_x() <= window.width + 1.0,
+        "popup overflows the right edge: max_x={}",
+        popup.max_x()
+    );
+    assert!(
+        popup.min_x() >= -1.0,
+        "popup overflows the left edge: min_x={}",
+        popup.min_x()
     );
 }

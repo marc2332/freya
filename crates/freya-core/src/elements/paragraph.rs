@@ -69,6 +69,7 @@ use crate::{
         ChildrenExt,
         Color,
         ContainerExt,
+        ContainerPositionExt,
         EventHandlersExt,
         Fill,
         KeyExt,
