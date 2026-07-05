@@ -677,14 +677,18 @@ fn render_content(
                 {
                     tooltip = LinkTooltip::Custom(title.clone());
                 }
-                result.child(Link::new(url.clone()).tooltip(tooltip).child(render_content(
-                    content,
-                    base_font_size,
-                    link_color,
-                    link_color,
-                    code_color,
-                    inline_element,
-                )))
+                result.child(
+                    Link::new(url.clone())
+                        .tooltip(tooltip)
+                        .child(render_content(
+                            content,
+                            base_font_size,
+                            link_color,
+                            link_color,
+                            code_color,
+                            inline_element,
+                        )),
+                )
             }
             #[cfg(not(feature = "router"))]
             Inline::Link { content, .. } => {
