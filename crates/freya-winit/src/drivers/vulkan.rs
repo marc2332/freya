@@ -123,12 +123,8 @@ impl Drop for VulkanDriver {
     fn drop(&mut self) {
         unsafe {
             let _ = self.device.device_wait_idle();
-        }
-        // Skia must release its GPU resources while the device is still alive.
-        unsafe {
+            // Skia must release its GPU resources while the device is still alive.
             ManuallyDrop::drop(&mut self.gr_context);
-        }
-        unsafe {
             self.device
                 .destroy_semaphore(self.image_available_semaphore, None);
             self.device
