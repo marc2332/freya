@@ -16,8 +16,10 @@ use torin::prelude::{
     Alignment,
     Area,
     CursorPoint,
+    Point2D,
     Position,
     Size,
+    Size2D,
 };
 
 use crate::{
@@ -121,6 +123,8 @@ impl Component for ColorPicker {
         let mut dragging = use_state(DragTarget::default);
         let mut area = use_state(Area::default);
         let mut hue_area = use_state(Area::default);
+        let mut preview_area = use_state(|| None::<Area>);
+        let mut popup_size = use_state(|| None::<Size2D>);
 
         let is_open = open();
 
@@ -129,6 +133,7 @@ impl Component for ColorPicker {
             .height(Size::px(24.))
             .corner_radius(4.)
             .background(self.value)
+            .on_sized(move |e: Event<SizedEventData>| preview_area.set_if_modified(Some(e.area)))
             .on_press(move |_| {
                 open.toggle();
             });
@@ -269,6 +274,25 @@ impl Component for ColorPicker {
 
         let (scale, opacity) = animation.read().value();
 
+        let (offset_x, offset_y, opacity) = match (preview_area(), popup_size()) {
+            (Some(preview), Some(size)) => {
+                let window = Area::from_size(*Platform::get().root_size.peek());
+                let popup = Area::new(Point2D::new(preview.max_x(), preview.min_y()), size);
+
+                let target = if popup.max_x() > window.max_x() && preview.min_x() >= size.width {
+                    Point2D::new(preview.min_x() - size.width, popup.min_y())
+                } else {
+                    popup.origin
+                };
+
+                let clamped = target.clamp(window.origin, window.max() - size.to_vector());
+                let offset = clamped - popup.origin;
+
+                (offset.x, offset.y, opacity)
+            }
+            _ => (0., 0., 0.),
+        };
+
         let popup = rect()
             .on_global_pointer_move(on_global_pointer_move)
             .on_global_pointer_press(on_global_pointer_press)
@@ -353,15 +377,22 @@ impl Component for ColorPicker {
 
         rect()
             .horizontal()
-            .spacing(8.)
             .child(preview)
-            .maybe_child((opacity > 0.).then(|| {
+            .maybe_child((is_open || opacity > 0.).then(|| {
                 rect()
                     .layer(Layer::Overlay)
                     .width(Size::px(0.))
                     .height(Size::px(0.))
+                    .offset_x(offset_x)
+                    .offset_y(offset_y)
                     .opacity(opacity)
-                    .child(rect().scale(scale).child(popup))
+                    .child(
+                        popup
+                            .scale(scale)
+                            .on_sized(move |e: Event<SizedEventData>| {
+                                popup_size.set_if_modified(Some(e.area.size))
+                            }),
+                    )
             }))
     }
 

@@ -69,6 +69,7 @@ impl LayoutExt for OverflowedContent {
 }
 
 impl ContainerSizeExt for OverflowedContent {}
+impl ContainerPositionExt for OverflowedContent {}
 
 impl Default for OverflowedContent {
     fn default() -> Self {
