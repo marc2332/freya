@@ -251,6 +251,7 @@ impl LayoutExt for GifViewer {
 }
 
 impl ContainerSizeExt for GifViewer {}
+impl ContainerPositionExt for GifViewer {}
 
 impl ImageExt for GifViewer {
     fn get_image_data(&mut self) -> &mut ImageData {
