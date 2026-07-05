@@ -98,7 +98,6 @@ Built-in element constructors:
 - `label()` - single-line text.
 - `paragraph()` - multi-line / rich text via `.text_span(...)` children; also the target for `use_editable`.
 - `image(handle)` - raster image; `handle` from `static_bytes(...)`, `dynamic_bytes(...)`, or asset loaders.
-- `SvgViewer::new(source)` - vector image (SVG); `source` from `(id, bytes)`, a `PathBuf`, or a URL.
 
 `&str` / `String` implement `Into<Label>`, so prefer `rect().child("Hi")` over `rect().child(label().text("Hi"))`.
 
@@ -581,9 +580,9 @@ fn app() -> impl IntoElement {
 
 Use `use_init_root_theme` to register at the root scope. To follow the OS preference, convert `Platform::get().preferred_theme` via the `FromPreference::to_theme` extension.
 
-### Element theme extensions
+### Theme extensions
 
-Built-in elements expose helpers that read the active theme - prefer these over hardcoded colors:
+Built-in elements and components expose helpers that read the active theme - prefer these over hardcoded colors:
 
 - `rect().theme_background()`, `rect().theme_color()`
 - `label().theme_color()`, `paragraph().theme_color()`
