@@ -58,10 +58,7 @@ use crate::{
         CloseDecision,
         WindowConfig,
     },
-    drivers::{
-        DriverError,
-        GraphicsDriver,
-    },
+    drivers::GraphicsDriver,
     integration::is_ime_role,
     plugins::{
         PluginEvent,
@@ -730,7 +727,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 }
                 WindowEvent::RedrawRequested => {
                     let scale_factor = app.effective_scale_factor();
-                    let present_result: Result<(), DriverError>;
                     hotpath::measure_block!("RedrawRequested", {
                         if app.process_layout_on_next_render {
                             self.plugins.send(
@@ -765,7 +761,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             );
                         }
 
-                        present_result = app.driver.present(
+                        let present_result = app.driver.present(
                             app.window.inner_size().cast(),
                             &app.window,
                             |surface| {
@@ -810,6 +806,13 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 );
                             },
                         );
+                        if let Err(error) = present_result {
+                            tracing::warn!(
+                                "Graphics driver lost ({error:?}), rebuilding on the same window"
+                            );
+                            needs_recovery = true;
+                        }
+
                         self.plugins.send(
                             PluginEvent::AfterPresenting {
                                 window: &app.window,
@@ -878,16 +881,14 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             PluginHandle::new(&self.proxy),
                         );
                     });
-
-                    if let Err(error) = present_result {
+                }
+                WindowEvent::Resized(size) => {
+                    if let Err(error) = app.driver.resize(size) {
                         tracing::warn!(
-                            "Graphics driver lost ({error:?}), rebuilding on the same window"
+                            "Graphics driver lost while resizing ({error:?}), rebuilding on the same window"
                         );
                         needs_recovery = true;
                     }
-                }
-                WindowEvent::Resized(size) => {
-                    app.driver.resize(size);
 
                     app.window.request_redraw();
 

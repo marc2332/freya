@@ -20,9 +20,7 @@ use winit::{
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[allow(dead_code)]
 pub enum DriverError {
-    /// The GPU device was lost.
     DeviceLost,
-    /// The GPU or host ran out of memory.
     OutOfMemory,
 }
 
@@ -150,8 +148,8 @@ impl GraphicsDriver {
             transparent,
         ) {
             Ok(driver) => return Self::OpenGl(driver),
-            Err(err) => {
-                tracing::warn!("OpenGL recovery failed, falling back to software: {err}");
+            Err(error) => {
+                tracing::warn!("OpenGL recovery failed, falling back to software: {error}");
             }
         }
 
@@ -199,20 +197,24 @@ impl GraphicsDriver {
         }
     }
 
-    pub fn resize(&mut self, size: PhysicalSize<u32>) {
+    pub fn resize(&mut self, size: PhysicalSize<u32>) -> Result<(), DriverError> {
         match self {
             #[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
-            Self::OpenGl(gl) => gl.resize(size),
-            #[cfg(target_os = "macos")]
-            Self::Metal(mtl) => mtl.resize(size),
-            #[cfg(any(target_os = "linux", target_os = "windows"))]
-            Self::Vulkan(vk) => {
-                // Recovered on the next present, so just log it.
-                if let Err(error) = vk.resize(size) {
-                    tracing::warn!("Vulkan resize failed ({error:?}), recovering on next present");
-                }
+            Self::OpenGl(gl) => {
+                gl.resize(size);
+                Ok(())
             }
-            Self::Software(sw) => sw.resize(size),
+            #[cfg(target_os = "macos")]
+            Self::Metal(mtl) => {
+                mtl.resize(size);
+                Ok(())
+            }
+            #[cfg(any(target_os = "linux", target_os = "windows"))]
+            Self::Vulkan(vk) => vk.resize(size),
+            Self::Software(sw) => {
+                sw.resize(size);
+                Ok(())
+            }
         }
     }
 }
