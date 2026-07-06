@@ -140,7 +140,7 @@ freya-skia-safe = { version = "0.98.0", features = [
   "webp",
 ] }
 bytes = "1.10.1"
-rfd = "0.17"
+rfd = { version = "0.17", default-features = false, features = ["gtk3", "wayland", "wayland-backend", "wayland-client", "wayland-protocols", "pollster"]}
 
 # Desktop renderer
 raw-window-handle = "0.6.0"
