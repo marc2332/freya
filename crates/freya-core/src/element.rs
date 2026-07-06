@@ -50,10 +50,12 @@ use crate::{
     layers::Layer,
     node_id::NodeId,
     prelude::{
+        Color,
         FileEventData,
         ImePreeditEventData,
         MaybeExt,
     },
+    style::fill::Fill,
     text_cache::TextCache,
     tree::{
         DiffModifies,
@@ -91,6 +93,12 @@ pub trait ElementExt: Any {
 
     fn style(&'_ self) -> Cow<'_, StyleState> {
         Cow::Owned(Default::default())
+    }
+
+    /// Whether the element paints nothing, letting events fall through to
+    /// non-ancestor elements behind it.
+    fn is_transparent(&self) -> bool {
+        self.style().background == Fill::Color(Color::TRANSPARENT)
     }
 
     fn text_style(&'_ self) -> Cow<'_, TextStyleData> {
