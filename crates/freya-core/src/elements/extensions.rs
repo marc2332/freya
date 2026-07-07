@@ -550,7 +550,7 @@ where
 
 impl<T: ContainerExt> ContainerSizeExt for T {}
 
-/// Method for setting how an element is placed relative to its parent or the window.
+/// Methods for setting how an element is placed relative to its parent or the window.
 pub trait ContainerPositionExt
 where
     Self: LayoutExt,
@@ -558,6 +558,12 @@ where
     /// Set how the element is placed relative to its parent or the window. See [`Position`].
     fn position(mut self, position: impl Into<Position>) -> Self {
         self.get_layout().layout.position = position.into();
+        self
+    }
+
+    /// Set the outer spacing between the element's edges and its surroundings. See [`Gaps`].
+    fn margin(mut self, margin: impl Into<Gaps>) -> Self {
+        self.get_layout().layout.margin = margin.into();
         self
     }
 }
@@ -572,12 +578,6 @@ where
     /// Set the inner spacing between the element's edges and its content. See [`Gaps`].
     fn padding(mut self, padding: impl Into<Gaps>) -> Self {
         self.get_layout().layout.padding = padding.into();
-        self
-    }
-
-    /// Set the outer spacing between the element's edges and its surroundings. See [`Gaps`].
-    fn margin(mut self, margin: impl Into<Gaps>) -> Self {
-        self.get_layout().layout.margin = margin.into();
         self
     }
 

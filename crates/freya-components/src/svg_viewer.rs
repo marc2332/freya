@@ -137,6 +137,7 @@ pub struct SvgViewer {
     show_loader: bool,
     parallel: bool,
 
+    children: Vec<Element>,
     error_renderer: Option<Callback<String, Element>>,
 
     key: DiffKey,
@@ -158,6 +159,7 @@ impl SvgViewer {
             style: SvgStyle::default(),
             show_loader: true,
             parallel: false,
+            children: Vec::new(),
             error_renderer: None,
             key: DiffKey::None,
         }
@@ -224,7 +226,15 @@ impl LayoutExt for SvgViewer {
     }
 }
 
-impl ContainerExt for SvgViewer {}
+impl ContainerSizeExt for SvgViewer {}
+impl ContainerWithContentExt for SvgViewer {}
+impl ContainerPositionExt for SvgViewer {}
+
+impl ChildrenExt for SvgViewer {
+    fn get_children(&mut self) -> &mut Vec<Element> {
+        &mut self.children
+    }
+}
 
 impl ImageExt for SvgViewer {
     fn get_image_data(&mut self) -> &mut ImageData {
@@ -328,6 +338,7 @@ impl Component for SvgViewer {
                     .layout(layout)
                     .image_data(self.image_data.clone())
                     .effect(self.effect.clone())
+                    .children(self.children.clone())
                     .with_event_handlers(self.event_handlers.clone())
                     .on_sized(move |event: Event<SizedEventData>| {
                         measured.set_if_modified(Some(event.visible_area.size));
