@@ -81,6 +81,7 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
     fn render(&self) -> impl IntoElement {
         let mut drags = use_drag::<T>();
         let mut phase = use_state(|| DragPhase::Idle);
+        let mut drag_offset = use_state(CursorPoint::zero);
         let data = self.data.clone();
         let drag_threshold = self.drag_threshold;
 
@@ -105,6 +106,7 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
             if e.data().button() != Some(MouseButton::Left) {
                 return;
             }
+            drag_offset.set(e.element_location());
             phase.set(DragPhase::Pressing(e.global_location()));
         };
 
@@ -126,7 +128,7 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
             .on_pointer_down(on_pointer_down)
             .maybe_child((dragging_position.zip(self.drag_element.clone())).map(
                 |(position, drag_element)| {
-                    let (x, y) = position.to_f32().to_tuple();
+                    let (x, y) = (position - *drag_offset.peek()).to_f32().to_tuple();
                     rect()
                         .position(Position::new_global())
                         .layer(Layer::Overlay)
