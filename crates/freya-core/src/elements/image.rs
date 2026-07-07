@@ -292,8 +292,14 @@ impl ElementExt for ImageElement {
         let image_width = image.width() as f32;
         let image_height = image.height() as f32;
 
-        let width_ratio = context.area_size.width / image_width;
-        let height_ratio = context.area_size.height / image_height;
+        let margin = &context.torin_node.margin;
+        let area_size = Size2D::new(
+            (context.area_size.width - margin.horizontal()).max(0.),
+            (context.area_size.height - margin.vertical()).max(0.),
+        );
+
+        let width_ratio = area_size.width / image_width;
+        let height_ratio = area_size.height / image_height;
 
         let size = match self.image_data.aspect_ratio {
             AspectRatio::Max => {
@@ -307,7 +313,7 @@ impl ElementExt for ImageElement {
                 Size2D::new(image_width * ratio, image_height * ratio)
             }
             AspectRatio::Fit => Size2D::new(image_width, image_height),
-            AspectRatio::None => *context.area_size,
+            AspectRatio::None => area_size,
         };
 
         Some((size, Rc::new(size)))
