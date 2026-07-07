@@ -292,11 +292,7 @@ impl ElementExt for ImageElement {
         let image_width = image.width() as f32;
         let image_height = image.height() as f32;
 
-        let margin = &context.torin_node.margin;
-        let area_size = Size2D::new(
-            (context.area_size.width - margin.horizontal()).max(0.),
-            (context.area_size.height - margin.vertical()).max(0.),
-        );
+        let area_size = (*context.area_size - context.torin_node.margin.into()).max(Size2D::zero());
 
         let width_ratio = area_size.width / image_width;
         let height_ratio = area_size.height / image_height;
