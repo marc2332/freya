@@ -10,18 +10,11 @@ pub fn svg_viewer_rasterizes_and_renders() {
         SvgViewer::new(("ferris", include_bytes!("../../../examples/ferris.svg")))
             .width(Size::px(100.))
             .height(Size::px(100.))
+            .parallel(true)
     }
 
     let mut test = launch_test(app);
     test.sync_and_update();
-
-    // Nothing is rendered until the container is measured and the SVG is rasterized.
-    assert!(
-        test.find(|_, element| Image::try_downcast(element))
-            .is_none(),
-        "no image before rasterization"
-    );
-
     test.poll(
         std::time::Duration::from_millis(1),
         std::time::Duration::from_millis(120),
@@ -36,6 +29,43 @@ pub fn svg_viewer_rasterizes_and_renders() {
 }
 
 #[test]
+pub fn svg_viewer_rasterizes_synchronously_by_default() {
+    fn app() -> impl IntoElement {
+        SvgViewer::new(("ferris", include_bytes!("../../../examples/ferris.svg")))
+            .width(Size::px(100.))
+            .height(Size::px(100.))
+    }
+
+    let mut test = launch_test(app);
+    test.sync_and_update();
+
+    assert!(
+        test.find(|_, element| Image::try_downcast(element))
+            .is_some(),
+        "SVG should be rasterized without polling async tasks"
+    );
+}
+
+#[test]
+pub fn svg_viewer_rasterizes_at_visible_size() {
+    fn app() -> impl IntoElement {
+        SvgViewer::new(("ferris", include_bytes!("../../../examples/ferris.svg")))
+            .width(Size::px(100.))
+            .height(Size::px(100.))
+            .margin((0., 0., 0., 20.))
+    }
+
+    let mut test = launch_test(app);
+    test.sync_and_update();
+
+    let dimensions = test.find(|_, element| {
+        Image::try_downcast(element).map(|image| image.image_handle.image.dimensions())
+    });
+    // The raster must match the element's visible size, margins excluded.
+    assert_eq!(dimensions.map(|d| (d.width, d.height)), Some((100, 100)));
+}
+
+#[test]
 pub fn svg_viewer_custom_error_renderer() {
     fn app() -> impl IntoElement {
         SvgViewer::new(std::path::PathBuf::from("/non/existent.svg"))
@@ -45,11 +75,6 @@ pub fn svg_viewer_custom_error_renderer() {
     }
 
     let mut test = launch_test(app);
-    test.sync_and_update();
-    test.poll(
-        std::time::Duration::from_millis(1),
-        std::time::Duration::from_millis(120),
-    );
     test.sync_and_update();
 
     let error_label = test.find(|node, element| {

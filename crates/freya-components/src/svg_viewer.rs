@@ -60,54 +60,57 @@ impl SvgStyle {
     }
 }
 
-/// Fetch, parse and rasterize an SVG at `size` off the main thread.
-async fn rasterize(
-    source: ImageSource,
-    size: DecodeSize,
-    style: SvgStyle,
-) -> anyhow::Result<SkImage> {
-    #[cfg(feature = "remote-asset")]
-    let bytes = {
-        let client = Http::get();
-        blocking::unblock(move || source.fetch(&client)).await?
-    };
-    #[cfg(not(feature = "remote-asset"))]
-    let bytes = blocking::unblock(move || source.fetch()).await?;
+/// Parse SVG bytes, apply the style overrides and rasterize them at `size`.
+fn rasterize_bytes(bytes: &[u8], size: DecodeSize, style: SvgStyle) -> anyhow::Result<SkImage> {
+    let width = size.width.max(1) as i32;
+    let height = size.height.max(1) as i32;
 
-    let _permit = RASTER_LIMIT.acquire().await;
-    blocking::unblock(move || {
-        let width = size.width.max(1) as i32;
-        let height = size.height.max(1) as i32;
+    let mut dom = svg::Dom::from_bytes(bytes, FontMgr::empty())
+        .map_err(|err| anyhow::anyhow!("Failed to parse SVG: {err:?}"))?;
+    dom.set_container_size((width, height));
 
-        let mut dom = svg::Dom::from_bytes(&bytes, FontMgr::empty())
-            .map_err(|err| anyhow::anyhow!("Failed to parse SVG: {err:?}"))?;
-        dom.set_container_size((width, height));
+    let mut root = dom.root();
+    root.set_width(svg::Length::new(width as f32, svg::LengthUnit::PX));
+    root.set_height(svg::Length::new(height as f32, svg::LengthUnit::PX));
+    root.set_color(style.color.unwrap_or(Color::BLACK).into());
+    if let Some(fill) = style.fill {
+        root.set_fill(svg::Paint::from_color(fill.into()));
+    }
+    if let Some(stroke) = style.stroke {
+        root.set_stroke(svg::Paint::from_color(stroke.into()));
+    }
+    if let Some(stroke_width) = style.stroke_width {
+        root.set_stroke_width(svg::Length::new(stroke_width, svg::LengthUnit::PX));
+    }
 
-        let mut root = dom.root();
-        root.set_width(svg::Length::new(width as f32, svg::LengthUnit::PX));
-        root.set_height(svg::Length::new(height as f32, svg::LengthUnit::PX));
-        root.set_color(style.color.unwrap_or(Color::BLACK).into());
-        if let Some(fill) = style.fill {
-            root.set_fill(svg::Paint::from_color(fill.into()));
+    let mut surface =
+        raster_n32_premul((width, height)).context("Failed to create the SVG surface.")?;
+    dom.render(surface.canvas());
+    Ok(surface.image_snapshot())
+}
+
+/// Store a raster result in the asset cache, as either a cached image or an error.
+fn store_raster(
+    mut asset_cacher: AssetCacher,
+    asset_config: AssetConfiguration,
+    result: anyhow::Result<SkImage>,
+) {
+    match result {
+        Ok(image) => {
+            asset_cacher.update_asset(
+                asset_config,
+                Asset::Cached(Rc::new(ImageHandle::new(image, Bytes::new()))),
+            );
         }
-        if let Some(stroke) = style.stroke {
-            root.set_stroke(svg::Paint::from_color(stroke.into()));
+        Err(err) => {
+            asset_cacher.update_asset(asset_config, Asset::Error(err.to_string()));
         }
-        if let Some(stroke_width) = style.stroke_width {
-            root.set_stroke_width(svg::Length::new(stroke_width, svg::LengthUnit::PX));
-        }
-
-        let mut surface =
-            raster_n32_premul((width, height)).context("Failed to create the SVG surface.")?;
-        dom.render(surface.canvas());
-        Ok(surface.image_snapshot())
-    })
-    .await
+    }
 }
 
 /// SVG viewer component.
 ///
-/// Rasterizes the SVG asynchronously to the size measured on its container, caching the result.
+/// Rasterizes the SVG synchronously or asynchronously and caches the result.
 /// See [`ImageSource`] for all supported sources.
 ///
 /// # Example
@@ -132,6 +135,7 @@ pub struct SvgViewer {
     event_handlers: FxHashMap<EventName, EventHandlerType>,
     style: SvgStyle,
     show_loader: bool,
+    parallel: bool,
 
     error_renderer: Option<Callback<String, Element>>,
 
@@ -153,6 +157,7 @@ impl SvgViewer {
             event_handlers: FxHashMap::default(),
             style: SvgStyle::default(),
             show_loader: true,
+            parallel: false,
             error_renderer: None,
             key: DiffKey::None,
         }
@@ -161,6 +166,12 @@ impl SvgViewer {
     /// Whether to render a loading indicator while the SVG is being rasterized. Defaults to `true`.
     pub fn show_loader(mut self, show_loader: bool) -> Self {
         self.show_loader = show_loader;
+        self
+    }
+
+    /// Whether to fetch and rasterize the SVG in a background thread. Defaults to `false`.
+    pub fn parallel(mut self, parallel: bool) -> Self {
+        self.parallel = parallel;
         self
     }
 
@@ -239,19 +250,14 @@ impl EventHandlersExt for SvgViewer {
     }
 }
 
-/// The logical size implied by a pixel-sized layout.
-fn layout_pixel_size(layout: &LayoutData) -> Option<Size2D> {
-    match (&layout.width, &layout.height) {
-        (Size::Pixels(width), Size::Pixels(height)) => Some(Size2D::new(width.get(), height.get())),
-        _ => None,
-    }
-}
-
 impl Component for SvgViewer {
     fn render(&self) -> impl IntoElement {
         let scale_factor = *Platform::get().scale_factor.read();
-        let seed = layout_pixel_size(&self.layout);
-        let mut measured = use_state(|| seed);
+        let layout = self.layout.clone();
+        let mut measured = use_state(|| match (&layout.width, &layout.height) {
+            (Size::Pixels(width), Size::Pixels(height)) => Some(Size2D::new(width.get(), height.get())),
+            _ => None,
+        });
         let mut asset_cacher = use_hook(AssetCacher::get);
 
         let target = measured().map(|logical| {
@@ -266,50 +272,65 @@ impl Component for SvgViewer {
             AssetConfiguration::new((&self.source, target, style.as_key()), self.asset_age);
         let asset = use_asset(&asset_config);
 
-        use_side_effect_with_deps(
-            &(self.source.clone(), asset_config, target, style),
-            move |(source, asset_config, target, style)| {
-                let Some(target) = *target else {
-                    return;
-                };
-                if matches!(
-                    asset_cacher.read_asset(asset_config),
-                    Some(Asset::Pending) | Some(Asset::Error(_))
-                ) {
-                    asset_cacher.update_asset(asset_config.clone(), Asset::Loading);
+        // Rasterize whenever the source, size, style or parallel flag change.
+        let mut previous_configuration = use_state(|| None);
+        if *previous_configuration.peek() != Some((asset_config.clone(), self.parallel)) {
+            previous_configuration.set(Some((asset_config.clone(), self.parallel)));
 
-                    let source = source.clone();
+            if let Some(target) = target
+                && matches!(
+                    asset_cacher.read_asset(&asset_config),
+                    Some(Asset::Pending) | Some(Asset::Error(_))
+                )
+            {
+                asset_cacher.update_asset(asset_config.clone(), Asset::Loading);
+
+                if self.parallel {
+                    let source = self.source.clone();
                     let asset_config = asset_config.clone();
-                    let style = *style;
                     spawn_forever(async move {
-                        match rasterize(source, target, style).await {
-                            Ok(image) => {
-                                asset_cacher.update_asset(
-                                    asset_config,
-                                    Asset::Cached(Rc::new(ImageHandle::new(image, Bytes::new()))),
-                                );
+                        #[cfg(feature = "remote-asset")]
+                        let bytes = {
+                            let client = Http::get();
+                            blocking::unblock(move || source.fetch(&client)).await
+                        };
+                        #[cfg(not(feature = "remote-asset"))]
+                        let bytes = blocking::unblock(move || source.fetch()).await;
+
+                        let result = match bytes {
+                            Ok(bytes) => {
+                                let _permit = RASTER_LIMIT.acquire().await;
+                                blocking::unblock(move || rasterize_bytes(&bytes, target, style))
+                                    .await
                             }
-                            Err(err) => {
-                                asset_cacher
-                                    .update_asset(asset_config, Asset::Error(err.to_string()));
-                            }
-                        }
+                            Err(err) => Err(err),
+                        };
+                        store_raster(asset_cacher, asset_config, result);
                     });
+                } else {
+                    #[cfg(feature = "remote-asset")]
+                    let bytes = self.source.clone().fetch(&Http::get());
+                    #[cfg(not(feature = "remote-asset"))]
+                    let bytes = self.source.clone().fetch();
+
+                    let result =
+                        bytes.and_then(|bytes| rasterize_bytes(&bytes, target, style));
+                    store_raster(asset_cacher, asset_config.clone(), result);
                 }
-            },
-        );
+            }
+        }
 
         match asset {
             Asset::Cached(asset) => {
                 let handle = asset.downcast_ref::<ImageHandle>().unwrap().clone();
                 image(handle)
                     .accessibility(self.accessibility.clone())
-                    .layout(self.layout.clone())
+                    .layout(layout)
                     .image_data(self.image_data.clone())
                     .effect(self.effect.clone())
                     .with_event_handlers(self.event_handlers.clone())
                     .on_sized(move |event: Event<SizedEventData>| {
-                        measured.set_if_modified(Some(event.area.size));
+                        measured.set_if_modified(Some(event.visible_area.size));
                     })
                     .into_element()
             }
@@ -318,9 +339,10 @@ impl Component for SvgViewer {
                 None => err.into(),
             },
             Asset::Pending | Asset::Loading => rect()
-                .layout(self.layout.clone())
+                .layout(layout)
+                .with_event_handlers(self.event_handlers.clone())
                 .on_sized(move |event: Event<SizedEventData>| {
-                    measured.set_if_modified(Some(event.area.size));
+                    measured.set_if_modified(Some(event.visible_area.size));
                 })
                 .center()
                 .maybe(self.show_loader, |loading| {
