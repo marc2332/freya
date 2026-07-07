@@ -255,7 +255,9 @@ impl Component for SvgViewer {
         let scale_factor = *Platform::get().scale_factor.read();
         let layout = self.layout.clone();
         let mut measured = use_state(|| match (&layout.width, &layout.height) {
-            (Size::Pixels(width), Size::Pixels(height)) => Some(Size2D::new(width.get(), height.get())),
+            (Size::Pixels(width), Size::Pixels(height)) => {
+                Some(Size2D::new(width.get(), height.get()))
+            }
             _ => None,
         });
         let mut asset_cacher = use_hook(AssetCacher::get);
@@ -287,7 +289,6 @@ impl Component for SvgViewer {
 
                 if self.parallel {
                     let source = self.source.clone();
-                    let asset_config = asset_config.clone();
                     spawn_forever(async move {
                         #[cfg(feature = "remote-asset")]
                         let bytes = {
@@ -313,9 +314,8 @@ impl Component for SvgViewer {
                     #[cfg(not(feature = "remote-asset"))]
                     let bytes = self.source.clone().fetch();
 
-                    let result =
-                        bytes.and_then(|bytes| rasterize_bytes(&bytes, target, style));
-                    store_raster(asset_cacher, asset_config.clone(), result);
+                    let result = bytes.and_then(|bytes| rasterize_bytes(&bytes, target, style));
+                    store_raster(asset_cacher, asset_config, result);
                 }
             }
         }
