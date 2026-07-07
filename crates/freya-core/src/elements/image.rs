@@ -240,6 +240,10 @@ impl ElementExt for ImageElement {
             diff.insert(DiffModifies::STYLE);
         }
 
+        if self.event_handlers != image.event_handlers {
+            diff.insert(DiffModifies::EVENT_HANDLERS);
+        }
+
         diff
     }
 
@@ -268,6 +272,10 @@ impl ElementExt for ImageElement {
 
     fn layer(&self) -> Layer {
         self.relative_layer
+    }
+
+    fn events_handlers(&'_ self) -> Option<Cow<'_, FxHashMap<EventName, EventHandlerType>>> {
+        Some(Cow::Borrowed(&self.event_handlers))
     }
 
     fn should_measure_inner_children(&self) -> bool {
