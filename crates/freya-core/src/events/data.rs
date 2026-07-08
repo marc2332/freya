@@ -139,6 +139,22 @@ impl SizedEventData {
     }
 }
 
+/// Data of a Visible event.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct VisibleEventData {
+    pub area: Area,
+}
+
+impl VisibleEventData {
+    pub fn new(area: Area) -> Self {
+        Self { area }
+    }
+
+    pub fn div(&mut self, rhs: f32) {
+        self.area = self.area.div(rhs);
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub enum WheelSource {
     Device,
@@ -286,6 +302,7 @@ pub enum EventType {
     Mouse(MouseEventData),
     Keyboard(KeyboardEventData),
     Sized(SizedEventData),
+    Visible(VisibleEventData),
     Wheel(WheelEventData),
     Touch(TouchEventData),
     Pointer(PointerEventData),

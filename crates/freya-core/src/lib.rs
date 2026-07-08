@@ -159,6 +159,7 @@ pub mod prelude {
 
 /// Used by renderers such as freya-testing, freya-winit or just integration crates.
 pub mod integration {
+    pub use ragnarok::NodesState;
     pub use rustc_hash::*;
 
     pub use crate::{

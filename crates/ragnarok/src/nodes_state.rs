@@ -16,6 +16,7 @@ use crate::{
 pub struct NodesState<Key: NodeKey> {
     pressed_nodes: FxHashSet<Key>,
     hovered_nodes: FxHashSet<Key>,
+    visible_nodes: FxHashSet<Key>,
     entered_node: Option<Key>,
 }
 
@@ -24,6 +25,7 @@ impl<Key: NodeKey> Default for NodesState<Key> {
         Self {
             pressed_nodes: FxHashSet::default(),
             hovered_nodes: FxHashSet::default(),
+            visible_nodes: FxHashSet::default(),
             entered_node: None,
         }
     }
@@ -231,6 +233,15 @@ impl<Key: NodeKey> NodesState<Key> {
 
     pub fn is_pressed(&self, key: Key) -> bool {
         self.pressed_nodes.contains(&key)
+    }
+
+    pub fn is_visible(&self, key: Key) -> bool {
+        self.visible_nodes.contains(&key)
+    }
+
+    /// Replace the visible nodes with the result of a new visibility pass.
+    pub fn set_visible_nodes(&mut self, visible_nodes: FxHashSet<Key>) {
+        self.visible_nodes = visible_nodes;
     }
 }
 

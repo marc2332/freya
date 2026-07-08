@@ -51,6 +51,7 @@ use crate::{
             KeyboardEventData,
             MouseEventData,
             SizedEventData,
+            VisibleEventData,
             WheelEventData,
         },
         name::EventName,
@@ -303,6 +304,15 @@ pub trait EventHandlersExt: Sized {
         self.get_event_handlers()
             .insert(EventName::Sized, EventHandlerType::Sized(on_sized.into()));
         self.get_layout().layout.has_layout_references = true;
+        self
+    }
+
+    /// Fires when the element becomes visible, even partially, inside the viewports of its clipping ancestors.
+    fn on_visible(mut self, on_visible: impl Into<EventHandler<Event<VisibleEventData>>>) -> Self {
+        self.get_event_handlers().insert(
+            EventName::Visible,
+            EventHandlerType::Visible(on_visible.into()),
+        );
         self
     }
 

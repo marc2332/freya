@@ -270,6 +270,8 @@ impl AppWindow {
             PluginHandle::new(event_loop_proxy),
         );
 
+        let mut nodes_state = NodesState::default();
+
         let mutations = runner.sync_and_update();
         tree.apply_mutations(mutations);
         tree.measure_layout(
@@ -281,11 +283,10 @@ impl AppWindow {
             font_collection,
             font_manager,
             &events_sender,
+            &mut nodes_state,
             window.scale_factor(),
             fallback_fonts,
         );
-
-        let nodes_state = NodesState::default();
 
         let accessibility_adapter =
             Adapter::with_event_loop_proxy(active_event_loop, &window, event_loop_proxy.clone());
