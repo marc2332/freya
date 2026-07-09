@@ -331,6 +331,7 @@ impl Tree {
         let mut layer_cascades: Vec<NodeId> = Vec::new();
         let mut effects_cascades: Vec<NodeId> = Vec::new();
         let mut text_style_cascades: Vec<NodeId> = Vec::new();
+        let mut styled_nodes: FxHashSet<NodeId> = FxHashSet::default();
 
         assert_eq!(dirty.len(), FxHashSet::from_iter(&dirty).len());
 
@@ -369,6 +370,15 @@ impl Tree {
 
                 if !needs_accessibility && (flags.intersects(DiffModifies::ACCESSIBILITY)) {
                     needs_accessibility = true;
+                }
+
+                if flags.intersects(DiffModifies::STYLE | DiffModifies::TEXT_STYLE)
+                    && self
+                        .listeners
+                        .get(&EventName::Styled)
+                        .is_some_and(|listeners| listeners.contains(&node_id))
+                {
+                    styled_nodes.insert(node_id);
                 }
 
                 if flags.contains(DiffModifies::ACCESSIBILITY) {
@@ -526,7 +536,6 @@ impl Tree {
                 while let Some(node_id) = buffer.pop_front() {
                     let element = self.elements.get(node_id).unwrap();
                     if let Some(parent_node_id) = self.parents.get(node_id) {
-                        let is_new = !self.text_style_state.contains_key(node_id);
                         let entries = self
                             .text_style_state
                             .get_disjoint_entries([node_id, parent_node_id], |_id| {
@@ -539,21 +548,13 @@ impl Tree {
                                 element,
                                 &mut self.layout,
                             );
-                            if (is_new || changed)
+                            if changed
                                 && self
                                     .listeners
                                     .get(&EventName::Styled)
                                     .is_some_and(|listeners| listeners.contains(node_id))
                             {
-                                self.events.push(EmmitableEvent {
-                                    name: EventName::Styled,
-                                    source_event: EventName::Styled,
-                                    node_id: *node_id,
-                                    data: EventType::Styled(StyledEventData {
-                                        text_style: text_style_state.clone(),
-                                    }),
-                                    bubbles: false,
-                                });
+                                styled_nodes.insert(*node_id);
                             }
                         }
                     } else {
@@ -570,6 +571,21 @@ impl Tree {
             #[cfg(all(debug_assertions, feature = "debug-integrity"))]
             self.verify_tree_integrity();
         });
+
+        for node_id in styled_nodes {
+            let element = self.elements.get(&node_id).unwrap();
+            let text_style_state = self.text_style_state.get(&node_id).unwrap();
+            self.events.push(EmmitableEvent {
+                name: EventName::Styled,
+                source_event: EventName::Styled,
+                node_id,
+                data: EventType::Styled(StyledEventData {
+                    style: element.style().into_owned(),
+                    text_style: text_style_state.clone(),
+                }),
+                bubbles: false,
+            });
+        }
 
         MutationsApplyResult {
             needs_render,
