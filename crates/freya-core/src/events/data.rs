@@ -14,6 +14,8 @@ use torin::prelude::{
     Size2D,
 };
 
+use crate::data::TextStyleState;
+
 #[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub enum MouseButton {
     Left,
@@ -137,6 +139,12 @@ impl SizedEventData {
             inner_sizes,
         }
     }
+}
+
+/// Data of a Styled event.
+#[derive(Debug, Clone, PartialEq)]
+pub struct StyledEventData {
+    pub text_style: TextStyleState,
 }
 
 #[derive(Debug, Clone, PartialEq, Copy)]
@@ -286,6 +294,7 @@ pub enum EventType {
     Mouse(MouseEventData),
     Keyboard(KeyboardEventData),
     Sized(SizedEventData),
+    Styled(StyledEventData),
     Wheel(WheelEventData),
     Touch(TouchEventData),
     Pointer(PointerEventData),

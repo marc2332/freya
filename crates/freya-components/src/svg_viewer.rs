@@ -178,6 +178,7 @@ impl SvgViewer {
     }
 
     /// Override the SVG's `currentColor`, used by shapes that inherit their color.
+    /// When not set, SVGs referencing `currentColor` use the inherited text color.
     pub fn color(mut self, color: impl Into<Color>) -> Self {
         self.style.color = Some(color.into());
         self
@@ -271,6 +272,7 @@ impl Component for SvgViewer {
             _ => None,
         });
         let mut asset_cacher = use_hook(AssetCacher::get);
+        let mut inherited_color = use_state::<Option<Color>>(|| None);
 
         let target = measured().map(|logical| {
             DecodeSize::new(
@@ -279,7 +281,11 @@ impl Component for SvgViewer {
             )
         });
 
-        let style = self.style;
+        let mut style = self.style;
+        if style.color.is_none() {
+            style.color = inherited_color();
+        }
+
         let asset_config =
             AssetConfiguration::new((&self.source, target, style.as_key()), self.asset_age);
         let asset = use_asset(&asset_config);
@@ -290,6 +296,7 @@ impl Component for SvgViewer {
             previous_configuration.set(Some((asset_config.clone(), self.parallel)));
 
             if let Some(target) = target
+                && style.color.is_some()
                 && matches!(
                     asset_cacher.read_asset(&asset_config),
                     Some(Asset::Pending) | Some(Asset::Error(_))
@@ -343,6 +350,10 @@ impl Component for SvgViewer {
                     .on_sized(move |event: Event<SizedEventData>| {
                         measured.set_if_modified(Some(event.visible_area.size));
                     })
+                    .on_styled(move |event: Event<StyledEventData>| {
+                        let color = event.text_style.color.as_color().unwrap_or(Color::BLACK);
+                        inherited_color.set_if_modified(Some(color));
+                    })
                     .into_element()
             }
             Asset::Error(err) => match &self.error_renderer {
@@ -354,6 +365,10 @@ impl Component for SvgViewer {
                 .with_event_handlers(self.event_handlers.clone())
                 .on_sized(move |event: Event<SizedEventData>| {
                     measured.set_if_modified(Some(event.visible_area.size));
+                })
+                .on_styled(move |event: Event<StyledEventData>| {
+                    let color = event.text_style.color.as_color().unwrap_or(Color::BLACK);
+                    inherited_color.set_if_modified(Some(color));
                 })
                 .center()
                 .maybe(self.show_loader, |loading| {

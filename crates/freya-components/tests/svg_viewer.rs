@@ -38,6 +38,7 @@ pub fn svg_viewer_rasterizes_synchronously_by_default() {
 
     let mut test = launch_test(app);
     test.sync_and_update();
+    test.sync_and_update();
 
     assert!(
         test.find(|_, element| Image::try_downcast(element))
@@ -57,6 +58,7 @@ pub fn svg_viewer_rasterizes_at_visible_size() {
 
     let mut test = launch_test(app);
     test.sync_and_update();
+    test.sync_and_update();
 
     let dimensions = test.find(|_, element| {
         Image::try_downcast(element).map(|image| image.image_handle.image.dimensions())
@@ -75,6 +77,7 @@ pub fn svg_viewer_custom_error_renderer() {
     }
 
     let mut test = launch_test(app);
+    test.sync_and_update();
     test.sync_and_update();
 
     let error_label = test.find(|node, element| {

@@ -51,6 +51,7 @@ use crate::{
             KeyboardEventData,
             MouseEventData,
             SizedEventData,
+            StyledEventData,
             WheelEventData,
         },
         name::EventName,
@@ -303,6 +304,15 @@ pub trait EventHandlersExt: Sized {
         self.get_event_handlers()
             .insert(EventName::Sized, EventHandlerType::Sized(on_sized.into()));
         self.get_layout().layout.has_layout_references = true;
+        self
+    }
+
+    /// Fires when the element's inherited text style is resolved or changes.
+    fn on_styled(mut self, on_styled: impl Into<EventHandler<Event<StyledEventData>>>) -> Self {
+        self.get_event_handlers().insert(
+            EventName::Styled,
+            EventHandlerType::Styled(on_styled.into()),
+        );
         self
     }
 

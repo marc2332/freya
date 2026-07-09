@@ -52,6 +52,7 @@ use crate::{
         data::{
             EventType,
             SizedEventData,
+            StyledEventData,
         },
         emittable::EmmitableEvent,
         name::EventName,
@@ -85,6 +86,9 @@ pub struct Tree {
 
     // Event listeners
     pub listeners: FxHashMap<EventName, Vec<NodeId>>,
+
+    // Events queued until the next layout measure
+    pub events: Vec<EmmitableEvent>,
 
     // Derived states
     pub layer_state: FxHashMap<NodeId, LayerState>,
@@ -522,18 +526,35 @@ impl Tree {
                 while let Some(node_id) = buffer.pop_front() {
                     let element = self.elements.get(node_id).unwrap();
                     if let Some(parent_node_id) = self.parents.get(node_id) {
+                        let is_new = !self.text_style_state.contains_key(node_id);
                         let entries = self
                             .text_style_state
                             .get_disjoint_entries([node_id, parent_node_id], |_id| {
                                 TextStyleState::default()
                             });
                         if let Some([text_style_state, parent_text_style_state]) = entries {
-                            text_style_state.update(
+                            let changed = text_style_state.update(
                                 *node_id,
                                 parent_text_style_state,
                                 element,
                                 &mut self.layout,
                             );
+                            if (is_new || changed)
+                                && self
+                                    .listeners
+                                    .get(&EventName::Styled)
+                                    .is_some_and(|listeners| listeners.contains(node_id))
+                            {
+                                self.events.push(EmmitableEvent {
+                                    name: EventName::Styled,
+                                    source_event: EventName::Styled,
+                                    node_id: *node_id,
+                                    data: EventType::Styled(StyledEventData {
+                                        text_style: text_style_state.clone(),
+                                    }),
+                                    bubbles: false,
+                                });
+                            }
                         }
                     } else {
                         assert_eq!(*node_id, NodeId::ROOT);
@@ -590,14 +611,12 @@ impl Tree {
             scale_factor,
         };
 
-        let mut events = Vec::new();
-
         let layout_adapter = LayoutMeasurerAdapter {
             elements: &self.elements,
             text_style_state: &self.text_style_state,
             font_collection,
             font_manager,
-            events: &mut events,
+            events: &mut self.events,
             scale_factor,
             fallback_fonts,
             text_cache: &mut self.text_cache,
@@ -611,7 +630,7 @@ impl Tree {
             &mut tree_adapter,
         );
         events_sender
-            .unbounded_send(EventsChunk::Batch(events))
+            .unbounded_send(EventsChunk::Batch(self.events.drain(..).collect()))
             .unwrap();
     }
 
