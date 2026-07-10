@@ -235,27 +235,28 @@ impl AssetCacher {
 pub fn use_asset(asset_config: &AssetConfiguration) -> Asset {
     let mut asset_cacher = use_hook(AssetCacher::get);
 
-    use_drop({
-        let asset_config = asset_config.clone();
-        move || {
-            // Try to clean in the next async tick, when this scope will already be dropped
-            spawn_forever(async move {
-                asset_cacher.try_clean(&asset_config);
-            });
-        }
+    let mut current_config = use_state::<Option<AssetConfiguration>>(|| None);
+
+    use_drop(move || {
+        let Some(asset_config) = current_config.peek().clone() else {
+            return;
+        };
+        // Try to clean in the next async tick, when this scope will already be dropped
+        spawn_forever(async move {
+            asset_cacher.try_clean(&asset_config);
+        });
     });
 
-    let mut prev = use_state::<Option<AssetConfiguration>>(|| None);
     {
-        let mut prev = prev.write();
-        if prev.as_ref() != Some(asset_config) {
-            if let Some(prev) = &*prev
+        let mut current_config = current_config.write();
+        if current_config.as_ref() != Some(asset_config) {
+            if let Some(prev) = &*current_config
                 && prev != asset_config
             {
                 // Try to clean the previous asset
                 asset_cacher.try_clean(prev);
             }
-            prev.replace(asset_config.clone());
+            current_config.replace(asset_config.clone());
         }
         asset_cacher.listen(ReactiveContext::current(), asset_config.clone());
     }
