@@ -7,8 +7,14 @@ use torin::prelude::*;
 #[derive(Clone, Copy)]
 enum DragPhase {
     Idle,
-    Pressing(CursorPoint),
-    Dragging(CursorPoint),
+    Pressing {
+        press_point: CursorPoint,
+        offset: CursorPoint,
+    },
+    Dragging {
+        position: CursorPoint,
+        offset: CursorPoint,
+    },
 }
 
 /// Access the global drag state for payloads of type `T`.
@@ -81,21 +87,29 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
     fn render(&self) -> impl IntoElement {
         let mut drags = use_drag::<T>();
         let mut phase = use_state(|| DragPhase::Idle);
-        let mut drag_offset = use_state(CursorPoint::zero);
         let data = self.data.clone();
         let drag_threshold = self.drag_threshold;
 
         let on_global_pointer_move = move |e: Event<PointerEventData>| match phase() {
-            DragPhase::Dragging(_) => {
-                phase.set(DragPhase::Dragging(e.global_location()));
+            DragPhase::Dragging { offset, .. } => {
+                phase.set(DragPhase::Dragging {
+                    position: e.global_location(),
+                    offset,
+                });
             }
-            DragPhase::Pressing(press_point) => {
+            DragPhase::Pressing {
+                press_point,
+                offset,
+            } => {
                 let current = e.global_location();
                 let dx = current.x - press_point.x;
                 let dy = current.y - press_point.y;
 
                 if (dx * dx + dy * dy).sqrt() >= drag_threshold {
-                    phase.set(DragPhase::Dragging(current));
+                    phase.set(DragPhase::Dragging {
+                        position: current,
+                        offset,
+                    });
                     *drags.write() = Some(data.clone());
                 }
             }
@@ -106,8 +120,10 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
             if e.data().button() != Some(MouseButton::Left) {
                 return;
             }
-            drag_offset.set(e.element_location());
-            phase.set(DragPhase::Pressing(e.global_location()));
+            phase.set(DragPhase::Pressing {
+                press_point: e.global_location(),
+                offset: e.element_location(),
+            });
         };
 
         let on_global_pointer_press = move |_: Event<PointerEventData>| {
@@ -117,8 +133,8 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
             }
         };
 
-        let dragging_position = match phase() {
-            DragPhase::Dragging(pos) => Some(pos),
+        let dragging = match phase() {
+            DragPhase::Dragging { position, offset } => Some((position, offset)),
             _ => None,
         };
 
@@ -126,9 +142,9 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
             .on_global_pointer_press(on_global_pointer_press)
             .on_global_pointer_move(on_global_pointer_move)
             .on_pointer_down(on_pointer_down)
-            .maybe_child((dragging_position.zip(self.drag_element.clone())).map(
-                |(position, drag_element)| {
-                    let (x, y) = (position - *drag_offset.peek()).to_f32().to_tuple();
+            .maybe_child((dragging.zip(self.drag_element.clone())).map(
+                |((position, offset), drag_element)| {
+                    let (x, y) = (position - offset).to_f32().to_tuple();
                     rect()
                         .position(Position::new_global())
                         .layer(Layer::Overlay)
@@ -142,8 +158,7 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
                 },
             ))
             .maybe_child(
-                (self.show_while_dragging || dragging_position.is_none())
-                    .then(|| self.children.clone()),
+                (self.show_while_dragging || dragging.is_none()).then(|| self.children.clone()),
             )
     }
 
