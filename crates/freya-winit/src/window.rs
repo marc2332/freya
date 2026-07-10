@@ -183,8 +183,7 @@ impl AppWindow {
         let screen_reader = ScreenReader::new();
         runner.provide_root_context(|| screen_reader.clone());
 
-        let (mut ticker_sender, ticker) = RenderingTicker::new();
-        ticker_sender.set_overflow(true);
+        let (ticker_sender, ticker) = RenderingTicker::new();
         runner.provide_root_context(|| ticker);
 
         let animation_clock = AnimationClock::new();

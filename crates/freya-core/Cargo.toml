@@ -25,7 +25,7 @@ futures-channel = { workspace = true }
 futures-lite = { workspace = true }
 
 # Animations
-async-broadcast = { workspace = true }
+async-watch = { workspace = true }
 
 # Text
 keyboard-types = { workspace = true }

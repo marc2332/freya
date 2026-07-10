@@ -876,9 +876,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             PluginHandle::new(&self.proxy),
                         );
 
-                        if app.ticker_sender.receiver_count() > 0 {
-                            app.ticker_sender.broadcast_blocking(()).unwrap();
-                        }
+                        app.ticker_sender.send(()).ok();
 
                         self.plugins.send(
                             PluginEvent::AfterRedraw {
