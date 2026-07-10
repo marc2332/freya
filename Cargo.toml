@@ -121,7 +121,7 @@ rusqlite = { version = "0.32", features = ["bundled"] }
 
 # Animations
 easer = "0.3.0"
-async-broadcast = "0.7.2"
+async-watch = "0.3.1"
 
 # Text editing
 ropey = "1.6.1"
