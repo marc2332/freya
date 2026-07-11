@@ -10,7 +10,6 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
       contents: read
 
     steps:
@@ -33,9 +32,12 @@ jobs:
         working-directory: website
         run: pnpm run build
 
-      - name: Upload to Deno Deploy
-        uses: denoland/deployctl@7bded90d0d09cd99bbfb513966146315db97618b # 1.13.1
+      - name: Setup Deno
+        uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
         with:
-          project: freya-temp
-          entrypoint: server/entry.mjs
-          root: website/dist
+          deno-version: v2.x
+
+      - name: Upload to Deno Deploy
+        env:
+          DENO_DEPLOY_TOKEN: ${{ secrets.DENO_DEPLOY_TOKEN }}
+        run: deno deploy website/dist --non-interactive --org marc2332 --app freya ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
