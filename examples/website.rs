@@ -86,7 +86,7 @@ impl Component for Home {
                                 rect()
                                     .direction(Direction::Horizontal)
                                     .spacing(10.0)
-                                    .child(Link::new("https://book.freyaui.dev/getting_started.html")
+                                    .child(Link::new("https://docs.rs/freya/latest/freya/_docs/introduction/index.html")
                                         .child(Button::new()
                                             .padding((10., 24.))
                                             .background((14, 165, 233))
@@ -198,7 +198,6 @@ impl Component for Navigation {
                     .height(Size::px(50.)),
             )
             .child(Link::new("https://freyaui.dev/blog").child("Blog"))
-            .child(Link::new("https://book.freyaui.dev/").child("Book"))
             .child(Link::new("https://docs.rs/freya/latest/freya/").child("Docs"))
             .child(Link::new("https://discord.gg/sYejxCdewG").child("Discord"))
     }
