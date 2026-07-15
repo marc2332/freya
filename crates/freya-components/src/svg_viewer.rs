@@ -197,8 +197,8 @@ impl SvgViewer {
     }
 
     /// Override the SVG stroke width.
-    pub fn stroke_width(mut self, stroke_width: impl Into<f32>) -> Self {
-        self.style.stroke_width = Some(stroke_width.into());
+    pub fn stroke_width(mut self, stroke_width: f32) -> Self {
+        self.style.stroke_width = Some(stroke_width);
         self
     }
 
