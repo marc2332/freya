@@ -136,8 +136,8 @@ impl ScrollView {
     }
 
     /// Sets the gap between children along the scroll direction.
-    pub fn spacing(mut self, spacing: impl Into<f32>) -> Self {
-        self.layout.spacing = Length::new(spacing.into());
+    pub fn spacing(mut self, spacing: f32) -> Self {
+        self.layout.spacing = Length::new(spacing);
         self
     }
 

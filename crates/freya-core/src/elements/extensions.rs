@@ -490,8 +490,8 @@ where
     }
 
     /// Set the gap inserted between adjacent children, in pixels.
-    fn spacing(mut self, spacing: impl Into<f32>) -> Self {
-        self.get_layout().layout.spacing = Length::new(spacing.into());
+    fn spacing(mut self, spacing: f32) -> Self {
+        self.get_layout().layout.spacing = Length::new(spacing);
         self
     }
 
@@ -509,14 +509,14 @@ where
     }
 
     /// Shift the element's children horizontally by the given pixels.
-    fn offset_x(mut self, offset_x: impl Into<f32>) -> Self {
-        self.get_layout().layout.offset_x = Length::new(offset_x.into());
+    fn offset_x(mut self, offset_x: f32) -> Self {
+        self.get_layout().layout.offset_x = Length::new(offset_x);
         self
     }
 
     /// Shift the element's children vertically by the given pixels.
-    fn offset_y(mut self, offset_y: impl Into<f32>) -> Self {
-        self.get_layout().layout.offset_y = Length::new(offset_y.into());
+    fn offset_y(mut self, offset_y: f32) -> Self {
+        self.get_layout().layout.offset_y = Length::new(offset_y);
         self
     }
 
@@ -1000,20 +1000,20 @@ pub trait EffectExt: Sized {
     }
 
     /// Apply a gaussian blur of the given radius to the element.
-    fn blur(mut self, blur: impl Into<f32>) -> Self {
-        self.get_effect().blur = Some(blur.into());
+    fn blur(mut self, blur: f32) -> Self {
+        self.get_effect().blur = Some(blur);
         self
     }
 
     /// Rotate the element by the given angle in degrees.
-    fn rotation(mut self, rotation: impl Into<f32>) -> Self {
-        self.get_effect().rotation = Some(rotation.into());
+    fn rotation(mut self, rotation: f32) -> Self {
+        self.get_effect().rotation = Some(rotation);
         self
     }
 
     /// Set the element's opacity, from `0.0` (transparent) to `1.0` (opaque).
-    fn opacity(mut self, opacity: impl Into<f32>) -> Self {
-        self.get_effect().opacity = Some(opacity.into());
+    fn opacity(mut self, opacity: f32) -> Self {
+        self.get_effect().opacity = Some(opacity);
         self
     }
 
