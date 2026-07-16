@@ -253,8 +253,8 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
     }
 
     /// Sets the fixed size of every item along the scroll axis, used to decide which items to render.
-    pub fn item_size(mut self, item_size: impl Into<f32>) -> Self {
-        self.item_size = item_size.into();
+    pub fn item_size(mut self, item_size: f32) -> Self {
+        self.item_size = item_size;
         self
     }
 
