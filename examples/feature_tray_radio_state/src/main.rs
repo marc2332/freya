@@ -16,7 +16,7 @@ use freya::{
     },
 };
 
-const ICON: &[u8] = include_bytes!("./freya_icon.png");
+const ICON: &[u8] = include_bytes!("../../freya_icon.png");
 
 fn main() {
     let mut radio_station = RadioStation::create_global(Data::default());

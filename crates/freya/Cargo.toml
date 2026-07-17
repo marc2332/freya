@@ -21,7 +21,8 @@ no-default-features = true
 [features]
 default = ["winit"]
 # Shortcuts
-all = [
+all = ["all-crossplatform", "tray", "webview", "camera", "video"]
+all-crossplatform = [
   "winit",
   "router",
   "i18n",
@@ -29,8 +30,6 @@ all = [
   "engine",
   "plot",
   "gif",
-  "video",
-  "tray",
   "material-design",
   "calendar",
   "sdk",
@@ -38,12 +37,10 @@ all = [
   "markdown-code-editor",
   "icons",
   "radio",
-  "webview",
   "titlebar",
   "terminal",
   "query",
   "code-editor",
-  "camera",
   "zoom-shortcuts",
 ]
 all-publish = [

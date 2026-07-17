@@ -51,6 +51,12 @@ members = [
   "./examples/ai-chat",
   "./examples/state_query_sqlite",
   "./examples/android",
+  "./examples/component_video",
+  "./examples/feature_camera",
+  "./examples/feature_tray",
+  "./examples/feature_tray_radio_state",
+  "./examples/feature_webview",
+  "./examples/feature_webviews_resizable",
 ]
 
 [workspace.dependencies]
@@ -97,6 +103,7 @@ mundy = { version = "0.2.3", default-features = false, features = [
 # core
 generational-box = "0.7"
 tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 rustc-hash = "2.1.1"
 bitflags = "2.9.3"
 # Core/async
@@ -183,7 +190,7 @@ rodio = { version = "0.20", default-features = false }
 tokio = { version = "1.0", default-features = false }
 
 [dev-dependencies]
-freya = { workspace = true, features = ["all"] }
+freya = { workspace = true, features = ["all-crossplatform"] }
 freya-core = { workspace = true, features = ["debug-integrity", "test"] }
 freya-engine = { workspace = true }
 torin = { workspace = true }
@@ -199,7 +206,6 @@ freya-query = { workspace = true }
 freya-icons = { workspace = true }
 freya-sdk = { workspace = true }
 freya-devtools = { workspace = true, features = ["server", "client"] }
-freya-webview = { workspace = true }
 freya-terminal = { workspace = true }
 freya-code-editor = { workspace = true }
 tree-sitter-rust = "0.24"
@@ -207,7 +213,7 @@ tree-sitter-rust = "0.24"
 freya-skia-safe = { workspace = true }
 
 tracing = { workspace = true }
-tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+tracing-subscriber = { workspace = true }
 
 rand = "0.10"
 
