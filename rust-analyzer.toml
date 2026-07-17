@@ -1,2 +1,1 @@
-# Check the workspace with every freya feature enabled, just like `just c`.
 cargo.features = ["all-debug"]
