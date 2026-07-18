@@ -5,7 +5,10 @@ use freya_core::{
 };
 use freya_testing::TestingRunner;
 use rustc_hash::FxHashMap;
-use torin::size::Size;
+use torin::{
+    position::Position,
+    size::Size,
+};
 
 struct RawIdMap(FxHashMap<u64, Vec<u64>>);
 
@@ -361,4 +364,49 @@ fn large_coordinate_hover_does_not_trigger_other_elements() {
     test.move_cursor((200., 200.));
     test.sync_and_update();
     assert_eq!(*counters.0.peek(), (11, 11));
+}
+
+#[test]
+fn text_blocks_events_to_lower_layers() {
+    #[derive(Clone, Copy)]
+    struct Counters(State<(i32, i32)>);
+
+    fn app() -> Element {
+        let mut counters = use_consume::<Counters>().0;
+        rect()
+            .expanded()
+            .background((255, 255, 255))
+            .child(
+                rect()
+                    .layer(Layer::OverlayLevel(2))
+                    .on_pointer_press(move |_| counters.write().0 += 1)
+                    .child(label().text("Button")),
+            )
+            .child(
+                rect()
+                    .layer(Layer::OverlayLevel(1))
+                    .width(Size::px(300.))
+                    .height(Size::px(300.))
+                    .position(Position::new_absolute().top(0.).left(0.))
+                    .background((255, 0, 0))
+                    .on_pointer_down(move |_| counters.write().1 += 1),
+            )
+            .into()
+    }
+
+    let (mut test, counters) = TestingRunner::new(
+        app,
+        (500., 500.).into(),
+        |runner| runner.provide_root_context(|| Counters(State::create((0, 0)))),
+        1.,
+    );
+    test.sync_and_update();
+
+    // Clicking over the text only reaches the button, not the rect behind it
+    test.click_cursor((5., 5.));
+    assert_eq!(*counters.0.peek(), (1, 0));
+
+    // Clicking away from the button reaches the rect behind it
+    test.click_cursor((200., 200.));
+    assert_eq!(*counters.0.peek(), (1, 1));
 }

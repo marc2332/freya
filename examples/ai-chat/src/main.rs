@@ -40,7 +40,7 @@ fn app() -> impl IntoElement {
                 .to_string(),
         }]
     });
-    let mut input_value = use_state(|| String::new());
+    let mut input_value = use_state(String::new);
 
     let send_message = move |_| {
         let user_message = input_value.read().clone();
@@ -58,11 +58,10 @@ fn app() -> impl IntoElement {
         *input_value.write() = String::new();
 
         // Add AI response using rig-core
-        let user_msg = user_message.clone();
         spawn(async move {
             let client = openai::Client::from_env();
             let agent = client.agent("gpt-5.2").build();
-            match agent.prompt(&user_msg).await {
+            match agent.prompt(&user_message).await {
                 Ok(response) => {
                     messages.write().push(Message {
                         role: Role::AI,

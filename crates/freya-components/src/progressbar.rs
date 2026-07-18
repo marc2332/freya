@@ -65,12 +65,12 @@ impl KeyExt for ProgressBar {
 }
 
 impl ProgressBar {
-    pub fn new(progress: impl Into<f32>) -> Self {
+    pub fn new(progress: f32) -> Self {
         Self {
             width: Size::fill(),
             theme: None,
             show_progress: true,
-            progress: progress.into(),
+            progress,
             key: DiffKey::None,
         }
     }
@@ -121,7 +121,7 @@ impl Component for ProgressBar {
             .child(
                 rect()
                     .horizontal()
-                    .width(Size::percent(&*animation.read()))
+                    .width(Size::percent(animation.read().value()))
                     .cross_align(Alignment::Center)
                     .height(Size::fill())
                     .corner_radius(99.)

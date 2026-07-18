@@ -84,7 +84,7 @@ impl Component for DraggableCanvas {
             if !e.data().is_primary() {
                 return;
             }
-            dragging_position.set(Some((offset() - e.element_location()).to_point()));
+            dragging_position.set(Some((e.element_location() - offset()).to_point()));
             e.stop_propagation();
         };
 

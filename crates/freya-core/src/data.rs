@@ -190,7 +190,7 @@ impl TextStyleState {
         parent_text_style: &Self,
         element: &Rc<dyn ElementExt>,
         layout: &mut Torin<NodeId>,
-    ) {
+    ) -> bool {
         let text_style_data = element.text_style();
 
         let text_style = Self::from_data(parent_text_style, &text_style_data);
@@ -202,6 +202,8 @@ impl TextStyleState {
             // TODO: Only invalidate label and paragraphs
             layout.invalidate(node_id);
         }
+
+        !is_equal
     }
 }
 
@@ -257,8 +259,8 @@ impl LayerState {
                 .saturating_add(relative_layer)
                 .saturating_add(1),
             Layer::Overlay => parent_layer.layer.saturating_add(i16::MAX / 16),
-            Layer::RelativeOverlay(relative_layer) => {
-                (relative_layer.max(1) as i16).saturating_mul(i16::MAX / 16)
+            Layer::OverlayLevel(overlay_level) => {
+                (overlay_level.max(1) as i16).saturating_mul(i16::MAX / 16)
             }
         };
         layers.insert_node_in_layer(node_id, self.layer);

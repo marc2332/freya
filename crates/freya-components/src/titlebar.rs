@@ -4,6 +4,7 @@ use torin::size::Size;
 use crate::{
     define_theme,
     get_theme,
+    svg_viewer::SvgViewer,
 };
 
 define_theme! {
@@ -84,7 +85,7 @@ impl Component for TitlebarButton {
             }
         };
 
-        let icon = svg(Bytes::from_static(icon_svg.as_bytes()))
+        let icon = SvgViewer::new(icon_svg.as_bytes())
             .width(Size::px(12.))
             .height(Size::px(12.));
 

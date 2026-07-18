@@ -52,6 +52,7 @@ use crate::{
         data::{
             EventType,
             SizedEventData,
+            StyledEventData,
         },
         emittable::EmmitableEvent,
         name::EventName,
@@ -85,6 +86,9 @@ pub struct Tree {
 
     // Event listeners
     pub listeners: FxHashMap<EventName, Vec<NodeId>>,
+
+    // Events queued until the next layout measure
+    pub events: Vec<EmmitableEvent>,
 
     // Derived states
     pub layer_state: FxHashMap<NodeId, LayerState>,
@@ -327,6 +331,7 @@ impl Tree {
         let mut layer_cascades: Vec<NodeId> = Vec::new();
         let mut effects_cascades: Vec<NodeId> = Vec::new();
         let mut text_style_cascades: Vec<NodeId> = Vec::new();
+        let mut styled_nodes: FxHashSet<NodeId> = FxHashSet::default();
 
         assert_eq!(dirty.len(), FxHashSet::from_iter(&dirty).len());
 
@@ -365,6 +370,15 @@ impl Tree {
 
                 if !needs_accessibility && (flags.intersects(DiffModifies::ACCESSIBILITY)) {
                     needs_accessibility = true;
+                }
+
+                if flags.intersects(DiffModifies::STYLE | DiffModifies::TEXT_STYLE)
+                    && self
+                        .listeners
+                        .get(&EventName::Styled)
+                        .is_some_and(|listeners| listeners.contains(&node_id))
+                {
+                    styled_nodes.insert(node_id);
                 }
 
                 if flags.contains(DiffModifies::ACCESSIBILITY) {
@@ -528,12 +542,20 @@ impl Tree {
                                 TextStyleState::default()
                             });
                         if let Some([text_style_state, parent_text_style_state]) = entries {
-                            text_style_state.update(
+                            let changed = text_style_state.update(
                                 *node_id,
                                 parent_text_style_state,
                                 element,
                                 &mut self.layout,
                             );
+                            if changed
+                                && self
+                                    .listeners
+                                    .get(&EventName::Styled)
+                                    .is_some_and(|listeners| listeners.contains(node_id))
+                            {
+                                styled_nodes.insert(*node_id);
+                            }
                         }
                     } else {
                         assert_eq!(*node_id, NodeId::ROOT);
@@ -549,6 +571,21 @@ impl Tree {
             #[cfg(all(debug_assertions, feature = "debug-integrity"))]
             self.verify_tree_integrity();
         });
+
+        for node_id in styled_nodes {
+            let element = self.elements.get(&node_id).unwrap();
+            let text_style_state = self.text_style_state.get(&node_id).unwrap();
+            self.events.push(EmmitableEvent {
+                name: EventName::Styled,
+                source_event: EventName::Styled,
+                node_id,
+                data: EventType::Styled(StyledEventData {
+                    style: element.style().into_owned(),
+                    text_style: text_style_state.clone(),
+                }),
+                bubbles: false,
+            });
+        }
 
         MutationsApplyResult {
             needs_render,
@@ -590,14 +627,12 @@ impl Tree {
             scale_factor,
         };
 
-        let mut events = Vec::new();
-
         let layout_adapter = LayoutMeasurerAdapter {
             elements: &self.elements,
             text_style_state: &self.text_style_state,
             font_collection,
             font_manager,
-            events: &mut events,
+            events: &mut self.events,
             scale_factor,
             fallback_fonts,
             text_cache: &mut self.text_cache,
@@ -611,7 +646,7 @@ impl Tree {
             &mut tree_adapter,
         );
         events_sender
-            .unbounded_send(EventsChunk::Batch(events))
+            .unbounded_send(EventsChunk::Batch(self.events.drain(..).collect()))
             .unwrap();
     }
 

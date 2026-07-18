@@ -1,6 +1,6 @@
 [package]
 name = "freya"
-version = "0.4.0-rc.23"
+version = "0.4.0"
 description = "Cross-platform and non-web GUI Library powered by Skia."
 edition = "2024"
 license = "MIT"
@@ -21,7 +21,8 @@ no-default-features = true
 [features]
 default = ["winit"]
 # Shortcuts
-all = [
+all = ["all-crossplatform", "tray", "webview", "camera", "video"]
+all-crossplatform = [
   "winit",
   "router",
   "i18n",
@@ -29,8 +30,6 @@ all = [
   "engine",
   "plot",
   "gif",
-  "video",
-  "tray",
   "material-design",
   "calendar",
   "sdk",
@@ -38,12 +37,10 @@ all = [
   "markdown-code-editor",
   "icons",
   "radio",
-  "webview",
   "titlebar",
   "terminal",
   "query",
   "code-editor",
-  "camera",
   "zoom-shortcuts",
 ]
 all-publish = [
@@ -53,7 +50,12 @@ all-publish = [
   "dep:freya-testing",
   "dep:freya-plotters-backend",
 ]
-all-debug = ["all", "dep:freya-testing", "dep:freya-plotters-backend"]
+all-debug = [
+  "all",
+  "dep:freya-testing",
+  "dep:freya-plotters-backend",
+  "performance",
+]
 all-tests = [
   "winit",
   "router",
