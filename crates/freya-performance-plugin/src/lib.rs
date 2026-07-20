@@ -78,6 +78,8 @@ struct WindowMetrics {
     started_tree_updates: Option<Instant>,
     finished_tree_updates: Option<Duration>,
 
+    tasks_poll_time: Duration,
+
     started_accessibility_updates: Option<Instant>,
     finished_accessibility_updates: Option<Duration>,
 
@@ -146,6 +148,7 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                     .retain(|frame| now.duration_since(*frame).as_millis() < 1000);
 
                 metrics.frames.push(now);
+                metrics.tasks_poll_time = Duration::ZERO;
             }
             PluginEvent::BeforePresenting { window, .. } => {
                 self.get_metrics(window.id()).started_presenting = Some(Instant::now())
@@ -160,6 +163,11 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
             PluginEvent::FinishedMeasuringLayout { window, .. } => {
                 let metrics = self.get_metrics(window.id());
                 metrics.finished_layout = Some(metrics.started_layout.unwrap().elapsed())
+            }
+            PluginEvent::TasksPolled {
+                window, duration, ..
+            } => {
+                self.get_metrics(window.id()).tasks_poll_time += *duration;
             }
             PluginEvent::StartedUpdatingTree { window, .. } => {
                 self.get_metrics(window.id()).started_tree_updates = Some(Instant::now())
@@ -201,6 +209,7 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 let finished_presenting = metrics.finished_presenting.unwrap_or_default();
                 let finished_layout = metrics.finished_layout.unwrap();
                 let finished_tree_updates = metrics.finished_tree_updates.unwrap_or_default();
+                let tasks_poll_time = metrics.tasks_poll_time;
                 let finished_accessibility_updates =
                     metrics.finished_accessibility_updates.unwrap_or_default();
 
@@ -272,13 +281,20 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                     18.0,
                 );
 
-                // Tree updates time
+                // a11y updates time
                 add_text(
                     &mut paragraph_builder,
                     format!(
                         "a11y Updates: {:.3}ms \n",
                         finished_accessibility_updates.as_secs_f64() * 1000.0
                     ),
+                    18.0,
+                );
+
+                // Async tasks polling time
+                add_text(
+                    &mut paragraph_builder,
+                    format!("Tasks: {:.3}ms \n", tasks_poll_time.as_secs_f64() * 1000.0),
                     18.0,
                 );
 

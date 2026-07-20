@@ -10,6 +10,10 @@ use std::{
     fmt::Debug,
     rc::Rc,
     sync::atomic::AtomicU64,
+    time::{
+        Duration,
+        Instant,
+    },
 };
 
 use futures_lite::{
@@ -156,6 +160,7 @@ pub struct Runner {
 
     pub(crate) dirty_scopes: FxHashSet<ScopeId>,
     pub(crate) dirty_tasks: VecDeque<TaskId>,
+    pub(crate) tasks_poll_time: Duration,
 
     pub node_to_scope: FxHashMap<NodeId, ScopeId>,
 
@@ -262,6 +267,7 @@ impl Runner {
 
             dirty_tasks: VecDeque::default(),
             dirty_scopes: FxHashSet::from_iter([ScopeId::ROOT]),
+            tasks_poll_time: Duration::ZERO,
 
             tasks: Rc::default(),
 
@@ -579,6 +585,7 @@ impl Runner {
                 return;
             }
 
+            let started_polling = (!self.dirty_tasks.is_empty()).then(Instant::now);
             while let Some(task_id) = self.dirty_tasks.pop_front() {
                 let Some(task) = self.tasks.borrow().get(&task_id).cloned() else {
                     continue;
@@ -608,6 +615,9 @@ impl Runner {
                         }
                     },
                 );
+            }
+            if let Some(started_polling) = started_polling {
+                self.tasks_poll_time += started_polling.elapsed();
             }
 
             if !self.dirty_scopes.is_empty() {
@@ -646,6 +656,7 @@ impl Runner {
         }
 
         // Poll here
+        let started_polling = (!self.dirty_tasks.is_empty()).then(Instant::now);
         while let Some(task_id) = self.dirty_tasks.pop_front() {
             let Some(task) = self.tasks.borrow().get(&task_id).cloned() else {
                 continue;
@@ -676,6 +687,14 @@ impl Runner {
                 },
             );
         }
+        if let Some(started_polling) = started_polling {
+            self.tasks_poll_time += started_polling.elapsed();
+        }
+    }
+
+    /// Time spent polling async tasks since the last call.
+    pub fn take_tasks_poll_time(&mut self) -> Duration {
+        std::mem::take(&mut self.tasks_poll_time)
     }
 
     #[cfg_attr(feature = "hotpath", hotpath::measure)]

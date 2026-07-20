@@ -2,6 +2,7 @@ use std::{
     cell::RefCell,
     collections::HashMap,
     rc::Rc,
+    time::Duration,
 };
 
 use freya_core::integration::*;
@@ -168,6 +169,13 @@ pub enum PluginEvent<'a> {
     FinishedMeasuringEvents {
         window: &'a Window,
         tree: &'a Tree,
+    },
+
+    /// Async tasks were polled, taking the given duration.
+    TasksPolled {
+        window: &'a Window,
+        tree: &'a Tree,
+        duration: Duration,
     },
 
     StartedUpdatingTree {

@@ -502,6 +502,17 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 },
                                 PluginHandle::new(&self.proxy),
                             );
+                            let tasks_poll_time = app.runner.take_tasks_poll_time();
+                            if !tasks_poll_time.is_zero() {
+                                self.plugins.send(
+                                    PluginEvent::TasksPolled {
+                                        window: &app.window,
+                                        tree: &app.tree,
+                                        duration: tasks_poll_time,
+                                    },
+                                    PluginHandle::new(&self.proxy),
+                                );
+                            }
                             #[cfg(debug_assertions)]
                             {
                                 tracing::info!("Updated app tree.");
