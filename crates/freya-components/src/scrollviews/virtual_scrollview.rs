@@ -284,18 +284,6 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
         self.scroll_controller = scroll_controller.into();
         self
     }
-
-    /// Caps the width of the scroll view.
-    pub fn max_width(mut self, max_width: impl Into<Size>) -> Self {
-        self.layout.maximum_width = max_width.into();
-        self
-    }
-
-    /// Caps the height of the scroll view.
-    pub fn max_height(mut self, max_height: impl Into<Size>) -> Self {
-        self.layout.maximum_height = max_height.into();
-        self
-    }
 }
 
 impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
