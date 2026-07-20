@@ -221,3 +221,53 @@ pub fn scroll_view_drag_scrolling_horizontal() {
     assert!(content[2].is_visible());
     assert!(content[3].is_visible());
 }
+
+#[test]
+pub fn scroll_view_scrollbar_smaller_than_thumb() {
+    fn small_scroll_view_app() -> impl IntoElement {
+        rect().height(Size::px(48.)).width(Size::px(200.)).child(
+            ScrollView::new().children((0..30).map(|i| {
+                label()
+                    .key(i)
+                    .height(Size::px(20.))
+                    .text(format!("Row {i}"))
+                    .into()
+            })),
+        )
+    }
+
+    let mut test = launch_test(small_scroll_view_app);
+    test.sync_and_update();
+
+    test.move_cursor((100., 24.));
+    test.sync_and_update();
+    test.scroll((100., 24.), (0., -20.));
+    test.sync_and_update();
+
+    let scrollview = test
+        .find(|node, element| {
+            Rect::try_downcast(element)
+                .filter(|rect| rect.accessibility.builder.role() == AccessibilityRole::ScrollView)
+                .map(move |_| node)
+        })
+        .unwrap();
+    let scrolled_before = scrollview.children()[0].children()[0].children()[0]
+        .layout()
+        .area
+        .min_y();
+
+    test.move_cursor((192., 5.));
+    test.sync_and_update();
+    test.press_cursor((192., 5.));
+    test.sync_and_update();
+    test.move_cursor((192., 30.));
+    test.sync_and_update();
+    test.release_cursor((192., 30.));
+    test.sync_and_update();
+
+    let scrolled_after = scrollview.children()[0].children()[0].children()[0]
+        .layout()
+        .area
+        .min_y();
+    assert_eq!(scrolled_before, scrolled_after);
+}
