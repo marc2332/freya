@@ -172,6 +172,24 @@ pub trait TextEditor {
     /// Get a mutable reference to text selection
     fn selection_mut(&mut self) -> &mut TextSelection;
 
+    /// Get the UTF-16 range of the grapheme cluster containing the given position.
+    fn grapheme_cluster_at(&self, pos_utf16: usize) -> Range<usize> {
+        let line_idx = self.char_to_line(self.utf16_cu_to_char(pos_utf16));
+        let line_start = self.char_to_utf16_cu(self.line_to_char(line_idx));
+        let Some(line) = self.line(line_idx) else {
+            return pos_utf16..pos_utf16;
+        };
+
+        let mut cluster = line_start..line_start;
+        for grapheme in line.text.graphemes(true) {
+            cluster = cluster.end..cluster.end + grapheme.encode_utf16().count();
+            if cluster.end > pos_utf16 {
+                return cluster;
+            }
+        }
+        pos_utf16..pos_utf16
+    }
+
     /// Get the cursor row
     fn cursor_row(&self) -> usize {
         let pos = self.cursor_pos();
@@ -201,7 +219,8 @@ pub trait TextEditor {
                 let new_row_char = self.char_to_utf16_cu(self.line_to_char(new_row));
                 let new_row_len = self.line(new_row).unwrap().utf16_len();
                 let new_col = old_col.min(new_row_len.saturating_sub(1));
-                self.selection_mut().move_to(new_row_char + new_col);
+                let new_pos = self.grapheme_cluster_at(new_row_char + new_col).start;
+                self.selection_mut().move_to(new_pos);
 
                 true
             }
@@ -235,7 +254,8 @@ pub trait TextEditor {
                 let new_row_char = self.char_to_utf16_cu(self.line_to_char(new_row));
                 let new_row_len = self.line(new_row).unwrap().utf16_len();
                 let new_col = old_col.min(new_row_len.saturating_sub(1));
-                self.selection_mut().move_to(new_row_char + new_col);
+                let new_pos = self.grapheme_cluster_at(new_row_char + new_col).start;
+                self.selection_mut().move_to(new_pos);
             }
 
             true
@@ -244,10 +264,10 @@ pub trait TextEditor {
         }
     }
 
-    /// Move the cursor 1 char to the right
+    /// Move the cursor 1 grapheme cluster to the right
     fn cursor_right(&mut self) -> bool {
         if self.cursor_pos() < self.len_utf16_cu() {
-            let to = self.selection().end() + 1;
+            let to = self.grapheme_cluster_at(self.selection().end()).end;
             self.selection_mut().move_to(to);
 
             true
@@ -256,10 +276,10 @@ pub trait TextEditor {
         }
     }
 
-    /// Move the cursor 1 char to the left
+    /// Move the cursor 1 grapheme cluster to the left
     fn cursor_left(&mut self) -> bool {
         if self.cursor_pos() > 0 {
-            let to = self.selection().end() - 1;
+            let to = self.grapheme_cluster_at(self.selection().end() - 1).start;
             self.selection_mut().move_to(to);
 
             true
@@ -567,8 +587,9 @@ pub trait TextEditor {
                     event.insert(TextEvent::TEXT_CHANGED);
                 } else if cursor_pos > 0 {
                     // Remove the character to the left if there is any
-                    let removed_text_len = self.remove(cursor_pos - 1..cursor_pos);
-                    self.move_cursor_to(cursor_pos - removed_text_len);
+                    let remove_from = self.grapheme_cluster_at(cursor_pos - 1).start;
+                    self.remove(remove_from..cursor_pos);
+                    self.move_cursor_to(remove_from);
                     event.insert(TextEvent::TEXT_CHANGED);
                 }
             }
@@ -582,7 +603,8 @@ pub trait TextEditor {
                     event.insert(TextEvent::TEXT_CHANGED);
                 } else if cursor_pos < self.len_utf16_cu() {
                     // Remove the character to the right if there is any
-                    self.remove(cursor_pos..cursor_pos + 1);
+                    let remove_to = self.grapheme_cluster_at(cursor_pos).end;
+                    self.remove(cursor_pos..remove_to);
                     event.insert(TextEvent::TEXT_CHANGED);
                 }
             }
