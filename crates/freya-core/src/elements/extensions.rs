@@ -827,6 +827,12 @@ where
     /// Returns a mutable reference to the element's style data.
     fn get_style(&mut self) -> &mut StyleState;
 
+    /// Replace all of the element's style data at once. See [`StyleState`].
+    fn style(mut self, style: StyleState) -> Self {
+        *self.get_style() = style;
+        self
+    }
+
     /// Paint the background with any [`Fill`]: a [`Color`], a gradient or a shader.
     fn background(mut self, background: impl Into<Fill>) -> Self {
         self.get_style().background = background.into();
