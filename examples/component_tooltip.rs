@@ -15,27 +15,27 @@ fn app() -> impl IntoElement {
         .center()
         .spacing(10.)
         .child(
-            TooltipContainer::new(Tooltip::new("Top!"))
+            TooltipContainer::new(Tooltip::new_text("Top!"))
                 .position(AttachedPosition::Top)
                 .child(Button::new().child("Top")),
         )
         .child(
-            TooltipContainer::new(Tooltip::new("Bottom!"))
+            TooltipContainer::new(Tooltip::new_text("Bottom!"))
                 .position(AttachedPosition::Bottom)
                 .child(Button::new().child("Bottom")),
         )
         .child(
-            TooltipContainer::new(Tooltip::new("Left!"))
+            TooltipContainer::new(Tooltip::new_text("Left!"))
                 .position(AttachedPosition::Left)
                 .child(Button::new().child("Left")),
         )
         .child(
-            TooltipContainer::new(Tooltip::new("Right!"))
+            TooltipContainer::new(Tooltip::new_text("Right!"))
                 .position(AttachedPosition::Right)
                 .child(Button::new().child("Right")),
         )
         .child(
-            TooltipContainer::new(Tooltip::new(
+            TooltipContainer::new(Tooltip::new().child(
                 rect()
                     .horizontal()
                     .cross_align(Alignment::Center)

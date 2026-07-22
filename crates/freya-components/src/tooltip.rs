@@ -62,7 +62,7 @@ define_theme! {
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     Tooltip::new(
+///     Tooltip::new().child(
 ///         rect()
 ///             .horizontal()
 ///             .cross_align(Alignment::Center)
@@ -107,17 +107,17 @@ impl ChildrenExt for Tooltip {
 }
 
 impl Tooltip {
-    pub fn new(content: impl IntoElement) -> Self {
+    pub fn new() -> Self {
         Self {
             theme: None,
-            children: vec![content.into_element()],
+            children: vec![],
             key: DiffKey::None,
         }
     }
 
     /// Create a [Tooltip] with a single-line text label.
     pub fn new_text(text: impl Into<Cow<'static, str>>) -> Self {
-        Self::new(label().max_lines(1).text(text))
+        Self::new().child(label().max_lines(1).text(text))
     }
 }
 
