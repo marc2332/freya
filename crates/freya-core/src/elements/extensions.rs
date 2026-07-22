@@ -181,10 +181,7 @@ pub trait EventHandlersExt: Sized {
     fn get_event_handlers(&mut self) -> &mut FxHashMap<EventName, EventHandlerType>;
 
     /// Replace all of this element's event handlers with the given map.
-    fn with_event_handlers(
-        mut self,
-        event_handlers: FxHashMap<EventName, EventHandlerType>,
-    ) -> Self {
+    fn event_handlers(mut self, event_handlers: FxHashMap<EventName, EventHandlerType>) -> Self {
         *self.get_event_handlers() = event_handlers;
         self
     }
