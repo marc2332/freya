@@ -34,4 +34,21 @@ fn app() -> impl IntoElement {
                 .position(AttachedPosition::Right)
                 .child(Button::new().child("Right")),
         )
+        .child(
+            TooltipContainer::new(Tooltip::new(
+                rect()
+                    .horizontal()
+                    .cross_align(Alignment::Center)
+                    .spacing(6.)
+                    .child(
+                        rect()
+                            .width(Size::px(10.))
+                            .height(Size::px(10.))
+                            .corner_radius(5.)
+                            .background(Color::GREEN),
+                    )
+                    .child("Connected"),
+            ))
+            .child(Button::new().child("Custom")),
+        )
 }
