@@ -94,6 +94,12 @@ pub struct Tooltip {
     key: DiffKey,
 }
 
+impl Default for Tooltip {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl KeyExt for Tooltip {
     fn write_key(&mut self) -> &mut DiffKey {
         &mut self.key
