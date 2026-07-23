@@ -478,14 +478,14 @@ where
         self
     }
     /// Set how children are aligned along the direction axis. See [`Alignment`].
-    fn main_align(mut self, main_align: Alignment) -> Self {
-        self.get_layout().layout.main_alignment = main_align;
+    fn main_align(mut self, main_align: impl Into<Alignment>) -> Self {
+        self.get_layout().layout.main_alignment = main_align.into();
         self
     }
 
     /// Set how children are aligned across the direction axis. See [`Alignment`].
-    fn cross_align(mut self, cross_align: Alignment) -> Self {
-        self.get_layout().layout.cross_alignment = cross_align;
+    fn cross_align(mut self, cross_align: impl Into<Alignment>) -> Self {
+        self.get_layout().layout.cross_alignment = cross_align.into();
         self
     }
 
