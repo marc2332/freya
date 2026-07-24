@@ -580,7 +580,7 @@ where
 
 impl<T: ContainerExt> ContainerPositionExt for T {}
 
-/// Methods controlling an element's spacing and size constraints.
+/// Method for setting an element's inner padding.
 pub trait ContainerExt
 where
     Self: LayoutExt,
@@ -590,7 +590,13 @@ where
         self.get_layout().layout.padding = padding.into();
         self
     }
+}
 
+/// Methods for setting an element's size constraints.
+pub trait ContainerConstraintsExt
+where
+    Self: LayoutExt,
+{
     /// Set the minimum width the element can shrink to. See [`Size`].
     fn min_width(mut self, minimum_width: impl Into<Size>) -> Self {
         self.get_layout().layout.minimum_width = minimum_width.into();
@@ -627,6 +633,8 @@ where
         self
     }
 }
+
+impl<T: ContainerExt> ContainerConstraintsExt for T {}
 
 /// Low-level access to an element's [`LayoutData`].
 pub trait LayoutExt
