@@ -144,6 +144,150 @@ pub fn virtual_scroll_view_scrollbar() {
 }
 
 #[test]
+pub fn virtual_scroll_view_max_height() {
+    fn virtual_scroll_view_max_height_app() -> impl IntoElement {
+        VirtualScrollView::new(|i, _| {
+            label()
+                .key(i)
+                .height(Size::px(50.))
+                .text(format!("{i} Hello, World!"))
+                .into()
+        })
+        .length(30usize)
+        .item_size(50.)
+        .max_height(Size::px(250.))
+    }
+
+    let mut test = launch_test(virtual_scroll_view_max_height_app);
+    test.sync_and_update();
+    let scrollview = test
+        .find(|node, element| {
+            Rect::try_downcast(element)
+                .filter(|rect| rect.accessibility.builder.role() == AccessibilityRole::ScrollView)
+                .map(move |_| node)
+        })
+        .unwrap();
+
+    // Capped at 250 by max_height
+    assert_eq!(scrollview.layout().area.height(), 250.);
+
+    let content = scrollview.children()[0].children()[0].children();
+
+    // 250 / 50 = 5 + 1 (for smooth scrolling) = 6
+    assert_eq!(content.len(), 6);
+
+    for (n, i) in (0..6).enumerate() {
+        let child = &content[n];
+        assert_eq!(
+            Label::try_downcast(&*child.element()).unwrap().text,
+            format!("{i} Hello, World!").as_str()
+        );
+    }
+
+    test.scroll((5., 5.), (0., -300.));
+
+    let content = scrollview.children()[0].children()[0].children();
+    assert_eq!(content.len(), 6);
+
+    // Scrolled 300 pixels, 300 / 50 = 6 items
+    for (n, i) in (6..12).enumerate() {
+        let child = &content[n];
+        assert_eq!(
+            Label::try_downcast(&*child.element()).unwrap().text,
+            format!("{i} Hello, World!").as_str()
+        );
+    }
+}
+
+#[test]
+pub fn virtual_scroll_view_min_height() {
+    fn virtual_scroll_view_min_height_app() -> impl IntoElement {
+        rect().width(Size::fill()).height(Size::px(100.)).child(
+            VirtualScrollView::new(|i, _| {
+                label()
+                    .key(i)
+                    .height(Size::px(50.))
+                    .text(format!("{i} Hello, World!"))
+                    .into()
+            })
+            .length(30usize)
+            .item_size(50.)
+            .min_height(Size::px(300.)),
+        )
+    }
+
+    let mut test = launch_test(virtual_scroll_view_min_height_app);
+    test.sync_and_update();
+    let scrollview = test
+        .find(|node, element| {
+            Rect::try_downcast(element)
+                .filter(|rect| rect.accessibility.builder.role() == AccessibilityRole::ScrollView)
+                .map(move |_| node)
+        })
+        .unwrap();
+
+    // Grown to 300 by min_height despite the 100 from the parent
+    assert_eq!(scrollview.layout().area.height(), 300.);
+
+    let content = scrollview.children()[0].children()[0].children();
+
+    // 300 / 50 = 6 + 1 (for smooth scrolling) = 7
+    assert_eq!(content.len(), 7);
+
+    for (n, i) in (0..7).enumerate() {
+        let child = &content[n];
+        assert_eq!(
+            Label::try_downcast(&*child.element()).unwrap().text,
+            format!("{i} Hello, World!").as_str()
+        );
+    }
+}
+
+#[test]
+pub fn virtual_scroll_view_max_height_window_percent() {
+    fn app() -> impl IntoElement {
+        VirtualScrollView::new(|i, _| {
+            label()
+                .key(i)
+                .height(Size::px(100.))
+                .text(format!("{i} Hello, World!"))
+                .into()
+        })
+        .length(30usize)
+        .item_size(100.)
+        .height(Size::fill())
+        .max_height(Size::window_percent(50.))
+    }
+
+    let mut test = launch_test(app);
+    test.sync_and_update();
+    let scrollview = test
+        .find(|node, element| {
+            Rect::try_downcast(element)
+                .filter(|rect| rect.accessibility.builder.role() == AccessibilityRole::ScrollView)
+                .map(move |_| node)
+        })
+        .unwrap();
+
+    // Capped at half of the 500 window
+    assert_eq!(scrollview.layout().area.height(), 250.);
+
+    let content = scrollview.children()[0].children()[0].children();
+    // Built items must cover the whole viewport
+    assert!(content.len() * 100 >= 250);
+
+    // Scroll to the end, last item must be reachable
+    test.scroll((5., 5.), (0., -10000.));
+    let content = scrollview.children()[0].children()[0].children();
+    assert_eq!(
+        Label::try_downcast(&*content[content.len() - 1].element())
+            .unwrap()
+            .text,
+        "29 Hello, World!"
+    );
+}
+
+#[test]
 pub fn virtual_scroll_view_controlled() {
     fn virtual_scroll_view_controlled_app() -> impl IntoElement {
         let scroll_controller = use_scroll_controller(ScrollConfig::default);

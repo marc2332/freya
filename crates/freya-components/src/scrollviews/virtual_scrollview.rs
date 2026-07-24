@@ -284,6 +284,30 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
         self.scroll_controller = scroll_controller.into();
         self
     }
+
+    /// Sets the minimum width the scroll view can shrink to.
+    pub fn min_width(mut self, min_width: impl Into<Size>) -> Self {
+        self.layout.minimum_width = min_width.into();
+        self
+    }
+
+    /// Sets the minimum height the scroll view can shrink to.
+    pub fn min_height(mut self, min_height: impl Into<Size>) -> Self {
+        self.layout.minimum_height = min_height.into();
+        self
+    }
+
+    /// Caps the width of the scroll view.
+    pub fn max_width(mut self, max_width: impl Into<Size>) -> Self {
+        self.layout.maximum_width = max_width.into();
+        self
+    }
+
+    /// Caps the height of the scroll view.
+    pub fn max_height(mut self, max_height: impl Into<Size>) -> Self {
+        self.layout.maximum_height = max_height.into();
+        self
+    }
 }
 
 impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
@@ -557,6 +581,10 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
         rect()
             .width(layout.width.clone())
             .height(layout.height.clone())
+            .min_width(layout.minimum_width.clone())
+            .min_height(layout.minimum_height.clone())
+            .max_width(layout.maximum_width.clone())
+            .max_height(layout.maximum_height.clone())
             .a11y_id(a11y_id)
             .a11y_focusable(false)
             .a11y_role(AccessibilityRole::ScrollView)
