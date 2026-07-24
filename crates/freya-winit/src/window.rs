@@ -33,6 +33,7 @@ use raw_window_handle::HasDisplayHandle;
 use raw_window_handle::RawDisplayHandle;
 use torin::prelude::{
     CursorPoint,
+    Point2D,
     Size2D,
 };
 use winit::{
@@ -203,6 +204,9 @@ impl AppWindow {
             };
             let is_app_focused = window.has_focus();
             let scale_factor = window.scale_factor();
+            // Computed here (not in the closure) so it doesn't move `window`, which is
+            // borrowed again below. `outer_position` is unsupported on some platforms.
+            let outer_position = window.outer_position().unwrap_or_default();
             move || Platform {
                 focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
                 focused_accessibility_node: State::create(accesskit::Node::new(
@@ -213,6 +217,12 @@ impl AppWindow {
                 root_size: State::create(Size2D::new(
                     window_size.width as f32 / scale_factor as f32,
                     window_size.height as f32 / scale_factor as f32,
+                )),
+                // Logical outer position, like `root_size` (kept in logical units so userland
+                // never scale-factor-corrects).
+                window_position: State::create(Point2D::new(
+                    outer_position.x as f32 / scale_factor as f32,
+                    outer_position.y as f32 / scale_factor as f32,
                 )),
                 scale_factor: State::create(scale_factor),
                 navigation_mode: State::create(NavigationMode::NotKeyboard),

@@ -4,7 +4,7 @@ pub use mundy::{
     AccentColor,
     Srgba,
 };
-use torin::prelude::Size2D;
+use torin::prelude::{Point2D, Size2D};
 
 use crate::{
     accessibility::id::AccessibilityId,
@@ -42,6 +42,10 @@ pub struct Platform {
     /// The size of the root window, in logical units — the same space as measured (sized-event)
     /// areas, so the two can be compared directly.
     pub root_size: State<Size2D>,
+    /// The window's outer position (top-left) on the desktop, in logical units — kept in the
+    /// same space as [`root_size`](Self::root_size), updated on `WindowEvent::Moved`. Lets
+    /// userland persist/restore where a window sits without reaching for the raw winit handle.
+    pub window_position: State<Point2D>,
     /// Rendering scale factor.
     pub scale_factor: State<f64>,
     /// The current [`NavigationMode`].

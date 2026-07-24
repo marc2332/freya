@@ -24,6 +24,7 @@ use ragnarok::{
 use rustc_hash::FxHashMap;
 use torin::prelude::{
     CursorPoint,
+    Point2D,
     Size2D,
 };
 #[cfg(all(feature = "tray", not(target_os = "linux")))]
@@ -1052,6 +1053,16 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     app.process_layout_on_next_render = true;
                     app.tree.layout.clear_dirty();
                     app.tree.layout.invalidate(NodeId::ROOT);
+                }
+
+                WindowEvent::Moved(position) => {
+                    // Publish the new outer position in logical units (like `root_size`), so
+                    // userland can persist/restore where the window sits.
+                    let scale_factor = app.window.scale_factor() as f32;
+                    app.platform.window_position.set_if_modified(Point2D::new(
+                        position.x as f32 / scale_factor,
+                        position.y as f32 / scale_factor,
+                    ));
                 }
 
                 WindowEvent::MouseInput { state, button, .. } => {
