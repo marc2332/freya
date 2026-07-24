@@ -20,6 +20,8 @@ pub mod extensions;
 pub mod integration;
 pub mod plugins;
 pub mod renderer;
+#[cfg(target_os = "macos")]
+mod traffic_light;
 #[cfg(feature = "tray")]
 mod tray_icon;
 mod window;

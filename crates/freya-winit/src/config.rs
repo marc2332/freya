@@ -72,6 +72,9 @@ pub struct WindowConfig {
     pub(crate) icon: Option<Icon>,
     /// Application ID for the Window.
     pub(crate) app_id: Option<String>,
+    /// macOS only: offset for the traffic-light window buttons, in logical points.
+    #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+    pub(crate) traffic_light_inset: Option<(f64, f64)>,
     /// Hook function called with the Window Attributes.
     pub(crate) window_attributes_hook: Option<WindowBuilderHook>,
     /// Hook function called with the Window.
@@ -93,6 +96,7 @@ impl Debug for WindowConfig {
             .field("resizable", &self.resizable)
             .field("icon", &self.icon)
             .field("app_id", &self.app_id)
+            .field("traffic_light_inset", &self.traffic_light_inset)
             .finish()
     }
 }
@@ -121,6 +125,7 @@ impl WindowConfig {
             resizable: true,
             icon: None,
             app_id: None,
+            traffic_light_inset: None,
             window_attributes_hook: None,
             window_handle_hook: None,
             on_close: None,
@@ -193,6 +198,23 @@ impl WindowConfig {
     /// Set the application ID for the Window, should match the `.desktop` file of your program.
     pub fn with_app_id(mut self, app_id: impl Into<String>) -> Self {
         self.app_id = Some(app_id.into());
+        self
+    }
+
+    /// macOS only (no effect elsewhere): offset the traffic-light window buttons
+    /// from their default position, in logical points. Positive values move right
+    /// (x) and down (y). The buttons stay interactive (hover and clicks) wherever
+    /// they are placed, including outside the titlebar.
+    ///
+    /// Mirrors the API proposed for winit in
+    /// [PR #4466](https://github.com/rust-windowing/winit/pull/4466)
+    /// (`WindowAttributesMacOS::with_traffic_light_inset`), implemented here in
+    /// [`crate::traffic_light`] until it lands upstream. Usually combined with a
+    /// transparent titlebar + full-size content view + hidden title (set via
+    /// [`with_window_attributes`](Self::with_window_attributes) and winit's
+    /// `WindowAttributesExtMacOS`).
+    pub fn with_traffic_light_inset(mut self, x: f64, y: f64) -> Self {
+        self.traffic_light_inset = Some((x, y));
         self
     }
 

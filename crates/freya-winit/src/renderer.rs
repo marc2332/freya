@@ -864,6 +864,12 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 }
                 WindowEvent::Focused(is_focused) => {
                     app.platform.is_app_focused.set_if_modified(is_focused);
+
+                    // Covers resets that don't resize (first show, deminiaturize).
+                    #[cfg(target_os = "macos")]
+                    if let Some(traffic_lights) = &app.traffic_lights {
+                        traffic_lights.reapply();
+                    }
                 }
                 WindowEvent::RedrawRequested => {
                     let scale_factor = app.effective_scale_factor();
@@ -1053,6 +1059,13 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     app.process_layout_on_next_render = true;
                     app.tree.layout.clear_dirty();
                     app.tree.layout.invalidate(NodeId::ROOT);
+
+                    // AppKit resets the traffic-light positions on resize and
+                    // fullscreen transitions (which also emit Resized).
+                    #[cfg(target_os = "macos")]
+                    if let Some(traffic_lights) = &app.traffic_lights {
+                        traffic_lights.reapply();
+                    }
                 }
 
                 WindowEvent::Moved(position) => {

@@ -108,6 +108,11 @@ pub struct AppWindow {
 
     pub(crate) window_attributes: WindowAttributes,
 
+    /// Traffic-light inset controller — re-applied by the event loop on resize and
+    /// focus, since AppKit resets the button positions on those transitions.
+    #[cfg(target_os = "macos")]
+    pub(crate) traffic_lights: Option<crate::traffic_light::TrafficLights>,
+
     pub(crate) user_zoom: f32,
     #[cfg(feature = "hotreload")]
     pub(crate) hot_reload_pending: Arc<std::sync::atomic::AtomicBool>,
@@ -167,6 +172,11 @@ impl AppWindow {
         if let Some(window_handle_hook) = window_config.window_handle_hook.take() {
             window_handle_hook(&mut window);
         }
+
+        #[cfg(target_os = "macos")]
+        let traffic_lights = window_config
+            .traffic_light_inset
+            .and_then(|inset| crate::traffic_light::TrafficLights::attach(&window, inset));
 
         let on_close = window_config.on_close.take();
 
@@ -380,6 +390,9 @@ impl AppWindow {
             on_close,
 
             window_attributes,
+
+            #[cfg(target_os = "macos")]
+            traffic_lights,
 
             user_zoom: 1.0,
 
