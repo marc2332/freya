@@ -39,7 +39,7 @@ fn app() -> impl IntoElement {
         .child(ContextMenuViewer::new())
         .child(
             Button::new()
-                .on_press(move |e: Event<PressEventData>| {
+                .on_press(move |_: Event<PressEventData>| {
                     if ContextMenu::is_open() {
                         ContextMenu::close();
                     } else {
