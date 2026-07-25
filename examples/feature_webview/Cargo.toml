@@ -1,0 +1,12 @@
+[package]
+name = "feature_webview"
+publish = false
+edition = "2024"
+
+[lints]
+workspace = true
+
+[dependencies]
+freya = { workspace = true }
+freya-webview = { workspace = true }
+tracing-subscriber = { workspace = true }

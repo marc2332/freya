@@ -1,7 +1,10 @@
 pub use euclid::Rect;
 
 use crate::{
-    geometry::Length,
+    geometry::{
+        Length,
+        Size2D,
+    },
     scaled::Scaled,
 };
 
@@ -40,6 +43,12 @@ impl From<(f32, f32)> for Gaps {
 impl From<(f32, f32, f32, f32)> for Gaps {
     fn from((top, right, bottom, left): (f32, f32, f32, f32)) -> Self {
         Gaps::new(top, right, bottom, left)
+    }
+}
+
+impl From<Gaps> for Size2D {
+    fn from(gaps: Gaps) -> Self {
+        Size2D::new(gaps.horizontal(), gaps.vertical())
     }
 }
 

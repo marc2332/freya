@@ -232,8 +232,16 @@ impl ElementExt for ImageElement {
             }
         }
 
-        if self.effect != image.effect || self.corner_radius != image.corner_radius {
+        if self.effect != image.effect {
+            diff.insert(DiffModifies::EFFECT);
+        }
+
+        if self.corner_radius != image.corner_radius {
             diff.insert(DiffModifies::STYLE);
+        }
+
+        if self.event_handlers != image.event_handlers {
+            diff.insert(DiffModifies::EVENT_HANDLERS);
         }
 
         diff
@@ -266,6 +274,10 @@ impl ElementExt for ImageElement {
         self.relative_layer
     }
 
+    fn events_handlers(&'_ self) -> Option<Cow<'_, FxHashMap<EventName, EventHandlerType>>> {
+        Some(Cow::Borrowed(&self.event_handlers))
+    }
+
     fn should_measure_inner_children(&self) -> bool {
         true
     }
@@ -280,8 +292,10 @@ impl ElementExt for ImageElement {
         let image_width = image.width() as f32;
         let image_height = image.height() as f32;
 
-        let width_ratio = context.area_size.width / image_width;
-        let height_ratio = context.area_size.height / image_height;
+        let area_size = (*context.area_size - context.torin_node.margin.into()).max(Size2D::zero());
+
+        let width_ratio = area_size.width / image_width;
+        let height_ratio = area_size.height / image_height;
 
         let size = match self.image_data.aspect_ratio {
             AspectRatio::Max => {
@@ -295,7 +309,7 @@ impl ElementExt for ImageElement {
                 Size2D::new(image_width * ratio, image_height * ratio)
             }
             AspectRatio::Fit => Size2D::new(image_width, image_height),
-            AspectRatio::None => *context.area_size,
+            AspectRatio::None => area_size,
         };
 
         Some((size, Rc::new(size)))

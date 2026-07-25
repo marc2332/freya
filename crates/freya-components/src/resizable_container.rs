@@ -371,8 +371,8 @@ impl ResizablePanel {
     }
 
     /// Set the minimum size for this panel (in the same units as the panel's sizing mode).
-    pub fn min_size(mut self, min_size: impl Into<f32>) -> Self {
-        self.min_size = Some(min_size.into());
+    pub fn min_size(mut self, min_size: f32) -> Self {
+        self.min_size = Some(min_size);
         self
     }
 
