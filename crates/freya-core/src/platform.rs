@@ -4,7 +4,10 @@ pub use mundy::{
     AccentColor,
     Srgba,
 };
-use torin::prelude::{Point2D, Size2D};
+use torin::prelude::{
+    Point2D,
+    Size2D,
+};
 
 use crate::{
     accessibility::id::AccessibilityId,
@@ -46,6 +49,18 @@ pub struct Platform {
     /// same space as [`root_size`](Self::root_size), updated on `WindowEvent::Moved`. Lets
     /// userland persist/restore where a window sits without reaching for the raw winit handle.
     pub window_position: State<Point2D>,
+    /// Whether the window is **filled** — winit's `Window::is_maximized`: the frame grown to
+    /// all the space the current monitor offers (macOS *zoom*). This is **not** native
+    /// fullscreen, which is [`is_fullscreen`](Self::is_fullscreen).
+    ///
+    /// Refreshed on every resize. Companion to [`root_size`](Self::root_size) /
+    /// [`window_position`](Self::window_position): a filled window's geometry is the monitor's,
+    /// not a size the user chose, so an app that persists geometry has to tell the two apart.
+    pub is_maximized: State<bool>,
+    /// Whether the window is in **native fullscreen** (winit's `Window::fullscreen`) — the
+    /// other state whose geometry isn't the user's own. See
+    /// [`is_maximized`](Self::is_maximized).
+    pub is_fullscreen: State<bool>,
     /// Rendering scale factor.
     pub scale_factor: State<f64>,
     /// The current [`NavigationMode`].

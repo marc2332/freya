@@ -1054,6 +1054,16 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 WindowEvent::Resized(size) => {
                     app.driver.resize(size);
 
+                    // Filling the window (macOS zoom) or entering fullscreen *is* a resize,
+                    // and winit has no event of its own for either, so this is where both
+                    // flags are refreshed for userland.
+                    app.platform
+                        .is_maximized
+                        .set_if_modified(app.window.is_maximized());
+                    app.platform
+                        .is_fullscreen
+                        .set_if_modified(app.window.fullscreen().is_some());
+
                     app.window.request_redraw();
 
                     app.process_layout_on_next_render = true;

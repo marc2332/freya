@@ -63,6 +63,7 @@ pub struct Attached {
     children: Vec<Element>,
     position: AttachedPosition,
     align: AttachedAlign,
+    offset: f32,
     key: DiffKey,
 }
 
@@ -85,12 +86,22 @@ impl Attached {
             children: vec![],
             position: AttachedPosition::Bottom,
             align: AttachedAlign::Center,
+            offset: 0.,
             key: DiffKey::None,
         }
     }
 
     pub fn position(mut self, position: AttachedPosition) -> Self {
         self.position = position;
+        self
+    }
+
+    /// Gap between the inner element and the attached one, along the attachment axis (default
+    /// `0.`, i.e. flush). A dropdown or popover usually wants a few pixels so its card reads as
+    /// a separate surface instead of growing out of its trigger. The window clamp still applies
+    /// afterwards, so an offset can't push the overlay off-screen.
+    pub fn offset(mut self, offset: f32) -> Self {
+        self.offset = offset;
         self
     }
 
@@ -156,10 +167,10 @@ impl Component for Attached {
         let cross_v = align_offset(inner_height, attached_height);
 
         let (left, top) = match self.position {
-            AttachedPosition::Top => (cross_h, -attached_height),
-            AttachedPosition::Bottom => (cross_h, inner_height),
-            AttachedPosition::Left => (-attached_width, cross_v),
-            AttachedPosition::Right => (inner_width, cross_v),
+            AttachedPosition::Top => (cross_h, -attached_height - self.offset),
+            AttachedPosition::Bottom => (cross_h, inner_height + self.offset),
+            AttachedPosition::Left => (-attached_width - self.offset, cross_v),
+            AttachedPosition::Right => (inner_width + self.offset, cross_v),
         };
 
         // Window clamp, computed *with* the position in the same frame (the inner area's

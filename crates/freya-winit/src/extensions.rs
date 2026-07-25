@@ -141,7 +141,14 @@ pub trait WinitPlatformExt {
         F: FnOnce(WindowId, &mut RendererContext) -> T + 'static;
 }
 
+/// Makes a [`Rect`] behave like a native title bar.
 pub trait WindowDragExt {
+    /// Press the element to drag the window; double-press it to **fill** the window to the
+    /// current monitor (macOS *zoom*) or restore its previous size. Filling is not native
+    /// fullscreen — see [`Platform::is_maximized`] / [`Platform::is_fullscreen`].
+    ///
+    /// This installs an `on_pointer_down` handler, so an interactive child that must not drag
+    /// the window has to stop the event propagating.
     fn window_drag(self) -> Self;
 }
 

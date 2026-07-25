@@ -217,6 +217,8 @@ impl AppWindow {
             // Computed here (not in the closure) so it doesn't move `window`, which is
             // borrowed again below. `outer_position` is unsupported on some platforms.
             let outer_position = window.outer_position().unwrap_or_default();
+            let is_maximized = window.is_maximized();
+            let is_fullscreen = window.fullscreen().is_some();
             move || Platform {
                 focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
                 focused_accessibility_node: State::create(accesskit::Node::new(
@@ -234,6 +236,10 @@ impl AppWindow {
                     outer_position.x as f32 / scale_factor as f32,
                     outer_position.y as f32 / scale_factor as f32,
                 )),
+                // Both refreshed on every resize (see the `WindowEvent::Resized` arm) —
+                // entering or leaving fill / fullscreen is a resize.
+                is_maximized: State::create(is_maximized),
+                is_fullscreen: State::create(is_fullscreen),
                 scale_factor: State::create(scale_factor),
                 navigation_mode: State::create(NavigationMode::NotKeyboard),
                 preferred_theme: State::create(theme),
