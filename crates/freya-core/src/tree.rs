@@ -59,6 +59,7 @@ use crate::{
     extended_hashmap::ExtendedHashMap,
     integration::{
         AccessibilityDirtyNodes,
+        AccessibilityFocusStrategy,
         AccessibilityGenerator,
         EventsChunk,
     },
@@ -553,6 +554,7 @@ impl Tree {
         MutationsApplyResult {
             needs_render,
             needs_accessibility,
+            auto_focus: self.accessibility_diff.requested_auto_focus.take(),
         }
     }
 
@@ -681,6 +683,7 @@ bitflags! {
 pub struct MutationsApplyResult {
     pub needs_render: bool,
     pub needs_accessibility: bool,
+    pub auto_focus: Option<AccessibilityFocusStrategy>,
 }
 
 pub struct LayoutMeasurerAdapter<'a> {

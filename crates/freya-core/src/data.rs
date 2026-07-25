@@ -442,7 +442,7 @@ impl AccessibilityState {
         }
 
         if data.a11y_auto_focus {
-            accessibility_diff.request_focus(AccessibilityFocusStrategy::Node(a11y_id));
+            accessibility_diff.request_auto_focus(AccessibilityFocusStrategy::Node(a11y_id));
         }
 
         Self {
