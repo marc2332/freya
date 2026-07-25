@@ -155,6 +155,14 @@ pub struct VirtualItem {
 /// One-direction scrollable area that dynamically builds and renders items based in their size and current available size,
 /// this is intended for apps using large sets of data that need good performance.
 ///
+/// Unlike [`ScrollView`](crate::scrollviews::ScrollView), which lays out every child even when it is
+/// off screen, a `VirtualScrollView` takes a builder closure and only calls it for the items that
+/// are actually visible, so the cost stays roughly constant no matter how long the list is.
+///
+/// It needs two things to know which items fall inside the viewport:
+/// [`item_size`](VirtualScrollView::item_size), the fixed size of each item along the scroll axis,
+/// and [`length`](VirtualScrollView::length), the total number of items.
+///
 /// # Example
 ///
 /// ```rust
@@ -231,7 +239,7 @@ impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> PartialEq for VirtualScrol
 }
 
 impl<B: Fn(VirtualItem, &()) -> Element> VirtualScrollView<(), B> {
-    /// Creates a [`VirtualScrollView`] that builds each item from its [`VirtualItem`].
+    /// Creates a virtual scroll view that builds each item on demand from its [`VirtualItem`].
     pub fn new(builder: B) -> Self {
         Self {
             builder,
@@ -253,7 +261,7 @@ impl<B: Fn(VirtualItem, &()) -> Element> VirtualScrollView<(), B> {
         }
     }
 
-    /// Same as [`Self::new`] but driven by an external [`ScrollController`].
+    /// Like [`new`](Self::new) but driven by the given [`ScrollController`].
     pub fn new_controlled(builder: B, scroll_controller: ScrollController) -> Self {
         Self {
             builder,
@@ -277,11 +285,29 @@ impl<B: Fn(VirtualItem, &()) -> Element> VirtualScrollView<(), B> {
 }
 
 impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
-    /// Same as [`Self::new`] but passes `builder_data` to the builder for every item.
+    /// Like [`new`](Self::new) but passes shared `builder_data` to every item build.
     ///
-    /// `builder_data` is owned by the scroll view and handed to the builder by reference
-    /// instead of being captured in the closure. It is part of the view's equality check,
-    /// so changing it rebuilds the visible items.
+    /// The builder closure cannot be compared across renders, so data captured inside it never
+    /// triggers a rebuild. Passing the data here instead makes it part of the view's `PartialEq`,
+    /// so the visible items are rebuilt whenever it changes.
+    ///
+    /// ```rust
+    /// # use freya::prelude::*;
+    /// fn app() -> impl IntoElement {
+    ///     let items = use_state(|| vec!["a".to_string(), "b".to_string(), "c".to_string()]);
+    ///
+    ///     // The current items are passed as data, so editing `items` rebuilds the visible rows.
+    ///     VirtualScrollView::new_with_data(items.read().clone(), |item, items: &Vec<String>| {
+    ///         rect()
+    ///             .key(item.index)
+    ///             .height(Size::px(item.size))
+    ///             .child(items[item.index].clone())
+    ///             .into()
+    ///     })
+    ///     .length(items.read().len())
+    ///     .item_size(25.)
+    /// }
+    /// ```
     pub fn new_with_data(builder_data: D, builder: B) -> Self {
         Self {
             builder,
@@ -303,7 +329,7 @@ impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
         }
     }
 
-    /// Same as [`Self::new_with_data`] but driven by an external [`ScrollController`].
+    /// Like [`new_with_data`](Self::new_with_data) but driven by the given [`ScrollController`].
     pub fn new_with_data_controlled(
         builder_data: D,
         builder: B,
@@ -330,41 +356,52 @@ impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
         }
     }
 
+    /// Toggles whether the scrollbar is shown when the content overflows.
     pub fn show_scrollbar(mut self, show_scrollbar: bool) -> Self {
         self.show_scrollbar = show_scrollbar;
         self
     }
 
+    /// Sets the axis the items flow and scroll in.
     pub fn direction(mut self, direction: Direction) -> Self {
         self.layout.direction = direction;
         self
     }
 
+    /// Toggles whether the arrow keys scroll the view while it is focused.
     pub fn scroll_with_arrows(mut self, scroll_with_arrows: impl Into<bool>) -> Self {
         self.scroll_with_arrows = scroll_with_arrows.into();
         self
     }
 
+    /// Sets the size of the items along the scroll axis, used to decide which items to render.
+    ///
+    /// Accepts an [`ItemSize`], so it can be a fixed size for every item or a closure that
+    /// resolves the size of each item by its index.
     pub fn item_size(mut self, item_size: impl Into<ItemSize>) -> Self {
         self.item_size = item_size.into();
         self
     }
 
+    /// Sets the total number of items the view can scroll through.
     pub fn length(mut self, length: impl Into<usize>) -> Self {
         self.length = length.into();
         self
     }
 
+    /// Inverts the direction of the mouse wheel relative to the content.
     pub fn invert_scroll_wheel(mut self, invert_scroll_wheel: impl Into<bool>) -> Self {
         self.invert_scroll_wheel = invert_scroll_wheel.into();
         self
     }
 
+    /// Toggles scrolling by dragging the content, useful mainly for touch input.
     pub fn drag_scrolling(mut self, drag_scrolling: bool) -> Self {
         self.drag_scrolling = drag_scrolling;
         self
     }
 
+    /// Attaches a [`ScrollController`] to drive this view externally.
     pub fn scroll_controller(
         mut self,
         scroll_controller: impl Into<Option<ScrollController>>,
@@ -373,11 +410,13 @@ impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
         self
     }
 
+    /// Caps the width of the scroll view.
     pub fn max_width(mut self, max_width: impl Into<Size>) -> Self {
         self.layout.maximum_width = max_width.into();
         self
     }
 
+    /// Caps the height of the scroll view.
     pub fn max_height(mut self, max_height: impl Into<Size>) -> Self {
         self.layout.maximum_height = max_height.into();
         self

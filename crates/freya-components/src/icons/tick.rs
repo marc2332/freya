@@ -5,6 +5,8 @@ use torin::{
     size::Size,
 };
 
+use crate::svg_viewer::SvgViewer;
+
 #[derive(Clone, PartialEq)]
 pub struct TickIcon {
     layout: LayoutData,
@@ -51,7 +53,7 @@ impl TickIcon {
 
 impl Component for TickIcon {
     fn render(&self) -> impl IntoElement {
-        svg(Bytes::from_static(
+        SvgViewer::new(
             r#"
             <svg viewBox="0 0 333 263" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M304.109 0L333 28.8909L99.1812 262.71L70.2903 233.819L304.109 0Z"/>
@@ -59,7 +61,7 @@ impl Component for TickIcon {
             </svg>
         "#
             .as_bytes(),
-        ))
+        )
         .width(self.layout.width.clone())
         .height(self.layout.height.clone())
         .margin(self.layout.margin)

@@ -1,0 +1,11 @@
+[package]
+name = "feature_camera"
+publish = false
+edition = "2024"
+
+[lints]
+workspace = true
+
+[dependencies]
+freya = { workspace = true, features = ["camera"] }
+tracing-subscriber = { workspace = true }

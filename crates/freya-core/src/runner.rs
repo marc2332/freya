@@ -417,6 +417,22 @@ impl Runner {
                                             }
                                         }
                                     }
+                                    EventType::Styled(data) => {
+                                        let event_handlers = element.events_handlers();
+                                        if let Some(event_handlers) = event_handlers {
+                                            match event_handlers.get(&event_name) {
+                                                Some(EventHandlerType::Styled(handler)) => {
+                                                    handler.call(Event {
+                                                        data: data.clone(),
+                                                        propagate: propagate.clone(),
+                                                        default: default.clone(),
+                                                    });
+                                                }
+                                                Some(_) => unreachable!(),
+                                                _ => {}
+                                            }
+                                        }
+                                    }
                                     EventType::Wheel(data) => {
                                         let event_handlers = element.events_handlers();
                                         if let Some(event_handlers) = event_handlers {

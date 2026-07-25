@@ -10,6 +10,14 @@ use torin::{
 
 use crate::theming::component_themes::ColorsSheet;
 
+/// Setter parameter type for a theme field, `f32` fields take a plain `f32`.
+#[doc(hidden)]
+#[macro_export]
+macro_rules! theme_setter_param {
+    (f32) => { f32 };
+    ($field_ty:ty) => { impl ::core::convert::Into<$field_ty> };
+}
+
 #[macro_export]
 macro_rules! define_theme {
     (NOTHING=) => {};
@@ -19,13 +27,13 @@ macro_rules! define_theme {
         [ $head_ty:ident $($rest_ty:ident)* ]
         [ $head_field:ident $($rest_field:ident)* ]
         $name:ident ;
-        $( $(#[$field_attrs:meta])* $field_name:ident : $field_ty:ty , )*
+        $( $(#[$field_attrs:meta])* $field_name:ident : $field_ty:tt , )*
     ) => {
         $crate::theming::macros::paste! {
             impl [<$name ThemePartialExt>] for $head_ty {
                 $(
                     $(#[$field_attrs])*
-                    fn $field_name(mut self, $field_name: impl Into<$field_ty>) -> Self {
+                    fn $field_name(mut self, $field_name: $crate::theme_setter_param!($field_ty)) -> Self {
                         self.$head_field = Some(self.$head_field.unwrap_or_default().$field_name($field_name));
                         self
                     }
@@ -45,7 +53,7 @@ macro_rules! define_theme {
         @ext_impls
         [] []
         $name:ident ;
-        $( $(#[$field_attrs:meta])* $field_name:ident : $field_ty:ty , )*
+        $( $(#[$field_attrs:meta])* $field_name:ident : $field_ty:tt , )*
     ) => {};
 
     // Emits the structs and their inherent impls.
@@ -58,7 +66,7 @@ macro_rules! define_theme {
                 %[fields$($cows_attr_control:tt)?]
                 $(
                     $(#[$field_attrs:meta])*
-                    $field_name:ident: $field_ty:ty,
+                    $field_name:ident: $field_ty:tt,
                 )*
             )?
     }) => {
@@ -125,7 +133,7 @@ macro_rules! define_theme {
 
                 $($(
                     $(#[$field_attrs])*
-                    pub fn $field_name(mut self, $field_name: impl Into<$field_ty>) -> Self {
+                    pub fn $field_name(mut self, $field_name: $crate::theme_setter_param!($field_ty)) -> Self {
                         self.$field_name = Some($crate::theming::macros::Preference::Specific($field_name.into()));
                         self
                     }
@@ -143,7 +151,7 @@ macro_rules! define_theme {
                 %[fields$($cows_attr_control:tt)?]
                 $(
                     $(#[$field_attrs:meta])*
-                    $field_name:ident: $field_ty:ty,
+                    $field_name:ident: $field_ty:tt,
                 )*
             )?
     }) => {
@@ -165,7 +173,7 @@ macro_rules! define_theme {
             pub trait [<$name ThemePartialExt>] {
                 $($(
                     $(#[$field_attrs])*
-                    fn $field_name(self, $field_name: impl Into<$field_ty>) -> Self;
+                    fn $field_name(self, $field_name: $crate::theme_setter_param!($field_ty)) -> Self;
                 )*)?
             }
         }
@@ -188,7 +196,7 @@ macro_rules! define_theme {
                 %[fields$($cows_attr_control:tt)?]
                 $(
                     $(#[$field_attrs:meta])*
-                    $field_name:ident: $field_ty:ty,
+                    $field_name:ident: $field_ty:tt,
                 )*
             )?
     }) => {
@@ -216,7 +224,7 @@ macro_rules! define_theme {
                 %[fields$($cows_attr_control:tt)?]
                 $(
                     $(#[$field_attrs:meta])*
-                    $field_name:ident: $field_ty:ty,
+                    $field_name:ident: $field_ty:tt,
                 )*
             )?
     }) => {

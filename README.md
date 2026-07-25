@@ -6,11 +6,22 @@
 [![Github Sponsors](https://img.shields.io/github/sponsors/marc2332?style=social)](https://github.com/sponsors/marc2332)
 [![codecov](https://codecov.io/github/marc2332/freya/branch/main/graph/badge.svg?token=APSGEC84B8)](https://codecov.io/github/marc2332/freya)
 
-[Website](https://freyaui.dev) | [Stable Documentation](https://docs.rs/freya/) | [Discord](https://discord.gg/sYejxCdewG) | [Contact](#contact)
+[Website](https://freyaui.dev) | [Documentation](https://docs.rs/freya/) | [Discord](https://discord.gg/sYejxCdewG) | [Contact](#contact)
 
 **Freya** is a **cross-platform, native, declarative** GUI library for Rust 🦀.
 
-> :warning: I recently rewrote a huge percentage of Freya in https://github.com/marc2332/freya/pull/1351, so the `main` branch differs a lot from the latest stable release.
+### Usage 📜
+Latest stable release:
+
+```toml
+freya = "0.4"
+```
+
+`main` branch:
+
+```toml
+freya = { git = "https://github.com/marc2332/freya", branch = "main" }
+```
 
 ### Components & State 
 
@@ -425,7 +436,7 @@ use freya::prelude::*;
 use freya::icons;
 
 fn app() -> impl IntoElement {
-    svg(icons::lucide::antenna())
+    SvgViewer::new(icons::lucide::antenna())
         .color((120, 50, 255))
         .expanded()
 }
@@ -740,7 +751,7 @@ Enable the `devtools` feature in `freya` and then run the devtools app.
 
 ### Trying it out
 
-Make sure to have [Development Setup](https://docs.rs/freya/0.3/freya/_docs/development_setup/index.html) ready.
+Make sure to have [Development Setup](https://docs.rs/freya/latest/freya/_docs/development_setup/index.html) ready.
 
 > ⚠️ If you happen to be on Windows using `windows-gnu` and get compile errors, maybe go check this [issue](https://github.com/marc2332/freya/issues/794).
 
@@ -757,19 +768,6 @@ Then run an example:
 
 ```shell
 cargo run --example counter
-```
-
-### Usage 📜
-`main` branch:
-
-```toml
-freya = { git = "https://github.com/marc2332/freya", branch = "main" }
-```
-
-Release candidates:
-
-```toml
-freya = "0.4.0-rc.23"
 ```
 
 ### Contributing 🧙‍♂️

@@ -96,8 +96,8 @@ impl Checkbox {
         self
     }
 
-    pub fn size(mut self, size: impl Into<f32>) -> Self {
-        self.size = size.into();
+    pub fn size(mut self, size: f32) -> Self {
+        self.size = size;
         self
     }
 }
