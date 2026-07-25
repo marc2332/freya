@@ -1,6 +1,7 @@
 use core::fmt;
 use std::{
     cell::{
+        Cell,
         Ref,
         RefCell,
     },
@@ -109,6 +110,10 @@ impl<Q: QueryCapability> QueryStateData<Q> {
     }
 
     /// Check if the state is stale or not, where stale means outdated.
+    ///
+    /// [QueryStateData::Pending] and [QueryStateData::Loading] are always stale as neither holds a
+    /// settled value that could age. Staleness says nothing about whether an execution is already
+    /// in flight, so it alone is not enough to decide to dispatch a new one.
     pub fn is_stale(&self, query: &Query<Q>) -> bool {
         match self {
             QueryStateData::Pending => true,
@@ -162,6 +167,15 @@ pub struct QueryData<Q: QueryCapability> {
     state: Rc<RefCell<QueryStateData<Q>>>,
     reactive_contexts: Rc<RefCell<FxHashSet<ReactiveContext>>>,
 
+    /// How many executions of this query are in flight right now.
+    ///
+    /// The state alone cannot tell: a brand new entry is [QueryStateData::Pending] before its
+    /// first execution is even dispatched, so [QueryStateData::is_stale] is `true` both for a
+    /// query that nobody is running and for one that is mid flight. This is a counter and not a
+    /// flag because the imperative paths ([QueriesStorage::get], [UseQuery::invalidate] and the
+    /// interval task) run the query on demand and may overlap with an execution already running.
+    running: Rc<Cell<usize>>,
+
     interval_task: Rc<RefCell<Option<(Duration, TaskHandle)>>>,
     clean_task: Rc<RefCell<Option<TaskHandle>>>,
 }
@@ -172,9 +186,43 @@ impl<Q: QueryCapability> Clone for QueryData<Q> {
             state: self.state.clone(),
             reactive_contexts: self.reactive_contexts.clone(),
 
+            running: self.running.clone(),
+
             interval_task: self.interval_task.clone(),
             clean_task: self.clean_task.clone(),
         }
+    }
+}
+
+impl<Q: QueryCapability> QueryData<Q> {
+    /// Check if there is any execution of this query in flight.
+    fn is_running(&self) -> bool {
+        self.running.get() > 0
+    }
+
+    /// Mark an execution of this query as in flight for as long as the returned guard is alive.
+    fn running_guard(&self) -> RunningGuard {
+        RunningGuard::new(&self.running)
+    }
+}
+
+/// Keeps a [QueryData] marked as running until it is dropped.
+///
+/// The count is restored on [Drop] rather than after awaiting the execution so that it is also
+/// restored when the future running the query is cancelled instead of settling, e.g the interval
+/// task being cancelled by [QueriesStorage::update_tasks] while it awaits a run.
+struct RunningGuard(Rc<Cell<usize>>);
+
+impl RunningGuard {
+    fn new(running: &Rc<Cell<usize>>) -> Self {
+        running.set(running.get() + 1);
+        Self(running.clone())
+    }
+}
+
+impl Drop for RunningGuard {
+    fn drop(&mut self) {
+        self.0.set(self.0.get().saturating_sub(1));
     }
 }
 
@@ -192,6 +240,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
         let query_data = storage.entry(query).or_insert_with(|| QueryData {
             state: Rc::new(RefCell::new(QueryStateData::Pending)),
             reactive_contexts: Rc::new(RefCell::new(FxHashSet::default())),
+            running: Rc::default(),
             interval_task: Rc::default(),
             clean_task: Rc::default(),
         });
@@ -281,13 +330,25 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
             .or_insert_with(|| QueryData {
                 state: Rc::new(RefCell::new(QueryStateData::Pending)),
                 reactive_contexts: Rc::new(RefCell::new(FxHashSet::default())),
+                running: Rc::default(),
                 interval_task: Rc::default(),
                 clean_task: Rc::default(),
             })
             .clone();
 
+        // Release the storage borrow before awaiting the run, as writing to a State panics when it
+        // is already borrowed: holding it across the await would make any query subscriber
+        // mounting meanwhile panic instead of attaching to this execution
+        drop(map);
+
         // Run the query if the value is stale
         if query_data.state.borrow().is_stale(&query) {
+            // This is an imperative read, so it runs the query even if another execution is
+            // already in flight: its caller awaits a settled value. It is still marked as
+            // running so that subscribers mounting meanwhile attach to it instead of
+            // dispatching yet another execution.
+            let _running_guard = query_data.running_guard();
+
             // Set to Loading
             let res = mem::replace(&mut *query_data.state.borrow_mut(), QueryStateData::Pending)
                 .into_loading();
@@ -395,6 +456,10 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
         let tasks = FuturesUnordered::new();
 
         for (query, query_data) in queries {
+            // Mark as running until this execution settles, so that a subscriber mounting
+            // meanwhile attaches to it instead of dispatching a duplicate execution
+            let running_guard = query_data.running_guard();
+
             // Set to Loading
             let res = mem::replace(&mut *query_data.state.borrow_mut(), QueryStateData::Pending)
                 .into_loading();
@@ -404,6 +469,8 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
             }
 
             tasks.push(Box::pin(async move {
+                let _running_guard = running_guard;
+
                 // Run
                 let res = query.query.run(&query.keys).await;
 
@@ -517,6 +584,9 @@ impl<Q: QueryCapability> Query<Q> {
 
     /// For how long is the data considered stale. If a query subscriber is mounted and the data is stale, it will re run the query
     /// otherwise it return the cached data.
+    ///
+    /// If an execution of this query is already in flight the mounting subscriber attaches to it
+    /// rather than running the query a second time.
     ///
     /// Defaults to [Duration::ZERO], meaning it is marked stale immediately after it has been used.
     pub fn stale_time(self, stale_time: Duration) -> Self {
@@ -653,6 +723,9 @@ impl<Q: QueryCapability> UseQuery<Q> {
 /// By default the stale time is `0ms`, so if a value is cached and a new query subscriber
 /// is interested in this value, it will get refreshed automatically.
 ///
+/// A subscriber that mounts while an execution of its query is already in flight attaches to that
+/// execution instead of dispatching a new one, so remounting never runs the query twice at once.
+///
 /// See [Query::stale_time].
 ///
 /// ### Clean time
@@ -686,10 +759,19 @@ pub fn use_query<Q: QueryCapability>(query: Query<Q>) -> UseQuery<Q> {
             storage.update_tasks(prev_query);
         }
 
-        // Immediately run the query if enabled and the value is stale
-        if query.enabled && query_data.state.borrow().is_stale(query) {
+        // Immediately run the query if enabled and the value is stale, unless an execution is
+        // already in flight: this subscriber reads the very same state, so it attaches to that
+        // execution instead of dispatching a duplicate one. Without this a subscriber that
+        // unmounts and remounts while its query runs would execute the capability twice
+        // concurrently, as the running execution is deliberately not cancelled on unmount.
+        if query.enabled && !query_data.is_running() && query_data.state.borrow().is_stale(query) {
+            // Marked as running here, before spawning, and not just inside `run_queries`:
+            // `spawn_forever` only queues the task, so any other subscriber mounting before the
+            // runner gets to poll it would otherwise still see this query as idle
+            let running_guard = query_data.running_guard();
             let query = query.clone();
             spawn_forever(async move {
+                let _running_guard = running_guard;
                 QueriesStorage::run_queries(&[(&query, &query_data)]).await;
             });
         }
