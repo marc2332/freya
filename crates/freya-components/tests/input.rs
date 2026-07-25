@@ -220,3 +220,52 @@ pub fn input_auto_focus_test() {
     });
     assert!(label.is_some());
 }
+
+#[test]
+pub fn input_select_all_on_init_test() {
+    fn rename_app() -> impl IntoElement {
+        // Seeded before the input mounts, the way a rename affordance opens over the name it is
+        // replacing.
+        let value = use_state(|| "old name".to_string());
+
+        rect()
+            .child(Input::new(value).auto_focus(true).select_all_on_init(true))
+            .child(format!("value={}", value.read()))
+    }
+
+    let mut test = launch_test(rename_app);
+
+    // No click needed: the input auto-focuses, and the seeded value arrives selected.
+    test.write_text("new");
+
+    let label = test.find(|_, element| {
+        Label::try_downcast(element).filter(|label| label.text.as_ref() == "value=new")
+    });
+    assert!(
+        label.is_some(),
+        "typing replaced the selected value instead of landing in front of it"
+    );
+}
+
+#[test]
+pub fn input_without_select_all_on_init_keeps_the_cursor_at_the_start() {
+    fn seeded_app() -> impl IntoElement {
+        let value = use_state(|| "old name".to_string());
+
+        rect()
+            .child(Input::new(value).auto_focus(true))
+            .child(format!("value={}", value.read()))
+    }
+
+    let mut test = launch_test(seeded_app);
+
+    test.write_text("new");
+
+    // The default is unchanged: an input mounts with its cursor at position 0, so this inserts
+    // there. `select_all_on_init` is opt-in precisely because that is right for a field the user
+    // is editing rather than replacing.
+    let label = test.find(|_, element| {
+        Label::try_downcast(element).filter(|label| label.text.as_ref() == "value=newold name")
+    });
+    assert!(label.is_some());
+}

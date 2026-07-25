@@ -14,6 +14,7 @@ pub struct EditableConfig {
     pub(crate) allow_read_clipboard: bool,
     pub(crate) allow_write_clipboard: bool,
     pub(crate) select_all_on_double_click: bool,
+    pub(crate) select_all_on_init: bool,
 }
 
 impl Default for EditableConfig {
@@ -32,6 +33,7 @@ impl EditableConfig {
             allow_read_clipboard: true,
             allow_write_clipboard: true,
             select_all_on_double_click: false,
+            select_all_on_init: false,
         }
     }
 
@@ -69,6 +71,17 @@ impl EditableConfig {
     /// behaving like a triple click. Useful for masked inputs.
     pub fn with_select_all_on_double_click(mut self, select_all_on_double_click: bool) -> Self {
         self.select_all_on_double_click = select_all_on_double_click;
+        self
+    }
+
+    /// Start with the initial content selected instead of the cursor at its beginning.
+    ///
+    /// For an editor that opens over text the user is about to replace — a rename affordance
+    /// seeded with the current name — this is what makes the first keystroke replace it rather
+    /// than prepend to it. Without it the cursor sits at position 0, so typing lands in front of
+    /// the very text being renamed.
+    pub fn with_select_all_on_init(mut self, select_all_on_init: bool) -> Self {
+        self.select_all_on_init = select_all_on_init;
         self
     }
 }

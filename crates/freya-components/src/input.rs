@@ -176,6 +176,7 @@ pub struct Input {
     on_submit: Option<EventHandler<String>>,
     mode: InputMode,
     auto_focus: bool,
+    select_all_on_init: bool,
     width: Size,
     enabled: bool,
     key: DiffKey,
@@ -205,6 +206,7 @@ impl Input {
             on_submit: None,
             mode: InputMode::default(),
             auto_focus: false,
+            select_all_on_init: false,
             width: Size::px(150.),
             enabled: true,
             key: DiffKey::default(),
@@ -243,6 +245,20 @@ impl Input {
 
     pub fn on_submit(mut self, on_submit: impl Into<EventHandler<String>>) -> Self {
         self.on_submit = Some(on_submit.into());
+        self
+    }
+
+    /// Start with the value selected rather than the cursor at its beginning, so the first
+    /// keystroke replaces it.
+    ///
+    /// For an input that opens over text the user came to replace — a rename affordance seeded
+    /// with the current name — this is the difference between typing *over* that name and typing
+    /// in front of it. Pair it with [`auto_focus`](Self::auto_focus).
+    ///
+    /// Applies to the value the input **mounts** with. A value that changes underneath it later
+    /// syncs as a plain edit, cursor and selection untouched.
+    pub fn select_all_on_init(mut self, select_all_on_init: bool) -> Self {
+        self.select_all_on_init = select_all_on_init;
         self
     }
 
@@ -354,6 +370,7 @@ impl Component for Input {
                 EditableConfig::new()
                     .with_allow_write_clipboard(!is_masked)
                     .with_select_all_on_double_click(is_masked)
+                    .with_select_all_on_init(self.select_all_on_init)
             },
         );
         let mut is_dragging = use_state(|| false);

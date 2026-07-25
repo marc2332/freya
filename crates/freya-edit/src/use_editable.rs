@@ -22,9 +22,17 @@ pub struct UseEditable {
 impl UseEditable {
     /// Manually create an editable content instead of using [use_editable].
     pub fn create(content: String, config: EditableConfig) -> Self {
+        // Selection positions are UTF-16 code units, which is what `encode_utf16().count()`
+        // gives — the same measure `Rope::len_utf16_cu` reports once the rope is built.
+        let selection = match config.select_all_on_init {
+            true if !content.is_empty() => {
+                TextSelection::new_range((0, content.encode_utf16().count()))
+            }
+            _ => TextSelection::new_cursor(0),
+        };
         let editor = State::create(RopeEditor::new(
             content,
-            TextSelection::new_cursor(0),
+            selection,
             config.indentation,
             EditorHistory::new(Duration::from_millis(10)),
         ));
