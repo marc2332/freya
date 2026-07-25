@@ -257,10 +257,14 @@ pub type TrayIconGetter = Box<dyn FnOnce() -> tray_icon::TrayIcon + Send>;
 #[cfg(feature = "tray")]
 pub type TrayHandler =
     Box<dyn FnMut(crate::tray_icon::TrayEvent, crate::renderer::RendererContext)>;
-/// Builds the application menubar. Runs once on the event loop thread when the app
-/// resumes (muda requires main-thread construction), so it must be `Send` to travel there.
+/// Builds the application menubar. Runs once, from `resumed`, on the very thread that
+/// called [`launch`](crate::launch): winit's event loop is main-thread-bound, which is also
+/// where muda requires menus to be constructed. It therefore never travels between threads
+/// and is deliberately **not** `Send`. muda's own `Menu` / `MenuItem` handles are not `Send`
+/// either, so requiring it would stop an app building its menu up front and keeping item
+/// handles to update at runtime (enabling an item, or swapping a dynamic submenu).
 #[cfg(feature = "menu")]
-pub type MenuGetter = Box<dyn FnOnce() -> muda::Menu + Send>;
+pub type MenuGetter = Box<dyn FnOnce() -> muda::Menu>;
 /// Handles the menubar's [`muda::MenuEvent`]s on the renderer thread. Note tray menus
 /// (the `tray` feature) share muda's global event stream — when both features are
 /// enabled every menu event reaches both handlers, and each should match its own item
@@ -382,7 +386,7 @@ impl LaunchConfig {
     #[cfg(feature = "menu")]
     pub fn with_menu(
         mut self,
-        menu: impl FnOnce() -> muda::Menu + 'static + Send,
+        menu: impl FnOnce() -> muda::Menu + 'static,
         menu_handler: impl FnMut(muda::MenuEvent, crate::renderer::RendererContext) + 'static,
     ) -> Self {
         self.menu = (Some(Box::new(menu)), Some(Box::new(menu_handler)));
