@@ -186,6 +186,9 @@ impl LayoutExt for TooltipContainer {
     }
 }
 
+impl ContainerSizeExt for TooltipContainer {}
+impl ContainerPositionExt for TooltipContainer {}
+
 impl ChildrenExt for TooltipContainer {
     fn get_children(&mut self) -> &mut Vec<Element> {
         &mut self.children
