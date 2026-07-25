@@ -43,7 +43,7 @@ fn app() -> impl IntoElement {
                     if ContextMenu::is_open() {
                         ContextMenu::close();
                     } else {
-                        ContextMenu::open_from_event(&e, context_menu())
+                        ContextMenu::open(context_menu())
                     }
                 })
                 .child("Open"),
