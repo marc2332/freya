@@ -91,6 +91,7 @@ pub struct AppWindow {
     pub(crate) accessibility: AccessibilityTree,
     pub(crate) accessibility_adapter: accesskit_winit::Adapter,
     pub(crate) accessibility_tasks_for_next_render: AccessibilityTask,
+    pub(crate) screen_reader: ScreenReader,
 
     pub(crate) process_layout_on_next_render: bool,
 
@@ -147,7 +148,9 @@ impl AppWindow {
             LogicalSize::new(area.width(), area.height()),
         );
 
-        self.accessibility_adapter.update_if_active(|| update);
+        if self.screen_reader.is_on() {
+            self.accessibility_adapter.update_if_active(|| update);
+        }
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -159,7 +162,6 @@ impl AppWindow {
         font_collection: &mut FontCollection,
         font_manager: &FontMgr,
         fallback_fonts: &[Cow<'static, str>],
-        screen_reader: ScreenReader,
         gpu_resource_cache_limit: usize,
     ) -> Self {
         #[cfg(feature = "hotreload")]
@@ -212,10 +214,10 @@ impl AppWindow {
             }
         });
 
-        runner.provide_root_context(|| screen_reader);
+        let screen_reader = ScreenReader::new();
+        runner.provide_root_context(|| screen_reader.clone());
 
-        let (mut ticker_sender, ticker) = RenderingTicker::new();
-        ticker_sender.set_overflow(true);
+        let (ticker_sender, ticker) = RenderingTicker::new();
         runner.provide_root_context(|| ticker);
 
         let animation_clock = AnimationClock::new();
@@ -384,6 +386,7 @@ impl AppWindow {
             accessibility: AccessibilityTree::default(),
             accessibility_adapter,
             accessibility_tasks_for_next_render: AccessibilityTask::ProcessUpdate { mode: None },
+            screen_reader,
 
             process_layout_on_next_render: true,
 

@@ -97,11 +97,6 @@ pub mod prelude {
                 Rect,
                 rect,
             },
-            svg::{
-                Svg,
-                SvgBytes,
-                svg,
-            },
         },
         event_handler::{
             Callback,

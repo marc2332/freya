@@ -179,6 +179,10 @@ impl ElementExt for LabelElement {
         Cow::Owned(StyleState::default())
     }
 
+    fn is_transparent(&self) -> bool {
+        false
+    }
+
     fn text_style(&'_ self) -> Cow<'_, TextStyleData> {
         Cow::Borrowed(&self.text_style_data)
     }

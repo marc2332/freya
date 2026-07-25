@@ -96,6 +96,7 @@
 //! - `hotreload`: Enables hot reload support via the `dx` CLI from `dioxus-cli`. See [Hot Reload](self::_docs::hot_reload).
 //! - `zoom-shortcuts`: Enables `Ctrl`/`Cmd` + `+`/`-`/`0` to zoom the app.
 
+/// Common imports to build Freya apps, use it with `use freya::prelude::*;`.
 pub mod prelude {
     pub use freya_core::prelude::*;
     pub use freya_edit::{
@@ -152,10 +153,12 @@ pub mod prelude {
         visible_size::VisibleSize,
     };
 }
+/// Built-in elements like `rect`, `label` or `paragraph`.
 pub mod elements {
     pub use freya_core::elements::*;
 }
 
+/// Built-in components like `Button`, `Input` or `ScrollView`.
 pub mod components {
     #[cfg_attr(feature = "docs", doc(cfg(feature = "gif")))]
     #[cfg(feature = "gif")]
@@ -171,7 +174,7 @@ pub mod components {
     }
     #[cfg_attr(feature = "docs", doc(cfg(feature = "remote-asset")))]
     #[cfg(feature = "remote-asset")]
-    pub use freya_components::Uri;
+    pub use freya_components::Url;
     #[cfg_attr(feature = "docs", doc(cfg(feature = "calendar")))]
     #[cfg(feature = "calendar")]
     pub use freya_components::calendar::*;
@@ -219,6 +222,7 @@ pub mod components {
         sidebar::*,
         skeleton::*,
         slider::*,
+        svg_viewer::*,
         switch::*,
         table::*,
         theming::{
@@ -237,18 +241,22 @@ pub mod components {
     };
 }
 
+/// Reexport `freya-edit`, the text editing APIs.
 pub mod text_edit {
     pub use freya_edit::*;
 }
 
+/// Reexport `freya-clipboard`.
 pub mod clipboard {
     pub use freya_clipboard::prelude::*;
 }
 
+/// Reexport `freya-animation`.
 pub mod animation {
     pub use freya_animation::prelude::*;
 }
 
+/// Reexport `freya-plotters-backend` and `plotters` when the `plot` feature is enabled.
 #[cfg_attr(feature = "docs", doc(cfg(feature = "plot")))]
 #[cfg(feature = "plot")]
 pub mod plot {
@@ -256,52 +264,61 @@ pub mod plot {
     pub use plotters;
 }
 
+/// Reexport `freya-router` when the `router` feature is enabled.
 #[cfg_attr(feature = "docs", doc(cfg(feature = "router")))]
 #[cfg(feature = "router")]
 pub mod router {
     pub use freya_router::prelude::*;
 }
 
+/// Reexport `freya-i18n` when the `i18n` feature is enabled.
 #[cfg_attr(feature = "docs", doc(cfg(feature = "i18n")))]
 #[cfg(feature = "i18n")]
 pub mod i18n {
     pub use freya_i18n::prelude::*;
 }
 
+/// Reexport `freya-engine` when the `engine` feature is enabled.
 #[cfg_attr(feature = "docs", doc(cfg(feature = "engine")))]
 #[cfg(feature = "engine")]
 pub mod engine {
     pub use freya_engine::*;
 }
 
+/// Reexport `winit` when the `winit` feature is enabled.
 #[cfg_attr(feature = "docs", doc(cfg(feature = "winit")))]
 #[cfg(feature = "winit")]
 pub mod winit {
     pub use freya_winit::winit::*;
 }
 
+/// Helpers to build elements out of plain functions.
 pub mod helpers {
     pub use freya_core::helpers::*;
 }
 
+/// Reexport `tray-icon` when the `tray` feature is enabled.
 #[cfg_attr(feature = "docs", doc(cfg(feature = "tray")))]
 #[cfg(feature = "tray")]
 pub mod tray {
     pub use freya_winit::tray::*;
 }
 
+/// Reexport `freya-sdk` when the `sdk` feature is enabled.
 #[cfg_attr(feature = "docs", doc(cfg(feature = "sdk")))]
 #[cfg(feature = "sdk")]
 pub mod sdk {
     pub use freya_sdk::prelude::*;
 }
 
+/// Reexport `freya-material-design` when the `material-design` feature is enabled.
 #[cfg_attr(feature = "docs", doc(cfg(feature = "material-design")))]
 #[cfg(feature = "material-design")]
 pub mod material_design {
     pub use freya_material_design::prelude::*;
 }
 
+/// Reexport `freya-icons` when the `icons` feature is enabled.
 #[cfg_attr(feature = "docs", doc(cfg(feature = "icons")))]
 #[cfg(feature = "icons")]
 pub mod icons {
@@ -361,6 +378,7 @@ pub mod video {
     pub use freya_video::*;
 }
 
+/// Reexport `freya-performance-plugin` when the `performance` feature is enabled.
 #[cfg(feature = "performance")]
 #[cfg_attr(feature = "docs", doc(cfg(feature = "performance")))]
 pub mod performance {
@@ -374,10 +392,12 @@ pub mod markdown {
     pub use freya_markdown::*;
 }
 
+/// Reexport `freya-android` when targeting Android.
 #[cfg(target_os = "android")]
 pub mod android {
     pub use freya_android::*;
 }
 
+/// Freya guides.
 #[cfg(doc)]
 pub mod _docs;

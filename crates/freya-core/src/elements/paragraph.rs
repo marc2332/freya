@@ -69,6 +69,7 @@ use crate::{
         ChildrenExt,
         Color,
         ContainerExt,
+        ContainerPositionExt,
         EventHandlersExt,
         Fill,
         KeyExt,
@@ -273,6 +274,10 @@ impl ElementExt for ParagraphElement {
 
     fn style(&'_ self) -> Cow<'_, StyleState> {
         Cow::Owned(StyleState::default())
+    }
+
+    fn is_transparent(&self) -> bool {
+        false
     }
 
     fn text_style(&'_ self) -> Cow<'_, TextStyleData> {

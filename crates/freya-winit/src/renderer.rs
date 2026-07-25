@@ -88,7 +88,6 @@ pub struct WinitRenderer {
     pub proxy: EventLoopProxy<NativeEvent>,
     pub plugins: PluginsManager,
     pub fallback_fonts: Vec<Cow<'static, str>>,
-    pub screen_reader: ScreenReader,
     pub font_manager: FontMgr,
     pub font_collection: FontCollection,
     pub futures: Vec<Pin<Box<dyn std::future::Future<Output = ()>>>>,
@@ -102,7 +101,6 @@ pub struct RendererContext<'a> {
     pub proxy: &'a mut EventLoopProxy<NativeEvent>,
     pub plugins: &'a mut PluginsManager,
     pub fallback_fonts: &'a mut Vec<Cow<'static, str>>,
-    pub screen_reader: &'a mut ScreenReader,
     pub font_manager: &'a mut FontMgr,
     pub font_collection: &'a mut FontCollection,
     pub active_event_loop: &'a ActiveEventLoop,
@@ -119,7 +117,6 @@ impl RendererContext<'_> {
             self.font_collection,
             self.font_manager,
             self.fallback_fonts,
-            self.screen_reader.clone(),
             self.gpu_resource_cache_limit,
         );
 
@@ -290,7 +287,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     &mut self.font_collection,
                     &self.font_manager,
                     &self.fallback_fonts,
-                    self.screen_reader.clone(),
                     self.gpu_resource_cache_limit,
                 );
 
@@ -352,7 +348,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     windows: &mut self.windows,
                     proxy: &mut self.proxy,
                     plugins: &mut self.plugins,
-                    screen_reader: &mut self.screen_reader,
                     font_manager: &mut self.font_manager,
                     font_collection: &mut self.font_collection,
                     gpu_resource_cache_limit: self.gpu_resource_cache_limit,
@@ -379,7 +374,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     windows: &mut self.windows,
                     proxy: &mut self.proxy,
                     plugins: &mut self.plugins,
-                    screen_reader: &mut self.screen_reader,
                     font_manager: &mut self.font_manager,
                     font_collection: &mut self.font_collection,
                     gpu_resource_cache_limit: self.gpu_resource_cache_limit,
@@ -410,7 +404,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             &mut self.font_collection,
                             &self.font_manager,
                             &self.fallback_fonts,
-                            self.screen_reader.clone(),
                             self.gpu_resource_cache_limit,
                         );
 
@@ -529,7 +522,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         NativeWindowEventAction::Accessibility(
                             accesskit_winit::WindowEvent::AccessibilityDeactivated,
                         ) => {
-                            self.screen_reader.set(false);
+                            app.screen_reader.set(false);
                         }
                         NativeWindowEventAction::Accessibility(
                             accesskit_winit::WindowEvent::ActionRequested(_),
@@ -539,7 +532,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         ) => {
                             app.accessibility_tasks_for_next_render = AccessibilityTask::Init;
                             app.window.request_redraw();
-                            self.screen_reader.set(true);
                         }
                         NativeWindowEventAction::User(user_event) => match user_event {
                             UserEvent::RequestRedraw => {
@@ -583,7 +575,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                             &mut self.font_collection,
                                             &self.font_manager,
                                             &self.fallback_fonts,
-                                            self.screen_reader.clone(),
                                             self.gpu_resource_cache_limit,
                                         );
 
@@ -628,7 +619,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                             windows: &mut self.windows,
                                             proxy: &mut self.proxy,
                                             plugins: &mut self.plugins,
-                                            screen_reader: &mut self.screen_reader,
                                             font_manager: &mut self.font_manager,
                                             font_collection: &mut self.font_collection,
                                             gpu_resource_cache_limit: self.gpu_resource_cache_limit,
@@ -693,7 +683,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             windows: &mut self.windows,
                             proxy: &mut self.proxy,
                             plugins: &mut self.plugins,
-                            screen_reader: &mut self.screen_reader,
                             font_manager: &mut self.font_manager,
                             font_collection: &mut self.font_collection,
                             gpu_resource_cache_limit: self.gpu_resource_cache_limit,
@@ -859,6 +848,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                     LogicalSize::new(area.width(), area.height()),
                                 );
 
+                                app.screen_reader.set(true);
                                 app.accessibility_adapter.update_if_active(|| update);
                             }
                             AccessibilityTask::None => {}
@@ -873,9 +863,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             PluginHandle::new(&self.proxy),
                         );
 
-                        if app.ticker_sender.receiver_count() > 0 {
-                            app.ticker_sender.broadcast_blocking(()).unwrap();
-                        }
+                        app.ticker_sender.send(()).ok();
 
                         self.plugins.send(
                             PluginEvent::AfterRedraw {

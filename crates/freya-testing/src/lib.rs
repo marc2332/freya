@@ -184,8 +184,7 @@ impl TestingRunner {
 
         runner.provide_root_context(ScreenReader::new);
 
-        let (mut ticker_sender, ticker) = RenderingTicker::new();
-        ticker_sender.set_overflow(true);
+        let (ticker_sender, ticker) = RenderingTicker::new();
         runner.provide_root_context(|| ticker);
 
         let animation_clock = runner.provide_root_context(AnimationClock::new);
@@ -395,7 +394,7 @@ impl TestingRunner {
             self.handle_events_immediately();
             self.sync_and_update();
             std::thread::sleep(step);
-            self.ticker_sender.broadcast_blocking(()).unwrap();
+            self.ticker_sender.send(()).ok();
         }
     }
 
@@ -406,7 +405,7 @@ impl TestingRunner {
             self.handle_events_immediately();
             self.sync_and_update();
             std::thread::sleep(step);
-            self.ticker_sender.broadcast_blocking(()).unwrap();
+            self.ticker_sender.send(()).ok();
         }
     }
 

@@ -190,7 +190,7 @@ impl TextStyleState {
         parent_text_style: &Self,
         element: &Rc<dyn ElementExt>,
         layout: &mut Torin<NodeId>,
-    ) {
+    ) -> bool {
         let text_style_data = element.text_style();
 
         let text_style = Self::from_data(parent_text_style, &text_style_data);
@@ -202,6 +202,8 @@ impl TextStyleState {
             // TODO: Only invalidate label and paragraphs
             layout.invalidate(node_id);
         }
+
+        !is_equal
     }
 }
 
