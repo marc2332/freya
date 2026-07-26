@@ -1052,10 +1052,10 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         button: None,
                     }];
 
-                    for dropped_file_path in app.dropped_file_paths.drain(..) {
+                    if !app.dropped_file_paths.is_empty() {
                         platform_event.push(PlatformEvent::File {
                             name: FileEventName::FileDrop,
-                            file_path: Some(dropped_file_path),
+                            file_paths: app.dropped_file_paths.drain(..).collect(),
                             cursor: app.position,
                         });
                     }
@@ -1156,7 +1156,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 WindowEvent::HoveredFile(file_path) => {
                     let platform_event = PlatformEvent::File {
                         name: FileEventName::FileHover,
-                        file_path: Some(file_path),
+                        file_paths: vec![file_path],
                         cursor: app.position,
                     };
                     let mut events_measurer_adapter = EventsMeasurerAdapter {
@@ -1175,7 +1175,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 WindowEvent::HoveredFileCancelled => {
                     let platform_event = PlatformEvent::File {
                         name: FileEventName::FileHoverCancelled,
-                        file_path: None,
+                        file_paths: Vec::new(),
                         cursor: app.position,
                     };
                     let mut events_measurer_adapter = EventsMeasurerAdapter {

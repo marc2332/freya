@@ -14,7 +14,7 @@ fn main() {
 enum Status {
     Idle,
     Hovering,
-    Dropped(PathBuf),
+    Dropped(Vec<PathBuf>),
 }
 
 fn app() -> impl IntoElement {
@@ -23,7 +23,14 @@ fn app() -> impl IntoElement {
     let (msg, background) = match &*status.read() {
         Status::Idle => ("Waiting for drop".to_string(), (109, 198, 227)),
         Status::Hovering => ("Drop it!".to_string(), (109, 198, 227)),
-        Status::Dropped(path) => (path.to_str().unwrap().to_string(), (109, 198, 227)),
+        Status::Dropped(paths) => (
+            paths
+                .iter()
+                .filter_map(|path| path.to_str())
+                .collect::<Vec<_>>()
+                .join("\n"),
+            (109, 198, 227),
+        ),
     };
 
     rect()
@@ -32,11 +39,7 @@ fn app() -> impl IntoElement {
         .background(background)
         .color(Color::WHITE)
         .on_file_drop(move |e: Event<FileEventData>| {
-            if let Some(file_path) = e.file_path.clone() {
-                status.set(Status::Dropped(file_path));
-            } else {
-                status.set(Status::Idle);
-            }
+            status.set(Status::Dropped(e.file_paths.clone()));
         })
         .on_global_file_hover(move |_| {
             status.set(Status::Hovering);

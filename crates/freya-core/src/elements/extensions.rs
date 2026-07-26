@@ -181,10 +181,7 @@ pub trait EventHandlersExt: Sized {
     fn get_event_handlers(&mut self) -> &mut FxHashMap<EventName, EventHandlerType>;
 
     /// Replace all of this element's event handlers with the given map.
-    fn with_event_handlers(
-        mut self,
-        event_handlers: FxHashMap<EventName, EventHandlerType>,
-    ) -> Self {
+    fn event_handlers(mut self, event_handlers: FxHashMap<EventName, EventHandlerType>) -> Self {
         *self.get_event_handlers() = event_handlers;
         self
     }
@@ -478,14 +475,14 @@ where
         self
     }
     /// Set how children are aligned along the direction axis. See [`Alignment`].
-    fn main_align(mut self, main_align: Alignment) -> Self {
-        self.get_layout().layout.main_alignment = main_align;
+    fn main_align(mut self, main_align: impl Into<Alignment>) -> Self {
+        self.get_layout().layout.main_alignment = main_align.into();
         self
     }
 
     /// Set how children are aligned across the direction axis. See [`Alignment`].
-    fn cross_align(mut self, cross_align: Alignment) -> Self {
-        self.get_layout().layout.cross_alignment = cross_align;
+    fn cross_align(mut self, cross_align: impl Into<Alignment>) -> Self {
+        self.get_layout().layout.cross_alignment = cross_align.into();
         self
     }
 
@@ -834,6 +831,12 @@ where
 {
     /// Returns a mutable reference to the element's style data.
     fn get_style(&mut self) -> &mut StyleState;
+
+    /// Replace all of the element's style data at once. See [`StyleState`].
+    fn style(mut self, style: StyleState) -> Self {
+        *self.get_style() = style;
+        self
+    }
 
     /// Paint the background with any [`Fill`]: a [`Color`], a gradient or a shader.
     fn background(mut self, background: impl Into<Fill>) -> Self {
