@@ -98,7 +98,7 @@ fn tab(route: Route, label: &'static str, icon: fn() -> Bytes) -> ActivableRoute
                     .spacing(2.)
                     .child(
                         SvgViewer::new(icon())
-                            .stroke(theme.read().colors.text_primary)
+                            .stroke(theme.read().colors().text_primary)
                             .width(Size::px(18.))
                             .height(Size::px(18.)),
                     )

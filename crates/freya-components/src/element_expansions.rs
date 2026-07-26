@@ -17,12 +17,12 @@ pub trait RectThemeExt {
 impl RectThemeExt for Rect {
     fn theme_background(self) -> Self {
         let theme = get_theme_or_default();
-        self.background(theme.read().colors.background)
+        self.background(theme.read().colors().background)
     }
 
     fn theme_color(self) -> Self {
         let theme = get_theme_or_default();
-        self.color(theme.read().colors.text_primary)
+        self.color(theme.read().colors().text_primary)
     }
 }
 
@@ -56,7 +56,7 @@ fn typography() -> crate::typography::TypographyTheme {
 impl LabelThemeExt for Label {
     fn theme_color(self) -> Self {
         let theme = get_theme_or_default();
-        self.color(theme.read().colors.text_primary)
+        self.color(theme.read().colors().text_primary)
     }
 
     fn title(self) -> Self {
@@ -87,6 +87,6 @@ pub trait ParagraphThemeExt {
 impl ParagraphThemeExt for Paragraph {
     fn theme_color(self) -> Self {
         let theme = get_theme_or_default();
-        self.color(theme.read().colors.text_primary)
+        self.color(theme.read().colors().text_primary)
     }
 }

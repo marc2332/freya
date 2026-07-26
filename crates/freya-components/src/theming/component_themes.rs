@@ -10,19 +10,51 @@ use freya_core::{
 
 use crate::theming::themes::light_theme;
 
+/// The color source a [`Theme`] resolves
+/// [`Preference::Reference`](crate::theming::macros::Preference::Reference) against.
+///
+/// The core [`ColorsSheet`] is required, so a reference to one of its slots always resolves
+/// no matter which palette an app installs, and built-in components can never be broken by a
+/// custom one. [`Palette::color`] is an open, app-defined namespace on top: it is consulted
+/// only for names the sheet does not carry, and it may compute a value (a tint of a slot, a
+/// mix of two) rather than store one.
+pub trait Palette: 'static {
+    /// The core slots.
+    fn sheet(&self) -> &ColorsSheet;
+
+    /// Resolve an app-defined slot name. Called only when `name` is not a core slot; returning
+    /// `None` (the default) leaves the reference unresolved.
+    fn color(&self, name: &str) -> Option<Color> {
+        let _ = name;
+        None
+    }
+}
+
+/// The plain sheet is itself a palette, with no extended slots.
+impl Palette for ColorsSheet {
+    fn sheet(&self) -> &ColorsSheet {
+        self
+    }
+}
+
 pub struct Theme {
     pub name: &'static str,
-    pub colors: ColorsSheet,
+    pub palette: Box<dyn Palette>,
     themes: FxHashMap<&'static str, Box<dyn Any>>,
 }
 
 impl Theme {
-    pub fn new(name: &'static str, colors: ColorsSheet) -> Self {
+    pub fn new(name: &'static str, palette: impl Palette) -> Self {
         Self {
             name,
-            colors,
+            palette: Box::new(palette),
             themes: FxHashMap::default(),
         }
+    }
+
+    /// The core color slots of this theme's palette.
+    pub fn colors(&self) -> &ColorsSheet {
+        self.palette.sheet()
     }
 
     /// Get a component theme by key.
@@ -40,7 +72,7 @@ impl fmt::Debug for Theme {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Theme")
             .field("name", &self.name)
-            .field("colors", &self.colors)
+            .field("colors", self.colors())
             .field("themes", &format!("({} entries)", self.themes.len()))
             .finish()
     }
@@ -48,7 +80,7 @@ impl fmt::Debug for Theme {
 
 impl PartialEq for Theme {
     fn eq(&self, other: &Self) -> bool {
-        self.name == other.name && self.colors == other.colors
+        self.name == other.name && self.colors() == other.colors()
     }
 }
 

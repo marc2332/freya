@@ -1,4 +1,7 @@
-use std::time::Duration;
+use std::{
+    borrow::Cow,
+    time::Duration,
+};
 
 #[doc(hidden)]
 pub use ::paste::paste;
@@ -8,7 +11,10 @@ use torin::{
     size::Size,
 };
 
-use crate::theming::component_themes::ColorsSheet;
+use crate::theming::component_themes::{
+    ColorsSheet,
+    Palette,
+};
 
 /// Setter parameter type for a theme field, `f32` fields take a plain `f32`.
 #[doc(hidden)]
@@ -113,13 +119,13 @@ macro_rules! define_theme {
                     )*)?
                 }
 
-                #[doc = "Checks each field in `optional` and if it's `Some`, it overwrites the corresponding `self` field."]
-                pub fn resolve(&mut self, colors_sheet: &$crate::theming::component_themes::ColorsSheet) -> [<$name Theme>] {
+                #[doc = "Resolves every field against `palette`, turning references into concrete values."]
+                pub fn resolve(&mut self, palette: &dyn $crate::theming::component_themes::Palette) -> [<$name Theme>] {
                     use $crate::theming::macros::ResolvablePreference;
                     [<$name Theme>] {
                         $(
                             $(
-                                $field_name: self.$field_name.resolve(colors_sheet),
+                                $field_name: self.$field_name.resolve(palette),
                             )*
                         )?
                     }
@@ -260,7 +266,7 @@ macro_rules! get_theme_or_default {
             requested_theme.apply_optional(&theme_override);
         }
 
-        requested_theme.resolve(&theme.colors)
+        requested_theme.resolve(&*theme.palette)
     }};
 }
 
@@ -276,7 +282,16 @@ macro_rules! get_theme {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Preference<T> {
     Specific(T),
-    Reference(&'static str),
+    /// A named slot, resolved against the theme's [`Palette`]. Owned so a palette slot named at
+    /// runtime (a theme loaded from disk) is expressible, not just a `&'static str` literal.
+    Reference(Cow<'static, str>),
+}
+
+impl<T> Preference<T> {
+    /// A reference to a named palette slot.
+    pub fn reference(name: impl Into<Cow<'static, str>>) -> Self {
+        Self::Reference(name.into())
+    }
 }
 
 impl<T> From<T> for Preference<T> {
@@ -285,58 +300,71 @@ impl<T> From<T> for Preference<T> {
     }
 }
 
+/// Resolve one of the core [`ColorsSheet`] slot names, or `None` when the name is not a core
+/// slot (and so belongs to the palette's own extended namespace).
+fn core_slot(colors_sheet: &ColorsSheet, name: &str) -> Option<Color> {
+    Some(match name {
+        // Brand & Accent
+        "primary" => colors_sheet.primary,
+        "secondary" => colors_sheet.secondary,
+        "tertiary" => colors_sheet.tertiary,
+
+        // Status
+        "success" => colors_sheet.success,
+        "warning" => colors_sheet.warning,
+        "error" => colors_sheet.error,
+        "info" => colors_sheet.info,
+
+        // Surfaces
+        "background" => colors_sheet.background,
+        "surface_primary" => colors_sheet.surface_primary,
+        "surface_secondary" => colors_sheet.surface_secondary,
+        "surface_tertiary" => colors_sheet.surface_tertiary,
+        "surface_inverse" => colors_sheet.surface_inverse,
+        "surface_inverse_secondary" => colors_sheet.surface_inverse_secondary,
+        "surface_inverse_tertiary" => colors_sheet.surface_inverse_tertiary,
+
+        // Borders
+        "border" => colors_sheet.border,
+        "border_focus" => colors_sheet.border_focus,
+        "border_disabled" => colors_sheet.border_disabled,
+
+        // Text
+        "text_primary" => colors_sheet.text_primary,
+        "text_secondary" => colors_sheet.text_secondary,
+        "text_placeholder" => colors_sheet.text_placeholder,
+        "text_inverse" => colors_sheet.text_inverse,
+        "text_highlight" => colors_sheet.text_highlight,
+
+        // States
+        "focus" => colors_sheet.focus,
+        "active" => colors_sheet.active,
+        "disabled" => colors_sheet.disabled,
+
+        // Utility
+        "overlay" => colors_sheet.overlay,
+        "shadow" => colors_sheet.shadow,
+
+        _ => return None,
+    })
+}
+
 pub trait ResolvablePreference<T: Clone> {
-    fn resolve(&self, colors_sheet: &ColorsSheet) -> T;
+    fn resolve(&self, palette: &dyn Palette) -> T;
 }
 
 impl ResolvablePreference<Color> for Preference<Color> {
-    fn resolve(&self, colors_sheet: &ColorsSheet) -> Color {
+    /// Core slots win over the palette's extended namespace, so an app palette can never break a
+    /// built-in component by shadowing a slot it depends on. An unresolvable name falls back to
+    /// `primary`.
+    fn resolve(&self, palette: &dyn Palette) -> Color {
         match self {
-            Self::Reference(reference) => match *reference {
-                // Brand & Accent
-                "primary" => colors_sheet.primary,
-                "secondary" => colors_sheet.secondary,
-                "tertiary" => colors_sheet.tertiary,
-
-                // Status
-                "success" => colors_sheet.success,
-                "warning" => colors_sheet.warning,
-                "error" => colors_sheet.error,
-                "info" => colors_sheet.info,
-
-                // Surfaces
-                "background" => colors_sheet.background,
-                "surface_primary" => colors_sheet.surface_primary,
-                "surface_secondary" => colors_sheet.surface_secondary,
-                "surface_tertiary" => colors_sheet.surface_tertiary,
-                "surface_inverse" => colors_sheet.surface_inverse,
-                "surface_inverse_secondary" => colors_sheet.surface_inverse_secondary,
-                "surface_inverse_tertiary" => colors_sheet.surface_inverse_tertiary,
-
-                // Borders
-                "border" => colors_sheet.border,
-                "border_focus" => colors_sheet.border_focus,
-                "border_disabled" => colors_sheet.border_disabled,
-
-                // Text
-                "text_primary" => colors_sheet.text_primary,
-                "text_secondary" => colors_sheet.text_secondary,
-                "text_placeholder" => colors_sheet.text_placeholder,
-                "text_inverse" => colors_sheet.text_inverse,
-                "text_highlight" => colors_sheet.text_highlight,
-
-                // States
-                "focus" => colors_sheet.focus,
-                "active" => colors_sheet.active,
-                "disabled" => colors_sheet.disabled,
-
-                // Utility
-                "overlay" => colors_sheet.overlay,
-                "shadow" => colors_sheet.shadow,
-
-                // Fallback
-                _ => colors_sheet.primary,
-            },
+            Self::Reference(reference) => {
+                let colors_sheet = palette.sheet();
+                core_slot(colors_sheet, reference)
+                    .or_else(|| palette.color(reference))
+                    .unwrap_or(colors_sheet.primary)
+            }
 
             Self::Specific(value) => *value,
         }
@@ -344,7 +372,7 @@ impl ResolvablePreference<Color> for Preference<Color> {
 }
 
 impl ResolvablePreference<Size> for Preference<Size> {
-    fn resolve(&self, _colors_sheet: &ColorsSheet) -> Size {
+    fn resolve(&self, _palette: &dyn Palette) -> Size {
         match self {
             Self::Reference(_) => {
                 panic!("Only Colors support references.")
@@ -355,7 +383,7 @@ impl ResolvablePreference<Size> for Preference<Size> {
 }
 
 impl ResolvablePreference<Gaps> for Preference<Gaps> {
-    fn resolve(&self, _colors_sheet: &ColorsSheet) -> Gaps {
+    fn resolve(&self, _palette: &dyn Palette) -> Gaps {
         match self {
             Self::Reference(_) => {
                 panic!("Only Colors support references.")
@@ -366,7 +394,7 @@ impl ResolvablePreference<Gaps> for Preference<Gaps> {
 }
 
 impl ResolvablePreference<CornerRadius> for Preference<CornerRadius> {
-    fn resolve(&self, _colors_sheet: &ColorsSheet) -> CornerRadius {
+    fn resolve(&self, _palette: &dyn Palette) -> CornerRadius {
         match self {
             Self::Reference(_) => {
                 panic!("Only Colors support references.")
@@ -377,7 +405,7 @@ impl ResolvablePreference<CornerRadius> for Preference<CornerRadius> {
 }
 
 impl ResolvablePreference<f32> for Preference<f32> {
-    fn resolve(&self, _colors_sheet: &ColorsSheet) -> f32 {
+    fn resolve(&self, _palette: &dyn Palette) -> f32 {
         match self {
             Self::Reference(_) => {
                 panic!("Only Colors support references.")
@@ -388,7 +416,7 @@ impl ResolvablePreference<f32> for Preference<f32> {
 }
 
 impl ResolvablePreference<Duration> for Preference<Duration> {
-    fn resolve(&self, _colors_sheet: &ColorsSheet) -> Duration {
+    fn resolve(&self, _palette: &dyn Palette) -> Duration {
         match self {
             Self::Reference(_) => {
                 panic!("Only Colors support references.")
@@ -399,7 +427,7 @@ impl ResolvablePreference<Duration> for Preference<Duration> {
 }
 
 impl ResolvablePreference<String> for Preference<String> {
-    fn resolve(&self, _colors_sheet: &ColorsSheet) -> String {
+    fn resolve(&self, _palette: &dyn Palette) -> String {
         match self {
             Self::Reference(_) => {
                 panic!("Only Colors support references.")
@@ -410,7 +438,7 @@ impl ResolvablePreference<String> for Preference<String> {
 }
 
 impl ResolvablePreference<i32> for Preference<i32> {
-    fn resolve(&self, _colors_sheet: &ColorsSheet) -> i32 {
+    fn resolve(&self, _palette: &dyn Palette) -> i32 {
         match self {
             Self::Reference(_) => {
                 panic!("Only Colors support references.")

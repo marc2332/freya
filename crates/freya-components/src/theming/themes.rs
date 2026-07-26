@@ -199,61 +199,61 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "button",
         ButtonColorsThemePreference {
-            background: Preference::Reference("surface_tertiary"),
-            hover_background: Preference::Reference("surface_secondary"),
-            disabled_background: Preference::Reference("surface_tertiary"),
-            border_fill: Preference::Reference("border"),
-            hover_border_fill: Preference::Reference("border"),
-            focus_border_fill: Preference::Reference("border_focus"),
-            disabled_border_fill: Preference::Reference("border_disabled"),
-            color: Preference::Reference("text_primary"),
-            hover_color: Preference::Reference("text_primary"),
-            disabled_color: Preference::Reference("disabled"),
+            background: Preference::reference("surface_tertiary"),
+            hover_background: Preference::reference("surface_secondary"),
+            disabled_background: Preference::reference("surface_tertiary"),
+            border_fill: Preference::reference("border"),
+            hover_border_fill: Preference::reference("border"),
+            focus_border_fill: Preference::reference("border_focus"),
+            disabled_border_fill: Preference::reference("border_disabled"),
+            color: Preference::reference("text_primary"),
+            hover_color: Preference::reference("text_primary"),
+            disabled_color: Preference::reference("disabled"),
         },
     );
     theme.set(
         "filled_button",
         ButtonColorsThemePreference {
-            background: Preference::Reference("primary"),
-            hover_background: Preference::Reference("tertiary"),
-            disabled_background: Preference::Reference("disabled"),
+            background: Preference::reference("primary"),
+            hover_background: Preference::reference("tertiary"),
+            disabled_background: Preference::reference("disabled"),
             border_fill: Preference::Specific(Color::TRANSPARENT),
             hover_border_fill: Preference::Specific(Color::TRANSPARENT),
-            focus_border_fill: Preference::Reference("secondary"),
+            focus_border_fill: Preference::reference("secondary"),
             disabled_border_fill: Preference::Specific(Color::TRANSPARENT),
-            color: Preference::Reference("text_inverse"),
-            hover_color: Preference::Reference("text_inverse"),
-            disabled_color: Preference::Reference("text_inverse"),
+            color: Preference::reference("text_inverse"),
+            hover_color: Preference::reference("text_inverse"),
+            disabled_color: Preference::reference("text_inverse"),
         },
     );
     theme.set(
         "outline_button",
         ButtonColorsThemePreference {
-            background: Preference::Reference("surface_tertiary"),
-            hover_background: Preference::Reference("surface_secondary"),
-            disabled_background: Preference::Reference("surface_tertiary"),
-            border_fill: Preference::Reference("border"),
-            hover_border_fill: Preference::Reference("border"),
-            focus_border_fill: Preference::Reference("secondary"),
-            disabled_border_fill: Preference::Reference("border_disabled"),
-            color: Preference::Reference("primary"),
-            hover_color: Preference::Reference("primary"),
-            disabled_color: Preference::Reference("disabled"),
+            background: Preference::reference("surface_tertiary"),
+            hover_background: Preference::reference("surface_secondary"),
+            disabled_background: Preference::reference("surface_tertiary"),
+            border_fill: Preference::reference("border"),
+            hover_border_fill: Preference::reference("border"),
+            focus_border_fill: Preference::reference("secondary"),
+            disabled_border_fill: Preference::reference("border_disabled"),
+            color: Preference::reference("primary"),
+            hover_color: Preference::reference("primary"),
+            disabled_color: Preference::reference("disabled"),
         },
     );
     theme.set(
         "flat_button",
         ButtonColorsThemePreference {
             background: Preference::Specific(Color::TRANSPARENT),
-            hover_background: Preference::Reference("surface_tertiary"),
+            hover_background: Preference::reference("surface_tertiary"),
             disabled_background: Preference::Specific(Color::TRANSPARENT),
             border_fill: Preference::Specific(Color::TRANSPARENT),
             hover_border_fill: Preference::Specific(Color::TRANSPARENT),
-            focus_border_fill: Preference::Reference("border"),
+            focus_border_fill: Preference::reference("border"),
             disabled_border_fill: Preference::Specific(Color::TRANSPARENT),
-            color: Preference::Reference("text_primary"),
-            hover_color: Preference::Reference("text_primary"),
-            disabled_color: Preference::Reference("disabled"),
+            color: Preference::reference("text_primary"),
+            hover_color: Preference::reference("text_primary"),
+            disabled_color: Preference::reference("disabled"),
         },
     );
     theme.set(
@@ -273,39 +273,39 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "filled_card",
         CardColorsThemePreference {
-            background: Preference::Reference("primary"),
-            hover_background: Preference::Reference("tertiary"),
+            background: Preference::reference("primary"),
+            hover_background: Preference::reference("tertiary"),
             border_fill: Preference::Specific(Color::TRANSPARENT),
-            color: Preference::Reference("text_inverse"),
-            shadow: Preference::Reference("shadow"),
+            color: Preference::reference("text_inverse"),
+            shadow: Preference::reference("shadow"),
         },
     );
     theme.set(
         "outline_card",
         CardColorsThemePreference {
-            background: Preference::Reference("surface_tertiary"),
-            hover_background: Preference::Reference("surface_secondary"),
-            border_fill: Preference::Reference("border"),
-            color: Preference::Reference("text_primary"),
-            shadow: Preference::Reference("shadow"),
+            background: Preference::reference("surface_tertiary"),
+            hover_background: Preference::reference("surface_secondary"),
+            border_fill: Preference::reference("border"),
+            color: Preference::reference("text_primary"),
+            shadow: Preference::reference("shadow"),
         },
     );
     theme.set(
         "accordion",
         AccordionThemePreference {
-            color: Preference::Reference("text_primary"),
-            background: Preference::Reference("surface_tertiary"),
-            border_fill: Preference::Reference("border"),
+            color: Preference::reference("text_primary"),
+            background: Preference::reference("surface_tertiary"),
+            border_fill: Preference::reference("border"),
         },
     );
     theme.set(
         "switch",
         SwitchColorsThemePreference {
-            background: Preference::Reference("surface_secondary"),
-            thumb_background: Preference::Reference("surface_inverse"),
-            toggled_background: Preference::Reference("secondary"),
-            toggled_thumb_background: Preference::Reference("primary"),
-            focus_border_fill: Preference::Reference("border_focus"),
+            background: Preference::reference("surface_secondary"),
+            thumb_background: Preference::reference("surface_inverse"),
+            toggled_background: Preference::reference("secondary"),
+            toggled_thumb_background: Preference::reference("primary"),
+            focus_border_fill: Preference::reference("border_focus"),
         },
     );
     theme.set(
@@ -339,30 +339,30 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "scrollbar",
         ScrollBarThemePreference {
-            background: Preference::Reference("surface_primary"),
-            thumb_background: Preference::Reference("surface_inverse"),
-            hover_thumb_background: Preference::Reference("surface_inverse_secondary"),
-            active_thumb_background: Preference::Reference("surface_inverse_tertiary"),
+            background: Preference::reference("surface_primary"),
+            thumb_background: Preference::reference("surface_inverse"),
+            hover_thumb_background: Preference::reference("surface_inverse_secondary"),
+            active_thumb_background: Preference::reference("surface_inverse_tertiary"),
             size: Preference::Specific(15.),
         },
     );
     theme.set(
         "progressbar",
         ProgressBarThemePreference {
-            color: Preference::Reference("text_inverse"),
-            background: Preference::Reference("surface_primary"),
-            progress_background: Preference::Reference("primary"),
+            color: Preference::reference("text_inverse"),
+            background: Preference::reference("surface_primary"),
+            progress_background: Preference::reference("primary"),
             height: Preference::Specific(20.),
         },
     );
     theme.set(
         "sidebar_item",
         SideBarItemThemePreference {
-            color: Preference::Reference("text_primary"),
-            background: Preference::Reference("surface_tertiary"),
-            active_background: Preference::Reference("surface_secondary"),
-            hover_background: Preference::Reference("surface_secondary"),
-            focus_border_fill: Preference::Reference("border_focus"),
+            color: Preference::reference("text_primary"),
+            background: Preference::reference("surface_tertiary"),
+            active_background: Preference::reference("surface_secondary"),
+            hover_background: Preference::reference("surface_secondary"),
+            focus_border_fill: Preference::reference("border_focus"),
             corner_radius: Preference::Specific(CornerRadius::new_all(12.)),
             margin: Preference::Specific(Gaps::new_all(0.)),
             padding: Preference::Specific(Gaps::new(8., 12., 8., 12.)),
@@ -372,15 +372,15 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "link",
         LinkThemePreference {
-            color: Preference::Reference("text_highlight"),
+            color: Preference::reference("text_highlight"),
         },
     );
     theme.set(
         "tooltip",
         TooltipThemePreference {
-            background: Preference::Reference("surface_tertiary"),
-            color: Preference::Reference("text_primary"),
-            border_fill: Preference::Reference("surface_primary"),
+            background: Preference::reference("surface_tertiary"),
+            color: Preference::reference("text_primary"),
+            border_fill: Preference::reference("surface_primary"),
             // Empty family inherits the ambient font.
             font_family: Preference::Specific(String::new()),
             font_size: Preference::Specific(14.),
@@ -390,7 +390,7 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "circular_loader",
         CircularLoaderThemePreference {
-            primary_color: Preference::Reference("surface_primary"),
+            primary_color: Preference::reference("surface_primary"),
         },
     );
     theme.set(
@@ -417,61 +417,61 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "input",
         InputColorsThemePreference {
-            background: Preference::Reference("surface_tertiary"),
-            focus_background: Preference::Reference("background"),
-            color: Preference::Reference("text_primary"),
-            placeholder_color: Preference::Reference("text_secondary"),
-            border_fill: Preference::Reference("border"),
-            focus_border_fill: Preference::Reference("border_focus"),
+            background: Preference::reference("surface_tertiary"),
+            focus_background: Preference::reference("background"),
+            color: Preference::reference("text_primary"),
+            placeholder_color: Preference::reference("text_secondary"),
+            border_fill: Preference::reference("border"),
+            focus_border_fill: Preference::reference("border_focus"),
         },
     );
     theme.set(
         "filled_input",
         InputColorsThemePreference {
-            background: Preference::Reference("primary"),
-            focus_background: Preference::Reference("tertiary"),
-            color: Preference::Reference("text_inverse"),
-            placeholder_color: Preference::Reference("text_inverse"),
+            background: Preference::reference("primary"),
+            focus_background: Preference::reference("tertiary"),
+            color: Preference::reference("text_inverse"),
+            placeholder_color: Preference::reference("text_inverse"),
             border_fill: Preference::Specific(Color::TRANSPARENT),
-            focus_border_fill: Preference::Reference("secondary"),
+            focus_border_fill: Preference::reference("secondary"),
         },
     );
     theme.set(
         "flat_input",
         InputColorsThemePreference {
             background: Preference::Specific(Color::TRANSPARENT),
-            focus_background: Preference::Reference("surface_tertiary"),
-            color: Preference::Reference("text_primary"),
-            placeholder_color: Preference::Reference("text_secondary"),
+            focus_background: Preference::reference("surface_tertiary"),
+            color: Preference::reference("text_primary"),
+            placeholder_color: Preference::reference("text_secondary"),
             border_fill: Preference::Specific(Color::TRANSPARENT),
-            focus_border_fill: Preference::Reference("border"),
+            focus_border_fill: Preference::reference("border"),
         },
     );
     theme.set(
         "radio",
         RadioItemThemePreference {
-            unselected_fill: Preference::Reference("surface_inverse_tertiary"),
-            selected_fill: Preference::Reference("primary"),
-            border_fill: Preference::Reference("surface_primary"),
+            unselected_fill: Preference::reference("surface_inverse_tertiary"),
+            selected_fill: Preference::reference("primary"),
+            border_fill: Preference::reference("surface_primary"),
         },
     );
     theme.set(
         "checkbox",
         CheckboxThemePreference {
             unselected_fill: Preference::Specific(Color::TRANSPARENT),
-            unselected_border_fill: Preference::Reference("surface_inverse_tertiary"),
-            selected_fill: Preference::Reference("primary"),
-            selected_border_fill: Preference::Reference("primary"),
-            selected_icon_fill: Preference::Reference("secondary"),
-            hover_border_fill: Preference::Reference("surface_inverse"),
-            focus_border_fill: Preference::Reference("surface_primary"),
+            unselected_border_fill: Preference::reference("surface_inverse_tertiary"),
+            selected_fill: Preference::reference("primary"),
+            selected_border_fill: Preference::reference("primary"),
+            selected_icon_fill: Preference::reference("secondary"),
+            hover_border_fill: Preference::reference("surface_inverse"),
+            focus_border_fill: Preference::reference("surface_primary"),
         },
     );
     theme.set(
         "resizable_handle",
         ResizableHandleThemePreference {
-            background: Preference::Reference("surface_secondary"),
-            hover_background: Preference::Reference("surface_primary"),
+            background: Preference::reference("surface_secondary"),
+            hover_background: Preference::reference("surface_primary"),
             corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
         },
     );
@@ -479,8 +479,8 @@ fn register_base_component_themes(theme: &mut Theme) {
         "floating_tab",
         FloatingTabThemePreference {
             background: Preference::Specific(Color::TRANSPARENT),
-            hover_background: Preference::Reference("surface_secondary"),
-            color: Preference::Reference("text_primary"),
+            hover_background: Preference::reference("surface_secondary"),
+            color: Preference::reference("text_primary"),
             padding: Preference::Specific(Gaps::new(6., 12., 6., 12.)),
             width: Preference::Specific(Size::Inner),
             height: Preference::Specific(Size::Inner),
@@ -490,18 +490,18 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "slider",
         SliderThemePreference {
-            background: Preference::Reference("surface_primary"),
-            thumb_background: Preference::Reference("secondary"),
-            thumb_inner_background: Preference::Reference("primary"),
-            border_fill: Preference::Reference("surface_primary"),
+            background: Preference::reference("surface_primary"),
+            thumb_background: Preference::reference("secondary"),
+            thumb_inner_background: Preference::reference("primary"),
+            border_fill: Preference::reference("surface_primary"),
         },
     );
     theme.set(
         "color_picker",
         ColorPickerThemePreference {
-            background: Preference::Reference("surface_tertiary"),
-            border_fill: Preference::Reference("border"),
-            color: Preference::Reference("text_primary"),
+            background: Preference::reference("surface_tertiary"),
+            border_fill: Preference::reference("border"),
+            color: Preference::reference("text_primary"),
         },
     );
     theme.set(
@@ -510,20 +510,20 @@ fn register_base_component_themes(theme: &mut Theme) {
             width: Preference::Specific(Size::Inner),
             margin: Preference::Specific(Gaps::new_all(0.)),
             list_margin: Preference::Specific(4.),
-            select_background: Preference::Reference("background"),
-            background_button: Preference::Reference("surface_tertiary"),
-            hover_background: Preference::Reference("surface_secondary"),
-            color: Preference::Reference("text_primary"),
-            border_fill: Preference::Reference("border"),
-            focus_border_fill: Preference::Reference("border_focus"),
-            arrow_fill: Preference::Reference("text_primary"),
+            select_background: Preference::reference("background"),
+            background_button: Preference::reference("surface_tertiary"),
+            hover_background: Preference::reference("surface_secondary"),
+            color: Preference::reference("text_primary"),
+            border_fill: Preference::reference("border"),
+            focus_border_fill: Preference::reference("border_focus"),
+            arrow_fill: Preference::reference("text_primary"),
         },
     );
     theme.set(
         "popup",
         PopupThemePreference {
-            background: Preference::Reference("background"),
-            color: Preference::Reference("text_primary"),
+            background: Preference::reference("background"),
+            color: Preference::reference("text_primary"),
             width: Preference::Specific(Size::px(500.)),
             height: Preference::Specific(Size::auto()),
             padding: Preference::Specific(Gaps::new_all(8.)),
@@ -533,80 +533,80 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "table",
         TableThemePreference {
-            background: Preference::Reference("background"),
-            arrow_fill: Preference::Reference("text_primary"),
+            background: Preference::reference("background"),
+            arrow_fill: Preference::reference("text_primary"),
             row_background: Preference::Specific(Color::TRANSPARENT),
-            hover_row_background: Preference::Reference("surface_secondary"),
-            divider_fill: Preference::Reference("surface_primary"),
+            hover_row_background: Preference::reference("surface_secondary"),
+            divider_fill: Preference::reference("surface_primary"),
             corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
-            color: Preference::Reference("text_primary"),
+            color: Preference::reference("text_primary"),
         },
     );
     theme.set(
         "chip",
         ChipThemePreference {
-            background: Preference::Reference("background"),
-            hover_background: Preference::Reference("tertiary"),
-            selected_background: Preference::Reference("primary"),
-            border_fill: Preference::Reference("border"),
-            hover_border_fill: Preference::Reference("tertiary"),
-            selected_border_fill: Preference::Reference("primary"),
-            focus_border_fill: Preference::Reference("secondary"),
+            background: Preference::reference("background"),
+            hover_background: Preference::reference("tertiary"),
+            selected_background: Preference::reference("primary"),
+            border_fill: Preference::reference("border"),
+            hover_border_fill: Preference::reference("tertiary"),
+            selected_border_fill: Preference::reference("primary"),
+            focus_border_fill: Preference::reference("secondary"),
             padding: Preference::Specific(Gaps::new(8., 14., 8., 14.)),
             margin: Preference::Specific(0.),
             corner_radius: Preference::Specific(CornerRadius::new_all(99.)),
             width: Preference::Specific(Size::Inner),
             height: Preference::Specific(Size::Inner),
-            color: Preference::Reference("text_primary"),
-            hover_color: Preference::Reference("text_inverse"),
-            selected_color: Preference::Reference("text_inverse"),
-            selected_icon_fill: Preference::Reference("secondary"),
-            hover_icon_fill: Preference::Reference("secondary"),
+            color: Preference::reference("text_primary"),
+            hover_color: Preference::reference("text_inverse"),
+            selected_color: Preference::reference("text_inverse"),
+            selected_icon_fill: Preference::reference("secondary"),
+            hover_icon_fill: Preference::reference("secondary"),
         },
     );
     theme.set(
         "menu_item",
         MenuItemThemePreference {
             background: Preference::Specific(Color::TRANSPARENT),
-            hover_background: Preference::Reference("surface_secondary"),
-            select_background: Preference::Reference("surface_secondary"),
+            hover_background: Preference::reference("surface_secondary"),
+            select_background: Preference::reference("surface_secondary"),
             border_fill: Preference::Specific(Color::TRANSPARENT),
-            select_border_fill: Preference::Reference("border_focus"),
+            select_border_fill: Preference::reference("border_focus"),
             corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
-            color: Preference::Reference("text_primary"),
+            color: Preference::reference("text_primary"),
         },
     );
     theme.set(
         "menu_container",
         MenuContainerThemePreference {
-            background: Preference::Reference("background"),
+            background: Preference::reference("background"),
             padding: Preference::Specific(Gaps::new_all(4.)),
-            shadow: Preference::Reference("shadow"),
-            border_fill: Preference::Reference("surface_primary"),
+            shadow: Preference::reference("shadow"),
+            border_fill: Preference::reference("surface_primary"),
             corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
         },
     );
     theme.set(
         "button_segment",
         ButtonSegmentThemePreference {
-            background: Preference::Reference("surface_tertiary"),
-            hover_background: Preference::Reference("surface_secondary"),
-            disabled_background: Preference::Reference("disabled"),
-            selected_background: Preference::Reference("surface_secondary"),
-            focus_background: Preference::Reference("surface_secondary"),
+            background: Preference::reference("surface_tertiary"),
+            hover_background: Preference::reference("surface_secondary"),
+            disabled_background: Preference::reference("disabled"),
+            selected_background: Preference::reference("surface_secondary"),
+            focus_background: Preference::reference("surface_secondary"),
             padding: Preference::Specific(Gaps::new(8., 16., 8., 16.)),
             selected_padding: Preference::Specific(Gaps::new(8., 12., 8., 12.)),
             width: Preference::Specific(Size::Inner),
             height: Preference::Specific(Size::Inner),
-            color: Preference::Reference("text_primary"),
-            selected_icon_fill: Preference::Reference("primary"),
+            color: Preference::reference("text_primary"),
+            selected_icon_fill: Preference::reference("primary"),
         },
     );
     theme.set(
         "segmented_button",
         SegmentedButtonThemePreference {
-            background: Preference::Reference("surface_tertiary"),
-            border_fill: Preference::Reference("border"),
+            background: Preference::reference("surface_tertiary"),
+            border_fill: Preference::reference("border"),
             corner_radius: Preference::Specific(CornerRadius::new_all(99.)),
         },
     );
@@ -614,17 +614,17 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "calendar",
         CalendarThemePreference {
-            background: Preference::Reference("surface_tertiary"),
+            background: Preference::reference("surface_tertiary"),
             day_background: Preference::Specific(Color::TRANSPARENT),
-            day_hover_background: Preference::Reference("surface_secondary"),
-            day_selected_background: Preference::Reference("surface_primary"),
-            color: Preference::Reference("text_primary"),
-            day_other_month_color: Preference::Reference("text_placeholder"),
-            header_color: Preference::Reference("text_primary"),
+            day_hover_background: Preference::reference("surface_secondary"),
+            day_selected_background: Preference::reference("surface_primary"),
+            color: Preference::reference("text_primary"),
+            day_other_month_color: Preference::reference("text_placeholder"),
+            header_color: Preference::reference("text_primary"),
             corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
             padding: Preference::Specific(Gaps::new_all(12.)),
             day_corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
-            nav_button_hover_background: Preference::Reference("surface_secondary"),
+            nav_button_hover_background: Preference::reference("surface_secondary"),
         },
     );
     #[cfg(feature = "titlebar")]
@@ -632,7 +632,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "titlebar_button",
         TitlebarButtonThemePreference {
             background: Preference::Specific(Color::TRANSPARENT),
-            hover_background: Preference::Reference("surface_secondary"),
+            hover_background: Preference::reference("surface_secondary"),
             corner_radius: Preference::Specific(CornerRadius::new_all(0.0)),
             width: Preference::Specific(Size::Pixels(Length::new(46.0))),
             height: Preference::Specific(Size::Fill),
@@ -641,7 +641,7 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "skeleton",
         SkeletonThemePreference {
-            background: Preference::Reference("surface_primary"),
+            background: Preference::reference("surface_primary"),
             shimmer_color: Preference::Specific(Color::WHITE.with_a(160)),
             duration: Preference::Specific(Duration::from_millis(1000)),
             animation: Preference::Specific(SkeletonAnimation::Pulse),

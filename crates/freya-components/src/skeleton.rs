@@ -11,7 +11,7 @@ use crate::{
     define_theme,
     get_theme,
     theming::{
-        component_themes::ColorsSheet,
+        component_themes::Palette,
         macros::{
             Preference,
             ResolvablePreference,
@@ -28,7 +28,7 @@ pub enum SkeletonAnimation {
 }
 
 impl ResolvablePreference<SkeletonAnimation> for Preference<SkeletonAnimation> {
-    fn resolve(&self, _: &ColorsSheet) -> SkeletonAnimation {
+    fn resolve(&self, _: &dyn Palette) -> SkeletonAnimation {
         match self {
             Self::Reference(_) => panic!("Only Colors support references."),
             Self::Specific(v) => *v,

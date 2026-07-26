@@ -46,17 +46,17 @@ impl Component for StatusBadge {
 fn custom_theme() -> Theme {
     let mut theme = dark_theme();
     theme.name = "custom";
-    theme.colors = ColorsSheet {
+    theme.palette = Box::new(ColorsSheet {
         primary: Color::from_rgb(37, 52, 63),
         secondary: Color::from_rgb(255, 155, 81),
         tertiary: Color::from_rgb(81, 155, 255),
         ..DARK_COLORS
-    };
+    });
     theme.set(
         "status_badge",
         StatusBadgeThemePreference {
-            background: Preference::Reference("secondary"),
-            color: Preference::Reference("text_inverse"),
+            background: Preference::reference("secondary"),
+            color: Preference::reference("text_inverse"),
             corner_radius: CornerRadius::new_all(99.).into(),
             padding: Gaps::new(4., 10., 4., 10.).into(),
         },

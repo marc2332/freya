@@ -25,12 +25,12 @@ fn accent_theme(accent: Color) -> Theme {
 
     let mut theme = light_theme();
     theme.name = "accent";
-    theme.colors = ColorsSheet {
+    theme.palette = Box::new(ColorsSheet {
         primary: accent,
         secondary,
         tertiary,
         ..LIGHT_COLORS
-    };
+    });
     theme
 }
 

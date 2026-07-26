@@ -229,11 +229,15 @@ pub mod components {
         theming::{
             component_themes::{
                 ColorsSheet,
+                Palette,
                 Theme,
             },
             extensions::*,
             hooks::*,
-            macros::Preference,
+            macros::{
+                Preference,
+                ResolvablePreference,
+            },
             themes::*,
         },
         tile::*,

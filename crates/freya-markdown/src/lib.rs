@@ -68,13 +68,13 @@ define_theme! {
 
 fn markdown_theme_preference() -> MarkdownViewerThemePreference {
     MarkdownViewerThemePreference {
-        color: Preference::Reference("text_primary"),
-        color_link: Preference::Reference("text_highlight"),
-        background_code: Preference::Reference("surface_tertiary"),
-        color_code: Preference::Reference("text_primary"),
-        background_blockquote: Preference::Reference("surface_tertiary"),
-        border_blockquote: Preference::Reference("surface_primary"),
-        background_divider: Preference::Reference("border"),
+        color: Preference::reference("text_primary"),
+        color_link: Preference::reference("text_highlight"),
+        background_code: Preference::reference("surface_tertiary"),
+        color_code: Preference::reference("text_primary"),
+        background_blockquote: Preference::reference("surface_tertiary"),
+        border_blockquote: Preference::reference("surface_primary"),
+        background_divider: Preference::reference("border"),
         heading_h1: Preference::Specific(32.0),
         heading_h2: Preference::Specific(28.0),
         heading_h3: Preference::Specific(24.0),

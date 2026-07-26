@@ -105,7 +105,7 @@ impl Component for Ripple {
 
         let color = self.color.unwrap_or_else(|| {
             let theme = get_theme_or_default();
-            theme.read().colors.primary
+            theme.read().colors().primary
         });
         let duration = self.duration;
 
