@@ -18,6 +18,7 @@ pub mod config;
 mod drivers;
 pub mod extensions;
 pub mod integration;
+mod parent_window;
 pub mod plugins;
 pub mod renderer;
 #[cfg(target_os = "macos")]

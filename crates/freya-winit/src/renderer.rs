@@ -143,6 +143,28 @@ impl RendererContext<'_> {
         window_id
     }
 
+    /// Make `child` a child window of `parent`, or detach it when `parent` is `None`.
+    ///
+    /// A child window is ordered above its parent and cannot be covered by it, travels with
+    /// it, and closes with it, while the parent stays fully interactive. Pointing an already
+    /// parented window at another one is a single call: it leaves the first parent first.
+    ///
+    /// Implemented on macOS (AppKit's `addChildWindow:ordered:`); a no-op elsewhere. Ids that
+    /// name no live window are ignored.
+    ///
+    /// See also
+    /// [`WinitPlatformExt::set_window_parent`](crate::extensions::WinitPlatformExt::set_window_parent),
+    /// which reaches this from a component.
+    pub fn set_window_parent(&mut self, child: WindowId, parent: Option<WindowId>) {
+        let Some(child) = self.windows.get(&child).map(AppWindow::window) else {
+            return;
+        };
+        match parent.and_then(|parent| self.windows.get(&parent)) {
+            Some(parent) => crate::parent_window::set_parent(child, parent.window()),
+            None => crate::parent_window::clear_parent(child),
+        }
+    }
+
     pub fn windows(&self) -> &FxHashMap<WindowId, AppWindow> {
         self.windows
     }

@@ -93,6 +93,32 @@ pub trait WinitPlatformExt {
     /// ```
     fn focus_window(&self, window_id: Option<WindowId>);
 
+    /// Make `child` a child window of `parent`, or detach it when `parent` is `None`.
+    ///
+    /// A child window is ordered above its parent and cannot be covered by it, travels with
+    /// it, and closes with it, while the parent stays fully interactive. That is the shape a
+    /// shared utility window wants (a settings or inspector panel opened from whichever
+    /// window asked for it): pointing it at another window is a single call, since the child
+    /// leaves its previous parent first.
+    ///
+    /// Implemented on macOS (AppKit's `addChildWindow:ordered:`); a no-op elsewhere, because
+    /// the equivalent owner-window relationships are set through a different handle and
+    /// Wayland has none.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use freya::{
+    ///     prelude::*,
+    ///     winit::window::WindowId,
+    /// };
+    ///
+    /// fn pin_above(panel: WindowId, owner: WindowId) {
+    ///     Platform::get().set_window_parent(panel, Some(owner));
+    /// }
+    /// ```
+    fn set_window_parent(&self, child: WindowId, parent: Option<WindowId>);
+
     /// Execute a callback with mutable access to a [`Window`].
     ///
     /// If `window_id` is `None`, the callback will be executed on the current window.
@@ -203,6 +229,15 @@ impl WinitPlatformExt for Platform {
 
     fn focus_window(&self, window_id: Option<WindowId>) {
         self.with_window(window_id, |w| w.focus_window());
+    }
+
+    fn set_window_parent(&self, child: WindowId, parent: Option<WindowId>) {
+        // Both windows have to be in hand at once, which only the renderer side can do.
+        self.send(UserEvent::Erased(SingleThreadErasedEvent(Box::new(
+            NativeWindowErasedEventAction::RendererCallback(Box::new(move |_, ctx| {
+                ctx.set_window_parent(child, parent);
+            })),
+        ))));
     }
 
     fn with_window(
