@@ -186,6 +186,7 @@ pub mod components {
         activable_context::*,
         attached::*,
         button::*,
+        cache::*,
         canvas::*,
         card::*,
         checkbox::*,
