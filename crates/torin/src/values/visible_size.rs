@@ -19,8 +19,8 @@ impl VisibleSize {
     }
 
     /// Use an [`InnerPercentage`](VisibleSize::InnerPercentage) visible size.
-    pub fn inner_percent(value: impl Into<f32>) -> VisibleSize {
-        VisibleSize::InnerPercentage(Length::new(value.into()))
+    pub fn inner_percent(value: f32) -> VisibleSize {
+        VisibleSize::InnerPercentage(Length::new(value))
     }
 
     pub fn pretty(&self) -> String {

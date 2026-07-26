@@ -6,7 +6,13 @@ const { frontmatter, headings } = Astro.props;
 const formattedDate = new Date(frontmatter.date).toLocaleString().split(",")[0];
 ---
 
-<Layout title={frontmatter.title}>
+<Layout
+    title={`${frontmatter.title} - Rust GUI library`}
+    description={frontmatter.description}
+    url={`/posts/${frontmatter.slug}`}
+    type="article"
+    image={frontmatter.image}
+>
     <div class="flex">
         <article class="sm:w-3/4 sm:px-8 px-2 w-full">
             <h1>{frontmatter.title}</h1>

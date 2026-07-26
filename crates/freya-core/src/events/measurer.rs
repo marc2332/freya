@@ -7,8 +7,6 @@ use crate::{
         platform::PlatformEvent,
     },
     node_id::NodeId,
-    prelude::Color,
-    style::fill::Fill,
     tree::Tree,
 };
 
@@ -101,7 +99,7 @@ impl ragnarok::EventsMeasurer for EventsMeasurerAdapter<'_> {
 
     fn is_node_transparent(&self, key: &Self::Key) -> bool {
         let element = self.tree.elements.get(key).unwrap();
-        element.style().background == Fill::Color(Color::TRANSPARENT)
+        element.is_transparent()
     }
 
     fn is_node_interactive(&self, key: &Self::Key) -> bool {

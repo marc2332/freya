@@ -21,11 +21,10 @@ use freya_core::{
     element::{
         Element,
         ElementExt,
-        EventHandlerType,
+        EventHandlers,
         LayoutContext,
         RenderContext,
     },
-    events::name::EventName,
     fifo_cache::FifoCache,
     prelude::*,
     tree::DiffModifies,
@@ -41,7 +40,6 @@ use freya_engine::prelude::{
     ParagraphStyle,
     TextStyle,
 };
-use rustc_hash::FxHashMap;
 use torin::prelude::Size2D;
 
 use crate::{
@@ -74,7 +72,7 @@ pub struct Terminal {
     background: Color,
     selection_color: Color,
     on_measured: Option<EventHandler<(f32, f32)>>,
-    event_handlers: FxHashMap<EventName, EventHandlerType>,
+    event_handlers: EventHandlers,
 }
 
 impl PartialEq for Terminal {
@@ -102,7 +100,7 @@ impl Terminal {
             background: (10, 10, 10).into(),
             selection_color: (60, 179, 214, 0.3).into(),
             on_measured: None,
-            event_handlers: FxHashMap::default(),
+            event_handlers: EventHandlers::default(),
         }
     }
 
@@ -138,7 +136,7 @@ impl Terminal {
 }
 
 impl EventHandlersExt for Terminal {
-    fn get_event_handlers(&mut self) -> &mut FxHashMap<EventName, EventHandlerType> {
+    fn get_event_handlers(&mut self) -> &mut EventHandlers {
         &mut self.event_handlers
     }
 }
@@ -194,7 +192,7 @@ impl ElementExt for Terminal {
         Cow::Borrowed(&self.accessibility)
     }
 
-    fn events_handlers(&'_ self) -> Option<Cow<'_, FxHashMap<EventName, EventHandlerType>>> {
+    fn events_handlers(&'_ self) -> Option<Cow<'_, EventHandlers>> {
         Some(Cow::Borrowed(&self.event_handlers))
     }
 

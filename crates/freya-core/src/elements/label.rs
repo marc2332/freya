@@ -15,7 +15,6 @@ use freya_engine::prelude::{
     SkRect,
     TextStyle,
 };
-use rustc_hash::FxHashMap;
 use torin::prelude::Size2D;
 
 use crate::{
@@ -31,12 +30,11 @@ use crate::{
         ClipContext,
         Element,
         ElementExt,
-        EventHandlerType,
+        EventHandlers,
         LayoutContext,
         RenderContext,
     },
     elements::paragraph::paint_paragraph_with_fill,
-    events::name::EventName,
     layers::Layer,
     prelude::{
         AccessibilityExt,
@@ -98,7 +96,7 @@ pub struct LabelElement {
     pub accessibility: AccessibilityData,
     pub text_style_data: TextStyleData,
     pub layout: LayoutData,
-    pub event_handlers: FxHashMap<EventName, EventHandlerType>,
+    pub event_handlers: EventHandlers,
     pub max_lines: Option<usize>,
     pub line_height: Option<f32>,
     pub relative_layer: Layer,
@@ -179,6 +177,10 @@ impl ElementExt for LabelElement {
         Cow::Owned(StyleState::default())
     }
 
+    fn is_transparent(&self) -> bool {
+        false
+    }
+
     fn text_style(&'_ self) -> Cow<'_, TextStyleData> {
         Cow::Borrowed(&self.text_style_data)
     }
@@ -191,7 +193,7 @@ impl ElementExt for LabelElement {
         self.relative_layer
     }
 
-    fn events_handlers(&'_ self) -> Option<Cow<'_, FxHashMap<EventName, EventHandlerType>>> {
+    fn events_handlers(&'_ self) -> Option<Cow<'_, EventHandlers>> {
         Some(Cow::Borrowed(&self.event_handlers))
     }
 
@@ -325,7 +327,7 @@ impl KeyExt for Label {
 }
 
 impl EventHandlersExt for Label {
-    fn get_event_handlers(&mut self) -> &mut FxHashMap<EventName, EventHandlerType> {
+    fn get_event_handlers(&mut self) -> &mut EventHandlers {
         &mut self.element.event_handlers
     }
 }
