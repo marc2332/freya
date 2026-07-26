@@ -150,10 +150,6 @@ bytes = "1.10.1"
 rfd = { version = "0.17", default-features = false, features = [
   "gtk3",
   "wayland",
-  "wayland-backend",
-  "wayland-client",
-  "wayland-protocols",
-  "pollster",
 ] }
 
 # Desktop renderer
