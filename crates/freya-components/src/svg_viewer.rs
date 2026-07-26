@@ -7,9 +7,8 @@ use anyhow::Context;
 use async_lock::Semaphore;
 use bytes::Bytes;
 use freya_core::{
-    element::EventHandlerType,
+    element::EventHandlers,
     elements::image::*,
-    events::name::EventName,
     prelude::*,
 };
 use freya_engine::prelude::{
@@ -18,7 +17,6 @@ use freya_engine::prelude::{
     raster_n32_premul,
     svg,
 };
-use rustc_hash::FxHashMap;
 use torin::prelude::{
     Size,
     Size2D,
@@ -132,7 +130,7 @@ pub struct SvgViewer {
     image_data: ImageData,
     accessibility: AccessibilityData,
     effect: EffectData,
-    event_handlers: FxHashMap<EventName, EventHandlerType>,
+    event_handlers: EventHandlers,
     style: SvgStyle,
     show_loader: bool,
     parallel: bool,
@@ -155,7 +153,7 @@ impl SvgViewer {
             image_data: ImageData::default(),
             accessibility,
             effect: EffectData::default(),
-            event_handlers: FxHashMap::default(),
+            event_handlers: EventHandlers::default(),
             style: SvgStyle::default(),
             show_loader: true,
             parallel: false,
@@ -256,7 +254,7 @@ impl EffectExt for SvgViewer {
 }
 
 impl EventHandlersExt for SvgViewer {
-    fn get_event_handlers(&mut self) -> &mut FxHashMap<EventName, EventHandlerType> {
+    fn get_event_handlers(&mut self) -> &mut EventHandlers {
         &mut self.event_handlers
     }
 }

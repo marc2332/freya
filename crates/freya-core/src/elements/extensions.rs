@@ -8,10 +8,7 @@ use std::{
 
 use paste::paste;
 use ragnarok::CursorPoint;
-use rustc_hash::{
-    FxHashMap,
-    FxHasher,
-};
+use rustc_hash::FxHasher;
 use torin::{
     content::Content,
     gaps::Gaps,
@@ -37,6 +34,7 @@ use crate::{
     element::{
         Element,
         EventHandlerType,
+        EventHandlers,
     },
     elements::image::{
         AspectRatio,
@@ -178,10 +176,10 @@ macro_rules! event_handlers {
 /// For high-level press handling, prefer [`on_press`](EventHandlersExt::on_press) over the raw mouse/pointer events.
 pub trait EventHandlersExt: Sized {
     /// Returns a mutable reference to the element's event handler map.
-    fn get_event_handlers(&mut self) -> &mut FxHashMap<EventName, EventHandlerType>;
+    fn get_event_handlers(&mut self) -> &mut EventHandlers;
 
     /// Replace all of this element's event handlers with the given map.
-    fn event_handlers(mut self, event_handlers: FxHashMap<EventName, EventHandlerType>) -> Self {
+    fn event_handlers(mut self, event_handlers: EventHandlers) -> Self {
         *self.get_event_handlers() = event_handlers;
         self
     }
