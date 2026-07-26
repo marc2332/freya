@@ -517,7 +517,7 @@ impl KeyExt for Gif {
 }
 
 impl EventHandlersExt for Gif {
-    fn get_event_handlers(&mut self) -> &mut FxHashMap<EventName, EventHandlerType> {
+    fn get_event_handlers(&mut self) -> &mut EventHandlers {
         &mut self.element.event_handlers
     }
 }
@@ -533,7 +533,7 @@ impl MaybeExt for Gif {}
 pub struct GifElement {
     accessibility: AccessibilityData,
     layout: LayoutData,
-    event_handlers: FxHashMap<EventName, EventHandlerType>,
+    event_handlers: EventHandlers,
     frames: Rc<CachedGifFrames>,
     frame_idx: usize,
     image_data: ImageData,
@@ -604,7 +604,7 @@ impl ElementExt for GifElement {
         Cow::Borrowed(&self.accessibility)
     }
 
-    fn events_handlers(&'_ self) -> Option<Cow<'_, FxHashMap<EventName, EventHandlerType>>> {
+    fn events_handlers(&'_ self) -> Option<Cow<'_, EventHandlers>> {
         Some(Cow::Borrowed(&self.event_handlers))
     }
 

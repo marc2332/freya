@@ -110,7 +110,7 @@ pub trait ElementExt: Any {
         Layer::default()
     }
 
-    fn events_handlers(&'_ self) -> Option<Cow<'_, FxHashMap<EventName, EventHandlerType>>> {
+    fn events_handlers(&'_ self) -> Option<Cow<'_, EventHandlers>> {
         None
     }
 
@@ -433,6 +433,8 @@ impl PartialEq for Element {
         }
     }
 }
+
+pub type EventHandlers = FxHashMap<EventName, EventHandlerType>;
 
 #[derive(Clone, PartialEq)]
 pub enum EventHandlerType {

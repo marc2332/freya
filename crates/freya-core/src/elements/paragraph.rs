@@ -30,7 +30,6 @@ use freya_engine::prelude::{
     TextBaseline,
     TextStyle,
 };
-use rustc_hash::FxHashMap;
 use torin::prelude::{
     Area,
     Length,
@@ -54,14 +53,13 @@ use crate::{
     element::{
         Element,
         ElementExt,
-        EventHandlerType,
+        EventHandlers,
         IntoElement,
         LayoutContext,
         PostMeasureContext,
         RenderContext,
     },
     elements::rect::rect,
-    events::name::EventName,
     layers::Layer,
     node_id::NodeId,
     prelude::{
@@ -151,7 +149,7 @@ pub struct ParagraphElement {
     pub accessibility: AccessibilityData,
     pub text_style_data: TextStyleData,
     pub cursor_style_data: CursorStyleData,
-    pub event_handlers: FxHashMap<EventName, EventHandlerType>,
+    pub event_handlers: EventHandlers,
     pub sk_paragraph: ParagraphHolder,
     pub cursor_index: Option<usize>,
     pub highlights: Vec<(usize, usize)>,
@@ -432,7 +430,7 @@ impl ElementExt for ParagraphElement {
         }
     }
 
-    fn events_handlers(&'_ self) -> Option<Cow<'_, FxHashMap<EventName, EventHandlerType>>> {
+    fn events_handlers(&'_ self) -> Option<Cow<'_, EventHandlers>> {
         Some(Cow::Borrowed(&self.event_handlers))
     }
 
@@ -840,7 +838,7 @@ impl KeyExt for Paragraph {
 }
 
 impl EventHandlersExt for Paragraph {
-    fn get_event_handlers(&mut self) -> &mut FxHashMap<EventName, EventHandlerType> {
+    fn get_event_handlers(&mut self) -> &mut EventHandlers {
         &mut self.element.event_handlers
     }
 }
@@ -934,6 +932,12 @@ impl Paragraph {
     fn push_span(&mut self, span: Span<'static>) {
         self.element.contents.push(ParagraphContent::Span);
         self.element.spans.push(span);
+    }
+
+    /// Replace all of the paragraph's cursor style data at once. See [`CursorStyleData`].
+    pub fn cursor_style_data(mut self, cursor_style_data: CursorStyleData) -> Self {
+        self.element.cursor_style_data = cursor_style_data;
+        self
     }
 
     /// Set the color of the text cursor. See [`Color`].
