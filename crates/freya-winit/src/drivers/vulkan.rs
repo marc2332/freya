@@ -94,7 +94,7 @@ use crate::drivers::DriverError;
 
 /// Graphics driver using Vulkan.
 pub struct VulkanDriver {
-    _entry: Entry, // Dont drop until backend is dropped
+    entry: Entry,
     instance: Instance,
     surface_fns: InstanceSurfaceFns,
     surface: SurfaceKHR,
@@ -107,8 +107,6 @@ pub struct VulkanDriver {
     swapchain_images: Vec<Image>,
     swapchain_format: Format,
     swapchain_extent: Extent2D,
-    swapchain_image_index: u32,
-    swapchain_suboptimal: bool,
     transparent: bool,
     gr_context: ManuallyDrop<DirectContext>,
     image_available_semaphore: Semaphore,
@@ -217,7 +215,7 @@ impl VulkanDriver {
         };
 
         let driver = Self {
-            _entry: entry,
+            entry,
             instance,
             surface_fns,
             surface,
@@ -230,8 +228,6 @@ impl VulkanDriver {
             swapchain_images,
             swapchain_format,
             swapchain_extent,
-            swapchain_image_index: 0,
-            swapchain_suboptimal: false,
             transparent,
             gr_context: ManuallyDrop::new(gr_context),
             image_available_semaphore,
@@ -273,7 +269,6 @@ impl VulkanDriver {
         self.swapchain_images = swapchain_images;
         self.swapchain_format = swapchain_format;
         self.swapchain_extent = swapchain_extent;
-        self.swapchain_suboptimal = false;
         unsafe {
             self.swapchain_fns.destroy_swapchain(old_swapchain, None);
         }
@@ -296,7 +291,7 @@ impl VulkanDriver {
                 .map_err(Self::classify_error)?;
         }
 
-        let (image_index, suboptimal) = match unsafe {
+        let (image_index, mut suboptimal) = match unsafe {
             self.swapchain_fns.acquire_next_image(
                 self.swapchain,
                 u64::MAX,
@@ -331,8 +326,6 @@ impl VulkanDriver {
             Err(error) => return Err(Self::classify_error(error)),
         };
 
-        self.swapchain_image_index = image_index;
-        self.swapchain_suboptimal = suboptimal;
         self.gpu_cache_purged = false;
 
         let image = self.swapchain_images[image_index as usize];
@@ -375,8 +368,6 @@ impl VulkanDriver {
         window.pre_present_notify();
 
         self.gr_context.flush_and_submit();
-
-        let image = self.swapchain_images[self.swapchain_image_index as usize];
 
         unsafe {
             self.device
@@ -435,7 +426,7 @@ impl VulkanDriver {
         };
 
         let swapchains = [self.swapchain];
-        let image_indices = [self.swapchain_image_index];
+        let image_indices = [image_index];
         let present_info = PresentInfoKHR::default()
             .wait_semaphores(&signal_semaphores)
             .swapchains(&swapchains)
@@ -447,7 +438,7 @@ impl VulkanDriver {
 
         match result {
             Ok(_) => {}
-            Err(ash::vk::Result::ERROR_OUT_OF_DATE_KHR) => self.swapchain_suboptimal = true,
+            Err(ash::vk::Result::ERROR_OUT_OF_DATE_KHR) => suboptimal = true,
             Err(ash::vk::Result::ERROR_SURFACE_LOST_KHR) => {
                 self.recreate_surface(window, size)?;
                 window.request_redraw();
@@ -456,7 +447,7 @@ impl VulkanDriver {
             Err(error) => return Err(Self::classify_error(error)),
         }
 
-        if self.swapchain_suboptimal {
+        if suboptimal {
             self.recreate_swapchain(size)?;
         }
 
@@ -486,7 +477,7 @@ impl VulkanDriver {
         };
         self.surface = unsafe {
             ash_window::create_surface(
-                &self._entry,
+                &self.entry,
                 &self.instance,
                 window.display_handle().map_err(handle_error)?.as_raw(),
                 window.window_handle().map_err(handle_error)?.as_raw(),

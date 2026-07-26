@@ -18,7 +18,8 @@ use winit::{
 
 /// Unrecoverable graphics error requiring a driver rebuild.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[allow(dead_code)]
+// Only the Vulkan driver reports these.
+#[cfg_attr(not(any(target_os = "linux", target_os = "windows")), allow(dead_code))]
 pub enum DriverError {
     DeviceLost,
     OutOfMemory,
@@ -132,20 +133,17 @@ impl GraphicsDriver {
 
     /// Rebuild the driver on the existing window, skipping Vulkan.
     pub fn recover_reusing_window(
-        event_loop: &ActiveEventLoop,
+        _event_loop: &ActiveEventLoop,
         window: &Window,
-        gpu_resource_cache_limit: usize,
-        transparent: bool,
+        _gpu_resource_cache_limit: usize,
+        _transparent: bool,
     ) -> Self {
-        #[cfg(target_os = "macos")]
-        let _ = (event_loop, gpu_resource_cache_limit, transparent);
-
         #[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
         match gl::OpenGLDriver::from_window(
-            event_loop,
+            _event_loop,
             window,
-            gpu_resource_cache_limit,
-            transparent,
+            _gpu_resource_cache_limit,
+            _transparent,
         ) {
             Ok(driver) => return Self::OpenGl(driver),
             Err(error) => {
