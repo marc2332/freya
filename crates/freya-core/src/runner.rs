@@ -1056,8 +1056,8 @@ impl Runner {
         // later be rearranged once the removals and additions have been done
         for (parent, movements) in &diff.moved {
             parents_to_resync_scopes.insert(parent.clone());
-            // `parent` is a new-tree path; if the parent itself was moved, its path in the
-            // old nodes tree will differ — resolve it before any lookup.
+            // `parent` is a new-tree path. If the parent itself was moved, its path in the
+            // old nodes tree will differ, so resolve it before any lookup.
             let old_parent = resolve_old_path(parent, &diff.moved);
             let paths = moved_nodes.entry(parent.clone()).or_insert_with(|| {
                 let parent_node_id = scope.borrow().nodes.get(&old_parent).unwrap().node_id;

@@ -21,10 +21,10 @@ impl TerminalMouseButton {
 
 /// Encode a mouse event to the byte sequence the running app expects.
 ///
-/// `sgr_code` is the value emitted in SGR (1006) encoding; `x11_code` is the
+/// `sgr_code` is the value emitted in SGR (1006) encoding, and `x11_code` is the
 /// value emitted in classic X11 encoding before the mandatory `+32` offset.
 /// `release_in_sgr` only affects SGR encoding (lowercase `m` vs uppercase
-/// `M`); X11 release uses a fixed button byte and is selected by passing
+/// `M`). X11 release uses a fixed button byte and is selected by passing
 /// `x11_code = 3`.
 fn encode(
     sgr_code: u8,
@@ -65,7 +65,7 @@ pub fn encode_mouse_release(
     button: TerminalMouseButton,
     mode: TermMode,
 ) -> String {
-    // X11 collapses release into a single "button 3" byte; SGR keeps the
+    // X11 collapses release into a single "button 3" byte, while SGR keeps the
     // original button code but switches `M` to `m`.
     encode(button.code(), 3, row, col, mode, true)
 }
