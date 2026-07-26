@@ -179,7 +179,7 @@ pub trait EventHandlersExt: Sized {
     fn get_event_handlers(&mut self) -> &mut EventHandlers;
 
     /// Replace all of this element's event handlers with the given map.
-    fn with_event_handlers(mut self, event_handlers: EventHandlers) -> Self {
+    fn event_handlers(mut self, event_handlers: EventHandlers) -> Self {
         *self.get_event_handlers() = event_handlers;
         self
     }
@@ -821,6 +821,12 @@ where
 {
     /// Returns a mutable reference to the element's style data.
     fn get_style(&mut self) -> &mut StyleState;
+
+    /// Replace all of the element's style data at once. See [`StyleState`].
+    fn style(mut self, style: StyleState) -> Self {
+        *self.get_style() = style;
+        self
+    }
 
     /// Paint the background with any [`Fill`]: a [`Color`], a gradient or a shader.
     fn background(mut self, background: impl Into<Fill>) -> Self {

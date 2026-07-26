@@ -349,7 +349,7 @@ impl Component for SvgViewer {
                     .image_data(self.image_data.clone())
                     .effect(self.effect.clone())
                     .children(self.children.clone())
-                    .with_event_handlers(self.event_handlers.clone())
+                    .event_handlers(self.event_handlers.clone())
                     .on_sized(move |event: Event<SizedEventData>| {
                         measured.set_if_modified(Some(event.visible_area.size));
                     })
@@ -365,7 +365,7 @@ impl Component for SvgViewer {
             },
             Asset::Pending | Asset::Loading => rect()
                 .layout(layout)
-                .with_event_handlers(self.event_handlers.clone())
+                .event_handlers(self.event_handlers.clone())
                 .on_sized(move |event: Event<SizedEventData>| {
                     measured.set_if_modified(Some(event.visible_area.size));
                 })
