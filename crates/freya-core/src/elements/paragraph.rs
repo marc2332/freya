@@ -936,6 +936,12 @@ impl Paragraph {
         self.element.spans.push(span);
     }
 
+    /// Replace all of the paragraph's cursor style data at once. See [`CursorStyleData`].
+    pub fn cursor_style_data(mut self, cursor_style_data: CursorStyleData) -> Self {
+        self.element.cursor_style_data = cursor_style_data;
+        self
+    }
+
     /// Set the color of the text cursor. See [`Color`].
     pub fn cursor_color(mut self, cursor_color: impl Into<Color>) -> Self {
         self.element.cursor_style_data.color = cursor_color.into();
