@@ -9,6 +9,7 @@ use std::sync::{
 pub use accesskit::{
     NodeId as AccessibilityId,
     Role as AccessibilityRole,
+    Toggled,
 };
 
 #[derive(Clone)]
