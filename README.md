@@ -23,6 +23,27 @@ freya = "0.4"
 freya = { git = "https://github.com/marc2332/freya", branch = "main" }
 ```
 
+### Trying it out 🚀
+
+Make sure to have [Development Setup](https://docs.rs/freya/latest/freya/_docs/development_setup/index.html) ready.
+
+> ⚠️ **This repo uses git submodules**, cloning without `--recurse-submodules` will make the examples fail to compile.
+
+```shell
+git clone --recurse-submodules https://github.com/marc2332/freya.git
+cd freya
+```
+
+> **Already cloned without submodules?** Run `git submodule update --init --recursive` to fetch them.
+
+Then run an example:
+
+```shell
+cargo run --example counter
+```
+
+> ⚠️ If you happen to be on Windows using `windows-gnu` and get compile errors, maybe go check this [issue](https://github.com/marc2332/freya/issues/794).
+
 ### Components & State 
 
 Freya’s component model lets you create reusable UI elements that automatically re-render when the state they depend on changes. Components can hold their own internal state or subscribe to shared state, and they produce UI as their output. Any type that implements the `Component` trait can be a component, while the root (`app`) component can simply be a function. Built-in examples include components like `Button` and `Switch`.
@@ -748,27 +769,6 @@ Enable the `devtools` feature in `freya` and then run the devtools app.
 <div align="center">
   <img src="https://github.com/user-attachments/assets/906fdbec-7b3c-4dc4-a420-95fdf852b1e4">
 </div>
-
-### Trying it out
-
-Make sure to have [Development Setup](https://docs.rs/freya/latest/freya/_docs/development_setup/index.html) ready.
-
-> ⚠️ If you happen to be on Windows using `windows-gnu` and get compile errors, maybe go check this [issue](https://github.com/marc2332/freya/issues/794).
-
-Clone this repo (this project uses git submodules, so make sure to clone with `--recurse-submodules`):
-
-```shell
-git clone --recurse-submodules https://github.com/marc2332/freya.git
-cd freya
-```
-
-> **Already cloned without submodules?** Run `git submodule update --init --recursive` to fetch them.
-
-Then run an example:
-
-```shell
-cargo run --example counter
-```
 
 ### Contributing 🧙‍♂️
 If you are interested in contributing please make sure to have read the [Contributing](CONTRIBUTING.md) guide first!
