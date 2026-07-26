@@ -398,10 +398,14 @@ impl<T: InputType> Component for Input<T> {
         let holder = use_state(ParagraphHolder::default);
         let mut area = use_state(Area::default);
         let mut status = use_state(InputStatus::default);
-        let allow_write_clipboard = !matches!(self.mode, InputMode::Hidden(_));
+        let is_masked = matches!(self.mode, InputMode::Hidden(_));
         let mut editable = use_editable(
             || self.value.read().as_text().into_owned(),
-            move || EditableConfig::new().with_allow_write_clipboard(allow_write_clipboard),
+            move || {
+                EditableConfig::new()
+                    .with_allow_write_clipboard(!is_masked)
+                    .with_select_all_on_double_click(is_masked)
+            },
         );
         let mut is_dragging = use_state(|| false);
         let mut value = self.value.clone();

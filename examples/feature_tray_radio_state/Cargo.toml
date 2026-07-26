@@ -1,0 +1,10 @@
+[package]
+name = "feature_tray_radio_state"
+publish = false
+edition = "2024"
+
+[lints]
+workspace = true
+
+[dependencies]
+freya = { workspace = true, features = ["tray", "radio"] }

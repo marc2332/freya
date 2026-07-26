@@ -1,6 +1,6 @@
 [package]
 name = "freya-core"
-version = "0.4.0-rc.23"
+version = "0.4.0"
 description = "Reactivity runtime, tree management, accessibility integration, rendering pipeline and more, for Freya"
 edition = "2024"
 license = "MIT"
@@ -25,7 +25,7 @@ futures-channel = { workspace = true }
 futures-lite = { workspace = true }
 
 # Animations
-async-broadcast = { workspace = true }
+async-watch = { workspace = true }
 
 # Text
 keyboard-types = { workspace = true }

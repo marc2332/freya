@@ -695,20 +695,20 @@ impl Rect {
     }
 
     /// Set the rect's opacity, from `0.0` (transparent) to `1.0` (opaque).
-    pub fn opacity(mut self, opacity: impl Into<f32>) -> Self {
+    pub fn opacity(mut self, opacity: f32) -> Self {
         self.element
             .effect
             .get_or_insert_with(Default::default)
-            .opacity = Some(opacity.into());
+            .opacity = Some(opacity);
         self
     }
 
     /// Apply a gaussian blur of the given radius to the rect.
-    pub fn blur(mut self, blur: impl Into<f32>) -> Self {
+    pub fn blur(mut self, blur: f32) -> Self {
         self.element
             .effect
             .get_or_insert_with(Default::default)
-            .blur = Some(blur.into());
+            .blur = Some(blur);
         self
     }
 }

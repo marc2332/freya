@@ -13,7 +13,14 @@ fn generate(name: &str, path: &str) {
 
     let mut code = String::new();
 
-    for entry in fs::read_dir(path).expect("Failed to read icons directory") {
+    let entries = fs::read_dir(path).unwrap_or_else(|err| {
+        panic!(
+            "Failed to read the '{name}' icons directory at '{path}': {err}.\n\
+             The icons are provided by a git submodule, run `git submodule update --init --recursive` to fetch it."
+        )
+    });
+
+    for entry in entries {
         let entry = entry.unwrap();
         let path = entry.path();
         if path.extension().and_then(|s| s.to_str()) == Some("svg") {

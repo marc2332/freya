@@ -24,13 +24,18 @@ use freya_engine::prelude::{
     SkRect,
     raster_n32_premul,
 };
+#[cfg(feature = "remote-asset")]
+use reqwest::{
+    Url,
+    blocking::Client,
+};
 use torin::prelude::{
     Size,
     Size2D,
 };
-#[cfg(feature = "remote-asset")]
-use ureq::http::Uri;
 
+#[cfg(feature = "remote-asset")]
+use crate::http::Http;
 use crate::{
     cache::*,
     loader::CircularLoader,
@@ -92,7 +97,7 @@ pub enum ImageSource {
     ///
     /// Requires the `remote-asset` feature.
     #[cfg(feature = "remote-asset")]
-    Uri(Uri),
+    Uri(Url),
 
     Path(PathBuf),
 
@@ -119,10 +124,30 @@ impl<const N: usize, H: Hash> From<(H, &'static [u8; N])> for ImageSource {
     }
 }
 
+impl From<Bytes> for ImageSource {
+    fn from(bytes: Bytes) -> Self {
+        let mut hasher = DefaultHasher::default();
+        bytes.hash(&mut hasher);
+        Self::Bytes(hasher.finish(), bytes)
+    }
+}
+
+impl From<&'static [u8]> for ImageSource {
+    fn from(bytes: &'static [u8]) -> Self {
+        Bytes::from_static(bytes).into()
+    }
+}
+
+impl<const N: usize> From<&'static [u8; N]> for ImageSource {
+    fn from(bytes: &'static [u8; N]) -> Self {
+        Bytes::from_static(bytes).into()
+    }
+}
+
 #[cfg_attr(feature = "docs", doc(cfg(feature = "remote-asset")))]
 #[cfg(feature = "remote-asset")]
-impl From<Uri> for ImageSource {
-    fn from(uri: Uri) -> Self {
+impl From<Url> for ImageSource {
+    fn from(uri: Url) -> Self {
         Self::Uri(uri)
     }
 }
@@ -131,7 +156,7 @@ impl From<Uri> for ImageSource {
 #[cfg(feature = "remote-asset")]
 impl From<&'static str> for ImageSource {
     fn from(src: &'static str) -> Self {
-        Self::Uri(Uri::from_static(src))
+        Self::Uri(Url::parse(src).expect("Invalid URL"))
     }
 }
 
@@ -158,6 +183,19 @@ pub type DecodeSize = euclid::Size2D<u32, ()>;
 static DECODE_LIMIT: LazyLock<Semaphore> = LazyLock::new(|| Semaphore::new(4));
 
 impl ImageSource {
+    /// Read the source's raw encoded bytes. Blocking, meant to run inside `unblock`.
+    pub(crate) fn fetch(
+        self,
+        #[cfg(feature = "remote-asset")] client: &Client,
+    ) -> anyhow::Result<Bytes> {
+        Ok(match self {
+            #[cfg(feature = "remote-asset")]
+            Self::Uri(uri) => client.get(uri).send()?.error_for_status()?.bytes()?,
+            Self::Path(path) => fs::read(path).map(Bytes::from)?,
+            Self::Bytes(_, bytes) => bytes,
+        })
+    }
+
     /// Fetch the source's encoded bytes and decode them into a Skia image.
     pub async fn load(
         &self,
@@ -165,18 +203,14 @@ impl ImageSource {
         sampling_mode: SamplingMode,
     ) -> anyhow::Result<(SkImage, Bytes)> {
         let source = self.clone();
+        #[cfg(feature = "remote-asset")]
+        let client = Http::get();
         let _decode_permit = DECODE_LIMIT.acquire().await;
         blocking::unblock(move || {
-            let bytes = match source {
-                #[cfg(feature = "remote-asset")]
-                Self::Uri(uri) => ureq::get(uri)
-                    .call()?
-                    .body_mut()
-                    .read_to_vec()
-                    .map(Bytes::from)?,
-                Self::Path(path) => fs::read(path).map(Bytes::from)?,
-                Self::Bytes(_, bytes) => bytes,
-            };
+            #[cfg(feature = "remote-asset")]
+            let bytes = source.fetch(&client)?;
+            #[cfg(not(feature = "remote-asset"))]
+            let bytes = source.fetch()?;
             let image = SkImage::from_encoded(unsafe { SkData::new_bytes(&bytes) })
                 .context("Failed to decode Image.")?;
             let image = image.make_raster_image(None, None).unwrap_or(image);
@@ -403,11 +437,16 @@ impl Component for ImageViewer {
         let sampling_mode = self.image_data.sampling_mode.clone();
         let asset_config =
             AssetConfiguration::new((&self.source, target, &sampling_mode), self.asset_age);
-        let asset = use_asset(&asset_config);
+        use_asset(&asset_config);
         let mut asset_cacher = use_hook(AssetCacher::get);
 
         use_side_effect_with_deps(
-            &(self.source.clone(), asset_config, target, sampling_mode),
+            &(
+                self.source.clone(),
+                asset_config.clone(),
+                target,
+                sampling_mode,
+            ),
             move |(source, asset_config, target, sampling_mode)| {
                 if matches!(
                     asset_cacher.read_asset(asset_config),
@@ -436,6 +475,10 @@ impl Component for ImageViewer {
                 }
             },
         );
+
+        let asset = asset_cacher
+            .read_asset(&asset_config)
+            .expect("Asset should exist by now");
 
         match asset {
             Asset::Cached(asset) => {

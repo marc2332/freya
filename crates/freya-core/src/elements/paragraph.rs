@@ -276,6 +276,10 @@ impl ElementExt for ParagraphElement {
         Cow::Owned(StyleState::default())
     }
 
+    fn is_transparent(&self) -> bool {
+        false
+    }
+
     fn text_style(&'_ self) -> Cow<'_, TextStyleData> {
         Cow::Borrowed(&self.text_style_data)
     }
@@ -930,6 +934,12 @@ impl Paragraph {
     fn push_span(&mut self, span: Span<'static>) {
         self.element.contents.push(ParagraphContent::Span);
         self.element.spans.push(span);
+    }
+
+    /// Replace all of the paragraph's cursor style data at once. See [`CursorStyleData`].
+    pub fn cursor_style_data(mut self, cursor_style_data: CursorStyleData) -> Self {
+        self.element.cursor_style_data = cursor_style_data;
+        self
     }
 
     /// Set the color of the text cursor. See [`Color`].
