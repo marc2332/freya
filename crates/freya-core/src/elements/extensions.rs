@@ -170,7 +170,7 @@ macro_rules! event_handlers {
 /// Methods for attaching event handlers to an element.
 ///
 /// Many events come in three flavors: the plain one fires only while the pointer is over the
-/// element; the `global_` variants fire no matter where the event happens; and the `capture_`
+/// element, the `global_` variants fire no matter where the event happens, and the `capture_`
 /// variants fire during the top-down capture phase, before the event reaches the inner element.
 ///
 /// For high-level press handling, prefer [`on_press`](EventHandlersExt::on_press) over the raw mouse/pointer events.

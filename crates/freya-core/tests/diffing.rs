@@ -1434,9 +1434,9 @@ fn modified_and_moved_both_siblings_with_nested_child() {
         if state() {
             // Old tree:
             //   root
-            //     A (key=1, padding=10) — has child X
+            //     A (key=1, padding=10) has child X
             //       X (key=3, padding=30)
-            //     B (key=2, padding=20) — no children
+            //     B (key=2, padding=20) has no children
             rect()
                 .child(rect().key(1).padding(10.).child(rect().key(3).padding(30.)))
                 .child(rect().key(2).padding(20.))
@@ -1445,9 +1445,9 @@ fn modified_and_moved_both_siblings_with_nested_child() {
             // New tree: A and B swap positions, both modified.
             // X (child of A) is also modified.
             //   root
-            //     B (key=2, padding=99) — moved to [0,0], modified
-            //     A (key=1, padding=88) — moved to [0,1], modified
-            //       X (key=3, padding=77) — at [0,1,0], modified
+            //     B (key=2, padding=99) moved to [0,0], modified
+            //     A (key=1, padding=88) moved to [0,1], modified
+            //       X (key=3, padding=77) at [0,1,0], modified
             //
             // No movements are recorded because both A and B are modified.
             // scope.nodes still has A at [0,0] and B at [0,1].
@@ -1850,7 +1850,7 @@ fn moved_element_with_deeply_nested_child_type_change() {
 ///
 /// Frame 2 adds a new grandchild under `a1` at tree path `[0,1,2,0]`. The
 /// diff emits `added = [[0,1,2,0]]`, which is not deferred (no moves), and
-/// `process_addition` looks up the parent `[0,1,2]` in `scope.nodes` — but
+/// `process_addition` looks up the parent `[0,1,2]` in `scope.nodes`, but
 /// that slot holds the leftover empty entry from frame 1, so `nodes.get`
 /// returns `None` and the unwrap at runner.rs L971 fires.
 #[test]
