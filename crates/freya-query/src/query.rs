@@ -176,6 +176,15 @@ pub struct QueryData<Q: QueryCapability> {
     /// interval task) run the query on demand and may overlap with an execution already running.
     running: Rc<Cell<usize>>,
 
+    /// How many [use_query] subscribers are mounted on this query right now.
+    ///
+    /// This is what cleanup keys on, not [QueryData::reactive_contexts]: one subscriber
+    /// registers several reactive contexts (its scope plus every side effect that reads the
+    /// query), and a context only unsubscribes when its scope storage drops, which happens
+    /// after the scope's drop callbacks have already run. Counting subscribers explicitly
+    /// makes "the last subscriber unmounted" independent of both fan out and teardown order.
+    subscribers: Rc<Cell<usize>>,
+
     interval_task: Rc<RefCell<Option<(Duration, TaskHandle)>>>,
     clean_task: Rc<RefCell<Option<TaskHandle>>>,
 }
@@ -187,6 +196,7 @@ impl<Q: QueryCapability> Clone for QueryData<Q> {
             reactive_contexts: self.reactive_contexts.clone(),
 
             running: self.running.clone(),
+            subscribers: self.subscribers.clone(),
 
             interval_task: self.interval_task.clone(),
             clean_task: self.clean_task.clone(),
@@ -241,9 +251,13 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
             state: Rc::new(RefCell::new(QueryStateData::Pending)),
             reactive_contexts: Rc::new(RefCell::new(FxHashSet::default())),
             running: Rc::default(),
+            subscribers: Rc::default(),
             interval_task: Rc::default(),
             clean_task: Rc::default(),
         });
+
+        // One more subscriber is mounted on this query, see [QueryData::subscribers]
+        query_data.subscribers.set(query_data.subscribers.get() + 1);
         let query_data_clone = query_data.clone();
 
         // Cancel clean task
@@ -286,28 +300,80 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
         query_data.clone()
     }
 
+    /// One [use_query] subscriber of `query` unmounted (or moved to another query). Once the
+    /// last one is gone the interval task is cancelled and the entry is scheduled for
+    /// cleanup via [QueriesStorage::spawn_clean_task].
     fn update_tasks(&mut self, query: Query<Q>) {
-        let storage_clone = self.storage;
-        let mut storage = self.storage.write_unchecked();
+        let query_data = {
+            let mut storage = self.storage.write_unchecked();
 
-        let query_data = storage.get_mut(&query).unwrap();
+            let Some(query_data) = storage.get_mut(&query) else {
+                return;
+            };
+            query_data
+                .subscribers
+                .set(query_data.subscribers.get().saturating_sub(1));
 
-        // Cancel interval task
-        if let Some((_, interval_task)) = query_data.interval_task.take() {
-            interval_task.cancel();
+            // Other subscribers are still mounted, so every task stays alive
+            if query_data.subscribers.get() > 0 {
+                return;
+            }
+
+            // Cancel interval task
+            if let Some((_, interval_task)) = query_data.interval_task.take() {
+                interval_task.cancel();
+            }
+
+            query_data.clone()
+        };
+
+        self.spawn_clean_task(query, &query_data);
+    }
+
+    /// Schedule `query` for removal once it has had no subscriber for [Query::clean_time].
+    /// A clean time of [Duration::MAX] disables cleanup entirely.
+    ///
+    /// A subscriber that mounts meanwhile is protected by [QueriesStorage::insert_or_get_query]
+    /// cancelling this task outright; the subscriber check at fire time is only a backstop
+    /// should that cancellation ever be bypassed. The load-bearing check is the running one:
+    /// an execution still in flight defers the removal for another clean time, because
+    /// removing the entry under it would orphan its settlement and make the next subscriber
+    /// dispatch a duplicate execution, the very thing [QueryData::running] exists to prevent.
+    fn spawn_clean_task(&self, query: Query<Q>, query_data: &QueryData<Q>) {
+        let mut clean_task = query_data.clean_task.borrow_mut();
+
+        // A merely overwritten task would keep ticking towards a stale removal
+        if let Some(prev_clean_task) = clean_task.take() {
+            prev_clean_task.cancel();
         }
 
-        // Spawn clean up task if there no more reactive contexts
-        if query_data.reactive_contexts.borrow().len() == 1 {
-            *query_data.clean_task.borrow_mut() = Some(spawn_forever(async move {
-                // Wait as long as the stale time is configured
+        if query.clean_time == Duration::MAX {
+            return;
+        }
+
+        let storage = self.storage;
+        let subscribers = query_data.subscribers.clone();
+        let running = query_data.running.clone();
+        *clean_task = Some(spawn_forever(async move {
+            loop {
+                // Wait as long as the clean time is configured
                 Timer::after(query.clean_time).await;
 
+                // Backstop only: a mounting subscriber cancels this task, so a mounted
+                // subscriber here means that cancellation was somehow bypassed
+                if subscribers.get() > 0 {
+                    break;
+                }
+                // An execution is still in flight, check again in another clean time
+                if running.get() > 0 {
+                    continue;
+                }
+
                 // Finally clear the query
-                let mut storage = storage_clone.write_unchecked();
-                storage.remove(&query);
-            }));
-        }
+                storage.write_unchecked().remove(&query);
+                break;
+            }
+        }));
     }
 
     pub async fn get(get_query: GetQuery<Q>) -> QueryReader<Q> {
@@ -331,6 +397,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
                 state: Rc::new(RefCell::new(QueryStateData::Pending)),
                 reactive_contexts: Rc::new(RefCell::new(FxHashSet::default())),
                 running: Rc::default(),
+                subscribers: Rc::default(),
                 interval_task: Rc::default(),
                 clean_task: Rc::default(),
             })
@@ -370,16 +437,9 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
             }
         }
 
-        // Spawn clean up task if there no more reactive contexts
-        if query_data.reactive_contexts.borrow().is_empty() {
-            *query_data.clean_task.borrow_mut() = Some(spawn_forever(async move {
-                // Wait as long as the stale time is configured
-                Timer::after(query.clean_time).await;
-
-                // Finally clear the query
-                let mut storage = storage.storage.write_unchecked();
-                storage.remove(&query);
-            }));
+        // Schedule cleanup if no subscriber is mounted on this query
+        if query_data.subscribers.get() == 0 {
+            storage.spawn_clean_task(query, &query_data);
         }
 
         QueryReader {
@@ -514,6 +574,8 @@ impl<Q: QueryCapability> GetQuery<Q> {
     }
 
     /// For how long the data is kept cached after there are no more query subscribers.
+    /// An entry whose execution is still in flight is never cleared, and
+    /// [Duration::MAX] disables cleanup entirely.
     ///
     /// Defaults to [Duration::ZERO], meaning it clears automatically.
     pub fn clean_time(self, clean_time: Duration) -> Self {
@@ -594,6 +656,8 @@ impl<Q: QueryCapability> Query<Q> {
     }
 
     /// For how long the data is kept cached after there are no more query subscribers.
+    /// An entry whose execution is still in flight is never cleared, and
+    /// [Duration::MAX] disables cleanup entirely.
     ///
     /// Defaults to `5min`, meaning it clears automatically after 5 minutes of no subscribers to it.
     pub fn clean_time(self, clean_time: Duration) -> Self {
@@ -650,10 +714,17 @@ impl<Q: QueryCapability> UseQuery<Q> {
     ///
     /// This **will** automatically subscribe.
     /// If you want a **non-subscribing** method have a look at [UseQuery::peek].
+    ///
+    /// A handle whose entry was already cleaned (it outlived its subscriber by more than
+    /// the clean time) reads as [QueryStateData::Pending] instead of panicking.
     pub fn read(&self) -> QueryReader<Q> {
         let storage = consume_context::<QueriesStorage<Q>>();
         let map = storage.storage.peek();
-        let query_data = map.get(&self.query.read()).cloned().unwrap();
+        let Some(query_data) = map.get(&self.query.read()).cloned() else {
+            return QueryReader {
+                state: Rc::new(RefCell::new(QueryStateData::Pending)),
+            };
+        };
 
         // Subscribe if possible
         if let Some(mut reactive_context) = ReactiveContext::try_current() {
@@ -669,10 +740,17 @@ impl<Q: QueryCapability> UseQuery<Q> {
     ///
     /// This **will not** automatically subscribe.
     /// If you want a **subscribing** method have a look at [UseQuery::read].
+    ///
+    /// A handle whose entry was already cleaned reads as [QueryStateData::Pending]
+    /// instead of panicking.
     pub fn peek(&self) -> QueryReader<Q> {
         let storage = consume_context::<QueriesStorage<Q>>();
         let map = storage.storage.peek();
-        let query_data = map.get(&self.query.peek()).cloned().unwrap();
+        let Some(query_data) = map.get(&self.query.peek()).cloned() else {
+            return QueryReader {
+                state: Rc::new(RefCell::new(QueryStateData::Pending)),
+            };
+        };
 
         QueryReader {
             state: query_data.state,
@@ -682,12 +760,19 @@ impl<Q: QueryCapability> UseQuery<Q> {
     /// Invalidate this query and await its result.
     ///
     /// For a `sync` version use [UseQuery::invalidate].
+    ///
+    /// A handle whose entry was already cleaned resolves [QueryStateData::Pending]
+    /// without running anything: the next mounting subscriber recreates and runs it.
     pub async fn invalidate_async(&self) -> QueryReader<Q> {
         let storage = consume_context::<QueriesStorage<Q>>();
 
         let query = self.query.peek().clone();
-        let map = storage.storage.peek();
-        let query_data = map.get(&query).cloned().unwrap();
+        let query_data = storage.storage.peek().get(&query).cloned();
+        let Some(query_data) = query_data else {
+            return QueryReader {
+                state: Rc::new(RefCell::new(QueryStateData::Pending)),
+            };
+        };
 
         // Run the query
         QueriesStorage::run_queries(&[(&query, &query_data)]).await;
@@ -700,12 +785,16 @@ impl<Q: QueryCapability> UseQuery<Q> {
     /// Invalidate this query in the background.
     ///
     /// For an `async` version use [UseQuery::invalidate_async].
+    ///
+    /// A handle whose entry was already cleaned does nothing: the next mounting
+    /// subscriber recreates and runs it.
     pub fn invalidate(&self) {
         let storage = consume_context::<QueriesStorage<Q>>();
 
         let query = self.query.peek().clone();
-        let map = storage.storage.peek();
-        let query_data = map.get(&query).cloned().unwrap();
+        let Some(query_data) = storage.storage.peek().get(&query).cloned() else {
+            return;
+        };
 
         // Run the query
         spawn_forever(async move { QueriesStorage::run_queries(&[(&query, &query_data)]).await });
@@ -734,6 +823,10 @@ impl<Q: QueryCapability> UseQuery<Q> {
 /// Imagine there is `Subscriber 1` of a query, the data is requested and cached.
 /// But after some seconds the `Subscriber 1` is unmounted, but the data is not cleared as the default clean time is `5min`.
 /// A few seconds later the `Subscriber 1` gets mounted again, it requests the data again but this time it is returned directly from the cache.
+///
+/// An entry whose execution is still in flight is never cleared, no matter the clean time:
+/// removing it would orphan the eventual settlement and make the next subscriber dispatch a
+/// duplicate execution. Cleanup waits for it to settle instead.
 ///
 /// See [Query::clean_time].
 ///

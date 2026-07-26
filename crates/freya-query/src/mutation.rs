@@ -1,6 +1,7 @@
 use core::fmt;
 use std::{
     cell::{
+        Cell,
         Ref,
         RefCell,
     },
@@ -144,6 +145,13 @@ pub struct MutationData<Q: MutationCapability> {
     state: Rc<RefCell<MutationStateData<Q>>>,
     reactive_contexts: Rc<RefCell<FxHashSet<ReactiveContext>>>,
 
+    /// How many [use_mutation] subscribers are mounted on this mutation right now.
+    ///
+    /// Cleanup keys on this, not on [MutationData::reactive_contexts], for the same
+    /// reason as `QueryData::subscribers`: one subscriber registers several reactive
+    /// contexts, and contexts only unsubscribe after drop callbacks have run.
+    subscribers: Rc<Cell<usize>>,
+
     clean_task: Rc<RefCell<Option<TaskHandle>>>,
 }
 
@@ -152,6 +160,7 @@ impl<Q: MutationCapability> Clone for MutationData<Q> {
         Self {
             state: self.state.clone(),
             reactive_contexts: self.reactive_contexts.clone(),
+            subscribers: self.subscribers.clone(),
             clean_task: self.clean_task.clone(),
         }
     }
@@ -170,8 +179,14 @@ impl<Q: MutationCapability> MutationsStorage<Q> {
         let mutation_data = storage.entry(mutation).or_insert_with(|| MutationData {
             state: Rc::new(RefCell::new(MutationStateData::Pending)),
             reactive_contexts: Rc::new(RefCell::new(FxHashSet::default())),
+            subscribers: Rc::default(),
             clean_task: Rc::default(),
         });
+
+        // One more subscriber is mounted on this mutation, see [MutationData::subscribers]
+        mutation_data
+            .subscribers
+            .set(mutation_data.subscribers.get() + 1);
 
         // Cancel clean task
         if let Some(clean_task) = mutation_data.clean_task.take() {
@@ -181,23 +196,43 @@ impl<Q: MutationCapability> MutationsStorage<Q> {
         mutation_data.clone()
     }
 
+    /// One [use_mutation] subscriber of `mutation` unmounted (or moved to another
+    /// mutation). Once the last one is gone the entry is scheduled for cleanup after
+    /// [Mutation::clean_time]; [Duration::MAX] disables cleanup entirely.
     fn update_tasks(&mut self, mutation: Mutation<Q>) {
         let storage_clone = self.storage;
         let mut storage = self.storage.write_unchecked();
 
-        let mutation_data = storage.get_mut(&mutation).unwrap();
+        let Some(mutation_data) = storage.get_mut(&mutation) else {
+            return;
+        };
+        mutation_data
+            .subscribers
+            .set(mutation_data.subscribers.get().saturating_sub(1));
 
-        // Spawn clean up task if there no more reactive contexts
-        if mutation_data.reactive_contexts.borrow().len() == 1 {
-            *mutation_data.clean_task.borrow_mut() = Some(spawn_forever(async move {
-                // Wait as long as the stale time is configured
-                Timer::after(mutation.clean_time).await;
-
-                // Finally clear the mutation
-                let mut storage = storage_clone.write_unchecked();
-                storage.remove(&mutation);
-            }));
+        // Other subscribers are still mounted, keep the entry alive
+        if mutation_data.subscribers.get() > 0 {
+            return;
         }
+
+        let mut clean_task = mutation_data.clean_task.borrow_mut();
+
+        // A merely overwritten task would keep ticking towards a stale removal
+        if let Some(prev_clean_task) = clean_task.take() {
+            prev_clean_task.cancel();
+        }
+
+        if mutation.clean_time == Duration::MAX {
+            return;
+        }
+
+        *clean_task = Some(spawn_forever(async move {
+            // Wait as long as the clean time is configured
+            Timer::after(mutation.clean_time).await;
+
+            // Finally clear the mutation
+            storage_clone.write_unchecked().remove(&mutation);
+        }));
     }
 
     async fn run(mutation: &Mutation<Q>, data: &MutationData<Q>, keys: Q::Keys) {
@@ -281,10 +316,17 @@ impl<Q: MutationCapability> UseMutation<Q> {
     ///
     /// This **will** automatically subscribe.
     /// If you want a **subscribing** method have a look at [UseMutation::peek].
+    ///
+    /// A handle whose entry was already cleaned (it outlived its subscriber by more than
+    /// the clean time) reads as [MutationStateData::Pending] instead of panicking.
     pub fn read(&self) -> MutationReader<Q> {
         let storage = consume_context::<MutationsStorage<Q>>();
         let map = storage.storage.peek();
-        let mutation_data = map.get(&self.mutation.read()).cloned().unwrap();
+        let Some(mutation_data) = map.get(&self.mutation.read()).cloned() else {
+            return MutationReader {
+                state: Rc::new(RefCell::new(MutationStateData::Pending)),
+            };
+        };
 
         // Subscribe if possible
         if let Some(mut reactive_context) = ReactiveContext::try_current() {
@@ -300,10 +342,17 @@ impl<Q: MutationCapability> UseMutation<Q> {
     ///
     /// This **will not** automatically subscribe.
     /// If you want a **subscribing** method have a look at [UseMutation::read].
+    ///
+    /// A handle whose entry was already cleaned reads as [MutationStateData::Pending]
+    /// instead of panicking.
     pub fn peek(&self) -> MutationReader<Q> {
         let storage = consume_context::<MutationsStorage<Q>>();
         let map = storage.storage.peek();
-        let mutation_data = map.get(&self.mutation.peek()).cloned().unwrap();
+        let Some(mutation_data) = map.get(&self.mutation.peek()).cloned() else {
+            return MutationReader {
+                state: Rc::new(RefCell::new(MutationStateData::Pending)),
+            };
+        };
 
         MutationReader {
             state: mutation_data.state,
@@ -313,12 +362,19 @@ impl<Q: MutationCapability> UseMutation<Q> {
     /// Run this mutation await its result.
     ///
     /// For a `sync` version use [UseMutation::mutate].
+    ///
+    /// A handle whose entry was already cleaned resolves [MutationStateData::Pending]
+    /// without running anything.
     pub async fn mutate_async(&self, keys: Q::Keys) -> MutationReader<Q> {
         let storage = consume_context::<MutationsStorage<Q>>();
 
         let mutation = self.mutation.peek().clone();
-        let map = storage.storage.peek();
-        let mutation_data = map.get(&mutation).cloned().unwrap();
+        let mutation_data = storage.storage.peek().get(&mutation).cloned();
+        let Some(mutation_data) = mutation_data else {
+            return MutationReader {
+                state: Rc::new(RefCell::new(MutationStateData::Pending)),
+            };
+        };
 
         // Run the mutation
         MutationsStorage::run(&mutation, &mutation_data, keys).await;
@@ -331,12 +387,15 @@ impl<Q: MutationCapability> UseMutation<Q> {
     // Run this mutation and await its result.
     ///
     /// For an `async` version use [UseMutation::mutate_async].
+    ///
+    /// A handle whose entry was already cleaned does nothing.
     pub fn mutate(&self, keys: Q::Keys) {
         let storage = consume_context::<MutationsStorage<Q>>();
 
         let mutation = self.mutation.peek().clone();
-        let map = storage.storage.peek();
-        let mutation_data = map.get(&mutation).cloned().unwrap();
+        let Some(mutation_data) = storage.storage.peek().get(&mutation).cloned() else {
+            return;
+        };
 
         // Run the mutation
         spawn_forever(async move { MutationsStorage::run(&mutation, &mutation_data, keys).await });
