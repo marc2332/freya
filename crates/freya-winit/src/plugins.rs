@@ -171,13 +171,6 @@ pub enum PluginEvent<'a> {
         tree: &'a Tree,
     },
 
-    /// Async tasks were polled, taking the given duration.
-    TasksPolled {
-        window: &'a Window,
-        tree: &'a Tree,
-        duration: Duration,
-    },
-
     StartedUpdatingTree {
         window: &'a Window,
         tree: &'a Tree,
@@ -186,6 +179,13 @@ pub enum PluginEvent<'a> {
     FinishedUpdatingTree {
         window: &'a Window,
         tree: &'a Tree,
+    },
+
+    /// After polling the async tasks, with the time spent on them.
+    TasksPolled {
+        window: &'a Window,
+        tree: &'a Tree,
+        duration: Duration,
     },
 
     BeforeAccessibility {

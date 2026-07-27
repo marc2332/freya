@@ -585,40 +585,7 @@ impl Runner {
                 return;
             }
 
-            let started_polling = (!self.dirty_tasks.is_empty()).then(Instant::now);
-            while let Some(task_id) = self.dirty_tasks.pop_front() {
-                let Some(task) = self.tasks.borrow().get(&task_id).cloned() else {
-                    continue;
-                };
-                let mut task = task.borrow_mut();
-                let waker = task.waker.clone();
-
-                let mut cx = std::task::Context::from_waker(&waker);
-
-                CurrentContext::run(
-                    {
-                        let Some(scope) = self.scopes.get(&task.scope_id) else {
-                            continue;
-                        };
-                        CurrentContext {
-                            scope_id: scope.borrow().id,
-                            scopes_storages: self.scopes_storages.clone(),
-                            tasks: self.tasks.clone(),
-                            task_id_counter: self.task_id_counter.clone(),
-                            sender: self.sender.clone(),
-                        }
-                    },
-                    || {
-                        let poll_result = task.future.poll(&mut cx);
-                        if poll_result.is_ready() {
-                            let _ = self.tasks.borrow_mut().remove(&task_id);
-                        }
-                    },
-                );
-            }
-            if let Some(started_polling) = started_polling {
-                self.tasks_poll_time += started_polling.elapsed();
-            }
+            self.poll_dirty_tasks();
 
             if !self.dirty_scopes.is_empty() {
                 return;
@@ -655,8 +622,17 @@ impl Runner {
             return;
         }
 
-        // Poll here
-        let started_polling = (!self.dirty_tasks.is_empty()).then(Instant::now);
+        self.poll_dirty_tasks();
+    }
+
+    /// Poll the dirty tasks, measuring the time spent on them.
+    fn poll_dirty_tasks(&mut self) {
+        if self.dirty_tasks.is_empty() {
+            return;
+        }
+
+        let started_polling = Instant::now();
+
         while let Some(task_id) = self.dirty_tasks.pop_front() {
             let Some(task) = self.tasks.borrow().get(&task_id).cloned() else {
                 continue;
@@ -687,9 +663,8 @@ impl Runner {
                 },
             );
         }
-        if let Some(started_polling) = started_polling {
-            self.tasks_poll_time += started_polling.elapsed();
-        }
+
+        self.tasks_poll_time += started_polling.elapsed();
     }
 
     /// Time spent polling async tasks since the last call.

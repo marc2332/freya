@@ -148,6 +148,8 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                     .retain(|frame| now.duration_since(*frame).as_millis() < 1000);
 
                 metrics.frames.push(now);
+
+                // Accumulated across the frame, so it needs a reset
                 metrics.tasks_poll_time = Duration::ZERO;
             }
             PluginEvent::BeforePresenting { window, .. } => {
@@ -164,11 +166,6 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 let metrics = self.get_metrics(window.id());
                 metrics.finished_layout = Some(metrics.started_layout.unwrap().elapsed())
             }
-            PluginEvent::TasksPolled {
-                window, duration, ..
-            } => {
-                self.get_metrics(window.id()).tasks_poll_time += *duration;
-            }
             PluginEvent::StartedUpdatingTree { window, .. } => {
                 self.get_metrics(window.id()).started_tree_updates = Some(Instant::now())
             }
@@ -176,6 +173,11 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 let metrics = self.get_metrics(window.id());
                 metrics.finished_tree_updates =
                     Some(metrics.started_tree_updates.unwrap().elapsed())
+            }
+            PluginEvent::TasksPolled {
+                window, duration, ..
+            } => {
+                self.get_metrics(window.id()).tasks_poll_time += *duration;
             }
             PluginEvent::BeforeAccessibility { window, .. } => {
                 self.get_metrics(window.id()).started_accessibility_updates = Some(Instant::now())
