@@ -147,6 +147,8 @@ enum TableRowState {
 #[derive(PartialEq, Default)]
 pub struct TableRow {
     pub theme: Option<TableThemePartial>,
+    /// optional press handler, called for a press anywhere in the row
+    pub on_press: Option<EventHandler<Event<PressEventData>>>,
     pub children: Vec<Element>,
     key: DiffKey,
 }
@@ -154,6 +156,24 @@ pub struct TableRow {
 impl TableRow {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Dress this row on its own, over the table's theme.
+    ///
+    /// A row is where a table says something about one record: the selected row, a zebra
+    /// stripe, an invalid entry. Setting `hover_row_background` to the same fill as
+    /// `row_background` also opts the row out of the hover response, for a table whose rows
+    /// carry a selection instead.
+    pub fn theme(mut self, theme: TableThemePartial) -> Self {
+        self.theme = Some(theme);
+        self
+    }
+
+    /// Handle a press anywhere in the row, rather than per [`TableCell`]. Use it for a table
+    /// whose rows are selectable.
+    pub fn on_press(mut self, handler: impl Into<EventHandler<Event<PressEventData>>>) -> Self {
+        self.on_press = Some(handler.into());
+        self
     }
 }
 
@@ -189,6 +209,9 @@ impl Component for TableRow {
         rect()
             .on_pointer_enter(move |_| state.set(TableRowState::Hovering))
             .on_pointer_leave(move |_| state.set(TableRowState::Idle))
+            .map(self.on_press.clone(), |el, on_press| {
+                el.on_press(move |e| on_press.call(e))
+            })
             .background(background)
             .child(
                 rect()
@@ -229,6 +252,8 @@ pub struct TableCell {
     pub padding: Gaps,
     /// height as typed Size
     pub height: Size,
+    /// where the cell's content sits along the row
+    pub main_align: Alignment,
     key: DiffKey,
 }
 
@@ -246,6 +271,7 @@ impl Default for TableCell {
             order_direction: None,
             padding: Gaps::new_all(5.0),
             height: Size::px(35.0),
+            main_align: Alignment::End,
             key: DiffKey::None,
         }
     }
@@ -275,6 +301,14 @@ impl TableCell {
         self.order_direction = dir;
         self
     }
+
+    /// Where the cell's content sits along the row. Defaults to [`Alignment::End`], which
+    /// suits the numeric columns a table is usually built from; text columns want
+    /// [`Alignment::Start`].
+    pub fn main_align(mut self, main_align: impl Into<Alignment>) -> Self {
+        self.main_align = main_align.into();
+        self
+    }
 }
 
 impl KeyExt for TableCell {
@@ -289,7 +323,7 @@ impl Component for TableCell {
             .overflow(Overflow::Clip)
             .padding(self.padding)
             .width(Size::fill())
-            .main_align(Alignment::End)
+            .main_align(self.main_align.clone())
             .cross_align(Alignment::Center)
             .height(self.height.clone())
             .horizontal();
@@ -461,6 +495,11 @@ impl Component for Table {
             .background(background)
             .corner_radius(corner_radius)
             .height(self.height.clone())
+            // So a table standing at a given height can hand what is left of it to a child:
+            // a [`TableHead`] over a scrolling [`TableBody`] wants the body at `Size::flex`,
+            // and without flex content that height has nowhere to go. Inert for the default
+            // `Size::Inner`, where no child asks for a share.
+            .content(Content::Flex)
             .border(
                 Border::new()
                     .alignment(BorderAlignment::Outer)
