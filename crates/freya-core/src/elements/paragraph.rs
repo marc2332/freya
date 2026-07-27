@@ -30,7 +30,6 @@ use freya_engine::prelude::{
     TextBaseline,
     TextStyle,
 };
-use rustc_hash::FxHashMap;
 use torin::prelude::{
     Area,
     Length,
