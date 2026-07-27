@@ -124,7 +124,7 @@ pub enum PlatformEvent {
     File {
         name: FileEventName,
         cursor: CursorPoint,
-        file_path: Option<PathBuf>,
+        file_paths: Vec<PathBuf>,
     },
 }
 
