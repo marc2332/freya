@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use freya::helpers::*;
 use freya_core::{
     integration::*,
@@ -409,4 +411,36 @@ fn text_blocks_events_to_lower_layers() {
     // Clicking away from the button reaches the rect behind it
     test.click_cursor((200., 200.));
     assert_eq!(*counters.0.peek(), (1, 1));
+}
+
+#[test]
+fn file_drop_with_multiple_files() {
+    fn app() -> Element {
+        let mut state = use_consume::<State<Vec<PathBuf>>>();
+        rect()
+            .expanded()
+            .background((255, 255, 255))
+            .on_file_drop(move |e: Event<FileEventData>| *state.write() = e.file_paths.clone())
+            .into()
+    }
+
+    let (mut test, state) = TestingRunner::new(
+        app,
+        (500., 500.).into(),
+        |runner| runner.provide_root_context(|| State::create(Vec::<PathBuf>::new())),
+        1.,
+    );
+    test.sync_and_update();
+
+    test.send_event(PlatformEvent::File {
+        name: FileEventName::FileDrop,
+        cursor: (15., 15.).into(),
+        file_paths: vec![PathBuf::from("first.txt"), PathBuf::from("second.txt")],
+    });
+    test.sync_and_update();
+
+    assert_eq!(
+        *state.peek(),
+        vec![PathBuf::from("first.txt"), PathBuf::from("second.txt")]
+    );
 }

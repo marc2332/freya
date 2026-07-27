@@ -447,12 +447,12 @@ mod test {
         ed.move_cursor_to(5);
         assert!(!ed.history.can_undo());
 
-        // Insert preedit — should NOT create undo history
+        // Insert preedit, should NOT create undo history
         ed.set_preedit("XY");
         assert!(!ed.history.can_undo());
         assert_eq!(ed.rope().to_string(), "HelloXY");
 
-        // Replace preedit — still no undo history
+        // Replace preedit, still no undo history
         ed.set_preedit("Z");
         assert!(!ed.history.can_undo());
         assert_eq!(ed.rope().to_string(), "HelloZ");

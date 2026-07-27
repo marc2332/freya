@@ -93,17 +93,19 @@ impl EditableEvent<'_> {
                     PressEventType::Double => {
                         let current_selection = text_editor.selection().clone();
 
-                        let char_position = paragraph.get_glyph_position_at_coordinate(
-                            location.mul(*scale_factor).to_i32().to_tuple(),
-                        );
-                        let press_selection = text_editor
-                            .measure_selection(char_position.position as usize, editor_line);
+                        let new_selection = if config.select_all_on_double_click {
+                            TextSelection::new_range((0, text_editor.len_utf16_cu()))
+                        } else {
+                            let char_position = paragraph.get_glyph_position_at_coordinate(
+                                location.mul(*scale_factor).to_i32().to_tuple(),
+                            );
+                            let press_selection = text_editor
+                                .measure_selection(char_position.position as usize, editor_line);
 
-                        // Find word boundaries
-                        let range = text_editor.find_word_boundaries(press_selection.pos());
-                        let new_selection = TextSelection::new_range(range);
+                            let range = text_editor.find_word_boundaries(press_selection.pos());
+                            TextSelection::new_range(range)
+                        };
 
-                        // Select the word
                         if current_selection != new_selection {
                             *text_editor.selection_mut() = new_selection;
                         }
