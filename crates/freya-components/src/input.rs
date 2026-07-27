@@ -178,6 +178,7 @@ pub struct Input {
     auto_focus: bool,
     select_all_on_init: bool,
     width: Size,
+    height: Size,
     enabled: bool,
     key: DiffKey,
     style_variant: InputStyleVariant,
@@ -208,6 +209,7 @@ impl Input {
             auto_focus: false,
             select_all_on_init: false,
             width: Size::px(150.),
+            height: Size::Inner,
             enabled: true,
             key: DiffKey::default(),
             style_variant: InputStyleVariant::Normal,
@@ -274,6 +276,21 @@ impl Input {
 
     pub fn width(mut self, width: impl Into<Size>) -> Self {
         self.width = width.into();
+        self
+    }
+
+    /// Set the input's height.
+    ///
+    /// Defaults to [`Size::Inner`], which is the input sized by its own content: the text line
+    /// box plus the layout theme's `inner_margin`. Set this when the input has to stand at a
+    /// height the surface dictates rather than the one its text happens to produce, for example
+    /// beside a control of a fixed size in a form row.
+    ///
+    /// Prefer this to wrapping the input in a sized container. A wrapper cannot change the
+    /// input's own box, so it only centres a differently sized input inside itself, and the
+    /// background, border and corner radius stay at the content height.
+    pub fn height(mut self, height: impl Into<Size>) -> Self {
+        self.height = height.into();
         self
     }
 
@@ -676,6 +693,7 @@ impl Component for Input {
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
             .width(self.width.clone())
+            .height(self.height.clone())
             .background(background.mul_if(!self.enabled, 0.85))
             .border(border)
             .corner_radius(theme_layout.corner_radius)
