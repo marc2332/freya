@@ -31,7 +31,6 @@ use freya_engine::prelude::{
     TextStyle,
 };
 use rustc_hash::FxHashMap;
-use unicode_segmentation::UnicodeSegmentation;
 use torin::prelude::{
     Area,
     Length,
@@ -40,6 +39,7 @@ use torin::prelude::{
     PostMeasure,
     Size2D,
 };
+use unicode_segmentation::UnicodeSegmentation;
 
 use crate::{
     data::{

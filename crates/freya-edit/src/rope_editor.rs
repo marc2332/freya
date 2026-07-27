@@ -375,7 +375,14 @@ mod test {
     }
 
     fn press(ed: &mut RopeEditor, key: NamedKey) {
-        ed.process_key(&Key::Named(key), &Modifiers::empty(), true, true, false, false);
+        ed.process_key(
+            &Key::Named(key),
+            &Modifiers::empty(),
+            true,
+            true,
+            false,
+            false,
+        );
     }
 
     #[test]
