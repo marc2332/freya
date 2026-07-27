@@ -18,12 +18,11 @@ use crate::{
 /// Spawn a task attached to the root scope.
 ///
 /// Unlike [`spawn`], this task keeps running when the component that started it
-/// unmounts. Use it for app-wide work such as shared cache initialization or a
-/// background synchronization loop. The task runs until it finishes, the app
-/// exits, or its [`TaskHandle`] is cancelled explicitly.
+/// unmounts. Use it for app-wide work like initializing a shared cache or a
+/// background synchronization loop. It runs until it finishes, the app exits, or
+/// its [`TaskHandle`] is cancelled.
 ///
-/// Initialize long-running tasks from a hook so rerenders do not spawn
-/// duplicates:
+/// Spawn it from a hook so rerenders do not create duplicates:
 ///
 /// ```rust,no_run
 /// # use freya::prelude::*;
@@ -38,9 +37,6 @@ use crate::{
 /// rect()
 /// # }
 /// ```
-///
-/// See the [Async guide](https://docs.rs/freya/latest/freya/_docs/_async/index.html)
-/// for a comparison with [`spawn`] and [`use_future`](crate::prelude::use_future).
 pub fn spawn_forever(future: impl Future<Output = ()> + 'static) -> TaskHandle {
     CurrentContext::with(|context| {
         let task_id = TaskId(context.task_id_counter.fetch_add(1, Ordering::Relaxed));
@@ -65,10 +61,10 @@ pub fn spawn_forever(future: impl Future<Output = ()> + 'static) -> TaskHandle {
 
 /// Spawn a task attached to the current component scope.
 ///
-/// Use this for async work owned by a component, such as handling an event,
-/// waiting for a timer, or loading component-specific data. Freya automatically
-/// cancels the task when that component unmounts. Use the returned [`TaskHandle`]
-/// when the task may also need to be cancelled earlier.
+/// Use it for async work owned by a component, like handling an event, waiting
+/// for a timer or loading component-specific data. Freya cancels the task when
+/// that component unmounts. The returned [`TaskHandle`] lets you cancel it
+/// earlier.
 ///
 /// ```rust,no_run
 /// # use freya::prelude::*;
@@ -81,10 +77,6 @@ pub fn spawn_forever(future: impl Future<Output = ()> + 'static) -> TaskHandle {
 /// })
 /// # }
 /// ```
-///
-/// See the [Async guide](https://docs.rs/freya/latest/freya/_docs/_async/index.html)
-/// for a comparison with [`spawn_forever`] and
-/// [`use_future`](crate::prelude::use_future).
 pub fn spawn(future: impl Future<Output = ()> + 'static) -> TaskHandle {
     CurrentContext::with(|context| {
         let task_id = TaskId(context.task_id_counter.fetch_add(1, Ordering::Relaxed));
@@ -110,11 +102,8 @@ pub fn spawn(future: impl Future<Output = ()> + 'static) -> TaskHandle {
 /// A non-owning handle used to cancel a spawned task manually.
 ///
 /// Dropping this handle does not cancel the task. Call [`TaskHandle::cancel`]
-/// explicitly, or convert it with [`TaskHandle::owned`] when the task should be
-/// cancelled automatically as its owner is dropped.
-///
-/// See the [Async guide](https://docs.rs/freya/latest/freya/_docs/_async/index.html)
-/// for an overview of Freya's task APIs.
+/// explicitly, or use [`TaskHandle::owned`] when the task should be cancelled as
+/// its owner is dropped.
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
 pub struct TaskHandle(TaskId);
 
@@ -127,18 +116,18 @@ impl From<TaskId> for TaskHandle {
 impl TaskHandle {
     /// Cancel the task.
     ///
-    /// Use this when an event or state change makes an in-progress task no
-    /// longer necessary. This method must run within Freya's current context;
-    /// use [`TaskHandle::try_cancel`] for cleanup that may run outside it.
+    /// Use it when an event or state change makes an in-progress task no longer
+    /// necessary. This method must run within Freya's current context, use
+    /// [`TaskHandle::try_cancel`] for cleanup that may run outside it.
     pub fn cancel(&self) {
         CurrentContext::with(|context| context.tasks.borrow_mut().remove(&self.0));
     }
 
     /// Try to cancel the task if Freya's current context is available.
     ///
-    /// Unlike [`TaskHandle::cancel`], this method safely does nothing when
-    /// called outside Freya's context. Prefer it in destructors and other
-    /// cleanup paths where a context might no longer exist.
+    /// Unlike [`TaskHandle::cancel`], this does nothing when called outside
+    /// Freya's context. Prefer it in destructors and other cleanup paths where a
+    /// context might no longer exist.
     pub fn try_cancel(&self) {
         CurrentContext::try_with(|context| context.tasks.borrow_mut().remove(&self.0));
     }
@@ -146,9 +135,9 @@ impl TaskHandle {
     /// Upgrade to an [`OwnedTaskHandle`] that cancels the task when its last
     /// clone is dropped.
     ///
-    /// Retain the returned handle for as long as the task should run. This is
-    /// useful for a task owned by another long-lived value rather than directly
-    /// by a component scope:
+    /// Retain the returned handle for as long as the task should run. Useful for
+    /// a task owned by another long-lived value rather than by a component
+    /// scope:
     ///
     /// ```rust,no_run
     /// # use freya::prelude::*;
@@ -179,9 +168,8 @@ impl Drop for InnerOwnedTaskHandle {
 
 /// An owning handle that cancels its task when the last clone is dropped.
 ///
-/// Use [`TaskHandle::owned`] to create one. Cloning this handle shares ownership
-/// of the same task; dropping an individual clone only cancels the task when no
-/// other clones remain.
+/// Use [`TaskHandle::owned`] to create one. Clones share ownership of the same
+/// task, so dropping one only cancels the task when no other clones remain.
 #[derive(Clone)]
 pub struct OwnedTaskHandle(Rc<InnerOwnedTaskHandle>);
 
@@ -218,7 +206,7 @@ impl OwnedTaskHandle {
 
 /// Wakes a Freya task by asking the runner to poll it again.
 ///
-/// This is a runtime implementation detail; application code normally uses
+/// This is a runtime implementation detail, application code normally uses
 /// [`spawn`] or [`spawn_forever`] instead.
 pub struct TaskWaker {
     task_id: TaskId,
@@ -233,7 +221,7 @@ impl futures_util::task::ArcWake for TaskWaker {
     }
 }
 
-/// A future scheduled by Freya's async executor.
+/// A future scheduled by Freya's async runtime.
 ///
 /// This is a runtime implementation detail stored by the runner. Application
 /// code should use [`TaskHandle`] to interact with spawned tasks.
@@ -244,6 +232,6 @@ pub struct Task {
     pub waker: futures_util::task::Waker,
 }
 
-/// The opaque identifier of a task scheduled by Freya's executor.
+/// The opaque identifier of a task scheduled by Freya's async runtime.
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
 pub struct TaskId(u64);
