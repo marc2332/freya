@@ -106,7 +106,6 @@ fn app() -> impl IntoElement {
                                 })
                                 .on_press(move |_| on_column_head_click(&order_by))
                                 .child(text.to_string())
-                                .into()
                         },
                     )),
                 ),
@@ -122,7 +121,6 @@ fn app() -> impl IntoElement {
                                     .key(n)
                                     .height(Size::px(35.))
                                     .child(item.to_string())
-                                    .into()
                             }))
                             .into()
                     })

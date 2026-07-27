@@ -83,14 +83,15 @@ pub trait ChildrenExt: Sized {
     /// ```
     fn get_children(&mut self) -> &mut Vec<Element>;
 
-    /// Extends the children with an iterable of [`Element`]s.
+    /// Extends the children with an iterable of anything that implements [`IntoElement`].
     ///
     /// # Example
     /// ```ignore
-    /// rect().children(["Hello", "World"].map(|t| label().text(t).into_element()))
+    /// rect().children(["Hello", "World"].map(|t| label().text(t)))
     /// ```
-    fn children(mut self, children: impl IntoIterator<Item = Element>) -> Self {
-        self.get_children().extend(children);
+    fn children(mut self, children: impl IntoIterator<Item = impl IntoElement>) -> Self {
+        self.get_children()
+            .extend(children.into_iter().map(IntoElement::into_element));
         self
     }
 
