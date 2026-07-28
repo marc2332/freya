@@ -19,9 +19,8 @@ use freya_core::{
     element::{
         Element,
         ElementExt,
-        EventHandlerType,
+        EventHandlers,
     },
-    events::name::EventName,
     layers::Layer,
     prelude::{
         AccessibilityExt,
@@ -34,7 +33,6 @@ use freya_core::{
     },
     tree::DiffModifies,
 };
-use rustc_hash::FxHashMap;
 
 use crate::registry::{
     WebViewConfig,
@@ -46,7 +44,7 @@ use crate::registry::{
 pub struct WebViewElement {
     pub accessibility: AccessibilityData,
     pub layout: LayoutData,
-    pub event_handlers: FxHashMap<EventName, EventHandlerType>,
+    pub event_handlers: EventHandlers,
     pub webview_id: WebViewId,
     pub config: WebViewConfig,
     pub relative_layer: Layer,
@@ -126,7 +124,7 @@ impl ElementExt for WebViewElement {
         false
     }
 
-    fn events_handlers(&'_ self) -> Option<Cow<'_, FxHashMap<EventName, EventHandlerType>>> {
+    fn events_handlers(&'_ self) -> Option<Cow<'_, EventHandlers>> {
         Some(Cow::Borrowed(&self.event_handlers))
     }
 }
@@ -183,7 +181,7 @@ impl KeyExt for WebView {
 }
 
 impl EventHandlersExt for WebView {
-    fn get_event_handlers(&mut self) -> &mut FxHashMap<EventName, EventHandlerType> {
+    fn get_event_handlers(&mut self) -> &mut EventHandlers {
         &mut self.element.event_handlers
     }
 }

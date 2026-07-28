@@ -373,8 +373,8 @@ impl TerminalHandle {
         self.inner.borrow().modifiers.contains(Modifiers::SHIFT)
     }
 
-    /// Handle a mouse move/drag. `row` and `col` are fractional cell units;
-    /// the fraction of `col` picks which cell half anchors the selection.
+    /// Handle a mouse move/drag. `row` and `col` are fractional cell units.
+    /// The fraction of `col` picks which cell half anchors the selection.
     pub fn mouse_move(&self, row: f32, col: f32) {
         let held = self.pressed_button();
 

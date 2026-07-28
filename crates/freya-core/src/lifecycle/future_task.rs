@@ -81,11 +81,33 @@ impl<D: 'static, F: Future<Output = D> + 'static> FutureTask<D, F> {
     }
 }
 
-/// Creata [FutureTask] with the given callback.
+/// Create a [FutureTask] with the given callback.
 ///
-/// It will automatically start polling.
+/// This is a hook around [spawn] that exposes the progress of the future as
+/// reactive state, so you can render the pending, loading and fulfilled cases
+/// without managing the task by hand. It starts polling automatically.
 ///
-/// To read it's state use [FutureTask::state].
+/// ```rust,no_run
+/// # use freya::prelude::*;
+/// #[derive(PartialEq)]
+/// struct Greeting;
+///
+/// impl Component for Greeting {
+///     fn render(&self) -> impl IntoElement {
+///         let future = use_future(|| async {
+///             // Some async work...
+///             "Hello!".to_string()
+///         });
+///
+///         match &*future.state() {
+///             FutureState::Pending | FutureState::Loading => "Loading...".to_string(),
+///             FutureState::Fulfilled(text) => text.clone(),
+///         }
+///     }
+/// }
+/// ```
+///
+/// To read its state use [FutureTask::state].
 /// You may restart/stop it using [FutureTask::start] and [FutureTask::cancel].
 pub fn use_future<D: 'static, F: Future<Output = D> + 'static>(
     future: impl FnMut() -> F + 'static,

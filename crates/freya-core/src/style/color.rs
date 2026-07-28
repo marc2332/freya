@@ -238,7 +238,7 @@ impl Color {
     }
 
     /// Linearly interpolates between two colors per channel. `t` is clamped
-    /// to `0.0..=1.0`; `0.0` returns `start`, `1.0` returns `end`.
+    /// to `0.0..=1.0`, where `0.0` returns `start` and `1.0` returns `end`.
     pub fn lerp(start: Color, end: Color, t: f32) -> Color {
         let t = t.clamp(0.0, 1.0);
         let mix = |a: u8, b: u8| (a as f32 + (b as f32 - a as f32) * t).round() as u8;
