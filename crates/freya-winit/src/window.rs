@@ -252,12 +252,10 @@ impl AppWindow {
                 is_app_focused: State::create(is_app_focused),
                 accent_color: State::create(accent_color_preference.accent_color),
                 sender: Rc::new(move |user_event| {
-                    event_loop_proxy
-                        .send_event(NativeEvent::Window(NativeWindowEvent {
-                            window_id,
-                            action: NativeWindowEventAction::User(user_event),
-                        }))
-                        .unwrap();
+                    let _ = event_loop_proxy.send_event(NativeEvent::Window(NativeWindowEvent {
+                        window_id,
+                        action: NativeWindowEventAction::User(user_event),
+                    }));
                 }),
             }
         });
