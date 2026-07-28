@@ -538,6 +538,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             row_background: Preference::Specific(Color::TRANSPARENT),
             hover_row_background: Preference::reference("surface_secondary"),
             divider_fill: Preference::reference("surface_primary"),
+            border_fill: Preference::reference("surface_primary"),
             corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
             color: Preference::reference("text_primary"),
         },

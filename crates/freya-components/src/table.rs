@@ -20,7 +20,13 @@ define_theme! {
         arrow_fill: Color,
         hover_row_background: Color,
         row_background: Color,
+        /// The rule between two rows.
         divider_fill: Color,
+        /// The table's own outer edge. Separate from `divider_fill` because a table's box and
+        /// the rules inside it are different weights in most designs, and a single token can
+        /// only be authored for one of them: pitched for the rules, the box disappears; pitched
+        /// for the box, every row is banded.
+        border_fill: Color,
         corner_radius: CornerRadius,
         color: Color,
     }
@@ -478,7 +484,7 @@ impl Component for Table {
         let TableTheme {
             background,
             corner_radius,
-            divider_fill,
+            border_fill,
             color,
             ..
         } = get_theme!(&self.theme, TableThemePreference, "table");
@@ -503,7 +509,7 @@ impl Component for Table {
             .border(
                 Border::new()
                     .alignment(BorderAlignment::Outer)
-                    .fill(divider_fill)
+                    .fill(border_fill)
                     .width(1.0),
             )
             .children(self.children.clone())
