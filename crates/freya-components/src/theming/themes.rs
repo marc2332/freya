@@ -628,7 +628,7 @@ fn register_base_component_themes(theme: &mut Theme) {
 
 /// Light theme with all built-in component themes registered.
 ///
-/// The primary color tracks the OS-level [`AccentColor`] when available; the
+/// The primary color tracks the OS-level [`AccentColor`] when available. The
 /// secondary and tertiary colors are derived from it (lightened / darkened).
 pub fn light_theme() -> Theme {
     build_theme("light", LIGHT_COLORS)
@@ -636,7 +636,7 @@ pub fn light_theme() -> Theme {
 
 /// Dark theme with all built-in component themes registered.
 ///
-/// The primary color tracks the OS-level [`AccentColor`] when available; the
+/// The primary color tracks the OS-level [`AccentColor`] when available. The
 /// secondary and tertiary colors are derived from it (lightened / darkened).
 pub fn dark_theme() -> Theme {
     build_theme("dark", DARK_COLORS)

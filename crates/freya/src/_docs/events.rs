@@ -4,7 +4,7 @@
 //! element, a scroll, a file drop, and so on.
 //!
 //! Events are attached to **elements** (`rect`, `label`, `paragraph`, ...), not to components.
-//! Components are just a way to organize and reuse UI; the listeners are on the elements that
+//! Components are just a way to organize and reuse UI. The listeners are on the elements that
 //! the component returns.
 //!
 //! ```rust, no_run
@@ -56,7 +56,7 @@
 //!
 //! Call [`stop_propagation`](freya_core::prelude::Event::stop_propagation) on the event to
 //! prevent it from continuing to bubble up to ancestors. The current handler still runs to
-//! completion; only ancestor handlers for **this same event** are skipped.
+//! completion. Only ancestor handlers for **this same event** are skipped.
 //!
 //! ```rust, no_run
 //! # use freya::prelude::*;

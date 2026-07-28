@@ -32,8 +32,8 @@ pub mod use_camera;
 pub use nokhwa;
 
 /// Request access to the system cameras. Always `true` on Linux/Windows.
-/// On macOS, blocks on the authorization prompt and returns whether access was granted;
-/// call once from `main` before launching the app.
+/// On macOS, blocks on the authorization prompt and returns whether access was granted.
+/// Call once from `main` before launching the app.
 #[cfg(target_os = "macos")]
 pub fn init() -> bool {
     use std::sync::mpsc;

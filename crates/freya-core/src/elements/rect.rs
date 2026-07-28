@@ -20,7 +20,6 @@ use freya_engine::prelude::{
     SkRRect,
     SkRect,
 };
-use rustc_hash::FxHashMap;
 use torin::{
     prelude::Area,
     scaled::Scaled,
@@ -31,11 +30,10 @@ use crate::{
     element::{
         ClipContext,
         ElementExt,
-        EventHandlerType,
+        EventHandlers,
         EventMeasurementContext,
         RenderContext,
     },
-    events::name::EventName,
     layers::Layer,
     prelude::*,
     style::{
@@ -76,7 +74,7 @@ pub struct RectElement {
     pub layout: LayoutData,
     pub text_style_data: TextStyleData,
     pub relative_layer: Layer,
-    pub event_handlers: FxHashMap<EventName, EventHandlerType>,
+    pub event_handlers: EventHandlers,
     pub accessibility: AccessibilityData,
     pub effect: Option<EffectData>,
 }
@@ -458,7 +456,7 @@ impl ElementExt for RectElement {
         self.relative_layer
     }
 
-    fn events_handlers(&'_ self) -> Option<Cow<'_, FxHashMap<EventName, EventHandlerType>>> {
+    fn events_handlers(&'_ self) -> Option<Cow<'_, EventHandlers>> {
         Some(Cow::Borrowed(&self.event_handlers))
     }
 
@@ -558,7 +556,7 @@ impl KeyExt for Rect {
 }
 
 impl EventHandlersExt for Rect {
-    fn get_event_handlers(&mut self) -> &mut FxHashMap<EventName, EventHandlerType> {
+    fn get_event_handlers(&mut self) -> &mut EventHandlers {
         &mut self.element.event_handlers
     }
 }
