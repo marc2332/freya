@@ -11,6 +11,7 @@ use crate::{
 #[derive(Default)]
 pub struct AccessibilityDirtyNodes {
     pub requested_focus: Option<AccessibilityFocusStrategy>,
+    pub requested_auto_focus: Option<AccessibilityFocusStrategy>,
     pub added_or_updated: FxHashSet<NodeId>,
     pub removed: FxHashMap<NodeId, NodeId>,
 }
@@ -18,6 +19,10 @@ pub struct AccessibilityDirtyNodes {
 impl AccessibilityDirtyNodes {
     pub fn request_focus(&mut self, strategy: AccessibilityFocusStrategy) {
         self.requested_focus = Some(strategy);
+    }
+
+    pub fn request_auto_focus(&mut self, strategy: AccessibilityFocusStrategy) {
+        self.requested_auto_focus = Some(strategy);
     }
 
     pub fn add_or_update(&mut self, node_id: NodeId) {
@@ -30,6 +35,7 @@ impl AccessibilityDirtyNodes {
 
     pub fn clear(&mut self) {
         self.requested_focus.take();
+        self.requested_auto_focus.take();
         self.added_or_updated.clear();
         self.removed.clear();
     }

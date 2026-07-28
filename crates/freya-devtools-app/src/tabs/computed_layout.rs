@@ -2,7 +2,7 @@ use freya::prelude::*;
 use torin::gaps::Gaps;
 
 fn gap_label(tooltip_text: &'static str, value: f32) -> impl IntoElement {
-    TooltipContainer::new(Tooltip::new(tooltip_text)).child(
+    TooltipContainer::new(Tooltip::new_text(tooltip_text)).child(
         label()
             .text_align(TextAlign::Center)
             .width(Size::px(25.))
@@ -55,8 +55,10 @@ pub fn computed_layout(inner_area: String, padding: Gaps, margin: Gaps) -> impl 
                                             .background((40, 40, 40))
                                             .corner_radius(CornerRadius::new_all(5.))
                                             .child(
-                                                TooltipContainer::new(Tooltip::new("Inner area"))
-                                                    .child(label().text(inner_area)),
+                                                TooltipContainer::new(Tooltip::new_text(
+                                                    "Inner area",
+                                                ))
+                                                .child(label().text(inner_area)),
                                             ),
                                     )
                                     .child(gap_label("Right padding", padding.right())),

@@ -165,13 +165,13 @@ pub struct LaunchProxy(pub EventLoopProxy<NativeEvent>);
 impl LaunchProxy {
     /// Queue a callback to be run on the renderer thread with access to a [`RendererContext`].
     ///
-    /// The call dispatches an event to the winit event loop and returns right away; the
+    /// The call dispatches an event to the winit event loop and returns right away. The
     /// callback runs later, when the event loop picks it up. Its return value is delivered
     /// through the returned oneshot [`Receiver`](futures_channel::oneshot::Receiver), which
     /// can be `.await`ed or dropped.
     ///
     /// The callback runs outside any component scope, so you can't call `Platform::get` or
-    /// consume context from inside it; use the [`RendererContext`] argument instead.
+    /// consume context from inside it. Use the [`RendererContext`] argument instead.
     pub fn post_callback<F, T: 'static>(&self, f: F) -> futures_channel::oneshot::Receiver<T>
     where
         F: FnOnce(&mut RendererContext) -> T + 'static,
@@ -504,6 +504,16 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                     AccessibilityTask::ProcessUpdate { mode: None };
                                 app.window.request_redraw();
                             }
+                            if let Some(strategy) = result.auto_focus {
+                                self.proxy
+                                    .send_event(NativeEvent::Window(NativeWindowEvent {
+                                        window_id: app.window.id(),
+                                        action: NativeWindowEventAction::User(
+                                            UserEvent::FocusAccessibilityNode(strategy),
+                                        ),
+                                    }))
+                                    .ok();
+                            }
                             self.plugins.send(
                                 PluginEvent::FinishedUpdatingTree {
                                     window: &app.window,
@@ -546,8 +556,11 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                     }
                                     _ => AccessibilityTask::ProcessUpdate { mode: None },
                                 };
+                                if let AccessibilityFocusStrategy::Node(id) = &strategy {
+                                    app.platform.focused_accessibility_id.set_if_modified(*id);
+                                }
                                 app.tree.accessibility_diff.request_focus(strategy);
-                                app.accessibility_tasks_for_next_render = task;
+                                app.accessibility_tasks_for_next_render |= task;
                                 app.window.request_redraw();
                             }
                             UserEvent::SetCursorIcon(cursor_icon) => {
@@ -822,33 +835,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
 
                         match app.accessibility_tasks_for_next_render.take() {
                             AccessibilityTask::ProcessUpdate { mode } => {
-                                let update = app
-                                    .accessibility
-                                    .process_updates(&mut app.tree, &app.events_sender);
-                                app.platform
-                                    .focused_accessibility_id
-                                    .set_if_modified(update.focus);
-                                let node_id = app.accessibility.focused_node_id().unwrap();
-                                let layout_node = app.tree.layout.get(&node_id).unwrap();
-                                let focused_node =
-                                    AccessibilityTree::create_node(node_id, layout_node, &app.tree);
-                                app.window.set_ime_allowed(is_ime_role(focused_node.role()));
-                                app.platform
-                                    .focused_accessibility_node
-                                    .set_if_modified(focused_node);
-                                if let Some(mode) = mode {
-                                    app.platform.navigation_mode.set(mode);
-                                }
-
-                                let area = layout_node.visible_area();
-                                app.window.set_ime_cursor_area(
-                                    LogicalPosition::new(area.min_x(), area.min_y()),
-                                    LogicalSize::new(area.width(), area.height()),
-                                );
-
-                                if app.screen_reader.is_on() {
-                                    app.accessibility_adapter.update_if_active(|| update);
-                                }
+                                app.process_accessibility_update(mode);
                             }
                             AccessibilityTask::Init => {
                                 let update = app.accessibility.init(&mut app.tree);

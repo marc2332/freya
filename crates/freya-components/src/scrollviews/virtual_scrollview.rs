@@ -30,6 +30,128 @@ use crate::scrollviews::{
     use_scroll_controller,
 };
 
+/// Defines how each item of a [`VirtualScrollView`] is sized along the scroll axis.
+///
+/// Build one from a fixed value or from a closure that resolves the size of each
+/// item by its index:
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// let fixed: ItemSize = 25.0f32.into();
+/// let dynamic: ItemSize =
+///     (|index: usize| if index.is_multiple_of(2) { 25.0 } else { 50.0 }).into();
+/// ```
+#[derive(Clone, PartialEq)]
+pub enum ItemSize {
+    /// Every item shares the same size in pixels.
+    Fixed(f32),
+    /// Each item is sized individually through a callback that receives its index.
+    Dynamic(Callback<usize, f32>),
+}
+
+impl ItemSize {
+    /// Size in pixels of the item at `index`.
+    fn at(&self, index: usize) -> f32 {
+        match self {
+            Self::Fixed(size) => *size,
+            Self::Dynamic(callback) => callback.call(index),
+        }
+    }
+
+    /// Range of items that fall inside the viewport for the given scroll position,
+    /// together with the offset that positions the first visible item correctly.
+    fn visible_range(
+        &self,
+        viewport_size: f32,
+        scroll_position: f32,
+        length: usize,
+    ) -> (Range<usize>, f32) {
+        let scroll_distance = (-scroll_position).max(0.0);
+        match self {
+            Self::Fixed(size) => {
+                if *size <= 0.0 {
+                    return (0..0, 0.0);
+                }
+                let start = scroll_distance / size;
+                let potentially_visible = (viewport_size / size) + 1.0;
+                let start_index = (start as usize).min(length);
+                let end_index = ((start + potentially_visible) as usize).min(length);
+                (
+                    start_index..end_index,
+                    start.floor() * size - scroll_distance,
+                )
+            }
+            Self::Dynamic(callback) => {
+                let mut start = 0;
+                let mut cumulative = 0.0;
+                while start < length {
+                    let item = callback.call(start);
+                    if cumulative + item > scroll_distance {
+                        break;
+                    }
+                    cumulative += item;
+                    start += 1;
+                }
+                let offset = cumulative - scroll_distance;
+                let mut end = start;
+                while end < length && cumulative < scroll_distance + viewport_size {
+                    cumulative += callback.call(end);
+                    end += 1;
+                }
+                (start..end, offset)
+            }
+        }
+    }
+
+    /// Total size of the content along the scroll axis.
+    ///
+    /// [`Self::Fixed`] is exact. [`Self::Dynamic`] extrapolates from the average size of
+    /// the items down to the viewport bottom, keeping the scrollbar stable as it scrolls.
+    fn total_size(&self, viewport_size: f32, scroll_position: f32, length: usize) -> f32 {
+        match self {
+            Self::Fixed(size) => size * length as f32,
+            Self::Dynamic(callback) => {
+                if length == 0 {
+                    return 0.0;
+                }
+                let viewport_bottom = (-scroll_position).max(0.0) + viewport_size;
+                let mut measured = callback.call(0);
+                let mut count = 1;
+                while count < length && measured < viewport_bottom {
+                    measured += callback.call(count);
+                    count += 1;
+                }
+                (measured / count as f32) * length as f32
+            }
+        }
+    }
+}
+
+impl Default for ItemSize {
+    fn default() -> Self {
+        Self::Fixed(0.)
+    }
+}
+
+impl From<f32> for ItemSize {
+    fn from(size: f32) -> Self {
+        Self::Fixed(size)
+    }
+}
+
+impl<F: Fn(usize) -> f32 + 'static> From<F> for ItemSize {
+    fn from(callback: F) -> Self {
+        Self::Dynamic(Callback::new(callback))
+    }
+}
+
+/// Data passed to a [`VirtualScrollView`] builder for each rendered item.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct VirtualItem {
+    pub index: usize,
+    pub size: f32,
+}
+
 /// One-direction scrollable area that dynamically builds and renders items based in their size and current available size,
 /// this is intended for apps using large sets of data that need good performance.
 ///
@@ -47,12 +169,12 @@ use crate::scrollviews::{
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
 ///     rect().child(
-///         VirtualScrollView::new(|i, _| {
+///         VirtualScrollView::new(|item, _| {
 ///             rect()
-///                 .key(i)
-///                 .height(Size::px(25.))
+///                 .key(item.index)
+///                 .height(Size::px(item.size))
 ///                 .padding(4.)
-///                 .child(format!("Item {i}"))
+///                 .child(format!("Item {}", item.index))
 ///                 .into()
 ///         })
 ///         .length(300usize)
@@ -75,10 +197,10 @@ use crate::scrollviews::{
     doc = embed_doc_image::embed_image!("virtual_scrollview", "images/gallery_virtual_scrollview.png")
 )]
 #[derive(Clone)]
-pub struct VirtualScrollView<D, B: Fn(usize, &D) -> Element> {
+pub struct VirtualScrollView<D, B: Fn(VirtualItem, &D) -> Element> {
     builder: B,
     builder_data: D,
-    item_size: f32,
+    item_size: ItemSize,
     length: usize,
     layout: LayoutData,
     show_scrollbar: bool,
@@ -89,21 +211,21 @@ pub struct VirtualScrollView<D, B: Fn(usize, &D) -> Element> {
     key: DiffKey,
 }
 
-impl<D: PartialEq, B: Fn(usize, &D) -> Element> LayoutExt for VirtualScrollView<D, B> {
+impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> LayoutExt for VirtualScrollView<D, B> {
     fn get_layout(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
 
-impl<D: PartialEq, B: Fn(usize, &D) -> Element> ContainerSizeExt for VirtualScrollView<D, B> {}
+impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> ContainerSizeExt for VirtualScrollView<D, B> {}
 
-impl<D: PartialEq, B: Fn(usize, &D) -> Element> KeyExt for VirtualScrollView<D, B> {
+impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> KeyExt for VirtualScrollView<D, B> {
     fn write_key(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
-impl<D: PartialEq, B: Fn(usize, &D) -> Element> PartialEq for VirtualScrollView<D, B> {
+impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> PartialEq for VirtualScrollView<D, B> {
     fn eq(&self, other: &Self) -> bool {
         self.builder_data == other.builder_data
             && self.item_size == other.item_size
@@ -116,13 +238,13 @@ impl<D: PartialEq, B: Fn(usize, &D) -> Element> PartialEq for VirtualScrollView<
     }
 }
 
-impl<B: Fn(usize, &()) -> Element> VirtualScrollView<(), B> {
-    /// Creates a virtual scroll view that builds each item on demand from its index.
+impl<B: Fn(VirtualItem, &()) -> Element> VirtualScrollView<(), B> {
+    /// Creates a virtual scroll view that builds each item on demand from its [`VirtualItem`].
     pub fn new(builder: B) -> Self {
         Self {
             builder,
             builder_data: (),
-            item_size: 0.,
+            item_size: ItemSize::default(),
             length: 0,
             layout: {
                 let mut l = LayoutData::default();
@@ -144,7 +266,7 @@ impl<B: Fn(usize, &()) -> Element> VirtualScrollView<(), B> {
         Self {
             builder,
             builder_data: (),
-            item_size: 0.,
+            item_size: ItemSize::default(),
             length: 0,
             layout: {
                 let mut l = LayoutData::default();
@@ -162,7 +284,7 @@ impl<B: Fn(usize, &()) -> Element> VirtualScrollView<(), B> {
     }
 }
 
-impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
+impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
     /// Like [`new`](Self::new) but passes shared `builder_data` to every item build.
     ///
     /// The builder closure cannot be compared across renders, so data captured inside it never
@@ -175,11 +297,11 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
     ///     let items = use_state(|| vec!["a".to_string(), "b".to_string(), "c".to_string()]);
     ///
     ///     // The current items are passed as data, so editing `items` rebuilds the visible rows.
-    ///     VirtualScrollView::new_with_data(items.read().clone(), |i, items: &Vec<String>| {
+    ///     VirtualScrollView::new_with_data(items.read().clone(), |item, items: &Vec<String>| {
     ///         rect()
-    ///             .key(i)
-    ///             .height(Size::px(25.))
-    ///             .child(items[i].clone())
+    ///             .key(item.index)
+    ///             .height(Size::px(item.size))
+    ///             .child(items[item.index].clone())
     ///             .into()
     ///     })
     ///     .length(items.read().len())
@@ -190,7 +312,7 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
         Self {
             builder,
             builder_data,
-            item_size: 0.,
+            item_size: ItemSize::default(),
             length: 0,
             layout: Node {
                 width: Size::fill(),
@@ -216,7 +338,7 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
         Self {
             builder,
             builder_data,
-            item_size: 0.,
+            item_size: ItemSize::default(),
             length: 0,
 
             layout: Node {
@@ -252,9 +374,12 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
         self
     }
 
-    /// Sets the fixed size of every item along the scroll axis, used to decide which items to render.
-    pub fn item_size(mut self, item_size: f32) -> Self {
-        self.item_size = item_size;
+    /// Sets the size of the items along the scroll axis, used to decide which items to render.
+    ///
+    /// Accepts an [`ItemSize`], so it can be a fixed size for every item or a closure that
+    /// resolves the size of each item by its index.
+    pub fn item_size(mut self, item_size: impl Into<ItemSize>) -> Self {
+        self.item_size = item_size.into();
         self
     }
 
@@ -298,7 +423,7 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
     }
 }
 
-impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
+impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Component
     for VirtualScrollView<D, B>
 {
     fn render(self: &VirtualScrollView<D, B>) -> impl IntoElement {
@@ -317,13 +442,18 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
         let direction = layout.direction;
         let drag_scrolling = self.drag_scrolling;
 
+        let viewport_width = size.read().area.width();
+        let viewport_height = size.read().area.height();
+
         let (inner_width, inner_height) = match direction {
             Direction::Vertical => (
                 size.read().inner_sizes.width,
-                self.item_size * self.length as f32,
+                self.item_size
+                    .total_size(viewport_height, scrolled_y as f32, self.length),
             ),
             Direction::Horizontal => (
-                self.item_size * self.length as f32,
+                self.item_size
+                    .total_size(viewport_width, scrolled_x as f32, self.length),
                 size.read().inner_sizes.height,
             ),
         };
@@ -527,37 +657,28 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
         };
 
         let (viewport_size, scroll_position) = if direction == Direction::vertical() {
-            (size.read().area.height(), corrected_scrolled_y)
+            (viewport_height, corrected_scrolled_y)
         } else {
-            (size.read().area.width(), corrected_scrolled_x)
+            (viewport_width, corrected_scrolled_x)
         };
 
-        let render_range = get_render_range(
-            viewport_size,
-            scroll_position,
-            self.item_size,
-            self.length as f32,
-        );
+        let (render_range, item_offset) =
+            self.item_size
+                .visible_range(viewport_size, scroll_position, self.length);
 
         let children = render_range
-            .map(|i| (self.builder)(i, &self.builder_data))
+            .map(|i| {
+                let item = VirtualItem {
+                    index: i,
+                    size: self.item_size.at(i),
+                };
+                (self.builder)(item, &self.builder_data)
+            })
             .collect::<Vec<Element>>();
 
         let (offset_x, offset_y) = match direction {
-            Direction::Vertical => {
-                let offset_y_min =
-                    (-corrected_scrolled_y / self.item_size).floor() * self.item_size;
-                let offset_y = -(-corrected_scrolled_y - offset_y_min);
-
-                (corrected_scrolled_x, offset_y)
-            }
-            Direction::Horizontal => {
-                let offset_x_min =
-                    (-corrected_scrolled_x / self.item_size).floor() * self.item_size;
-                let offset_x = -(-corrected_scrolled_x - offset_x_min);
-
-                (offset_x, corrected_scrolled_y)
-            }
+            Direction::Vertical => (corrected_scrolled_x, item_offset),
+            Direction::Horizontal => (item_offset, corrected_scrolled_y),
         };
 
         let on_pointer_down = move |e: Event<PointerEventData>| {
@@ -639,23 +760,4 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
     fn render_key(&self) -> DiffKey {
         self.key.clone().or(self.default_key())
     }
-}
-
-fn get_render_range(
-    viewport_size: f32,
-    scroll_position: f32,
-    item_size: f32,
-    item_length: f32,
-) -> Range<usize> {
-    let render_index_start = (-scroll_position) / item_size;
-    let potentially_visible_length = (viewport_size / item_size) + 1.0;
-    let remaining_length = item_length - render_index_start;
-
-    let render_index_end = if remaining_length <= potentially_visible_length {
-        item_length
-    } else {
-        render_index_start + potentially_visible_length
-    };
-
-    render_index_start as usize..(render_index_end as usize)
 }

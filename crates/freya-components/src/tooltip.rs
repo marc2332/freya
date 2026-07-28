@@ -43,16 +43,41 @@ define_theme! {
 ///
 /// # Example
 ///
+/// Use [Tooltip::new_text] to show plain text in a single line:
+///
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     Tooltip::new("Hello, World!")
+///     Tooltip::new_text("Hello, World!")
 /// }
 ///
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
 /// #   rect().center().expanded().child(app())
 /// # }, "./images/gallery_tooltip.png").render();
+/// ```
+///
+/// Use [Tooltip::new] to show any element:
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> impl IntoElement {
+///     Tooltip::new().child(
+///         rect()
+///             .horizontal()
+///             .cross_align(Alignment::Center)
+///             .spacing(4.)
+///             .child(
+///                 rect()
+///                     .width(Size::px(10.))
+///                     .height(Size::px(10.))
+///                     .corner_radius(5.)
+///                     .background(Color::GREEN),
+///             )
+///             .child("Connected"),
+///     )
+/// }
+/// # let _ = app();
 /// ```
 ///
 /// # Preview
@@ -64,9 +89,15 @@ define_theme! {
 pub struct Tooltip {
     /// Theme override.
     pub(crate) theme: Option<TooltipThemePartial>,
-    /// Text to show in the [Tooltip].
-    text: Cow<'static, str>,
+    /// Content to show in the [Tooltip].
+    children: Vec<Element>,
     key: DiffKey,
+}
+
+impl Default for Tooltip {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl KeyExt for Tooltip {
@@ -75,13 +106,24 @@ impl KeyExt for Tooltip {
     }
 }
 
+impl ChildrenExt for Tooltip {
+    fn get_children(&mut self) -> &mut Vec<Element> {
+        &mut self.children
+    }
+}
+
 impl Tooltip {
-    pub fn new(text: impl Into<Cow<'static, str>>) -> Self {
+    pub fn new() -> Self {
         Self {
             theme: None,
-            text: text.into(),
+            children: vec![],
             key: DiffKey::None,
         }
+    }
+
+    /// Create a [Tooltip] with a single-line text label.
+    pub fn new_text(text: impl Into<Cow<'static, str>>) -> Self {
+        Self::new().child(label().max_lines(1).text(text))
     }
 }
 
@@ -106,13 +148,9 @@ impl Component for Tooltip {
             )
             .background(background)
             .corner_radius(8.)
-            .child(
-                label()
-                    .max_lines(1)
-                    .font_size(font_size)
-                    .color(color)
-                    .text(self.text.clone()),
-            )
+            .font_size(font_size)
+            .color(color)
+            .children(self.children.clone())
     }
 
     fn render_key(&self) -> DiffKey {
