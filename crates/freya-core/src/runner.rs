@@ -10,10 +10,6 @@ use std::{
     fmt::Debug,
     rc::Rc,
     sync::atomic::AtomicU64,
-    time::{
-        Duration,
-        Instant,
-    },
 };
 
 use futures_lite::{
@@ -154,13 +150,19 @@ pub enum Message {
     PollTask(TaskId),
 }
 
+/// Reported around every batch of dirty tasks polled by the [Runner].
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum TasksPollStage {
+    Started,
+    Finished,
+}
+
 pub struct Runner {
     pub scopes: FxHashMap<ScopeId, Rc<RefCell<Scope>>>,
     pub scopes_storages: Rc<RefCell<FxHashMap<ScopeId, ScopeStorage>>>,
 
     pub(crate) dirty_scopes: FxHashSet<ScopeId>,
     pub(crate) dirty_tasks: VecDeque<TaskId>,
-    pub(crate) tasks_poll_time: Duration,
 
     pub node_to_scope: FxHashMap<NodeId, ScopeId>,
 
@@ -267,7 +269,6 @@ impl Runner {
 
             dirty_tasks: VecDeque::default(),
             dirty_scopes: FxHashSet::from_iter([ScopeId::ROOT]),
-            tasks_poll_time: Duration::ZERO,
 
             tasks: Rc::default(),
 
@@ -569,6 +570,11 @@ impl Runner {
 
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     pub async fn handle_events(&mut self) {
+        self.handle_events_with(&mut |_| {}).await
+    }
+
+    /// Like [Self::handle_events], notifying the observer around every tasks polling batch.
+    pub async fn handle_events_with(&mut self, observer: &mut dyn FnMut(TasksPollStage)) {
         loop {
             while let Ok(msg) = self.receiver.try_recv() {
                 match msg {
@@ -585,7 +591,7 @@ impl Runner {
                 return;
             }
 
-            self.poll_dirty_tasks();
+            self.poll_dirty_tasks(observer);
 
             if !self.dirty_scopes.is_empty() {
                 return;
@@ -607,6 +613,12 @@ impl Runner {
     /// Useful for freya-testing
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     pub fn handle_events_immediately(&mut self) {
+        self.handle_events_immediately_with(&mut |_| {})
+    }
+
+    /// Like [Self::handle_events_immediately], notifying the observer around every tasks polling
+    /// batch.
+    pub fn handle_events_immediately_with(&mut self, observer: &mut dyn FnMut(TasksPollStage)) {
         while let Ok(msg) = self.receiver.try_recv() {
             match msg {
                 Message::MarkScopeAsDirty(scope_id) => {
@@ -622,16 +634,16 @@ impl Runner {
             return;
         }
 
-        self.poll_dirty_tasks();
+        self.poll_dirty_tasks(observer);
     }
 
-    /// Poll the dirty tasks, measuring the time spent on them.
-    fn poll_dirty_tasks(&mut self) {
+    /// Poll the dirty tasks, notifying the observer around the batch.
+    fn poll_dirty_tasks(&mut self, observer: &mut dyn FnMut(TasksPollStage)) {
         if self.dirty_tasks.is_empty() {
             return;
         }
 
-        let started_polling = Instant::now();
+        observer(TasksPollStage::Started);
 
         while let Some(task_id) = self.dirty_tasks.pop_front() {
             let Some(task) = self.tasks.borrow().get(&task_id).cloned() else {
@@ -664,17 +676,17 @@ impl Runner {
             );
         }
 
-        self.tasks_poll_time += started_polling.elapsed();
-    }
-
-    /// Time spent polling async tasks since the last call.
-    pub fn take_tasks_poll_time(&mut self) -> Duration {
-        std::mem::take(&mut self.tasks_poll_time)
+        observer(TasksPollStage::Finished);
     }
 
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     pub fn sync_and_update(&mut self) -> Mutations {
-        self.handle_events_immediately();
+        self.sync_and_update_with(&mut |_| {})
+    }
+
+    /// Like [Self::sync_and_update], notifying the observer around every tasks polling batch.
+    pub fn sync_and_update_with(&mut self, observer: &mut dyn FnMut(TasksPollStage)) -> Mutations {
+        self.handle_events_immediately_with(observer);
         use itertools::Itertools;
 
         #[cfg(all(debug_assertions, feature = "debug-integrity"))]

@@ -435,6 +435,10 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             }
 
                             {
+                                let mut observer = self.plugins.tasks_poll_observer(
+                                    &app.window,
+                                    PluginHandle::new(&self.proxy),
+                                );
                                 let fut = std::pin::pin!(async {
                                     select! {
                                         events_chunk = app.events_receiver.next() => {
@@ -453,7 +457,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                                 _ => {}
                                             }
                                         },
-                                        _ = app.runner.handle_events().fuse() => {},
+                                        _ = app.runner.handle_events_with(&mut observer).fuse() => {},
                                     }
                                 });
 
@@ -477,7 +481,12 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 },
                                 PluginHandle::new(&self.proxy),
                             );
-                            let mutations = app.runner.sync_and_update();
+                            let mutations = app.runner.sync_and_update_with(
+                                &mut self.plugins.tasks_poll_observer(
+                                    &app.window,
+                                    PluginHandle::new(&self.proxy),
+                                ),
+                            );
                             let result = app.runner.run_in(|| app.tree.apply_mutations(mutations));
                             if result.needs_render {
                                 app.process_layout_on_next_render = true;
@@ -502,17 +511,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 },
                                 PluginHandle::new(&self.proxy),
                             );
-                            let tasks_poll_time = app.runner.take_tasks_poll_time();
-                            if !tasks_poll_time.is_zero() {
-                                self.plugins.send(
-                                    PluginEvent::TasksPolled {
-                                        window: &app.window,
-                                        tree: &app.tree,
-                                        duration: tasks_poll_time,
-                                    },
-                                    PluginHandle::new(&self.proxy),
-                                );
-                            }
                             #[cfg(debug_assertions)]
                             {
                                 tracing::info!("Updated app tree.");

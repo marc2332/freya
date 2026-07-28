@@ -2,7 +2,6 @@ use std::{
     cell::RefCell,
     collections::HashMap,
     rc::Rc,
-    time::Duration,
 };
 
 use freya_core::integration::*;
@@ -75,6 +74,21 @@ impl PluginsManager {
     pub fn send(&mut self, mut event: PluginEvent, handle: PluginHandle) {
         for plugin in self.plugins.borrow_mut().values_mut() {
             plugin.on_event(&mut event, handle.clone())
+        }
+    }
+
+    /// Observer reporting every tasks polling batch of a [Runner] as plugin events.
+    pub fn tasks_poll_observer<'a>(
+        &'a mut self,
+        window: &'a Window,
+        handle: PluginHandle,
+    ) -> impl FnMut(TasksPollStage) + 'a {
+        move |stage| {
+            let event = match stage {
+                TasksPollStage::Started => PluginEvent::StartedPollingTasks { window },
+                TasksPollStage::Finished => PluginEvent::FinishedPollingTasks { window },
+            };
+            self.send(event, handle.clone())
         }
     }
 
@@ -181,11 +195,14 @@ pub enum PluginEvent<'a> {
         tree: &'a Tree,
     },
 
-    /// After polling the async tasks, with the time spent on them.
-    TasksPolled {
+    /// Before starting to poll a batch of async tasks.
+    StartedPollingTasks {
         window: &'a Window,
-        tree: &'a Tree,
-        duration: Duration,
+    },
+
+    /// After polling a batch of async tasks.
+    FinishedPollingTasks {
+        window: &'a Window,
     },
 
     BeforeAccessibility {

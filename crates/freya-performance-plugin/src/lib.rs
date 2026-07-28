@@ -78,6 +78,7 @@ struct WindowMetrics {
     started_tree_updates: Option<Instant>,
     finished_tree_updates: Option<Duration>,
 
+    started_tasks_poll: Option<Instant>,
     tasks_poll_time: Duration,
 
     started_accessibility_updates: Option<Instant>,
@@ -174,10 +175,14 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 metrics.finished_tree_updates =
                     Some(metrics.started_tree_updates.unwrap().elapsed())
             }
-            PluginEvent::TasksPolled {
-                window, duration, ..
-            } => {
-                self.get_metrics(window.id()).tasks_poll_time += *duration;
+            PluginEvent::StartedPollingTasks { window, .. } => {
+                self.get_metrics(window.id()).started_tasks_poll = Some(Instant::now())
+            }
+            PluginEvent::FinishedPollingTasks { window, .. } => {
+                let metrics = self.get_metrics(window.id());
+                if let Some(started) = metrics.started_tasks_poll.take() {
+                    metrics.tasks_poll_time += started.elapsed();
+                }
             }
             PluginEvent::BeforeAccessibility { window, .. } => {
                 self.get_metrics(window.id()).started_accessibility_updates = Some(Instant::now())
