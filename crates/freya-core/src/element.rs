@@ -42,6 +42,7 @@ use crate::{
             MouseEventData,
             PointerEventData,
             SizedEventData,
+            StyledEventData,
             TouchEventData,
             WheelEventData,
         },
@@ -50,10 +51,12 @@ use crate::{
     layers::Layer,
     node_id::NodeId,
     prelude::{
+        Color,
         FileEventData,
         ImePreeditEventData,
         MaybeExt,
     },
+    style::fill::Fill,
     text_cache::TextCache,
     tree::{
         DiffModifies,
@@ -93,6 +96,12 @@ pub trait ElementExt: Any {
         Cow::Owned(Default::default())
     }
 
+    /// Whether the element paints nothing, letting events fall through to
+    /// non-ancestor elements behind it.
+    fn is_transparent(&self) -> bool {
+        self.style().background == Fill::Color(Color::TRANSPARENT)
+    }
+
     fn text_style(&'_ self) -> Cow<'_, TextStyleData> {
         Cow::Owned(Default::default())
     }
@@ -101,7 +110,7 @@ pub trait ElementExt: Any {
         Layer::default()
     }
 
-    fn events_handlers(&'_ self) -> Option<Cow<'_, FxHashMap<EventName, EventHandlerType>>> {
+    fn events_handlers(&'_ self) -> Option<Cow<'_, EventHandlers>> {
         None
     }
 
@@ -425,11 +434,14 @@ impl PartialEq for Element {
     }
 }
 
+pub type EventHandlers = FxHashMap<EventName, EventHandlerType>;
+
 #[derive(Clone, PartialEq)]
 pub enum EventHandlerType {
     Mouse(EventHandler<Event<MouseEventData>>),
     Keyboard(EventHandler<Event<KeyboardEventData>>),
     Sized(EventHandler<Event<SizedEventData>>),
+    Styled(EventHandler<Event<StyledEventData>>),
     Wheel(EventHandler<Event<WheelEventData>>),
     Touch(EventHandler<Event<TouchEventData>>),
     Pointer(EventHandler<Event<PointerEventData>>),

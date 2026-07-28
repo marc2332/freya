@@ -109,7 +109,13 @@ impl LayoutExt for Card {
     }
 }
 
-impl ContainerExt for Card {}
+impl ContainerSizeExt for Card {}
+
+impl ContainerPositionExt for Card {}
+
+impl ContainerConstraintsExt for Card {}
+
+impl ContainerWithContentExt for Card {}
 
 impl AccessibilityExt for Card {
     fn get_accessibility_data(&mut self) -> &mut AccessibilityData {

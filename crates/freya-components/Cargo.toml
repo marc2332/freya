@@ -1,6 +1,6 @@
 [package]
 name = "freya-components"
-version = "0.4.0-rc.23"
+version = "0.4.0"
 edition = "2024"
 description = "Components for Freya apps"
 license = "MIT"
@@ -34,7 +34,6 @@ freya-edit = { workspace = true }
 freya-sdk = { workspace = true }
 freya-icons = { workspace = true, optional = true }
 tracing = { workspace = true }
-rustc-hash = { workspace = true }
 
 # Theming
 paste = "1.0.15"

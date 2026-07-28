@@ -5,6 +5,7 @@ pub struct EditableConfig {
     pub(crate) allow_changes: bool,
     pub(crate) allow_read_clipboard: bool,
     pub(crate) allow_write_clipboard: bool,
+    pub(crate) select_all_on_double_click: bool,
 }
 
 impl Default for EditableConfig {
@@ -22,6 +23,7 @@ impl EditableConfig {
             allow_changes: true,
             allow_read_clipboard: true,
             allow_write_clipboard: true,
+            select_all_on_double_click: false,
         }
     }
 
@@ -52,6 +54,13 @@ impl EditableConfig {
     /// Allow writing to the clipboard (copy and cut).
     pub fn with_allow_write_clipboard(mut self, allow_write_clipboard: bool) -> Self {
         self.allow_write_clipboard = allow_write_clipboard;
+        self
+    }
+
+    /// Make a double click select the whole text instead of a single word,
+    /// behaving like a triple click. Useful for masked inputs.
+    pub fn with_select_all_on_double_click(mut self, select_all_on_double_click: bool) -> Self {
+        self.select_all_on_double_click = select_all_on_double_click;
         self
     }
 }

@@ -276,12 +276,12 @@ impl Component for CodeEditor {
             })
             .on_global_pointer_press(on_global_pointer_press)
             .child(
-                VirtualScrollView::new(move |line_index, _| {
+                VirtualScrollView::new(move |item, _| {
                     EditorLineUI {
                         editor: editor.clone(),
                         font_size,
                         line_height,
-                        line_index,
+                        line_index: item.index,
                         read_only,
                         gutter,
                         show_whitespace,

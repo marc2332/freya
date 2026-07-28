@@ -106,6 +106,7 @@ pub struct Menu {
     pub(crate) theme: Option<MenuContainerThemePartial>,
     children: Vec<Element>,
     on_close: Option<EventHandler<()>>,
+    on_escape: Option<EventHandler<()>>,
     key: DiffKey,
 }
 
@@ -124,6 +125,12 @@ impl KeyExt for Menu {
 impl Menu {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Called when Escape closes the menu, falls back to [`Menu::on_close`].
+    pub fn on_escape(mut self, f: impl Into<EventHandler<()>>) -> Self {
+        self.on_escape = Some(f.into());
+        self
     }
 
     pub fn on_close<F>(mut self, f: F) -> Self
@@ -150,13 +157,13 @@ impl ComponentOwned for Menu {
         // Provide this the ROOT Menu ID
         use_provide_context(|| ROOT_MENU);
 
-        let on_close = self.on_close.clone();
+        let on_escape = self.on_escape.clone().or(self.on_close.clone());
         let on_global_key_down = move |e: Event<KeyboardEventData>| {
             if e.key == Key::Named(NamedKey::Escape) {
                 if menus.read().len() > 1 {
                     menus.write().pop();
-                } else if let Some(on_close) = &on_close {
-                    on_close.call(());
+                } else if let Some(on_escape) = &on_escape {
+                    on_escape.call(());
                 }
             }
         };

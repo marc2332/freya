@@ -38,13 +38,12 @@ Custom inline elements like this counter <counter/> can flow within the text.
 The markdown viewer supports:
 
 - **Bold text** and *italic text*
-- ~~Strikethrough~~ text
-- `inline code` snippets
 - Ordered and unordered lists
 - Code blocks with syntax highlighting
 - Blockquotes
 - Images (with `remote-asset` feature)
 - Horizontal rules
+- And more!
 
 ---
 

@@ -92,7 +92,7 @@ fn markdown_theme_preference() -> MarkdownViewerThemePreference {
 /// Renders markdown content with support for:
 /// - Headings (h1-h6)
 /// - Paragraphs
-/// - Bold, italic, and strikethrough text
+/// - Bold and italic text
 /// - Code (inline and blocks)
 /// - Lists (ordered and unordered)
 /// - Tables
@@ -194,7 +194,6 @@ impl LayoutExt for MarkdownViewer {
 
 impl ContainerExt for MarkdownViewer {}
 
-#[allow(dead_code)]
 #[derive(Clone)]
 enum MarkdownElement {
     Heading {
@@ -206,6 +205,7 @@ enum MarkdownElement {
     },
     CodeBlock {
         code: String,
+        #[cfg_attr(not(feature = "code-editor"), allow(dead_code))]
         language: Option<String>,
     },
     List(List),
@@ -213,6 +213,7 @@ enum MarkdownElement {
         url: String,
         alt: String,
     },
+    #[cfg_attr(not(feature = "router"), allow(dead_code))]
     Link {
         url: String,
         title: Option<String>,
@@ -266,8 +267,6 @@ struct TextSpan {
     text: String,
     bold: bool,
     italic: bool,
-    #[allow(dead_code)]
-    strikethrough: bool,
     code: bool,
 }
 
@@ -277,7 +276,6 @@ impl TextSpan {
             text: text.into(),
             bold: false,
             italic: false,
-            strikethrough: false,
             code: false,
         }
     }
@@ -285,7 +283,6 @@ impl TextSpan {
 
 fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
     let mut options = Options::empty();
-    options.insert(Options::ENABLE_STRIKETHROUGH);
     options.insert(Options::ENABLE_TABLES);
 
     let parser = Parser::new_ext(content, options);
@@ -321,7 +318,6 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
 
     let mut bold = false;
     let mut italic = false;
-    let mut strikethrough = false;
 
     for event in parser {
         match event {
@@ -370,7 +366,6 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                 }
                 Tag::Strong => bold = true,
                 Tag::Emphasis => italic = true,
-                Tag::Strikethrough => strikethrough = true,
                 Tag::BlockQuote(_) => {
                     in_blockquote = true;
                     blockquote_content.clear();
@@ -452,7 +447,6 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                 }
                 TagEnd::Strong => bold = false,
                 TagEnd::Emphasis => italic = false,
-                TagEnd::Strikethrough => strikethrough = false,
                 TagEnd::BlockQuote(_) => {
                     in_blockquote = false;
                     elements.push(MarkdownElement::Blockquote {
@@ -543,7 +537,6 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                         text: text.to_string(),
                         bold,
                         italic,
-                        strikethrough,
                         code: false,
                     };
                     current_cell_spans.push(span);
@@ -552,7 +545,6 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                         text: text.to_string(),
                         bold,
                         italic,
-                        strikethrough,
                         code: false,
                     };
                     if in_link {
@@ -577,7 +569,6 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                     text: code.to_string(),
                     bold,
                     italic,
-                    strikethrough,
                     code: true,
                 };
                 if in_table_cell {

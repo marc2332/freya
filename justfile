@@ -20,12 +20,12 @@ f-nix:
 
 c:
     taplo check
-    cargo clippy --workspace --examples --features "all-debug" -- -D warnings
+    cargo clippy --workspace --examples --bins --features "all-debug" -- -D warnings
     cargo doc --no-deps --workspace --features "all-debug"
 
 c-ci:
     taplo check
-    cargo clippy --workspace --examples --features "all-debug" -- -D warnings
+    cargo clippy --workspace --examples --bins --features "all-debug" -- -D warnings
     RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --workspace --features "all-debug"
 
 e example:

@@ -437,11 +437,16 @@ impl Component for ImageViewer {
         let sampling_mode = self.image_data.sampling_mode.clone();
         let asset_config =
             AssetConfiguration::new((&self.source, target, &sampling_mode), self.asset_age);
-        let asset = use_asset(&asset_config);
+        use_asset(&asset_config);
         let mut asset_cacher = use_hook(AssetCacher::get);
 
         use_side_effect_with_deps(
-            &(self.source.clone(), asset_config, target, sampling_mode),
+            &(
+                self.source.clone(),
+                asset_config.clone(),
+                target,
+                sampling_mode,
+            ),
             move |(source, asset_config, target, sampling_mode)| {
                 if matches!(
                     asset_cacher.read_asset(asset_config),
@@ -470,6 +475,10 @@ impl Component for ImageViewer {
                 }
             },
         );
+
+        let asset = asset_cacher
+            .read_asset(&asset_config)
+            .expect("Asset should exist by now");
 
         match asset {
             Asset::Cached(asset) => {

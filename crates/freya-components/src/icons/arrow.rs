@@ -47,8 +47,8 @@ impl ArrowIcon {
         self
     }
 
-    pub fn rotate(mut self, rotate: impl Into<f32>) -> Self {
-        self.rotate = Some(rotate.into());
+    pub fn rotate(mut self, rotate: f32) -> Self {
+        self.rotate = Some(rotate);
         self
     }
 

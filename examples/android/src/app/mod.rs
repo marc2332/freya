@@ -17,24 +17,24 @@ pub fn app() -> impl IntoElement {
 #[rustfmt::skip]
 pub enum Route {
     #[layout(AppTopBar)]
-        #[route("/")]
-        ScrollViewDemo,
-        #[route("/widgets")]
-        WidgetsDemo,
-        #[route("/portal")]
-        PortalDemo,
-        #[route("/editor")]
-        EditorDemo,
-        #[route("/markdown")]
-        MarkdownDemo,
+        #[route("/", ScrollViewDemo)]
+        ScrollView,
+        #[route("/widgets", WidgetsDemo)]
+        Widgets,
+        #[route("/portal", PortalDemo)]
+        Portal,
+        #[route("/editor", EditorDemo)]
+        Editor,
+        #[route("/markdown", MarkdownDemo)]
+        Markdown,
 }
 
 const ROUTES: [Route; 5] = [
-    Route::ScrollViewDemo,
-    Route::WidgetsDemo,
-    Route::PortalDemo,
-    Route::EditorDemo,
-    Route::MarkdownDemo,
+    Route::ScrollView,
+    Route::Widgets,
+    Route::Portal,
+    Route::Editor,
+    Route::Markdown,
 ];
 
 fn route_index(route: &Route) -> usize {
@@ -43,11 +43,11 @@ fn route_index(route: &Route) -> usize {
 
 fn route_element(route: &Route) -> Element {
     match route {
-        Route::ScrollViewDemo => ScrollViewDemo.into_element(),
-        Route::WidgetsDemo => WidgetsDemo.into_element(),
-        Route::PortalDemo => PortalDemo.into_element(),
-        Route::EditorDemo => EditorDemo.into_element(),
-        Route::MarkdownDemo => MarkdownDemo.into_element(),
+        Route::ScrollView => ScrollViewDemo.into_element(),
+        Route::Widgets => WidgetsDemo.into_element(),
+        Route::Portal => PortalDemo.into_element(),
+        Route::Editor => EditorDemo.into_element(),
+        Route::Markdown => MarkdownDemo.into_element(),
     }
 }
 
@@ -77,15 +77,11 @@ impl Component for AppTopBar {
                         .main_align(Alignment::center())
                         .padding((4., 4., 20., 4.))
                         .spacing(4.)
-                        .child(tab(Route::ScrollViewDemo, "Scroll", lucide::scroll_text))
-                        .child(tab(
-                            Route::WidgetsDemo,
-                            "Widgets",
-                            lucide::sliders_horizontal,
-                        ))
-                        .child(tab(Route::PortalDemo, "Portal", lucide::layers))
-                        .child(tab(Route::EditorDemo, "Editor", lucide::code))
-                        .child(tab(Route::MarkdownDemo, "Markdown", lucide::notebook_text)),
+                        .child(tab(Route::ScrollView, "Scroll", lucide::scroll_text))
+                        .child(tab(Route::Widgets, "Widgets", lucide::sliders_horizontal))
+                        .child(tab(Route::Portal, "Portal", lucide::layers))
+                        .child(tab(Route::Editor, "Editor", lucide::code))
+                        .child(tab(Route::Markdown, "Markdown", lucide::notebook_text)),
                 ),
         ))
     }
@@ -204,7 +200,7 @@ impl Component for AnimatedOutlet {
         let involves_scroll = matches!(
             &*animated_router.read(),
             AnimatedRouterContext::FromTo(from, to)
-                if *from == Route::ScrollViewDemo || *to == Route::ScrollViewDemo
+                if *from == Route::ScrollView || *to == Route::ScrollView
         );
 
         let from_route = if involves_scroll {

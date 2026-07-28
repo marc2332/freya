@@ -76,7 +76,6 @@ pub fn launch(launch_config: LaunchConfig) {
 fn launch_inner(mut launch_config: LaunchConfig) {
     use std::collections::HashMap;
 
-    use freya_core::integration::*;
     use freya_engine::prelude::{
         FontCollection,
         FontMgr,
@@ -106,8 +105,6 @@ fn launch_inner(mut launch_config: LaunchConfig) {
     font_collection.set_default_font_manager(def_mgr, None);
     font_collection.set_dynamic_font_manager(font_mgr.clone());
     font_collection.paragraph_cache_mut().turn_on(false);
-
-    let screen_reader = ScreenReader::new();
 
     struct FuturesWaker(EventLoopProxy<NativeEvent>);
 
@@ -142,7 +139,6 @@ fn launch_inner(mut launch_config: LaunchConfig) {
         windows_configs: launch_config.windows_configs,
         plugins: launch_config.plugins,
         fallback_fonts: launch_config.fallback_fonts,
-        screen_reader,
         waker,
         exit_on_close: launch_config.exit_on_close,
         gpu_resource_cache_limit: launch_config.gpu_resource_cache_limit,

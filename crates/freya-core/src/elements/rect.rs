@@ -20,7 +20,6 @@ use freya_engine::prelude::{
     SkRRect,
     SkRect,
 };
-use rustc_hash::FxHashMap;
 use torin::{
     prelude::Area,
     scaled::Scaled,
@@ -31,11 +30,10 @@ use crate::{
     element::{
         ClipContext,
         ElementExt,
-        EventHandlerType,
+        EventHandlers,
         EventMeasurementContext,
         RenderContext,
     },
-    events::name::EventName,
     layers::Layer,
     prelude::*,
     style::{
@@ -76,7 +74,7 @@ pub struct RectElement {
     pub layout: LayoutData,
     pub text_style_data: TextStyleData,
     pub relative_layer: Layer,
-    pub event_handlers: FxHashMap<EventName, EventHandlerType>,
+    pub event_handlers: EventHandlers,
     pub accessibility: AccessibilityData,
     pub effect: Option<EffectData>,
 }
@@ -458,7 +456,7 @@ impl ElementExt for RectElement {
         self.relative_layer
     }
 
-    fn events_handlers(&'_ self) -> Option<Cow<'_, FxHashMap<EventName, EventHandlerType>>> {
+    fn events_handlers(&'_ self) -> Option<Cow<'_, EventHandlers>> {
         Some(Cow::Borrowed(&self.event_handlers))
     }
 
@@ -558,7 +556,7 @@ impl KeyExt for Rect {
 }
 
 impl EventHandlersExt for Rect {
-    fn get_event_handlers(&mut self) -> &mut FxHashMap<EventName, EventHandlerType> {
+    fn get_event_handlers(&mut self) -> &mut EventHandlers {
         &mut self.element.event_handlers
     }
 }
@@ -695,20 +693,20 @@ impl Rect {
     }
 
     /// Set the rect's opacity, from `0.0` (transparent) to `1.0` (opaque).
-    pub fn opacity(mut self, opacity: impl Into<f32>) -> Self {
+    pub fn opacity(mut self, opacity: f32) -> Self {
         self.element
             .effect
             .get_or_insert_with(Default::default)
-            .opacity = Some(opacity.into());
+            .opacity = Some(opacity);
         self
     }
 
     /// Apply a gaussian blur of the given radius to the rect.
-    pub fn blur(mut self, blur: impl Into<f32>) -> Self {
+    pub fn blur(mut self, blur: f32) -> Self {
         self.element
             .effect
             .get_or_insert_with(Default::default)
-            .blur = Some(blur.into());
+            .blur = Some(blur);
         self
     }
 }
