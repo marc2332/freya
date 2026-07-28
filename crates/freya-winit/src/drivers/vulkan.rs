@@ -2,6 +2,7 @@ use std::{
     ffi::{
         CStr,
         CString,
+        c_char,
     },
     mem::ManuallyDrop,
     ptr,
@@ -17,7 +18,7 @@ use ash::{
         swapchain::Device as DeviceSwapchainFns,
     },
     vk::{
-        API_VERSION_1_3,
+        API_VERSION_1_0,
         AccessFlags,
         ApplicationInfo,
         ColorSpaceKHR,
@@ -60,6 +61,9 @@ use ash::{
         SurfaceKHR,
         SwapchainCreateInfoKHR,
         SwapchainKHR,
+        api_version_major,
+        api_version_minor,
+        api_version_patch,
         make_api_version,
     },
 };
@@ -76,7 +80,6 @@ use freya_engine::prelude::{
     wrap_backend_render_target,
 };
 use raw_window_handle::{
-    DisplayHandle,
     HandleError,
     HasDisplayHandle,
     HasWindowHandle,
@@ -91,6 +94,9 @@ use winit::{
 };
 
 use crate::drivers::DriverError;
+
+/// Extensions enabled on the logical device and reported to Skia.
+const DEVICE_EXTENSIONS: &[&CStr] = &[KHR_SWAPCHAIN_NAME];
 
 /// Graphics driver using Vulkan.
 pub struct VulkanDriver {
@@ -148,7 +154,13 @@ impl VulkanDriver {
 
         let entry = unsafe { Entry::load()? };
 
-        let instance = create_instance(&entry, window.display_handle()?)?;
+        // Skia resolves its entry points for the version the loader reports, so requesting an older
+        // one here makes them resolve to null and its Vulkan context creation fail.
+        let api_version =
+            unsafe { entry.try_enumerate_instance_version() }?.unwrap_or(API_VERSION_1_0);
+
+        let instance_extensions = enumerate_required_extensions(window.display_handle()?.as_raw())?;
+        let instance = create_instance(&entry, instance_extensions, api_version)?;
         let surface_fns = InstanceSurfaceFns::new(&entry, &instance);
         let surface = unsafe {
             ash_window::create_surface(
@@ -190,6 +202,8 @@ impl VulkanDriver {
             queue,
             queue_family_index,
             gpu_resource_cache_limit,
+            instance_extensions,
+            api_version,
         )?;
 
         let (image_available_semaphore, render_finished_semaphore, in_flight_fence) =
@@ -512,7 +526,8 @@ impl VulkanDriver {
 
 fn create_instance(
     entry: &Entry,
-    display_handle: DisplayHandle<'_>,
+    extension_names: &[*const c_char],
+    api_version: u32,
 ) -> Result<Instance, Box<dyn std::error::Error>> {
     let app_name = CString::new("AnyRender")?;
     let engine_name = CString::new("No Engine")?;
@@ -521,13 +536,11 @@ fn create_instance(
         .application_version(make_api_version(0, 1, 0, 0))
         .engine_name(&engine_name)
         .engine_version(make_api_version(0, 1, 0, 0))
-        .api_version(API_VERSION_1_3);
-
-    let extension_names = enumerate_required_extensions(display_handle.as_raw())?.to_vec();
+        .api_version(api_version);
 
     let create_info = InstanceCreateInfo::default()
         .application_info(&app_info)
-        .enabled_extension_names(&extension_names);
+        .enabled_extension_names(extension_names);
 
     Ok(unsafe { entry.create_instance(&create_info, None)? })
 }
@@ -594,7 +607,10 @@ fn create_logical_device(
 
     let features = PhysicalDeviceFeatures::default().sample_rate_shading(true);
 
-    let extensions = [KHR_SWAPCHAIN_NAME.as_ptr()];
+    let extensions = DEVICE_EXTENSIONS
+        .iter()
+        .map(|extension| extension.as_ptr())
+        .collect::<Vec<_>>();
 
     let create_info = DeviceCreateInfo::default()
         .queue_create_infos(std::slice::from_ref(&queue_create_info))
@@ -708,6 +724,7 @@ fn create_swapchain(
     Ok((swapchain, swapchain_fns, images, format.format, extent))
 }
 
+#[allow(clippy::too_many_arguments)]
 fn create_gr_context(
     entry: &Entry,
     instance: &Instance,
@@ -716,6 +733,8 @@ fn create_gr_context(
     queue: Queue,
     queue_family_index: u32,
     gpu_resource_cache_limit: usize,
+    instance_extensions: &[*const c_char],
+    api_version: u32,
 ) -> Result<DirectContext, Box<dyn std::error::Error>> {
     let get_proc = unsafe {
         |gpo: vk::GetProcOf| {
@@ -736,16 +755,31 @@ fn create_gr_context(
         }
     };
 
+    let instance_extensions = instance_extensions
+        .iter()
+        .filter_map(|name| unsafe { CStr::from_ptr(*name) }.to_str().ok())
+        .collect::<Vec<_>>();
+    let device_extensions = DEVICE_EXTENSIONS
+        .iter()
+        .filter_map(|extension| extension.to_str().ok())
+        .collect::<Vec<_>>();
+
     let mut backend_context = unsafe {
-        vk::BackendContext::new(
+        vk::BackendContext::new_with_extensions(
             instance.handle().as_raw() as _,
             physical_device.as_raw() as _,
             device.handle().as_raw() as _,
             (queue.as_raw() as _, queue_family_index as usize),
             &get_proc,
+            &instance_extensions,
+            &device_extensions,
         )
     };
-    backend_context.set_max_api_version(vk::Version::new(1, 3, 0));
+    backend_context.set_max_api_version(vk::Version::new(
+        api_version_major(api_version) as usize,
+        api_version_minor(api_version) as usize,
+        api_version_patch(api_version) as usize,
+    ));
 
     let context_options = ContextOptions::default();
 
