@@ -1440,7 +1440,6 @@ impl Runner {
         self.dirty_tasks.clear();
         while self.receiver.try_recv().is_ok() {}
 
-        let mut scopes_storages = self.scopes_storages.borrow_mut();
         let scopes = self
             .scopes
             .iter()
@@ -1458,9 +1457,11 @@ impl Runner {
                     sender: self.sender.clone(),
                 },
                 || {
-                    if let Some(storage) = scopes_storages.get_mut(&scope_id) {
-                        storage.reset_hooks();
-                    }
+                    let _hooks = self
+                        .scopes_storages
+                        .borrow_mut()
+                        .get_mut(&scope_id)
+                        .map(|storage| storage.reset_hooks());
                 },
             );
         }
