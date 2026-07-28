@@ -316,6 +316,11 @@ impl TestingRunner {
         self.sync_and_update();
     }
 
+    /// Run a closure inside the app runtime.
+    pub fn run_in<T>(&self, run: impl FnOnce() -> T) -> T {
+        self.runner.run_in(run)
+    }
+
     pub async fn handle_events(&mut self) {
         self.runner.handle_events().await
     }
