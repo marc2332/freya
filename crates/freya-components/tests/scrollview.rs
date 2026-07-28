@@ -225,15 +225,16 @@ pub fn scroll_view_drag_scrolling_horizontal() {
 #[test]
 pub fn scroll_view_scrollbar_smaller_than_thumb() {
     fn small_scroll_view_app() -> impl IntoElement {
-        rect().height(Size::px(48.)).width(Size::px(200.)).child(
-            ScrollView::new().children((0..30).map(|i| {
+        rect()
+            .height(Size::px(48.))
+            .width(Size::px(200.))
+            .child(ScrollView::new().children((0..30).map(|i| {
                 label()
                     .key(i)
                     .height(Size::px(20.))
                     .text(format!("Row {i}"))
                     .into()
-            })),
-        )
+            })))
     }
 
     let mut test = launch_test(small_scroll_view_app);
