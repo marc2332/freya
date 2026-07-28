@@ -146,8 +146,23 @@ impl<Q: QueryCapability> QueryStateData<Q> {
     }
 }
 
+/// Replacement for [QueryCapability::run], see [QueriesStorage::mocked].
+#[cfg(debug_assertions)]
+type QueryMock<Q> = Rc<
+    dyn Fn(
+        <Q as QueryCapability>::Keys,
+    ) -> std::pin::Pin<
+        Box<dyn Future<Output = Result<<Q as QueryCapability>::Ok, <Q as QueryCapability>::Err>>>,
+    >,
+>;
+
 pub struct QueriesStorage<Q: QueryCapability> {
     storage: State<HashMap<Query<Q>, QueryData<Q>>>,
+
+    /// Mocks are only available with debug assertions enabled so that release builds
+    /// call [QueryCapability::run] directly.
+    #[cfg(debug_assertions)]
+    mock: State<Option<QueryMock<Q>>>,
 }
 
 impl<Q: QueryCapability> Copy for QueriesStorage<Q> {}
@@ -182,6 +197,38 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
     fn new_in_root() -> Self {
         Self {
             storage: State::create_global(HashMap::default()),
+            #[cfg(debug_assertions)]
+            mock: State::create_global(None),
+        }
+    }
+
+    /// Create a storage whose queries resolve with `mock` instead of [QueryCapability::run].
+    ///
+    /// Provide it in the root scope before the app runs any query.
+    ///
+    /// Only available with debug assertions enabled.
+    #[cfg(debug_assertions)]
+    pub fn mocked(mock: impl Fn(Q::Keys) -> Result<Q::Ok, Q::Err> + 'static) -> Self {
+        Self::mocked_async(move |keys| {
+            let res = mock(keys);
+            async move { res }
+        })
+    }
+
+    /// Like [QueriesStorage::mocked] but the mock resolves asynchronously, so tests can
+    /// also assert the states the query goes through while running.
+    ///
+    /// Only available with debug assertions enabled.
+    #[cfg(debug_assertions)]
+    pub fn mocked_async<F>(mock: impl Fn(Q::Keys) -> F + 'static) -> Self
+    where
+        F: Future<Output = Result<Q::Ok, Q::Err>> + 'static,
+    {
+        let mock: QueryMock<Q> = Rc::new(move |keys| Box::pin(mock(keys)));
+
+        Self {
+            storage: State::create_global(HashMap::default()),
+            mock: State::create_global(Some(mock)),
         }
     }
 
@@ -297,7 +344,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
             }
 
             // Run
-            let res = query.query.run(&query.keys).await;
+            let res = query.run().await;
 
             // Set to Settled
             *query_data.state.borrow_mut() = QueryStateData::Settled {
@@ -326,17 +373,33 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
         }
     }
 
-    /// Acquires query storage from context and invalidates all queries
+    /// Read the state of the cached queries matching the given [QueryCapability::Keys],
+    /// without running them.
     ///
-    /// Panics if query storage is not in context
-    pub async fn invalidate_all() {
-        let storage = consume_context::<QueriesStorage<Q>>();
+    /// Matching follows the same rules as [QueriesStorage::invalidate_matching], so with the
+    /// default [QueryCapability::matches] every cached query of this capability is returned.
+    ///
+    /// Returns an empty [Vec] if the query storage is not in context.
+    pub fn peek_matching(matching_keys: Q::Keys) -> Vec<QueryReader<Q>> {
+        let Some(storage) = try_consume_context::<QueriesStorage<Q>>() else {
+            return Vec::new();
+        };
 
-        storage.inner_invalidate_all().await;
+        storage
+            .storage
+            .peek()
+            .iter()
+            .filter(|(query, _)| query.query.matches(&matching_keys))
+            .map(|(_, data)| QueryReader {
+                state: data.state.clone(),
+            })
+            .collect()
     }
 
-    /// Non-panicking version of [`QueriesStorage::invalidate_all()`]
-    pub async fn try_invalidate_all() {
+    /// Acquires query storage from context and invalidates all queries
+    ///
+    /// Does nothing if the query storage is not in context
+    pub async fn invalidate_all() {
         let Some(storage) = try_consume_context::<QueriesStorage<Q>>() else {
             return;
         };
@@ -358,15 +421,8 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
 
     /// Acquires query storage from context and invalidates matching queries
     ///
-    /// Panics if query storage is not in context
+    /// Does nothing if the query storage is not in context
     pub async fn invalidate_matching(matching_keys: Q::Keys) {
-        let storage = consume_context::<QueriesStorage<Q>>();
-
-        storage.inner_invalidate_matching(matching_keys).await;
-    }
-
-    /// Non-panicking version of [`QueriesStorage::invalidate_matching()`]
-    pub async fn try_invalidate_matching(matching_keys: Q::Keys) {
         let Some(storage) = try_consume_context::<QueriesStorage<Q>>() else {
             return;
         };
@@ -405,7 +461,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
 
             tasks.push(Box::pin(async move {
                 // Run
-                let res = query.query.run(&query.keys).await;
+                let res = query.run().await;
 
                 // Set to settled
                 *query_data.state.borrow_mut() = QueryStateData::Settled {
@@ -497,6 +553,21 @@ impl<Q: QueryCapability> Hash for Query<Q> {
 }
 
 impl<Q: QueryCapability> Query<Q> {
+    /// Run the query, using the mock of the [QueriesStorage] if there is one.
+    async fn run(&self) -> Result<Q::Ok, Q::Err> {
+        #[cfg(debug_assertions)]
+        {
+            let mock = try_consume_context::<QueriesStorage<Q>>()
+                .and_then(|storage| storage.mock.peek().clone());
+
+            if let Some(mock) = mock {
+                return mock(self.keys.clone()).await;
+            }
+        }
+
+        self.query.run(&self.keys).await
+    }
+
     pub fn new(keys: Q::Keys, query: Q) -> Self {
         Self {
             query,
