@@ -34,11 +34,11 @@ fn app() -> impl IntoElement {
                 .child(format!("Length: {}", length.read())),
         )
         .child(
-            VirtualScrollView::new(|i, _| {
+            VirtualScrollView::new(|item, _| {
                 rect()
-                    .key(i)
+                    .key(item.index)
                     .width(Size::fill())
-                    .height(Size::px(100.))
+                    .height(Size::px(item.size))
                     .padding(6.)
                     .child(
                         rect()
@@ -47,7 +47,11 @@ fn app() -> impl IntoElement {
                             .background((0, 119, 182))
                             .main_align(Alignment::center())
                             .cross_align(Alignment::center())
-                            .child(label().color(Color::WHITE).text(format!("Item {i}"))),
+                            .child(
+                                label()
+                                    .color(Color::WHITE)
+                                    .text(format!("Item {}", item.index)),
+                            ),
                     )
                     .into()
             })

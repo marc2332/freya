@@ -5,11 +5,11 @@ use freya_testing::prelude::*;
 #[test]
 pub fn virtual_scroll_view_wheel() {
     fn virtual_scroll_view_wheel_app() -> impl IntoElement {
-        VirtualScrollView::new(|i, _| {
+        VirtualScrollView::new(|item, _| {
             label()
-                .key(i)
+                .key(item.index)
                 .height(Size::px(50.))
-                .text(format!("{i} Hello, World!"))
+                .text(format!("{} Hello, World!", item.index))
                 .into()
         })
         .length(30usize)
@@ -57,11 +57,11 @@ pub fn virtual_scroll_view_wheel() {
 #[test]
 pub fn virtual_scroll_view_scrollbar() {
     fn virtual_scroll_view_scrollbar_app() -> impl IntoElement {
-        VirtualScrollView::new(|i, _| {
+        VirtualScrollView::new(|item, _| {
             label()
-                .key(i)
+                .key(item.index)
                 .height(Size::px(50.))
-                .text(format!("{i} Hello, World!"))
+                .text(format!("{} Hello, World!", item.index))
                 .into()
         })
         .length(30usize)
@@ -146,11 +146,11 @@ pub fn virtual_scroll_view_scrollbar() {
 #[test]
 pub fn virtual_scroll_view_max_height() {
     fn virtual_scroll_view_max_height_app() -> impl IntoElement {
-        VirtualScrollView::new(|i, _| {
+        VirtualScrollView::new(|item, _| {
             label()
-                .key(i)
-                .height(Size::px(50.))
-                .text(format!("{i} Hello, World!"))
+                .key(item.index)
+                .height(Size::px(item.size))
+                .text(format!("{} Hello, World!", item.index))
                 .into()
         })
         .length(30usize)
@@ -203,11 +203,11 @@ pub fn virtual_scroll_view_max_height() {
 pub fn virtual_scroll_view_min_height() {
     fn virtual_scroll_view_min_height_app() -> impl IntoElement {
         rect().width(Size::fill()).height(Size::px(100.)).child(
-            VirtualScrollView::new(|i, _| {
+            VirtualScrollView::new(|item, _| {
                 label()
-                    .key(i)
-                    .height(Size::px(50.))
-                    .text(format!("{i} Hello, World!"))
+                    .key(item.index)
+                    .height(Size::px(item.size))
+                    .text(format!("{} Hello, World!", item.index))
                     .into()
             })
             .length(30usize)
@@ -246,11 +246,11 @@ pub fn virtual_scroll_view_min_height() {
 #[test]
 pub fn virtual_scroll_view_max_height_window_percent() {
     fn app() -> impl IntoElement {
-        VirtualScrollView::new(|i, _| {
+        VirtualScrollView::new(|item, _| {
             label()
-                .key(i)
-                .height(Size::px(100.))
-                .text(format!("{i} Hello, World!"))
+                .key(item.index)
+                .height(Size::px(item.size))
+                .text(format!("{} Hello, World!", item.index))
                 .into()
         })
         .length(30usize)
@@ -297,11 +297,11 @@ pub fn virtual_scroll_view_controlled() {
             .content(Content::Flex)
             .child(
                 VirtualScrollView::new_controlled(
-                    |i, _| {
+                    |item, _| {
                         label()
-                            .key(i)
+                            .key(item.index)
                             .height(Size::px(50.))
-                            .text(format!("{i} Hello, World!"))
+                            .text(format!("{} Hello, World!", item.index))
                             .into()
                     },
                     scroll_controller,
@@ -312,11 +312,11 @@ pub fn virtual_scroll_view_controlled() {
             )
             .child(
                 VirtualScrollView::new_controlled(
-                    |i, _| {
+                    |item, _| {
                         label()
-                            .key(i)
+                            .key(item.index)
                             .height(Size::px(50.))
-                            .text(format!("{i} Second View"))
+                            .text(format!("{} Second View", item.index))
                             .into()
                     },
                     scroll_controller,
@@ -387,13 +387,93 @@ pub fn virtual_scroll_view_controlled() {
 }
 
 #[test]
+pub fn virtual_scroll_view_closure_item_size() {
+    fn virtual_scroll_view_closure_app() -> impl IntoElement {
+        VirtualScrollView::new(|item, _| {
+            label()
+                .key(item.index)
+                .height(Size::px(item.size))
+                .text(format!("{}:{}", item.index, item.size))
+                .into()
+        })
+        .length(30usize)
+        .item_size(|index: usize| if index.is_multiple_of(2) { 100. } else { 50. })
+    }
+
+    let mut test = launch_test(virtual_scroll_view_closure_app);
+    test.sync_and_update();
+    let scrollview = test
+        .find(|node, element| {
+            Rect::try_downcast(element)
+                .filter(|rect| rect.accessibility.builder.role() == AccessibilityRole::ScrollView)
+                .map(move |_| node)
+        })
+        .unwrap();
+    let content = scrollview.children()[0].children()[0].children();
+
+    // Heights accumulate as 100, 150, 250, 300, 400, 450, 550, so the 7th item
+    // is the one that crosses the 500px viewport. The closure size also reaches the builder.
+    assert_eq!(content.len(), 7);
+
+    let expected = ["0:100", "1:50", "2:100", "3:50", "4:100", "5:50", "6:100"];
+    for (child, text) in content.iter().zip(expected) {
+        assert_eq!(Label::try_downcast(&*child.element()).unwrap().text, text);
+    }
+
+    // Scrolling 300 pixels lands on index 4, since 100 + 50 + 100 + 50 = 300.
+    test.scroll((5., 5.), (0., -300.));
+
+    let content = scrollview.children()[0].children()[0].children();
+    assert_eq!(content.len(), 7);
+    assert_eq!(
+        Label::try_downcast(&*content[0].element()).unwrap().text,
+        "4:100"
+    );
+}
+
+#[test]
+pub fn virtual_scroll_view_closure_item_size_horizontal() {
+    fn virtual_scroll_view_closure_horizontal_app() -> impl IntoElement {
+        VirtualScrollView::new(|item, _| {
+            label()
+                .key(item.index)
+                .width(Size::px(item.size))
+                .text(format!("{}:{}", item.index, item.size))
+                .into()
+        })
+        .length(30usize)
+        .item_size(|index: usize| if index.is_multiple_of(2) { 120. } else { 60. })
+        .direction(Direction::Horizontal)
+    }
+
+    let mut test = launch_test(virtual_scroll_view_closure_horizontal_app);
+    test.sync_and_update();
+    let scrollview = test
+        .find(|node, element| {
+            Rect::try_downcast(element)
+                .filter(|rect| rect.accessibility.builder.role() == AccessibilityRole::ScrollView)
+                .map(move |_| node)
+        })
+        .unwrap();
+    let content = scrollview.children()[0].children()[0].children();
+
+    // Widths accumulate as 120, 180, 300, 360, 480, 540, so 6 items cover the 500px viewport.
+    assert_eq!(content.len(), 6);
+
+    let expected = ["0:120", "1:60", "2:120", "3:60", "4:120", "5:60"];
+    for (child, text) in content.iter().zip(expected) {
+        assert_eq!(Label::try_downcast(&*child.element()).unwrap().text, text);
+    }
+}
+
+#[test]
 pub fn virtual_scroll_view_keyboard_navigation() {
     fn virtual_scroll_view_keyboard_app() -> impl IntoElement {
-        VirtualScrollView::new(|i, _| {
+        VirtualScrollView::new(|item, _| {
             label()
-                .key(i)
+                .key(item.index)
                 .height(Size::px(50.))
-                .text(format!("{i} Hello, World!"))
+                .text(format!("{} Hello, World!", item.index))
                 .into()
         })
         .length(30usize)
@@ -492,11 +572,11 @@ pub fn virtual_scroll_view_keyboard_navigation() {
 #[test]
 pub fn virtual_scroll_view_keyboard_navigation_horizontal() {
     fn virtual_scroll_view_horizontal_app() -> impl IntoElement {
-        VirtualScrollView::new(|i, _| {
+        VirtualScrollView::new(|item, _| {
             label()
-                .key(i)
+                .key(item.index)
                 .width(Size::px(50.))
-                .text(format!("{i}"))
+                .text(format!("{}", item.index))
                 .into()
         })
         .length(30usize)
