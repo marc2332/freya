@@ -153,10 +153,10 @@ pub trait ElementExt: Any {
         SkRRect::new_rect_radii(
             SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
             &[
-                (corner_radius.top_left, corner_radius.top_left).into(),
-                (corner_radius.top_right, corner_radius.top_right).into(),
-                (corner_radius.bottom_right, corner_radius.bottom_right).into(),
-                (corner_radius.bottom_left, corner_radius.bottom_left).into(),
+                (corner_radius.top_left(), corner_radius.top_left()).into(),
+                (corner_radius.top_right(), corner_radius.top_right()).into(),
+                (corner_radius.bottom_right(), corner_radius.bottom_right()).into(),
+                (corner_radius.bottom_left(), corner_radius.bottom_left()).into(),
             ],
         )
     }

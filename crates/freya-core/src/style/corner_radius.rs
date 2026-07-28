@@ -6,39 +6,65 @@ use torin::scaled::Scaled;
 /// Radius applied to each corner of an element to round it, plus an optional
 /// `smoothing` factor (`0.0..=1.0`) that turns sharp rounding into a squircle.
 ///
-/// Use [`CornerRadius::new_all`] for a uniform radius. It also implements `From<f32>`,
-/// applied to every corner.
+/// Prefer the constructors [`CornerRadius::new_all`], [`CornerRadius::new_symmetric`] and [`CornerRadius::new`].
+/// It also implements `From<f32>`, `From<(f32, f32)>` and `From<(f32, f32, f32, f32)>`.
 ///
 /// ```
 /// # use freya::prelude::*;
-/// let radius = CornerRadius::new_all(8.0);
+/// let all = CornerRadius::new_all(8.0);
+/// let symmetric = CornerRadius::new_symmetric(8.0, 0.0); // (top, bottom)
+/// let each = CornerRadius::new(1.0, 2.0, 3.0, 4.0); // (top_left, top_right, bottom_right, bottom_left)
+/// let squircle = CornerRadius::new_all(8.0).with_smoothing(0.6);
 /// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(PartialEq, Clone, Debug, Default, Copy)]
 pub struct CornerRadius {
-    pub top_left: f32,
-    pub top_right: f32,
-    pub bottom_right: f32,
-    pub bottom_left: f32,
-    pub smoothing: f32,
+    top_left: f32,
+    top_right: f32,
+    bottom_right: f32,
+    bottom_left: f32,
+    smoothing: f32,
 }
 
 impl From<f32> for CornerRadius {
-    fn from(value: f32) -> Self {
-        CornerRadius::new_all(value)
+    fn from(radius: f32) -> Self {
+        CornerRadius::new_all(radius)
+    }
+}
+
+impl From<(f32, f32)> for CornerRadius {
+    fn from((top, bottom): (f32, f32)) -> Self {
+        CornerRadius::new_symmetric(top, bottom)
+    }
+}
+
+impl From<(f32, f32, f32, f32)> for CornerRadius {
+    fn from((top_left, top_right, bottom_right, bottom_left): (f32, f32, f32, f32)) -> Self {
+        CornerRadius::new(top_left, top_right, bottom_right, bottom_left)
     }
 }
 
 impl CornerRadius {
-    /// Create a [`CornerRadius`] with the same radius on all four corners.
-    pub const fn new_all(radius: f32) -> Self {
+    /// Create a [`CornerRadius`] with an individual radius for each corner, in
+    /// `(top_left, top_right, bottom_right, bottom_left)` order.
+    pub const fn new(top_left: f32, top_right: f32, bottom_right: f32, bottom_left: f32) -> Self {
         Self {
-            top_left: radius,
-            top_right: radius,
-            bottom_right: radius,
-            bottom_left: radius,
+            top_left,
+            top_right,
+            bottom_right,
+            bottom_left,
             smoothing: 0.,
         }
+    }
+
+    /// Create a [`CornerRadius`] with the same radius on all four corners.
+    pub const fn new_all(radius: f32) -> Self {
+        Self::new(radius, radius, radius, radius)
+    }
+
+    /// Create a [`CornerRadius`] with one radius for the two top corners and another for the two bottom corners.
+    pub const fn new_symmetric(top: f32, bottom: f32) -> Self {
+        Self::new(top, top, bottom, bottom)
     }
 
     pub fn fill_top(&mut self, value: f32) {
@@ -60,6 +86,26 @@ impl CornerRadius {
     pub fn with_smoothing(mut self, smoothing: f32) -> Self {
         self.smoothing = smoothing.clamp(0.0, 1.0);
         self
+    }
+
+    pub fn top_left(&self) -> f32 {
+        self.top_left
+    }
+
+    pub fn top_right(&self) -> f32 {
+        self.top_right
+    }
+
+    pub fn bottom_right(&self) -> f32 {
+        self.bottom_right
+    }
+
+    pub fn bottom_left(&self) -> f32 {
+        self.bottom_left
+    }
+
+    pub fn smoothing(&self) -> f32 {
+        self.smoothing
     }
 
     // https://github.com/aloisdeniel/figma_squircle/blob/main/lib/src/path_smooth_corners.dart
