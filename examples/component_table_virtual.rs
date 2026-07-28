@@ -113,15 +113,15 @@ fn app() -> impl IntoElement {
             )
             .child(
                 TableBody::new().child(
-                    VirtualScrollView::new_with_data(filtered_data, move |i, filtered_data| {
-                        let items = &filtered_data[i];
+                    VirtualScrollView::new_with_data(filtered_data, move |item, filtered_data| {
+                        let row = &filtered_data[item.index];
                         TableRow::new()
-                            .key(i)
-                            .children(items.iter().enumerate().map(|(n, item)| {
+                            .key(item.index)
+                            .children(row.iter().enumerate().map(|(n, cell)| {
                                 TableCell::new()
                                     .key(n)
                                     .height(Size::px(35.))
-                                    .child(item.to_string())
+                                    .child(cell.to_string())
                                     .into()
                             }))
                             .into()
