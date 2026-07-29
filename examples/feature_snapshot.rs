@@ -36,18 +36,18 @@ fn main() {
                         .width(Size::flex(1.))
                         .height(Size::fill())
                         .background((self.0 + value(), 180, 100))
-                        .into(),
+                        .into_element(),
                     rect()
                         .width(Size::flex(1.))
                         .height(Size::fill())
                         .background((self.0 + value(), 180, 100))
-                        .into(),
+                        .into_element(),
                     rect()
                         .width(Size::flex(1.))
                         .height(Size::fill())
                         .background((self.0 + value(), 180, 100))
-                        .into(),
-                    Button::new().on_press(|_| {}).child("hi").into(),
+                        .into_element(),
+                    Button::new().on_press(|_| {}).child("hi").into_element(),
                 ])
         }
     }

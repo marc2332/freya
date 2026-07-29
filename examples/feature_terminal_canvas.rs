@@ -55,11 +55,8 @@ fn app() -> impl IntoElement {
         .child(
             DraggableCanvas::new()
                 .expanded()
-                .children(radio.read().panels.iter().map(|panel| {
-                    TerminalPanel {
-                        data: panel.clone(),
-                    }
-                    .into()
+                .children(radio.read().panels.iter().map(|panel| TerminalPanel {
+                    data: panel.clone(),
                 })),
         )
         .child(

@@ -237,10 +237,8 @@ fn app() -> impl IntoElement {
                             ),
                         )
                         .child(
-                            TableBody::new().child(
-                                ScrollView::new()
-                                    .children(todos.iter().map(|todo| TodoRow::new(todo).into())),
-                            ),
+                            TableBody::new()
+                                .child(ScrollView::new().children(todos.iter().map(TodoRow::new))),
                         )
                         .into_element()
                 }
