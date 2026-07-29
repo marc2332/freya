@@ -157,7 +157,6 @@ impl<Q: QueryCapability> QueryStateData<Q> {
     }
 }
 
-/// Replacement for [QueryCapability::run], see [QueriesStorage::mocked].
 #[cfg(debug_assertions)]
 type QueryMock<Q> = Rc<
     dyn Fn(
@@ -170,8 +169,6 @@ type QueryMock<Q> = Rc<
 pub struct QueriesStorage<Q: QueryCapability> {
     storage: State<HashMap<Query<Q>, QueryData<Q>>>,
 
-    /// Mocks are only available with debug assertions enabled so that release builds
-    /// call [QueryCapability::run] directly.
     #[cfg(debug_assertions)]
     mock: State<Option<QueryMock<Q>>>,
 }
@@ -216,8 +213,6 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
     /// Create a storage whose queries resolve with `mock` instead of [QueryCapability::run].
     ///
     /// Provide it in the root scope before the app runs any query.
-    ///
-    /// Only available with debug assertions enabled.
     #[cfg(debug_assertions)]
     pub fn mocked(mock: impl Fn(Q::Keys) -> Result<Q::Ok, Q::Err> + 'static) -> Self {
         Self::mocked_async(move |keys| {
@@ -226,10 +221,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
         })
     }
 
-    /// Like [QueriesStorage::mocked] but the mock resolves asynchronously, so tests can
-    /// also assert the states the query goes through while running.
-    ///
-    /// Only available with debug assertions enabled.
+    /// Like [QueriesStorage::mocked] but with an async mock.
     #[cfg(debug_assertions)]
     pub fn mocked_async<F>(mock: impl Fn(Q::Keys) -> F + 'static) -> Self
     where
@@ -384,11 +376,10 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
         }
     }
 
-    /// Read the state of the cached queries matching the given [QueryCapability::Keys],
-    /// without running them.
+    /// Read the state of the cached queries matching the keys, without running them.
     ///
-    /// Matching follows the same rules as [QueriesStorage::invalidate_matching], so with the
-    /// default [QueryCapability::matches] every cached query of this capability is returned.
+    /// Matches like [QueriesStorage::invalidate_matching], so by default every cached query
+    /// is returned.
     ///
     /// Returns an empty [Vec] if the query storage is not in context.
     pub fn peek_matching(matching_keys: Q::Keys) -> Vec<QueryReader<Q>> {
@@ -564,7 +555,7 @@ impl<Q: QueryCapability> Hash for Query<Q> {
 }
 
 impl<Q: QueryCapability> Query<Q> {
-    /// Run the query, using the mock of the [QueriesStorage] if there is one.
+    /// Run the query, using its mock if there is one.
     async fn run(&self) -> Result<Q::Ok, Q::Err> {
         #[cfg(debug_assertions)]
         {
