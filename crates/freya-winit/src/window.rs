@@ -36,7 +36,10 @@ use torin::prelude::{
     Size2D,
 };
 use winit::{
-    dpi::LogicalSize,
+    dpi::{
+        LogicalPosition,
+        LogicalSize,
+    },
     event::ElementState,
     event_loop::{
         ActiveEventLoop,
@@ -58,6 +61,7 @@ use crate::{
         WindowConfig,
     },
     drivers::GraphicsDriver,
+    integration::is_ime_role,
     plugins::{
         PluginEvent,
         PluginHandle,
@@ -119,6 +123,36 @@ pub(crate) const MAX_USER_ZOOM: f32 = 5.0;
 pub(crate) const ZOOM_STEP: f32 = 0.10;
 
 impl AppWindow {
+    pub(crate) fn process_accessibility_update(&mut self, mode: Option<NavigationMode>) {
+        let update = self
+            .accessibility
+            .process_updates(&mut self.tree, &self.events_sender);
+        self.platform
+            .focused_accessibility_id
+            .set_if_modified(update.focus);
+        let node_id = self.accessibility.focused_node_id().unwrap();
+        let layout_node = self.tree.layout.get(&node_id).unwrap();
+        let focused_node = AccessibilityTree::create_node(node_id, layout_node, &self.tree);
+        self.window
+            .set_ime_allowed(is_ime_role(focused_node.role()));
+        self.platform
+            .focused_accessibility_node
+            .set_if_modified(focused_node);
+        if let Some(mode) = mode {
+            self.platform.navigation_mode.set(mode);
+        }
+
+        let area = layout_node.visible_area();
+        self.window.set_ime_cursor_area(
+            LogicalPosition::new(area.min_x(), area.min_y()),
+            LogicalSize::new(area.width(), area.height()),
+        );
+
+        if self.screen_reader.is_on() {
+            self.accessibility_adapter.update_if_active(|| update);
+        }
+    }
+
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         mut window_config: WindowConfig,
@@ -218,12 +252,10 @@ impl AppWindow {
                 is_app_focused: State::create(is_app_focused),
                 accent_color: State::create(accent_color_preference.accent_color),
                 sender: Rc::new(move |user_event| {
-                    event_loop_proxy
-                        .send_event(NativeEvent::Window(NativeWindowEvent {
-                            window_id,
-                            action: NativeWindowEventAction::User(user_event),
-                        }))
-                        .unwrap();
+                    let _ = event_loop_proxy.send_event(NativeEvent::Window(NativeWindowEvent {
+                        window_id,
+                        action: NativeWindowEventAction::User(user_event),
+                    }));
                 }),
             }
         });
@@ -270,7 +302,10 @@ impl AppWindow {
         );
 
         let mutations = runner.sync_and_update();
-        tree.apply_mutations(mutations);
+        let result = tree.apply_mutations(mutations);
+        if let Some(strategy) = result.auto_focus {
+            tree.accessibility_diff.request_focus(strategy);
+        }
         tree.measure_layout(
             (
                 window.inner_size().width as f32,

@@ -204,7 +204,7 @@
 //! ### Plain utility functions
 //!
 //! When you just want to reuse or encapsulate a chunk of UI with no internal state, a plain
-//! function is the simplest option — no boilerplate, no trait to implement.
+//! function is the simplest option, no boilerplate, no trait to implement.
 //!
 //! ```rust
 //! # use freya::prelude::*;

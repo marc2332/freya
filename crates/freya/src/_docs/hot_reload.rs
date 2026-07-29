@@ -39,7 +39,7 @@
 //! ```
 //!
 //! `dx` will build and launch your app, then watch your sources. When you save
-//! a file, it compiles a patch and pushes it into the running process; Freya
+//! a file, it compiles a patch and pushes it into the running process, and Freya
 //! re-renders the UI so you can see the change immediately.
 //!
 //! To hot reload an example instead of the main binary, pass `--example`:
@@ -72,7 +72,7 @@
 //!   the components that own it.
 //! - **Subsecond patching constraints.** Subsecond patches function bodies in
 //!   the running binary. Changes that alter the program's structure (adding
-//!   or removing functions, types, or trait impls; changing function
-//!   signatures; modifying struct layouts; touching `const`/`static`
+//!   or removing functions, types, or trait impls, changing function
+//!   signatures, modifying struct layouts, touching `const`/`static`
 //!   initializers) cannot be applied as a patch. When `dx` cannot patch a
 //!   change, restart the app to pick it up.

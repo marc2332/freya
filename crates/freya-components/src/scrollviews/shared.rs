@@ -72,11 +72,7 @@ pub fn is_scrollbar_visible(
     inner_size: f32,
     viewport_size: f32,
 ) -> bool {
-    if is_scrollbar_enabled {
-        viewport_size > 0. && viewport_size < inner_size
-    } else {
-        false
-    }
+    is_scrollbar_enabled && viewport_size > MIN_SCROLLBAR_SIZE && viewport_size < inner_size
 }
 
 const MIN_SCROLLBAR_SIZE: f32 = 50.0;
@@ -87,16 +83,12 @@ pub fn get_scrollbar_pos_and_size(
     viewport_size: f32,
     scroll_position: f32,
 ) -> (f32, f32) {
-    if viewport_size >= inner_size {
-        return (0.0, inner_size);
+    if viewport_size <= MIN_SCROLLBAR_SIZE || viewport_size >= inner_size {
+        return (0.0, 0.0);
     }
 
     let viewable_ratio = viewport_size / inner_size;
-    let mut scrollbar_size = viewport_size * viewable_ratio;
-
-    if scrollbar_size < MIN_SCROLLBAR_SIZE {
-        scrollbar_size = MIN_SCROLLBAR_SIZE;
-    }
+    let scrollbar_size = (viewport_size * viewable_ratio).max(MIN_SCROLLBAR_SIZE);
 
     let available_scroll_range = inner_size - viewport_size;
     let available_thumb_range = viewport_size - scrollbar_size;
@@ -112,16 +104,12 @@ pub fn get_scroll_position_from_cursor(
     inner_size: f32,
     viewport_size: f32,
 ) -> i32 {
-    if viewport_size >= inner_size {
+    if viewport_size <= MIN_SCROLLBAR_SIZE || viewport_size >= inner_size {
         return 0;
     }
 
     let viewable_ratio = viewport_size / inner_size;
-    let mut scrollbar_size = viewport_size * viewable_ratio;
-
-    if scrollbar_size < MIN_SCROLLBAR_SIZE {
-        scrollbar_size = MIN_SCROLLBAR_SIZE;
-    }
+    let scrollbar_size = (viewport_size * viewable_ratio).max(MIN_SCROLLBAR_SIZE);
 
     let available_scroll_range = inner_size - viewport_size;
     let available_thumb_range = viewport_size - scrollbar_size;

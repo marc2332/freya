@@ -356,9 +356,12 @@ impl TestingRunner {
         }
 
         let mutations = self.runner.sync_and_update();
-        self.runner.run_in(|| {
-            self.tree.borrow_mut().apply_mutations(mutations);
-        });
+        let result = self
+            .runner
+            .run_in(|| self.tree.borrow_mut().apply_mutations(mutations));
+        if let Some(strategy) = result.auto_focus {
+            self.requested_focus_strategy.borrow_mut().replace(strategy);
+        }
         self.tree.borrow_mut().measure_layout(
             self.size,
             &mut self.font_collection,

@@ -8,10 +8,7 @@ use std::{
 
 use paste::paste;
 use ragnarok::CursorPoint;
-use rustc_hash::{
-    FxHashMap,
-    FxHasher,
-};
+use rustc_hash::FxHasher;
 use torin::{
     content::Content,
     gaps::Gaps,
@@ -37,6 +34,7 @@ use crate::{
     element::{
         Element,
         EventHandlerType,
+        EventHandlers,
     },
     elements::image::{
         AspectRatio,
@@ -172,19 +170,16 @@ macro_rules! event_handlers {
 /// Methods for attaching event handlers to an element.
 ///
 /// Many events come in three flavors: the plain one fires only while the pointer is over the
-/// element; the `global_` variants fire no matter where the event happens; and the `capture_`
+/// element, the `global_` variants fire no matter where the event happens, and the `capture_`
 /// variants fire during the top-down capture phase, before the event reaches the inner element.
 ///
 /// For high-level press handling, prefer [`on_press`](EventHandlersExt::on_press) over the raw mouse/pointer events.
 pub trait EventHandlersExt: Sized {
     /// Returns a mutable reference to the element's event handler map.
-    fn get_event_handlers(&mut self) -> &mut FxHashMap<EventName, EventHandlerType>;
+    fn get_event_handlers(&mut self) -> &mut EventHandlers;
 
     /// Replace all of this element's event handlers with the given map.
-    fn with_event_handlers(
-        mut self,
-        event_handlers: FxHashMap<EventName, EventHandlerType>,
-    ) -> Self {
+    fn event_handlers(mut self, event_handlers: EventHandlers) -> Self {
         *self.get_event_handlers() = event_handlers;
         self
     }
@@ -478,14 +473,14 @@ where
         self
     }
     /// Set how children are aligned along the direction axis. See [`Alignment`].
-    fn main_align(mut self, main_align: Alignment) -> Self {
-        self.get_layout().layout.main_alignment = main_align;
+    fn main_align(mut self, main_align: impl Into<Alignment>) -> Self {
+        self.get_layout().layout.main_alignment = main_align.into();
         self
     }
 
     /// Set how children are aligned across the direction axis. See [`Alignment`].
-    fn cross_align(mut self, cross_align: Alignment) -> Self {
-        self.get_layout().layout.cross_alignment = cross_align;
+    fn cross_align(mut self, cross_align: impl Into<Alignment>) -> Self {
+        self.get_layout().layout.cross_alignment = cross_align.into();
         self
     }
 
@@ -580,7 +575,7 @@ where
 
 impl<T: ContainerExt> ContainerPositionExt for T {}
 
-/// Methods controlling an element's spacing and size constraints.
+/// Method for setting an element's inner padding.
 pub trait ContainerExt
 where
     Self: LayoutExt,
@@ -590,7 +585,13 @@ where
         self.get_layout().layout.padding = padding.into();
         self
     }
+}
 
+/// Methods for setting an element's size constraints.
+pub trait ContainerConstraintsExt
+where
+    Self: LayoutExt,
+{
     /// Set the minimum width the element can shrink to. See [`Size`].
     fn min_width(mut self, minimum_width: impl Into<Size>) -> Self {
         self.get_layout().layout.minimum_width = minimum_width.into();
@@ -627,6 +628,8 @@ where
         self
     }
 }
+
+impl<T: ContainerExt> ContainerConstraintsExt for T {}
 
 /// Low-level access to an element's [`LayoutData`].
 pub trait LayoutExt
@@ -826,6 +829,12 @@ where
 {
     /// Returns a mutable reference to the element's style data.
     fn get_style(&mut self) -> &mut StyleState;
+
+    /// Replace all of the element's style data at once. See [`StyleState`].
+    fn style(mut self, style: StyleState) -> Self {
+        *self.get_style() = style;
+        self
+    }
 
     /// Paint the background with any [`Fill`]: a [`Color`], a gradient or a shader.
     fn background(mut self, background: impl Into<Fill>) -> Self {
