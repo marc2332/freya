@@ -71,39 +71,55 @@ freya-engine = { workspace = true, features = [
   "vulkan",
   "x11",
   "wayland",
-] }
+], optional = true }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-freya-engine = { workspace = true, features = ["gl", "vulkan"] }
+freya-engine = { workspace = true, features = [
+  "gl",
+  "vulkan",
+], optional = true }
 
 # Rendering OpenGL + Vulkan (Linux/Windows)
 [target.'cfg(any(target_os = "linux", target_os = "windows"))'.dependencies]
-gl = { workspace = true }
-glutin = { workspace = true }
-glutin-winit = { workspace = true }
-ash = { workspace = true }
-ash-window = { workspace = true }
+gl = { workspace = true, optional = true }
+glutin = { workspace = true, optional = true }
+glutin-winit = { workspace = true, optional = true }
+ash = { workspace = true, optional = true }
+ash-window = { workspace = true, optional = true }
 
 # Rendering OpenGL (Android)
 [target.'cfg(target_os = "android")'.dependencies]
-gl = { workspace = true }
-glutin = { workspace = true }
-glutin-winit = { workspace = true }
-freya-engine = { workspace = true, features = ["gl"] }
+gl = { workspace = true, optional = true }
+glutin = { workspace = true, optional = true }
+glutin-winit = { workspace = true, optional = true }
+freya-engine = { workspace = true, features = ["gl"], optional = true }
 
 # Rendering Metal (macOS)
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2-core-foundation = { version = "0.3.2" }
-objc2 = { version = "0.6" }
-objc2-metal = { version = "0.3" }
-objc2-quartz-core = { version = "0.3" }
-objc2-app-kit = { version = "0.3" }
-freya-engine = { workspace = true, features = ["metal"] }
+objc2 = { version = "0.6", optional = true }
+objc2-metal = { version = "0.3", optional = true }
+objc2-quartz-core = { version = "0.3", optional = true }
+objc2-app-kit = { version = "0.3", optional = true }
+freya-engine = { workspace = true, features = ["metal"], optional = true }
 
 [dev-dependencies]
 freya = { path = "../freya" }
 
 [features]
+default = ["gpu"]
+gpu = [
+  "dep:freya-engine",
+  "dep:gl",
+  "dep:glutin",
+  "dep:glutin-winit",
+  "dep:ash",
+  "dep:ash-window",
+  "dep:objc2",
+  "dep:objc2-metal",
+  "dep:objc2-quartz-core",
+  "dep:objc2-app-kit",
+]
 hotpath = ["hotpath/hotpath"]
 hotreload = ["freya-core/hotreload"]
 tray = ["dep:tray-icon", "dep:gtk"]

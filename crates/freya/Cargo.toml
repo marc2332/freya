@@ -19,11 +19,12 @@ features = ["all-publish"]
 no-default-features = true
 
 [features]
-default = ["winit"]
+default = ["winit", "gpu"]
 # Shortcuts
 all = ["all-crossplatform", "tray", "webview", "camera", "video"]
 all-crossplatform = [
   "winit",
+  "gpu",
   "router",
   "i18n",
   "remote-asset",
@@ -58,6 +59,7 @@ all-debug = [
 ]
 all-tests = [
   "winit",
+  "gpu",
   "router",
   "i18n",
   "remote-asset",
@@ -76,6 +78,7 @@ all-tests = [
 docs = ["all-debug"]
 # Features
 winit = ["dep:freya-winit"]
+gpu = ["freya-winit?/gpu"]
 router = [
   "dep:freya-router",
   "freya-components/router",

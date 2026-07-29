@@ -53,6 +53,7 @@ members = [
   "./examples/android",
   "./examples/component_video",
   "./examples/feature_camera",
+  "./examples/feature_software_renderer",
   "./examples/feature_tray",
   "./examples/feature_tray_radio_state",
   "./examples/feature_webview",
@@ -66,7 +67,7 @@ torin = { path = "./crates/torin", version = "0.4.0" }
 ragnarok = { path = "./crates/ragnarok", version = "0.4.0" }
 freya-clipboard = { path = "./crates/freya-clipboard", version = "0.4.0" }
 freya-edit = { path = "./crates/freya-edit", version = "0.4.0" }
-freya-winit = { path = "./crates/freya-winit", version = "0.4.0" }
+freya-winit = { path = "./crates/freya-winit", version = "0.4.0", default-features = false }
 freya-components = { path = "./crates/freya-components", version = "0.4.0" }
 freya-video = { path = "./crates/freya-video", version = "0.4.0" }
 freya-markdown = { path = "./crates/freya-markdown", version = "0.4.0" }
