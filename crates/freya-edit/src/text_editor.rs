@@ -207,6 +207,16 @@ pub trait TextEditor {
         pos - line_char
     }
 
+    /// Move the cursor to `row`, keeping `col` when possible and snapping to a
+    /// grapheme cluster boundary.
+    fn move_cursor_to_row(&mut self, row: usize, col: usize) {
+        let Some(line) = self.line(row) else { return };
+        let row_start = self.char_to_utf16_cu(self.line_to_char(row));
+        let col = col.min(line.utf16_len().saturating_sub(1));
+        let pos = self.grapheme_cluster_at(row_start + col).start;
+        self.selection_mut().move_to(pos);
+    }
+
     /// Move the cursor 1 line down
     fn cursor_down(&mut self) -> bool {
         let old_row = self.cursor_row();
@@ -214,28 +224,17 @@ pub trait TextEditor {
 
         match old_row.cmp(&(self.len_lines() - 1)) {
             Ordering::Less => {
-                // One line below
-                let new_row = old_row + 1;
-                let new_row_char = self.char_to_utf16_cu(self.line_to_char(new_row));
-                let new_row_len = self.line(new_row).unwrap().utf16_len();
-                let new_col = old_col.min(new_row_len.saturating_sub(1));
-                let new_pos = self.grapheme_cluster_at(new_row_char + new_col).start;
-                self.selection_mut().move_to(new_pos);
+                self.move_cursor_to_row(old_row + 1, old_col);
 
                 true
             }
             Ordering::Equal => {
                 let end = self.len_utf16_cu();
-                // Reached max
                 self.selection_mut().move_to(end);
 
                 true
             }
-            Ordering::Greater => {
-                // Can't go further
-
-                false
-            }
+            Ordering::Greater => false,
         }
     }
 
@@ -246,16 +245,10 @@ pub trait TextEditor {
         let old_col = self.cursor_col();
 
         if pos > 0 {
-            // Reached max
             if old_row == 0 {
                 self.selection_mut().move_to(0);
             } else {
-                let new_row = old_row - 1;
-                let new_row_char = self.char_to_utf16_cu(self.line_to_char(new_row));
-                let new_row_len = self.line(new_row).unwrap().utf16_len();
-                let new_col = old_col.min(new_row_len.saturating_sub(1));
-                let new_pos = self.grapheme_cluster_at(new_row_char + new_col).start;
-                self.selection_mut().move_to(new_pos);
+                self.move_cursor_to_row(old_row - 1, old_col);
             }
 
             true
@@ -586,7 +579,6 @@ pub trait TextEditor {
                     self.move_cursor_to(start);
                     event.insert(TextEvent::TEXT_CHANGED);
                 } else if cursor_pos > 0 {
-                    // Remove the character to the left if there is any
                     let remove_from = self.grapheme_cluster_at(cursor_pos - 1).start;
                     self.remove(remove_from..cursor_pos);
                     self.move_cursor_to(remove_from);
@@ -602,7 +594,6 @@ pub trait TextEditor {
                     self.move_cursor_to(start);
                     event.insert(TextEvent::TEXT_CHANGED);
                 } else if cursor_pos < self.len_utf16_cu() {
-                    // Remove the character to the right if there is any
                     let remove_to = self.grapheme_cluster_at(cursor_pos).end;
                     self.remove(cursor_pos..remove_to);
                     event.insert(TextEvent::TEXT_CHANGED);

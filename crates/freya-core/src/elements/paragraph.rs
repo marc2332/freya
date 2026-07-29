@@ -502,15 +502,12 @@ impl ElementExt for ParagraphElement {
             }
         }
 
-        // We exclude those highlights that on the same start and end (e.g the user just started dragging)
         let visible_highlights = self
             .highlights
             .iter()
-            .filter(|highlight| highlight.0 != highlight.1)
-            .count()
-            > 0;
+            .any(|highlight| highlight.0 != highlight.1);
 
-        // Draw block cursor behind text if needed
+        // Draw block cursor
         if let Some(cursor_index) = self.cursor_index
             && self.cursor_style == CursorStyle::Block
         {
@@ -536,7 +533,7 @@ impl ElementExt for ParagraphElement {
             context.canvas.draw_rect(cursor_rect, &paint);
         }
 
-        // Draw text (always uses visible_area with vertical_offset)
+        // Draw text
         paint_paragraph_with_fill(
             paragraph,
             context.canvas,
@@ -550,42 +547,27 @@ impl ElementExt for ParagraphElement {
             && self.cursor_style != CursorStyle::Block
             && let Some(cursor_rect) = cursor_character_rect(paragraph, &self.text(), cursor_index)
         {
-            let paint_color = self.cursor_style_data.color;
-            match self.cursor_style {
-                CursorStyle::Underline => {
-                    let thickness = 2.0;
-                    let underline_rect = SkRect::new(
-                        cursor_area.min_x() + cursor_rect.left,
-                        cursor_area.min_y() + cursor_rect.bottom - thickness
-                            + cursor_vertical_offset,
-                        cursor_area.min_x() + cursor_rect.right,
-                        cursor_area.min_y() + cursor_rect.bottom + cursor_vertical_size_offset,
-                    );
+            let cursor_rect = match self.cursor_style {
+                CursorStyle::Underline => SkRect::new(
+                    cursor_area.min_x() + cursor_rect.left,
+                    cursor_area.min_y() + cursor_rect.bottom - 2. + cursor_vertical_offset,
+                    cursor_area.min_x() + cursor_rect.right,
+                    cursor_area.min_y() + cursor_rect.bottom + cursor_vertical_size_offset,
+                ),
+                _ => SkRect::new(
+                    cursor_area.min_x() + cursor_rect.left,
+                    cursor_area.min_y() + cursor_rect.top + cursor_vertical_offset,
+                    cursor_area.min_x() + cursor_rect.left + 2.,
+                    cursor_area.min_y() + cursor_rect.bottom + cursor_vertical_size_offset,
+                ),
+            };
 
-                    let mut paint = Paint::default();
-                    paint.set_anti_alias(true);
-                    paint.set_style(PaintStyle::Fill);
-                    paint.set_color(paint_color);
+            let mut paint = Paint::default();
+            paint.set_anti_alias(true);
+            paint.set_style(PaintStyle::Fill);
+            paint.set_color(self.cursor_style_data.color);
 
-                    context.canvas.draw_rect(underline_rect, &paint);
-                }
-                CursorStyle::Line => {
-                    let cursor_rect = SkRect::new(
-                        cursor_area.min_x() + cursor_rect.left,
-                        cursor_area.min_y() + cursor_rect.top + cursor_vertical_offset,
-                        cursor_area.min_x() + cursor_rect.left + 2.,
-                        cursor_area.min_y() + cursor_rect.bottom + cursor_vertical_size_offset,
-                    );
-
-                    let mut paint = Paint::default();
-                    paint.set_anti_alias(true);
-                    paint.set_style(PaintStyle::Fill);
-                    paint.set_color(paint_color);
-
-                    context.canvas.draw_rect(cursor_rect, &paint);
-                }
-                _ => {}
-            }
+            context.canvas.draw_rect(cursor_rect, &paint);
         }
     }
 }
@@ -597,7 +579,7 @@ impl ParagraphElement {
             .any(|content| matches!(content, ParagraphContent::Element))
     }
 
-    /// The paragraph text as Skia indexes it, inline children become placeholder characters.
+    /// The paragraph text as Skia indexes it, with inline children as placeholder characters.
     fn text(&self) -> String {
         let mut text = String::new();
         let mut spans = self.spans.iter();
@@ -678,8 +660,8 @@ impl ParagraphElement {
     }
 }
 
-/// Rect of the grapheme cluster at `cursor_index` in UTF-16 code units, or a caret
-/// collapsed after the last cluster when the cursor is at the end of the text.
+/// Rect of the grapheme cluster at `cursor_index` (in UTF-16 code units), or a
+/// caret collapsed after the last cluster when the cursor is at the end of the text.
 fn cursor_character_rect(
     paragraph: &SkParagraph,
     text: &str,
