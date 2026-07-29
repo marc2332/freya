@@ -26,7 +26,7 @@ impl<V> PathGraphEntry<V> {
                         items: Vec::new(),
                     });
                 }
-                // Only shift on collision with a real sibling; empty
+                // Only shift on collision with a real sibling. Empty
                 // placeholders from prior moves are filled in place.
                 Some(existing) if path.len() == 1 && existing.value.is_some() => {
                     self.items.insert(

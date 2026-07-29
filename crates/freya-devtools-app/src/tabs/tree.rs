@@ -132,12 +132,12 @@ impl Component for NodesTree {
                 self.on_selected.clone(),
                 self.on_hover.clone(),
             ),
-            move |i, (selected_node_id, selected_window_id, on_selected, on_hover)| {
+            move |item, (selected_node_id, selected_window_id, on_selected, on_hover)| {
                 let NodeTreeItem {
                     window_id,
                     node_id,
                     is_open,
-                } = items[i];
+                } = items[item.index];
                 let on_selected = on_selected.clone();
                 let on_hover = on_hover.clone();
                 NodeElement {
