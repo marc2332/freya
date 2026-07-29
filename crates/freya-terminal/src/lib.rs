@@ -13,6 +13,7 @@
 //! - **256-Color Support**: ANSI 16 colors, 6x6x6 RGB cube, and 24-level grayscale
 //! - **Keyboard Input**: Handle all standard terminal key sequences
 //! - **Auto-resize**: Terminal automatically resizes based on available space
+//! - **Focus reporting**: Focus changes are reported to programs that enable mode 1004
 //!
 //! ## Basic Usage
 //!

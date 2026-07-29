@@ -297,6 +297,13 @@ impl TerminalHandle {
         Ok(())
     }
 
+    /// Report a keyboard focus change to the program if it enabled focus reporting (mode 1004).
+    pub fn focus_changed(&self, focused: bool) {
+        if self.mode().contains(TermMode::FOCUS_IN_OUT) {
+            let _ = self.write_raw(if focused { b"\x1b[I" } else { b"\x1b[O" });
+        }
+    }
+
     /// Write data to the PTY without resetting scroll or selection state.
     fn write_raw(&self, data: &[u8]) -> Result<(), TerminalError> {
         let mut writer = self.writer.borrow_mut();
