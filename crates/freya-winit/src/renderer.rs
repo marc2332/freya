@@ -194,7 +194,7 @@ pub type RendererCallback = Box<dyn FnOnce(WindowId, &mut RendererContext) + 'st
 
 pub enum NativeWindowErasedEventAction {
     LaunchWindow {
-        window_config: WindowConfig,
+        window_config: Box<WindowConfig>,
         ack: futures_channel::oneshot::Sender<WindowId>,
     },
     CloseWindow(WindowId),
@@ -571,7 +571,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                         ack,
                                     } => {
                                         let app_window = AppWindow::new(
-                                            window_config,
+                                            *window_config,
                                             active_event_loop,
                                             &self.proxy,
                                             &mut self.plugins,
