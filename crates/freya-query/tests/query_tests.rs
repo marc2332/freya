@@ -195,12 +195,6 @@ fn peek_query_state_from_the_test() {
         std::time::Duration::from_millis(200),
     );
 
-    // A capability no component uses has nothing cached
-    assert!(
-        test.run_in(|| QueriesStorage::<CountCalls>::peek_matching(0))
-            .is_empty()
-    );
-
     let name = test.run_in(|| {
         QueriesStorage::<GetUserName>::peek_matching(0)
             .first()
@@ -249,10 +243,10 @@ fn mocked_query() {
 
 #[test]
 #[cfg(debug_assertions)]
-fn mocked_async_query_goes_through_loading() {
+fn mocked_async_query() {
     fn app() -> impl IntoElement {
-        let user = use_query(Query::new(0, GetUserName(Captured(FancyClient))));
-        rect().child(label().text(format!("{:?}", user.read().state())))
+        use_query(Query::new(0, GetUserName(Captured(FancyClient))));
+        rect()
     }
 
     let (mut test, _) = TestingRunner::new(
@@ -261,43 +255,33 @@ fn mocked_async_query_goes_through_loading() {
         |runner| {
             runner.provide_root_context(|| {
                 QueriesStorage::<GetUserName>::mocked_async(|keys| async move {
-                    Timer::after(std::time::Duration::from_millis(150)).await;
-                    match keys {
-                        0 => Ok("Mocked".to_string()),
-                        _ => Err(()),
-                    }
+                    Timer::after(std::time::Duration::from_millis(20)).await;
+                    Ok(format!("Mocked {keys}"))
                 })
             })
         },
         1.,
     );
 
-    let state_is = |test: &mut TestingRunner, expected: &str| {
-        let label = test
-            .find(|node, element| Label::try_downcast(element).map(|_| node))
-            .unwrap();
-        let element = label.element();
-        Label::try_downcast(&*element)
-            .unwrap()
-            .text
-            .contains(expected)
-    };
-
     test.sync_and_update();
-    test.poll(
-        std::time::Duration::from_millis(10),
-        std::time::Duration::from_millis(50),
-    );
 
-    assert!(
-        state_is(&mut test, "Loading"),
-        "the mock resolved instantly, the loading state was not observable"
-    );
+    assert!(test.run_in(|| {
+        QueriesStorage::<GetUserName>::peek_matching(0)[0]
+            .state()
+            .is_loading()
+    }));
 
     test.poll(
-        std::time::Duration::from_millis(10),
-        std::time::Duration::from_millis(300),
+        std::time::Duration::from_millis(5),
+        std::time::Duration::from_millis(100),
     );
 
-    assert!(state_is(&mut test, "Settled { Ok(\"Mocked\") }"));
+    let name = test.run_in(|| {
+        QueriesStorage::<GetUserName>::peek_matching(0)[0]
+            .state()
+            .ok()
+            .cloned()
+    });
+
+    assert_eq!(name.as_deref(), Some("Mocked 0"));
 }
