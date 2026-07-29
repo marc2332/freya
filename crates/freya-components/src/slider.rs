@@ -320,9 +320,9 @@ impl Component for Slider {
                     .direction(self.direction)
                     .main_align(thumb_main_align)
                     .children(if direction_is_vertical {
-                        vec![thumb.into(), track.into()]
+                        vec![thumb, track]
                     } else {
-                        vec![track.into(), thumb.into()]
+                        vec![track, thumb]
                     }),
             )
     }

@@ -77,7 +77,7 @@ pub enum ScrollEvent {
 ///         )
 ///         .child(
 ///             ScrollView::new_controlled(scroll_controller)
-///                 .children((0..100).map(|i| label().key(i).text(format!("Item {i}")).into())),
+///                 .children((0..100).map(|i| label().key(i).text(format!("Item {i}")))),
 ///         )
 /// }
 /// ```
@@ -102,12 +102,12 @@ pub enum ScrollEvent {
 ///         .child(
 ///             ScrollView::new_controlled(scroll_controller)
 ///                 .width(Size::flex(1.))
-///                 .children((0..30).map(|i| label().key(i).text(format!("Left {i}")).into())),
+///                 .children((0..30).map(|i| label().key(i).text(format!("Left {i}")))),
 ///         )
 ///         .child(
 ///             ScrollView::new_controlled(scroll_controller)
 ///                 .width(Size::flex(1.))
-///                 .children((0..30).map(|i| label().key(i).text(format!("Right {i}")).into())),
+///                 .children((0..30).map(|i| label().key(i).text(format!("Right {i}")))),
 ///         )
 /// }
 /// ```
@@ -127,7 +127,7 @@ pub enum ScrollEvent {
 ///     });
 ///
 ///     ScrollView::new_controlled(scroll_controller)
-///         .children((0..100).map(|i| label().key(i).text(format!("Item {i}")).into()))
+///         .children((0..100).map(|i| label().key(i).text(format!("Item {i}"))))
 /// }
 /// ```
 #[derive(PartialEq, Clone, Copy)]

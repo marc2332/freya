@@ -89,9 +89,9 @@ impl Component for ShaderEditor {
             .width(Size::percent(50.))
             .height(Size::fill())
             .child(
-                VirtualScrollView::new(move |line_index, _| {
+                VirtualScrollView::new(move |item, _| {
                     EditingLine {
-                        line_index,
+                        line_index: item.index,
                         editable,
                     }
                     .into()

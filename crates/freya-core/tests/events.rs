@@ -252,23 +252,18 @@ fn pointer_enter_leave_at_large_coordinates() {
             .expanded()
             .background((255, 255, 255))
             .children([
-                rect()
-                    .width(Size::percent(100.))
-                    .height(Size::px(3000.))
-                    .into(),
+                rect().width(Size::percent(100.)).height(Size::px(3000.)),
                 rect()
                     .width(Size::px(100.))
                     .height(Size::px(100.))
                     .background((0, 0, 0))
                     .on_pointer_enter(move |_| *state.write() += 1)
-                    .on_pointer_leave(move |_| *state.write() += 10)
-                    .into(),
+                    .on_pointer_leave(move |_| *state.write() += 10),
                 rect()
                     .width(Size::percent(100.))
                     .height(Size::px(100.))
                     .background((20, 20, 20))
-                    .on_pointer_enter(move |_| *state.write() += 100)
-                    .into(),
+                    .on_pointer_enter(move |_| *state.write() += 100),
             ])
             .into()
     }
@@ -318,19 +313,14 @@ fn large_coordinate_hover_does_not_trigger_other_elements() {
                     .height(Size::px(100.))
                     .background((0, 0, 0))
                     .on_pointer_enter(move |_| counters.write().0 += 1)
-                    .on_pointer_leave(move |_| counters.write().0 += 10)
-                    .into(),
-                rect()
-                    .width(Size::percent(100.))
-                    .height(Size::px(2900.))
-                    .into(),
+                    .on_pointer_leave(move |_| counters.write().0 += 10),
+                rect().width(Size::percent(100.)).height(Size::px(2900.)),
                 rect()
                     .width(Size::px(100.))
                     .height(Size::px(100.))
                     .background((40, 40, 40))
                     .on_pointer_enter(move |_| counters.write().1 += 1)
-                    .on_pointer_leave(move |_| counters.write().1 += 10)
-                    .into(),
+                    .on_pointer_leave(move |_| counters.write().1 += 10),
             ])
             .into()
     }

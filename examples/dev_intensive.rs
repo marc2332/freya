@@ -50,7 +50,6 @@ fn app() -> impl IntoElement {
             .margin((4., 4.))
             .center()
             .child(label().text(format!("Item {}", i + 1)))
-            .into()
     });
 
     rect().padding(8.).vertical().child(
