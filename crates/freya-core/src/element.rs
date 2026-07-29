@@ -1,5 +1,8 @@
 use std::{
-    any::Any,
+    any::{
+        Any,
+        TypeId,
+    },
     borrow::Cow,
     fmt::Debug,
     rc::Rc,
@@ -209,8 +212,9 @@ pub struct ClipContext<'a> {
 
 impl<T: Any + PartialEq> ComponentProps for T {
     fn changed(&self, other: &dyn ComponentProps) -> bool {
-        let other = (other as &dyn Any).downcast_ref::<T>().unwrap();
-        self != other
+        (other as &dyn Any)
+            .downcast_ref::<T>()
+            .is_none_or(|other| self != other)
     }
 }
 
@@ -375,7 +379,13 @@ where
     T: Component,
 {
     fn default_key(&self) -> DiffKey {
-        DiffKey::DefaultU64(Self::render as *const () as u64)
+        use std::hash::{
+            Hash,
+            Hasher,
+        };
+        let mut hasher = rustc_hash::FxHasher::default();
+        TypeId::of::<T>().hash(&mut hasher);
+        DiffKey::DefaultU64(hasher.finish())
     }
 }
 
