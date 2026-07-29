@@ -154,8 +154,8 @@ impl VulkanDriver {
 
         let entry = unsafe { Entry::load()? };
 
-        // Skia resolves its entry points for the version the loader reports, so requesting an older
-        // one here makes them resolve to null and its Vulkan context creation fail.
+        // The requested version must match the one the loader reports, otherwise Skia fails to
+        // create its Vulkan context.
         let api_version =
             unsafe { entry.try_enumerate_instance_version() }?.unwrap_or(API_VERSION_1_0);
 

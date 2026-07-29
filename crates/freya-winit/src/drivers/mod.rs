@@ -132,18 +132,19 @@ impl GraphicsDriver {
     }
 
     /// Rebuild the driver on the existing window, skipping Vulkan.
+    #[cfg_attr(target_os = "macos", allow(unused_variables))]
     pub fn recover_reusing_window(
-        _event_loop: &ActiveEventLoop,
+        event_loop: &ActiveEventLoop,
         window: &Window,
-        _gpu_resource_cache_limit: usize,
-        _transparent: bool,
+        gpu_resource_cache_limit: usize,
+        transparent: bool,
     ) -> Self {
         #[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
         match gl::OpenGLDriver::from_window(
-            _event_loop,
+            event_loop,
             window,
-            _gpu_resource_cache_limit,
-            _transparent,
+            gpu_resource_cache_limit,
+            transparent,
         ) {
             Ok(driver) => return Self::OpenGl(driver),
             Err(error) => {
@@ -158,7 +159,7 @@ impl GraphicsDriver {
 
     pub fn present(
         &mut self,
-        _size: PhysicalSize<u32>,
+        size: PhysicalSize<u32>,
         window: &Window,
         render: impl FnOnce(&mut SkiaSurface),
     ) -> Result<(), DriverError> {
@@ -170,13 +171,13 @@ impl GraphicsDriver {
             }
             #[cfg(target_os = "macos")]
             Self::Metal(mtl) => {
-                mtl.present(_size, window, render);
+                mtl.present(size, window, render);
                 Ok(())
             }
             #[cfg(any(target_os = "linux", target_os = "windows"))]
-            Self::Vulkan(vk) => vk.present(_size, window, render),
+            Self::Vulkan(vk) => vk.present(size, window, render),
             Self::Software(sw) => {
-                sw.present(_size, window, render);
+                sw.present(size, window, render);
                 Ok(())
             }
         }
