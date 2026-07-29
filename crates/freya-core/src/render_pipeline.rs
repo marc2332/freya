@@ -139,7 +139,7 @@ impl RenderPipeline<'_> {
                         }
                     }
 
-                    // Composite the blur before the opacity layers so its backdrop samples the real content underneath rather than the still empty opacity layer.
+                    // Composite the blur before the opacity layers so it samples the real content underneath.
                     if let Some(blur_radius) = effect_state.blur {
                         let style = element.style();
 
