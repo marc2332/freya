@@ -14,6 +14,11 @@ use torin::prelude::{
     Size2D,
 };
 
+use crate::data::{
+    StyleState,
+    TextStyleState,
+};
+
 #[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub enum MouseButton {
     Left,
@@ -137,6 +142,13 @@ impl SizedEventData {
             inner_sizes,
         }
     }
+}
+
+/// Data of a Styled event.
+#[derive(Debug, Clone, PartialEq)]
+pub struct StyledEventData {
+    pub style: StyleState,
+    pub text_style: TextStyleState,
 }
 
 #[derive(Debug, Clone, PartialEq, Copy)]
@@ -272,12 +284,12 @@ impl ImePreeditEventData {
 #[derive(Debug, Clone, PartialEq)]
 pub struct FileEventData {
     pub cursor: CursorPoint,
-    pub file_path: Option<PathBuf>,
+    pub file_paths: Vec<PathBuf>,
 }
 
 impl FileEventData {
-    pub(crate) fn new(cursor: CursorPoint, file_path: Option<PathBuf>) -> Self {
-        Self { cursor, file_path }
+    pub(crate) fn new(cursor: CursorPoint, file_paths: Vec<PathBuf>) -> Self {
+        Self { cursor, file_paths }
     }
 }
 
@@ -286,6 +298,7 @@ pub enum EventType {
     Mouse(MouseEventData),
     Keyboard(KeyboardEventData),
     Sized(SizedEventData),
+    Styled(StyledEventData),
     Wheel(WheelEventData),
     Touch(TouchEventData),
     Pointer(PointerEventData),

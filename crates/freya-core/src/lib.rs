@@ -71,6 +71,7 @@ pub mod prelude {
             ComponentKey,
             ComponentOwned,
             Element,
+            EventHandlers,
             IntoElement,
             RenderContext,
         },
@@ -96,11 +97,6 @@ pub mod prelude {
             rect::{
                 Rect,
                 rect,
-            },
-            svg::{
-                Svg,
-                SvgBytes,
-                svg,
             },
         },
         event_handler::{

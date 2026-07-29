@@ -212,6 +212,8 @@ pub fn input_auto_focus_test() {
 
     let mut test = launch_test(auto_focus_app);
 
+    test.sync_and_update();
+
     // Type without clicking, auto_focus should have focused the input
     test.write_text("typed");
 

@@ -15,13 +15,15 @@ use crate::node_id::NodeId;
 /// Converts from an `i16`, which becomes a [`Layer::Relative`] offset.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Layer {
-    /// Offset from the parent's layer. `0` (the default) keeps the normal stacking order;
-    /// negative values move behind siblings and positive values in front.
+    /// Relative layer to the parent's layer. `0` (the default) keeps the normal stacking order.
+    /// Negative values move behind siblings and positive values in front.
     Relative(i16),
-    /// Paint far above everything else, for overlays such as popups and tooltips.
+    /// Adds a big layer jump relative to the parents layer.
+    /// You may stack multiple overlays on top of each other.
     Overlay,
-    /// Paint on an overlay layer offset by the given multiplier, to stack overlays among themselves.
-    RelativeOverlay(u8),
+    /// Paint on a specific, numbered overlay level, regardless of the parent's layer.
+    /// There are up to 16 levels you can use, anything above will be capped at 16.
+    OverlayLevel(u8),
 }
 
 impl Default for Layer {

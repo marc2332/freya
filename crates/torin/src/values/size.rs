@@ -197,23 +197,23 @@ impl Size {
     }
 
     /// Use a [`Percentage`](Size::Percentage) size.
-    pub fn percent(percent: impl Into<f32>) -> Size {
-        Size::Percentage(Length::new(percent.into()))
+    pub fn percent(percent: f32) -> Size {
+        Size::Percentage(Length::new(percent))
     }
 
     /// Use a [`Pixels`](Size::Pixels) size.
-    pub fn px(px: impl Into<f32>) -> Size {
-        Size::Pixels(Length::new(px.into()))
+    pub fn px(px: f32) -> Size {
+        Size::Pixels(Length::new(px))
     }
 
     /// Use a [`RootPercentage`](Size::RootPercentage) size.
-    pub fn window_percent(percent: impl Into<f32>) -> Size {
-        Size::RootPercentage(Length::new(percent.into()))
+    pub fn window_percent(percent: f32) -> Size {
+        Size::RootPercentage(Length::new(percent))
     }
 
     /// Use a [`Flex`](Size::Flex) size.
-    pub fn flex(flex: impl Into<f32>) -> Size {
-        Size::Flex(Length::new(flex.into()))
+    pub fn flex(flex: f32) -> Size {
+        Size::Flex(Length::new(flex))
     }
 
     /// Use a dynamic [`Fn`](Size::Fn) size computed by the given closure.

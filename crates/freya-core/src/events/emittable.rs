@@ -256,13 +256,13 @@ impl EmmitableEvent {
             PlatformEvent::File {
                 name: platform_event_name,
                 cursor,
-                file_path,
+                file_paths,
             } => Self {
                 node_id,
                 name,
 
                 source_event: platform_event_name.into(),
-                data: EventType::File(FileEventData::new(cursor, file_path)),
+                data: EventType::File(FileEventData::new(cursor, file_paths)),
                 bubbles,
             },
         }

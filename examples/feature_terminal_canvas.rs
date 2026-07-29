@@ -55,11 +55,8 @@ fn app() -> impl IntoElement {
         .child(
             DraggableCanvas::new()
                 .expanded()
-                .children(radio.read().panels.iter().map(|panel| {
-                    TerminalPanel {
-                        data: panel.clone(),
-                    }
-                    .into()
+                .children(radio.read().panels.iter().map(|panel| TerminalPanel {
+                    data: panel.clone(),
                 })),
         )
         .child(
@@ -74,7 +71,7 @@ fn app() -> impl IntoElement {
                         .background((40, 40, 40))
                         .focusable(false)
                         .child(
-                            svg(icons::lucide::plus())
+                            SvgViewer::new(icons::lucide::plus())
                                 .width(Size::px(24.))
                                 .height(Size::px(24.))
                                 .color((200, 200, 200)),
@@ -150,7 +147,7 @@ impl Component for TerminalPanel {
                                     .padding(4.)
                                     .rounded_full()
                                     .child(
-                                        svg(icons::lucide::x())
+                                        SvgViewer::new(icons::lucide::x())
                                             .width(Size::px(16.))
                                             .height(Size::px(16.))
                                             .color((200, 200, 200)),

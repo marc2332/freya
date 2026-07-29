@@ -128,16 +128,13 @@ impl Component for Ripple {
             .on_pointer_down(on_pointer_down)
             .on_sized(move |e: Event<SizedEventData>| container_size.set(e.area.size))
             .children(self.children.clone())
-            .children(ripples.read().iter().map(|ripple| {
-                RippleCircle {
-                    id: ripple.id,
-                    center: ripple.center,
-                    color,
-                    duration,
-                    max_size,
-                    ripples,
-                }
-                .into()
+            .children(ripples.read().iter().map(|ripple| RippleCircle {
+                id: ripple.id,
+                center: ripple.center,
+                color,
+                duration,
+                max_size,
+                ripples,
             }))
     }
 

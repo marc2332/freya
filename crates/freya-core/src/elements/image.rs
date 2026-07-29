@@ -24,7 +24,6 @@ use freya_engine::prelude::{
     SkRect,
     raster_from_data,
 };
-use rustc_hash::FxHashMap;
 use torin::prelude::Size2D;
 
 use crate::{
@@ -40,11 +39,10 @@ use crate::{
         ClipContext,
         Element,
         ElementExt,
-        EventHandlerType,
+        EventHandlers,
         LayoutContext,
         RenderContext,
     },
-    events::name::EventName,
     layers::Layer,
     prelude::{
         AccessibilityExt,
@@ -189,7 +187,7 @@ pub struct ImageData {
 pub struct ImageElement {
     pub accessibility: AccessibilityData,
     pub layout: LayoutData,
-    pub event_handlers: FxHashMap<EventName, EventHandlerType>,
+    pub event_handlers: EventHandlers,
     pub image_handle: ImageHandle,
     pub image_data: ImageData,
     pub relative_layer: Layer,
@@ -232,8 +230,16 @@ impl ElementExt for ImageElement {
             }
         }
 
-        if self.effect != image.effect || self.corner_radius != image.corner_radius {
+        if self.effect != image.effect {
+            diff.insert(DiffModifies::EFFECT);
+        }
+
+        if self.corner_radius != image.corner_radius {
             diff.insert(DiffModifies::STYLE);
+        }
+
+        if self.event_handlers != image.event_handlers {
+            diff.insert(DiffModifies::EVENT_HANDLERS);
         }
 
         diff
@@ -266,6 +272,10 @@ impl ElementExt for ImageElement {
         self.relative_layer
     }
 
+    fn events_handlers(&'_ self) -> Option<Cow<'_, EventHandlers>> {
+        Some(Cow::Borrowed(&self.event_handlers))
+    }
+
     fn should_measure_inner_children(&self) -> bool {
         true
     }
@@ -280,8 +290,10 @@ impl ElementExt for ImageElement {
         let image_width = image.width() as f32;
         let image_height = image.height() as f32;
 
-        let width_ratio = context.area_size.width / image_width;
-        let height_ratio = context.area_size.height / image_height;
+        let area_size = (*context.area_size - context.torin_node.margin.into()).max(Size2D::zero());
+
+        let width_ratio = area_size.width / image_width;
+        let height_ratio = area_size.height / image_height;
 
         let size = match self.image_data.aspect_ratio {
             AspectRatio::Max => {
@@ -295,7 +307,7 @@ impl ElementExt for ImageElement {
                 Size2D::new(image_width * ratio, image_height * ratio)
             }
             AspectRatio::Fit => Size2D::new(image_width, image_height),
-            AspectRatio::None => *context.area_size,
+            AspectRatio::None => area_size,
         };
 
         Some((size, Rc::new(size)))
@@ -373,7 +385,7 @@ impl KeyExt for Image {
 }
 
 impl EventHandlersExt for Image {
-    fn get_event_handlers(&mut self) -> &mut FxHashMap<EventName, EventHandlerType> {
+    fn get_event_handlers(&mut self) -> &mut EventHandlers {
         &mut self.element.event_handlers
     }
 }

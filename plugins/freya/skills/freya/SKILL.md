@@ -98,7 +98,6 @@ Built-in element constructors:
 - `label()` - single-line text.
 - `paragraph()` - multi-line / rich text via `.text_span(...)` children; also the target for `use_editable`.
 - `image(handle)` - raster image; `handle` from `static_bytes(...)`, `dynamic_bytes(...)`, or asset loaders.
-- `svg(bytes)` - vector image.
 
 `&str` / `String` implement `Into<Label>`, so prefer `rect().child("Hi")` over `rect().child(label().text("Hi"))`.
 
@@ -581,13 +580,13 @@ fn app() -> impl IntoElement {
 
 Use `use_init_root_theme` to register at the root scope. To follow the OS preference, convert `Platform::get().preferred_theme` via the `FromPreference::to_theme` extension.
 
-### Element theme extensions
+### Theme extensions
 
-Built-in elements expose helpers that read the active theme - prefer these over hardcoded colors:
+Built-in elements and components expose helpers that read the active theme - prefer these over hardcoded colors:
 
 - `rect().theme_background()`, `rect().theme_color()`
 - `label().theme_color()`, `paragraph().theme_color()`
-- `svg(...).theme_color()` / `.theme_accent_color()` / `.theme_fill()` / `.theme_stroke()` / `.theme_accent_fill()` / `.theme_accent_stroke()`
+- `SvgViewer::new(...).theme_color()` / `.theme_accent_color()` / `.theme_fill()` / `.theme_stroke()` / `.theme_accent_fill()` / `.theme_accent_stroke()`
 
 ### Custom themes
 
@@ -688,10 +687,10 @@ For components that store the partial under a non-default field name (e.g. `them
 Use `.key(id)` on elements in dynamic lists to ensure correct reconciliation on reorders:
 
 ```rust
-VirtualScrollView::new(|i, _| {
+VirtualScrollView::new(|item, _| {
     rect()
-        .key(i)
-        .child(format!("Item {i}"))
+        .key(item.index)
+        .child(format!("Item {}", item.index))
         .into()
 })
 .length(items.len())
@@ -844,7 +843,7 @@ Enable with `features = ["icons"]`. Uses Lucide icons rendered as SVGs:
 ```rust
 use freya::icons;
 
-svg(icons::lucide::antenna()).color((120, 50, 255)).expanded()
+SvgViewer::new(icons::lucide::antenna()).color((120, 50, 255)).expanded()
 ```
 
 ## Rich Text Editing

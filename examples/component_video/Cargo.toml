@@ -1,0 +1,10 @@
+[package]
+name = "component_video"
+publish = false
+edition = "2024"
+
+[lints]
+workspace = true
+
+[dependencies]
+freya = { workspace = true, features = ["video"] }

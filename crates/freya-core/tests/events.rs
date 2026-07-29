@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use freya::helpers::*;
 use freya_core::{
     integration::*,
@@ -5,7 +7,10 @@ use freya_core::{
 };
 use freya_testing::TestingRunner;
 use rustc_hash::FxHashMap;
-use torin::size::Size;
+use torin::{
+    position::Position,
+    size::Size,
+};
 
 struct RawIdMap(FxHashMap<u64, Vec<u64>>);
 
@@ -247,23 +252,18 @@ fn pointer_enter_leave_at_large_coordinates() {
             .expanded()
             .background((255, 255, 255))
             .children([
-                rect()
-                    .width(Size::percent(100.))
-                    .height(Size::px(3000.))
-                    .into(),
+                rect().width(Size::percent(100.)).height(Size::px(3000.)),
                 rect()
                     .width(Size::px(100.))
                     .height(Size::px(100.))
                     .background((0, 0, 0))
                     .on_pointer_enter(move |_| *state.write() += 1)
-                    .on_pointer_leave(move |_| *state.write() += 10)
-                    .into(),
+                    .on_pointer_leave(move |_| *state.write() += 10),
                 rect()
                     .width(Size::percent(100.))
                     .height(Size::px(100.))
                     .background((20, 20, 20))
-                    .on_pointer_enter(move |_| *state.write() += 100)
-                    .into(),
+                    .on_pointer_enter(move |_| *state.write() += 100),
             ])
             .into()
     }
@@ -313,19 +313,14 @@ fn large_coordinate_hover_does_not_trigger_other_elements() {
                     .height(Size::px(100.))
                     .background((0, 0, 0))
                     .on_pointer_enter(move |_| counters.write().0 += 1)
-                    .on_pointer_leave(move |_| counters.write().0 += 10)
-                    .into(),
-                rect()
-                    .width(Size::percent(100.))
-                    .height(Size::px(2900.))
-                    .into(),
+                    .on_pointer_leave(move |_| counters.write().0 += 10),
+                rect().width(Size::percent(100.)).height(Size::px(2900.)),
                 rect()
                     .width(Size::px(100.))
                     .height(Size::px(100.))
                     .background((40, 40, 40))
                     .on_pointer_enter(move |_| counters.write().1 += 1)
-                    .on_pointer_leave(move |_| counters.write().1 += 10)
-                    .into(),
+                    .on_pointer_leave(move |_| counters.write().1 += 10),
             ])
             .into()
     }
@@ -361,4 +356,81 @@ fn large_coordinate_hover_does_not_trigger_other_elements() {
     test.move_cursor((200., 200.));
     test.sync_and_update();
     assert_eq!(*counters.0.peek(), (11, 11));
+}
+
+#[test]
+fn text_blocks_events_to_lower_layers() {
+    #[derive(Clone, Copy)]
+    struct Counters(State<(i32, i32)>);
+
+    fn app() -> Element {
+        let mut counters = use_consume::<Counters>().0;
+        rect()
+            .expanded()
+            .background((255, 255, 255))
+            .child(
+                rect()
+                    .layer(Layer::OverlayLevel(2))
+                    .on_pointer_press(move |_| counters.write().0 += 1)
+                    .child(label().text("Button")),
+            )
+            .child(
+                rect()
+                    .layer(Layer::OverlayLevel(1))
+                    .width(Size::px(300.))
+                    .height(Size::px(300.))
+                    .position(Position::new_absolute().top(0.).left(0.))
+                    .background((255, 0, 0))
+                    .on_pointer_down(move |_| counters.write().1 += 1),
+            )
+            .into()
+    }
+
+    let (mut test, counters) = TestingRunner::new(
+        app,
+        (500., 500.).into(),
+        |runner| runner.provide_root_context(|| Counters(State::create((0, 0)))),
+        1.,
+    );
+    test.sync_and_update();
+
+    // Clicking over the text only reaches the button, not the rect behind it
+    test.click_cursor((5., 5.));
+    assert_eq!(*counters.0.peek(), (1, 0));
+
+    // Clicking away from the button reaches the rect behind it
+    test.click_cursor((200., 200.));
+    assert_eq!(*counters.0.peek(), (1, 1));
+}
+
+#[test]
+fn file_drop_with_multiple_files() {
+    fn app() -> Element {
+        let mut state = use_consume::<State<Vec<PathBuf>>>();
+        rect()
+            .expanded()
+            .background((255, 255, 255))
+            .on_file_drop(move |e: Event<FileEventData>| *state.write() = e.file_paths.clone())
+            .into()
+    }
+
+    let (mut test, state) = TestingRunner::new(
+        app,
+        (500., 500.).into(),
+        |runner| runner.provide_root_context(|| State::create(Vec::<PathBuf>::new())),
+        1.,
+    );
+    test.sync_and_update();
+
+    test.send_event(PlatformEvent::File {
+        name: FileEventName::FileDrop,
+        cursor: (15., 15.).into(),
+        file_paths: vec![PathBuf::from("first.txt"), PathBuf::from("second.txt")],
+    });
+    test.sync_and_update();
+
+    assert_eq!(
+        *state.peek(),
+        vec![PathBuf::from("first.txt"), PathBuf::from("second.txt")]
+    );
 }

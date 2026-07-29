@@ -77,28 +77,38 @@ impl Component for NodeElement {
             let on_expand_all = self.on_expand_all.clone();
             let on_collapse_all = self.on_collapse_all.clone();
             let is_open = self.is_open;
-            move |e: Event<PressEventData>| {
+            move |_: Event<PressEventData>| {
                 let on_toggle = on_toggle.clone();
                 let on_expand_all = on_expand_all.clone();
                 let on_collapse_all = on_collapse_all.clone();
-                ContextMenu::open_from_event(
-                    &e,
+                ContextMenu::open_from_down(
                     Menu::new()
-                        .child(MenuItem::new().on_press(move |_| on_toggle.call(())).child(
-                            if Some(true) == is_open {
-                                "Collapse"
-                            } else {
-                                "Expand"
-                            },
-                        ))
                         .child(
                             MenuItem::new()
-                                .on_press(move |_| on_expand_all.call(()))
+                                .on_press(move |_| {
+                                    on_toggle.call(());
+                                    ContextMenu::close();
+                                })
+                                .child(if Some(true) == is_open {
+                                    "Collapse"
+                                } else {
+                                    "Expand"
+                                }),
+                        )
+                        .child(
+                            MenuItem::new()
+                                .on_press(move |_| {
+                                    on_expand_all.call(());
+                                    ContextMenu::close();
+                                })
                                 .child("Expand All"),
                         )
                         .child(
                             MenuItem::new()
-                                .on_press(move |_| on_collapse_all.call(()))
+                                .on_press(move |_| {
+                                    on_collapse_all.call(());
+                                    ContextMenu::close();
+                                })
                                 .child("Collapse All"),
                         ),
                 );

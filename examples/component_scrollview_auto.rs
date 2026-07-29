@@ -17,6 +17,5 @@ fn app() -> impl IntoElement {
                 .width(Size::fill())
                 .height(Size::window_percent(10.))
                 .background((0, 119, 182))
-                .into()
         })))
 }

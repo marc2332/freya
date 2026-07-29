@@ -48,10 +48,12 @@ use freya_engine::prelude::{
     raster_n32_premul,
 };
 use gif::DisposalMethod;
-use torin::prelude::Size2D;
 #[cfg(feature = "remote-asset")]
-use ureq::http::Uri;
+use reqwest::Url;
+use torin::prelude::Size2D;
 
+#[cfg(feature = "remote-asset")]
+use crate::http::Http;
 use crate::{
     cache::*,
     loader::CircularLoader,
@@ -97,7 +99,7 @@ pub enum GifSource {
     ///
     /// Requires the `remote-asset` feature.
     #[cfg(feature = "remote-asset")]
-    Uri(Uri),
+    Uri(Url),
 
     Path(PathBuf),
 
@@ -129,8 +131,8 @@ impl<const N: usize> From<(&'static str, &'static [u8; N])> for GifSource {
 }
 
 #[cfg(feature = "remote-asset")]
-impl From<Uri> for GifSource {
-    fn from(uri: Uri) -> Self {
+impl From<Url> for GifSource {
+    fn from(uri: Url) -> Self {
         Self::Uri(uri)
     }
 }
@@ -138,7 +140,7 @@ impl From<Uri> for GifSource {
 #[cfg(feature = "remote-asset")]
 impl From<&'static str> for GifSource {
     fn from(src: &'static str) -> Self {
-        Self::Uri(Uri::from_static(src))
+        Self::Uri(Url::parse(src).expect("Invalid URL"))
     }
 }
 
@@ -162,14 +164,12 @@ impl Hash for GifSource {
 impl GifSource {
     pub async fn bytes(&self) -> anyhow::Result<Bytes> {
         let source = self.clone();
+        #[cfg(feature = "remote-asset")]
+        let client = Http::get();
         blocking::unblock(move || {
             let bytes = match source {
                 #[cfg(feature = "remote-asset")]
-                Self::Uri(uri) => ureq::get(uri)
-                    .call()?
-                    .body_mut()
-                    .read_to_vec()
-                    .map(Bytes::from)?,
+                Self::Uri(uri) => client.get(uri).send()?.error_for_status()?.bytes()?,
                 Self::Path(path) => fs::read(path).map(Bytes::from)?,
                 Self::Bytes(_, bytes) => bytes,
             };
@@ -251,6 +251,7 @@ impl LayoutExt for GifViewer {
 }
 
 impl ContainerSizeExt for GifViewer {}
+impl ContainerPositionExt for GifViewer {}
 
 impl ImageExt for GifViewer {
     fn get_image_data(&mut self) -> &mut ImageData {
@@ -273,7 +274,7 @@ enum Status {
 impl Component for GifViewer {
     fn render(&self) -> impl IntoElement {
         let asset_config = AssetConfiguration::new(&self.source, self.asset_age);
-        let asset_data = use_asset(&asset_config);
+        use_asset(&asset_config);
         let mut status = use_state(|| Status::Decoding);
         let mut cached_frames = use_state::<Option<Rc<CachedGifFrames>>>(|| None);
         let mut asset_cacher = use_hook(AssetCacher::get);
@@ -400,29 +401,36 @@ impl Component for GifViewer {
             }
         });
 
-        use_side_effect(move || {
-            if let Some(Asset::Cached(asset)) = asset_cacher.subscribe_asset(&asset_config) {
-                if let Some(bytes) = asset.downcast_ref::<Bytes>().cloned() {
-                    let asset_task = spawn(async move {
-                        if let Err(err) = stream_gif(bytes).await {
-                            *status.write() = Status::Errored(err.to_string());
-                            #[cfg(debug_assertions)]
-                            tracing::error!(
-                                "Failed to render GIF by ID <{}>, error: {err:?}",
-                                asset_config.id
-                            );
-                        }
-                    });
-                    assets_tasks.write().push(asset_task);
-                } else {
-                    #[cfg(debug_assertions)]
-                    tracing::error!(
-                        "Failed to downcast asset of GIF by ID <{}>",
-                        asset_config.id
-                    )
+        use_side_effect({
+            let asset_config = asset_config.clone();
+            move || {
+                if let Some(Asset::Cached(asset)) = asset_cacher.subscribe_asset(&asset_config) {
+                    if let Some(bytes) = asset.downcast_ref::<Bytes>().cloned() {
+                        let asset_task = spawn(async move {
+                            if let Err(err) = stream_gif(bytes).await {
+                                *status.write() = Status::Errored(err.to_string());
+                                #[cfg(debug_assertions)]
+                                tracing::error!(
+                                    "Failed to render GIF by ID <{}>, error: {err:?}",
+                                    asset_config.id
+                                );
+                            }
+                        });
+                        assets_tasks.write().push(asset_task);
+                    } else {
+                        #[cfg(debug_assertions)]
+                        tracing::error!(
+                            "Failed to downcast asset of GIF by ID <{}>",
+                            asset_config.id
+                        )
+                    }
                 }
             }
         });
+
+        let asset_data = asset_cacher
+            .read_asset(&asset_config)
+            .expect("Asset should exist by now");
 
         match (asset_data, cached_frames.read().as_ref()) {
             (Asset::Cached(_), Some(frames)) => match &*status.read() {
@@ -509,7 +517,7 @@ impl KeyExt for Gif {
 }
 
 impl EventHandlersExt for Gif {
-    fn get_event_handlers(&mut self) -> &mut FxHashMap<EventName, EventHandlerType> {
+    fn get_event_handlers(&mut self) -> &mut EventHandlers {
         &mut self.element.event_handlers
     }
 }
@@ -525,7 +533,7 @@ impl MaybeExt for Gif {}
 pub struct GifElement {
     accessibility: AccessibilityData,
     layout: LayoutData,
-    event_handlers: FxHashMap<EventName, EventHandlerType>,
+    event_handlers: EventHandlers,
     frames: Rc<CachedGifFrames>,
     frame_idx: usize,
     image_data: ImageData,
@@ -569,6 +577,10 @@ impl ElementExt for GifElement {
             diff.insert(DiffModifies::STYLE);
         }
 
+        if self.event_handlers != image.event_handlers {
+            diff.insert(DiffModifies::EVENT_HANDLERS);
+        }
+
         diff
     }
 
@@ -592,6 +604,10 @@ impl ElementExt for GifElement {
         Cow::Borrowed(&self.accessibility)
     }
 
+    fn events_handlers(&'_ self) -> Option<Cow<'_, EventHandlers>> {
+        Some(Cow::Borrowed(&self.event_handlers))
+    }
+
     fn should_measure_inner_children(&self) -> bool {
         false
     }
@@ -607,8 +623,10 @@ impl ElementExt for GifElement {
         let image_width = image.width() as f32;
         let image_height = image.height() as f32;
 
-        let width_ratio = context.area_size.width / image.width() as f32;
-        let height_ratio = context.area_size.height / image.height() as f32;
+        let area_size = (*context.area_size - context.torin_node.margin.into()).max(Size2D::zero());
+
+        let width_ratio = area_size.width / image_width;
+        let height_ratio = area_size.height / image_height;
 
         let size = match self.image_data.aspect_ratio {
             AspectRatio::Max => {
@@ -622,7 +640,7 @@ impl ElementExt for GifElement {
                 Size2D::new(image_width * ratio, image_height * ratio)
             }
             AspectRatio::Fit => Size2D::new(image_width, image_height),
-            AspectRatio::None => *context.area_size,
+            AspectRatio::None => area_size,
         };
 
         Some((size, Rc::new(())))

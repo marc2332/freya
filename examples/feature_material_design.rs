@@ -44,11 +44,11 @@ fn app() -> impl IntoElement {
         .child(ContextMenuViewer::new())
         .child(
             Button::new()
-                .on_press(|e: Event<PressEventData>| {
+                .on_press(|_: Event<PressEventData>| {
                     if ContextMenu::is_open() {
                         ContextMenu::close();
                     } else {
-                        ContextMenu::open_from_event(&e, context_menu());
+                        ContextMenu::open(context_menu());
                     }
                 })
                 .flat()

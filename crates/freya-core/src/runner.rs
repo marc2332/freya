@@ -417,6 +417,22 @@ impl Runner {
                                             }
                                         }
                                     }
+                                    EventType::Styled(data) => {
+                                        let event_handlers = element.events_handlers();
+                                        if let Some(event_handlers) = event_handlers {
+                                            match event_handlers.get(&event_name) {
+                                                Some(EventHandlerType::Styled(handler)) => {
+                                                    handler.call(Event {
+                                                        data: data.clone(),
+                                                        propagate: propagate.clone(),
+                                                        default: default.clone(),
+                                                    });
+                                                }
+                                                Some(_) => unreachable!(),
+                                                _ => {}
+                                            }
+                                        }
+                                    }
                                     EventType::Wheel(data) => {
                                         let event_handlers = element.events_handlers();
                                         if let Some(event_handlers) = event_handlers {
@@ -1040,8 +1056,8 @@ impl Runner {
         // later be rearranged once the removals and additions have been done
         for (parent, movements) in &diff.moved {
             parents_to_resync_scopes.insert(parent.clone());
-            // `parent` is a new-tree path; if the parent itself was moved, its path in the
-            // old nodes tree will differ — resolve it before any lookup.
+            // `parent` is a new-tree path. If the parent itself was moved, its path in the
+            // old nodes tree will differ, so resolve it before any lookup.
             let old_parent = resolve_old_path(parent, &diff.moved);
             let paths = moved_nodes.entry(parent.clone()).or_insert_with(|| {
                 let parent_node_id = scope.borrow().nodes.get(&old_parent).unwrap().node_id;
@@ -1405,7 +1421,6 @@ impl Runner {
         self.dirty_tasks.clear();
         while self.receiver.try_recv().is_ok() {}
 
-        let mut scopes_storages = self.scopes_storages.borrow_mut();
         let scopes = self
             .scopes
             .iter()
@@ -1423,9 +1438,11 @@ impl Runner {
                     sender: self.sender.clone(),
                 },
                 || {
-                    if let Some(storage) = scopes_storages.get_mut(&scope_id) {
-                        storage.reset_hooks();
-                    }
+                    let _hooks = self
+                        .scopes_storages
+                        .borrow_mut()
+                        .get_mut(&scope_id)
+                        .map(|storage| storage.reset_hooks());
                 },
             );
         }
