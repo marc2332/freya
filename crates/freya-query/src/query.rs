@@ -238,8 +238,8 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
         let mock: QueryMock<Q> = Rc::new(move |keys| Box::pin(mock(keys)));
 
         Self {
-            storage: State::create_global(HashMap::default()),
-            mock: State::create_global(Some(mock)),
+            storage: State::create_in_scope(HashMap::default(), ScopeId::ROOT),
+            mock: State::create_in_scope(Some(mock), ScopeId::ROOT),
         }
     }
 
