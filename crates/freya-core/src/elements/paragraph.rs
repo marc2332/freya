@@ -878,7 +878,7 @@ impl ChildrenExt for Paragraph {
         self
     }
 
-    fn children(self, children: impl IntoIterator<Item = Element>) -> Self {
+    fn children(self, children: impl IntoIterator<Item = impl IntoElement>) -> Self {
         children
             .into_iter()
             .fold(self, |paragraph, child| paragraph.child(child))

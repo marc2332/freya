@@ -100,7 +100,6 @@ fn app() -> impl IntoElement {
                                         .child("X"),
                                 ),
                         )
-                        .into()
                 }))
                 .child(
                     Button::new()
@@ -131,8 +130,7 @@ fn app() -> impl IntoElement {
                             WebView::new(&url)
                                 .expanded()
                                 .id(tab.id)
-                                .close_on_drop(false)
-                                .into(),
+                                .close_on_drop(false),
                         )
                     } else {
                         None

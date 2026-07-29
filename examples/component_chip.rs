@@ -30,7 +30,6 @@ fn app() -> impl IntoElement {
                     }
                 })
                 .child(format!("Value {i}"))
-                .into()
         })))
         .child(rect().spacing(8.).horizontal().children((0..3).map(|i| {
             Chip::new()
@@ -45,6 +44,5 @@ fn app() -> impl IntoElement {
                     }
                 })
                 .child(format!("Value {i}"))
-                .into()
         })))
 }
