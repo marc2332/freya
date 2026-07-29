@@ -139,8 +139,24 @@ impl<Q: MutationCapability> MutationStateData<Q> {
         }
     }
 }
+#[cfg(debug_assertions)]
+type MutationMock<Q> = Rc<
+    dyn Fn(
+        <Q as MutationCapability>::Keys,
+    ) -> std::pin::Pin<
+        Box<
+            dyn Future<
+                Output = Result<<Q as MutationCapability>::Ok, <Q as MutationCapability>::Err>,
+            >,
+        >,
+    >,
+>;
+
 pub struct MutationsStorage<Q: MutationCapability> {
     storage: State<HashMap<Mutation<Q>, MutationData<Q>>>,
+
+    #[cfg(debug_assertions)]
+    mock: State<Option<MutationMock<Q>>>,
 }
 
 impl<Q: MutationCapability> Copy for MutationsStorage<Q> {}
@@ -172,6 +188,35 @@ impl<Q: MutationCapability> MutationsStorage<Q> {
     fn new_in_root() -> Self {
         Self {
             storage: State::create_global(HashMap::default()),
+            #[cfg(debug_assertions)]
+            mock: State::create_global(None),
+        }
+    }
+
+    /// Create a storage whose mutations resolve with `mock` instead of [MutationCapability::run].
+    ///
+    /// [MutationCapability::on_settled] still runs.
+    ///
+    /// Provide it in the root scope before the app runs any mutation.
+    #[cfg(debug_assertions)]
+    pub fn mocked(mock: impl Fn(Q::Keys) -> Result<Q::Ok, Q::Err> + 'static) -> Self {
+        Self::mocked_async(move |keys| {
+            let res = mock(keys);
+            async move { res }
+        })
+    }
+
+    /// Like [MutationsStorage::mocked] but with an async mock.
+    #[cfg(debug_assertions)]
+    pub fn mocked_async<F>(mock: impl Fn(Q::Keys) -> F + 'static) -> Self
+    where
+        F: Future<Output = Result<Q::Ok, Q::Err>> + 'static,
+    {
+        let mock: MutationMock<Q> = Rc::new(move |keys| Box::pin(mock(keys)));
+
+        Self {
+            storage: State::create_in_scope(HashMap::default(), ScopeId::ROOT),
+            mock: State::create_in_scope(Some(mock), ScopeId::ROOT),
         }
     }
 
@@ -221,7 +266,7 @@ impl<Q: MutationCapability> MutationsStorage<Q> {
         }
 
         // Run
-        let res = mutation.mutation.run(&keys).await;
+        let res = mutation.run(&keys).await;
 
         // Set to Settled
         mutation.mutation.on_settled(&keys, &res).await;
@@ -256,6 +301,21 @@ impl<Q: MutationCapability> From<Q> for Mutation<Q> {
 }
 
 impl<Q: MutationCapability> Mutation<Q> {
+    /// Run the mutation, using its mock if there is one.
+    async fn run(&self, keys: &Q::Keys) -> Result<Q::Ok, Q::Err> {
+        #[cfg(debug_assertions)]
+        {
+            let mock = try_consume_context::<MutationsStorage<Q>>()
+                .and_then(|storage| storage.mock.peek().clone());
+
+            if let Some(mock) = mock {
+                return mock(keys.clone()).await;
+            }
+        }
+
+        self.mutation.run(keys).await
+    }
+
     pub fn new(mutation: Q) -> Self {
         Self {
             mutation,
