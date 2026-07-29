@@ -14,21 +14,12 @@ categories = ["gui"]
 [lints]
 workspace = true
 
+[features]
+gl = ["freya-skia-safe/gl"]
+vulkan = ["freya-skia-safe/vulkan"]
+metal = ["freya-skia-safe/metal"]
+x11 = ["freya-skia-safe/x11"]
+wayland = ["freya-skia-safe/wayland"]
+
 [dependencies]
 freya-skia-safe = { workspace = true }
-
-[target."cfg(target_os = \"linux\")".dependencies.freya-skia-safe]
-workspace = true
-features = ["textlayout", "svg", "x11", "wayland", "vulkan", "gl"]
-
-[target."cfg(target_os = \"macos\")".dependencies.freya-skia-safe]
-workspace = true
-features = ["textlayout", "svg", "metal"]
-
-[target."cfg(target_os = \"windows\")".dependencies.freya-skia-safe]
-workspace = true
-features = ["textlayout", "svg", "vulkan", "gl"]
-
-[target."cfg(target_os = \"android\")".dependencies.freya-skia-safe]
-workspace = true
-features = ["textlayout", "svg", "gl"]
