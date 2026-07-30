@@ -12,6 +12,9 @@ pub enum UserEvent {
     /// Focus with the given strategy
     FocusAccessibilityNode(AccessibilityFocusStrategy),
 
+    /// Set a custom scale factor.
+    SetCustomScaleFactor(f64),
+
     Erased(SingleThreadErasedEvent),
 }
 

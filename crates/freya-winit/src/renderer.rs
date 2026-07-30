@@ -194,7 +194,7 @@ pub type RendererCallback = Box<dyn FnOnce(WindowId, &mut RendererContext) + 'st
 
 pub enum NativeWindowErasedEventAction {
     LaunchWindow {
-        window_config: WindowConfig,
+        window_config: Box<WindowConfig>,
         ack: futures_channel::oneshot::Sender<WindowId>,
     },
     CloseWindow(WindowId),
@@ -555,6 +555,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 app.accessibility_tasks_for_next_render |= task;
                                 app.window.request_redraw();
                             }
+                            UserEvent::SetCustomScaleFactor(custom_scale_factor) => {
+                                app.set_custom_scale_factor(custom_scale_factor);
+                            }
                             UserEvent::Erased(data) => {
                                 let action = data
                                     .0
@@ -566,7 +569,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                         ack,
                                     } => {
                                         let app_window = AppWindow::new(
-                                            window_config,
+                                            *window_config,
                                             active_event_loop,
                                             &self.proxy,
                                             &mut self.plugins,
@@ -662,11 +665,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     });
                 }
                 WindowEvent::ScaleFactorChanged { .. } => {
-                    app.sync_scale_factor();
-                    app.window.request_redraw();
-                    app.process_layout_on_next_render = true;
-                    app.tree.layout.reset();
-                    app.tree.text_cache.reset();
+                    app.scale_factor_changed();
                 }
                 WindowEvent::CloseRequested => {
                     let mut on_close_hook = self
@@ -930,11 +929,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     let key = winit_mappings::map_winit_key(&event.logical_key);
                     let code = winit_mappings::map_winit_physical_key(&event.physical_key);
                     let modifiers = winit_mappings::map_winit_modifiers(app.modifiers_state);
-
-                    #[cfg(feature = "zoom-shortcuts")]
-                    if app.try_handle_zoom_shortcut(&key, modifiers, event.state.is_pressed()) {
-                        return;
-                    }
 
                     self.plugins.send(
                         PluginEvent::KeyboardInput {
