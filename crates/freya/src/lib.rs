@@ -242,6 +242,7 @@ pub mod components {
         },
         tile::*,
         tooltip::*,
+        tree::*,
         typography::*,
     };
 }

@@ -66,6 +66,7 @@ use crate::{
         macros::Preference,
     },
     tooltip::TooltipThemePreference,
+    tree::TreeThemePreference,
     typography::TypographyThemePreference,
 };
 
@@ -543,6 +544,23 @@ fn register_base_component_themes(theme: &mut Theme) {
             border_fill: Preference::reference("surface_primary"),
             corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
             color: Preference::reference("text_primary"),
+        },
+    );
+    theme.set(
+        "tree",
+        TreeThemePreference {
+            background: Preference::reference("background"),
+            color: Preference::reference("text_primary"),
+            arrow_fill: Preference::reference("text_secondary"),
+            item_background: Preference::Specific(Color::TRANSPARENT),
+            hover_item_background: Preference::reference("surface_secondary"),
+            selected_item_background: Preference::reference("primary"),
+            selected_item_color: Preference::reference("text_inverse"),
+            guide_fill: Preference::reference("surface_primary"),
+            indent: Preference::Specific(16.),
+            item_height: Preference::Specific(24.),
+            item_padding: Preference::Specific(Gaps::new(0., 8., 0., 4.)),
+            corner_radius: Preference::Specific(CornerRadius::new_all(4.)),
         },
     );
     theme.set(
