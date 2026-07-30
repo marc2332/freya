@@ -166,7 +166,7 @@ impl WinitPlatformExt for Platform {
         let (tx, rx) = futures_channel::oneshot::channel();
         self.send(UserEvent::Erased(SingleThreadErasedEvent(Box::new(
             NativeWindowErasedEventAction::LaunchWindow {
-                window_config,
+                window_config: Box::new(window_config),
                 ack: tx,
             },
         ))));

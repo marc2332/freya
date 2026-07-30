@@ -24,6 +24,7 @@ docs = ["dep:embed-doc-image"]
 gif = ["dep:gif"]
 calendar = ["dep:chrono"]
 titlebar = ["dep:freya-icons"]
+zoom-shortcuts = []
 
 [dependencies]
 freya-core = { workspace = true }

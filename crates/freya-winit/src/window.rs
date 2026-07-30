@@ -111,16 +111,16 @@ pub struct AppWindow {
 
     pub(crate) window_attributes: WindowAttributes,
 
-    pub(crate) user_zoom: f32,
     #[cfg(feature = "hotreload")]
     pub(crate) hot_reload_pending: Arc<std::sync::atomic::AtomicBool>,
 }
 
-pub(crate) const MIN_USER_ZOOM: f32 = 0.25;
-pub(crate) const MAX_USER_ZOOM: f32 = 5.0;
+const MIN_CUSTOM_SCALE_FACTOR: f64 = 0.25;
+const MAX_CUSTOM_SCALE_FACTOR: f64 = 5.0;
 
-#[cfg(feature = "zoom-shortcuts")]
-pub(crate) const ZOOM_STEP: f32 = 0.10;
+fn clamp_custom_scale_factor(custom_scale_factor: f64) -> f64 {
+    custom_scale_factor.clamp(MIN_CUSTOM_SCALE_FACTOR, MAX_CUSTOM_SCALE_FACTOR)
+}
 
 impl AppWindow {
     pub(crate) fn process_accessibility_update(&mut self, mode: Option<NavigationMode>) {
@@ -226,6 +226,9 @@ impl AppWindow {
         runner.provide_root_context(AssetCacher::create);
         let mut tree = Tree::default();
 
+        let custom_scale_factor = clamp_custom_scale_factor(window_config.custom_scale_factor);
+        let scale_factor = window.scale_factor() * custom_scale_factor;
+
         let window_size = window.inner_size();
         let accent_color_preference = accent_color_preference();
         let platform = runner.provide_root_context({
@@ -236,7 +239,6 @@ impl AppWindow {
                 _ => PreferredTheme::Light,
             };
             let is_app_focused = window.has_focus();
-            let scale_factor = window.scale_factor();
             move || Platform {
                 focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
                 focused_accessibility_node: State::create(accesskit::Node::new(
@@ -247,6 +249,7 @@ impl AppWindow {
                     window_size.height as f32,
                 )),
                 scale_factor: State::create(scale_factor),
+                custom_scale_factor: State::create(custom_scale_factor),
                 navigation_mode: State::create(NavigationMode::NotKeyboard),
                 preferred_theme: State::create(theme),
                 is_app_focused: State::create(is_app_focused),
@@ -315,7 +318,7 @@ impl AppWindow {
             font_collection,
             font_manager,
             &events_sender,
-            window.scale_factor(),
+            scale_factor,
             fallback_fonts,
         );
 
@@ -404,8 +407,6 @@ impl AppWindow {
 
             window_attributes,
 
-            user_zoom: 1.0,
-
             #[cfg(feature = "hotreload")]
             hot_reload_pending,
         }
@@ -420,57 +421,28 @@ impl AppWindow {
     }
 
     pub fn effective_scale_factor(&self) -> f64 {
-        self.window.scale_factor() * self.user_zoom as f64
+        self.window.scale_factor() * *self.platform.custom_scale_factor.peek()
     }
 
-    /// Syncs the effective scale factor on [`Platform`].
-    pub fn sync_scale_factor(&mut self) {
+    /// Syncs the effective scale factor on [`Platform`] and invalidates layout.
+    pub fn scale_factor_changed(&mut self) {
         self.platform
             .scale_factor
             .set(self.effective_scale_factor());
-    }
-
-    /// Sets `user_zoom`, clamped to `[MIN_USER_ZOOM, MAX_USER_ZOOM]`. On change,
-    /// resets layout/text caches and requests a redraw, mirroring `ScaleFactorChanged`.
-    pub fn set_user_zoom(&mut self, zoom: f32) {
-        let clamped = zoom.clamp(MIN_USER_ZOOM, MAX_USER_ZOOM);
-        if (clamped - self.user_zoom).abs() < f32::EPSILON {
-            return;
-        }
-        self.user_zoom = clamped;
-        self.sync_scale_factor();
         self.process_layout_on_next_render = true;
         self.tree.layout.reset();
         self.tree.text_cache.reset();
         self.window.request_redraw();
     }
 
-    /// Returns `true` when the combo matched. Releases are also consumed so
-    /// press/release pairs stay symmetrical for upstream listeners.
-    #[cfg(feature = "zoom-shortcuts")]
-    pub fn try_handle_zoom_shortcut(
-        &mut self,
-        key: &keyboard_types::Key,
-        modifiers: keyboard_types::Modifiers,
-        is_pressed: bool,
-    ) -> bool {
-        use keyboard_types::{
-            Key,
-            Modifiers,
-        };
-        if !modifiers.contains(Modifiers::ctrl_or_meta()) {
-            return false;
+    /// Sets the custom scale factor, clamped to a reasonable range.
+    pub fn set_custom_scale_factor(&mut self, custom_scale_factor: f64) {
+        let clamped = clamp_custom_scale_factor(custom_scale_factor);
+        if (clamped - *self.platform.custom_scale_factor.peek()).abs() < f64::EPSILON {
+            return;
         }
-        let new_zoom = match key {
-            Key::Character(c) if c == "+" || c == "=" => self.user_zoom + ZOOM_STEP,
-            Key::Character(c) if c == "-" => self.user_zoom - ZOOM_STEP,
-            Key::Character(c) if c == "0" => 1.0,
-            _ => return false,
-        };
-        if is_pressed {
-            self.set_user_zoom(new_zoom);
-        }
-        true
+        self.platform.custom_scale_factor.set(clamped);
+        self.scale_factor_changed();
     }
 }
 
