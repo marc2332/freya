@@ -14,7 +14,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app).with_size(900., 600.)))
 }
 
-#[derive(PartialEq, Clone, Copy, Debug)]
+#[derive(PartialEq, Clone, Copy, Debug, Hash)]
 pub enum TaskStatus {
     Todo,
     InProgress,
@@ -120,7 +120,8 @@ fn column(mut tasks: State<Vec<Task>>, status: TaskStatus, title: String) -> imp
                         .read()
                         .iter()
                         .filter(|t| t.status == status)
-                        .map(|task| {
+                        .enumerate()
+                        .map(|(index, task)| {
                             DragZone::<usize>::new(
                                 task.id,
                                 Portal::new(task.id)
@@ -128,6 +129,7 @@ fn column(mut tasks: State<Vec<Task>>, status: TaskStatus, title: String) -> imp
                                     .width(Size::fill())
                                     .function(Function::Expo)
                                     .duration(Duration::from_millis(500))
+                                    .animation_dependency((status, index))
                                     .child(Card(task.clone())),
                             )
                             .drag_element(
