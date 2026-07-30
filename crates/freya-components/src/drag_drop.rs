@@ -125,9 +125,8 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
             DragPhase::Idle => {}
         };
 
-        let enabled = self.enabled;
         let on_pointer_down = move |e: Event<PointerEventData>| {
-            if !enabled || e.data().button() != Some(MouseButton::Left) {
+            if e.data().button() != Some(MouseButton::Left) {
                 return;
             }
             phase.set(DragPhase::Pressing {
@@ -151,7 +150,7 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
         rect()
             .on_global_pointer_press(on_global_pointer_press)
             .on_global_pointer_move(on_global_pointer_move)
-            .on_pointer_down(on_pointer_down)
+            .maybe(self.enabled, |rect| rect.on_pointer_down(on_pointer_down))
             .maybe_child((dragging.zip(self.drag_element.clone())).map(
                 |((position, offset), drag_element)| {
                     let (x, y) = (position - offset).to_f32().to_tuple();
