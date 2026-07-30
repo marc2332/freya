@@ -42,7 +42,6 @@ define_theme! {
 ///            Accordion::new()
 ///                .header("Click to expand!")
 ///                .child(LOREM_IPSUM)
-///                .into()
 ///        }))
 /// }
 ///

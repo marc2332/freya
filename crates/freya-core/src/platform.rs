@@ -41,8 +41,10 @@ pub struct Platform {
     pub focused_accessibility_node: State<accesskit::Node>,
     /// The size of the root window.
     pub root_size: State<Size2D>,
-    /// Rendering scale factor.
+    /// Rendering scale factor, the OS scale factor multiplied by the custom scale factor.
     pub scale_factor: State<f64>,
+    /// Custom scale factor, change it with [`Platform::set_custom_scale_factor`].
+    pub custom_scale_factor: State<f64>,
     /// The current [`NavigationMode`].
     pub navigation_mode: State<NavigationMode>,
     /// The OS-level [`PreferredTheme`].
@@ -64,5 +66,11 @@ impl Platform {
     /// Dispatch a [`UserEvent`] to the active renderer.
     pub fn send(&self, event: UserEvent) {
         (self.sender)(event)
+    }
+
+    /// Request the renderer to use a custom scale factor, multiplied with the
+    /// OS scale factor. The value might get clamped to a reasonable range.
+    pub fn set_custom_scale_factor(&self, custom_scale_factor: f64) {
+        self.send(UserEvent::SetCustomScaleFactor(custom_scale_factor));
     }
 }

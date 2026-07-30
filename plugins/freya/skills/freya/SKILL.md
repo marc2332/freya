@@ -687,10 +687,10 @@ For components that store the partial under a non-default field name (e.g. `them
 Use `.key(id)` on elements in dynamic lists to ensure correct reconciliation on reorders:
 
 ```rust
-VirtualScrollView::new(|i, _| {
+VirtualScrollView::new(|item, _| {
     rect()
-        .key(i)
-        .child(format!("Item {i}"))
+        .key(item.index)
+        .child(format!("Item {}", item.index))
         .into()
 })
 .length(items.len())

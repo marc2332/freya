@@ -139,6 +139,30 @@ impl RenderPipeline<'_> {
                         }
                     }
 
+                    // Composite the blur before the opacity layers so it samples the real content underneath.
+                    if let Some(blur_radius) = effect_state.blur {
+                        let style = element.style();
+
+                        let image_filter = blur(
+                            (blur_radius * scale_factor, blur_radius * scale_factor),
+                            None,
+                            None,
+                            render_rect.rect(),
+                        );
+                        if let Some(image_filter) = image_filter {
+                            let rec = SaveLayerRec::default()
+                                .bounds(render_rect.rect())
+                                .backdrop(&image_filter);
+
+                            let blur_layer = self.canvas.save();
+                            if style.corner_radius.is_round() {
+                                self.canvas.clip_rrect(render_rect, ClipOp::Intersect, true);
+                            }
+                            self.canvas.save_layer(&rec);
+                            self.canvas.restore_to_count(blur_layer);
+                        }
+                    }
+
                     for opacity in effect_state.opacities.iter() {
                         self.canvas.save_layer_alpha_f(layer_bounds, *opacity);
                     }
@@ -169,36 +193,6 @@ impl RenderPipeline<'_> {
                 hotpath::measure_block!("Element Render", {
                     element.render(render_context);
                 });
-
-                if let Some(effect_state) = effect_state {
-                    let visible_area = layout_node.visible_area();
-                    let render_rect = element.render_rect(&visible_area, self.scale_factor as f32);
-                    // Apply blur effect
-                    if let Some(blur_radius) = effect_state.blur {
-                        let style = element.style();
-
-                        let image_filter = blur(
-                            (
-                                blur_radius * self.scale_factor as f32,
-                                blur_radius * self.scale_factor as f32,
-                            ),
-                            None,
-                            None,
-                            render_rect.rect(),
-                        );
-                        if let Some(image_filter) = image_filter {
-                            let rec = SaveLayerRec::default()
-                                .bounds(render_rect.rect())
-                                .backdrop(&image_filter);
-                            if style.corner_radius.is_round() {
-                                self.canvas.clip_rrect(render_rect, ClipOp::Intersect, true);
-                                self.canvas.save_layer(&rec);
-                            } else {
-                                self.canvas.save_layer(&rec);
-                            }
-                        }
-                    }
-                }
 
                 self.canvas.restore_to_count(layer);
             }

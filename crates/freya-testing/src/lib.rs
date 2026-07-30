@@ -206,22 +206,20 @@ impl TestingRunner {
                 )),
                 root_size: State::create(size),
                 scale_factor: State::create(scale_factor),
+                custom_scale_factor: State::create(1.0),
                 navigation_mode: State::create(NavigationMode::NotKeyboard),
                 preferred_theme: State::create(PreferredTheme::Light),
                 is_app_focused: State::create(true),
                 accent_color: State::create(AccentColor::default()),
                 sender: Rc::new(move |user_event| {
                     match user_event {
-                        UserEvent::RequestRedraw => {
-                            // Nothing
-                        }
                         UserEvent::FocusAccessibilityNode(strategy) => {
                             requested_focus_strategy.borrow_mut().replace(strategy);
                         }
-                        UserEvent::SetCursorIcon(_) => {
-                            // Nothing
-                        }
-                        UserEvent::Erased(_) => {
+                        UserEvent::RequestRedraw
+                        | UserEvent::SetCursorIcon(_)
+                        | UserEvent::SetCustomScaleFactor(_)
+                        | UserEvent::Erased(_) => {
                             // Nothing
                         }
                     }
@@ -356,9 +354,12 @@ impl TestingRunner {
         }
 
         let mutations = self.runner.sync_and_update();
-        self.runner.run_in(|| {
-            self.tree.borrow_mut().apply_mutations(mutations);
-        });
+        let result = self
+            .runner
+            .run_in(|| self.tree.borrow_mut().apply_mutations(mutations));
+        if let Some(strategy) = result.auto_focus {
+            self.requested_focus_strategy.borrow_mut().replace(strategy);
+        }
         self.tree.borrow_mut().measure_layout(
             self.size,
             &mut self.font_collection,

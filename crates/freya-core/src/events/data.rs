@@ -284,12 +284,12 @@ impl ImePreeditEventData {
 #[derive(Debug, Clone, PartialEq)]
 pub struct FileEventData {
     pub cursor: CursorPoint,
-    pub file_path: Option<PathBuf>,
+    pub file_paths: Vec<PathBuf>,
 }
 
 impl FileEventData {
-    pub(crate) fn new(cursor: CursorPoint, file_path: Option<PathBuf>) -> Self {
-        Self { cursor, file_path }
+    pub(crate) fn new(cursor: CursorPoint, file_paths: Vec<PathBuf>) -> Self {
+        Self { cursor, file_paths }
     }
 }
 

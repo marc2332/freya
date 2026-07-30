@@ -69,7 +69,6 @@ pub enum ButtonSegmentStatus {
 ///                 }
 ///             })
 ///             .child(format!("Option {i}"))
-///             .into()
 ///     }))
 /// }
 /// ```
@@ -275,7 +274,6 @@ impl Component for ButtonSegment {
 ///                 }
 ///             })
 ///             .child(format!("Option {i}"))
-///             .into()
 ///     }))
 /// }
 /// # use freya_testing::prelude::*;

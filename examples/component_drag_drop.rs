@@ -49,6 +49,5 @@ fn app() -> impl IntoElement {
                         position.set(i);
                     },
                 ))
-                .into()
         }))
 }

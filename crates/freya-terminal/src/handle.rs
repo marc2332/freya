@@ -297,6 +297,13 @@ impl TerminalHandle {
         Ok(())
     }
 
+    /// Report a keyboard focus change to the program if it enabled focus reporting (mode 1004).
+    pub fn focus_changed(&self, focused: bool) {
+        if self.mode().contains(TermMode::FOCUS_IN_OUT) {
+            let _ = self.write_raw(if focused { b"\x1b[I" } else { b"\x1b[O" });
+        }
+    }
+
     /// Write data to the PTY without resetting scroll or selection state.
     fn write_raw(&self, data: &[u8]) -> Result<(), TerminalError> {
         let mut writer = self.writer.borrow_mut();
@@ -373,8 +380,8 @@ impl TerminalHandle {
         self.inner.borrow().modifiers.contains(Modifiers::SHIFT)
     }
 
-    /// Handle a mouse move/drag. `row` and `col` are fractional cell units;
-    /// the fraction of `col` picks which cell half anchors the selection.
+    /// Handle a mouse move/drag. `row` and `col` are fractional cell units.
+    /// The fraction of `col` picks which cell half anchors the selection.
     pub fn mouse_move(&self, row: f32, col: f32) {
         let held = self.pressed_button();
 
