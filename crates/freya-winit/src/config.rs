@@ -68,6 +68,8 @@ pub struct WindowConfig {
     pub(crate) background: Color,
     /// Enable Window resizable behaviour.
     pub(crate) resizable: bool,
+    /// Custom scale factor for the Window.
+    pub(crate) custom_scale_factor: f64,
     /// Icon for the Window.
     pub(crate) icon: Option<Icon>,
     /// Application ID for the Window.
@@ -94,6 +96,7 @@ impl Debug for WindowConfig {
             .field("transparent", &self.transparent)
             .field("background", &self.background)
             .field("resizable", &self.resizable)
+            .field("custom_scale_factor", &self.custom_scale_factor)
             .field("icon", &self.icon)
             .field("app_id", &self.app_id)
             .field("traffic_light_inset", &self.traffic_light_inset)
@@ -123,6 +126,7 @@ impl WindowConfig {
             transparent: false,
             background: Color::WHITE,
             resizable: true,
+            custom_scale_factor: 1.0,
             icon: None,
             app_id: None,
             traffic_light_inset: None,
@@ -177,6 +181,13 @@ impl WindowConfig {
     /// Is Window resizable.
     pub fn with_resizable(mut self, resizable: bool) -> Self {
         self.resizable = resizable;
+        self
+    }
+
+    /// Specify a custom scale factor for the Window, multiplied with the OS
+    /// scale factor. Defaults to `1.0`.
+    pub fn with_custom_scale_factor(mut self, custom_scale_factor: f64) -> Self {
+        self.custom_scale_factor = custom_scale_factor;
         self
     }
 

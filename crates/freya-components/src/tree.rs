@@ -9,7 +9,10 @@ use crate::{
     define_theme,
     get_theme,
     icons::arrow::ArrowIcon,
-    scrollviews::VirtualScrollView,
+    scrollviews::{
+        VirtualItem,
+        VirtualScrollView,
+    },
 };
 
 define_theme! {
@@ -209,7 +212,6 @@ impl Component for TreeItem {
                         .height(Size::fill())
                         .background(guide_fill),
                 )
-                .into()
         });
 
         // The arrow keeps its slot on a leaf, so labels down one level all start at the same x.
@@ -274,7 +276,7 @@ impl Component for TreeItem {
 ///
 /// Selection and keyboard movement are the caller's, as they are for [`Table`](crate::Table): both
 /// are about which row means something, which the tree cannot know.
-pub struct Tree<D, B: Fn(usize, &D) -> Element> {
+pub struct Tree<D, B: Fn(VirtualItem, &D) -> Element> {
     pub theme: Option<TreeThemePartial>,
     builder: B,
     builder_data: D,
@@ -285,7 +287,7 @@ pub struct Tree<D, B: Fn(usize, &D) -> Element> {
 
 /// Compared on everything **but** the builder, as [`VirtualScrollView`] is: two closures are never
 /// equal, so deriving this would re-render the tree on every pass.
-impl<D: PartialEq, B: Fn(usize, &D) -> Element> PartialEq for Tree<D, B> {
+impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> PartialEq for Tree<D, B> {
     fn eq(&self, other: &Self) -> bool {
         self.theme == other.theme
             && self.builder_data == other.builder_data
@@ -294,7 +296,7 @@ impl<D: PartialEq, B: Fn(usize, &D) -> Element> PartialEq for Tree<D, B> {
     }
 }
 
-impl<B: Fn(usize, &()) -> Element> Tree<(), B> {
+impl<B: Fn(VirtualItem, &()) -> Element> Tree<(), B> {
     /// A tree whose rows are built by index.
     pub fn new(builder: B) -> Self {
         Self {
@@ -308,7 +310,7 @@ impl<B: Fn(usize, &()) -> Element> Tree<(), B> {
     }
 }
 
-impl<D, B: Fn(usize, &D) -> Element> Tree<D, B> {
+impl<D, B: Fn(VirtualItem, &D) -> Element> Tree<D, B> {
     /// A tree whose row builder is handed shared data — the [`VirtualScrollView`] contract, and the
     /// way to keep a snapshot out of the memoized closure.
     pub fn new_with_data(builder_data: D, builder: B) -> Self {
@@ -339,13 +341,13 @@ impl<D, B: Fn(usize, &D) -> Element> Tree<D, B> {
     }
 }
 
-impl<D: PartialEq, B: Fn(usize, &D) -> Element> KeyExt for Tree<D, B> {
+impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> KeyExt for Tree<D, B> {
     fn write_key(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
-impl<D: Clone + PartialEq + 'static, B: Clone + Fn(usize, &D) -> Element + 'static> Component
+impl<D: Clone + PartialEq + 'static, B: Clone + Fn(VirtualItem, &D) -> Element + 'static> Component
     for Tree<D, B>
 {
     fn render(&self) -> impl IntoElement {

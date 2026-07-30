@@ -13,6 +13,7 @@ fn app() -> impl IntoElement {
     let mut controller = use_state(|| ResizableContext {
         panels: vec![],
         direction: Direction::Vertical,
+        ..Default::default()
     });
 
     let on_reset = move |_| {

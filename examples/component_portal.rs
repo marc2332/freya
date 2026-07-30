@@ -141,9 +141,7 @@ fn app() -> impl IntoElement {
                                         .center()
                                         .child(cell.id.to_string()),
                                 )
-                                .into()
                         }))
-                        .into()
                 })),
         )
 }

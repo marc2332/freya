@@ -72,6 +72,7 @@ pub mod prelude {
             ComponentKey,
             ComponentOwned,
             Element,
+            EventHandlers,
             IntoElement,
             RenderContext,
         },

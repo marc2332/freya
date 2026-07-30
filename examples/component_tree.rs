@@ -95,8 +95,9 @@ fn app() -> impl IntoElement {
                 // Both inputs ride in the builder data, so a selection or an expansion rebuilds the
                 // rows rather than leaving the memoized closure showing the old ones.
                 (visible.clone(), selected.read().clone()),
-                move |index, (visible, selected_path): &(Vec<Row>, Option<Vec<usize>>)| {
-                    let Some(row) = visible.get(index).cloned() else {
+                move |item: VirtualItem,
+                      (visible, selected_path): &(Vec<Row>, Option<Vec<usize>>)| {
+                    let Some(row) = visible.get(item.index).cloned() else {
                         return rect().into();
                     };
                     let toggle_path = row.path.clone();

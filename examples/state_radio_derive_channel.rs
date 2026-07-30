@@ -67,7 +67,7 @@ fn app() -> impl IntoElement {
                         .child("Reset All"),
                 ),
         )
-        .children((0..count).map(|i| CounterRow(i).into()))
+        .children((0..count).map(CounterRow))
 }
 
 #[derive(PartialEq)]

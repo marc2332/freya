@@ -212,6 +212,8 @@ pub fn input_auto_focus_test() {
 
     let mut test = launch_test(auto_focus_app);
 
+    test.sync_and_update();
+
     // Type without clicking, auto_focus should have focused the input
     test.write_text("typed");
 
@@ -234,6 +236,8 @@ pub fn input_select_all_on_init_test() {
     }
 
     let mut test = launch_test(rename_app);
+
+    test.sync_and_update();
 
     // No click needed: the input auto-focuses, and the seeded value arrives selected.
     test.write_text("new");
@@ -258,6 +262,8 @@ pub fn input_without_select_all_on_init_keeps_the_cursor_at_the_start() {
     }
 
     let mut test = launch_test(seeded_app);
+
+    test.sync_and_update();
 
     test.write_text("new");
 

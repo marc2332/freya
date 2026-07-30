@@ -154,14 +154,14 @@ pub trait WinitPlatformExt {
 
     /// Queue a callback to be run on the renderer thread with access to a [`RendererContext`].
     ///
-    /// The call dispatches an event to the winit event loop and returns right away; the
+    /// The call dispatches an event to the winit event loop and returns right away. The
     /// callback runs later, when the event loop picks it up. The [`WindowId`] passed to the
     /// callback is the id of the window this [`Platform`] instance was bound to. The return
     /// value is delivered through the returned oneshot
     /// [`Receiver`](futures_channel::oneshot::Receiver), which can be `.await`ed or dropped.
     ///
     /// The callback runs outside any component scope, so you can't call [`Platform::get`] or
-    /// consume context from inside it; use the [`RendererContext`] argument instead.
+    /// consume context from inside it. Use the [`RendererContext`] argument instead.
     fn post_callback<F, T: 'static>(&self, f: F) -> futures_channel::oneshot::Receiver<T>
     where
         F: FnOnce(WindowId, &mut RendererContext) -> T + 'static;
@@ -207,7 +207,7 @@ impl WinitPlatformExt for Platform {
         let (tx, rx) = futures_channel::oneshot::channel();
         self.send(UserEvent::Erased(SingleThreadErasedEvent(Box::new(
             NativeWindowErasedEventAction::LaunchWindow {
-                window_config,
+                window_config: Box::new(window_config),
                 ack: tx,
             },
         ))));

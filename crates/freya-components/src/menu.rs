@@ -106,6 +106,7 @@ pub struct Menu {
     pub(crate) theme: Option<MenuContainerThemePartial>,
     children: Vec<Element>,
     on_close: Option<EventHandler<()>>,
+    on_escape: Option<EventHandler<()>>,
     min_width: Option<Size>,
     min_height: Option<Size>,
     key: DiffKey,
@@ -126,6 +127,12 @@ impl KeyExt for Menu {
 impl Menu {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Called when Escape closes the menu, falls back to [`Menu::on_close`].
+    pub fn on_escape(mut self, f: impl Into<EventHandler<()>>) -> Self {
+        self.on_escape = Some(f.into());
+        self
     }
 
     pub fn on_close<F>(mut self, f: F) -> Self
@@ -174,7 +181,7 @@ impl ComponentOwned for Menu {
         // down (arms) then presses (closes), still one click.
         let mut armed = use_state(|| false);
 
-        let on_close = self.on_close.clone();
+        let on_escape = self.on_escape.clone().or(self.on_close.clone());
         let on_global_key_down = move |e: Event<KeyboardEventData>| {
             if e.key == Key::Named(NamedKey::Escape) {
                 if menus.read().len() > 1 {
@@ -182,8 +189,8 @@ impl ComponentOwned for Menu {
                     // Consume the Escape: cancels the remaining global key events so
                     // deeper listeners don't also act on the same press.
                     e.prevent_default();
-                } else if let Some(on_close) = &on_close {
-                    on_close.call(());
+                } else if let Some(on_escape) = &on_escape {
+                    on_escape.call(());
                     e.prevent_default();
                 }
             }
@@ -210,10 +217,8 @@ impl ComponentOwned for Menu {
                     || px > a.origin.x + a.size.width
                     || py < a.origin.y
                     || py > a.origin.y + a.size.height;
-                if outside {
-                    if let Some(on_close) = &self.on_close {
-                        on_close.call(());
-                    }
+                if outside && let Some(on_close) = &self.on_close {
+                    on_close.call(());
                 }
             })
             .on_global_key_down(on_global_key_down)

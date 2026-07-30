@@ -133,7 +133,7 @@ impl Component for Link {
             .children(self.children.clone());
 
         if let Some(tooltip_text) = tooltip_text {
-            TooltipContainer::new(Tooltip::new(tooltip_text))
+            TooltipContainer::new(Tooltip::new_text(tooltip_text))
                 .child(link)
                 .into_element()
         } else {

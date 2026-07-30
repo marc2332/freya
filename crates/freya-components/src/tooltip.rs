@@ -52,16 +52,42 @@ define_theme! {
 ///
 /// # Example
 ///
+/// Use [Tooltip::new_text] to show plain text, laid out on a single line and wrapped
+/// into a fixed-width card only once it would grow too wide:
+///
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     Tooltip::new("Hello, World!")
+///     Tooltip::new_text("Hello, World!")
 /// }
 ///
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
 /// #   rect().center().expanded().child(app())
 /// # }, "./images/gallery_tooltip.png").render();
+/// ```
+///
+/// Use [Tooltip::new] to show any element:
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> impl IntoElement {
+///     Tooltip::new().child(
+///         rect()
+///             .horizontal()
+///             .cross_align(Alignment::Center)
+///             .spacing(4.)
+///             .child(
+///                 rect()
+///                     .width(Size::px(10.))
+///                     .height(Size::px(10.))
+///                     .corner_radius(5.)
+///                     .background(Color::GREEN),
+///             )
+///             .child("Connected"),
+///     )
+/// }
+/// # let _ = app();
 /// ```
 ///
 /// # Preview
@@ -73,9 +99,19 @@ define_theme! {
 pub struct Tooltip {
     /// Theme override.
     pub(crate) theme: Option<TooltipThemePartial>,
-    /// Text to show in the [Tooltip].
-    text: Cow<'static, str>,
+    /// Text to show in the [Tooltip], set by [Tooltip::new_text]. Rendered instead of
+    /// [`children`](Self::children), because plain text is the one content the tooltip can
+    /// size for itself — see the two-phase sizing in [`Component::render`].
+    text: Option<Cow<'static, str>>,
+    /// Content to show in the [Tooltip].
+    children: Vec<Element>,
     key: DiffKey,
+}
+
+impl Default for Tooltip {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl KeyExt for Tooltip {
@@ -84,12 +120,28 @@ impl KeyExt for Tooltip {
     }
 }
 
+impl ChildrenExt for Tooltip {
+    fn get_children(&mut self) -> &mut Vec<Element> {
+        &mut self.children
+    }
+}
+
 impl Tooltip {
-    pub fn new(text: impl Into<Cow<'static, str>>) -> Self {
+    pub fn new() -> Self {
         Self {
             theme: None,
-            text: text.into(),
+            text: None,
+            children: vec![],
             key: DiffKey::None,
+        }
+    }
+
+    /// Create a [Tooltip] with a text label: a single line, wrapped into a fixed-width
+    /// card only when it would otherwise grow too wide.
+    pub fn new_text(text: impl Into<Cow<'static, str>>) -> Self {
+        Self {
+            text: Some(text.into()),
+            ..Self::new()
         }
     }
 }
@@ -110,18 +162,21 @@ impl Component for Tooltip {
         /// the window.
         const MAX_WIDTH: f32 = 340.;
 
-        // Two-phase "max-content" sizing. An absolutely-positioned overlay inherits its
-        // *trigger's* available width, so a wrapping label would fold at that (one glyph
-        // per line off a 28px icon button) instead of at its own content. So: lay the
-        // text out on a single overflow-allowed line first and measure it; only when it
-        // genuinely exceeds the cap re-render as a fixed-width wrapping card (an explicit
-        // width, like a menu panel's, isn't clamped by the parent).
+        // Two-phase "max-content" sizing, for the text form only: an absolutely-positioned
+        // overlay inherits its *trigger's* available width, so a wrapping label would fold
+        // at that (one glyph per line off a 28px icon button) instead of at its own content.
+        // So: lay the text out on a single overflow-allowed line first and measure it; only
+        // when it genuinely exceeds the cap re-render as a fixed-width wrapping card (an
+        // explicit width, like a menu panel's, isn't clamped by the parent). Arbitrary
+        // children are left to size themselves — the tooltip can't know what they hold.
         let mut measured = use_state(|| None::<(String, f32)>);
-        let text_width = measured
-            .read()
-            .as_ref()
-            .filter(|(text, _)| *text == self.text)
-            .map(|(_, width)| *width);
+        let text_width = self.text.as_ref().and_then(|text| {
+            measured
+                .read()
+                .as_ref()
+                .filter(|(recorded, _)| recorded == text)
+                .map(|(_, width)| *width)
+        });
         let wraps = text_width.is_some_and(|width| width > MAX_WIDTH);
         let text = self.text.clone();
 
@@ -129,7 +184,11 @@ impl Component for Tooltip {
             .interactive(Interactive::No)
             .maybe(wraps, |el| el.width(Size::px(MAX_WIDTH)))
             // Hidden until measured, so an over-long line never flashes before wrapping.
-            .opacity(if text_width.is_some() { 1. } else { 0. })
+            .opacity(if self.text.is_some() && text_width.is_none() {
+                0.
+            } else {
+                1.
+            })
             .padding((4., 10.))
             .border(
                 Border::new()
@@ -139,24 +198,28 @@ impl Component for Tooltip {
             )
             .background(background)
             .corner_radius(8.)
-            .child(
-                label()
-                    .maybe(!wraps, |el| el.max_lines(1))
-                    .on_sized(move |e: Event<SizedEventData>| {
-                        // Record once per text, from the single-line pass: the wrapped
-                        // re-layout reports the capped width and must not overwrite the
-                        // decision.
-                        if measured.peek().as_ref().is_none_or(|(t, _)| *t != text) {
-                            measured.set(Some((text.to_string(), e.area.width())));
-                        }
-                    })
-                    .maybe(!font_family.is_empty(), |el| el.font_family(font_family))
-                    .font_size(font_size)
-                    .font_weight(font_weight)
-                    .line_height(1.45)
-                    .color(color)
-                    .text(self.text.clone()),
-            )
+            .maybe(!font_family.is_empty(), |el| el.font_family(font_family))
+            .font_size(font_size)
+            .font_weight(font_weight)
+            .color(color)
+            .children(self.children.clone())
+            .map(text, |el, text| {
+                let shown = text.clone();
+                el.child(
+                    label()
+                        .maybe(!wraps, |el| el.max_lines(1))
+                        .on_sized(move |e: Event<SizedEventData>| {
+                            // Record once per text, from the single-line pass: the wrapped
+                            // re-layout reports the capped width and must not overwrite the
+                            // decision.
+                            if measured.peek().as_ref().is_none_or(|(t, _)| *t != text) {
+                                measured.set(Some((text.to_string(), e.area.width())));
+                            }
+                        })
+                        .line_height(1.45)
+                        .text(shown),
+                )
+            })
     }
 
     fn render_key(&self) -> DiffKey {

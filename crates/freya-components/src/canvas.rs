@@ -67,7 +67,7 @@ impl<H: FnMut(&mut CanvasContext) + 'static> From<H> for RenderCallback {
 #[derive(PartialEq, Clone)]
 pub struct CanvasElement {
     pub layout: LayoutData,
-    pub event_handlers: FxHashMap<EventName, EventHandlerType>,
+    pub event_handlers: EventHandlers,
     pub effect: Option<EffectData>,
     pub on_render: RenderCallback,
 }
@@ -135,7 +135,7 @@ impl ElementExt for CanvasElement {
         Cow::Owned(AccessibilityData::default())
     }
 
-    fn events_handlers(&'_ self) -> Option<Cow<'_, FxHashMap<EventName, EventHandlerType>>> {
+    fn events_handlers(&'_ self) -> Option<Cow<'_, EventHandlers>> {
         Some(Cow::Borrowed(&self.event_handlers))
     }
 
@@ -198,7 +198,7 @@ impl KeyExt for Canvas {
 }
 
 impl EventHandlersExt for Canvas {
-    fn get_event_handlers(&mut self) -> &mut FxHashMap<EventName, EventHandlerType> {
+    fn get_event_handlers(&mut self) -> &mut EventHandlers {
         &mut self.element.event_handlers
     }
 }

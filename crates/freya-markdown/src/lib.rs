@@ -694,10 +694,8 @@ fn render_list(
                                 color_code,
                                 inline_element,
                             )
-                            .into()
                         })),
                 )
-                .into()
         }))
 }
 

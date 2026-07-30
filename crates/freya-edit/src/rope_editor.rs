@@ -365,6 +365,12 @@ impl<'a> Iterator for LinesIterator<'a> {
 mod test {
     use std::time::Duration;
 
+    use keyboard_types::{
+        Key,
+        Modifiers,
+        NamedKey,
+    };
+
     use super::RopeEditor;
     use crate::{
         EditorHistory,
@@ -379,6 +385,48 @@ mod test {
             4,
             EditorHistory::new(Duration::ZERO),
         )
+    }
+
+    fn press(ed: &mut RopeEditor, key: NamedKey) {
+        ed.process_key(
+            &Key::Named(key),
+            &Modifiers::empty(),
+            true,
+            true,
+            false,
+            false,
+        );
+    }
+
+    #[test]
+    fn cursor_moves_over_whole_graphemes() {
+        let mut ed = editor("a🙂👨‍👩‍👧e\u{301}\nb");
+
+        let mut positions = Vec::new();
+        while ed.cursor_right() {
+            positions.push(ed.cursor_pos());
+        }
+        assert_eq!(positions, [1, 3, 11, 13, 14, 15]);
+
+        positions.clear();
+        while ed.cursor_left() {
+            positions.push(ed.cursor_pos());
+        }
+        assert_eq!(positions, [14, 13, 11, 3, 1, 0]);
+    }
+
+    #[test]
+    fn backspace_and_delete_remove_whole_graphemes() {
+        let mut ed = editor("🙂a🙂");
+
+        press(&mut ed, NamedKey::Delete);
+        assert_eq!(ed.rope().to_string(), "a🙂");
+        assert_eq!(ed.cursor_pos(), 0);
+
+        ed.move_cursor_to(3);
+        press(&mut ed, NamedKey::Backspace);
+        assert_eq!(ed.rope().to_string(), "a");
+        assert_eq!(ed.cursor_pos(), 1);
     }
 
     #[test]
@@ -419,12 +467,12 @@ mod test {
         ed.move_cursor_to(5);
         assert!(!ed.history.can_undo());
 
-        // Insert preedit — should NOT create undo history
+        // Insert preedit, should NOT create undo history
         ed.set_preedit("XY");
         assert!(!ed.history.can_undo());
         assert_eq!(ed.rope().to_string(), "HelloXY");
 
-        // Replace preedit — still no undo history
+        // Replace preedit, still no undo history
         ed.set_preedit("Z");
         assert!(!ed.history.can_undo());
         assert_eq!(ed.rope().to_string(), "HelloZ");

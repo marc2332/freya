@@ -181,7 +181,7 @@ fn components() {
 
     fn counter(value: &u8) -> Element {
         rect()
-            .children([label().text(format!("Value is {value}")).into()])
+            .children([label().text(format!("Value is {value}"))])
             .into()
     }
 
@@ -281,7 +281,7 @@ fn state_reconcillation2() {
 
     fn counter(stuff: u8) -> Element {
         rect()
-            .children([label().text(format!("Value is {stuff}")).into()])
+            .children([label().text(format!("Value is {stuff}"))])
             .into()
     }
 
@@ -425,9 +425,7 @@ fn scopes_smart_rerun() {
             .on_mouse_up(move |_| {
                 *value.write() += 1;
             })
-            .children([label()
-                .text(format!("Value is {stuff} {}", value.read()))
-                .into()])
+            .children([label().text(format!("Value is {stuff} {}", value.read()))])
             .into()
     }
 
@@ -462,10 +460,8 @@ fn scopes_smart_rerun() {
 
 #[test]
 fn element_diffing() {
-    let first_render: Element = rect()
-        .children([rect().into(), rect().into(), rect().into()])
-        .into();
-    let second_render: Element = rect().children([rect().into(), rect().into()]).into();
+    let first_render: Element = rect().children([rect(), rect(), rect()]).into();
+    let second_render: Element = rect().children([rect(), rect()]).into();
     let first_render = PathElement::from_element(vec![0], first_render);
     let second_render = PathElement::from_element(vec![0], second_render);
     let mut diff = Diff::default();
@@ -477,15 +473,9 @@ fn element_diffing() {
     // Compare keys from one render to the other one and diff those, then dif normally the others, and finally remove thus not unmarked
 
     let first_render: Element = rect()
-        .children([
-            rect().key(1).into(),
-            rect().key(2).into(),
-            rect().key(3).into(),
-        ])
+        .children([rect().key(1), rect().key(2), rect().key(3)])
         .into();
-    let second_render: Element = rect()
-        .children([rect().key(1).into(), rect().key(3).into()])
-        .into();
+    let second_render: Element = rect().children([rect().key(1), rect().key(3)]).into();
     let first_render = PathElement::from_element(vec![0], first_render);
     let second_render = PathElement::from_element(vec![0], second_render);
     let mut diff = Diff::default();
@@ -1434,9 +1424,9 @@ fn modified_and_moved_both_siblings_with_nested_child() {
         if state() {
             // Old tree:
             //   root
-            //     A (key=1, padding=10) — has child X
+            //     A (key=1, padding=10) has child X
             //       X (key=3, padding=30)
-            //     B (key=2, padding=20) — no children
+            //     B (key=2, padding=20) has no children
             rect()
                 .child(rect().key(1).padding(10.).child(rect().key(3).padding(30.)))
                 .child(rect().key(2).padding(20.))
@@ -1445,9 +1435,9 @@ fn modified_and_moved_both_siblings_with_nested_child() {
             // New tree: A and B swap positions, both modified.
             // X (child of A) is also modified.
             //   root
-            //     B (key=2, padding=99) — moved to [0,0], modified
-            //     A (key=1, padding=88) — moved to [0,1], modified
-            //       X (key=3, padding=77) — at [0,1,0], modified
+            //     B (key=2, padding=99) moved to [0,0], modified
+            //     A (key=1, padding=88) moved to [0,1], modified
+            //       X (key=3, padding=77) at [0,1,0], modified
             //
             // No movements are recorded because both A and B are modified.
             // scope.nodes still has A at [0,0] and B at [0,1].
@@ -1850,7 +1840,7 @@ fn moved_element_with_deeply_nested_child_type_change() {
 ///
 /// Frame 2 adds a new grandchild under `a1` at tree path `[0,1,2,0]`. The
 /// diff emits `added = [[0,1,2,0]]`, which is not deferred (no moves), and
-/// `process_addition` looks up the parent `[0,1,2]` in `scope.nodes` — but
+/// `process_addition` looks up the parent `[0,1,2]` in `scope.nodes`, but
 /// that slot holds the leftover empty entry from frame 1, so `nodes.get`
 /// returns `None` and the unwrap at runner.rs L971 fires.
 #[test]
@@ -1911,7 +1901,7 @@ fn replay_keyed_list(history: &[Vec<u8>]) {
     fn app() -> Element {
         let layout = consume_context::<State<Vec<u8>>>();
         rect()
-            .children(layout.read().iter().map(|key| rect().key(*key).into()))
+            .children(layout.read().iter().map(|key| rect().key(*key)))
             .into()
     }
 

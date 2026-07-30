@@ -126,13 +126,18 @@ pub fn is_scrollable(inner_size: f32, viewport_size: f32) -> bool {
     viewport_size > 0. && viewport_size < inner_size
 }
 
+/// Whether the scrollbar is drawn at all: the axis has to overflow *and* the viewport has to be
+/// long enough to hold the minimum-sized thumb, since a shorter one could only show a thumb that
+/// misreports how much content there is.
 #[doc(hidden)]
 pub fn is_scrollbar_visible(
     is_scrollbar_enabled: bool,
     inner_size: f32,
     viewport_size: f32,
 ) -> bool {
-    is_scrollbar_enabled && is_scrollable(inner_size, viewport_size)
+    is_scrollbar_enabled
+        && is_scrollable(inner_size, viewport_size)
+        && viewport_size > MIN_SCROLLBAR_SIZE
 }
 
 const MIN_SCROLLBAR_SIZE: f32 = 50.0;
@@ -143,16 +148,12 @@ pub fn get_scrollbar_pos_and_size(
     viewport_size: f32,
     scroll_position: f32,
 ) -> (f32, f32) {
-    if !is_scrollable(inner_size, viewport_size) {
-        return (0.0, inner_size);
+    if !is_scrollable(inner_size, viewport_size) || viewport_size <= MIN_SCROLLBAR_SIZE {
+        return (0.0, 0.0);
     }
 
     let viewable_ratio = viewport_size / inner_size;
-    let mut scrollbar_size = viewport_size * viewable_ratio;
-
-    if scrollbar_size < MIN_SCROLLBAR_SIZE {
-        scrollbar_size = MIN_SCROLLBAR_SIZE;
-    }
+    let scrollbar_size = (viewport_size * viewable_ratio).max(MIN_SCROLLBAR_SIZE);
 
     let available_scroll_range = inner_size - viewport_size;
     let available_thumb_range = viewport_size - scrollbar_size;
@@ -168,16 +169,12 @@ pub fn get_scroll_position_from_cursor(
     inner_size: f32,
     viewport_size: f32,
 ) -> i32 {
-    if !is_scrollable(inner_size, viewport_size) {
+    if !is_scrollable(inner_size, viewport_size) || viewport_size <= MIN_SCROLLBAR_SIZE {
         return 0;
     }
 
     let viewable_ratio = viewport_size / inner_size;
-    let mut scrollbar_size = viewport_size * viewable_ratio;
-
-    if scrollbar_size < MIN_SCROLLBAR_SIZE {
-        scrollbar_size = MIN_SCROLLBAR_SIZE;
-    }
+    let scrollbar_size = (viewport_size * viewable_ratio).max(MIN_SCROLLBAR_SIZE);
 
     let available_scroll_range = inner_size - viewport_size;
     let available_thumb_range = viewport_size - scrollbar_size;
