@@ -97,6 +97,8 @@ fn app() -> impl IntoElement {
 }
 
 fn column(mut tasks: State<Vec<Task>>, status: TaskStatus, title: String) -> impl IntoElement {
+    let dragging = use_drag::<usize>().read().is_some();
+
     rect()
         .direction(Direction::Vertical)
         .width(Size::flex(1.))
@@ -129,7 +131,7 @@ fn column(mut tasks: State<Vec<Task>>, status: TaskStatus, title: String) -> imp
                                     .width(Size::fill())
                                     .function(Function::Expo)
                                     .duration(Duration::from_millis(500))
-                                    .animation_dependency((status, index))
+                                    .animation_dependency((status, index, dragging))
                                     .child(Card(task.clone())),
                             )
                             .drag_element(

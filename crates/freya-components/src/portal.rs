@@ -213,8 +213,8 @@ impl<T: PartialEq + 'static + Clone + std::hash::Hash + Eq + Debug> Component fo
             .height(self.layout.height.clone())
             .child(
                 rect()
-                    .maybe(!is_stacked, |rect| {
-                        rect.offset_x(area.min_x())
+                    .maybe(!is_stacked, |el| {
+                        el.offset_x(area.min_x())
                             .offset_y(area.min_y())
                             .position(Position::new_global())
                     })
