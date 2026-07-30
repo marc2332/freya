@@ -46,6 +46,8 @@ pub struct DragZone<T: Clone + 'static + PartialEq> {
     show_while_dragging: bool,
     /// Minimum distance in pixels the cursor must move before dragging starts. Defaults to `4.0`.
     drag_threshold: f64,
+    /// Whether dragging can start. Defaults to `true`.
+    enabled: bool,
     key: DiffKey,
 }
 
@@ -63,6 +65,7 @@ impl<T: Clone + PartialEq + 'static> DragZone<T> {
             drag_element: None,
             show_while_dragging: true,
             drag_threshold: 4.0,
+            enabled: true,
             key: DiffKey::default(),
         }
     }
@@ -79,6 +82,12 @@ impl<T: Clone + PartialEq + 'static> DragZone<T> {
 
     pub fn drag_threshold(mut self, drag_threshold: f64) -> Self {
         self.drag_threshold = drag_threshold;
+        self
+    }
+
+    /// Whether dragging can start. Defaults to `true`.
+    pub fn enabled(mut self, enabled: bool) -> Self {
+        self.enabled = enabled;
         self
     }
 }
@@ -116,8 +125,9 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
             DragPhase::Idle => {}
         };
 
+        let enabled = self.enabled;
         let on_pointer_down = move |e: Event<PointerEventData>| {
-            if e.data().button() != Some(MouseButton::Left) {
+            if !enabled || e.data().button() != Some(MouseButton::Left) {
                 return;
             }
             phase.set(DragPhase::Pressing {
