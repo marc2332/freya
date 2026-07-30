@@ -187,7 +187,6 @@ impl Component for Switch {
             ),
         };
 
-        let mut hovering = use_state(|| false);
         let mut pressing = use_state(|| false);
         let a11y_id = use_a11y();
         let focus = use_focus(a11y_id);
@@ -248,14 +247,6 @@ impl Component for Switch {
         });
         let press_size = anim_press.get().value();
 
-        let enabled = use_reactive(&self.enabled);
-        let cursor_icon = self.cursor_icon;
-        use_drop(move || {
-            if hovering() && enabled() {
-                Cursor::set(CursorIcon::default());
-            }
-        });
-
         let border = if focus() == Focus::Keyboard {
             Border::new()
                 .width(2.)
@@ -296,20 +287,11 @@ impl Component for Switch {
                 })
             })
             .on_global_pointer_press(move |_| pressing.set_if_modified(false))
-            .on_pointer_enter(move |_| {
-                hovering.set(true);
-                if enabled() {
-                    Cursor::set(cursor_icon);
-                } else {
-                    Cursor::set(CursorIcon::NotAllowed);
-                }
-            })
-            .on_pointer_leave(move |_| {
-                if hovering() {
-                    Cursor::set(CursorIcon::default());
-                    hovering.set(false);
-                }
-                pressing.set_if_modified(false);
+            .on_pointer_leave(move |_| pressing.set_if_modified(false))
+            .cursor(if self.enabled {
+                self.cursor_icon
+            } else {
+                CursorIcon::NotAllowed
             })
             .child(
                 rect()

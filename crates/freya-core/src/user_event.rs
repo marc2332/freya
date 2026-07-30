@@ -3,8 +3,6 @@ use std::{
     fmt::Debug,
 };
 
-use cursor_icon::CursorIcon;
-
 use crate::prelude::AccessibilityFocusStrategy;
 
 #[derive(Debug)]
@@ -13,9 +11,6 @@ pub enum UserEvent {
 
     /// Focus with the given strategy
     FocusAccessibilityNode(AccessibilityFocusStrategy),
-
-    /// Set a new cursor icon.
-    SetCursorIcon(CursorIcon),
 
     Erased(SingleThreadErasedEvent),
 }

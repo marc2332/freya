@@ -218,9 +218,6 @@ impl TestingRunner {
                         UserEvent::FocusAccessibilityNode(strategy) => {
                             requested_focus_strategy.borrow_mut().replace(strategy);
                         }
-                        UserEvent::SetCursorIcon(_) => {
-                            // Nothing
-                        }
                         UserEvent::Erased(_) => {
                             // Nothing
                         }
@@ -407,6 +404,11 @@ impl TestingRunner {
             std::thread::sleep(step);
             self.ticker_sender.send(()).ok();
         }
+    }
+
+    /// Resolve the [CursorIcon] for the currently hovered nodes.
+    pub fn cursor_icon(&self) -> CursorIcon {
+        self.tree.borrow().cursor_icon(&self.nodes_state)
     }
 
     pub fn send_event(&mut self, platform_event: PlatformEvent) {

@@ -394,11 +394,6 @@ impl Component for Input {
             use_cursor_blink(focus() != Focus::Not, theme_colors.color);
 
         let enabled = use_reactive(&self.enabled);
-        use_drop(move || {
-            if status() == InputStatus::Hovering && enabled() {
-                Cursor::set(CursorIcon::default());
-            }
-        });
 
         let display_placeholder = value.read().is_empty()
             && self.placeholder.is_some()
@@ -443,7 +438,6 @@ impl Component for Input {
                 // On unfocus
                 Key::Named(NamedKey::Escape) => {
                     a11y_id.request_unfocus();
-                    Cursor::set(CursorIcon::default());
                 }
                 // On change
                 _ => {
@@ -544,16 +538,10 @@ impl Component for Input {
 
         let on_pointer_enter = move |_| {
             *status.write() = InputStatus::Hovering;
-            if enabled() {
-                Cursor::set(CursorIcon::Text);
-            } else {
-                Cursor::set(CursorIcon::NotAllowed);
-            }
         };
 
         let on_pointer_leave = move |_| {
             if status() == InputStatus::Hovering {
-                Cursor::set(CursorIcon::default());
                 *status.write() = InputStatus::default();
             }
         };
@@ -658,6 +646,11 @@ impl Component for Input {
             })
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
+            .cursor(if self.enabled {
+                CursorIcon::Text
+            } else {
+                CursorIcon::NotAllowed
+            })
             .width(self.width.clone())
             .background(background.mul_if(!self.enabled, 0.85))
             .border(border)

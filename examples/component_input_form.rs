@@ -28,7 +28,7 @@ fn app() -> impl IntoElement {
                     .color((150, 150, 150)),
             )
             .trailing(
-                CursorArea::new().icon(CursorIcon::Pointer).child(
+                rect().cursor(CursorIcon::Pointer).child(
                     SvgViewer::new(if matches!(*mode.read(), InputMode::Shown) {
                         icons::lucide::eye()
                     } else {
