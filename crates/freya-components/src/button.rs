@@ -146,6 +146,7 @@ pub struct Button {
     enabled: bool,
     focusable: bool,
     cursor_icon: CursorIcon,
+    border_style: BorderStyle,
 }
 
 impl Default for Button {
@@ -180,6 +181,7 @@ impl Button {
             enabled: true,
             focusable: true,
             cursor_icon: CursorIcon::default(),
+            border_style: BorderStyle::default(),
             key: DiffKey::None,
         }
     }
@@ -268,6 +270,17 @@ impl Button {
         self.style_variant(ButtonStyleVariant::Flat)
     }
 
+    /// Draw the button's edge in `style` instead of a continuous one.
+    ///
+    /// Only the style: the edge keeps the theme's width and its state-driven fill, so a dashed
+    /// button still answers hover with the colours its variant resolves. The keyboard focus ring
+    /// stays solid, since that one belongs to the platform rather than to the button. For a control
+    /// standing on a slot that is waiting to be filled rather than a bound one.
+    pub fn border_style(mut self, border_style: impl Into<BorderStyle>) -> Self {
+        self.border_style = border_style.into();
+        self
+    }
+
     /// Override the cursor icon shown when hovering over the button while enabled.
     pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
         self.cursor_icon = cursor_icon.into();
@@ -334,6 +347,8 @@ impl Component for Button {
         };
 
         let hovered = enabled() && hovering();
+        // The keyboard focus ring is deliberately solid whatever `border_style` says: it is the
+        // platform telling the user where they are, not part of the button's own dress.
         let border = if focus() == Focus::Keyboard {
             Border::new()
                 .fill(theme_colors.focus_border_fill)
@@ -351,6 +366,7 @@ impl Component for Button {
                 .fill(fill)
                 .width(1.)
                 .alignment(BorderAlignment::Inner)
+                .style(self.border_style)
         };
         let background = if !self.enabled {
             theme_colors.disabled_background

@@ -12,6 +12,7 @@ use freya_engine::prelude::{
     Paint,
     PaintStyle,
     PathBuilder,
+    PathEffect,
     SkBlurStyle,
     SkMaskFilter,
     SkPath,
@@ -171,6 +172,11 @@ impl RectElement {
         border: &Border,
         corner_radius: &CornerRadius,
     ) {
+        if let BorderStyle::Dashed { dash, gap } = border.style {
+            Self::render_dashed_border(canvas, rect, border, corner_radius, dash, gap);
+            return;
+        }
+
         let mut border_paint = Paint::default();
         border_paint.set_style(PaintStyle::Fill);
         border_paint.set_anti_alias(true);
@@ -184,6 +190,74 @@ impl RectElement {
                 canvas.draw_path(&path, &border_paint);
             }
         }
+    }
+
+    /// Draws a [`BorderStyle::Dashed`] outline.
+    ///
+    /// Unlike a solid border, which fills the region between an outer and an inner rounded
+    /// rectangle, this **strokes** the outline's centreline with a dash path effect: a filled
+    /// region cannot carry a pattern. That is also why it uses a single width for every side
+    /// (see [`BorderStyle::Dashed`]).
+    fn render_dashed_border(
+        canvas: &Canvas,
+        rect: SkRect,
+        border: &Border,
+        corner_radius: &CornerRadius,
+        dash: f32,
+        gap: f32,
+    ) {
+        let width = border.width.top;
+        if width <= 0.0 || dash <= 0.0 {
+            return;
+        }
+
+        // How far the stroke's centreline sits inside the element's edge: half the stroke for an
+        // inner border, half outside it for an outer one.
+        let inset = match border.alignment {
+            BorderAlignment::Inner => width / 2.0,
+            BorderAlignment::Outer => -width / 2.0,
+            BorderAlignment::Center => 0.0,
+        };
+        let radius = |corner: f32| (corner - inset).max(0.0);
+        let centre_line = SkRRect::new_rect_radii(
+            SkRect::new(
+                rect.left + inset,
+                rect.top + inset,
+                rect.right - inset,
+                rect.bottom - inset,
+            ),
+            &[
+                (
+                    radius(corner_radius.top_left),
+                    radius(corner_radius.top_left),
+                )
+                    .into(),
+                (
+                    radius(corner_radius.top_right),
+                    radius(corner_radius.top_right),
+                )
+                    .into(),
+                (
+                    radius(corner_radius.bottom_right),
+                    radius(corner_radius.bottom_right),
+                )
+                    .into(),
+                (
+                    radius(corner_radius.bottom_left),
+                    radius(corner_radius.bottom_left),
+                )
+                    .into(),
+            ],
+        );
+
+        let mut border_paint = Paint::default();
+        border_paint.set_style(PaintStyle::Stroke);
+        border_paint.set_stroke_width(width);
+        border_paint.set_anti_alias(true);
+        border_paint.set_color(border.fill);
+        border_paint.set_path_effect(PathEffect::dash(&[dash, gap], 0.0));
+
+        canvas.draw_rrect(centre_line, &border_paint);
     }
 
     /// Returns a `Path` that will draw a [`Border`] around a base rectangle.

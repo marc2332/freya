@@ -44,6 +44,7 @@ pub use skia_safe::{
     Path,
     PathBuilder,
     PathDirection,
+    PathEffect,
     PathFillType,
     Pixmap,
     Point,

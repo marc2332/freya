@@ -68,8 +68,36 @@ pub enum BorderShape {
     Path(SkPath),
 }
 
+/// Whether a [`Border`] is drawn as a continuous outline or a dashed one.
+///
+/// A dashed border is painted by **stroking** the outline's centreline rather than filling the
+/// region between its outer and inner edges, which is what makes the pattern possible at all.
+/// Two consequences, both deliberate: it uses one width for all four sides
+/// ([`BorderWidth::top`]), since a stroke has a single width, and it ignores
+/// [`CornerRadius::smoothing`](crate::style::CornerRadius): a squircle outline has no stroked
+/// equivalent.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Default, Clone, Copy, Debug, PartialEq)]
+pub enum BorderStyle {
+    /// One continuous outline. This is the default.
+    #[default]
+    Solid,
+    /// A repeating pattern of `dash` pixels drawn and `gap` pixels skipped.
+    Dashed { dash: f32, gap: f32 },
+}
+
+impl Scaled for BorderStyle {
+    fn scale(&mut self, scale_factor: f32) {
+        if let Self::Dashed { dash, gap } = self {
+            *dash *= scale_factor;
+            *gap *= scale_factor;
+        }
+    }
+}
+
 /// An outline drawn around an element, with a [`fill`](Border::fill) color,
-/// a [`width`](Border::width) per side and an [`alignment`](Border::alignment).
+/// a [`width`](Border::width) per side, an [`alignment`](Border::alignment) and a
+/// [`style`](Border::style).
 ///
 /// Start from [`Border::new`] and chain the methods you need:
 ///
@@ -80,12 +108,20 @@ pub enum BorderShape {
 ///     .width(2.0)
 ///     .alignment(BorderAlignment::Inner);
 /// ```
+///
+/// A dashed outline, for a slot that is waiting to be filled rather than a bound edge:
+///
+/// ```
+/// # use freya::prelude::*;
+/// let border = Border::new().fill(Color::RED).width(1.0).dashed(4.0, 3.0);
+/// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Default, Clone, Debug, PartialEq)]
 pub struct Border {
     pub fill: Color,
     pub width: BorderWidth,
     pub alignment: BorderAlignment,
+    pub style: BorderStyle,
 }
 
 impl Border {
@@ -112,6 +148,18 @@ impl Border {
         self
     }
 
+    /// Set the [`BorderStyle`] the outline is drawn in. See [`BorderStyle`].
+    pub fn style(mut self, style: impl Into<BorderStyle>) -> Self {
+        self.style = style.into();
+        self
+    }
+
+    /// Draw the outline dashed: `dash` pixels painted, `gap` pixels skipped, repeating. See
+    /// [`BorderStyle::Dashed`] for what a stroked outline costs.
+    pub fn dashed(self, dash: f32, gap: f32) -> Self {
+        self.style(BorderStyle::Dashed { dash, gap })
+    }
+
     #[inline]
     pub(crate) fn is_visible(&self) -> bool {
         !(self.width.top == 0.0
@@ -122,12 +170,13 @@ impl Border {
     }
 
     pub fn pretty(&self) -> String {
-        format!("{} {:?}", self.width, self.alignment)
+        format!("{} {:?} {:?}", self.width, self.alignment, self.style)
     }
 }
 
 impl Scaled for Border {
     fn scale(&mut self, scale_factor: f32) {
         self.width.scale(scale_factor);
+        self.style.scale(scale_factor);
     }
 }
