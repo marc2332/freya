@@ -29,8 +29,7 @@ pub fn default_monospace_fonts() -> Vec<Cow<'static, str>> {
         fonts.insert(1, "Adwaita Mono".into());
         fonts.insert(2, "DejaVu Sans Mono".into());
     } else if cfg!(target_os = "android") {
-        fonts.insert(0, "Roboto Mono".into());
-        fonts.insert(1, "Droid Sans Mono".into());
+        fonts.insert(0, "monospace".into());
     }
     fonts
 }
