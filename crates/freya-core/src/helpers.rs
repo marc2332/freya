@@ -1,5 +1,8 @@
 use std::{
-    any::Any,
+    any::{
+        Any,
+        TypeId,
+    },
     hash::{
         Hash,
         Hasher,
@@ -70,6 +73,7 @@ pub fn from_fn<P: PartialEq + 'static>(
     comp: impl Fn(&P) -> Element + Clone + 'static,
 ) -> Element {
     let mut hasher = FxHasher::default();
+    TypeId::of::<P>().hash(&mut hasher);
     key.hash(&mut hasher);
     Element::Component {
         key: DiffKey::U64(hasher.finish()),
@@ -94,6 +98,7 @@ pub fn from_fn_owned<P: PartialEq + Clone + 'static>(
     comp: impl Fn(P) -> Element + Clone + 'static,
 ) -> Element {
     let mut hasher = FxHasher::default();
+    TypeId::of::<P>().hash(&mut hasher);
     key.hash(&mut hasher);
     Element::Component {
         key: DiffKey::U64(hasher.finish()),
@@ -117,6 +122,7 @@ pub fn from_fn_standalone_borrowed_keyed<K: Hash, P: 'static + PartialEq>(
     comp: fn(&P) -> Element,
 ) -> Element {
     let mut hasher = FxHasher::default();
+    TypeId::of::<P>().hash(&mut hasher);
     key.hash(&mut hasher);
     Element::Component {
         key: DiffKey::U64(hasher.finish()),

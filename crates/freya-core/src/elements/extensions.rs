@@ -126,8 +126,14 @@ pub trait KeyExt: Sized {
     fn write_key(&mut self) -> &mut DiffKey;
 
     /// Assign a key derived from any hashable value, used to reconcile elements in dynamic lists.
-    fn key(mut self, key: impl Hash) -> Self {
+    /// The key is scoped to the element's type, so the same value used
+    /// on different element or component types never collides.
+    fn key(mut self, key: impl Hash) -> Self
+    where
+        Self: 'static,
+    {
         let mut hasher = FxHasher::default();
+        std::any::TypeId::of::<Self>().hash(&mut hasher);
         key.hash(&mut hasher);
         *self.write_key() = DiffKey::U64(hasher.finish());
         self
