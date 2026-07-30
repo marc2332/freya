@@ -136,7 +136,7 @@ impl RectElement {
         }
 
         // Add either the RRect or smoothed path based on whether smoothing is used.
-        if corner_radius.smoothing > 0.0 {
+        if corner_radius.smoothing() > 0.0 {
             shadow_path.add_path(
                 &corner_radius.smoothed_path(rounded_rect.with_outset(outset)),
                 None,
@@ -200,33 +200,33 @@ impl RectElement {
         // Let's call this the outer border path.
         let (outer_rrect, outer_corner_radius) = {
             // Calculate the outer corner radius for the border.
-            let corner_radius = CornerRadius {
-                top_left: Self::outer_border_path_corner_radius(
+            let corner_radius = CornerRadius::new(
+                Self::outer_border_path_corner_radius(
                     border_alignment,
-                    base_corner_radius.top_left,
+                    base_corner_radius.top_left(),
                     border_width.top,
                     border_width.left,
                 ),
-                top_right: Self::outer_border_path_corner_radius(
+                Self::outer_border_path_corner_radius(
                     border_alignment,
-                    base_corner_radius.top_right,
+                    base_corner_radius.top_right(),
                     border_width.top,
                     border_width.right,
                 ),
-                bottom_left: Self::outer_border_path_corner_radius(
+                Self::outer_border_path_corner_radius(
                     border_alignment,
-                    base_corner_radius.bottom_left,
-                    border_width.bottom,
-                    border_width.left,
-                ),
-                bottom_right: Self::outer_border_path_corner_radius(
-                    border_alignment,
-                    base_corner_radius.bottom_right,
+                    base_corner_radius.bottom_right(),
                     border_width.bottom,
                     border_width.right,
                 ),
-                smoothing: base_corner_radius.smoothing,
-            };
+                Self::outer_border_path_corner_radius(
+                    border_alignment,
+                    base_corner_radius.bottom_left(),
+                    border_width.bottom,
+                    border_width.left,
+                ),
+            )
+            .with_smoothing(base_corner_radius.smoothing());
 
             let rrect = SkRRect::new_rect_radii(
                 {
@@ -245,10 +245,10 @@ impl RectElement {
                     rect
                 },
                 &[
-                    (corner_radius.top_left, corner_radius.top_left).into(),
-                    (corner_radius.top_right, corner_radius.top_right).into(),
-                    (corner_radius.bottom_right, corner_radius.bottom_right).into(),
-                    (corner_radius.bottom_left, corner_radius.bottom_left).into(),
+                    (corner_radius.top_left(), corner_radius.top_left()).into(),
+                    (corner_radius.top_right(), corner_radius.top_right()).into(),
+                    (corner_radius.bottom_right(), corner_radius.bottom_right()).into(),
+                    (corner_radius.bottom_left(), corner_radius.bottom_left()).into(),
                 ],
             );
 
@@ -258,33 +258,33 @@ impl RectElement {
         // After the outer path, we will then move to the inner bounds of the border.
         let (inner_rrect, inner_corner_radius) = {
             // Calculate the inner corner radius for the border.
-            let corner_radius = CornerRadius {
-                top_left: Self::inner_border_path_corner_radius(
+            let corner_radius = CornerRadius::new(
+                Self::inner_border_path_corner_radius(
                     border_alignment,
-                    base_corner_radius.top_left,
+                    base_corner_radius.top_left(),
                     border_width.top,
                     border_width.left,
                 ),
-                top_right: Self::inner_border_path_corner_radius(
+                Self::inner_border_path_corner_radius(
                     border_alignment,
-                    base_corner_radius.top_right,
+                    base_corner_radius.top_right(),
                     border_width.top,
                     border_width.right,
                 ),
-                bottom_left: Self::inner_border_path_corner_radius(
+                Self::inner_border_path_corner_radius(
                     border_alignment,
-                    base_corner_radius.bottom_left,
-                    border_width.bottom,
-                    border_width.left,
-                ),
-                bottom_right: Self::inner_border_path_corner_radius(
-                    border_alignment,
-                    base_corner_radius.bottom_right,
+                    base_corner_radius.bottom_right(),
                     border_width.bottom,
                     border_width.right,
                 ),
-                smoothing: base_corner_radius.smoothing,
-            };
+                Self::inner_border_path_corner_radius(
+                    border_alignment,
+                    base_corner_radius.bottom_left(),
+                    border_width.bottom,
+                    border_width.left,
+                ),
+            )
+            .with_smoothing(base_corner_radius.smoothing());
 
             let rrect = SkRRect::new_rect_radii(
                 {
@@ -303,17 +303,17 @@ impl RectElement {
                     rect
                 },
                 &[
-                    (corner_radius.top_left, corner_radius.top_left).into(),
-                    (corner_radius.top_right, corner_radius.top_right).into(),
-                    (corner_radius.bottom_right, corner_radius.bottom_right).into(),
-                    (corner_radius.bottom_left, corner_radius.bottom_left).into(),
+                    (corner_radius.top_left(), corner_radius.top_left()).into(),
+                    (corner_radius.top_right(), corner_radius.top_right()).into(),
+                    (corner_radius.bottom_right(), corner_radius.bottom_right()).into(),
+                    (corner_radius.bottom_left(), corner_radius.bottom_left()).into(),
                 ],
             );
 
             (rrect, corner_radius)
         };
 
-        if base_corner_radius.smoothing > 0.0 {
+        if base_corner_radius.smoothing() > 0.0 {
             let mut path = PathBuilder::new();
             path.set_fill_type(SkPathFillType::EvenOdd);
 
@@ -501,7 +501,7 @@ impl ElementExt for RectElement {
 
         // Container
         let rounded_rect = self.render_rect(&area, context.scale_factor as f32);
-        if corner_radius.smoothing > 0.0 {
+        if corner_radius.smoothing() > 0.0 {
             path.add_path(&corner_radius.smoothed_path(rounded_rect), None);
         } else {
             path.add_rrect(rounded_rect, None, None);

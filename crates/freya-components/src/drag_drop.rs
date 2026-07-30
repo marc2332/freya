@@ -96,6 +96,7 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
     fn render(&self) -> impl IntoElement {
         let mut drags = use_drag::<T>();
         let mut phase = use_state(|| DragPhase::Idle);
+        let mut drag_element_size = use_state(|| None::<Size2D>);
         let data = self.data.clone();
         let drag_threshold = self.drag_threshold;
 
@@ -153,16 +154,22 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
             .maybe(self.enabled, |rect| rect.on_pointer_down(on_pointer_down))
             .maybe_child((dragging.zip(self.drag_element.clone())).map(
                 |((position, offset), drag_element)| {
-                    let (x, y) = (position - offset).to_f32().to_tuple();
+                    let size = *drag_element_size.read();
+                    let anchor = size.map_or(offset, |size| {
+                        offset.min(CursorPoint::new(size.width as f64, size.height as f64))
+                    });
+                    let (x, y) = (position - anchor).to_f32().to_tuple();
                     rect()
                         .position(Position::new_global())
                         .layer(Layer::Overlay)
                         .interactive(false)
-                        .width(Size::px(0.))
-                        .height(Size::px(0.))
+                        .opacity(if size.is_some() { 1. } else { 0. })
                         // Extend by 1. so that the cursor click can reach the drop zone
                         .offset_x(x + 1.)
                         .offset_y(y + 1.)
+                        .on_sized(move |e: Event<SizedEventData>| {
+                            drag_element_size.set_if_modified(Some(e.area.size))
+                        })
                         .child(drag_element)
                 },
             ))
