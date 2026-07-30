@@ -480,6 +480,8 @@ fn register_base_component_themes(theme: &mut Theme) {
         FloatingTabThemePreference {
             background: Preference::Specific(Color::TRANSPARENT),
             hover_background: Preference::reference("surface_secondary"),
+            selected_background: Preference::reference("surface_secondary"),
+            selected_color: Preference::reference("text_primary"),
             color: Preference::reference("text_primary"),
             padding: Preference::Specific(Gaps::new(6., 12., 6., 12.)),
             width: Preference::Specific(Size::Inner),

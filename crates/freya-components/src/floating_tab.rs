@@ -16,6 +16,15 @@ define_theme! {
         %[fields]
         background: Color,
         hover_background: Color,
+        /// Fill for the tab that is currently active, via [Activable](crate::activable::Activable).
+        ///
+        /// Authored apart from `hover_background` so a tab strip can say which tab you are *on*
+        /// and which one you are *pointing at* in the same glance. With one fill for both, hovering
+        /// an inactive tab makes it indistinguishable from the active one, which on a two tab strip
+        /// leaves no way to read the selection at all.
+        selected_background: Color,
+        /// Content colour for the active tab, for the same reason.
+        selected_color: Color,
         width: Size,
         height: Size,
         padding: Gaps,
@@ -105,6 +114,15 @@ impl FloatingTab {
         self.theme = Some(theme);
         self
     }
+
+    /// Handle the tab being pressed.
+    ///
+    /// The handler is called with the triggering event, so a caller that wants the pointer
+    /// position or the modifier state has it without a second listener.
+    pub fn on_press(mut self, on_press: impl Into<EventHandler<Event<PressEventData>>>) -> Self {
+        self.on_press = Some(on_press.into());
+        self
+    }
 }
 
 impl Component for FloatingTab {
@@ -117,6 +135,8 @@ impl Component for FloatingTab {
         let FloatingTabTheme {
             background,
             hover_background,
+            selected_background,
+            selected_color,
             padding,
             width,
             height,
@@ -134,12 +154,14 @@ impl Component for FloatingTab {
             status.set(TabStatus::default());
         };
 
-        let background =
-            if focus() == Focus::Keyboard || is_active || *status.read() == TabStatus::Hovering {
-                hover_background
-            } else {
-                background
-            };
+        // Active outranks hover: pointing at a tab must not make it look like the one you are on,
+        // and moving the pointer over an inactive tab must not make the active one look inactive.
+        let hovering = focus() == Focus::Keyboard || *status.read() == TabStatus::Hovering;
+        let (background, color) = match (is_active, hovering) {
+            (true, _) => (selected_background, selected_color),
+            (false, true) => (hover_background, color),
+            (false, false) => (background, color),
+        };
 
         rect()
             .a11y_id(a11y_id)
