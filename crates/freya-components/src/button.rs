@@ -283,12 +283,6 @@ impl Component for Button {
         let focus = use_focus(a11y_id);
 
         let enabled = use_reactive(&self.enabled);
-        let cursor_icon = self.cursor_icon;
-        use_drop(move || {
-            if hovering() {
-                Cursor::set(CursorIcon::default());
-            }
-        });
 
         let theme_colors = match self.style_variant {
             ButtonStyleVariant::Normal => {
@@ -396,15 +390,10 @@ impl Component for Button {
                 })
                 .on_pointer_out(move |_| hovering.set_if_modified(false))
             })
-            .on_pointer_enter(move |_| {
-                if enabled() {
-                    Cursor::set(cursor_icon);
-                } else {
-                    Cursor::set(CursorIcon::NotAllowed);
-                }
-            })
-            .on_pointer_leave(move |_| {
-                Cursor::set(CursorIcon::default());
+            .cursor(if self.enabled {
+                self.cursor_icon
+            } else {
+                CursorIcon::NotAllowed
             })
             .children(self.elements.clone())
     }
