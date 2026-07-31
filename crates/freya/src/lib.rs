@@ -73,12 +73,14 @@
 //! - `remote-asset`: Enables support for **HTTP** asset sources for [ImageViewer](components::ImageViewer) and [GifViewer](components::GifViewer) components.
 //! - `tray`: Enables tray support using the [tray_icon] crate.
 //! - `sdk`: Reexport [freya_sdk] under [sdk].
+//! - `sdk-tokio`: Enables the Tokio utilities from [freya_sdk]. Implies `sdk`.
 //! - `gif`: Enables the [GifViewer](components::GifViewer) component.
 //! - `video`: Reexport [freya_video] under [video].
 //! - `plot`: Reexport of plotters under [plot].
 //! - `material-design`: Reexport [freya_material_design] under [material_design].
 //! - `calendar`: Enables the [Calendar](components::Calendar) component.
 //! - `icons`: Reexport of [freya_icons] under [icons].
+//! - `icons-lucide`: Enables the Lucide icons from [freya_icons]. Implies `icons`.
 //! - `radio`: Reexport [freya_radio] under [radio].
 //! - `query`: Reexport [freya_query] under [query].
 //! - `markdown`: Reexport [freya_markdown] under [markdown].

@@ -80,12 +80,8 @@ freya-performance-plugin = { path = "./crates/freya-performance-plugin", version
 freya-radio = { path = "./crates/freya-radio", version = "0.4.0" }
 freya-engine = { path = "./crates/freya-engine", version = "0.4.0" }
 freya-devtools = { path = "./crates/freya-devtools", version = "0.4.0" }
-freya-icons = { path = "./crates/freya-icons", features = [
-  "all",
-], version = "0.4.0" }
-freya-sdk = { path = "./crates/freya-sdk", features = [
-  "all",
-], version = "0.4.0" }
+freya-icons = { path = "./crates/freya-icons", version = "0.4.0" }
+freya-sdk = { path = "./crates/freya-sdk", version = "0.4.0" }
 freya-material-design = { path = "./crates/freya-material-design", version = "0.4.0" }
 freya-plotters-backend = { path = "./crates/freya-plotters-backend", version = "0.4.0" }
 freya-query = { path = "./crates/freya-query", version = "0.4.0" }
@@ -203,8 +199,8 @@ freya-i18n = { workspace = true }
 freya-performance-plugin = { workspace = true }
 freya-radio = { workspace = true }
 freya-query = { workspace = true }
-freya-icons = { workspace = true }
-freya-sdk = { workspace = true }
+freya-icons = { workspace = true, features = ["all"] }
+freya-sdk = { workspace = true, features = ["all"] }
 freya-devtools = { workspace = true, features = ["server", "client"] }
 freya-terminal = { workspace = true }
 freya-code-editor = { workspace = true }
