@@ -192,7 +192,10 @@ pub mod integration {
         rendering_ticker::*,
         runner::Runner,
         scope_id::ScopeId,
-        style::default_fonts::default_fonts,
+        style::default_fonts::{
+            default_fonts,
+            default_monospace_fonts,
+        },
         tree::{
             DiffModifies,
             Tree,
