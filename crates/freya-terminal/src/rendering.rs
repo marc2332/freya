@@ -1,6 +1,9 @@
-use std::hash::{
-    Hash,
-    Hasher,
+use std::{
+    borrow::Cow,
+    hash::{
+        Hash,
+        Hasher,
+    },
 };
 
 use alacritty_terminal::{
@@ -57,7 +60,7 @@ pub(crate) struct Renderer<'a> {
     pub foreground: Color,
     pub background: Color,
     pub selection_color: Color,
-    pub font_family: &'a str,
+    pub font_families: &'a [Cow<'static, str>],
     pub font_size: f32,
     pub selection: Option<SelectionRange>,
     pub display_offset: usize,
@@ -366,7 +369,7 @@ impl Renderer<'_> {
     fn render_paragraph(&mut self, row: &[Cell], row_y: f32, cache_key: u64) {
         let mut text_style = TextStyle::new();
         text_style.set_font_size(self.font_size);
-        text_style.set_font_families(&[self.font_family]);
+        text_style.set_font_families(self.font_families);
         text_style.set_color(self.foreground);
 
         let mut builder =
