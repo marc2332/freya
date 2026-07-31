@@ -182,6 +182,8 @@ impl TestingRunner {
         let app = app.into();
         let mut runner = Runner::new(move || integration(app.clone()).into_element());
 
+        runner.provide_root_context(GlobalContexts::default);
+
         runner.provide_root_context(ScreenReader::new);
 
         let (ticker_sender, ticker) = RenderingTicker::new();

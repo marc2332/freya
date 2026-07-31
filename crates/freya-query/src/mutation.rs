@@ -20,11 +20,9 @@ use freya_core::{
     integration::FxHashSet,
     lifecycle::context::{
         consume_context,
-        provide_context_for_scope_id,
         try_consume_context,
     },
     prelude::*,
-    scope_id::ScopeId,
 };
 
 pub trait MutationCapability
@@ -393,7 +391,7 @@ impl<Q: MutationCapability> UseMutation<Q> {
     pub async fn mutate_async(&self, keys: Q::Keys) -> MutationReader<Q> {
         let storage = consume_context::<MutationsStorage<Q>>();
 
-        let mutation = self.mutation.peek().clone();
+        let mutation = self.mutation.peek();
         let map = storage.storage.peek();
         let mutation_data = map.get(&mutation).cloned().unwrap();
 
@@ -411,7 +409,7 @@ impl<Q: MutationCapability> UseMutation<Q> {
     pub fn mutate(&self, keys: Q::Keys) {
         let storage = consume_context::<MutationsStorage<Q>>();
 
-        let mutation = self.mutation.peek().clone();
+        let mutation = self.mutation.peek();
         let map = storage.storage.peek();
         let mutation_data = map.get(&mutation).cloned().unwrap();
 
@@ -431,7 +429,7 @@ pub fn use_mutation<Q: MutationCapability>(mutation: impl Into<Mutation<Q>>) -> 
     let mut storage = match try_consume_context::<MutationsStorage<Q>>() {
         Some(storage) => storage,
         None => {
-            provide_context_for_scope_id(MutationsStorage::<Q>::new_in_root(), Some(ScopeId::ROOT));
+            provide_root_context(MutationsStorage::<Q>::new_in_root());
             try_consume_context::<MutationsStorage<Q>>().unwrap()
         }
     };

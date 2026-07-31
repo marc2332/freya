@@ -1,7 +1,13 @@
 use std::{
-    any::TypeId,
+    any::{
+        Any,
+        TypeId,
+    },
+    cell::RefCell,
     rc::Rc,
 };
+
+use rustc_hash::FxHashMap;
 
 use crate::{
     current_context::CurrentContext,
@@ -9,16 +15,50 @@ use crate::{
     scope_id::ScopeId,
 };
 
+/// Root contexts shared by all windows.
+#[derive(Clone, Default)]
+pub struct GlobalContexts(Rc<RefCell<FxHashMap<TypeId, Rc<dyn Any>>>>);
+
+impl GlobalContexts {
+    pub fn get_or_insert<T: Clone + 'static>(&self, value: T) -> T {
+        let mut contexts = self.0.borrow_mut();
+        if let Some(context) = contexts
+            .get(&TypeId::of::<T>())
+            .and_then(|context| context.downcast_ref::<T>())
+        {
+            return context.clone();
+        }
+        contexts.insert(TypeId::of::<T>(), Rc::new(value.clone()));
+        value
+    }
+
+    pub fn get<T: Clone + 'static>(&self) -> Option<T> {
+        self.0
+            .borrow()
+            .get(&TypeId::of::<T>())?
+            .downcast_ref::<T>()
+            .cloned()
+    }
+}
+
 pub fn provide_context<T: Clone + 'static>(value: T) {
     provide_context_for_scope_id(value, None)
 }
 
-/// Store the given value in the root scope.
+/// Store the given value in the root scope, shared across windows. If a value of the same
+/// type already exists, that one is returned instead.
 ///
 /// Only needed for specific cases like values consumed by queries or mutations, which run in
 /// the root scope. Prefer [provide_context] otherwise.
-pub fn provide_root_context<T: Clone + 'static>(value: T) {
-    provide_context_for_scope_id(value, Some(ScopeId::ROOT))
+pub fn provide_root_context<T: Clone + 'static>(value: T) -> T {
+    let value = match try_consume_root_context::<GlobalContexts>() {
+        Some(global_contexts) => global_contexts.get_or_insert(value),
+        None => value,
+    };
+
+    provide_context_for_scope_id(value.clone(), Some(ScopeId::ROOT));
+
+    value
 }
 
 pub fn provide_context_for_scope_id<T: Clone + 'static>(
@@ -91,7 +131,13 @@ pub fn try_consume_context_from_scope_id<T: Clone + 'static>(
             }
         }
 
-        None
+        // Fall back to the shared contexts
+        let root_scope_storage = scopes_storages.get(&ScopeId::ROOT)?;
+        let global_contexts = root_scope_storage
+            .contexts
+            .get(&TypeId::of::<GlobalContexts>())?
+            .downcast_ref::<GlobalContexts>()?;
+        global_contexts.get::<T>()
     })
 }
 
@@ -105,15 +151,15 @@ pub fn use_provide_context<T: Clone + 'static>(init: impl FnOnce() -> T) -> T {
     })
 }
 
-/// Store the given value in the root scope.
+/// Store the given value in the root scope, shared across windows. If a value of the same
+/// type already exists, that one is returned and `init` is not called.
 ///
 /// Only needed for specific cases like values consumed by queries or mutations, which run in
 /// the root scope. Prefer [use_provide_context] otherwise.
 pub fn use_provide_root_context<T: Clone + 'static>(init: impl FnOnce() -> T) -> T {
-    use_hook(|| {
-        let ctx = init();
-        provide_root_context(ctx.clone());
-        ctx
+    use_hook(|| match try_consume_root_context::<T>() {
+        Some(context) => context,
+        None => provide_root_context(init()),
     })
 }
 
