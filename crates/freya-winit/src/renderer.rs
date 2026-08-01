@@ -1204,6 +1204,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 PluginEvent::GraphicsDriverChanged {
                     window: &app.window,
                     graphics_driver: app.driver.name(),
+                    gpu_name: app.driver.gpu_name(),
                 },
                 PluginHandle::new(&self.proxy),
             );

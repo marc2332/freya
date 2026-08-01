@@ -366,6 +366,7 @@ impl AppWindow {
                 animation_clock: &animation_clock,
                 runner: &mut runner,
                 graphics_driver: driver.name(),
+                gpu_name: driver.gpu_name(),
             },
             PluginHandle::new(event_loop_proxy),
         );
