@@ -29,6 +29,7 @@ rio-vt = "0.5.3"
 linkify = { workspace = true }
 
 # Async
+async-io = { workspace = true }
 futures-channel = { workspace = true }
 futures-lite = { workspace = true }
 

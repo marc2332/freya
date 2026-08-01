@@ -257,3 +257,7 @@ opt-level = 3
 # Optimizes the freya devtools server
 [profile.dev.package.freya-devtools]
 opt-level = 3
+
+# rio-vt with the sync-update fix from https://github.com/raphamorim/rio/pull/1788, drop once released
+[patch.crates-io]
+rio-vt = { git = "https://github.com/marc2332/rio", branch = "fix/rio-vt-sync-inline-esu" }

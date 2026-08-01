@@ -29,7 +29,11 @@ use freya_core::{
         spawn_forever,
     },
 };
-use futures_lite::AsyncReadExt;
+use async_io::Timer;
+use futures_lite::{
+    AsyncReadExt,
+    future,
+};
 use keyboard_types::Modifiers;
 use portable_pty::{
     CommandBuilder,
@@ -167,9 +171,26 @@ pub(crate) fn spawn_pty(
             let mut cwd_sink = CwdSink::default();
             loop {
                 let mut buf = [0u8; 4096];
-                match reader.read(&mut buf).await {
-                    Ok(0) => break,
-                    Ok(n) => {
+                let sync_deadline = processor.sync_timeout().sync_timeout();
+                let read = async { Some(reader.read(&mut buf).await) };
+                let result = if let Some(deadline) = sync_deadline {
+                    let expiry = async {
+                        Timer::at(deadline).await;
+                        None
+                    };
+                    future::or(read, expiry).await
+                } else {
+                    read.await
+                };
+                match result {
+                    // Sync update deadline expired, apply the buffered bytes.
+                    None => {
+                        processor.stop_sync(&mut *term.borrow_mut());
+                        output_notifier.notify();
+                        platform.send(UserEvent::RequestRedraw);
+                    }
+                    Some(Ok(0)) | Some(Err(_)) => break,
+                    Some(Ok(n)) => {
                         let data = &buf[..n];
                         processor.advance(&mut *term.borrow_mut(), data);
 
@@ -181,7 +202,6 @@ pub(crate) fn spawn_pty(
                         output_notifier.notify();
                         platform.send(UserEvent::RequestRedraw);
                     }
-                    Err(_) => break,
                 }
             }
             // PTY closed: drop the writer and notify observers.
