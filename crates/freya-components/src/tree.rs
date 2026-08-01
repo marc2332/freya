@@ -1,5 +1,6 @@
 use freya_core::prelude::*;
 use torin::{
+    content::Content,
     gaps::Gaps,
     prelude::Alignment,
     size::Size,
@@ -111,6 +112,10 @@ pub struct TreeItem {
     depth: usize,
     disclosure: Option<Disclosure>,
     selected: bool,
+    /// How wide the row is. See [`TreeItem::width`]; the default hugs.
+    width: Size,
+    /// The disclosure glyph, in place of the built-in arrow. See [`TreeItem::arrow`].
+    arrow: Option<Element>,
     /// Pressing the row — selecting it. Fired for a press anywhere that is not the arrow.
     on_press: Option<EventHandler<Event<PressEventData>>>,
     /// Pressing the disclosure arrow — opening or closing the row.
@@ -142,6 +147,25 @@ impl TreeItem {
         self
     }
 
+    /// How wide the row is. Defaults to [`Size::Inner`], which hugs its content.
+    ///
+    /// The choice is what a tree is *for*, and the two options are mutually exclusive. A row
+    /// that **hugs** can exceed the viewport, which is what the scroll view measures as overflow
+    /// and therefore what makes horizontal panning possible; a tree over long values needs it.
+    /// A row sized [`Size::fill`] cannot overflow, and in exchange it can distribute: a
+    /// `Size::flex` child pushes trailing content to the row's far end, which is how a sidebar
+    /// tree puts a count or a badge at the edge. Asking for both is the
+    /// `Fill`-child-of-a-hugged-parent trap, which torin cannot express.
+    ///
+    /// A row that is not hugging lays its content out with `Content::Flex`, so a `Size::flex`
+    /// child distributes what the guides and the arrow leave. Without that the option would buy
+    /// nothing: a flex child in a non-distributing parent takes a width of its own and pushes
+    /// whatever trails it off the row's end.
+    pub fn width(mut self, width: impl Into<Size>) -> Self {
+        self.width = width.into();
+        self
+    }
+
     pub fn on_press(mut self, handler: impl Into<EventHandler<Event<PressEventData>>>) -> Self {
         self.on_press = Some(handler.into());
         self
@@ -152,6 +176,24 @@ impl TreeItem {
     /// without the other.
     pub fn on_toggle(mut self, handler: impl Into<EventHandler<Event<PressEventData>>>) -> Self {
         self.on_toggle = Some(handler.into());
+        self
+    }
+
+    /// The disclosure glyph, in place of the built-in arrow.
+    ///
+    /// The built-in arrow points down and is turned by the row's [`Disclosure`]; a supplied one
+    /// is drawn exactly as given, because an app with its own icon set has already chosen which
+    /// glyph each state gets: it passes `disclosure` in this same chain, so it knows. Rotating
+    /// somebody else's icon on their behalf would fight that.
+    ///
+    /// Everything else about the slot is unchanged: it is the same width, it is still empty for
+    /// a [`Disclosure::Leaf`] so labels down one level stay aligned, and it still consumes its
+    /// own press when `on_toggle` is wired.
+    ///
+    /// The theme's `arrow_fill` does not reach it: an element the caller built carries the
+    /// caller's own colour.
+    pub fn arrow(mut self, arrow: impl IntoElement) -> Self {
+        self.arrow = Some(arrow.into_element());
         self
     }
 
@@ -221,11 +263,13 @@ impl Component for TreeItem {
             .main_align(Alignment::Center)
             .cross_align(Alignment::Center)
             .maybe(!matches!(disclosure, Disclosure::Leaf), |el| {
-                el.child(
-                    ArrowIcon::new()
+                el.child(match self.arrow.clone() {
+                    Some(arrow) => arrow,
+                    None => ArrowIcon::new()
                         .rotate(disclosure.rotation())
-                        .fill(arrow_fill),
-                )
+                        .fill(arrow_fill)
+                        .into_element(),
+                })
                 // The arrow takes its own press and stops there: `Switch`'s press reaching its
                 // ancestors is what makes a "press the row to toggle" wrapper fire twice, so an
                 // arrow inside a pressable row has to consume its own.
@@ -237,11 +281,17 @@ impl Component for TreeItem {
 
         rect()
             .height(Size::px(config.item_height))
-            // Hugs its own content, so a long row exceeds the viewport — which is what the scroll
-            // view measures as overflow, and therefore what makes the horizontal pan possible. A
-            // row sized `fill` clamps itself to the visible width, and then nothing ever overflows.
-            .width(Size::Inner)
+            // Hugs its own content by default, so a long row exceeds the viewport, which is what
+            // the scroll view measures as overflow, and therefore what makes the horizontal pan
+            // possible. A row sized `fill` clamps itself to the visible width and nothing ever
+            // overflows, which is the trade [`TreeItem::width`] exists to let a caller make.
+            .width(self.width.clone())
             .horizontal()
+            // A hugging row has nothing to distribute; one that fills does, and a `Size::flex`
+            // child is inert without this. See [`TreeItem::width`].
+            .maybe(!matches!(self.width, Size::Inner), |el| {
+                el.content(Content::Flex)
+            })
             .cross_align(Alignment::Center)
             .padding(item_padding)
             .corner_radius(corner_radius)
