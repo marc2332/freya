@@ -245,7 +245,8 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
         // If multiple queries subscribers use different intervals the interval task
         // will run using the shortest interval
         let interval = query_clone.interval_time;
-        let interval_enabled = query_clone.interval_time != Duration::MAX;
+        let interval_enabled =
+            query_clone.interval_time != Duration::MAX && query_clone.keys.is_some();
         let interval_task = &mut *query_data.interval_task.borrow_mut();
 
         let create_interval_task = match interval_task {
@@ -327,25 +328,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
 
         // Run the query if the value is stale
         if query_data.state.borrow().is_stale(&query) {
-            // Set to Loading
-            let res = mem::replace(&mut *query_data.state.borrow_mut(), QueryStateData::Pending)
-                .into_loading();
-            *query_data.state.borrow_mut() = res;
-            for reactive_context in query_data.reactive_contexts.borrow().iter() {
-                reactive_context.notify();
-            }
-
-            // Run
-            let res = query.run().await;
-
-            // Set to Settled
-            *query_data.state.borrow_mut() = QueryStateData::Settled {
-                res,
-                settlement_instant: Instant::now(),
-            };
-            for reactive_context in query_data.reactive_contexts.borrow().iter() {
-                reactive_context.notify();
-            }
+            Self::run_queries(&[(&query, &query_data)]).await;
         }
 
         // Spawn clean up task if there no more reactive contexts
@@ -442,6 +425,11 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
         let tasks = FuturesUnordered::new();
 
         for (query, query_data) in queries {
+            // Queries without keys are disabled and never run
+            let Some(keys) = &query.keys else {
+                continue;
+            };
+
             // Set to Loading
             let res = mem::replace(&mut *query_data.state.borrow_mut(), QueryStateData::Pending)
                 .into_loading();
@@ -452,7 +440,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
 
             tasks.push(Box::pin(async move {
                 // Run
-                let res = query.run().await;
+                let res = query.run(keys).await;
 
                 // Set to settled
                 *query_data.state.borrow_mut() = QueryStateData::Settled {
@@ -505,9 +493,7 @@ impl<Q: QueryCapability> From<GetQuery<Q>> for Query<Q> {
     fn from(value: GetQuery<Q>) -> Self {
         Query {
             query: value.query,
-            keys: value.keys,
-
-            enabled: true,
+            keys: Some(value.keys),
 
             stale_time: value.stale_time,
             clean_time: value.clean_time,
@@ -518,9 +504,7 @@ impl<Q: QueryCapability> From<GetQuery<Q>> for Query<Q> {
 #[derive(PartialEq, Clone)]
 pub struct Query<Q: QueryCapability> {
     query: Q,
-    keys: Q::Keys,
-
-    enabled: bool,
+    keys: Option<Q::Keys>,
 
     stale_time: Duration,
     clean_time: Duration,
@@ -533,8 +517,6 @@ impl<Q: QueryCapability> Hash for Query<Q> {
         self.query.hash(state);
         self.keys.hash(state);
 
-        self.enabled.hash(state);
-
         self.stale_time.hash(state);
         self.clean_time.hash(state);
 
@@ -545,36 +527,32 @@ impl<Q: QueryCapability> Hash for Query<Q> {
 
 impl<Q: QueryCapability> Query<Q> {
     /// Run the query, using its mock if there is one.
-    async fn run(&self) -> Result<Q::Ok, Q::Err> {
+    async fn run(&self, keys: &Q::Keys) -> Result<Q::Ok, Q::Err> {
         #[cfg(debug_assertions)]
         {
             let mock = try_consume_context::<QueriesStorage<Q>>()
                 .and_then(|storage| storage.mock.peek().clone());
 
             if let Some(mock) = mock {
-                return mock(self.keys.clone()).await;
+                return mock(keys.clone()).await;
             }
         }
 
-        self.query.run(&self.keys).await
+        self.query.run(keys).await
     }
 
-    pub fn new(keys: Q::Keys, query: Q) -> Self {
+    /// Create a [Query] with the given keys.
+    ///
+    /// Passing [None] as keys disables the query, meaning it will not run until it is given some keys.
+    /// Useful for queries that depend on data that might not be available yet.
+    pub fn new(keys: impl Into<Option<Q::Keys>>, query: Q) -> Self {
         Self {
             query,
-            keys,
-            enabled: true,
+            keys: keys.into(),
             stale_time: Duration::ZERO,
             clean_time: Duration::from_secs(5 * 60),
             interval_time: Duration::MAX,
         }
-    }
-
-    /// Enable or disable this query so that it doesnt automatically run.
-    ///
-    /// Defaults to `true`.
-    pub fn enable(self, enabled: bool) -> Self {
-        Self { enabled, ..self }
     }
 
     /// For how long is the data considered stale. If a query subscriber is mounted and the data is stale, it will re run the query
@@ -748,8 +726,8 @@ pub fn use_query<Q: QueryCapability>(query: Query<Q>) -> UseQuery<Q> {
             storage.update_tasks(prev_query);
         }
 
-        // Immediately run the query if enabled and the value is stale
-        if query.enabled && query_data.state.borrow().is_stale(query) {
+        // Immediately run the query if the value is stale
+        if query_data.state.borrow().is_stale(query) {
             let query = query.clone();
             spawn_forever(async move {
                 QueriesStorage::run_queries(&[(&query, &query_data)]).await;
