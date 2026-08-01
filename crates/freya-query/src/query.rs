@@ -563,14 +563,27 @@ impl<Q: QueryCapability> QueryReader<Q> {
         self.state.borrow()
     }
 
-    /// Get the result of the query.
-    ///
-    /// **This method will panic if the query is not settled.**
-    pub fn as_settled(&'_ self) -> Ref<'_, Result<Q::Ok, Q::Err>> {
-        Ref::map(self.state.borrow(), |state| match state {
-            QueryStateData::Settled { res, .. } => res,
-            _ => panic!("Query is not settled."),
+    /// Get the result of the query if it has settled.
+    pub fn ok(&'_ self) -> Option<Ref<'_, Result<Q::Ok, Q::Err>>> {
+        Ref::filter_map(self.state.borrow(), |state| match state {
+            QueryStateData::Settled { res, .. } => Some(res),
+            _ => None,
         })
+        .ok()
+    }
+
+    /// Get the error of the query if it has settled with one.
+    pub fn err(&'_ self) -> Option<Ref<'_, Q::Err>> {
+        Ref::filter_map(self.state.borrow(), |state| match state {
+            QueryStateData::Settled { res: Err(err), .. } => Some(err),
+            _ => None,
+        })
+        .ok()
+    }
+
+    /// Get the result of the query, panics if it has not settled.
+    pub fn unwrap(&'_ self) -> Ref<'_, Result<Q::Ok, Q::Err>> {
+        self.ok().expect("Query is not settled.")
     }
 }
 
