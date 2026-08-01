@@ -1,8 +1,9 @@
-use crate::cell::TermCell;
 use linkify::{
     LinkFinder,
     LinkKind,
 };
+
+use crate::cell::TermCell;
 
 thread_local! {
     static FINDER: LinkFinder = {
@@ -63,10 +64,7 @@ pub(crate) fn url_at(row: &[TermCell], col: usize) -> Option<String> {
 /// Cheap pre-scan: skips the row-text allocation when no `://` triplet exists in `row`.
 fn row_has_url_marker(row: &[TermCell]) -> bool {
     let (mut a, mut b) = ('\0', '\0');
-    for cell in row
-        .iter()
-        .filter(|c| !c.wide_spacer)
-    {
+    for cell in row.iter().filter(|c| !c.wide_spacer) {
         if a == ':' && b == '/' && cell.c == '/' {
             return true;
         }

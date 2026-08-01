@@ -80,8 +80,8 @@ mod url;
 
 /// Prelude module for convenient imports.
 pub mod prelude {
-    pub use rio_vt::selection::SelectionType;
     pub use portable_pty::CommandBuilder;
+    pub use rio_vt::selection::SelectionType;
 
     pub use crate::{
         element::Terminal,

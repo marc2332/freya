@@ -107,8 +107,7 @@ pub(crate) fn snapshot_row<T: EventListener>(
     let styles = term.grid.style_set.styles();
     let extras = &term.grid.extras_table;
     let columns = term.columns();
-    buf.extend(
-        (0..columns)
-            .map(|col| TermCell::from_square(&row[rio_vt::crosswords::pos::Column(col)], styles, extras)),
-    );
+    buf.extend((0..columns).map(|col| {
+        TermCell::from_square(&row[rio_vt::crosswords::pos::Column(col)], styles, extras)
+    }));
 }

@@ -5,6 +5,25 @@ use std::{
     time::Instant,
 };
 
+use async_io::Timer;
+use freya_core::{
+    notify::ArcNotify,
+    prelude::{
+        Platform,
+        UserEvent,
+        spawn_forever,
+    },
+};
+use futures_lite::{
+    AsyncReadExt,
+    future,
+};
+use keyboard_types::Modifiers;
+use portable_pty::{
+    CommandBuilder,
+    PtySize,
+    native_pty_system,
+};
 use rio_vt::{
     ansi::CursorShape,
     crosswords::{
@@ -20,25 +39,6 @@ use rio_vt::{
         handler::Processor,
         parser::Parser as VteParser,
     },
-};
-use freya_core::{
-    notify::ArcNotify,
-    prelude::{
-        Platform,
-        UserEvent,
-        spawn_forever,
-    },
-};
-use async_io::Timer;
-use futures_lite::{
-    AsyncReadExt,
-    future,
-};
-use keyboard_types::Modifiers;
-use portable_pty::{
-    CommandBuilder,
-    PtySize,
-    native_pty_system,
 };
 
 use crate::{

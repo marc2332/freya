@@ -5,10 +5,6 @@ use std::{
     rc::Rc,
 };
 
-use rio_vt::crosswords::{
-    Mode,
-    pos::Column,
-};
 use freya_core::{
     data::{
         AccessibilityData,
@@ -37,6 +33,10 @@ use freya_engine::prelude::{
     ParagraphBuilder,
     ParagraphStyle,
     TextStyle,
+};
+use rio_vt::crosswords::{
+    Mode,
+    pos::Column,
 };
 use torin::prelude::Size2D;
 
@@ -333,7 +333,8 @@ impl ElementExt for Terminal {
             }
             row.clear();
             row.extend(
-                (0..columns).map(|col| TermCell::from_square(&visible_row[Column(col)], styles, extras)),
+                (0..columns)
+                    .map(|col| TermCell::from_square(&visible_row[Column(col)], styles, extras)),
             );
             renderer.render_row(row_idx, &row, y);
             y += measure.line_height;

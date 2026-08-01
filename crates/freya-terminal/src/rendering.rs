@@ -6,7 +6,6 @@ use std::{
     },
 };
 
-use rio_vt::selection::SelectionRange;
 use freya_core::{
     fifo_cache::FifoCache,
     prelude::Color,
@@ -23,6 +22,7 @@ use freya_engine::prelude::{
     TextBlob,
     TextStyle,
 };
+use rio_vt::selection::SelectionRange;
 use rustc_hash::FxHasher;
 use torin::prelude::Area;
 
@@ -168,11 +168,7 @@ impl Renderer<'_> {
             } else {
                 map_ansi_color(cell.bg, self.foreground, self.background)
             };
-            let end_col = if cell.wide {
-                col + 2
-            } else {
-                col + 1
-            };
+            let end_col = if cell.wide { col + 2 } else { col + 1 };
 
             if cell_bg != self.background {
                 match &run_start {
@@ -296,11 +292,7 @@ impl Renderer<'_> {
     }
 
     fn cell_foreground(&self, cell: &TermCell) -> Color {
-        let raw = if cell.inverse {
-            cell.bg
-        } else {
-            cell.fg
-        };
+        let raw = if cell.inverse { cell.bg } else { cell.fg };
         map_ansi_color(raw, self.foreground, self.background)
     }
 

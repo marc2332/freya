@@ -1,8 +1,8 @@
+use freya_core::prelude::Color;
 use rio_vt::config::colors::{
     AnsiColor,
     NamedColor,
 };
-use freya_core::prelude::Color;
 
 /// ANSI 16-color palette (matches WezTerm defaults)
 const ANSI_COLORS: [(u8, u8, u8); 16] = [
