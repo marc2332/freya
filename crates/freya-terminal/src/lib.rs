@@ -4,7 +4,7 @@
 //!
 //! This crate provides a way to embed interactive terminal emulators in your Freya applications.
 //! It uses PTY (pseudo-terminal) to spawn shell processes and drives an
-//! [`alacritty_terminal`] grid for parsing and reflow.
+//! [`rio_vt`] grid for parsing and reflow.
 //!
 //! ## Features
 //!
@@ -68,6 +68,7 @@
 //! ## Advance usage
 //!
 //! Check the `feature_terminal.rs` example in the repository.
+mod cell;
 pub mod colors;
 pub mod element;
 pub mod handle;
@@ -79,7 +80,7 @@ mod url;
 
 /// Prelude module for convenient imports.
 pub mod prelude {
-    pub use alacritty_terminal::selection::SelectionType;
+    pub use rio_vt::selection::SelectionType;
     pub use portable_pty::CommandBuilder;
 
     pub use crate::{

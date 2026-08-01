@@ -5,12 +5,9 @@ use std::{
     rc::Rc,
 };
 
-use alacritty_terminal::{
-    grid::Dimensions,
-    term::{
-        TermMode,
-        cell::Cell,
-    },
+use rio_vt::crosswords::{
+    Mode,
+    pos::Column,
 };
 use freya_core::{
     data::{
@@ -44,6 +41,7 @@ use freya_engine::prelude::{
 use torin::prelude::Size2D;
 
 use crate::{
+    cell::TermCell,
     handle::TerminalHandle,
     rendering::{
         CachedRow,
@@ -292,11 +290,10 @@ impl ElementExt for Terminal {
             .unwrap();
 
         let term = self.handle.term();
-        let grid = term.grid();
-        let columns = grid.columns();
-        let screen_lines = grid.screen_lines();
-        let display_offset = grid.display_offset();
-        let total_scrollback = grid.history_size();
+        let columns = term.columns();
+        let screen_lines = term.screen_lines();
+        let display_offset = term.display_offset();
+        let total_scrollback = term.history_size();
         let selection = term.selection.as_ref().and_then(|s| s.to_range(&*term));
 
         let mut paint = Paint::default();
@@ -324,25 +321,35 @@ impl ElementExt for Terminal {
 
         renderer.render_background();
 
-        // Reused row buffer so redraws don't allocate a `Vec<Vec<Cell>>`.
-        let mut row: Vec<Cell> = Vec::with_capacity(columns);
-        let mut display_iter = grid.display_iter();
+        // Reused row buffer so redraws don't allocate a `Vec<Vec<TermCell>>`.
+        let visible_rows = term.visible_rows();
+        let styles = term.grid.style_set.styles();
+        let extras = &term.grid.extras_table;
+        let mut row: Vec<TermCell> = Vec::with_capacity(columns);
         let mut y = area.min_y();
-        for row_idx in 0..screen_lines {
+        for (row_idx, visible_row) in visible_rows.iter().enumerate().take(screen_lines) {
             if y + measure.line_height > area.max_y() {
                 break;
             }
             row.clear();
-            row.extend(display_iter.by_ref().take(columns).map(|c| c.cell.clone()));
+            row.extend(
+                (0..columns).map(|col| TermCell::from_square(&visible_row[Column(col)], styles, extras)),
+            );
             renderer.render_row(row_idx, &row, y);
             y += measure.line_height;
         }
 
-        if display_offset == 0 && term.mode().contains(TermMode::SHOW_CURSOR) {
-            let cursor_point = grid.cursor.point;
-            let cursor_y = area.min_y() + (cursor_point.line.0 as f32) * measure.line_height;
+        if display_offset == 0 && term.mode().contains(Mode::SHOW_CURSOR) {
+            let cursor_pos = term.cursor().pos;
+            let cursor_line = cursor_pos.row.0.max(0) as usize;
+            let cursor_y = area.min_y() + (cursor_line as f32) * measure.line_height;
             if cursor_y + measure.line_height <= area.max_y() {
-                renderer.render_cursor(&grid[cursor_point], cursor_y, cursor_point.column.0);
+                let cursor_cell = visible_rows
+                    .get(cursor_line)
+                    .map(|r| TermCell::from_square(&r[Column(cursor_pos.col.0)], styles, extras));
+                if let Some(cursor_cell) = cursor_cell {
+                    renderer.render_cursor(&cursor_cell, cursor_y, cursor_pos.col.0);
+                }
             }
         }
 

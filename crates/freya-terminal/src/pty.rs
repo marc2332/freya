@@ -5,22 +5,20 @@ use std::{
     time::Instant,
 };
 
-use alacritty_terminal::{
+use rio_vt::{
+    ansi::CursorShape,
+    crosswords::{
+        Crosswords,
+        CrosswordsSize,
+    },
     event::{
-        Event as AlacrittyEvent,
         EventListener,
+        RioEvent,
+        WindowId,
     },
-    grid::Dimensions,
-    term::{
-        Config as TermConfig,
-        Term,
-    },
-    vte::{
-        Parser as VteParser,
-        ansi::{
-            Processor,
-            StdSyncHandler,
-        },
+    performer::{
+        handler::Processor,
+        parser::Parser as VteParser,
     },
 };
 use freya_core::{
@@ -53,28 +51,7 @@ use crate::{
     },
 };
 
-/// `Dimensions` impl passed to `Term::new` / `Term::resize`.
-#[derive(Clone, Copy)]
-pub(crate) struct TermSize {
-    pub screen_lines: usize,
-    pub columns: usize,
-}
-
-impl Dimensions for TermSize {
-    fn total_lines(&self) -> usize {
-        self.screen_lines
-    }
-
-    fn screen_lines(&self) -> usize {
-        self.screen_lines
-    }
-
-    fn columns(&self) -> usize {
-        self.columns
-    }
-}
-
-/// Listener proxy passed into alacritty's `Term`. Routes its side-effects
+/// Listener proxy passed into rio-vt's `Crosswords`. Routes its side-effects
 /// (PtyWrite, Title, ClipboardStore) into the freya-side state.
 #[derive(Clone)]
 pub struct EventProxy {
@@ -86,27 +63,31 @@ pub struct EventProxy {
 }
 
 impl EventListener for EventProxy {
-    fn send_event(&self, event: AlacrittyEvent) {
+    fn event(&self) -> (Option<RioEvent>, bool) {
+        (None, false)
+    }
+
+    fn send_event(&self, event: RioEvent, _window_id: WindowId) {
         match event {
-            AlacrittyEvent::PtyWrite(text) => {
+            RioEvent::PtyWrite(_route, text) => {
                 if let Some(writer) = &mut *self.writer.borrow_mut() {
                     let _ = writer.write_all(text.as_bytes());
                     let _ = writer.flush();
                 }
             }
-            AlacrittyEvent::Title(t) => {
+            RioEvent::Title(t) => {
                 *self.title.borrow_mut() = Some(t);
                 self.title_notifier.notify();
             }
-            AlacrittyEvent::ResetTitle => {
+            RioEvent::ResetTitle => {
                 *self.title.borrow_mut() = None;
                 self.title_notifier.notify();
             }
-            AlacrittyEvent::ClipboardStore(_, text) => {
+            RioEvent::ClipboardStore(_, text) => {
                 *self.clipboard_content.borrow_mut() = Some(text);
                 self.clipboard_notifier.notify();
             }
-            // Bell, MouseCursorDirty, ChildExit, ColorRequest, etc.
+            // Bell, Wakeup, ColorRequest, etc.
             _ => {}
         }
     }
@@ -135,18 +116,13 @@ pub(crate) fn spawn_pty(
         clipboard_notifier: clipboard_notifier.clone(),
     };
 
-    let term_config = TermConfig {
-        scrolling_history: scrollback_size,
-        ..TermConfig::default()
-    };
-    let initial_size = TermSize {
-        screen_lines: 24,
-        columns: 80,
-    };
-    let term = Rc::new(RefCell::new(Term::new(
-        term_config,
-        &initial_size,
+    let term = Rc::new(RefCell::new(Crosswords::new(
+        CrosswordsSize::new(80, 24),
+        CursorShape::Block,
         event_proxy,
+        WindowId::from(0),
+        0,
+        scrollback_size,
     )));
 
     let pty_system = native_pty_system();
@@ -183,8 +159,10 @@ pub(crate) fn spawn_pty(
         let output_notifier = output_notifier.clone();
         let cwd = cwd.clone();
         async move {
-            let mut processor = Processor::<StdSyncHandler>::new();
-            // Side-channel parser for OSC 7 (cwd), which alacritty drops.
+            let mut processor = Processor::default();
+            // Side-channel parser for OSC 7 (cwd). rio-vt also tracks this
+            // natively (`Crosswords::current_directory`); the side channel is
+            // kept so the notification flow stays unchanged.
             let mut cwd_parser = VteParser::new();
             let mut cwd_sink = CwdSink::default();
             loop {

@@ -9,24 +9,22 @@ use std::{
     },
 };
 
-use alacritty_terminal::{
-    grid::{
-        Dimensions,
-        Scroll,
-    },
-    index::{
-        Column,
-        Line,
-        Point,
-        Side,
+use rio_vt::{
+    crosswords::{
+        Crosswords,
+        CrosswordsSize,
+        Mode,
+        grid::Scroll,
+        pos::{
+            Column,
+            Line,
+            Pos,
+            Side,
+        },
     },
     selection::{
         Selection,
         SelectionType,
-    },
-    term::{
-        Term,
-        TermMode,
     },
 };
 use freya_core::{
@@ -49,6 +47,7 @@ use portable_pty::{
 };
 
 use crate::{
+    cell::snapshot_row,
     parser::{
         TerminalMouseButton,
         encode_mouse_move,
@@ -58,7 +57,6 @@ use crate::{
     },
     pty::{
         EventProxy,
-        TermSize,
         spawn_pty,
     },
     url::url_at,
@@ -130,9 +128,9 @@ impl Drop for TerminalCleaner {
 pub struct TerminalHandle {
     /// Unique identifier for this terminal instance, used for `PartialEq`.
     pub(crate) id: TerminalId,
-    /// alacritty's terminal model: grid, modes, scrollback. The renderer
+    /// rio-vt's terminal model: grid, modes, scrollback. The renderer
     /// borrows this directly during paint, so there is no parallel snapshot.
-    pub(crate) term: Rc<RefCell<Term<EventProxy>>>,
+    pub(crate) term: Rc<RefCell<Crosswords<EventProxy>>>,
     /// Writer for sending input to the PTY process.
     pub(crate) writer: Rc<RefCell<Option<Box<dyn Write + Send>>>>,
     /// Handle-local state (PTY master, input tracking).
@@ -246,7 +244,7 @@ impl TerminalHandle {
             }
             Key::Named(NamedKey::Home) => {
                 self.scroll(i32::MAX);
-                if self.term.borrow().grid().display_offset() != 0 {
+                if self.term.borrow().display_offset() != 0 {
                     return Ok(true);
                 }
                 if shift || ctrl {
@@ -256,7 +254,7 @@ impl TerminalHandle {
                 }
             }
             Key::Named(NamedKey::End) => {
-                if self.term.borrow().grid().display_offset() != 0 {
+                if self.term.borrow().display_offset() != 0 {
                     self.scroll_to_bottom();
                     return Ok(true);
                 }
@@ -284,7 +282,7 @@ impl TerminalHandle {
             .term
             .borrow()
             .mode()
-            .contains(TermMode::BRACKETED_PASTE);
+            .contains(Mode::BRACKETED_PASTE);
         if bracketed {
             let filtered = text.replace(['\x1b', '\x03'], "");
             self.write_raw(b"\x1b[200~")?;
@@ -299,7 +297,7 @@ impl TerminalHandle {
 
     /// Report a keyboard focus change to the program if it enabled focus reporting (mode 1004).
     pub fn focus_changed(&self, focused: bool) {
-        if self.mode().contains(TermMode::FOCUS_IN_OUT) {
+        if self.mode().contains(Mode::FOCUS_IN_OUT) {
             let _ = self.write_raw(if focused { b"\x1b[I" } else { b"\x1b[O" });
         }
     }
@@ -323,10 +321,9 @@ impl TerminalHandle {
             pixel_height: 0,
         });
 
-        self.term.borrow_mut().resize(TermSize {
-            screen_lines: rows as usize,
-            columns: cols as usize,
-        });
+        self.term
+            .borrow_mut()
+            .resize(CrosswordsSize::new(cols as usize, rows as usize));
     }
 
     /// Scroll by delta. Positive moves up into scrollback (vt100 convention).
@@ -341,7 +338,7 @@ impl TerminalHandle {
 
     fn scroll_to(&self, target: Scroll) {
         let mut term = self.term.borrow_mut();
-        if term.mode().contains(TermMode::ALT_SCREEN) {
+        if term.mode().contains(Mode::ALT_SCREEN) {
             return;
         }
         term.scroll_display(target);
@@ -364,8 +361,8 @@ impl TerminalHandle {
     }
 
     /// Snapshot of the active terminal mode bits.
-    fn mode(&self) -> TermMode {
-        *self.term.borrow().mode()
+    fn mode(&self) -> Mode {
+        self.term.borrow().mode()
     }
 
     fn pressed_button(&self) -> Option<TerminalMouseButton> {
@@ -391,18 +388,18 @@ impl TerminalHandle {
         }
 
         let mode = self.mode();
-        if mode.contains(TermMode::MOUSE_MOTION) {
+        if mode.contains(Mode::MOUSE_MOTION) {
             // Any-motion mode: report regardless of button state.
             let _ = self
                 .write_raw(encode_mouse_move(row as usize, col as usize, held, mode).as_bytes());
-        } else if mode.contains(TermMode::MOUSE_DRAG)
+        } else if mode.contains(Mode::MOUSE_DRAG)
             && let Some(button) = held
         {
             // Button-motion mode: only while a button is held.
             let _ = self.write_raw(
                 encode_mouse_move(row as usize, col as usize, Some(button), mode).as_bytes(),
             );
-        } else if !mode.intersects(TermMode::MOUSE_MODE) && held.is_some() {
+        } else if !mode.intersects(Mode::MOUSE_MODE) && held.is_some() {
             self.update_selection(row, col);
         }
     }
@@ -420,7 +417,7 @@ impl TerminalHandle {
         self.set_pressed_button(Some(button));
 
         let mode = self.mode();
-        if !self.is_shift_held() && mode.intersects(TermMode::MOUSE_MODE) {
+        if !self.is_shift_held() && mode.intersects(Mode::MOUSE_MODE) {
             let _ = self
                 .write_raw(encode_mouse_press(row as usize, col as usize, button, mode).as_bytes());
         } else {
@@ -433,7 +430,7 @@ impl TerminalHandle {
         self.set_pressed_button(None);
 
         let mode = self.mode();
-        if !self.is_shift_held() && mode.intersects(TermMode::MOUSE_MODE) {
+        if !self.is_shift_held() && mode.intersects(Mode::MOUSE_MODE) {
             let _ = self.write_raw(
                 encode_mouse_release(row as usize, col as usize, button, mode).as_bytes(),
             );
@@ -453,16 +450,16 @@ impl TerminalHandle {
         let scroll_delta = if delta_y > 0.0 { lines } else { -lines };
 
         let mode = self.mode();
-        let scroll_offset = self.term.borrow().grid().display_offset();
+        let scroll_offset = self.term.borrow().display_offset();
 
         if scroll_offset > 0 {
             self.scroll(scroll_delta);
-        } else if mode.intersects(TermMode::MOUSE_MODE) {
+        } else if mode.intersects(Mode::MOUSE_MODE) {
             let _ = self.write_raw(
                 encode_wheel_event(row as usize, col as usize, delta_y, mode).as_bytes(),
             );
-        } else if mode.contains(TermMode::ALT_SCREEN) {
-            let app_cursor = mode.contains(TermMode::APP_CURSOR);
+        } else if mode.contains(Mode::ALT_SCREEN) {
+            let app_cursor = mode.contains(Mode::APP_CURSOR);
             let key = match (delta_y > 0.0, app_cursor) {
                 (true, true) => "\x1bOA",
                 (true, false) => "\x1b[A",
@@ -477,8 +474,8 @@ impl TerminalHandle {
         }
     }
 
-    /// Borrow the underlying alacritty `Term` for direct read access.
-    pub fn term(&self) -> std::cell::Ref<'_, Term<EventProxy>> {
+    /// Borrow the underlying rio-vt `Crosswords` for direct read access.
+    pub fn term(&self) -> std::cell::Ref<'_, Crosswords<EventProxy>> {
         self.term.borrow()
     }
 
@@ -542,27 +539,29 @@ impl TerminalHandle {
     /// sits inside a detected plain-text URL. See [`Self::mouse_move`] for the
     /// fractional coordinate convention.
     pub fn hyperlink_at(&self, row: f32, col: f32) -> Option<String> {
-        let (point, _) = self.point_and_side_at(row, col);
         let term = self.term.borrow();
-        let grid = term.grid();
-        if let Some(h) = grid[point].hyperlink() {
-            return Some(h.uri().to_owned());
+        let viewport_row = (row.max(0.0) as usize).min(term.screen_lines().saturating_sub(1));
+        let column = (col.max(0.0) as usize).min(term.columns().saturating_sub(1));
+        let mut cells = Vec::new();
+        snapshot_row(&term, viewport_row, &mut cells);
+        if let Some(uri) = cells.get(column).and_then(|c| c.hyperlink.clone()) {
+            return Some(uri);
         }
-        url_at(&grid[point.line][..], point.column.0)
+        url_at(&cells, column)
     }
 
     /// Grid point and cell half (left vs right) for a pointer at fractional cell coordinates.
-    fn point_and_side_at(&self, row: f32, col: f32) -> (Point, Side) {
+    fn point_and_side_at(&self, row: f32, col: f32) -> (Pos, Side) {
         let term = self.term.borrow();
         let col = col.max(0.0);
         let row = (row.max(0.0) as usize).min(term.screen_lines().saturating_sub(1));
         let column = (col as usize).min(term.columns().saturating_sub(1));
-        let line = row as i32 - term.grid().display_offset() as i32;
+        let line = row as i32 - term.display_offset() as i32;
         let side = if col.fract() < 0.5 {
             Side::Left
         } else {
             Side::Right
         };
-        (Point::new(Line(line), Column(column)), side)
+        (Pos::new(Line(line), Column(column)), side)
     }
 }

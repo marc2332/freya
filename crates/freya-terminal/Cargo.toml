@@ -23,7 +23,7 @@ keyboard-types = { workspace = true }
 
 # PTY and terminal emulator
 portable-pty = "0.9"
-alacritty_terminal = "0.26"
+rio-vt = "0.5.3"
 
 # URL detection in terminal output
 linkify = { workspace = true }

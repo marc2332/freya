@@ -1,11 +1,12 @@
 //! OSC 7 (current working directory) extraction.
 //!
-//! alacritty's vte dispatcher silently drops OSC 7, so we run a second
-//! `vte::Parser` whose `Perform` impl intercepts only that sequence.
+//! A second `Parser` runs alongside the terminal with a `Perform` impl that
+//! intercepts only this sequence, keeping cwd notification independent of the
+//! terminal state.
 
 use std::path::PathBuf;
 
-use alacritty_terminal::vte::Perform;
+use rio_vt::performer::parser::Perform;
 
 /// Captures the payload of OSC 7 sequences seen on the byte stream.
 #[derive(Default)]
@@ -44,7 +45,7 @@ pub(crate) fn parse_cwd_url(url: &str) -> PathBuf {
 
 #[cfg(test)]
 mod tests {
-    use alacritty_terminal::vte::Parser as VteParser;
+    use rio_vt::performer::parser::Parser as VteParser;
 
     use super::*;
 
