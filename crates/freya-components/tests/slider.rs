@@ -281,6 +281,42 @@ pub fn slider_wheel() {
 }
 
 #[test]
+pub fn slider_scroll_disabled() {
+    fn slider_app() -> impl IntoElement {
+        let mut value = use_state(|| 50.0);
+
+        rect()
+            .child(label().text(format!("Value: {}", value() as i32)))
+            .child(
+                Slider::new(move |v| value.set(v))
+                    .value(value())
+                    .scroll_enabled(false)
+                    .size(Size::px(200.)),
+            )
+    }
+
+    let mut test = launch_test(slider_app);
+    test.sync_and_update();
+
+    // Try to scroll over the slider
+    test.scroll((100.0, 30.0), (0.0, 300.0));
+
+    let label = test
+        .find(|node, element| {
+            Label::try_downcast(element)
+                .filter(|l| l.text.starts_with("Value:"))
+                .map(|_| node)
+        })
+        .unwrap();
+
+    let value_text = Label::try_downcast(&*label.element()).unwrap().text;
+    let value: f64 = value_text.replace("Value: ", "").parse().unwrap();
+
+    // Value should remain unchanged at 50
+    assert_eq!(value, 50.0);
+}
+
+#[test]
 pub fn slider_disabled() {
     fn slider_app() -> impl IntoElement {
         let mut value = use_state(|| 50.0);
