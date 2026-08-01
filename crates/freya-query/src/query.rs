@@ -128,6 +128,17 @@ impl<Q: QueryCapability> QueryStateData<Q> {
         }
     }
 
+    /// Get the error as an [Option].
+    pub fn err(&self) -> Option<&Q::Err> {
+        match self {
+            Self::Settled { res: Err(err), .. } => Some(err),
+            Self::Loading {
+                res: Some(Err(err)),
+            } => Some(err),
+            _ => None,
+        }
+    }
+
     /// Get the value as an [Result] if possible, otherwise it will panic.
     pub fn unwrap(&self) -> &Result<Q::Ok, Q::Err> {
         match self {
