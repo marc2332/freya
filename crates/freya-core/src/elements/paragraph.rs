@@ -100,11 +100,7 @@ use crate::{
 /// }
 /// ```
 pub fn paragraph() -> Paragraph {
-    Paragraph {
-        key: DiffKey::None,
-        element: ParagraphElement::default(),
-        children: Vec::new(),
-    }
+    Paragraph::default()
 }
 
 pub struct ParagraphHolderInner {
@@ -835,6 +831,7 @@ impl LayerExt for Paragraph {
     }
 }
 
+#[derive(Default)]
 pub struct Paragraph {
     key: DiffKey,
     element: ParagraphElement,
