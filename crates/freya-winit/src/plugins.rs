@@ -102,6 +102,12 @@ pub enum PluginEvent<'a> {
         graphics_driver: &'static str,
     },
 
+    /// The graphics driver was rebuilt at runtime.
+    GraphicsDriverChanged {
+        window: &'a Window,
+        graphics_driver: &'static str,
+    },
+
     /// A Window just got closed.
     WindowClosed {
         window: &'a Window,

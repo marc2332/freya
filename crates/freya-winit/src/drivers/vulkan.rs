@@ -2,7 +2,9 @@ use std::{
     ffi::{
         CStr,
         CString,
+        c_char,
     },
+    mem::ManuallyDrop,
     ptr,
     sync::Arc,
 };
@@ -16,7 +18,7 @@ use ash::{
         swapchain::Device as DeviceSwapchainFns,
     },
     vk::{
-        API_VERSION_1_3,
+        API_VERSION_1_0,
         AccessFlags,
         ApplicationInfo,
         ColorSpaceKHR,
@@ -24,6 +26,7 @@ use ash::{
         CommandBufferAllocateInfo,
         CommandBufferBeginInfo,
         CommandBufferLevel,
+        CommandPool,
         CommandPoolCreateFlags,
         CommandPoolCreateInfo,
         CompositeAlphaFlagsKHR,
@@ -58,6 +61,9 @@ use ash::{
         SurfaceKHR,
         SwapchainCreateInfoKHR,
         SwapchainKHR,
+        api_version_major,
+        api_version_minor,
+        api_version_patch,
         make_api_version,
     },
 };
@@ -74,7 +80,7 @@ use freya_engine::prelude::{
     wrap_backend_render_target,
 };
 use raw_window_handle::{
-    DisplayHandle,
+    HandleError,
     HasDisplayHandle,
     HasWindowHandle,
 };
@@ -87,9 +93,14 @@ use winit::{
     },
 };
 
+use crate::drivers::DriverError;
+
+/// Extensions enabled on the logical device and reported to Skia.
+const DEVICE_EXTENSIONS: &[&CStr] = &[KHR_SWAPCHAIN_NAME];
+
 /// Graphics driver using Vulkan.
 pub struct VulkanDriver {
-    _entry: Entry, // Dont drop until backend is dropped
+    entry: Entry,
     instance: Instance,
     surface_fns: InstanceSurfaceFns,
     surface: SurfaceKHR,
@@ -100,17 +111,35 @@ pub struct VulkanDriver {
     swapchain: SwapchainKHR,
     swapchain_fns: DeviceSwapchainFns,
     swapchain_images: Vec<Image>,
-    swapchain_format: Format,
     swapchain_extent: Extent2D,
-    swapchain_image_index: u32,
-    swapchain_suboptimal: bool,
-    swapchain_size: PhysicalSize<u32>,
     transparent: bool,
-    gr_context: DirectContext,
+    gr_context: ManuallyDrop<DirectContext>,
     image_available_semaphore: Semaphore,
     render_finished_semaphore: Semaphore,
     in_flight_fence: Fence,
     cmd_buf: CommandBuffer,
+    cmd_pool: CommandPool,
+    gpu_cache_purged: bool,
+}
+
+impl Drop for VulkanDriver {
+    fn drop(&mut self) {
+        unsafe {
+            let _ = self.device.device_wait_idle();
+            // Skia must release its GPU resources while the device is still alive.
+            ManuallyDrop::drop(&mut self.gr_context);
+            self.device
+                .destroy_semaphore(self.image_available_semaphore, None);
+            self.device
+                .destroy_semaphore(self.render_finished_semaphore, None);
+            self.device.destroy_fence(self.in_flight_fence, None);
+            self.device.destroy_command_pool(self.cmd_pool, None);
+            self.swapchain_fns.destroy_swapchain(self.swapchain, None);
+            self.surface_fns.destroy_surface(self.surface, None);
+            self.device.destroy_device(None);
+            self.instance.destroy_instance(None);
+        }
+    }
 }
 
 impl VulkanDriver {
@@ -124,7 +153,13 @@ impl VulkanDriver {
 
         let entry = unsafe { Entry::load()? };
 
-        let instance = create_instance(&entry, window.display_handle()?)?;
+        // The requested version must match the one the loader reports, otherwise Skia fails to
+        // create its Vulkan context.
+        let api_version =
+            unsafe { entry.try_enumerate_instance_version() }?.unwrap_or(API_VERSION_1_0);
+
+        let instance_extensions = enumerate_required_extensions(window.display_handle()?.as_raw())?;
+        let instance = create_instance(&entry, instance_extensions, api_version)?;
         let surface_fns = InstanceSurfaceFns::new(&entry, &instance);
         let surface = unsafe {
             ash_window::create_surface(
@@ -145,18 +180,17 @@ impl VulkanDriver {
 
         let swapchain_size = window.inner_size();
 
-        let (swapchain, swapchain_fns, swapchain_images, swapchain_format, swapchain_extent) =
-            create_swapchain(
-                &instance,
-                &device,
-                physical_device,
-                &surface_fns,
-                surface,
-                queue_family_index,
-                swapchain_size,
-                None,
-                transparent,
-            )?;
+        let (swapchain, swapchain_fns, swapchain_images, swapchain_extent) = create_swapchain(
+            &instance,
+            &device,
+            physical_device,
+            &surface_fns,
+            surface,
+            queue_family_index,
+            swapchain_size,
+            None,
+            transparent,
+        )?;
 
         let gr_context = create_gr_context(
             &entry,
@@ -166,6 +200,8 @@ impl VulkanDriver {
             queue,
             queue_family_index,
             gpu_resource_cache_limit,
+            instance_extensions,
+            api_version,
         )?;
 
         let (image_available_semaphore, render_finished_semaphore, in_flight_fence) =
@@ -191,7 +227,7 @@ impl VulkanDriver {
         };
 
         let driver = Self {
-            _entry: entry,
+            entry,
             instance,
             surface_fns,
             surface,
@@ -202,49 +238,50 @@ impl VulkanDriver {
             swapchain,
             swapchain_fns,
             swapchain_images,
-            swapchain_format,
             swapchain_extent,
-            swapchain_image_index: 0,
-            swapchain_suboptimal: false,
-            swapchain_size,
             transparent,
-            gr_context,
+            gr_context: ManuallyDrop::new(gr_context),
             image_available_semaphore,
             render_finished_semaphore,
             in_flight_fence,
             cmd_buf,
+            cmd_pool,
+            gpu_cache_purged: false,
         };
 
         Ok((driver, window))
     }
 
-    fn recreate_swapchain(&mut self) {
+    fn recreate_swapchain(&mut self, size: PhysicalSize<u32>) -> Result<(), DriverError> {
         unsafe {
-            self.device.device_wait_idle().unwrap();
+            self.device
+                .device_wait_idle()
+                .map_err(Self::vulkan_to_driver_error)?;
         }
         let old_swapchain = self.swapchain;
-        let (swapchain, swapchain_fns, swapchain_images, swapchain_format, swapchain_extent) =
-            create_swapchain(
-                &self.instance,
-                &self.device,
-                self.physical_device,
-                &self.surface_fns,
-                self.surface,
-                self.queue_family_index,
-                self.swapchain_size,
-                Some(old_swapchain),
-                self.transparent,
-            )
-            .expect("Failed to recreate Vulkan swapchain");
+        let (swapchain, swapchain_fns, swapchain_images, swapchain_extent) = create_swapchain(
+            &self.instance,
+            &self.device,
+            self.physical_device,
+            &self.surface_fns,
+            self.surface,
+            self.queue_family_index,
+            size,
+            Some(old_swapchain),
+            self.transparent,
+        )
+        .map_err(|error| {
+            tracing::error!("Failed to recreate Vulkan swapchain: {error}");
+            DriverError::DeviceLost
+        })?;
         self.swapchain = swapchain;
         self.swapchain_fns = swapchain_fns;
         self.swapchain_images = swapchain_images;
-        self.swapchain_format = swapchain_format;
         self.swapchain_extent = swapchain_extent;
-        self.swapchain_suboptimal = false;
         unsafe {
             self.swapchain_fns.destroy_swapchain(old_swapchain, None);
         }
+        Ok(())
     }
 
     pub fn present(
@@ -252,35 +289,55 @@ impl VulkanDriver {
         size: PhysicalSize<u32>,
         window: &Window,
         render: impl FnOnce(&mut SkiaSurface),
-    ) {
+    ) -> Result<(), DriverError> {
         if size.width == 0 || size.height == 0 {
-            return;
+            return Ok(());
         }
 
-        let mut surface = unsafe {
+        unsafe {
             self.device
                 .wait_for_fences(&[self.in_flight_fence], true, u64::MAX)
-                .unwrap();
+                .map_err(Self::vulkan_to_driver_error)?;
+        }
 
-            self.device.reset_fences(&[self.in_flight_fence]).unwrap();
+        let (image_index, suboptimal) = match unsafe {
+            self.swapchain_fns.acquire_next_image(
+                self.swapchain,
+                u64::MAX,
+                self.image_available_semaphore,
+                Fence::null(),
+            )
+        } {
+            Ok(acquired) => acquired,
+            Err(ash::vk::Result::ERROR_OUT_OF_DATE_KHR) => {
+                self.recreate_swapchain(size)?;
+                window.request_redraw();
+                return Ok(());
+            }
+            Err(ash::vk::Result::ERROR_SURFACE_LOST_KHR) => {
+                self.recreate_surface(window, size)?;
+                window.request_redraw();
+                return Ok(());
+            }
+            Err(error) => match Self::vulkan_to_driver_error(error) {
+                DriverError::OutOfMemory if !self.gpu_cache_purged => {
+                    tracing::warn!("Vulkan out of memory acquiring image, purging GPU cache");
+                    self.gr_context.free_gpu_resources();
+                    self.gpu_cache_purged = true;
+                    window.request_redraw();
+                    return Ok(());
+                }
+                driver_error => return Err(driver_error),
+            },
+        };
 
-            let (image_index, suboptimal) = self
-                .swapchain_fns
-                .acquire_next_image(
-                    self.swapchain,
-                    u64::MAX,
-                    self.image_available_semaphore,
-                    Fence::null(),
-                )
-                .unwrap();
+        self.gpu_cache_purged = false;
 
-            self.swapchain_image_index = image_index;
-            self.swapchain_suboptimal = suboptimal;
+        let image = self.swapchain_images[image_index as usize];
 
-            let image = self.swapchain_images[image_index as usize];
-
-            let alloc = vk::Alloc::default();
-            let sk_image_info = vk::ImageInfo::new(
+        let alloc = vk::Alloc::default();
+        let sk_image_info = unsafe {
+            vk::ImageInfo::new(
                 image.as_raw() as _,
                 alloc,
                 vk::ImageTiling::OPTIMAL,
@@ -291,25 +348,25 @@ impl VulkanDriver {
                 None,
                 None,
                 vk::SharingMode::EXCLUSIVE,
-            );
-            let render_target = backend_render_targets::make_vk(
-                (
-                    self.swapchain_extent.width as i32,
-                    self.swapchain_extent.height as i32,
-                ),
-                &sk_image_info,
-            );
-
-            wrap_backend_render_target(
-                &mut self.gr_context,
-                &render_target,
-                SurfaceOrigin::TopLeft,
-                ColorType::BGRA8888,
-                None,
-                None,
             )
-            .unwrap()
         };
+        let render_target = backend_render_targets::make_vk(
+            (
+                self.swapchain_extent.width as i32,
+                self.swapchain_extent.height as i32,
+            ),
+            &sk_image_info,
+        );
+
+        let mut surface = wrap_backend_render_target(
+            &mut self.gr_context,
+            &render_target,
+            SurfaceOrigin::TopLeft,
+            ColorType::BGRA8888,
+            None,
+            None,
+        )
+        .ok_or(DriverError::DeviceLost)?;
 
         render(&mut surface);
 
@@ -317,12 +374,10 @@ impl VulkanDriver {
 
         self.gr_context.flush_and_submit();
 
-        let image = self.swapchain_images[self.swapchain_image_index as usize];
-
         unsafe {
             self.device
                 .begin_command_buffer(self.cmd_buf, &CommandBufferBeginInfo::default())
-                .unwrap();
+                .map_err(Self::vulkan_to_driver_error)?;
 
             let image_barrier = ImageMemoryBarrier::default()
                 .src_access_mask(AccessFlags::COLOR_ATTACHMENT_WRITE)
@@ -348,7 +403,9 @@ impl VulkanDriver {
                 &[image_barrier],
             );
 
-            self.device.end_command_buffer(self.cmd_buf).unwrap();
+            self.device
+                .end_command_buffer(self.cmd_buf)
+                .map_err(Self::vulkan_to_driver_error)?;
         };
 
         let wait_semaphores = [self.image_available_semaphore];
@@ -363,13 +420,18 @@ impl VulkanDriver {
             .signal_semaphores(&signal_semaphores)];
 
         unsafe {
+            // Reset only right before submit so earlier returns leave the fence signaled.
+            self.device
+                .reset_fences(&[self.in_flight_fence])
+                .map_err(Self::vulkan_to_driver_error)?;
+
             self.device
                 .queue_submit(self.queue, &submit_infos, self.in_flight_fence)
-                .unwrap();
+                .map_err(Self::vulkan_to_driver_error)?;
         };
 
         let swapchains = [self.swapchain];
-        let image_indices = [self.swapchain_image_index];
+        let image_indices = [image_index];
         let present_info = PresentInfoKHR::default()
             .wait_semaphores(&signal_semaphores)
             .swapchains(&swapchains)
@@ -379,26 +441,88 @@ impl VulkanDriver {
 
         drop(surface);
 
-        if self.swapchain_suboptimal
-            || matches!(result, Err(ash::vk::Result::ERROR_OUT_OF_DATE_KHR))
-        {
-            self.swapchain_size = size;
-            self.recreate_swapchain();
+        match result {
+            Ok(_) => {}
+            Err(ash::vk::Result::ERROR_OUT_OF_DATE_KHR) => {
+                self.recreate_swapchain(size)?;
+                window.request_redraw();
+                return Ok(());
+            }
+            Err(ash::vk::Result::ERROR_SURFACE_LOST_KHR) => {
+                self.recreate_surface(window, size)?;
+                window.request_redraw();
+                return Ok(());
+            }
+            Err(error) => return Err(Self::vulkan_to_driver_error(error)),
         }
+
+        if suboptimal {
+            self.recreate_swapchain(size)?;
+        }
+
+        Ok(())
     }
 
-    pub fn resize(&mut self, size: PhysicalSize<u32>) {
-        if size.width == 0 || size.height == 0 {
-            return;
+    /// Recreate the surface and its swapchain after the surface was lost.
+    fn recreate_surface(
+        &mut self,
+        window: &Window,
+        size: PhysicalSize<u32>,
+    ) -> Result<(), DriverError> {
+        unsafe {
+            self.device
+                .device_wait_idle()
+                .map_err(Self::vulkan_to_driver_error)?;
+            self.swapchain_fns.destroy_swapchain(self.swapchain, None);
+            self.surface_fns.destroy_surface(self.surface, None);
         }
-        self.swapchain_size = size;
-        self.recreate_swapchain();
+        // Null handles keep Drop safe if any of the steps below fail.
+        self.swapchain = SwapchainKHR::null();
+        self.surface = SurfaceKHR::null();
+
+        let handle_error = |error: HandleError| {
+            tracing::error!("Failed to get a window handle: {error}");
+            DriverError::DeviceLost
+        };
+        self.surface = unsafe {
+            ash_window::create_surface(
+                &self.entry,
+                &self.instance,
+                window.display_handle().map_err(handle_error)?.as_raw(),
+                window.window_handle().map_err(handle_error)?.as_raw(),
+                None,
+            )
+            .map_err(Self::vulkan_to_driver_error)?
+        };
+
+        self.recreate_swapchain(size)
+    }
+
+    pub fn resize(&mut self, size: PhysicalSize<u32>) -> Result<(), DriverError> {
+        if size.width == 0 || size.height == 0 {
+            return Ok(());
+        }
+        self.recreate_swapchain(size)
+    }
+
+    /// Map a Vulkan error to a recovery action.
+    fn vulkan_to_driver_error(error: ash::vk::Result) -> DriverError {
+        match error {
+            ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY
+            | ash::vk::Result::ERROR_OUT_OF_HOST_MEMORY => DriverError::OutOfMemory,
+            ash::vk::Result::ERROR_DEVICE_LOST => DriverError::DeviceLost,
+            other => {
+                tracing::error!("Unexpected Vulkan error, treating as device loss: {other:?}");
+                DriverError::DeviceLost
+            }
+        }
     }
 }
 
 fn create_instance(
     entry: &Entry,
-    display_handle: DisplayHandle<'_>,
+    extension_names: &[*const c_char],
+    api_version: u32,
 ) -> Result<Instance, Box<dyn std::error::Error>> {
     let app_name = CString::new("AnyRender")?;
     let engine_name = CString::new("No Engine")?;
@@ -407,13 +531,11 @@ fn create_instance(
         .application_version(make_api_version(0, 1, 0, 0))
         .engine_name(&engine_name)
         .engine_version(make_api_version(0, 1, 0, 0))
-        .api_version(API_VERSION_1_3);
-
-    let extension_names = enumerate_required_extensions(display_handle.as_raw())?.to_vec();
+        .api_version(api_version);
 
     let create_info = InstanceCreateInfo::default()
         .application_info(&app_info)
-        .enabled_extension_names(&extension_names);
+        .enabled_extension_names(extension_names);
 
     Ok(unsafe { entry.create_instance(&create_info, None)? })
 }
@@ -480,7 +602,10 @@ fn create_logical_device(
 
     let features = PhysicalDeviceFeatures::default().sample_rate_shading(true);
 
-    let extensions = [KHR_SWAPCHAIN_NAME.as_ptr()];
+    let extensions = DEVICE_EXTENSIONS
+        .iter()
+        .map(|extension| extension.as_ptr())
+        .collect::<Vec<_>>();
 
     let create_info = DeviceCreateInfo::default()
         .queue_create_infos(std::slice::from_ref(&queue_create_info))
@@ -505,16 +630,7 @@ fn create_swapchain(
     size: PhysicalSize<u32>,
     old_swapchain: Option<SwapchainKHR>,
     transparent: bool,
-) -> Result<
-    (
-        SwapchainKHR,
-        DeviceSwapchainFns,
-        Vec<Image>,
-        Format,
-        Extent2D,
-    ),
-    Box<dyn std::error::Error>,
-> {
+) -> Result<(SwapchainKHR, DeviceSwapchainFns, Vec<Image>, Extent2D), Box<dyn std::error::Error>> {
     let surface_caps =
         unsafe { surface_fns.get_physical_device_surface_capabilities(physical_device, surface)? };
 
@@ -591,9 +707,10 @@ fn create_swapchain(
     let swapchain = unsafe { swapchain_fns.create_swapchain(&create_info, None)? };
     let images = unsafe { swapchain_fns.get_swapchain_images(swapchain)? };
 
-    Ok((swapchain, swapchain_fns, images, format.format, extent))
+    Ok((swapchain, swapchain_fns, images, extent))
 }
 
+#[allow(clippy::too_many_arguments)]
 fn create_gr_context(
     entry: &Entry,
     instance: &Instance,
@@ -602,6 +719,8 @@ fn create_gr_context(
     queue: Queue,
     queue_family_index: u32,
     gpu_resource_cache_limit: usize,
+    instance_extensions: &[*const c_char],
+    api_version: u32,
 ) -> Result<DirectContext, Box<dyn std::error::Error>> {
     let get_proc = unsafe {
         |gpo: vk::GetProcOf| {
@@ -622,16 +741,31 @@ fn create_gr_context(
         }
     };
 
+    let instance_extensions = instance_extensions
+        .iter()
+        .filter_map(|name| unsafe { CStr::from_ptr(*name) }.to_str().ok())
+        .collect::<Vec<_>>();
+    let device_extensions = DEVICE_EXTENSIONS
+        .iter()
+        .filter_map(|extension| extension.to_str().ok())
+        .collect::<Vec<_>>();
+
     let mut backend_context = unsafe {
-        vk::BackendContext::new(
+        vk::BackendContext::new_with_extensions(
             instance.handle().as_raw() as _,
             physical_device.as_raw() as _,
             device.handle().as_raw() as _,
             (queue.as_raw() as _, queue_family_index as usize),
             &get_proc,
+            &instance_extensions,
+            &device_extensions,
         )
     };
-    backend_context.set_max_api_version(vk::Version::new(1, 3, 0));
+    backend_context.set_max_api_version(vk::Version::new(
+        api_version_major(api_version) as usize,
+        api_version_minor(api_version) as usize,
+        api_version_patch(api_version) as usize,
+    ));
 
     let context_options = ContextOptions::default();
 
