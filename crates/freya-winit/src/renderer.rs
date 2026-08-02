@@ -435,6 +435,10 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             }
 
                             {
+                                let mut observer = self.plugins.tasks_poll_observer(
+                                    &app.window,
+                                    PluginHandle::new(&self.proxy),
+                                );
                                 let fut = std::pin::pin!(async {
                                     select! {
                                         events_chunk = app.events_receiver.next() => {
@@ -453,7 +457,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                                 _ => {}
                                             }
                                         },
-                                        _ = app.runner.handle_events().fuse() => {},
+                                        _ = app.runner.handle_events_with(&mut observer).fuse() => {},
                                     }
                                 });
 
@@ -470,6 +474,12 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 }
                             }
 
+                            app.runner.handle_events_immediately_with(
+                                &mut self.plugins.tasks_poll_observer(
+                                    &app.window,
+                                    PluginHandle::new(&self.proxy),
+                                ),
+                            );
                             self.plugins.send(
                                 PluginEvent::StartedUpdatingTree {
                                     window: &app.window,
