@@ -83,14 +83,15 @@ pub trait ChildrenExt: Sized {
     /// ```
     fn get_children(&mut self) -> &mut Vec<Element>;
 
-    /// Extends the children with an iterable of [`Element`]s.
+    /// Extends the children with an iterable of anything that implements [`IntoElement`].
     ///
     /// # Example
     /// ```ignore
-    /// rect().children(["Hello", "World"].map(|t| label().text(t).into_element()))
+    /// rect().children(["Hello", "World"].map(|t| label().text(t)))
     /// ```
-    fn children(mut self, children: impl IntoIterator<Item = Element>) -> Self {
-        self.get_children().extend(children);
+    fn children(mut self, children: impl IntoIterator<Item = impl IntoElement>) -> Self {
+        self.get_children()
+            .extend(children.into_iter().map(IntoElement::into_element));
         self
     }
 
@@ -125,8 +126,14 @@ pub trait KeyExt: Sized {
     fn write_key(&mut self) -> &mut DiffKey;
 
     /// Assign a key derived from any hashable value, used to reconcile elements in dynamic lists.
-    fn key(mut self, key: impl Hash) -> Self {
+    /// The key is scoped to the element's type, so the same value used
+    /// on different element or component types never collides.
+    fn key(mut self, key: impl Hash) -> Self
+    where
+        Self: 'static,
+    {
         let mut hasher = FxHasher::default();
+        std::any::TypeId::of::<Self>().hash(&mut hasher);
         key.hash(&mut hasher);
         *self.write_key() = DiffKey::U64(hasher.finish());
         self

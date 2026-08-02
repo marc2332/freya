@@ -23,16 +23,14 @@ pub fn portal_animates_position_change() {
                         .height(Size::px(100.))
                         .duration(Duration::from_millis(50))
                         .function(Function::Linear)
-                        .child(label().expanded().text("A"))
-                        .into(),
+                        .child(label().expanded().text("A")),
                     Portal::new("b")
                         .key("b")
                         .width(Size::px(100.))
                         .height(Size::px(100.))
                         .duration(Duration::from_millis(50))
                         .function(Function::Linear)
-                        .child(label().expanded().text("B"))
-                        .into(),
+                        .child(label().expanded().text("B")),
                 ]
             } else {
                 vec![
@@ -42,16 +40,14 @@ pub fn portal_animates_position_change() {
                         .height(Size::px(100.))
                         .duration(Duration::from_millis(50))
                         .function(Function::Linear)
-                        .child(label().expanded().text("B"))
-                        .into(),
+                        .child(label().expanded().text("B")),
                     Portal::new("a")
                         .key("a")
                         .width(Size::px(100.))
                         .height(Size::px(100.))
                         .duration(Duration::from_millis(50))
                         .function(Function::Linear)
-                        .child(label().expanded().text("A"))
-                        .into(),
+                        .child(label().expanded().text("A")),
                 ]
             }))
     }

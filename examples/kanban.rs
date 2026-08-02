@@ -157,7 +157,6 @@ fn column(mut tasks: State<Vec<Task>>, status: TaskStatus, title: String) -> imp
                             )
                             .show_while_dragging(false)
                             .key(task.id)
-                            .into()
                         }),
                 ),
             move |task_id: usize| {

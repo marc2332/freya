@@ -64,7 +64,7 @@ impl MutationCapability for SetUserName {
 fn app() -> impl IntoElement {
     let client = use_state(|| FancyClient::new("Marc"));
     let user = use_query(Query::new(0, GetUserName(Captured(client))));
-    let mutation = use_mutation(Mutation::new(SetUserName(Captured(client))));
+    let mutation = use_mutation(SetUserName(Captured(client)));
 
     rect()
         .spacing(6.)

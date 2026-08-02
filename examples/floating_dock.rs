@@ -60,12 +60,9 @@ fn app() -> impl IntoElement {
         .spacing(8.)
         .background((30, 30, 30, 0.8))
         .children(apps.iter().filter_map(|app| {
-            app.icon_path.as_ref().map(|icon_path| {
-                DockIcon {
-                    icon_path: icon_path.clone(),
-                    name: app.name.clone(),
-                }
-                .into()
+            app.icon_path.as_ref().map(|icon_path| DockIcon {
+                icon_path: icon_path.clone(),
+                name: app.name.clone(),
             })
         }))
 }

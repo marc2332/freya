@@ -117,7 +117,6 @@ fn app() -> impl IntoElement {
                                 MarkdownViewer::new(msg.content.clone()).into_element()
                             }),
                     )
-                    .into()
             }),
         )),
     );

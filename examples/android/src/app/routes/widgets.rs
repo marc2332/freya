@@ -133,7 +133,6 @@ impl Component for WidgetsDemo {
                                         .on_press(move |_| selected.set(i))
                                         .ripple()
                                         .child(val.to_string())
-                                        .into()
                                 })),
                         ),
                     )
@@ -172,7 +171,6 @@ impl Component for WidgetsDemo {
                                         .child(
                                             label().text(feature.to_string()).width(Size::fill()),
                                         )
-                                        .into()
                                 },
                             )),
                     )
@@ -188,7 +186,6 @@ impl Component for WidgetsDemo {
                                         .ripple()
                                         .leading(RadioItem::new().selected(text_size() == size))
                                         .child(label().text(size.to_string()).width(Size::fill()))
-                                        .into()
                                 },
                             )),
                     )
@@ -236,7 +233,6 @@ impl Component for WidgetsDemo {
                                             }
                                         })
                                         .child(tag.to_string())
-                                        .into()
                                 })),
                         ),
                     )

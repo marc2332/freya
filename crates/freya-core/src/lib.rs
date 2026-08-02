@@ -195,7 +195,10 @@ pub mod integration {
             TasksPollStage,
         },
         scope_id::ScopeId,
-        style::default_fonts::default_fonts,
+        style::default_fonts::{
+            default_fonts,
+            default_monospace_fonts,
+        },
         tree::{
             DiffModifies,
             Tree,

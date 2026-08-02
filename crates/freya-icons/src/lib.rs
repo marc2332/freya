@@ -1,6 +1,7 @@
 //! Icon assets for Freya UI.
 //!
 //! Currently the `lucide` feature enables the Lucide icons.
+//! When depending on the `freya` crate, enable them with its `icons-lucide` feature.
 //!
 //! # Example
 //!

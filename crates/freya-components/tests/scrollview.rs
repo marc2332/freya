@@ -233,7 +233,6 @@ pub fn scroll_view_scrollbar_smaller_than_thumb() {
                     .key(i)
                     .height(Size::px(20.))
                     .text(format!("Row {i}"))
-                    .into()
             })))
     }
 

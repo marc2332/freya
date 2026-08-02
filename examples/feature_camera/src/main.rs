@@ -65,7 +65,6 @@ fn app() -> impl IntoElement {
                     info.index(),
                     info.human_name()
                 )))
-                .into()
         }));
 
     let main = rect()

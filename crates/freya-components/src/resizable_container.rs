@@ -325,9 +325,12 @@ impl Component for ResizableContainer {
             .content(Content::flex())
             .children(self.panels.iter().enumerate().flat_map(|(i, e)| {
                 if i > 0 {
-                    vec![ResizableHandle::new(i).into(), e.clone().into()]
+                    vec![
+                        ResizableHandle::new(i).into_element(),
+                        e.clone().into_element(),
+                    ]
                 } else {
-                    vec![e.clone().into()]
+                    vec![e.clone().into_element()]
                 }
             }))
     }

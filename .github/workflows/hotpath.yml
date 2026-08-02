@@ -24,7 +24,7 @@ jobs:
         with:
           tool: just
       - name: Install hotpath-utils CLI
-        run: cargo install hotpath --version '^0.15' --bin hotpath-utils --features=utils
+        run: cargo install hotpath --version '^0.22' --bin hotpath-utils --features=utils
       - name: Install linux dependencies
         if: runner.os == 'Linux'
         run: |

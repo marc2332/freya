@@ -16,7 +16,6 @@ fn app() -> impl IntoElement {
                     .width(Size::fill())
                     .height(Size::px(80.))
                     .background((182, 119, 0))
-                    .into()
             })),
         ))
         .child(
@@ -30,7 +29,6 @@ fn app() -> impl IntoElement {
                             .width(Size::px(80.))
                             .height(Size::fill())
                             .background((0, 119, 182))
-                            .into()
                     })),
             ),
         )
