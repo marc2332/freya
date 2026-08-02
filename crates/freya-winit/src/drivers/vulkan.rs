@@ -49,6 +49,7 @@ use ash::{
         KHR_SWAPCHAIN_NAME,
         PhysicalDevice,
         PhysicalDeviceFeatures,
+        PhysicalDeviceType,
         PipelineStageFlags,
         PresentInfoKHR,
         PresentModeKHR,
@@ -120,6 +121,7 @@ pub struct VulkanDriver {
     cmd_buf: CommandBuffer,
     cmd_pool: CommandPool,
     gpu_cache_purged: bool,
+    pub(crate) gpu_name: String,
 }
 
 impl Drop for VulkanDriver {
@@ -171,7 +173,7 @@ impl VulkanDriver {
             )?
         };
 
-        let (physical_device, queue_family_index) =
+        let (physical_device, queue_family_index, gpu_name) =
             pick_physical_device(&instance, &surface_fns, surface)?;
 
         let (device, queue) =
@@ -247,6 +249,7 @@ impl VulkanDriver {
             cmd_buf,
             cmd_pool,
             gpu_cache_purged: false,
+            gpu_name,
         };
 
         Ok((driver, window))
@@ -540,15 +543,28 @@ fn create_instance(
     Ok(unsafe { entry.create_instance(&create_info, None)? })
 }
 
+/// Rank real GPUs by preference, software implementations like llvmpipe are rejected.
+fn device_type_rank(device_type: PhysicalDeviceType) -> Option<u32> {
+    match device_type {
+        PhysicalDeviceType::DISCRETE_GPU => Some(0),
+        PhysicalDeviceType::INTEGRATED_GPU => Some(1),
+        PhysicalDeviceType::VIRTUAL_GPU => Some(2),
+        PhysicalDeviceType::OTHER => Some(3),
+        _ => None,
+    }
+}
+
 fn pick_physical_device(
     instance: &Instance,
     surface_fns: &InstanceSurfaceFns,
     surface: SurfaceKHR,
-) -> Result<(PhysicalDevice, u32), Box<dyn std::error::Error>> {
+) -> Result<(PhysicalDevice, u32, String), Box<dyn std::error::Error>> {
     let devices = unsafe { instance.enumerate_physical_devices()? };
     devices
         .into_iter()
-        .find_map(|physical_device| {
+        .filter_map(|physical_device| {
+            let properties = unsafe { instance.get_physical_device_properties(physical_device) };
+            let rank = device_type_rank(properties.device_type)?;
             let queue_family_index = unsafe {
                 instance
                     .get_physical_device_queue_family_properties(physical_device)
@@ -582,12 +598,20 @@ fn pick_physical_device(
             };
 
             if extensions_supported {
-                Some((physical_device, queue_family_index))
+                Some((rank, physical_device, queue_family_index, properties))
             } else {
                 None
             }
         })
-        .ok_or_else(|| "No suitable Vulkan physical device found".into())
+        .min_by_key(|(rank, ..)| *rank)
+        .map(|(_, physical_device, queue_family_index, properties)| {
+            let gpu_name = properties
+                .device_name_as_c_str()
+                .map(|name| name.to_string_lossy().into_owned())
+                .unwrap_or_default();
+            (physical_device, queue_family_index, gpu_name)
+        })
+        .ok_or_else(|| "No suitable Vulkan physical device found, GPU-less software implementations are skipped".into())
 }
 
 fn create_logical_device(

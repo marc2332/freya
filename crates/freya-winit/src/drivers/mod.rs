@@ -196,6 +196,17 @@ impl GraphicsDriver {
         }
     }
 
+    /// The name of the GPU picked by the driver, only known for OpenGL and Vulkan.
+    pub fn gpu_name(&self) -> Option<&str> {
+        match self {
+            #[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
+            Self::OpenGl(gl) => gl.gpu_name.as_deref(),
+            #[cfg(any(target_os = "linux", target_os = "windows"))]
+            Self::Vulkan(vk) => Some(vk.gpu_name.as_str()),
+            _ => None,
+        }
+    }
+
     pub fn resize(&mut self, size: PhysicalSize<u32>) -> Result<(), DriverError> {
         match self {
             #[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]

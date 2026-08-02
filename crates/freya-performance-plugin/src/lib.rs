@@ -65,6 +65,7 @@ impl Default for PerformanceOverlayPlugin {
 #[derive(Default)]
 struct WindowMetrics {
     graphics_driver: &'static str,
+    gpu_name: Option<String>,
 
     frames: Vec<Instant>,
     fps_historic: Vec<usize>,
@@ -133,13 +134,17 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
             PluginEvent::WindowCreated {
                 window,
                 graphics_driver,
+                gpu_name,
                 ..
             }
             | PluginEvent::GraphicsDriverChanged {
                 window,
                 graphics_driver,
+                gpu_name,
             } => {
-                self.get_metrics(window.id()).graphics_driver = graphics_driver;
+                let metrics = self.get_metrics(window.id());
+                metrics.graphics_driver = graphics_driver;
+                metrics.gpu_name = gpu_name.map(str::to_string);
             }
             PluginEvent::AfterRedraw { window, .. } => {
                 let metrics = self.get_metrics(window.id());
@@ -207,13 +212,6 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 let finished_tree_updates = metrics.finished_tree_updates.unwrap_or_default();
                 let finished_accessibility_updates =
                     metrics.finished_accessibility_updates.unwrap_or_default();
-
-                let mut paint = Paint::default();
-                paint.set_anti_alias(true);
-                paint.set_style(PaintStyle::Fill);
-                paint.set_color(Color::from_argb(225, 225, 225, 225));
-
-                canvas.draw_rect(Rect::new(5., 5., 220., 440.), &paint);
 
                 // Render the texts
                 let mut paragraph_builder =
@@ -323,9 +321,13 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                     14.0,
                 );
 
+                // Picked GPU
+                if let Some(gpu_name) = &metrics.gpu_name {
+                    add_text(&mut paragraph_builder, format!("GPU: {gpu_name} \n"), 14.0);
+                }
+
                 let mut paragraph = paragraph_builder.build();
-                paragraph.layout(f32::MAX);
-                paragraph.paint(canvas, (5.0, 0.0));
+                paragraph.layout(210.0);
 
                 metrics.max_fps = metrics.max_fps.max(
                     metrics
@@ -335,8 +337,17 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                         .copied()
                         .unwrap_or_default(),
                 );
+
                 let start_x = 5.0;
-                let start_y = 290.0 + metrics.max_fps.max(60) as f32;
+                let start_y = paragraph.height() + 20.0 + metrics.max_fps.max(60) as f32;
+
+                let mut paint = Paint::default();
+                paint.set_anti_alias(true);
+                paint.set_style(PaintStyle::Fill);
+                paint.set_color(Color::from_argb(225, 225, 225, 225));
+                canvas.draw_rect(Rect::new(5., 5., 220., start_y + 15.0), &paint);
+
+                paragraph.paint(canvas, (5.0, 0.0));
 
                 for (i, fps) in metrics.fps_historic.iter().enumerate() {
                     let mut paint = Paint::default();

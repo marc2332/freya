@@ -1,5 +1,8 @@
 use std::{
-    ffi::CString,
+    ffi::{
+        CStr,
+        CString,
+    },
     num::NonZeroU32,
 };
 
@@ -70,6 +73,7 @@ pub struct OpenGLDriver {
     pub(crate) num_samples: usize,
     pub(crate) stencil_size: usize,
     pub(crate) surface: SkiaSurface,
+    pub(crate) gpu_name: Option<String>,
 }
 
 impl Drop for OpenGLDriver {
@@ -221,6 +225,13 @@ impl OpenGLDriver {
             }
         };
 
+        let renderer = unsafe { GetString(RENDERER) };
+        let gpu_name = (!renderer.is_null()).then(|| {
+            unsafe { CStr::from_ptr(renderer.cast()) }
+                .to_string_lossy()
+                .into_owned()
+        });
+
         let num_samples = gl_config.num_samples() as usize;
         let stencil_size = gl_config.stencil_size() as usize;
 
@@ -253,6 +264,7 @@ impl OpenGLDriver {
             stencil_size,
             fb_info,
             surface,
+            gpu_name,
         };
 
         Ok(driver)
