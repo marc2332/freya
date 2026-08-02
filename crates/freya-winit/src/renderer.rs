@@ -474,6 +474,12 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 }
                             }
 
+                            app.runner.handle_events_immediately_with(
+                                &mut self.plugins.tasks_poll_observer(
+                                    &app.window,
+                                    PluginHandle::new(&self.proxy),
+                                ),
+                            );
                             self.plugins.send(
                                 PluginEvent::StartedUpdatingTree {
                                     window: &app.window,
@@ -481,12 +487,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 },
                                 PluginHandle::new(&self.proxy),
                             );
-                            let mutations = app.runner.sync_and_update_with(
-                                &mut self.plugins.tasks_poll_observer(
-                                    &app.window,
-                                    PluginHandle::new(&self.proxy),
-                                ),
-                            );
+                            let mutations = app.runner.sync_and_update();
                             let result = app.runner.run_in(|| app.tree.apply_mutations(mutations));
                             if result.needs_render {
                                 app.process_layout_on_next_render = true;

@@ -192,6 +192,12 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 if let Some(started) = metrics.started_tasks_poll.take() {
                     metrics.tasks_poll_time += started.elapsed();
                 }
+                if self.enabled {
+                    handle.send_event_loop_event(NativeEvent::Window(NativeWindowEvent {
+                        window_id: window.id(),
+                        action: NativeWindowEventAction::User(UserEvent::RequestRedraw),
+                    }));
+                }
             }
             PluginEvent::BeforeAccessibility { window, .. } => {
                 self.get_metrics(window.id()).started_accessibility_updates = Some(Instant::now())

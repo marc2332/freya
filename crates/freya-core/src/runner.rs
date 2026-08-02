@@ -681,12 +681,7 @@ impl Runner {
 
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     pub fn sync_and_update(&mut self) -> Mutations {
-        self.sync_and_update_with(&mut |_| {})
-    }
-
-    /// Like [Self::sync_and_update], notifying the observer around every tasks polling batch.
-    pub fn sync_and_update_with(&mut self, observer: &mut dyn FnMut(TasksPollStage)) -> Mutations {
-        self.handle_events_immediately_with(observer);
+        self.handle_events_immediately();
         use itertools::Itertools;
 
         #[cfg(all(debug_assertions, feature = "debug-integrity"))]
