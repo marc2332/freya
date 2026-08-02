@@ -9,7 +9,7 @@ pub enum FutureState<D> {
 }
 
 impl<D> FutureState<D> {
-    pub fn try_as_fulfilled(&self) -> Option<&D> {
+    pub fn ok(&self) -> Option<&D> {
         if let Self::Fulfilled(d) = &self {
             Some(d)
         } else {
@@ -17,9 +17,8 @@ impl<D> FutureState<D> {
         }
     }
 
-    pub fn as_fulfilled(&self) -> &D {
-        self.try_as_fulfilled()
-            .expect("Future state is not fulfilled")
+    pub fn unwrap(&self) -> &D {
+        self.ok().expect("Future state is not fulfilled")
     }
 
     pub fn is_loading(&self) -> bool {
