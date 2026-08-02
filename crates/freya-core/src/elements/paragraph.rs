@@ -653,9 +653,8 @@ impl ParagraphElement {
     }
 }
 
-/// Rect of the grapheme cluster at `cursor_index` (in UTF-16 code units), collapsed to a
-/// caret at the text end, or a 6px stub when nothing is measurable. Skia lays out no
-/// lines for empty text, so the stub's aligned left edge is derived from `text_align`.
+/// Rect of the grapheme cluster at `cursor_index` (in UTF-16 code units),
+/// or a caret stub when there is nothing to measure.
 fn cursor_character_rect(
     paragraph: &SkParagraph,
     text: &str,
