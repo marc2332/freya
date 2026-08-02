@@ -187,6 +187,8 @@ impl EmmitableEvent {
                 name: platform_event_name,
                 scroll,
                 source,
+                granularity,
+                timestamp,
                 cursor,
                 ..
             } => {
@@ -205,6 +207,8 @@ impl EmmitableEvent {
                         scroll.x,
                         scroll.y,
                         source,
+                        granularity,
+                        timestamp,
                         global_location,
                         element_location,
                     )),

@@ -523,7 +523,43 @@ impl TestingRunner {
         self.sync_and_update();
     }
 
+    /// Scrolls by a delta in pixels, as a precise device such as a trackpad reports it. These are
+    /// taken at face value, so the distance asked for is the distance scrolled.
     pub fn scroll(&mut self, cursor: impl Into<CursorPoint>, scroll: impl Into<CursorPoint>) {
+        self.scroll_wheel(cursor, scroll, WheelGranularity::Pixel, Instant::now());
+    }
+
+    /// Scrolls by a number of lines, as a mouse wheel reports it. Wheel acceleration applies, so
+    /// how far this scrolls depends on the gap since the previous line scroll.
+    pub fn scroll_lines(&mut self, cursor: impl Into<CursorPoint>, lines: impl Into<CursorPoint>) {
+        self.scroll_lines_at(cursor, lines, Instant::now());
+    }
+
+    /// Scrolls by a number of lines as of `timestamp`, for tests that assert on how a wheel
+    /// gesture accelerates: the gap between successive timestamps is the gesture's speed, so
+    /// stating them is what makes such a test independent of how long the test itself takes.
+    pub fn scroll_lines_at(
+        &mut self,
+        cursor: impl Into<CursorPoint>,
+        lines: impl Into<CursorPoint>,
+        timestamp: Instant,
+    ) {
+        let lines = lines.into();
+        self.scroll_wheel(
+            cursor,
+            lines * WheelGranularity::LINE_SIZE,
+            WheelGranularity::Line,
+            timestamp,
+        );
+    }
+
+    fn scroll_wheel(
+        &mut self,
+        cursor: impl Into<CursorPoint>,
+        scroll: impl Into<CursorPoint>,
+        granularity: WheelGranularity,
+        timestamp: Instant,
+    ) {
         let cursor = cursor.into();
         let scroll = scroll.into();
         self.send_event(PlatformEvent::Wheel {
@@ -531,6 +567,8 @@ impl TestingRunner {
             scroll,
             cursor,
             source: WheelSource::Device,
+            granularity,
+            timestamp,
         });
         self.sync_and_update();
     }

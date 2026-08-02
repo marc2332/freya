@@ -3,6 +3,7 @@ use std::{
     fmt,
     pin::Pin,
     task::Waker,
+    time::Instant,
 };
 
 use accesskit_winit::WindowEvent as AccessibilityWindowEvent;
@@ -1176,21 +1177,27 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 }
 
                 WindowEvent::MouseWheel { delta, phase, .. } => {
-                    const WHEEL_SPEED_MODIFIER: f64 = 53.0;
                     const TOUCHPAD_SPEED_MODIFIER: f64 = 2.0;
 
                     if TouchPhase::Moved == phase {
-                        let scroll_data = {
-                            match delta {
-                                MouseScrollDelta::LineDelta(x, y) => (
-                                    (x as f64 * WHEEL_SPEED_MODIFIER),
-                                    (y as f64 * WHEEL_SPEED_MODIFIER),
+                        // Deltas are pixelized here so every consumer works in one unit, but which
+                        // resolution the device reported travels with the event: a line device has
+                        // no acceleration of its own, a pixel device is already accelerated.
+                        let (scroll_data, granularity) = match delta {
+                            MouseScrollDelta::LineDelta(x, y) => (
+                                (
+                                    x as f64 * WheelGranularity::LINE_SIZE,
+                                    y as f64 * WheelGranularity::LINE_SIZE,
                                 ),
-                                MouseScrollDelta::PixelDelta(pos) => (
-                                    (pos.x * TOUCHPAD_SPEED_MODIFIER),
-                                    (pos.y * TOUCHPAD_SPEED_MODIFIER),
+                                WheelGranularity::Line,
+                            ),
+                            MouseScrollDelta::PixelDelta(pos) => (
+                                (
+                                    pos.x * TOUCHPAD_SPEED_MODIFIER,
+                                    pos.y * TOUCHPAD_SPEED_MODIFIER,
                                 ),
-                            }
+                                WheelGranularity::Pixel,
+                            ),
                         };
 
                         let platform_event = PlatformEvent::Wheel {
@@ -1198,6 +1205,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             scroll: scroll_data.into(),
                             cursor: app.position,
                             source: WheelSource::Device,
+                            granularity,
+                            timestamp: Instant::now(),
                         };
                         let mut events_measurer_adapter = EventsMeasurerAdapter {
                             scale_factor: app.effective_scale_factor(),

@@ -6,6 +6,7 @@ use std::{
     },
     path::PathBuf,
     rc::Rc,
+    time::Instant,
 };
 
 use torin::prelude::{
@@ -157,10 +158,36 @@ pub enum WheelSource {
     Custom,
 }
 
+/// The resolution a wheel delta was reported at by the device that produced it.
+///
+/// Deltas always reach a consumer in pixels, but how they were measured still matters: a device
+/// reporting whole lines has no acceleration of its own, while one reporting pixels is already
+/// accelerated by the system and must not be scaled again.
+#[derive(Debug, Clone, PartialEq, Eq, Copy)]
+pub enum WheelGranularity {
+    /// Measured in lines, the usual mouse wheel: one event per notch, always the same distance
+    /// however fast the wheel is spun.
+    Line,
+    /// Measured in pixels, a precise device such as a macOS trackpad or a Magic Mouse. The system
+    /// has already applied its own acceleration curve to these.
+    Pixel,
+}
+
+impl WheelGranularity {
+    /// How far one line scrolls, in pixels. The platform layer multiplies a line delta by this to
+    /// reach the pixels every wheel consumer works in, so a consumer asking whether a delta was a
+    /// whole line compares against the same number.
+    pub const LINE_SIZE: f64 = 53.0;
+}
+
 /// Data of a Wheel event.
 #[derive(Debug, Clone, PartialEq)]
 pub struct WheelEventData {
     pub source: WheelSource,
+    pub granularity: WheelGranularity,
+    /// When the event was observed. Every node the event reaches sees the same instant, which is
+    /// what lets a consumer tell one event apart from the same event arriving at another node.
+    pub timestamp: Instant,
     pub delta_x: f64,
     pub delta_y: f64,
     pub global_location: CursorPoint,
@@ -172,6 +199,8 @@ impl WheelEventData {
         delta_x: f64,
         delta_y: f64,
         source: WheelSource,
+        granularity: WheelGranularity,
+        timestamp: Instant,
         global_location: CursorPoint,
         element_location: CursorPoint,
     ) -> Self {
@@ -179,6 +208,8 @@ impl WheelEventData {
             delta_x,
             delta_y,
             source,
+            granularity,
+            timestamp,
             global_location,
             element_location,
         }

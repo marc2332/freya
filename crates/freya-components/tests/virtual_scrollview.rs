@@ -1,3 +1,8 @@
+use std::time::{
+    Duration,
+    Instant,
+};
+
 use freya::prelude::*;
 use freya_core::prelude::Label;
 use freya_testing::prelude::*;
@@ -670,4 +675,66 @@ pub fn virtual_scroll_view_keyboard_navigation_horizontal() {
         Label::try_downcast(&*content[0].element()).unwrap().text,
         "0"
     );
+}
+
+/// A list of tens of thousands of rows has to be crossable with the wheel, not only by dragging
+/// the scrollbar thumb, and that must not cost the reader who is scrolling slowly to find
+/// something. Each gesture below is two events; only the gap between them differs.
+#[test]
+pub fn virtual_scroll_view_wheel_acceleration() {
+    fn virtual_scroll_view_acceleration_app() -> impl IntoElement {
+        VirtualScrollView::new(|item, _| {
+            label()
+                .key(item.index)
+                .height(Size::px(50.))
+                .text(format!("{} Hello, World!", item.index))
+                .into()
+        })
+        .length(10_000usize)
+        .item_size(50.)
+    }
+
+    let first_visible_item = |test: &TestingRunner| {
+        let scrollview = test
+            .find(|node, element| {
+                Rect::try_downcast(element)
+                    .filter(|rect| {
+                        rect.accessibility.builder.role() == AccessibilityRole::ScrollView
+                    })
+                    .map(move |_| node)
+            })
+            .unwrap();
+        let content = scrollview.children()[0].children()[0].children();
+        Label::try_downcast(&*content[0].element())
+            .unwrap()
+            .text
+            .to_string()
+    };
+
+    // A fast gesture: the first notch moves the plain 53 pixels, having no rate to be measured
+    // against, and the second is accelerated to the ceiling and capped at the 500 pixel viewport.
+    // 553 pixels in, the first visible item is 553 / 50 = 11.
+    let mut test = launch_test(virtual_scroll_view_acceleration_app);
+    test.sync_and_update();
+    let start = Instant::now();
+    test.scroll_lines_at((5., 5.), (0., -1.), start);
+    test.scroll_lines_at((5., 5.), (0., -1.), start + Duration::from_millis(15));
+    assert_eq!(first_visible_item(&test), "11 Hello, World!");
+
+    // The same two notches, arriving at a reading pace: 106 pixels, the plain rate, so the first
+    // visible item is 106 / 50 = 2.
+    let mut test = launch_test(virtual_scroll_view_acceleration_app);
+    test.sync_and_update();
+    let start = Instant::now();
+    test.scroll_lines_at((5., 5.), (0., -1.), start);
+    test.scroll_lines_at((5., 5.), (0., -1.), start + Duration::from_millis(90));
+    assert_eq!(first_visible_item(&test), "2 Hello, World!");
+
+    // The same distance from a trackpad, which the system has already accelerated: back to back,
+    // and still 106 pixels.
+    let mut test = launch_test(virtual_scroll_view_acceleration_app);
+    test.sync_and_update();
+    test.scroll((5., 5.), (0., -53.));
+    test.scroll((5., 5.), (0., -53.));
+    assert_eq!(first_visible_item(&test), "2 Hello, World!");
 }

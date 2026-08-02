@@ -23,6 +23,7 @@ use crate::scrollviews::{
     shared::{
         Axis,
         WheelGestureClock,
+        accelerate_wheel_movement,
         get_container_sizes,
         get_corrected_scroll_position,
         get_scroll_position_from_cursor,
@@ -317,6 +318,9 @@ impl Component for ScrollView {
         };
 
         let on_wheel = move |e: Event<WheelEventData>| {
+            // Advance the shared wheel-gesture clock, which both reads this event's acceleration
+            // and keeps the clock honest for latching descendants.
+            let gesture = wheel_gesture_clock.advance(e.timestamp, e.granularity);
             // Only invert direction on deviced-sourced wheel events
             let invert_direction = e.source == WheelSource::Device
                 && (*pressing_shift.read() || invert_scroll_wheel)
@@ -340,20 +344,29 @@ impl Component for ScrollView {
                 }
             }
 
-            // Gesture latching: a gesture belongs to the view that received its FIRST event
-            // (`gesture == now`) and could move in its direction; every other latching view
-            // passes the whole gesture through untouched, including views the gesture only
-            // reaches mid-flight. A latched gesture is consumed below even once it pins at an
-            // end. Plain views still advance the shared clock so in-flight gestures that start
-            // over them are recognisable.
+            // Acceleration, so a long list can be crossed with the wheel. Applied before the
+            // latch decision so the delta the decision is taken on is the delta that will move.
+            (x_movement, y_movement) = accelerate_wheel_movement(
+                (x_movement, y_movement),
+                e.granularity,
+                gesture,
+                size.read().area,
+            );
+
+            // Gesture latching: a gesture belongs to a view that saw its FIRST event
+            // (`gesture.start == e.timestamp`) and could move in its direction. Every view that
+            // saw that first event is a candidate, and the innermost one able to move takes it
+            // and stops propagation, so an outer latching view only gets the gesture when the
+            // inner declined it. A view the gesture only reaches mid-flight is never a candidate
+            // and passes the whole gesture through untouched. A latched gesture is consumed below
+            // even once it pins at an end. Plain views still advance the shared clock so in-flight
+            // gestures that start over them are recognisable.
             if latch_wheel {
-                let now = Instant::now();
-                let gesture = wheel_gesture_clock.advance(now);
                 let decision = *latch.peek();
                 let latched = match decision {
-                    Some((owned, latched)) if owned == gesture => latched,
+                    Some((owned, latched)) if owned == gesture.start => latched,
                     _ => {
-                        let latched = gesture == now && {
+                        let latched = gesture.start == e.timestamp && {
                             let s = size.read();
                             get_scroll_position_from_wheel(
                                 y_movement,
@@ -368,15 +381,13 @@ impl Component for ScrollView {
                                     corrected_scrolled_x,
                                 ) != corrected_scrolled_x as i32
                         };
-                        latch.set(Some((gesture, latched)));
+                        latch.set(Some((gesture.start, latched)));
                         latched
                     }
                 };
                 if !latched {
                     return;
                 }
-            } else {
-                wheel_gesture_clock.advance(Instant::now());
             }
 
             // Vertical scroll

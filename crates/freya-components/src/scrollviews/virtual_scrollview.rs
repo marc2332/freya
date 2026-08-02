@@ -1,9 +1,6 @@
 use std::{
     ops::Range,
-    time::{
-        Duration,
-        Instant,
-    },
+    time::Duration,
 };
 
 use freya_core::prelude::*;
@@ -23,6 +20,7 @@ use crate::scrollviews::{
     shared::{
         Axis,
         WheelGestureClock,
+        accelerate_wheel_movement,
         get_container_sizes,
         get_corrected_scroll_position,
         get_scroll_position_from_cursor,
@@ -534,8 +532,9 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
         };
 
         let on_wheel = move |e: Event<WheelEventData>| {
-            // Keep the shared wheel-gesture clock honest for latching descendants.
-            wheel_gesture_clock.advance(Instant::now());
+            // Advance the shared wheel-gesture clock, which both reads this event's acceleration
+            // and keeps the clock honest for latching descendants.
+            let gesture = wheel_gesture_clock.advance(e.timestamp, e.granularity);
             // Only invert direction on deviced-sourced wheel events
             let invert_direction = e.source == WheelSource::Device
                 && (*pressing_shift.read() || invert_scroll_wheel)
@@ -558,6 +557,14 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                     y_movement = 0.;
                 }
             }
+
+            // Acceleration, so a long list can be crossed with the wheel.
+            (x_movement, y_movement) = accelerate_wheel_movement(
+                (x_movement, y_movement),
+                e.granularity,
+                gesture,
+                size.read().area,
+            );
 
             // Vertical scroll
             let scroll_position_y = get_scroll_position_from_wheel(

@@ -1,3 +1,8 @@
+use std::time::{
+    Duration,
+    Instant,
+};
+
 use freya::prelude::*;
 use freya_testing::prelude::*;
 
@@ -297,6 +302,49 @@ pub fn scroll_view_wheel_latching() {
     assert!(outer_content[3].is_visible());
 }
 
+/// Every latching view that saw a gesture's first event is a candidate for it, and the innermost
+/// one able to move takes it. An outer latching view therefore gets the gesture exactly when the
+/// inner one declined it, rather than being excluded for not having been the first to look.
+#[test]
+pub fn scroll_view_wheel_latching_nested() {
+    fn nested_latching_app() -> impl IntoElement {
+        // A latched inner view inside a latched outer view, both able to scroll.
+        ScrollView::new()
+            .latch_wheel()
+            .child(
+                ScrollView::new()
+                    .height(Size::px(200.))
+                    .latch_wheel()
+                    .child(rect().height(Size::px(200.)).width(Size::fill()))
+                    .child(rect().height(Size::px(200.)).width(Size::fill())),
+            )
+            .child(rect().height(Size::px(200.)).width(Size::fill()))
+            .child(rect().height(Size::px(200.)).width(Size::fill()))
+            .child(rect().height(Size::px(200.)).width(Size::fill()))
+    }
+
+    let mut test = launch_test(nested_latching_app);
+    let outer = test
+        .find(|node, element| {
+            Rect::try_downcast(element)
+                .filter(|rect| rect.accessibility.builder.role() == AccessibilityRole::ScrollView)
+                .map(move |_| node)
+        })
+        .unwrap();
+    let outer_content = outer.children()[0].children()[0].children();
+    let inner_content = outer_content[0].children()[0].children()[0].children();
+
+    // The inner view can move, so it takes the gesture and the outer never sees it.
+    test.scroll((100., 100.), (0., -200.));
+    assert!(inner_content[1].is_visible());
+    assert!(!outer_content[3].is_visible());
+
+    // A new gesture with the inner at its end: the inner declines, so the outer takes it.
+    std::thread::sleep(Duration::from_millis(300));
+    test.scroll((100., 100.), (0., -300.));
+    assert!(outer_content[3].is_visible());
+}
+
 #[test]
 pub fn scroll_view_scrollbar_smaller_than_thumb() {
     fn small_scroll_view_app() -> impl IntoElement {
@@ -345,4 +393,50 @@ pub fn scroll_view_scrollbar_smaller_than_thumb() {
         .area
         .min_y();
     assert_eq!(scrolled_before, scrolled_after);
+}
+
+/// Acceleration lands on every scroll surface, so it is applied in `scrollviews::shared` rather
+/// than per view. Same gesture as `virtual_scroll_view_wheel_acceleration`, on a plain view.
+#[test]
+pub fn scroll_view_wheel_acceleration() {
+    fn scroll_view_acceleration_app() -> impl IntoElement {
+        ScrollView::new().children((0..10).map(|_| {
+            rect()
+                .height(Size::px(200.))
+                .width(Size::px(200.))
+                .into_element()
+        }))
+    }
+
+    let first_visible_item = |test: &TestingRunner| {
+        let scrollview = test
+            .find(|node, element| {
+                Rect::try_downcast(element)
+                    .filter(|rect| {
+                        rect.accessibility.builder.role() == AccessibilityRole::ScrollView
+                    })
+                    .map(move |_| node)
+            })
+            .unwrap();
+        let content = scrollview.children()[0].children()[0].children();
+        content.iter().position(|child| child.is_visible()).unwrap()
+    };
+
+    // A fast gesture: 53 pixels for the first notch, then the second accelerated to the ceiling
+    // and capped at the 500 pixel viewport. 553 pixels in, the item spanning 400 to 600 is the
+    // first still on screen.
+    let mut test = launch_test(scroll_view_acceleration_app);
+    test.sync_and_update();
+    let start = Instant::now();
+    test.scroll_lines_at((5., 5.), (0., -1.), start);
+    test.scroll_lines_at((5., 5.), (0., -1.), start + Duration::from_millis(15));
+    assert_eq!(first_visible_item(&test), 2);
+
+    // The same two notches at a reading pace: 106 pixels, so the first item is still on screen.
+    let mut test = launch_test(scroll_view_acceleration_app);
+    test.sync_and_update();
+    let start = Instant::now();
+    test.scroll_lines_at((5., 5.), (0., -1.), start);
+    test.scroll_lines_at((5., 5.), (0., -1.), start + Duration::from_millis(90));
+    assert_eq!(first_visible_item(&test), 0);
 }

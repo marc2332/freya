@@ -1,4 +1,7 @@
-use std::any::Any;
+use std::{
+    any::Any,
+    time::Instant,
+};
 
 use accesskit::{
     Action,
@@ -44,6 +47,7 @@ use crate::{
         TextAlign,
         TextDecoration,
         WheelEventData,
+        WheelGranularity,
         WheelSource,
     },
     tree::Tree,
@@ -300,6 +304,10 @@ impl AccessibilityTree {
         };
         let mut target_node = node_id;
         let mut emmitable_events = Vec::new();
+        // One focus movement is one event, however many nested scrollables it has to move: the
+        // events below are stamped alike so a consumer measuring the rate wheel events arrive at
+        // reads them as the single action they are, rather than as a burst.
+        let timestamp = Instant::now();
         // Iterate over the inherited scrollables from the closes to the farthest
         for closest_scrollable in effect_state.scrollables.iter().rev() {
             // Every scrollable has a target node, the first scrollable target is the focused node that we want to make visible,
@@ -338,6 +346,10 @@ impl AccessibilityTree {
                         delta_x as f64,
                         delta_y as f64,
                         WheelSource::Custom,
+                        // An exact distance to travel, so it is reported as pixels: scaling it
+                        // would overshoot the element it is revealing.
+                        WheelGranularity::Pixel,
+                        timestamp,
                         CursorPoint::default(),
                         CursorPoint::default(),
                     )),
