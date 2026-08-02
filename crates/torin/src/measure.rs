@@ -667,8 +667,14 @@ where
 
         let flex_axis = AlignAxis::new(&parent_node.direction, AlignmentDirection::Main);
 
-        let flex_available_width = available_area.width() - initial_phase_inner_sizes.width;
-        let flex_available_height = available_area.height() - initial_phase_inner_sizes.height;
+        // Clamped at zero: when the non-flex children already fill (or overflow) the parent there
+        // is nothing left to distribute, and a negative remainder would be shared out as negative
+        // sizes, placing flex children to the left of their own origin and painting them over
+        // their siblings. Overflow is a paint concern (`Overflow`), never a negative measurement.
+        let flex_available_width =
+            (available_area.width() - initial_phase_inner_sizes.width).max(0.);
+        let flex_available_height =
+            (available_area.height() - initial_phase_inner_sizes.height).max(0.);
 
         if parent_node.content.is_flex() {
             initial_phase_inner_sizes =

@@ -704,3 +704,82 @@ pub fn flex_with_cross_align_center_and_text() {
     assert_eq!(node_4_area.size.height, 12.0);
     assert_eq!(node_4_area.origin.y, node_2_area.origin.y + 4.0);
 }
+
+/// When the non-flex children already overflow the parent there is nothing left to distribute,
+/// so a flex child measures zero rather than a negative size.
+///
+/// A negative remainder used to be shared out as-is, which placed the flex child to the left of
+/// (or above) its own origin and painted it over its siblings. Overflowing content is a paint
+/// concern, never a negative measurement.
+#[test]
+pub fn flex_does_not_measure_negative_when_siblings_overflow() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
+        0,
+        None,
+        vec![1, 2, 3],
+        Node::from_size_and_content(
+            Size::Pixels(Length::new(200.0)),
+            Size::Pixels(Length::new(200.0)),
+            Content::Flex,
+        ),
+    );
+    // Two fixed children whose combined height (300) already exceeds the parent's 200.
+    mocked_tree.add(
+        1,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(100.0)),
+            Size::Pixels(Length::new(150.0)),
+            Direction::Vertical,
+        ),
+    );
+    mocked_tree.add(
+        2,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(100.0)),
+            Size::Pixels(Length::new(150.0)),
+            Direction::Vertical,
+        ),
+    );
+    mocked_tree.add(
+        3,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(100.0)),
+            Size::Flex(Length::new(1.0)),
+            Direction::Vertical,
+        ),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        &mut measurer,
+        &mut mocked_tree,
+    );
+
+    // The fixed children keep their sizes and overflow, which is what `Overflow` is for.
+    assert_eq!(
+        layout.get(&1).unwrap().area,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 150.0)),
+    );
+    assert_eq!(
+        layout.get(&2).unwrap().area,
+        Rect::new(Point2D::new(0.0, 150.0), Size2D::new(100.0, 150.0)),
+    );
+
+    // The flex child collapses to nothing instead of taking the -100 remainder.
+    let flex_area = layout.get(&3).unwrap().area;
+    assert_eq!(flex_area.size.height, 0.0);
+    assert!(
+        flex_area.size.height >= 0.0 && flex_area.size.width >= 0.0,
+        "a flex child must never be measured negative: {flex_area:?}"
+    );
+}
