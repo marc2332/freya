@@ -164,9 +164,6 @@ pub(crate) fn spawn_pty(
         let cwd = cwd.clone();
         async move {
             let mut processor = Processor::default();
-            // Side-channel parser for OSC 7 (cwd). rio-vt also tracks this
-            // natively (`Crosswords::current_directory`); the side channel is
-            // kept so the notification flow stays unchanged.
             let mut cwd_parser = VteParser::new();
             let mut cwd_sink = CwdSink::default();
             loop {

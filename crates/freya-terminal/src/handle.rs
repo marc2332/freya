@@ -278,7 +278,7 @@ impl TerminalHandle {
 
     /// Paste text into the PTY, wrapping in bracketed-paste markers if the app enabled them.
     pub fn paste(&self, text: &str) -> Result<(), TerminalError> {
-        let bracketed = self.term.borrow().mode().contains(Mode::BRACKETED_PASTE);
+        let bracketed = self.mode().contains(Mode::BRACKETED_PASTE);
         if bracketed {
             let filtered = text.replace(['\x1b', '\x03'], "");
             self.write_raw(b"\x1b[200~")?;

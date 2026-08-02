@@ -321,7 +321,6 @@ impl ElementExt for Terminal {
 
         renderer.render_background();
 
-        // Reused row buffer so redraws don't allocate a `Vec<Vec<TermCell>>`.
         let visible_rows = term.visible_rows();
         let styles = term.grid.style_set.styles();
         let extras = &term.grid.extras_table;

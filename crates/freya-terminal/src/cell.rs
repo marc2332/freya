@@ -3,8 +3,7 @@
 //! rio-vt stores cells as packed `Square`s whose colors, attributes,
 //! hyperlinks and zero-width characters live in per-grid side tables.
 //! The renderer and URL scanner work on plain row buffers, so each visible
-//! row is resolved into `TermCell`s once per frame (mirroring the row
-//! cloning the previous backend required).
+//! row is resolved into `TermCell`s once per frame.
 
 use rio_vt::{
     config::colors::{
@@ -28,8 +27,8 @@ use rio_vt::{
     event::EventListener,
 };
 
-/// A resolved terminal cell: character, colors and the attributes the
-/// renderer consumes.
+/// A resolved terminal cell with the character, colors and attributes
+/// the renderer consumes.
 #[derive(Clone)]
 pub(crate) struct TermCell {
     pub c: char,
