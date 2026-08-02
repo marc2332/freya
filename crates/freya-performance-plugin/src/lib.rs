@@ -356,7 +356,7 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 }
 
                 let mut paragraph = paragraph_builder.build();
-                paragraph.layout(210.0);
+                paragraph.layout(235.0);
 
                 metrics.max_fps = metrics.max_fps.max(
                     metrics
@@ -374,7 +374,7 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 paint.set_anti_alias(true);
                 paint.set_style(PaintStyle::Fill);
                 paint.set_color(Color::from_argb(225, 225, 225, 225));
-                canvas.draw_rect(Rect::new(5., 5., 220., start_y + 15.0), &paint);
+                canvas.draw_rect(Rect::new(5., 5., 245.0, start_y + 15.0), &paint);
 
                 paragraph.paint(canvas, (5.0, 0.0));
 
