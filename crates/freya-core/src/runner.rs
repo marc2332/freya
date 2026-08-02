@@ -597,14 +597,15 @@ impl Runner {
                 return;
             }
 
-            while let Some(msg) = self.receiver.next().await {
-                match msg {
-                    Message::MarkScopeAsDirty(scope_id) => {
-                        self.dirty_scopes.insert(scope_id);
-                    }
-                    Message::PollTask(task_id) => {
-                        self.dirty_tasks.push_back(task_id);
-                    }
+            let Some(msg) = self.receiver.next().await else {
+                return;
+            };
+            match msg {
+                Message::MarkScopeAsDirty(scope_id) => {
+                    self.dirty_scopes.insert(scope_id);
+                }
+                Message::PollTask(task_id) => {
+                    self.dirty_tasks.push_back(task_id);
                 }
             }
         }
