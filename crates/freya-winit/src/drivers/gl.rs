@@ -47,7 +47,10 @@ use glutin::{
         WindowSurface,
     },
 };
-use glutin_winit::DisplayBuilder;
+use glutin_winit::{
+    ApiPreference,
+    DisplayBuilder,
+};
 use raw_window_handle::HasWindowHandle;
 use winit::{
     dpi::PhysicalSize,
@@ -86,16 +89,28 @@ impl OpenGLDriver {
             .with_alpha_size(8)
             .with_transparency(transparent);
 
-        let display_builder = DisplayBuilder::new().with_window_attributes(Some(window_attributes));
-        let (window, gl_config) = display_builder.build(event_loop, template, |configs| {
-            Self::pick_config(configs, transparent)
-        })?;
+        let build_with_preference =
+            |preference| -> Result<(Self, Window), Box<dyn std::error::Error>> {
+                let display_builder = DisplayBuilder::new()
+                    .with_preference(preference)
+                    .with_window_attributes(Some(window_attributes.clone()));
+                let (window, gl_config) =
+                    display_builder.build(event_loop, template.clone(), |configs| {
+                        Self::pick_config(configs, transparent)
+                    })?;
+                let window = window.ok_or("OpenGL display builder returned no window")?;
+                let driver = Self::build(&gl_config, &window, gpu_resource_cache_limit)?;
 
-        let window = window.ok_or("OpenGL display builder returned no window")?;
+                Ok((driver, window))
+            };
 
-        let driver = Self::build(&gl_config, &window, gpu_resource_cache_limit)?;
-
-        Ok((driver, window))
+        match build_with_preference(ApiPreference::FallbackEgl) {
+            Ok(result) => Ok(result),
+            Err(error) => {
+                tracing::warn!("OpenGL initialization failed, retrying with EGL: {error}");
+                build_with_preference(ApiPreference::PreferEgl)
+            }
+        }
     }
 
     /// Build the driver on an existing window instead of creating a new one.
@@ -110,11 +125,23 @@ impl OpenGLDriver {
             .with_transparency(transparent)
             .compatible_with_native_window(window.window_handle()?.as_raw());
 
-        let (_, gl_config) = DisplayBuilder::new().build(event_loop, template, |configs| {
-            Self::pick_config(configs, transparent)
-        })?;
+        let build_with_preference = |preference| -> Result<Self, Box<dyn std::error::Error>> {
+            let display_builder = DisplayBuilder::new().with_preference(preference);
+            let (_, gl_config) =
+                display_builder.build(event_loop, template.clone(), |configs| {
+                    Self::pick_config(configs, transparent)
+                })?;
 
-        Self::build(&gl_config, window, gpu_resource_cache_limit)
+            Self::build(&gl_config, window, gpu_resource_cache_limit)
+        };
+
+        match build_with_preference(ApiPreference::FallbackEgl) {
+            Ok(driver) => Ok(driver),
+            Err(error) => {
+                tracing::warn!("OpenGL recovery failed, retrying with EGL: {error}");
+                build_with_preference(ApiPreference::PreferEgl)
+            }
+        }
     }
 
     fn build(
@@ -122,33 +149,35 @@ impl OpenGLDriver {
         window: &Window,
         gpu_resource_cache_limit: usize,
     ) -> Result<Self, Box<dyn std::error::Error>> {
-        let window_handle = window.window_handle()?;
+        let window_handle = window.window_handle()?.as_raw();
 
-        let context_attributes = ContextAttributesBuilder::new()
-            .with_profile(GlProfile::Core)
-            .build(Some(window_handle.as_raw()));
+        let context_attributes = [
+            ContextAttributesBuilder::new()
+                .with_profile(GlProfile::Core)
+                .build(Some(window_handle)),
+            ContextAttributesBuilder::new()
+                .with_profile(GlProfile::Compatibility)
+                .build(Some(window_handle)),
+            ContextAttributesBuilder::new()
+                .with_context_api(ContextApi::Gles(None))
+                .build(Some(window_handle)),
+        ];
 
-        let fallback_context_attributes = ContextAttributesBuilder::new()
-            .with_profile(GlProfile::Core)
-            .with_context_api(ContextApi::Gles(None))
-            .build(Some(window_handle.as_raw()));
-
-        let not_current_gl_context = unsafe {
-            match gl_config
-                .display()
-                .create_context(gl_config, &context_attributes)
-            {
-                Ok(ctx) => ctx,
-                Err(_) => gl_config
-                    .display()
-                    .create_context(gl_config, &fallback_context_attributes)?,
-            }
-        };
+        let not_current_gl_context = context_attributes
+            .iter()
+            .find_map(|attributes| {
+                unsafe { gl_config.display().create_context(gl_config, attributes) }
+                    .inspect_err(|error| {
+                        tracing::warn!("Failed to create an OpenGL context: {error}")
+                    })
+                    .ok()
+            })
+            .ok_or("could not create an OpenGL context with any profile")?;
 
         let size = window.inner_size();
 
         let attrs = SurfaceAttributesBuilder::<WindowSurface>::new().build(
-            window_handle.as_raw(),
+            window_handle,
             NonZeroU32::new(size.width).ok_or("OpenGL window has zero width")?,
             NonZeroU32::new(size.height).ok_or("OpenGL window has zero height")?,
         );
