@@ -215,7 +215,9 @@ impl Input {
             leading: None,
             trailing: None,
             on_pre_key_down: Callback::new(|e: Event<KeyboardEventData>| match &e.key {
-                Key::Named(NamedKey::Enter) | Key::Named(NamedKey::Escape) => true,
+                Key::Named(NamedKey::Enter)
+                | Key::Named(NamedKey::Escape)
+                | Key::Named(NamedKey::Shift) => true,
                 Key::Named(NamedKey::Tab) => false,
                 _ => {
                     e.stop_propagation();
