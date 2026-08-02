@@ -77,6 +77,21 @@ impl PluginsManager {
         }
     }
 
+    /// Observer reporting every tasks polling batch of a [Runner] as plugin events.
+    pub fn tasks_poll_observer<'a>(
+        &'a mut self,
+        window: &'a Window,
+        handle: PluginHandle,
+    ) -> impl FnMut(TasksPollStage) + 'a {
+        move |stage| {
+            let event = match stage {
+                TasksPollStage::Started => PluginEvent::StartedPollingTasks { window },
+                TasksPollStage::Finished => PluginEvent::FinishedPollingTasks { window },
+            };
+            self.send(event, handle.clone())
+        }
+    }
+
     /// Compose the root element through all plugins' root components.
     pub fn wrap_root(&self, mut root: Element) -> Element {
         for plugin in self.plugins.borrow().values() {
@@ -186,6 +201,16 @@ pub enum PluginEvent<'a> {
     FinishedUpdatingTree {
         window: &'a Window,
         tree: &'a Tree,
+    },
+
+    /// Before starting to poll a batch of async tasks.
+    StartedPollingTasks {
+        window: &'a Window,
+    },
+
+    /// After polling a batch of async tasks.
+    FinishedPollingTasks {
+        window: &'a Window,
     },
 
     BeforeAccessibility {
