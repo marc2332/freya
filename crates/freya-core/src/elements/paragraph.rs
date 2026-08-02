@@ -675,7 +675,8 @@ fn cursor_character_rect(
         }
     }
     if cluster.is_empty() {
-        return None;
+        let line_height = paragraph.height() / paragraph.get_line_metrics().len().max(1) as f32;
+        return Some(SkRect::new(0., 0., 6., line_height));
     }
 
     let rects = paragraph.get_rects_for_range(
