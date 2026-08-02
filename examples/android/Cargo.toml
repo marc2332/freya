@@ -10,7 +10,7 @@ freya = { workspace = true, features = [
   "material-design",
   "code-editor",
   "markdown",
-  "icons",
+  "icons-lucide",
   "remote-asset",
 ] }
 freya-winit = { workspace = true }

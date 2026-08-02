@@ -100,6 +100,14 @@ pub enum PluginEvent<'a> {
         animation_clock: &'a AnimationClock,
         runner: &'a mut Runner,
         graphics_driver: &'static str,
+        gpu_name: Option<&'a str>,
+    },
+
+    /// The graphics driver was rebuilt at runtime.
+    GraphicsDriverChanged {
+        window: &'a Window,
+        graphics_driver: &'static str,
+        gpu_name: Option<&'a str>,
     },
 
     /// A Window just got closed.
