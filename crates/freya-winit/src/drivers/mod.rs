@@ -17,7 +17,7 @@ use winit::{
 };
 
 /// Unrecoverable graphics error requiring a driver rebuild.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug)]
 // Only the Vulkan driver reports these.
 #[cfg_attr(not(any(target_os = "linux", target_os = "windows")), allow(dead_code))]
 pub enum DriverError {

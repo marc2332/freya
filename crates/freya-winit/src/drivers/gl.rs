@@ -84,7 +84,7 @@ impl OpenGLDriver {
         let transparent = window_attributes.transparent;
         let template = ConfigTemplateBuilder::new()
             .with_alpha_size(8)
-            .with_transparency(window_attributes.transparent);
+            .with_transparency(transparent);
 
         let display_builder = DisplayBuilder::new().with_window_attributes(Some(window_attributes));
         let (window, gl_config) = display_builder.build(event_loop, template, |configs| {

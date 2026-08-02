@@ -1189,7 +1189,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
             }
         }
 
-        // Rebuild on the same window to keep input and accessibility working.
+        // Rebuild on the same window.
         if needs_recovery && let Some(mut app) = self.windows.remove(&window_id) {
             // Drop the lost driver first to release its GPU surface.
             drop(app.driver);
