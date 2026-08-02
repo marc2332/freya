@@ -19,6 +19,18 @@ use winit::{
     },
 };
 
+/// Unrecoverable graphics error requiring a driver rebuild.
+#[derive(Debug)]
+// Only the Vulkan driver reports these.
+#[cfg_attr(
+    not(all(any(target_os = "linux", target_os = "windows"), feature = "gpu")),
+    allow(dead_code)
+)]
+pub enum DriverError {
+    DeviceLost,
+    OutOfMemory,
+}
+
 #[allow(clippy::large_enum_variant)]
 pub enum GraphicsDriver {
     #[cfg(all(
@@ -125,23 +137,64 @@ impl GraphicsDriver {
         (Self::Software(driver), window)
     }
 
+    /// Rebuild the driver on the existing window, skipping Vulkan.
+    #[cfg_attr(
+        any(target_os = "macos", not(feature = "gpu")),
+        allow(unused_variables)
+    )]
+    pub fn recover_reusing_window(
+        event_loop: &ActiveEventLoop,
+        window: &Window,
+        gpu_resource_cache_limit: usize,
+        transparent: bool,
+    ) -> Self {
+        #[cfg(all(
+            any(target_os = "linux", target_os = "windows", target_os = "android"),
+            feature = "gpu"
+        ))]
+        match gl::OpenGLDriver::from_window(
+            event_loop,
+            window,
+            gpu_resource_cache_limit,
+            transparent,
+        ) {
+            Ok(driver) => return Self::OpenGl(driver),
+            Err(error) => {
+                tracing::warn!("OpenGL recovery failed, falling back to software: {error}");
+            }
+        }
+
+        let driver = software::SoftwareDriver::from_window(window)
+            .expect("Failed to initialize software renderer fallback");
+        Self::Software(driver)
+    }
+
     pub fn present(
         &mut self,
-        _size: PhysicalSize<u32>,
+        size: PhysicalSize<u32>,
         window: &Window,
         render: impl FnOnce(&mut SkiaSurface),
-    ) {
+    ) -> Result<(), DriverError> {
         match self {
             #[cfg(all(
                 any(target_os = "linux", target_os = "windows", target_os = "android"),
                 feature = "gpu"
             ))]
-            Self::OpenGl(gl) => gl.present(window, render),
+            Self::OpenGl(gl) => {
+                gl.present(window, render);
+                Ok(())
+            }
             #[cfg(all(target_os = "macos", feature = "gpu"))]
-            Self::Metal(mtl) => mtl.present(_size, window, render),
+            Self::Metal(mtl) => {
+                mtl.present(size, window, render);
+                Ok(())
+            }
             #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
-            Self::Vulkan(vk) => vk.present(_size, window, render),
-            Self::Software(sw) => sw.present(_size, window, render),
+            Self::Vulkan(vk) => vk.present(size, window, render),
+            Self::Software(sw) => {
+                sw.present(size, window, render);
+                Ok(())
+            }
         }
     }
 
@@ -161,18 +214,41 @@ impl GraphicsDriver {
         }
     }
 
-    pub fn resize(&mut self, size: PhysicalSize<u32>) {
+    /// The name of the GPU picked by the driver, only known for OpenGL and Vulkan.
+    pub fn gpu_name(&self) -> Option<&str> {
         match self {
             #[cfg(all(
                 any(target_os = "linux", target_os = "windows", target_os = "android"),
                 feature = "gpu"
             ))]
-            Self::OpenGl(gl) => gl.resize(size),
+            Self::OpenGl(gl) => gl.gpu_name.as_deref(),
+            #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
+            Self::Vulkan(vk) => Some(vk.gpu_name.as_str()),
+            _ => None,
+        }
+    }
+
+    pub fn resize(&mut self, size: PhysicalSize<u32>) -> Result<(), DriverError> {
+        match self {
+            #[cfg(all(
+                any(target_os = "linux", target_os = "windows", target_os = "android"),
+                feature = "gpu"
+            ))]
+            Self::OpenGl(gl) => {
+                gl.resize(size);
+                Ok(())
+            }
             #[cfg(all(target_os = "macos", feature = "gpu"))]
-            Self::Metal(mtl) => mtl.resize(size),
+            Self::Metal(mtl) => {
+                mtl.resize(size);
+                Ok(())
+            }
             #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
             Self::Vulkan(vk) => vk.resize(size),
-            Self::Software(sw) => sw.resize(size),
+            Self::Software(sw) => {
+                sw.resize(size);
+                Ok(())
+            }
         }
     }
 }

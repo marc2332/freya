@@ -181,7 +181,7 @@ fn components() {
 
     fn counter(value: &u8) -> Element {
         rect()
-            .children([label().text(format!("Value is {value}")).into()])
+            .children([label().text(format!("Value is {value}"))])
             .into()
     }
 
@@ -281,7 +281,7 @@ fn state_reconcillation2() {
 
     fn counter(stuff: u8) -> Element {
         rect()
-            .children([label().text(format!("Value is {stuff}")).into()])
+            .children([label().text(format!("Value is {stuff}"))])
             .into()
     }
 
@@ -425,9 +425,7 @@ fn scopes_smart_rerun() {
             .on_mouse_up(move |_| {
                 *value.write() += 1;
             })
-            .children([label()
-                .text(format!("Value is {stuff} {}", value.read()))
-                .into()])
+            .children([label().text(format!("Value is {stuff} {}", value.read()))])
             .into()
     }
 
@@ -462,10 +460,8 @@ fn scopes_smart_rerun() {
 
 #[test]
 fn element_diffing() {
-    let first_render: Element = rect()
-        .children([rect().into(), rect().into(), rect().into()])
-        .into();
-    let second_render: Element = rect().children([rect().into(), rect().into()]).into();
+    let first_render: Element = rect().children([rect(), rect(), rect()]).into();
+    let second_render: Element = rect().children([rect(), rect()]).into();
     let first_render = PathElement::from_element(vec![0], first_render);
     let second_render = PathElement::from_element(vec![0], second_render);
     let mut diff = Diff::default();
@@ -477,15 +473,9 @@ fn element_diffing() {
     // Compare keys from one render to the other one and diff those, then dif normally the others, and finally remove thus not unmarked
 
     let first_render: Element = rect()
-        .children([
-            rect().key(1).into(),
-            rect().key(2).into(),
-            rect().key(3).into(),
-        ])
+        .children([rect().key(1), rect().key(2), rect().key(3)])
         .into();
-    let second_render: Element = rect()
-        .children([rect().key(1).into(), rect().key(3).into()])
-        .into();
+    let second_render: Element = rect().children([rect().key(1), rect().key(3)]).into();
     let first_render = PathElement::from_element(vec![0], first_render);
     let second_render = PathElement::from_element(vec![0], second_render);
     let mut diff = Diff::default();
@@ -1911,7 +1901,7 @@ fn replay_keyed_list(history: &[Vec<u8>]) {
     fn app() -> Element {
         let layout = consume_context::<State<Vec<u8>>>();
         rect()
-            .children(layout.read().iter().map(|key| rect().key(*key).into()))
+            .children(layout.read().iter().map(|key| rect().key(*key)))
             .into()
     }
 

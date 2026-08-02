@@ -16,7 +16,6 @@ fn app() -> impl IntoElement {
             ScrollView::new()
                 .width(Size::px(200.))
                 .spacing(4.)
-                .children((0..25).map(|i| Button::new().key(i).child(format!("Button {i}")).into()))
-                .into()
+                .children((0..25).map(|i| Button::new().key(i).child(format!("Button {i}"))))
         }))
 }
