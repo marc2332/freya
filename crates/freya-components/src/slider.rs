@@ -312,9 +312,7 @@ impl Component for Slider {
                     .on_pointer_down(on_pointer_down)
                     .on_global_pointer_move(on_global_pointer_move)
                     .on_global_pointer_press(on_global_pointer_press)
-            })
-            .maybe(self.enabled && self.scroll_enabled, |el| {
-                el.on_wheel(on_wheel)
+                    .maybe(self.scroll_enabled, |el| el.on_wheel(on_wheel))
             })
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
