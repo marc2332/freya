@@ -457,6 +457,15 @@ impl ElementExt for ParagraphElement {
             CursorMode::Expanded => vertical_offset * 2.,
         };
 
+        let to_cursor_area = |rect: SkRect| {
+            SkRect::new(
+                cursor_area.min_x() + rect.left,
+                cursor_area.min_y() + rect.top + cursor_vertical_offset,
+                cursor_area.min_x() + rect.right,
+                cursor_area.min_y() + rect.bottom + cursor_vertical_size_offset,
+            )
+        };
+
         // Draw highlights
         for (from, to) in self.highlights.iter() {
             if from == to {
@@ -475,26 +484,23 @@ impl ElementExt for ParagraphElement {
             highlights_paint.set_color(self.cursor_style_data.highlight_color);
 
             if rects.is_empty() && *from == 0 {
-                let avg_line_height =
-                    paragraph.height() / paragraph.get_line_metrics().len().max(1) as f32;
-                let rect = SkRect::new(
-                    cursor_area.min_x(),
-                    cursor_area.min_y() + cursor_vertical_offset,
-                    cursor_area.min_x() + 6.,
-                    cursor_area.min_y() + avg_line_height + cursor_vertical_size_offset,
+                let caret_rect = cursor_character_rect(
+                    paragraph,
+                    &self.text(),
+                    *from,
+                    context.text_style_state.text_align,
                 );
-
-                context.canvas.draw_rect(rect, &highlights_paint);
+                context
+                    .canvas
+                    .draw_rect(to_cursor_area(caret_rect), &highlights_paint);
             }
 
             for rect in rects {
-                let rect = SkRect::new(
-                    cursor_area.min_x() + rect.rect.left,
-                    cursor_area.min_y() + rect.rect.top + cursor_vertical_offset,
-                    cursor_area.min_x() + rect.rect.right.max(6.),
-                    cursor_area.min_y() + rect.rect.bottom + cursor_vertical_size_offset,
-                );
-                context.canvas.draw_rect(rect, &highlights_paint);
+                let mut rect = rect.rect;
+                rect.right = rect.right.max(6.);
+                context
+                    .canvas
+                    .draw_rect(to_cursor_area(rect), &highlights_paint);
             }
         }
 
@@ -503,30 +509,26 @@ impl ElementExt for ParagraphElement {
             .iter()
             .any(|highlight| highlight.0 != highlight.1);
 
+        let mut cursor_paint = Paint::default();
+        cursor_paint.set_anti_alias(true);
+        cursor_paint.set_style(PaintStyle::Fill);
+        cursor_paint.set_color(self.cursor_style_data.color);
+
         // Draw block cursor
         if let Some(cursor_index) = self.cursor_index
             && self.cursor_style == CursorStyle::Block
         {
-            let cursor_rect = cursor_character_rect(paragraph, &self.text(), cursor_index)
-                .unwrap_or_else(|| {
-                    let avg_line_height =
-                        paragraph.height() / paragraph.get_line_metrics().len().max(1) as f32;
-                    SkRect::new(0., 0., 6., avg_line_height)
-                });
-            let width = (cursor_rect.right - cursor_rect.left).max(6.0);
-            let cursor_rect = SkRect::new(
-                cursor_area.min_x() + cursor_rect.left,
-                cursor_area.min_y() + cursor_rect.top + cursor_vertical_offset,
-                cursor_area.min_x() + cursor_rect.left + width,
-                cursor_area.min_y() + cursor_rect.bottom + cursor_vertical_size_offset,
+            let mut cursor_rect = cursor_character_rect(
+                paragraph,
+                &self.text(),
+                cursor_index,
+                context.text_style_state.text_align,
             );
-
-            let mut paint = Paint::default();
-            paint.set_anti_alias(true);
-            paint.set_style(PaintStyle::Fill);
-            paint.set_color(self.cursor_style_data.color);
-
-            context.canvas.draw_rect(cursor_rect, &paint);
+            let width = (cursor_rect.right - cursor_rect.left).max(6.0);
+            cursor_rect.right = cursor_rect.left + width;
+            context
+                .canvas
+                .draw_rect(to_cursor_area(cursor_rect), &cursor_paint);
         }
 
         // Draw text
@@ -541,29 +543,20 @@ impl ElementExt for ParagraphElement {
         if let Some(cursor_index) = self.cursor_index
             && !visible_highlights
             && self.cursor_style != CursorStyle::Block
-            && let Some(cursor_rect) = cursor_character_rect(paragraph, &self.text(), cursor_index)
         {
-            let cursor_rect = match self.cursor_style {
-                CursorStyle::Underline => SkRect::new(
-                    cursor_area.min_x() + cursor_rect.left,
-                    cursor_area.min_y() + cursor_rect.bottom - 2. + cursor_vertical_offset,
-                    cursor_area.min_x() + cursor_rect.right,
-                    cursor_area.min_y() + cursor_rect.bottom + cursor_vertical_size_offset,
-                ),
-                _ => SkRect::new(
-                    cursor_area.min_x() + cursor_rect.left,
-                    cursor_area.min_y() + cursor_rect.top + cursor_vertical_offset,
-                    cursor_area.min_x() + cursor_rect.left + 2.,
-                    cursor_area.min_y() + cursor_rect.bottom + cursor_vertical_size_offset,
-                ),
-            };
-
-            let mut paint = Paint::default();
-            paint.set_anti_alias(true);
-            paint.set_style(PaintStyle::Fill);
-            paint.set_color(self.cursor_style_data.color);
-
-            context.canvas.draw_rect(cursor_rect, &paint);
+            let mut cursor_rect = cursor_character_rect(
+                paragraph,
+                &self.text(),
+                cursor_index,
+                context.text_style_state.text_align,
+            );
+            match self.cursor_style {
+                CursorStyle::Underline => cursor_rect.top = cursor_rect.bottom - 2.,
+                _ => cursor_rect.right = cursor_rect.left + 2.,
+            }
+            context
+                .canvas
+                .draw_rect(to_cursor_area(cursor_rect), &cursor_paint);
         }
     }
 }
@@ -656,13 +649,14 @@ impl ParagraphElement {
     }
 }
 
-/// Rect of the grapheme cluster at `cursor_index` (in UTF-16 code units), or a
-/// caret collapsed after the last cluster when the cursor is at the end of the text.
+/// Rect of the grapheme cluster at `cursor_index` (in UTF-16 code units),
+/// or a caret stub when there is nothing to measure.
 fn cursor_character_rect(
     paragraph: &SkParagraph,
     text: &str,
     cursor_index: usize,
-) -> Option<SkRect> {
+    text_align: TextAlign,
+) -> SkRect {
     let mut cluster = 0..0;
     for grapheme in text.graphemes(true) {
         cluster = cluster.end..cluster.end + grapheme.encode_utf16().count();
@@ -670,20 +664,33 @@ fn cursor_character_rect(
             break;
         }
     }
-    if cluster.is_empty() {
-        return None;
+
+    if !cluster.is_empty() {
+        let rects = paragraph.get_rects_for_range(
+            cluster.clone(),
+            RectHeightStyle::Tight,
+            RectWidthStyle::Tight,
+        );
+        if let Some(rect) = rects.first() {
+            let mut rect = rect.rect;
+            if cluster.end <= cursor_index {
+                rect.left = rect.right;
+            }
+            return rect;
+        }
     }
 
-    let rects = paragraph.get_rects_for_range(
-        cluster.clone(),
-        RectHeightStyle::Tight,
-        RectWidthStyle::Tight,
-    );
-    let mut rect = rects.first()?.rect;
-    if cluster.end <= cursor_index {
-        rect.left = rect.right;
+    if let Some(line) = paragraph.get_line_metrics_at(0) {
+        let left = line.left as f32;
+        return SkRect::new(left, 0., left + 6., line.height as f32);
     }
-    Some(rect)
+
+    let left = match text_align {
+        TextAlign::Center => paragraph.max_width() / 2.,
+        TextAlign::Right | TextAlign::End => paragraph.max_width() - 6.,
+        _ => 0.,
+    };
+    SkRect::new(left, 0., left + 6., paragraph.height())
 }
 
 impl From<Paragraph> for Element {
