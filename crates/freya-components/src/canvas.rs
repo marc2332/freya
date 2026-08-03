@@ -163,6 +163,12 @@ impl ElementExt for CanvasElement {
             &paint,
         );
 
+        // Save before the transform and restore back to that exact level, so this element
+        // balances its own canvas stack. The bare `restore()` this replaces popped a level the
+        // element never pushed: it happened to unwind correctly only because the render
+        // pipeline brackets every element with `save()` / `restore_to_count`, so the canvas was
+        // spending the caller's save and relying on the caller to cover it.
+        let saved = context.canvas.save();
         context.canvas.translate((area.min_x(), area.min_y()));
         context
             .canvas
@@ -175,7 +181,7 @@ impl ElementExt for CanvasElement {
             text_style_state: context.text_style_state,
         };
         self.on_render.call(&mut canvas_context);
-        context.canvas.restore();
+        context.canvas.restore_to_count(saved);
     }
 }
 

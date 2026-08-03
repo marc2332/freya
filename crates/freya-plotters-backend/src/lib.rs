@@ -13,6 +13,7 @@ use std::error::Error;
 
 use freya_engine::prelude::*;
 use plotters_backend::{
+    BackendColor,
     BackendCoord,
     BackendStyle,
     BackendTextStyle,
@@ -74,6 +75,12 @@ impl DrawingBackend for PlotSkiaBackend<'_> {
             color.rgb.2,
         ));
         paint.set_stroke_width(style.stroke_width() as f32);
+        // Anti alias the diagonals only. Plotters routes every one pixel wide path through
+        // here, including each axis and every gridline of a mesh, and those are axis aligned on
+        // integer coordinates: a one pixel stroke centred on an integer straddles two pixel
+        // rows, so anti aliasing turns a crisp hairline into a two pixel half opacity smear.
+        let axis_aligned = from.0 == to.0 || from.1 == to.1;
+        paint.set_anti_alias(!axis_aligned);
         self.canvas.draw_line(from, to, &paint);
         Ok(())
     }
@@ -99,6 +106,7 @@ impl DrawingBackend for PlotSkiaBackend<'_> {
             PaintStyle::Stroke
         });
         paint.set_stroke_width(style.stroke_width() as f32);
+        paint.set_anti_alias(true);
         let rect = Rect::new(
             upper_left.0 as f32,
             upper_left.1 as f32,
@@ -191,6 +199,8 @@ impl DrawingBackend for PlotSkiaBackend<'_> {
             color.rgb.2,
         ));
 
+        paint.set_anti_alias(true);
+
         let mut path = PathBuilder::new();
         path.move_to(first);
         for pos in vert {
@@ -275,12 +285,30 @@ impl DrawingBackend for PlotSkiaBackend<'_> {
         ))
     }
 
+    /// Paint one pixel as a 1x1 filled rectangle, the smallest area Skia can fill.
+    ///
+    /// Plotters reaches for this from its own rasterizer whenever a shape has no native
+    /// primitive on the backend (anti aliased circles and polygon edges among them), so a
+    /// backend that does not implement it panics on plots that otherwise draw fine.
     fn draw_pixel(
         &mut self,
-        _point: plotters_backend::BackendCoord,
-        _color: plotters_backend::BackendColor,
-    ) -> Result<(), plotters_backend::DrawingErrorKind<Self::ErrorType>> {
-        todo!()
+        point: BackendCoord,
+        color: BackendColor,
+    ) -> Result<(), DrawingErrorKind<Self::ErrorType>> {
+        if color.alpha == 0.0 {
+            return Ok(());
+        }
+        let mut paint = Paint::default();
+        paint.set_color(Color::from_argb(
+            (255. * color.alpha) as u8,
+            color.rgb.0,
+            color.rgb.1,
+            color.rgb.2,
+        ));
+        let (x, y) = (point.0 as f32, point.1 as f32);
+        self.canvas
+            .draw_rect(Rect::new(x, y, x + 1., y + 1.), &paint);
+        Ok(())
     }
 
     fn get_size(&self) -> (u32, u32) {
