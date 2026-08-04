@@ -659,17 +659,20 @@ fn cursor_character_rect(
     text_align: TextAlign,
 ) -> SkRect {
     let mut cluster = 0..0;
-    for grapheme in text.graphemes(true) {
+    let mut cluster_byte_index = 0;
+    for (byte_index, grapheme) in text.grapheme_indices(true) {
         cluster = cluster.end..cluster.end + grapheme.encode_utf16().count();
+        cluster_byte_index = byte_index;
         if cluster.end > cursor_index {
             break;
         }
     }
 
     if !cluster.is_empty() {
+        // A line below the final cluster is the empty line after a trailing line break
         if cluster.end <= cursor_index
-            && text.ends_with('\n')
-            && let Some(line) = paragraph.get_line_metrics().last()
+            && let Some(cluster_line) = paragraph.get_line_number_at(cluster_byte_index)
+            && let Some(line) = paragraph.get_line_metrics_at(cluster_line + 1)
         {
             let left = line.left as f32;
             let top = (line.baseline - line.ascent) as f32;
