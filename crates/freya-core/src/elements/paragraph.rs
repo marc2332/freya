@@ -650,7 +650,8 @@ impl ParagraphElement {
 }
 
 /// Rect of the grapheme cluster at `cursor_index` (in UTF-16 code units),
-/// or a caret stub when there is nothing to measure.
+/// or a caret stub when there is nothing to measure. A caret after a
+/// trailing line break lands on the empty last line.
 fn cursor_character_rect(
     paragraph: &SkParagraph,
     text: &str,
@@ -666,6 +667,16 @@ fn cursor_character_rect(
     }
 
     if !cluster.is_empty() {
+        if cluster.end <= cursor_index
+            && text.ends_with('\n')
+            && let Some(line) = paragraph.get_line_metrics().last()
+        {
+            let left = line.left as f32;
+            let top = (line.baseline - line.ascent) as f32;
+            let bottom = (line.baseline + line.descent) as f32;
+            return SkRect::new(left, top, left, bottom);
+        }
+
         let rects = paragraph.get_rects_for_range(
             cluster.clone(),
             RectHeightStyle::Tight,
