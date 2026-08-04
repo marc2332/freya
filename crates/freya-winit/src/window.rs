@@ -27,6 +27,10 @@ use futures_util::task::{
     ArcWake,
     waker,
 };
+use keyboard_types::{
+    Code,
+    Key,
+};
 use ragnarok::NodesState;
 use raw_window_handle::HasDisplayHandle;
 #[cfg(target_os = "linux")]
@@ -84,6 +88,7 @@ pub struct AppWindow {
     pub(crate) position: CursorPoint,
     pub(crate) mouse_state: ElementState,
     pub(crate) modifiers_state: ModifiersState,
+    pub(crate) pressed_keys: Vec<(Key, Code)>,
 
     pub(crate) events_receiver: futures_channel::mpsc::UnboundedReceiver<EventsChunk>,
     pub(crate) events_sender: futures_channel::mpsc::UnboundedSender<EventsChunk>,
@@ -381,6 +386,7 @@ impl AppWindow {
             mouse_state: ElementState::Released,
             position: CursorPoint::default(),
             modifiers_state: ModifiersState::default(),
+            pressed_keys: Vec::new(),
 
             events_receiver,
             events_sender,
