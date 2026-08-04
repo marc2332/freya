@@ -513,6 +513,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             width: Preference::Specific(Size::Inner),
             margin: Preference::Specific(Gaps::new_all(0.)),
             list_margin: Preference::Specific(4.),
+            list_max_height: Preference::Specific(Size::px(320.)),
             select_background: Preference::reference("background"),
             background_button: Preference::reference("surface_tertiary"),
             hover_background: Preference::reference("surface_secondary"),

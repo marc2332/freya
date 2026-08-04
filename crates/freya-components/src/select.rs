@@ -7,6 +7,7 @@ use crate::{
     get_theme,
     icons::arrow::ArrowIcon,
     menu::MenuGroup,
+    scrollviews::ScrollView,
 };
 
 define_theme! {
@@ -16,6 +17,14 @@ define_theme! {
         width: Size,
         margin: Gaps,
         list_margin: f32,
+        /// How tall the dropdown may grow before its items scroll.
+        ///
+        /// A list is as long as the items it is given, and a caller that builds those items
+        /// from data cannot know how many there will be. Without a cap a long list simply
+        /// runs past the bottom of the window, and since the list opens downward whenever it
+        /// does not fit *above* either, the items past the edge cannot be reached at all.
+        /// Use [`Size::Inner`] for an uncapped list.
+        list_max_height: Size,
         select_background: Color,
         background_button: Color,
         hover_background: Color,
@@ -359,7 +368,26 @@ impl Component for Select {
                                 .content(Content::Fit)
                                 .opacity(opacity)
                                 .scale(scale)
-                                .children(self.children.clone()),
+                                .child(
+                                    // The cap belongs on the scroll rather than on the box
+                                    // around it: a capped box whose content cannot scroll
+                                    // hides its tail instead of deferring it. Sized by its
+                                    // items in both axes, so a list under the cap lays out
+                                    // exactly as it did before.
+                                    ScrollView::new()
+                                        .width(Size::Inner)
+                                        .height(Size::Inner)
+                                        .max_height(theme.list_max_height.clone())
+                                        // A `MenuItem` is `fill_minimum`, so the items need a
+                                        // `Content::Fit` parent of their own or they grow to
+                                        // the space around the list instead of to its longest
+                                        // item.
+                                        .child(
+                                            rect()
+                                                .content(Content::Fit)
+                                                .children(self.children.clone()),
+                                        ),
+                                ),
                         ),
                 )
             }))
