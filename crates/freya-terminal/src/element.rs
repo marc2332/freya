@@ -27,6 +27,7 @@ use freya_core::{
     },
     fifo_cache::FifoCache,
     prelude::*,
+    style::default_fonts::default_monospace_fonts,
     tree::DiffModifies,
 };
 use freya_engine::prelude::{
@@ -56,7 +57,7 @@ struct TerminalMeasure {
     line_height: f32,
     baseline_offset: f32,
     font: Font,
-    font_family: String,
+    font_families: Vec<Cow<'static, str>>,
     font_size: f32,
     row_cache: RefCell<FifoCache<u64, CachedRow>>,
 }
@@ -66,7 +67,7 @@ pub struct Terminal {
     handle: TerminalHandle,
     layout_data: LayoutData,
     accessibility: AccessibilityData,
-    font_family: String,
+    font_families: Vec<Cow<'static, str>>,
     font_size: f32,
     foreground: Color,
     background: Color,
@@ -79,7 +80,7 @@ impl PartialEq for Terminal {
     fn eq(&self, other: &Self) -> bool {
         self.handle == other.handle
             && self.font_size == other.font_size
-            && self.font_family == other.font_family
+            && self.font_families == other.font_families
             && self.foreground == other.foreground
             && self.background == other.background
             && self.event_handlers.len() == other.event_handlers.len()
@@ -94,7 +95,7 @@ impl Terminal {
             handle,
             layout_data: Default::default(),
             accessibility,
-            font_family: "Cascadia Code".to_string(),
+            font_families: default_monospace_fonts(),
             font_size: 14.,
             foreground: (220, 220, 220).into(),
             background: (10, 10, 10).into(),
@@ -114,8 +115,9 @@ impl Terminal {
         self
     }
 
-    pub fn font_family(mut self, font_family: impl Into<String>) -> Self {
-        self.font_family = font_family.into();
+    /// Sets the preferred font family, keeping the default fonts as fallbacks.
+    pub fn font_family(mut self, font_family: impl Into<Cow<'static, str>>) -> Self {
+        self.font_families.insert(0, font_family.into());
         self
     }
 
@@ -162,7 +164,7 @@ impl ElementExt for Terminal {
         let mut diff = DiffModifies::empty();
 
         if self.font_size != terminal.font_size
-            || self.font_family != terminal.font_family
+            || self.font_families != terminal.font_families
             || self.handle != terminal.handle
             || self.event_handlers.len() != terminal.event_handlers.len()
         {
@@ -209,7 +211,7 @@ impl ElementExt for Terminal {
 
         let mut style = TextStyle::new();
         style.set_font_size(scaled_font_size);
-        style.set_font_families(&[self.font_family.as_str()]);
+        style.set_font_families(&self.font_families);
         builder.push_style(&style);
         builder.add_text("W");
 
@@ -248,7 +250,7 @@ impl ElementExt for Terminal {
 
         let typeface = context
             .font_collection
-            .find_typefaces(&[&self.font_family], FontStyle::default())
+            .find_typefaces(&self.font_families, FontStyle::default())
             .into_iter()
             .next()
             .expect("Terminal font family not found");
@@ -272,7 +274,7 @@ impl ElementExt for Terminal {
                 line_height,
                 baseline_offset,
                 font,
-                font_family: self.font_family.clone(),
+                font_families: self.font_families.clone(),
                 font_size: scaled_font_size,
                 row_cache: RefCell::new(FifoCache::new()),
             }),
@@ -314,7 +316,7 @@ impl ElementExt for Terminal {
             foreground: self.foreground,
             background: self.background,
             selection_color: self.selection_color,
-            font_family: &measure.font_family,
+            font_families: &measure.font_families,
             font_size: measure.font_size,
             selection,
             display_offset,

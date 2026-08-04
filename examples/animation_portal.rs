@@ -101,6 +101,5 @@ fn app() -> impl IntoElement {
                         .rounded()
                         .on_press(move |_| show_popup.set(Some(i))),
                 )
-                .into()
         }))
 }

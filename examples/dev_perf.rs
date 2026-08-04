@@ -39,20 +39,20 @@ fn main() {
             })
             .children(
                 [
-                    label().text(format!("Value is {}", value())).into(),
+                    label().text(format!("Value is {}", value())).into_element(),
                     rect()
                         .children(
                             (0..count())
-                                .map(|i| label().text(format!("Value is {i}")).into())
+                                .map(|i| label().text(format!("Value is {i}")))
                                 .collect::<Vec<_>>(),
                         )
-                        .into(),
-                    label().text("Hey!").into(),
+                        .into_element(),
+                    label().text("Hey!").into_element(),
                 ]
                 .into_iter()
                 .chain({
                     if value() == stuff + 1 {
-                        vec![label().text("Hello World!").into()]
+                        vec![label().text("Hello World!").into_element()]
                     } else {
                         vec![]
                     }

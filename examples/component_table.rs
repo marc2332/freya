@@ -105,19 +105,18 @@ fn app() -> impl IntoElement {
                                 })
                                 .on_press(move |_| on_column_head_click(&order_by))
                                 .child(text.to_string())
-                                .into()
                         },
                     )),
                 ),
             )
             .child(TableBody::new().child(ScrollView::new().children(
                 filtered_data.enumerate().map(|(i, items)| {
-                    TableRow::new()
-                        .key(i)
-                        .children(items.iter().enumerate().map(|(n, item)| {
-                            TableCell::new().key(n).child(item.to_string()).into()
-                        }))
-                        .into()
+                    TableRow::new().key(i).children(
+                        items
+                            .iter()
+                            .enumerate()
+                            .map(|(n, item)| TableCell::new().key(n).child(item.to_string())),
+                    )
                 }),
             ))),
     )

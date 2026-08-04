@@ -38,7 +38,6 @@ impl Component for PortalDemo {
                                     .child(portal_card(i)),
                             )
                             .on_press(move |_| show_popup.set(Some(i)))
-                            .into()
                     })),
             )
     }

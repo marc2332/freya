@@ -55,11 +55,8 @@ fn app() -> impl IntoElement {
         .child(
             DraggableCanvas::new()
                 .expanded()
-                .children(radio.read().panels.iter().map(|panel| {
-                    TerminalPanel {
-                        data: panel.clone(),
-                    }
-                    .into()
+                .children(radio.read().panels.iter().map(|panel| TerminalPanel {
+                    data: panel.clone(),
                 })),
         )
         .child(
@@ -116,6 +113,13 @@ impl Component for TerminalPanel {
         let a11y_id = use_a11y();
         let focus = use_focus(a11y_id);
         let mut dimensions = use_state(|| (0.0, 0.0));
+
+        use_side_effect(move || {
+            let focused = *Platform::get().is_app_focused.read() && focus().is_focused();
+            if let Some(handle) = handle.read().clone() {
+                handle.focus_changed(focused);
+            }
+        });
 
         let background = if focus.read().is_focused() {
             (25, 25, 25)

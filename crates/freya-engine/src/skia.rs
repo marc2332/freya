@@ -1,13 +1,28 @@
-#[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
+#[cfg(feature = "gl")]
 pub use skia_safe::gpu::gl::{
     Format,
     FramebufferInfo,
     Interface,
 };
-#[cfg(target_os = "macos")]
+#[cfg(feature = "metal")]
 pub use skia_safe::gpu::mtl;
-#[cfg(any(target_os = "linux", target_os = "windows"))]
+#[cfg(feature = "vulkan")]
 pub use skia_safe::gpu::vk;
+#[cfg(any(feature = "gl", feature = "vulkan", feature = "metal"))]
+pub use skia_safe::gpu::{
+    self,
+    BackendRenderTarget,
+    Budgeted,
+    DirectContext,
+    RecordingContext,
+    SurfaceOrigin,
+    backend_render_targets,
+    direct_contexts,
+    surfaces::{
+        render_target,
+        wrap_backend_render_target,
+    },
+};
 pub use skia_safe::{
     AlphaType,
     Bitmap,
@@ -64,20 +79,6 @@ pub use skia_safe::{
         Slant,
         Weight,
         Width,
-    },
-    gpu::{
-        self,
-        BackendRenderTarget,
-        Budgeted,
-        DirectContext,
-        RecordingContext,
-        SurfaceOrigin,
-        backend_render_targets,
-        direct_contexts,
-        surfaces::{
-            render_target,
-            wrap_backend_render_target,
-        },
     },
     gradient::{
         Colors,

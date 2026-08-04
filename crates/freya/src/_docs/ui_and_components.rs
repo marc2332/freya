@@ -141,7 +141,7 @@
 //!             .read()
 //!             .iter()
 //!             .enumerate()
-//!             .map(|(index, item)| label().key(index).text(item.clone()).into()),
+//!             .map(|(index, item)| label().key(index).text(item.clone())),
 //!     )
 //! }
 //! ```
@@ -191,7 +191,7 @@
 //! fn app(ids: Vec<u64>) -> impl IntoElement {
 //!     rect().children(
 //!         ids.iter()
-//!             .map(|id| Task::new(format!("Task {id}")).key(*id).into()),
+//!             .map(|id| Task::new(format!("Task {id}")).key(*id)),
 //!     )
 //! }
 //! ```

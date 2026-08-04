@@ -190,9 +190,15 @@ pub mod integration {
         platform::*,
         render_pipeline::RenderPipeline,
         rendering_ticker::*,
-        runner::Runner,
+        runner::{
+            Runner,
+            TasksPollStage,
+        },
         scope_id::ScopeId,
-        style::default_fonts::default_fonts,
+        style::default_fonts::{
+            default_fonts,
+            default_monospace_fonts,
+        },
         tree::{
             DiffModifies,
             Tree,

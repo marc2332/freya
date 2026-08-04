@@ -111,6 +111,17 @@ impl<Q: MutationCapability> MutationStateData<Q> {
         }
     }
 
+    /// Get the error as an [Option].
+    pub fn err(&self) -> Option<&Q::Err> {
+        match self {
+            Self::Settled { res: Err(err), .. } => Some(err),
+            Self::Loading {
+                res: Some(Err(err)),
+            } => Some(err),
+            _ => None,
+        }
+    }
+
     /// Get the value as an [Result] if possible, otherwise it will panic.
     pub fn unwrap(&self) -> &Result<Q::Ok, Q::Err> {
         match self {
@@ -283,6 +294,12 @@ impl<Q: MutationCapability> Hash for Mutation<Q> {
     }
 }
 
+impl<Q: MutationCapability> From<Q> for Mutation<Q> {
+    fn from(mutation: Q) -> Self {
+        Self::new(mutation)
+    }
+}
+
 impl<Q: MutationCapability> Mutation<Q> {
     /// Run the mutation, using its mock if there is one.
     async fn run(&self, keys: &Q::Keys) -> Result<Q::Ok, Q::Err> {
@@ -409,7 +426,8 @@ impl<Q: MutationCapability> UseMutation<Q> {
 /// This is how long will the mutation result be kept cached after there are no more subscribers of that mutation.
 ///
 /// See [Mutation::clean_time].
-pub fn use_mutation<Q: MutationCapability>(mutation: Mutation<Q>) -> UseMutation<Q> {
+pub fn use_mutation<Q: MutationCapability>(mutation: impl Into<Mutation<Q>>) -> UseMutation<Q> {
+    let mutation = mutation.into();
     let mut storage = match try_consume_context::<MutationsStorage<Q>>() {
         Some(storage) => storage,
         None => {

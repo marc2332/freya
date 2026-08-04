@@ -277,7 +277,8 @@
 //!
 //! ### Using a mutation in a component
 //!
-//! Call [`use_mutation`](crate::mutation::use_mutation) with a [`Mutation`](crate::mutation::Mutation):
+//! Call [`use_mutation`](crate::mutation::use_mutation) with your capability, or with a
+//! [`Mutation`](crate::mutation::Mutation) if you need to configure it:
 //!
 //! ```rust,no_run
 //! # use freya::prelude::*;
@@ -295,7 +296,7 @@
 //!
 //! impl Component for UserEditor {
 //!     fn render(&self) -> impl IntoElement {
-//!         let mutation = use_mutation(Mutation::new(UpdateUser { user_id: self.0 }));
+//!         let mutation = use_mutation(UpdateUser { user_id: self.0 });
 //!
 //!         let status = match &*mutation.read().state() {
 //!             MutationStateData::Pending => "Ready",
