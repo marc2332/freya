@@ -1,4 +1,7 @@
-use std::any::Any;
+use std::{
+    any::Any,
+    borrow::Cow,
+};
 
 use accesskit::{
     Action,
@@ -362,6 +365,7 @@ impl AccessibilityTree {
 
         if node_id == NodeId::ROOT {
             accessibility_data.builder.set_role(Role::Window);
+            accessibility_data.builder.set_label(Cow::from(&tree.title));
         }
 
         // Set children

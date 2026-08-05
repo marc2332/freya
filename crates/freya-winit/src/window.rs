@@ -309,6 +309,7 @@ impl AppWindow {
         if let Some(strategy) = result.auto_focus {
             tree.accessibility_diff.request_focus(strategy);
         }
+        tree.title = window.title();
         tree.measure_layout(
             (
                 window.inner_size().width as f32,
