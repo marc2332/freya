@@ -312,7 +312,7 @@ impl TestingRunner {
         );
         self.tree.borrow_mut().accessibility_diff.clear();
         self.accessibility.focused_id = ACCESSIBILITY_ROOT_ID;
-        self.accessibility.init(&mut self.tree.borrow_mut());
+        self.accessibility.init(&mut self.tree.borrow_mut(), "");
         self.sync_and_update();
     }
 
@@ -369,9 +369,11 @@ impl TestingRunner {
             &self.default_fonts,
         );
 
-        let accessibility_update = self
-            .accessibility
-            .process_updates(&mut self.tree.borrow_mut(), &self.events_sender);
+        let accessibility_update = self.accessibility.process_updates(
+            &mut self.tree.borrow_mut(),
+            &self.events_sender,
+            "",
+        );
 
         self.platform
             .focused_accessibility_id
@@ -381,7 +383,12 @@ impl TestingRunner {
         let layout_node = tree.layout.get(&node_id).unwrap();
         self.platform
             .focused_accessibility_node
-            .set_if_modified(AccessibilityTree::create_node(node_id, layout_node, &tree));
+            .set_if_modified(AccessibilityTree::create_node(
+                node_id,
+                layout_node,
+                &tree,
+                "",
+            ));
     }
 
     /// Poll async tasks and events every `step` time for a total time of `duration`.

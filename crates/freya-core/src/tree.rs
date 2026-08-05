@@ -83,9 +83,6 @@ pub struct Tree {
     pub children: FxHashMap<NodeId, Vec<NodeId>>,
     pub heights: FxHashMap<NodeId, u16>,
 
-    // The root window title
-    pub title: String,
-
     pub elements: FxHashMap<NodeId, Rc<dyn ElementExt>>,
 
     // Event listeners

@@ -846,14 +846,19 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 app.process_accessibility_update(mode);
                             }
                             AccessibilityTask::Init => {
-                                let update = app.accessibility.init(&mut app.tree);
+                                let title = app.window.title();
+                                let update = app.accessibility.init(&mut app.tree, &title);
                                 app.platform
                                     .focused_accessibility_id
                                     .set_if_modified(update.focus);
                                 let node_id = app.accessibility.focused_node_id().unwrap();
                                 let layout_node = app.tree.layout.get(&node_id).unwrap();
-                                let focused_node =
-                                    AccessibilityTree::create_node(node_id, layout_node, &app.tree);
+                                let focused_node = AccessibilityTree::create_node(
+                                    node_id,
+                                    layout_node,
+                                    &app.tree,
+                                    &title,
+                                );
                                 app.window.set_ime_allowed(is_ime_role(focused_node.role()));
                                 app.platform
                                     .focused_accessibility_node
