@@ -907,7 +907,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             PluginHandle::new(&self.proxy),
                         );
 
-                        app.ticker_sender.send(()).ok();
+                        app.ticker_sender.notify();
 
                         self.plugins.send(
                             PluginEvent::AfterRedraw {

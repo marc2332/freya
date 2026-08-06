@@ -392,7 +392,7 @@ impl TestingRunner {
             self.handle_events_immediately();
             self.sync_and_update();
             std::thread::sleep(step);
-            self.ticker_sender.send(()).ok();
+            self.ticker_sender.notify();
         }
     }
 
@@ -403,7 +403,7 @@ impl TestingRunner {
             self.handle_events_immediately();
             self.sync_and_update();
             std::thread::sleep(step);
-            self.ticker_sender.send(()).ok();
+            self.ticker_sender.notify();
         }
     }
 
