@@ -127,7 +127,7 @@ impl<T: Clone + Eq + Hash + Debug + 'static> Component for Portal<T> {
         let mut previous_size = use_state::<Option<Area>>(|| None);
         let mut current_size = use_state::<Option<Area>>(|| None);
         let mut last_dependency = use_state::<Option<u64>>(|| None);
-        let mut animating = use_state(|| false);
+        let mut should_animate = use_state(|| false);
 
         let mut animation = use_animation_with_dependencies(
             &(self.function, self.duration, self.ease),
@@ -161,12 +161,12 @@ impl<T: Clone + Eq + Hash + Debug + 'static> Component for Portal<T> {
         // Rest the portal once the animation stops
         use_side_effect(move || {
             if !*animation.is_running().read() {
-                animating.set_if_modified(false);
+                should_animate.set_if_modified(false);
             }
         });
 
         // Area the children are placed at
-        let at_rest = !animating() && current_size.read().is_some();
+        let at_rest = !should_animate() && current_size.read().is_some();
         let area = if at_rest {
             current_size.read().unwrap_or_default()
         } else {
@@ -204,7 +204,7 @@ impl<T: Clone + Eq + Hash + Debug + 'static> Component for Portal<T> {
 
                 previous_size.set(current_size());
                 current_size.set(Some(e.area));
-                animating.set_if_modified(animate);
+                should_animate.set_if_modified(animate);
 
                 spawn(async move {
                     if animate {
