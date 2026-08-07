@@ -2,7 +2,6 @@ use rio_vt::{
     config::colors::{
         AnsiColor,
         ColorRgb,
-        NamedColor,
     },
     crosswords::{
         Crosswords,
@@ -25,7 +24,6 @@ use rio_vt::{
 };
 
 /// A resolved terminal cell with the character, colors and attributes the renderer consumes.
-#[derive(Clone)]
 pub(crate) struct TermCell {
     pub character: char,
     pub foreground: AnsiColor,
@@ -34,72 +32,69 @@ pub(crate) struct TermCell {
     pub wide: bool,
     pub wide_spacer: bool,
     pub zerowidth: Vec<char>,
-    pub hyperlink: Option<String>,
+    pub has_hyperlink: bool,
 }
 
 impl TermCell {
     pub(crate) fn from_square(square: &Square, styles: &[Style], extras: &ExtrasTable) -> Self {
-        let (foreground, background, flags) = match square.content_tag() {
-            ContentTag::Codepoint => {
-                let style = styles
+        let (style, extra) = match square.content_tag() {
+            ContentTag::Codepoint => (
+                styles
                     .get(square.style_id() as usize)
                     .copied()
-                    .unwrap_or_default();
-                (style.fg, style.bg, style.flags)
-            }
+                    .unwrap_or_default(),
+                square.extras_id().and_then(|id| extras.get(id)),
+            ),
             ContentTag::BgPalette => (
-                AnsiColor::Named(NamedColor::Foreground),
-                AnsiColor::Indexed(square.bg_palette_index()),
-                StyleFlags::empty(),
+                Style {
+                    bg: AnsiColor::Indexed(square.bg_palette_index()),
+                    ..Style::default()
+                },
+                None,
             ),
             ContentTag::BgRgb => {
                 let (red, green, blue) = square.bg_rgb();
                 (
-                    AnsiColor::Named(NamedColor::Foreground),
-                    AnsiColor::Spec(ColorRgb {
-                        r: red,
-                        g: green,
-                        b: blue,
-                    }),
-                    StyleFlags::empty(),
+                    Style {
+                        bg: AnsiColor::Spec(ColorRgb {
+                            r: red,
+                            g: green,
+                            b: blue,
+                        }),
+                        ..Style::default()
+                    },
+                    None,
                 )
             }
         };
 
-        let (zerowidth, hyperlink) = square
-            .extras_id()
-            .and_then(|id| extras.get(id))
-            .map(|extra| {
-                (
-                    extra.zerowidth.clone(),
-                    extra.hyperlink.as_ref().map(|link| link.uri().to_owned()),
-                )
-            })
-            .unwrap_or_default();
-
         TermCell {
             character: square.c(),
-            foreground,
-            background,
-            inverse: flags.contains(StyleFlags::INVERSE),
+            foreground: style.fg,
+            background: style.bg,
+            inverse: style.flags.contains(StyleFlags::INVERSE),
             wide: matches!(square.wide(), Wide::Wide),
             wide_spacer: matches!(square.wide(), Wide::Spacer | Wide::LeadingSpacer),
-            zerowidth,
-            hyperlink,
+            zerowidth: extra
+                .map(|extra| extra.zerowidth.clone())
+                .unwrap_or_default(),
+            has_hyperlink: extra.is_some_and(|extra| extra.hyperlink.is_some()),
         }
     }
 }
 
-/// Resolve the viewport row at `viewport_row` (0 is the top of the visible area) into [`TermCell`]s.
+/// Resolve the viewport row at `viewport_row` (0 is the top of the visible area) into `cells`.
 pub(crate) fn snapshot_row<T: EventListener>(
     term: &Crosswords<T>,
     viewport_row: usize,
-) -> Vec<TermCell> {
-    let line = Line(viewport_row as i32 - term.display_offset() as i32);
-    let row = &term.grid[line];
+    cells: &mut Vec<TermCell>,
+) {
+    let row = &term.grid[Line(viewport_row as i32 - term.display_offset() as i32)];
     let styles = term.grid.style_set.styles();
     let extras = &term.grid.extras_table;
-    (0..term.columns())
-        .map(|column| TermCell::from_square(&row[Column(column)], styles, extras))
-        .collect()
+    cells.clear();
+    cells.extend(
+        (0..term.columns())
+            .map(|column| TermCell::from_square(&row[Column(column)], styles, extras)),
+    );
 }

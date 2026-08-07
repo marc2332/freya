@@ -254,11 +254,12 @@ impl Renderer<'_> {
     fn render_text_row(&mut self, row: &[TermCell], y: f32) {
         let mut hasher = FxHasher::default();
         let mut needs_fallback = false;
+        let mut text = String::new();
         for cell in row.iter() {
             if cell.wide_spacer {
                 continue;
             }
-            let text = cell_text(cell);
+            write_cell_text(cell, &mut text);
             let cell_fg = self.cell_foreground(cell);
             text.hash(&mut hasher);
             cell_fg.hash(&mut hasher);
@@ -292,12 +293,15 @@ impl Renderer<'_> {
     }
 
     fn cell_foreground(&self, cell: &TermCell) -> Color {
-        let raw = if cell.inverse {
-            cell.background
-        } else {
-            cell.foreground
-        };
-        map_ansi_color(raw, self.foreground, self.background)
+        map_ansi_color(
+            if cell.inverse {
+                cell.background
+            } else {
+                cell.foreground
+            },
+            self.foreground,
+            self.background,
+        )
     }
 
     /// Fast path: same-color glyphs batched into one `TextBlob`, each glyph
@@ -307,13 +311,14 @@ impl Renderer<'_> {
         let mut glyphs = String::new();
         let mut glyph_positions: Vec<f32> = Vec::new();
         let mut blobs: Vec<(TextBlob, Color)> = Vec::new();
+        let mut text = String::new();
 
         for (col_idx, cell) in row.iter().enumerate() {
             if cell.wide_spacer {
                 continue;
             }
             let cell_fg = self.cell_foreground(cell);
-            let text = cell_text(cell);
+            write_cell_text(cell, &mut text);
             let x = (col_idx as f32) * self.char_width;
 
             if current_color != Some(cell_fg) {
@@ -366,6 +371,7 @@ impl Renderer<'_> {
         let mut builder =
             ParagraphBuilder::new(&ParagraphStyle::default(), self.font_collection.clone());
 
+        let mut text = String::new();
         for cell in row.iter() {
             if cell.wide_spacer {
                 continue;
@@ -373,7 +379,8 @@ impl Renderer<'_> {
             let mut cell_style = text_style.clone();
             cell_style.set_color(self.cell_foreground(cell));
             builder.push_style(&cell_style);
-            builder.add_text(cell_text(cell).as_str());
+            write_cell_text(cell, &mut text);
+            builder.add_text(text.as_str());
         }
 
         let mut paragraph = builder.build();
@@ -385,15 +392,12 @@ impl Renderer<'_> {
     }
 }
 
-/// Visible text for a cell, mapping empty (`\0`) and tab (`\t`) cells to a space.
-fn cell_text(cell: &TermCell) -> String {
-    let mut text = String::new();
+/// Write the visible text for a cell into `text`, mapping empty (`\0`) and tab (`\t`) cells to a space.
+fn write_cell_text(cell: &TermCell, text: &mut String) {
+    text.clear();
     text.push(match cell.character {
         '\0' | '\t' => ' ',
         character => character,
     });
-    for character in &cell.zerowidth {
-        text.push(*character);
-    }
-    text
+    text.extend(&cell.zerowidth);
 }

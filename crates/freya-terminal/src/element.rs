@@ -34,14 +34,14 @@ use freya_engine::prelude::{
     ParagraphStyle,
     TextStyle,
 };
-use rio_vt::crosswords::{
-    Mode,
-    pos::Column,
-};
+use rio_vt::ansi::CursorShape;
 use torin::prelude::Size2D;
 
 use crate::{
-    cell::TermCell,
+    cell::{
+        TermCell,
+        snapshot_row,
+    },
     handle::TerminalHandle,
     rendering::{
         CachedRow,
@@ -290,11 +290,9 @@ impl ElementExt for Terminal {
             .unwrap();
 
         let term = self.handle.term();
-        let columns = term.columns();
         let screen_lines = term.screen_lines();
         let display_offset = term.display_offset();
         let total_scrollback = term.history_size();
-        let selection = term.selection.as_ref().and_then(|s| s.to_range(&*term));
 
         let mut paint = Paint::default();
         paint.set_anti_alias(true);
@@ -315,40 +313,31 @@ impl ElementExt for Terminal {
             selection_color: self.selection_color,
             font_families: &measure.font_families,
             font_size: measure.font_size,
-            selection,
+            selection: term.selection.as_ref().and_then(|s| s.to_range(&*term)),
             display_offset,
         };
 
         renderer.render_background();
 
-        let visible_rows = term.visible_rows();
-        let styles = term.grid.style_set.styles();
-        let extras = &term.grid.extras_table;
-        let mut row: Vec<TermCell> = Vec::with_capacity(columns);
+        let mut row: Vec<TermCell> = Vec::with_capacity(term.columns());
         let mut y = area.min_y();
-        for (row_idx, visible_row) in visible_rows.iter().enumerate().take(screen_lines) {
+        for row_idx in 0..screen_lines {
             if y + measure.line_height > area.max_y() {
                 break;
             }
-            row.clear();
-            row.extend(
-                (0..columns)
-                    .map(|col| TermCell::from_square(&visible_row[Column(col)], styles, extras)),
-            );
+            snapshot_row(&term, row_idx, &mut row);
             renderer.render_row(row_idx, &row, y);
             y += measure.line_height;
         }
 
-        if display_offset == 0 && term.mode().contains(Mode::SHOW_CURSOR) {
-            let cursor_pos = term.cursor().pos;
-            let cursor_line = cursor_pos.row.0.max(0) as usize;
+        let cursor = term.cursor();
+        if cursor.content != CursorShape::Hidden {
+            let cursor_line = cursor.pos.row.0.max(0) as usize;
             let cursor_y = area.min_y() + (cursor_line as f32) * measure.line_height;
-            if cursor_y + measure.line_height <= area.max_y() {
-                let cursor_cell = visible_rows.get(cursor_line).map(|visible_row| {
-                    TermCell::from_square(&visible_row[Column(cursor_pos.col.0)], styles, extras)
-                });
-                if let Some(cursor_cell) = cursor_cell {
-                    renderer.render_cursor(&cursor_cell, cursor_y, cursor_pos.col.0);
+            if cursor_line < screen_lines && cursor_y + measure.line_height <= area.max_y() {
+                snapshot_row(&term, cursor_line, &mut row);
+                if let Some(cursor_cell) = row.get(cursor.pos.col.0) {
+                    renderer.render_cursor(cursor_cell, cursor_y, cursor.pos.col.0);
                 }
             }
         }

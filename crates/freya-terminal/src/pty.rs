@@ -1,6 +1,5 @@
 use std::{
     cell::RefCell,
-    path::PathBuf,
     rc::Rc,
     time::Instant,
 };
@@ -35,24 +34,15 @@ use rio_vt::{
         RioEvent,
         WindowId,
     },
-    performer::{
-        handler::Processor,
-        parser::Parser as VteParser,
-    },
+    performer::handler::Processor,
 };
 
-use crate::{
-    handle::{
-        TerminalCleaner,
-        TerminalError,
-        TerminalHandle,
-        TerminalId,
-        TerminalInner,
-    },
-    osc7::{
-        CwdSink,
-        parse_cwd_url,
-    },
+use crate::handle::{
+    TerminalCleaner,
+    TerminalError,
+    TerminalHandle,
+    TerminalId,
+    TerminalInner,
 };
 
 /// Listener proxy passed into rio-vt's `Crosswords`. Routes its side-effects
@@ -107,7 +97,6 @@ pub(crate) fn spawn_pty(
     let closer_notifier = ArcNotify::new();
     let output_notifier = ArcNotify::new();
     let title_notifier = ArcNotify::new();
-    let cwd: Rc<RefCell<Option<PathBuf>>> = Rc::new(RefCell::new(None));
     let title: Rc<RefCell<Option<String>>> = Rc::new(RefCell::new(None));
     let clipboard_content: Rc<RefCell<Option<String>>> = Rc::new(RefCell::new(None));
     let clipboard_notifier = ArcNotify::new();
@@ -129,24 +118,23 @@ pub(crate) fn spawn_pty(
         scrollback_size,
     )));
 
-    let pty_system = native_pty_system();
-    let pair = pty_system
+    let pair = native_pty_system()
         .openpty(PtySize::default())
         .map_err(|_| TerminalError::NotInitialized)?;
-    let master_writer = pair
-        .master
-        .take_writer()
-        .map_err(|_| TerminalError::NotInitialized)?;
-    *writer.borrow_mut() = Some(master_writer);
+    *writer.borrow_mut() = Some(
+        pair.master
+            .take_writer()
+            .map_err(|_| TerminalError::NotInitialized)?,
+    );
 
     pair.slave
         .spawn_command(command)
         .map_err(|_| TerminalError::NotInitialized)?;
-    let reader = pair
-        .master
-        .try_clone_reader()
-        .map_err(|_| TerminalError::NotInitialized)?;
-    let mut reader = blocking::Unblock::new(reader);
+    let mut reader = blocking::Unblock::new(
+        pair.master
+            .try_clone_reader()
+            .map_err(|_| TerminalError::NotInitialized)?,
+    );
 
     let inner = Rc::new(RefCell::new(TerminalInner {
         master: pair.master,
@@ -161,16 +149,12 @@ pub(crate) fn spawn_pty(
         let writer = writer.clone();
         let closer_notifier = closer_notifier.clone();
         let output_notifier = output_notifier.clone();
-        let cwd = cwd.clone();
         async move {
             let mut processor = Processor::default();
-            let mut cwd_parser = VteParser::new();
-            let mut cwd_sink = CwdSink::default();
             loop {
                 let mut buf = [0u8; 4096];
-                let sync_deadline = processor.sync_timeout().sync_timeout();
                 let read = async { Some(reader.read(&mut buf).await) };
-                let result = if let Some(deadline) = sync_deadline {
+                let result = if let Some(deadline) = processor.sync_timeout().sync_timeout() {
                     let expiry = async {
                         Timer::at(deadline).await;
                         None
@@ -187,14 +171,7 @@ pub(crate) fn spawn_pty(
                     }
                     Some(Ok(0)) | Some(Err(_)) => break,
                     Some(Ok(n)) => {
-                        let data = &buf[..n];
-                        processor.advance(&mut *term.borrow_mut(), data);
-
-                        cwd_parser.advance(&mut cwd_sink, data);
-                        if let Some(url) = cwd_sink.take() {
-                            *cwd.borrow_mut() = Some(parse_cwd_url(&url));
-                        }
-
+                        processor.advance(&mut *term.borrow_mut(), &buf[..n]);
                         output_notifier.notify();
                         platform.send(UserEvent::RequestRedraw);
                     }
@@ -218,7 +195,6 @@ pub(crate) fn spawn_pty(
         term,
         writer,
         inner,
-        cwd,
         title,
         title_notifier,
         clipboard_content,

@@ -135,8 +135,6 @@ pub struct TerminalHandle {
     pub(crate) writer: Rc<RefCell<Option<Box<dyn Write + Send>>>>,
     /// Handle-local state (PTY master, input tracking).
     pub(crate) inner: Rc<RefCell<TerminalInner>>,
-    /// Current working directory reported by the shell via OSC 7.
-    pub(crate) cwd: Rc<RefCell<Option<PathBuf>>>,
     /// Window title reported by the shell via OSC 0 or OSC 2.
     pub(crate) title: Rc<RefCell<Option<String>>>,
     /// Notifier that signals when the terminal/PTY closes.
@@ -278,8 +276,7 @@ impl TerminalHandle {
 
     /// Paste text into the PTY, wrapping in bracketed-paste markers if the app enabled them.
     pub fn paste(&self, text: &str) -> Result<(), TerminalError> {
-        let bracketed = self.mode().contains(Mode::BRACKETED_PASTE);
-        if bracketed {
+        if self.mode().contains(Mode::BRACKETED_PASTE) {
             let filtered = text.replace(['\x1b', '\x03'], "");
             self.write_raw(b"\x1b[200~")?;
             self.write_raw(filtered.as_bytes())?;
@@ -343,7 +340,7 @@ impl TerminalHandle {
 
     /// Current working directory reported via OSC 7.
     pub fn cwd(&self) -> Option<PathBuf> {
-        self.cwd.borrow().clone()
+        self.term.borrow().current_directory.clone()
     }
 
     /// Window title reported via OSC 0 / 2.
@@ -446,9 +443,8 @@ impl TerminalHandle {
         let scroll_delta = if delta_y > 0.0 { lines } else { -lines };
 
         let mode = self.mode();
-        let scroll_offset = self.term.borrow().display_offset();
 
-        if scroll_offset > 0 {
+        if self.term.borrow().display_offset() > 0 {
             self.scroll(scroll_delta);
         } else if mode.intersects(Mode::MOUSE_MODE) {
             let _ = self.write_raw(
@@ -538,10 +534,19 @@ impl TerminalHandle {
         let term = self.term.borrow();
         let viewport_row = (row.max(0.0) as usize).min(term.screen_lines().saturating_sub(1));
         let column = (col.max(0.0) as usize).min(term.columns().saturating_sub(1));
-        let cells = snapshot_row(&term, viewport_row);
-        if let Some(uri) = cells.get(column).and_then(|cell| cell.hyperlink.clone()) {
-            return Some(uri);
+        let square =
+            term.grid[Line(viewport_row as i32 - term.display_offset() as i32)][Column(column)];
+        if !square.is_bg_only()
+            && let Some(hyperlink) = square
+                .extras_id()
+                .and_then(|id| term.grid.extras_table.get(id))
+                .and_then(|extras| extras.hyperlink.as_ref())
+        {
+            return Some(hyperlink.uri().to_owned());
         }
+
+        let mut cells = Vec::new();
+        snapshot_row(&term, viewport_row, &mut cells);
         url_at(&cells, column)
     }
 

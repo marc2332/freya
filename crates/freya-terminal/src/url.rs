@@ -24,7 +24,7 @@ pub(crate) fn link_ranges(row: &[TermCell]) -> Vec<(usize, usize)> {
         if cell.wide_spacer {
             continue;
         }
-        if cell.hyperlink.is_some() {
+        if cell.has_hyperlink {
             run_start.get_or_insert(col);
         } else if let Some(start) = run_start.take() {
             ranges.push((start, col));

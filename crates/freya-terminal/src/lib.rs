@@ -72,7 +72,6 @@ mod cell;
 pub mod colors;
 pub mod element;
 pub mod handle;
-mod osc7;
 pub mod parser;
 pub mod pty;
 mod rendering;
