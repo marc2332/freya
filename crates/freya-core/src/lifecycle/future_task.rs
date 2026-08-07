@@ -9,7 +9,7 @@ pub enum FutureState<D> {
 }
 
 impl<D> FutureState<D> {
-    pub fn try_as_fulfilled(&self) -> Option<&D> {
+    pub fn ok(&self) -> Option<&D> {
         if let Self::Fulfilled(d) = &self {
             Some(d)
         } else {
@@ -17,9 +17,8 @@ impl<D> FutureState<D> {
         }
     }
 
-    pub fn as_fulfilled(&self) -> &D {
-        self.try_as_fulfilled()
-            .expect("Future state is not fulfilled")
+    pub fn unwrap(&self) -> &D {
+        self.ok().expect("Future state is not fulfilled")
     }
 
     pub fn is_loading(&self) -> bool {
@@ -53,6 +52,21 @@ impl<D: 'static, F: Future<Output = D> + 'static> FutureTask<D, F> {
             state: State::create(FutureState::Pending),
             task: State::create(None),
         }
+    }
+
+    /// Create a [FutureTask] with a reactive callback. Any [State] read inside the
+    /// callback (outside the async block) subscribes it, restarting the future when it changes.
+    pub fn create_reactive(mut future: impl FnMut() -> F + 'static) -> FutureTask<D, F> {
+        let (notify, reactive_context) = ReactiveContext::new_for_task();
+        let mut future_task =
+            Self::create(move || ReactiveContext::run(reactive_context.clone(), &mut future));
+        spawn(async move {
+            loop {
+                future_task.start();
+                notify.notified().await;
+            }
+        });
+        future_task
     }
 
     /// Cancel the currently task if there is any.
@@ -107,14 +121,30 @@ impl<D: 'static, F: Future<Output = D> + 'static> FutureTask<D, F> {
 /// }
 /// ```
 ///
+/// The callback is reactive, any [State] read inside of it (outside the async block)
+/// subscribes the future, restarting it when that state changes. Reads inside the
+/// async block do not subscribe.
+///
+/// ```rust,no_run
+/// # use freya::prelude::*;
+/// # async fn load_user(user_id: usize) -> String { String::new() }
+/// # fn app() -> impl IntoElement {
+/// let user_id = use_state(|| 1);
+///
+/// // Restarts whenever `user_id` changes.
+/// let user = use_future(move || {
+///     let user_id = user_id();
+///     async move { load_user(user_id).await }
+/// });
+/// # let _ = user;
+/// # rect()
+/// # }
+/// ```
+///
 /// To read its state use [FutureTask::state].
 /// You may restart/stop it using [FutureTask::start] and [FutureTask::cancel].
 pub fn use_future<D: 'static, F: Future<Output = D> + 'static>(
     future: impl FnMut() -> F + 'static,
 ) -> FutureTask<D, F> {
-    use_hook(|| {
-        let mut future = FutureTask::create(future);
-        future.start();
-        future
-    })
+    use_hook(|| FutureTask::create_reactive(future))
 }

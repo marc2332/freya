@@ -17,6 +17,12 @@ Latest stable release:
 freya = "0.4"
 ```
 
+Next release:
+
+```toml
+freya = "0.5.0-rc.1"
+```
+
 `main` branch:
 
 ```toml
