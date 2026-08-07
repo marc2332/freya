@@ -25,5 +25,5 @@ itertools = { workspace = true, optional = true }
 tracing = { workspace = true, optional = true }
 
 [dev-dependencies]
-freya = { path = "../freya" }
+freya = { path = "../freya", features = ["radio"] }
 freya-testing = { path = "../freya-testing" }

@@ -1,5 +1,8 @@
 use std::{
-    any::TypeId,
+    any::{
+        Any,
+        TypeId,
+    },
     cell::RefCell,
     cmp::Ordering,
     collections::{
@@ -811,11 +814,16 @@ impl Runner {
                     .map(|s| s.try_borrow_mut())
                 {
                     let key_changed = existing_scope.key != *key;
-                    if key_changed || existing_scope.props.changed(props.as_ref()) {
+                    // Colliding keys can pair components of different types, which requires a full reset
+                    let type_changed = (existing_scope.props.as_ref() as &dyn Any).type_id()
+                        != (props.as_ref() as &dyn Any).type_id();
+                    if key_changed || type_changed || existing_scope.props.changed(props.as_ref()) {
                         self.dirty_scopes.insert(assigned_scope_id);
                         existing_scope.props = props.clone();
 
-                        if key_changed {
+                        if key_changed || type_changed {
+                            existing_scope.key = key.clone();
+                            existing_scope.comp = comp.clone();
                             self.scopes_storages
                                 .borrow_mut()
                                 .get_mut(&assigned_scope_id)
