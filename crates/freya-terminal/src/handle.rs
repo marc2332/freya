@@ -538,9 +538,8 @@ impl TerminalHandle {
         let term = self.term.borrow();
         let viewport_row = (row.max(0.0) as usize).min(term.screen_lines().saturating_sub(1));
         let column = (col.max(0.0) as usize).min(term.columns().saturating_sub(1));
-        let mut cells = Vec::new();
-        snapshot_row(&term, viewport_row, &mut cells);
-        if let Some(uri) = cells.get(column).and_then(|c| c.hyperlink.clone()) {
+        let cells = snapshot_row(&term, viewport_row);
+        if let Some(uri) = cells.get(column).and_then(|cell| cell.hyperlink.clone()) {
             return Some(uri);
         }
         url_at(&cells, column)

@@ -344,9 +344,9 @@ impl ElementExt for Terminal {
             let cursor_line = cursor_pos.row.0.max(0) as usize;
             let cursor_y = area.min_y() + (cursor_line as f32) * measure.line_height;
             if cursor_y + measure.line_height <= area.max_y() {
-                let cursor_cell = visible_rows
-                    .get(cursor_line)
-                    .map(|r| TermCell::from_square(&r[Column(cursor_pos.col.0)], styles, extras));
+                let cursor_cell = visible_rows.get(cursor_line).map(|visible_row| {
+                    TermCell::from_square(&visible_row[Column(cursor_pos.col.0)], styles, extras)
+                });
                 if let Some(cursor_cell) = cursor_cell {
                     renderer.render_cursor(&cursor_cell, cursor_y, cursor_pos.col.0);
                 }

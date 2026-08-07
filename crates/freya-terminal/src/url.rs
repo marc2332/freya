@@ -63,13 +63,13 @@ pub(crate) fn url_at(row: &[TermCell], col: usize) -> Option<String> {
 
 /// Cheap pre-scan: skips the row-text allocation when no `://` triplet exists in `row`.
 fn row_has_url_marker(row: &[TermCell]) -> bool {
-    let (mut a, mut b) = ('\0', '\0');
-    for cell in row.iter().filter(|c| !c.wide_spacer) {
-        if a == ':' && b == '/' && cell.c == '/' {
+    let (mut before_previous, mut previous) = ('\0', '\0');
+    for cell in row.iter().filter(|cell| !cell.wide_spacer) {
+        if before_previous == ':' && previous == '/' && cell.character == '/' {
             return true;
         }
-        a = b;
-        b = cell.c;
+        before_previous = previous;
+        previous = cell.character;
     }
     false
 }
@@ -83,11 +83,11 @@ fn row_text(row: &[TermCell]) -> (String, Vec<usize>) {
         if cell.wide_spacer {
             continue;
         }
-        let c = match cell.c {
+        let character = match cell.character {
             '\0' | '\t' => ' ',
-            c => c,
+            character => character,
         };
-        text.push(c);
+        text.push(character);
         byte_to_col.resize(text.len(), col);
     }
     (text, byte_to_col)

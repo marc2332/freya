@@ -94,9 +94,9 @@ impl Renderer<'_> {
             self.paint,
         );
 
-        let glyph = match cell.c {
+        let glyph = match cell.character {
             '\0' | '\t' => ' ',
-            c => c,
+            character => character,
         };
         let mut buf = [0u8; 4];
         let content: &str = glyph.encode_utf8(&mut buf);
@@ -164,9 +164,9 @@ impl Renderer<'_> {
                 continue;
             }
             let cell_bg = if cell.inverse {
-                map_ansi_color(cell.fg, self.foreground, self.background)
+                map_ansi_color(cell.foreground, self.foreground, self.background)
             } else {
-                map_ansi_color(cell.bg, self.foreground, self.background)
+                map_ansi_color(cell.background, self.foreground, self.background)
             };
             let end_col = if cell.wide { col + 2 } else { col + 1 };
 
@@ -292,7 +292,11 @@ impl Renderer<'_> {
     }
 
     fn cell_foreground(&self, cell: &TermCell) -> Color {
-        let raw = if cell.inverse { cell.bg } else { cell.fg };
+        let raw = if cell.inverse {
+            cell.background
+        } else {
+            cell.foreground
+        };
         map_ansi_color(raw, self.foreground, self.background)
     }
 
@@ -383,13 +387,13 @@ impl Renderer<'_> {
 
 /// Visible text for a cell, mapping empty (`\0`) and tab (`\t`) cells to a space.
 fn cell_text(cell: &TermCell) -> String {
-    let mut s = String::new();
-    s.push(match cell.c {
+    let mut text = String::new();
+    text.push(match cell.character {
         '\0' | '\t' => ' ',
-        c => c,
+        character => character,
     });
-    for c in &cell.zerowidth {
-        s.push(*c);
+    for character in &cell.zerowidth {
+        text.push(*character);
     }
-    s
+    text
 }

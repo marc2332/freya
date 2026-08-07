@@ -14,6 +14,10 @@ use rio_vt::{
     crosswords::{
         Crosswords,
         grid::ExtrasTable,
+        pos::{
+            Column,
+            Line,
+        },
         square::{
             ContentTag,
             Square,
@@ -31,9 +35,9 @@ use rio_vt::{
 /// the renderer consumes.
 #[derive(Clone)]
 pub(crate) struct TermCell {
-    pub c: char,
-    pub fg: AnsiColor,
-    pub bg: AnsiColor,
+    pub character: char,
+    pub foreground: AnsiColor,
+    pub background: AnsiColor,
     pub inverse: bool,
     pub wide: bool,
     pub wide_spacer: bool,
@@ -44,7 +48,7 @@ pub(crate) struct TermCell {
 
 impl TermCell {
     pub(crate) fn from_square(square: &Square, styles: &[Style], extras: &ExtrasTable) -> Self {
-        let (fg, bg, flags) = match square.content_tag() {
+        let (foreground, background, flags) = match square.content_tag() {
             ContentTag::Codepoint => {
                 let style = styles
                     .get(square.style_id() as usize)
@@ -58,10 +62,14 @@ impl TermCell {
                 StyleFlags::empty(),
             ),
             ContentTag::BgRgb => {
-                let (r, g, b) = square.bg_rgb();
+                let (red, green, blue) = square.bg_rgb();
                 (
                     AnsiColor::Named(NamedColor::Foreground),
-                    AnsiColor::Spec(ColorRgb { r, g, b }),
+                    AnsiColor::Spec(ColorRgb {
+                        r: red,
+                        g: green,
+                        b: blue,
+                    }),
                     StyleFlags::empty(),
                 )
             }
@@ -73,15 +81,15 @@ impl TermCell {
             .map(|extra| {
                 (
                     extra.zerowidth.clone(),
-                    extra.hyperlink.as_ref().map(|h| h.uri().to_owned()),
+                    extra.hyperlink.as_ref().map(|link| link.uri().to_owned()),
                 )
             })
             .unwrap_or_default();
 
         TermCell {
-            c: square.c(),
-            fg,
-            bg,
+            character: square.c(),
+            foreground,
+            background,
             inverse: flags.contains(StyleFlags::INVERSE),
             wide: matches!(square.wide(), Wide::Wide),
             wide_spacer: matches!(square.wide(), Wide::Spacer | Wide::LeadingSpacer),
@@ -91,22 +99,17 @@ impl TermCell {
     }
 }
 
-/// Resolve the viewport row at `line` (0 = top of the visible area) into
-/// `TermCell`s, reusing `buf`.
+/// Resolve the viewport row at `viewport_row` (0 = top of the visible area)
+/// into `TermCell`s, indexing the grid directly so only that row is touched.
 pub(crate) fn snapshot_row<T: EventListener>(
     term: &Crosswords<T>,
-    line: usize,
-    buf: &mut Vec<TermCell>,
-) {
-    buf.clear();
-    let rows = term.visible_rows();
-    let Some(row) = rows.get(line) else {
-        return;
-    };
+    viewport_row: usize,
+) -> Vec<TermCell> {
+    let line = Line(viewport_row as i32 - term.display_offset() as i32);
+    let row = &term.grid[line];
     let styles = term.grid.style_set.styles();
     let extras = &term.grid.extras_table;
-    let columns = term.columns();
-    buf.extend((0..columns).map(|col| {
-        TermCell::from_square(&row[rio_vt::crosswords::pos::Column(col)], styles, extras)
-    }));
+    (0..term.columns())
+        .map(|column| TermCell::from_square(&row[Column(column)], styles, extras))
+        .collect()
 }
