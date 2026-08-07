@@ -180,7 +180,6 @@ pub(crate) fn spawn_pty(
                     read.await
                 };
                 match result {
-                    // Sync update deadline expired, apply the buffered bytes.
                     None => {
                         processor.stop_sync(&mut *term.borrow_mut());
                         output_notifier.notify();

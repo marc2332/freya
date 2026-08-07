@@ -1,8 +1,4 @@
 //! OSC 7 (current working directory) extraction.
-//!
-//! A second `Parser` runs alongside the terminal with a `Perform` impl that
-//! intercepts only this sequence, keeping cwd notification independent of the
-//! terminal state.
 
 use std::path::PathBuf;
 

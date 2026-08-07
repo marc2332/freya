@@ -1,10 +1,3 @@
-//! Crate-local snapshot of a terminal cell.
-//!
-//! rio-vt stores cells as packed `Square`s whose colors, attributes,
-//! hyperlinks and zero-width characters live in per-grid side tables.
-//! The renderer and URL scanner work on plain row buffers, so each visible
-//! row is resolved into `TermCell`s once per frame.
-
 use rio_vt::{
     config::colors::{
         AnsiColor,
@@ -31,8 +24,7 @@ use rio_vt::{
     event::EventListener,
 };
 
-/// A resolved terminal cell with the character, colors and attributes
-/// the renderer consumes.
+/// A resolved terminal cell with the character, colors and attributes the renderer consumes.
 #[derive(Clone)]
 pub(crate) struct TermCell {
     pub character: char,
@@ -42,7 +34,6 @@ pub(crate) struct TermCell {
     pub wide: bool,
     pub wide_spacer: bool,
     pub zerowidth: Vec<char>,
-    /// URI of the OSC 8 hyperlink attached to this cell, if any.
     pub hyperlink: Option<String>,
 }
 
@@ -99,8 +90,7 @@ impl TermCell {
     }
 }
 
-/// Resolve the viewport row at `viewport_row` (0 = top of the visible area)
-/// into `TermCell`s, indexing the grid directly so only that row is touched.
+/// Resolve the viewport row at `viewport_row` (0 is the top of the visible area) into [`TermCell`]s.
 pub(crate) fn snapshot_row<T: EventListener>(
     term: &Crosswords<T>,
     viewport_row: usize,
