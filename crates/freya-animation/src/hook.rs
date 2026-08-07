@@ -202,6 +202,8 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
             task.cancel();
         }
 
+        self.is_running.set_if_modified(false);
+
         self.animated_value
             .write()
             .prepare(*self.last_direction.peek());
@@ -214,6 +216,8 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
         if let Some(task) = self.task.write().take() {
             task.cancel();
         }
+
+        self.is_running.set_if_modified(false);
 
         self.animated_value
             .write()
