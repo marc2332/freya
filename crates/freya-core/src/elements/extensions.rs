@@ -685,7 +685,7 @@ where
         self
     }
 
-    /// Snap the image origin to whole pixels. Defaults to `false`.
+    /// Snap the image to the pixels grid. Defaults to `false`.
     fn snap_to_grid(mut self, snap_to_grid: bool) -> Self {
         self.get_image_data().snap_to_grid = snap_to_grid;
         self

@@ -181,7 +181,7 @@ pub struct ImageData {
     pub sampling_mode: SamplingMode,
     pub aspect_ratio: AspectRatio,
     pub image_cover: ImageCover,
-    /// Snap the image origin to whole pixels.
+    /// Snap the image to the pixels grid.
     pub snap_to_grid: bool,
 }
 
@@ -331,17 +331,11 @@ impl ElementExt for ImageElement {
 
         let area = context.layout_node.visible_area();
 
-        let (origin_x, origin_y) = if self.image_data.snap_to_grid {
-            (area.min_x().round(), area.min_y().round())
-        } else {
-            (area.min_x(), area.min_y())
-        };
-
         let mut rect = SkRect::new(
-            origin_x,
-            origin_y,
-            origin_x + size.width,
-            origin_y + size.height,
+            area.min_x(),
+            area.min_y(),
+            area.min_x() + size.width,
+            area.min_y() + size.height,
         );
         if self.image_data.image_cover == ImageCover::Center {
             let width_offset = (size.width - area.width()) / 2.;
@@ -351,6 +345,15 @@ impl ElementExt for ImageElement {
             rect.right -= width_offset;
             rect.top -= height_offset;
             rect.bottom -= height_offset;
+        }
+
+        if self.image_data.snap_to_grid {
+            rect = SkRect::new(
+                rect.left.round(),
+                rect.top.round(),
+                rect.right.round(),
+                rect.bottom.round(),
+            );
         }
 
         context.canvas.save();
