@@ -257,7 +257,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
             task.cancel();
         }
 
-        let mut ticker = RenderingTicker::get();
+        let ticker = RenderingTicker::get();
         let platform = Platform::get();
         let animation_clock = AnimationClock::get();
 
