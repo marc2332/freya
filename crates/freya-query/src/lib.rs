@@ -110,7 +110,7 @@
 //! ### Query configuration
 //!
 //! [`Query`](crate::query::Query) supports builder methods to control caching behavior.
-//! See its docs for the full list of options (`stale_time`, `clean_time`, `interval_time`, `enable`).
+//! See its docs for the full list of options (`stale_time`, `clean_time`, `interval_time`, `enable`, `keep_old_data`).
 //!
 //! ```rust,no_run
 //! # use freya::prelude::*;

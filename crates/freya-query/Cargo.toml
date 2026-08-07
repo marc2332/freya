@@ -20,5 +20,5 @@ futures-util = { workspace = true }
 async-io = { workspace = true }
 
 [dev-dependencies]
-freya = { path = "../freya" }
+freya = { path = "../freya", features = ["query"] }
 freya-testing = { path = "../freya-testing" }
