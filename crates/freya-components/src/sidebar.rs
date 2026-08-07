@@ -171,10 +171,19 @@ impl Component for SideBarItem {
         });
 
         let on_press = self.on_press.clone();
+        // An item with no `on_press` is not a link: it is a row that happens to live in a
+        // sidebar. Announcing it as one, giving it a tab stop and painting a keyboard focus
+        // border promises an activation that no key can perform, so both the role and the
+        // focusability follow whether the item is actually pressable.
+        let pressable = self.on_press.is_some();
         rect()
             .a11y_id(a11y_id)
-            .a11y_focusable(true)
-            .a11y_role(AccessibilityRole::Link)
+            .a11y_focusable(pressable)
+            .a11y_role(if pressable {
+                AccessibilityRole::Link
+            } else {
+                AccessibilityRole::GenericContainer
+            })
             .on_press(move |e: Event<PressEventData>| {
                 if let Some(handler) = &on_press {
                     handler.call(e);
