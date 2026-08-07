@@ -24,9 +24,6 @@ futures-util = { workspace = true }
 futures-channel = { workspace = true }
 futures-lite = { workspace = true }
 
-# Animations
-async-watch = { workspace = true }
-
 # Text
 keyboard-types = { workspace = true }
 unicode-segmentation = "1.11"

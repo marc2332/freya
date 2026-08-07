@@ -76,7 +76,7 @@ impl AccessibilityTree {
     }
 
     /// Initialize the Accessibility Tree
-    pub fn init(&mut self, tree: &mut Tree) -> TreeUpdate {
+    pub fn init(&mut self, tree: &mut Tree, title: &str) -> TreeUpdate {
         tree.accessibility_diff.clear();
 
         let mut nodes = vec![];
@@ -84,7 +84,7 @@ impl AccessibilityTree {
         tree.traverse_depth(|node_id| {
             let accessibility_state = tree.accessibility_state.get(&node_id).unwrap();
             let layout_node = tree.layout.get(&node_id).unwrap();
-            let accessibility_node = Self::create_node(node_id, layout_node, tree);
+            let accessibility_node = Self::create_node(node_id, layout_node, tree, title);
             nodes.push((accessibility_state.a11y_id, accessibility_node));
             self.map.insert(accessibility_state.a11y_id, node_id);
         });
@@ -113,6 +113,7 @@ impl AccessibilityTree {
         &mut self,
         tree: &mut Tree,
         events_sender: &futures_channel::mpsc::UnboundedSender<EventsChunk>,
+        title: &str,
     ) -> TreeUpdate {
         let requested_focus = tree.accessibility_diff.requested_focus.take();
         let removed_ids = tree
@@ -162,7 +163,7 @@ impl AccessibilityTree {
         for node_id in added_or_updated_ids {
             let accessibility_state = tree.accessibility_state.get(&node_id).unwrap();
             let layout_node = tree.layout.get(&node_id).unwrap();
-            let accessibility_node = Self::create_node(node_id, layout_node, tree);
+            let accessibility_node = Self::create_node(node_id, layout_node, tree, title);
             nodes.push((accessibility_state.a11y_id, accessibility_node));
         }
 
@@ -356,12 +357,18 @@ impl AccessibilityTree {
     }
 
     /// Create an accessibility node
-    pub fn create_node(node_id: NodeId, layout_node: &LayoutNode, tree: &Tree) -> Node {
+    pub fn create_node(
+        node_id: NodeId,
+        layout_node: &LayoutNode,
+        tree: &Tree,
+        title: &str,
+    ) -> Node {
         let element = tree.elements.get(&node_id).unwrap();
         let mut accessibility_data = element.accessibility().into_owned();
 
         if node_id == NodeId::ROOT {
             accessibility_data.builder.set_role(Role::Window);
+            accessibility_data.builder.set_label(title);
         }
 
         // Set children
