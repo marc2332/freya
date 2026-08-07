@@ -75,7 +75,7 @@ fn app() -> impl IntoElement {
     // Just some values to generate a different size and color based on the grid size
     let grid_size = grid.read().size;
     let size = 600. / grid_size as f32;
-    let color_ratio = 255. / (grid.read().size as f32 * grid.read().size as f32);
+    let color_ratio = 255. / (grid_size * grid_size) as f32;
 
     rect()
         .spacing(12.)
@@ -115,12 +115,10 @@ fn app() -> impl IntoElement {
                 ),
         )
         .child(
-            rect().spacing(6.).children(
-                grid.read()
-                    .cells
-                    .chunks(grid.read().size)
-                    .enumerate()
-                    .map(|(row_index, row)| {
+            rect()
+                .spacing(6.)
+                .children(grid.read().cells.chunks(grid_size).enumerate().map(
+                    |(row_index, row)| {
                         rect()
                             .spacing(6.)
                             .horizontal()
@@ -147,7 +145,7 @@ fn app() -> impl IntoElement {
                                             .child(cell.id.to_string()),
                                     )
                             }))
-                    }),
-            ),
+                    },
+                )),
         )
 }

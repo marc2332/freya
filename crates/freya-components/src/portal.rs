@@ -101,7 +101,7 @@ impl<T> KeyExt for Portal<T> {
     }
 }
 
-impl<T: PartialEq + 'static + Clone + std::hash::Hash + Eq + Debug> Component for Portal<T> {
+impl<T: Clone + Eq + Hash + Debug + 'static> Component for Portal<T> {
     fn render(&self) -> impl IntoElement {
         let mut positions = use_hook(|| match try_consume_context::<PortalsMap<T>>() {
             Some(ctx) => ctx,
@@ -115,15 +115,19 @@ impl<T: PartialEq + 'static + Clone + std::hash::Hash + Eq + Debug> Component fo
         });
         let id = self.id.clone();
         let dependency = self.dependency;
-        // Skip the stored area when the dependency did not change across a remount
+        // Area left by the previous mount of this same portal
         let init_size = use_hook(move || {
-            positions.ids.write().remove(&id).and_then(|(area, last)| {
-                (dependency.is_none() || last != dependency).then_some(area)
-            })
+            positions
+                .ids
+                .write()
+                .remove(&id)
+                .filter(|(_, last)| dependency.is_none() || *last != dependency)
+                .map(|(area, _)| area)
         });
         let mut previous_size = use_state::<Option<Area>>(|| None);
         let mut current_size = use_state::<Option<Area>>(|| None);
         let mut last_dependency = use_state::<Option<u64>>(|| None);
+        let mut animating = use_state(|| false);
 
         let mut animation = use_animation_with_dependencies(
             &(self.function, self.duration, self.ease),
@@ -154,17 +158,15 @@ impl<T: PartialEq + 'static + Clone + std::hash::Hash + Eq + Debug> Component fo
             },
         );
 
-        // Nothing is resized when an animation ends, so rest is restored reactively instead
+        // Rest the portal once the animation stops
         use_side_effect(move || {
-            if !*animation.is_running().read() && *previous_size.peek() != *current_size.peek() {
-                previous_size.set(*current_size.peek());
+            if !*animation.is_running().read() {
+                animating.set_if_modified(false);
             }
         });
 
-        // At rest the layout position applies directly
-        let at_rest = !*animation.is_running().read()
-            && *previous_size.read() == *current_size.read()
-            && current_size.read().is_some();
+        // Area the children are placed at
+        let at_rest = !animating() && current_size.read().is_some();
         let area = if at_rest {
             current_size.read().unwrap_or_default()
         } else {
@@ -172,10 +174,11 @@ impl<T: PartialEq + 'static + Clone + std::hash::Hash + Eq + Debug> Component fo
             Area::new(Point2D::new(x, y), Size2D::new(width, height))
         };
 
-        // Resting portals let the layout position their children directly
+        // Resting portals are placed by the layout rather than positioned globally
         let is_new = init_size.is_none() && current_size.read().is_none();
         let is_stacked = self.dependency.is_some()
             && (is_new || (at_rest && self.dependency == *last_dependency.read()));
+        let global_area = (!is_stacked).then_some(area);
 
         let id = self.id.clone();
         let show = self.show;
@@ -183,64 +186,51 @@ impl<T: PartialEq + 'static + Clone + std::hash::Hash + Eq + Debug> Component fo
         rect()
             .a11y_focusable(false)
             .on_sized(move |e: Event<SizedEventData>| {
-                if *current_size.peek() != Some(e.area) && show {
-                    positions
-                        .ids
-                        .write()
-                        .insert(id.clone(), (e.area, dependency));
-
-                    let dependency_changed =
-                        dependency.is_none() || *last_dependency.peek() != dependency;
-                    last_dependency.set_if_modified(dependency);
-                    let can_animate = init_size.is_some() || current_size.peek().is_some();
-
-                    if dependency_changed && can_animate {
-                        previous_size.set(current_size());
-                        current_size.set(Some(e.area));
-                        spawn(async move {
-                            animation.start();
-                        });
-                    } else {
-                        previous_size.set(Some(e.area));
-                        current_size.set(Some(e.area));
-                        spawn(async move {
-                            animation.finish();
-                        });
-                    }
+                if !show || *current_size.peek() == Some(e.area) {
+                    return;
                 }
+
+                positions
+                    .ids
+                    .write()
+                    .insert(id.clone(), (e.area, dependency));
+
+                // Portals with a dependency only animate when it changes
+                let dependency_changed =
+                    dependency.is_none() || *last_dependency.peek() != dependency;
+                last_dependency.set_if_modified(dependency);
+                let animate =
+                    dependency_changed && (init_size.is_some() || current_size.peek().is_some());
+
+                previous_size.set(current_size());
+                current_size.set(Some(e.area));
+                animating.set_if_modified(animate);
+
+                spawn(async move {
+                    if animate {
+                        animation.start();
+                    } else {
+                        animation.finish();
+                    }
+                });
             })
             .width(self.layout.width.clone())
             .height(self.layout.height.clone())
             .child(
                 rect()
-                    .maybe(!is_stacked, |el| {
+                    .map(global_area, |el, area| {
                         el.offset_x(area.min_x())
                             .offset_y(area.min_y())
                             .position(Position::new_global())
                     })
                     .child(
                         rect()
-                            .width(if is_stacked {
-                                Size::fill()
-                            } else {
-                                Size::px(area.width())
-                            })
-                            .height(if is_stacked {
-                                Size::fill()
-                            } else {
-                                Size::px(area.height())
-                            })
-                            // Only show the element after it has been sized
-                            .opacity(
-                                if is_stacked
-                                    || init_size.is_some()
-                                    || current_size.read().is_some()
-                                {
-                                    1.
-                                } else {
-                                    0.
-                                },
+                            .width(global_area.map_or(Size::fill(), |area| Size::px(area.width())))
+                            .height(
+                                global_area.map_or(Size::fill(), |area| Size::px(area.height())),
                             )
+                            // Only show the element after it has been sized
+                            .opacity(if is_stacked || !is_new { 1. } else { 0. })
                             .children(if self.show {
                                 self.children.clone()
                             } else {

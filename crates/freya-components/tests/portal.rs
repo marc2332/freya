@@ -4,12 +4,12 @@ use freya::prelude::*;
 use freya_animation::prelude::Function;
 use freya_testing::prelude::*;
 
-fn test_portal(id: &'static str, duration: Duration) -> Portal<&'static str> {
+fn test_portal(id: &'static str) -> Portal<&'static str> {
     Portal::new(id)
         .key(id)
         .width(Size::px(100.))
         .height(Size::px(100.))
-        .duration(duration)
+        .duration(Duration::from_secs(10))
         .function(Function::Linear)
         .child(label().expanded().text(id))
 }
@@ -30,7 +30,6 @@ fn label_x(test: &TestingRunner, text: &str) -> f32 {
 pub fn portal_animates_position_change() {
     fn portal_app() -> impl IntoElement {
         let mut swap = use_state(|| false);
-        let duration = Duration::from_millis(50);
 
         rect()
             .child(
@@ -39,9 +38,9 @@ pub fn portal_animates_position_change() {
                     .child("Swap"),
             )
             .child(rect().horizontal().children(if !swap() {
-                vec![test_portal("A", duration), test_portal("B", duration)]
+                vec![test_portal("A"), test_portal("B")]
             } else {
-                vec![test_portal("B", duration), test_portal("A", duration)]
+                vec![test_portal("B"), test_portal("A")]
             }))
     }
 
@@ -77,10 +76,7 @@ fn spaced_portal_app(dependency: fn(bool) -> u8) -> impl IntoElement {
                         .width(Size::px(if spaced() { 100. } else { 0. }))
                         .height(Size::px(100.)),
                 )
-                .child(
-                    test_portal("A", Duration::from_secs(10))
-                        .animation_dependency(dependency(spaced())),
-                ),
+                .child(test_portal("A").animation_dependency(dependency(spaced()))),
         )
 }
 
