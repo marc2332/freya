@@ -8,10 +8,10 @@
 //!
 //! | Platform | Graphics Backend |
 //! |----------|-----------------|
-//! | Linux | Vulkan (preferred), OpenGL (fallback) |
-//! | Windows | Vulkan (preferred), OpenGL (fallback) |
-//! | macOS | Metal |
-//! | Android (experimental) | OpenGL |
+//! | Linux | Vulkan (preferred), OpenGL (fallback), Software (fallback) |
+//! | Windows | Vulkan (preferred), OpenGL (fallback), Software (fallback) |
+//! | macOS | Metal, Software (fallback) |
+//! | Android (experimental) | OpenGL, Software (fallback) |
 //!
 //! ## Rendering Backends
 //!
@@ -36,6 +36,22 @@
 //! ### OpenGL (Android)
 //!
 //! Used to render on Android, where Freya draws through Skia's OpenGL backend.
+//!
+//! ### Software (all platforms)
+//!
+//! CPU-based rendering used as a last-resort fallback when no GPU backend could be initialized.
+//! You can also force it at runtime:
+//!
+//! ```sh
+//! FREYA_RENDERER=software cargo run
+//! ```
+//!
+//! To build a software-only app without any of the GPU backends and their dependencies,
+//! disable the default `gpu` feature:
+//!
+//! ```toml
+//! freya = { version = "0.4", default-features = false, features = ["winit"] }
+//! ```
 //!
 //! ## Android
 //!
