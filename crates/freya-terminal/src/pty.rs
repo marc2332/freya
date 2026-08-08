@@ -1,6 +1,11 @@
 use std::{
     cell::RefCell,
+    io::Write,
     rc::Rc,
+    sync::mpsc::{
+        Sender,
+        channel,
+    },
     time::Instant,
 };
 
@@ -45,11 +50,41 @@ use crate::handle::{
     TerminalInner,
 };
 
+/// Queues input for the PTY, written on a blocking thread.
+pub(crate) struct PtyWriter {
+    sender: Sender<Vec<u8>>,
+}
+
+impl PtyWriter {
+    fn spawn(mut writer: Box<dyn Write + Send>) -> Self {
+        let (sender, receiver) = channel::<Vec<u8>>();
+        blocking::unblock(move || {
+            while let Ok(data) = receiver.recv() {
+                if writer
+                    .write_all(&data)
+                    .and_then(|_| writer.flush())
+                    .is_err()
+                {
+                    break;
+                }
+            }
+        })
+        .detach();
+        Self { sender }
+    }
+
+    pub(crate) fn write(&self, data: &[u8]) -> Result<(), TerminalError> {
+        self.sender
+            .send(data.to_vec())
+            .map_err(|_| TerminalError::WriteError("PTY writer is closed".to_string()))
+    }
+}
+
 /// Listener proxy passed into rio-vt's `Crosswords`. Routes its side-effects
 /// (PtyWrite, Title, ClipboardStore) into the freya-side state.
 #[derive(Clone)]
 pub struct EventProxy {
-    pub(crate) writer: Rc<RefCell<Option<Box<dyn std::io::Write + Send>>>>,
+    pub(crate) writer: Rc<RefCell<Option<PtyWriter>>>,
     pub(crate) title: Rc<RefCell<Option<String>>>,
     pub(crate) title_notifier: ArcNotify,
     pub(crate) clipboard_content: Rc<RefCell<Option<String>>>,
@@ -60,9 +95,8 @@ impl EventListener for EventProxy {
     fn send_event(&self, event: RioEvent, _window_id: WindowId) {
         match event {
             RioEvent::PtyWrite(_route, text) => {
-                if let Some(writer) = &mut *self.writer.borrow_mut() {
-                    let _ = writer.write_all(text.as_bytes());
-                    let _ = writer.flush();
+                if let Some(writer) = &*self.writer.borrow() {
+                    let _ = writer.write(text.as_bytes());
                 }
             }
             RioEvent::Title(t) => {
@@ -89,7 +123,7 @@ pub(crate) fn spawn_pty(
     command: CommandBuilder,
     scrollback_size: usize,
 ) -> Result<TerminalHandle, TerminalError> {
-    let writer = Rc::new(RefCell::new(None::<Box<dyn std::io::Write + Send>>));
+    let writer = Rc::new(RefCell::new(None::<PtyWriter>));
     let closer_notifier = ArcNotify::new();
     let output_notifier = ArcNotify::new();
     let title_notifier = ArcNotify::new();
@@ -117,11 +151,11 @@ pub(crate) fn spawn_pty(
     let pair = native_pty_system()
         .openpty(PtySize::default())
         .map_err(|_| TerminalError::NotInitialized)?;
-    *writer.borrow_mut() = Some(
+    *writer.borrow_mut() = Some(PtyWriter::spawn(
         pair.master
             .take_writer()
             .map_err(|_| TerminalError::NotInitialized)?,
-    );
+    ));
 
     pair.slave
         .spawn_command(command)
