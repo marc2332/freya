@@ -28,7 +28,7 @@ use crate::{
 };
 
 define_theme! {
-    for = Input;
+    for = Input<T>;
     theme_field = theme_layout;
 
     %[component]
@@ -40,7 +40,7 @@ define_theme! {
 }
 
 define_theme! {
-    for = Input;
+    for = Input<T>;
     theme_field = theme_colors;
 
     %[component]
@@ -115,6 +115,45 @@ impl InputValidator {
     }
 }
 
+/// Value type that an [Input] can edit through its text representation.
+pub trait InputType: Clone + PartialEq + 'static {
+    /// Text representation of the value.
+    fn as_text(&self) -> Cow<'_, str>;
+
+    /// Parse the text back into a value, `None` if the text is not valid.
+    fn from_text(text: &str) -> Option<Self>;
+}
+
+impl InputType for String {
+    fn as_text(&self) -> Cow<'_, str> {
+        Cow::Borrowed(self)
+    }
+
+    fn from_text(text: &str) -> Option<Self> {
+        Some(text.to_owned())
+    }
+}
+
+macro_rules! impl_input_type_parseable {
+    ($($ty:ty),*) => {
+        $(
+            impl InputType for $ty {
+                fn as_text(&self) -> Cow<'_, str> {
+                    Cow::Owned(self.to_string())
+                }
+
+                fn from_text(text: &str) -> Option<Self> {
+                    text.parse().ok()
+                }
+            }
+        )*
+    };
+}
+
+impl_input_type_parseable!(
+    u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64
+);
+
 /// Small box to write some text.
 ///
 /// ## **Normal**
@@ -157,6 +196,18 @@ impl InputValidator {
 /// # }, "./images/gallery_flat_input.png").render();
 /// ```
 ///
+/// ## **Value types**
+///
+/// The value can be of any type implementing [InputType], for example numbers.
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> impl IntoElement {
+///     let value = use_state(|| 50u8);
+///     Input::new(value).placeholder("Age")
+/// }
+/// ```
+///
 /// # Preview
 /// ![Input Preview][input]
 /// ![Filled Input Preview][filled_input]
@@ -167,13 +218,13 @@ impl InputValidator {
     doc = embed_doc_image::embed_image!("flat_input", "images/gallery_flat_input.png"),
 )]
 #[derive(Clone, PartialEq)]
-pub struct Input {
+pub struct Input<T: 'static = String> {
     pub(crate) theme_colors: Option<InputColorsThemePartial>,
     pub(crate) theme_layout: Option<InputLayoutThemePartial>,
-    value: Writable<String>,
+    value: Writable<T>,
     placeholder: Option<Cow<'static, str>>,
     on_validate: Option<EventHandler<InputValidator>>,
-    on_submit: Option<EventHandler<String>>,
+    on_submit: Option<EventHandler<T>>,
     mode: InputMode,
     auto_focus: bool,
     width: Size,
@@ -188,14 +239,14 @@ pub struct Input {
     on_pre_key_down: Callback<Event<KeyboardEventData>, bool>,
 }
 
-impl KeyExt for Input {
+impl<T: 'static> KeyExt for Input<T> {
     fn write_key(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
-impl Input {
-    pub fn new(value: impl Into<Writable<String>>) -> Self {
+impl<T: InputType> Input<T> {
+    pub fn new(value: impl Into<Writable<T>>) -> Self {
         Input {
             theme_colors: None,
             theme_layout: None,
@@ -243,7 +294,7 @@ impl Input {
         self
     }
 
-    pub fn on_submit(mut self, on_submit: impl Into<EventHandler<String>>) -> Self {
+    pub fn on_submit(mut self, on_submit: impl Into<EventHandler<T>>) -> Self {
         self.on_submit = Some(on_submit.into());
         self
     }
@@ -336,13 +387,13 @@ impl Input {
     }
 }
 
-impl CornerRadiusExt for Input {
+impl<T: 'static> CornerRadiusExt for Input<T> {
     fn with_corner_radius(self, corner_radius: f32) -> Self {
         self.corner_radius(corner_radius)
     }
 }
 
-impl Component for Input {
+impl<T: InputType> Component for Input<T> {
     fn render(&self) -> impl IntoElement {
         let a11y_id = use_hook(|| self.a11y_id.unwrap_or_else(AccessibilityId::new_unique));
         let focus = use_focus(a11y_id);
@@ -351,7 +402,7 @@ impl Component for Input {
         let mut status = use_state(InputStatus::default);
         let is_masked = matches!(self.mode, InputMode::Hidden(_));
         let mut editable = use_editable(
-            || self.value.read().to_string(),
+            || self.value.read().as_text().into_owned(),
             move || {
                 EditableConfig::new()
                     .with_allow_write_clipboard(!is_masked)
@@ -402,19 +453,22 @@ impl Component for Input {
             }
         });
 
-        let display_placeholder = value.read().is_empty()
-            && self.placeholder.is_some()
-            && !editable.editor().read().has_preedit();
         let on_validate = self.on_validate.clone();
         let on_submit = self.on_submit.clone();
 
-        if *value.read() != editable.editor().read().committed_text() {
+        let editor_value = T::from_text(&editable.editor().read().committed_text());
+        if editor_value.as_ref() != Some(&*self.value.read()) {
             let mut editor = editable.editor_mut().write();
             editor.clear_preedit();
-            editor.set(&value.read());
+            editor.set(&self.value.read().as_text());
             editor.editor_history().clear();
             editor.clear_selection();
         }
+
+        let display_placeholder = {
+            let editor = editable.editor().read();
+            editor.rope().len_chars() == 0 && self.placeholder.is_some() && !editor.has_preedit()
+        };
 
         let on_ime_preedit = move |e: Event<ImePreeditEventData>| {
             let mut editor = editable.editor_mut().write();
@@ -438,8 +492,7 @@ impl Component for Input {
                 // On submit
                 Key::Named(NamedKey::Enter) => {
                     if let Some(on_submit) = &on_submit {
-                        let text = editable.editor().peek().committed_text();
-                        on_submit.call(text);
+                        on_submit.call(value.peek().clone());
                     }
                 }
                 // On unfocus
@@ -456,24 +509,20 @@ impl Component for Input {
                     });
                     let text = editable.editor().read().committed_text();
 
-                    let apply_change = match &on_validate {
-                        Some(on_validate) => {
-                            let mut editor = editable.editor_mut().write();
-                            let validator = InputValidator::new(text.clone());
-                            on_validate.call(validator.clone());
-                            if !validator.is_valid() {
-                                if let Some(selection) = editor.undo() {
-                                    *editor.selection_mut() = selection;
-                                }
-                                editor.editor_history().clear_redos();
-                            }
-                            validator.is_valid()
-                        }
-                        None => true,
-                    };
+                    let is_valid = on_validate.as_ref().is_none_or(|on_validate| {
+                        let validator = InputValidator::new(text.clone());
+                        on_validate.call(validator.clone());
+                        validator.is_valid()
+                    });
 
-                    if apply_change {
-                        *value.write() = text;
+                    if let Some(new_value) = is_valid.then(|| T::from_text(&text)).flatten() {
+                        *value.write() = new_value;
+                    } else {
+                        let mut editor = editable.editor_mut().write();
+                        if let Some(selection) = editor.undo() {
+                            *editor.selection_mut() = selection;
+                        }
+                        editor.editor_history().clear_redos();
                     }
                 }
             }
@@ -631,11 +680,13 @@ impl Component for Input {
             theme_colors.color
         };
 
-        let value = self.value.read();
+        let committed_text = editable.editor().read().committed_text();
         let a11y_text: Cow<str> = match (self.mode.clone(), &self.placeholder) {
             (_, Some(ph)) if display_placeholder => Cow::Borrowed(ph.as_ref()),
-            (InputMode::Hidden(ch), _) => Cow::Owned(ch.to_string().repeat(value.len())),
-            (InputMode::Shown, _) => Cow::Borrowed(value.as_ref()),
+            (InputMode::Hidden(ch), _) => {
+                Cow::Owned(ch.to_string().repeat(committed_text.chars().count()))
+            }
+            (InputMode::Shown, _) => Cow::Owned(committed_text),
         };
 
         let a11_role = match self.mode {
