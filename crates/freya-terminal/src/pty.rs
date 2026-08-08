@@ -50,7 +50,7 @@ use crate::handle::{
     TerminalInner,
 };
 
-/// Queues input for the PTY, written on a blocking thread.
+/// Queues input for the PTY, written on its own thread.
 pub(crate) struct PtyWriter {
     sender: Sender<Vec<u8>>,
 }
@@ -58,18 +58,19 @@ pub(crate) struct PtyWriter {
 impl PtyWriter {
     fn spawn(mut writer: Box<dyn Write + Send>) -> Self {
         let (sender, receiver) = channel::<Vec<u8>>();
-        blocking::unblock(move || {
-            while let Ok(data) = receiver.recv() {
-                if writer
-                    .write_all(&data)
-                    .and_then(|_| writer.flush())
-                    .is_err()
-                {
-                    break;
+        let _ = std::thread::Builder::new()
+            .name("pty-writer".into())
+            .spawn(move || {
+                while let Ok(data) = receiver.recv() {
+                    if writer
+                        .write_all(&data)
+                        .and_then(|_| writer.flush())
+                        .is_err()
+                    {
+                        break;
+                    }
                 }
-            }
-        })
-        .detach();
+            });
         Self { sender }
     }
 
