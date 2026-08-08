@@ -281,6 +281,51 @@ pub fn slider_wheel() {
 }
 
 #[test]
+pub fn slider_step() {
+    fn slider_app() -> impl IntoElement {
+        let mut value = use_state(|| 0.0);
+
+        rect()
+            .child(label().text(format!("Value: {}", value() as i32)))
+            .child(
+                Slider::new(move |v| value.set(v))
+                    .value(value())
+                    .step(10.0)
+                    .size(Size::px(200.)),
+            )
+    }
+
+    let mut test = launch_test(slider_app);
+    test.sync_and_update();
+
+    let read_value = |test: &mut TestingRunner| -> f64 {
+        let label = test
+            .find(|node, element| {
+                Label::try_downcast(element)
+                    .filter(|l| l.text.starts_with("Value:"))
+                    .map(|_| node)
+            })
+            .unwrap();
+        let value_text = Label::try_downcast(&*label.element()).unwrap().text;
+        value_text.replace("Value: ", "").parse().unwrap()
+    };
+
+    test.click_cursor((105.0, 30.0));
+    test.sync_and_update();
+    assert_eq!(read_value(&mut test), 50.0);
+
+    test.press_key(Key::Named(NamedKey::ArrowRight));
+    assert_eq!(read_value(&mut test), 60.0);
+    test.press_key(Key::Named(NamedKey::ArrowLeft));
+    assert_eq!(read_value(&mut test), 50.0);
+
+    test.scroll((100.0, 30.0), (0.0, 5.0));
+    assert_eq!(read_value(&mut test), 60.0);
+    test.scroll((100.0, 30.0), (0.0, -5.0));
+    assert_eq!(read_value(&mut test), 50.0);
+}
+
+#[test]
 pub fn slider_disabled() {
     fn slider_app() -> impl IntoElement {
         let mut value = use_state(|| 50.0);

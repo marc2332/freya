@@ -50,6 +50,7 @@ pub struct Slider {
     direction: Direction,
     enabled: bool,
     cursor_icon: CursorIcon,
+    step: Option<f64>,
     key: DiffKey,
 }
 
@@ -69,6 +70,7 @@ impl Slider {
             direction: Direction::Horizontal,
             enabled: true,
             cursor_icon: CursorIcon::default(),
+            step: None,
             key: DiffKey::None,
         }
     }
@@ -103,6 +105,12 @@ impl Slider {
         self.cursor_icon = cursor_icon.into();
         self
     }
+
+    /// Snap the values emitted by `on_moved` to multiples of the given step.
+    pub fn step(mut self, step: f64) -> Self {
+        self.step = Some(step);
+        self
+    }
 }
 
 impl Component for Slider {
@@ -126,24 +134,34 @@ impl Component for Slider {
         let value = self.value;
         let on_moved = self.on_moved.clone();
 
+        let step = self.step.filter(|step| *step > 0.0);
+        let snap = move |value: f64| -> f64 {
+            let value = value.clamp(0.0, 100.0);
+            match step {
+                Some(step) => ((value / step).round() * step).min(100.0),
+                None => value,
+            }
+        };
+        let keyboard_step = step.unwrap_or(4.0);
+
         let on_key_down = {
             let on_moved = self.on_moved.clone();
             move |e: Event<KeyboardEventData>| match e.key {
                 Key::Named(NamedKey::ArrowLeft) if !direction_is_vertical => {
                     e.stop_propagation();
-                    on_moved.call((value - 4.0).clamp(0.0, 100.0));
+                    on_moved.call(snap(value - keyboard_step));
                 }
                 Key::Named(NamedKey::ArrowRight) if !direction_is_vertical => {
                     e.stop_propagation();
-                    on_moved.call((value + 4.0).clamp(0.0, 100.0));
+                    on_moved.call(snap(value + keyboard_step));
                 }
                 Key::Named(NamedKey::ArrowUp) if direction_is_vertical => {
                     e.stop_propagation();
-                    on_moved.call((value + 4.0).clamp(0.0, 100.0));
+                    on_moved.call(snap(value + keyboard_step));
                 }
                 Key::Named(NamedKey::ArrowDown) if direction_is_vertical => {
                     e.stop_propagation();
-                    on_moved.call((value - 4.0).clamp(0.0, 100.0));
+                    on_moved.call(snap(value - keyboard_step));
                 }
                 _ => {}
             }
@@ -171,7 +189,7 @@ impl Component for Slider {
                 let x = x - 8.0;
                 x / (size.read().width() as f64 - 15.) * 100.0
             };
-            pct.clamp(0.0, 100.0)
+            snap(pct)
         };
 
         let on_pointer_down = {
@@ -210,7 +228,11 @@ impl Component for Slider {
                     return;
                 }
                 e.stop_propagation();
-                on_moved.call((value + e.delta_y * 0.1).clamp(0.0, 100.0));
+                let delta = match step {
+                    Some(step) => step * e.delta_y.signum(),
+                    None => e.delta_y * 0.1,
+                };
+                on_moved.call(snap(value + delta));
             }
         };
 
