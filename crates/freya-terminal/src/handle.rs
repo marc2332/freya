@@ -1,6 +1,5 @@
 use std::{
     cell::RefCell,
-    io::Write,
     path::PathBuf,
     rc::Rc,
     time::{
@@ -57,6 +56,7 @@ use crate::{
     },
     pty::{
         EventProxy,
+        PtyWriter,
         spawn_pty,
     },
     url::url_at,
@@ -97,7 +97,7 @@ impl From<std::io::Error> for TerminalError {
 /// Cleans up the PTY and the reader task when the last handle is dropped.
 pub(crate) struct TerminalCleaner {
     /// Writer handle for the PTY.
-    pub(crate) writer: Rc<RefCell<Option<Box<dyn Write + Send>>>>,
+    pub(crate) writer: Rc<RefCell<Option<PtyWriter>>>,
     /// PTY reader/parser task.
     pub(crate) pty_task: TaskHandle,
     /// Notifier that signals when the terminal should close.
@@ -132,7 +132,7 @@ pub struct TerminalHandle {
     /// borrows this directly during paint, so there is no parallel snapshot.
     pub(crate) term: Rc<RefCell<Crosswords<EventProxy>>>,
     /// Writer for sending input to the PTY process.
-    pub(crate) writer: Rc<RefCell<Option<Box<dyn Write + Send>>>>,
+    pub(crate) writer: Rc<RefCell<Option<PtyWriter>>>,
     /// Handle-local state (PTY master, input tracking).
     pub(crate) inner: Rc<RefCell<TerminalInner>>,
     /// Window title reported by the shell via OSC 0 or OSC 2.
@@ -297,11 +297,11 @@ impl TerminalHandle {
 
     /// Write data to the PTY without resetting scroll or selection state.
     fn write_raw(&self, data: &[u8]) -> Result<(), TerminalError> {
-        let mut writer = self.writer.borrow_mut();
-        let writer = writer.as_mut().ok_or(TerminalError::NotInitialized)?;
-        writer.write_all(data)?;
-        writer.flush()?;
-        Ok(())
+        let writer = self.writer.borrow();
+        writer
+            .as_ref()
+            .ok_or(TerminalError::NotInitialized)?
+            .write(data)
     }
 
     /// Resize the terminal. Lossless: the grid reflows on width, preserves scrollback on height.

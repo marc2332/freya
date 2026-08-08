@@ -30,7 +30,6 @@ linkify = { workspace = true }
 
 # Async
 async-io = { workspace = true }
-futures-channel = { workspace = true }
 futures-lite = { workspace = true }
 
 [dev-dependencies]

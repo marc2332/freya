@@ -3020,7 +3020,6 @@ dependencies = [
  "freya",
  "freya-core",
  "freya-engine",
- "futures-channel",
  "futures-lite",
  "keyboard-types 0.8.3",
  "linkify",
