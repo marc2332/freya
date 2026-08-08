@@ -1024,32 +1024,30 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         .unwrap();
                 }
 
-                WindowEvent::MouseWheel { delta, phase, .. } => {
-                    const WHEEL_SPEED_MODIFIER: f64 = 53.0;
-                    const TOUCHPAD_SPEED_MODIFIER: f64 = 2.0;
+                WindowEvent::MouseWheel { delta, phase, .. } if phase != TouchPhase::Cancelled => {
+                    const WHEEL_PIXELS_PER_LINE: f64 = 53.0;
 
-                    if TouchPhase::Moved == phase {
-                        let scroll_data = {
-                            match delta {
-                                MouseScrollDelta::LineDelta(x, y) => (
-                                    (x as f64 * WHEEL_SPEED_MODIFIER),
-                                    (y as f64 * WHEEL_SPEED_MODIFIER),
-                                ),
-                                MouseScrollDelta::PixelDelta(pos) => (
-                                    (pos.x * TOUCHPAD_SPEED_MODIFIER),
-                                    (pos.y * TOUCHPAD_SPEED_MODIFIER),
-                                ),
-                            }
-                        };
+                    let scale_factor = app.effective_scale_factor();
 
+                    let (delta_x, delta_y) = match delta {
+                        MouseScrollDelta::LineDelta(x, y) => (
+                            x as f64 * WHEEL_PIXELS_PER_LINE,
+                            y as f64 * WHEEL_PIXELS_PER_LINE,
+                        ),
+                        MouseScrollDelta::PixelDelta(position) => {
+                            position.to_logical::<f64>(scale_factor).into()
+                        }
+                    };
+
+                    if delta_x != 0. || delta_y != 0. {
                         let platform_event = PlatformEvent::Wheel {
                             name: WheelEventName::Wheel,
-                            scroll: scroll_data.into(),
+                            scroll: CursorPoint::new(delta_x, delta_y),
                             cursor: app.position,
                             source: WheelSource::Device,
                         };
                         let mut events_measurer_adapter = EventsMeasurerAdapter {
-                            scale_factor: app.effective_scale_factor(),
+                            scale_factor,
                             tree: &mut app.tree,
                         };
                         let processed_events = events_measurer_adapter.run(

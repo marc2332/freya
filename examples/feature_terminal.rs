@@ -135,7 +135,7 @@ fn app() -> impl IntoElement {
                                 let (mouse_x, mouse_y) = e.element_location.to_tuple();
                                 let col = (mouse_x / char_width as f64) as f32;
                                 let row = (mouse_y / line_height as f64) as f32;
-                                handle.wheel(e.delta_y, row, col);
+                                handle.wheel(e.delta_y / line_height as f64, row, col);
                             }
                         })
                         .a11y_id(a11y_id)

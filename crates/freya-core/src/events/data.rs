@@ -161,7 +161,9 @@ pub enum WheelSource {
 #[derive(Debug, Clone, PartialEq)]
 pub struct WheelEventData {
     pub source: WheelSource,
+    /// Horizontal scroll in logical pixels, positive when scrolling left.
     pub delta_x: f64,
+    /// Vertical scroll in logical pixels, positive when scrolling up.
     pub delta_y: f64,
     pub global_location: CursorPoint,
     pub element_location: CursorPoint,
