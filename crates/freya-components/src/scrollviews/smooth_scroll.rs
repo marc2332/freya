@@ -188,8 +188,8 @@ impl SmoothScroll {
         let target_y = get_corrected_scroll_position(content.height, viewport.height, projected.y);
 
         self.fling_from(from, velocity);
-        self.scroll_controller.scroll_to_x(target_x as i32);
-        self.scroll_controller.scroll_to_y(target_y as i32);
+        self.scroll_controller.scroll_to_x(target_x);
+        self.scroll_controller.scroll_to_y(target_y);
     }
 
     /// Freezes the scroll where it is, returning the velocity it was moving at.
@@ -197,7 +197,7 @@ impl SmoothScroll {
         if let Some(task) = self.task.write().take() {
             task.cancel();
 
-            let position = self.damp.peek().position.to_i32();
+            let position = self.damp.peek().position;
             self.scroll_controller.scroll_to_x(position.x);
             self.scroll_controller.scroll_to_y(position.y);
         }

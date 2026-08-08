@@ -473,10 +473,10 @@ impl Component for Input {
 
             // Minimally reveal the cursor
             if cursor_x < visible_start_x {
-                scroll_controller.scroll_to_x(-cursor_x as i32);
+                scroll_controller.scroll_to_x(-cursor_x);
             } else if cursor_x + inner_margin.horizontal() > visible_start_x + viewport.width() {
                 scroll_controller
-                    .scroll_to_x(-(cursor_x + inner_margin.horizontal() - viewport.width()) as i32);
+                    .scroll_to_x(-(cursor_x + inner_margin.horizontal() - viewport.width()));
             }
 
             if multiline {
@@ -485,13 +485,12 @@ impl Component for Input {
                 let visible_start_y = viewport.min_y() - area.peek().min_y();
 
                 if cursor_top < visible_start_y {
-                    scroll_controller.scroll_to_y(-cursor_top as i32);
+                    scroll_controller.scroll_to_y(-cursor_top);
                 } else if cursor_bottom + inner_margin.vertical()
                     > visible_start_y + viewport.height()
                 {
-                    scroll_controller.scroll_to_y(
-                        -(cursor_bottom + inner_margin.vertical() - viewport.height()) as i32,
-                    );
+                    scroll_controller
+                        .scroll_to_y(-(cursor_bottom + inner_margin.vertical() - viewport.height()));
                 }
             }
         };

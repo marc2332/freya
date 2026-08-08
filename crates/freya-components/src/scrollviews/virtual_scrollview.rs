@@ -467,11 +467,11 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
             Direction::Vertical => (
                 size.read().inner_sizes.width,
                 self.item_size
-                    .total_size(viewport_height, scrolled_y as f32, self.length),
+                    .total_size(viewport_height, scrolled_y, self.length),
             ),
             Direction::Horizontal => (
                 self.item_size
-                    .total_size(viewport_width, scrolled_x as f32, self.length),
+                    .total_size(viewport_width, scrolled_x, self.length),
                 size.read().inner_sizes.height,
             ),
         };
@@ -479,13 +479,10 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
         scroll_controller.use_apply(inner_width, inner_height);
 
         let corrected_scrolled_x =
-            get_corrected_scroll_position(inner_width, size.read().area.width(), scrolled_x as f32);
+            get_corrected_scroll_position(inner_width, size.read().area.width(), scrolled_x);
 
-        let corrected_scrolled_y = get_corrected_scroll_position(
-            inner_height,
-            size.read().area.height(),
-            scrolled_y as f32,
-        );
+        let corrected_scrolled_y =
+            get_corrected_scroll_position(inner_height, size.read().area.height(), scrolled_y);
 
         let (displayed_x, displayed_y) = smooth_scroll
             .position(Point2D::new(corrected_scrolled_x, corrected_scrolled_y))
@@ -587,8 +584,8 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                     let delta = prev - coords;
 
                     smooth_scroll.drag(delta.to_f32());
-                    scroll_controller.scroll_to_y((displayed_y - delta.y as f32) as i32);
-                    scroll_controller.scroll_to_x((displayed_x - delta.x as f32) as i32);
+                    scroll_controller.scroll_to_y(displayed_y - delta.y as f32);
+                    scroll_controller.scroll_to_x(displayed_x - delta.x as f32);
 
                     dragging_content.set(Some(coords));
                     e.prevent_default();
@@ -607,8 +604,8 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                         let delta = origin - coords;
 
                         smooth_scroll.drag(delta.to_f32());
-                        scroll_controller.scroll_to_y((displayed_y - delta.y as f32) as i32);
-                        scroll_controller.scroll_to_x((displayed_x - delta.x as f32) as i32);
+                        scroll_controller.scroll_to_y(displayed_y - delta.y as f32);
+                        scroll_controller.scroll_to_x(displayed_x - delta.x as f32);
 
                         dragging_content.set(Some(coords));
                         e.prevent_default();
@@ -681,8 +678,8 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                 direction,
             ) {
                 smooth_scroll.animate_from(displayed);
-                scroll_controller.scroll_to_x(x as i32);
-                scroll_controller.scroll_to_y(y as i32);
+                scroll_controller.scroll_to_x(x);
+                scroll_controller.scroll_to_y(y);
                 e.stop_propagation();
                 timeout.reset();
             }

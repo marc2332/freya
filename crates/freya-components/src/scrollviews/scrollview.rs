@@ -219,13 +219,13 @@ impl Component for ScrollView {
         let corrected_scrolled_x = get_corrected_scroll_position(
             size.read().inner_sizes.width,
             size.read().area.width(),
-            scrolled_x as f32,
+            scrolled_x,
         );
 
         let corrected_scrolled_y = get_corrected_scroll_position(
             size.read().inner_sizes.height,
             size.read().area.height(),
-            scrolled_y as f32,
+            scrolled_y,
         );
 
         let (displayed_x, displayed_y) = smooth_scroll
@@ -349,8 +349,8 @@ impl Component for ScrollView {
                     let delta = prev - coords;
 
                     smooth_scroll.drag(delta.to_f32());
-                    scroll_controller.scroll_to_y((displayed_y - delta.y as f32) as i32);
-                    scroll_controller.scroll_to_x((displayed_x - delta.x as f32) as i32);
+                    scroll_controller.scroll_to_y(displayed_y - delta.y as f32);
+                    scroll_controller.scroll_to_x(displayed_x - delta.x as f32);
 
                     dragging_content.set(Some(coords));
                     e.prevent_default();
@@ -369,8 +369,8 @@ impl Component for ScrollView {
                         let delta = origin - coords;
 
                         smooth_scroll.drag(delta.to_f32());
-                        scroll_controller.scroll_to_y((displayed_y - delta.y as f32) as i32);
-                        scroll_controller.scroll_to_x((displayed_x - delta.x as f32) as i32);
+                        scroll_controller.scroll_to_y(displayed_y - delta.y as f32);
+                        scroll_controller.scroll_to_x(displayed_x - delta.x as f32);
 
                         dragging_content.set(Some(coords));
                         e.prevent_default();
@@ -443,8 +443,8 @@ impl Component for ScrollView {
                 direction,
             ) {
                 smooth_scroll.animate_from(displayed);
-                scroll_controller.scroll_to_x(x as i32);
-                scroll_controller.scroll_to_y(y as i32);
+                scroll_controller.scroll_to_x(x);
+                scroll_controller.scroll_to_y(y);
                 e.stop_propagation();
                 timeout.reset();
             }

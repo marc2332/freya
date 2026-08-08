@@ -201,9 +201,9 @@ impl Component for CodeEditor {
                 }
 
                 editor.write_if(|mut editor| {
-                    let lines_jump = (line_height * LINES_JUMP_ALT as f32).ceil() as i32;
-                    let min_height = -(lines_len as f32 * line_height) as i32;
-                    let max_height = 0; // TODO, this should be the height of the viewport
+                    let lines_jump = (line_height * LINES_JUMP_ALT as f32).ceil();
+                    let min_height = -(lines_len as f32 * line_height);
+                    let max_height = 0.; // TODO, this should be the height of the viewport
                     let current_scroll = editor.scrolls.1;
 
                     let events = match &key {
