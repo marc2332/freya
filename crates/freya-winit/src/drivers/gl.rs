@@ -1,5 +1,8 @@
 use std::{
-    ffi::CString,
+    ffi::{
+        CStr,
+        CString,
+    },
     num::NonZeroU32,
 };
 
@@ -21,6 +24,7 @@ use gl::{
 };
 use glutin::{
     config::{
+        Config,
         ConfigTemplateBuilder,
         GlConfig,
     },
@@ -46,7 +50,10 @@ use glutin::{
         WindowSurface,
     },
 };
-use glutin_winit::DisplayBuilder;
+use glutin_winit::{
+    ApiPreference,
+    DisplayBuilder,
+};
 use raw_window_handle::HasWindowHandle;
 use winit::{
     dpi::PhysicalSize,
@@ -66,6 +73,7 @@ pub struct OpenGLDriver {
     pub(crate) num_samples: usize,
     pub(crate) stencil_size: usize,
     pub(crate) surface: SkiaSurface,
+    pub(crate) gpu_name: Option<String>,
 }
 
 impl Drop for OpenGLDriver {
@@ -83,54 +91,97 @@ impl OpenGLDriver {
         let transparent = window_attributes.transparent;
         let template = ConfigTemplateBuilder::new()
             .with_alpha_size(8)
-            .with_transparency(window_attributes.transparent);
+            .with_transparency(transparent);
 
-        let display_builder = DisplayBuilder::new().with_window_attributes(Some(window_attributes));
-        let (window, gl_config) = display_builder.build(event_loop, template, |configs| {
-            configs
-                .reduce(|accum, config| {
-                    let transparency_check = transparent
-                        && config.supports_transparency().unwrap_or(false)
-                        && !accum.supports_transparency().unwrap_or(false);
+        let build_with_preference =
+            |preference| -> Result<(Self, Window), Box<dyn std::error::Error>> {
+                let display_builder = DisplayBuilder::new()
+                    .with_preference(preference)
+                    .with_window_attributes(Some(window_attributes.clone()));
+                let (window, gl_config) =
+                    display_builder.build(event_loop, template.clone(), |configs| {
+                        Self::pick_config(configs, transparent)
+                    })?;
+                let window = window.ok_or("OpenGL display builder returned no window")?;
+                let driver = Self::build(&gl_config, &window, gpu_resource_cache_limit)?;
 
-                    if transparency_check || config.num_samples() < accum.num_samples() {
-                        config
-                    } else {
-                        accum
-                    }
-                })
-                .expect("at least one OpenGL config")
-        })?;
+                Ok((driver, window))
+            };
 
-        let window = window.ok_or("OpenGL display builder returned no window")?;
-
-        let window_handle = window.window_handle()?;
-
-        let context_attributes = ContextAttributesBuilder::new()
-            .with_profile(GlProfile::Core)
-            .build(Some(window_handle.as_raw()));
-
-        let fallback_context_attributes = ContextAttributesBuilder::new()
-            .with_profile(GlProfile::Core)
-            .with_context_api(ContextApi::Gles(None))
-            .build(Some(window_handle.as_raw()));
-
-        let not_current_gl_context = unsafe {
-            match gl_config
-                .display()
-                .create_context(&gl_config, &context_attributes)
-            {
-                Ok(ctx) => ctx,
-                Err(_) => gl_config
-                    .display()
-                    .create_context(&gl_config, &fallback_context_attributes)?,
+        match build_with_preference(ApiPreference::FallbackEgl) {
+            Ok(result) => Ok(result),
+            Err(error) => {
+                tracing::warn!("OpenGL initialization failed, retrying with EGL: {error}");
+                build_with_preference(ApiPreference::PreferEgl)
             }
+        }
+    }
+
+    /// Build the driver on an existing window instead of creating a new one.
+    pub fn from_window(
+        event_loop: &ActiveEventLoop,
+        window: &Window,
+        gpu_resource_cache_limit: usize,
+        transparent: bool,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        let template = ConfigTemplateBuilder::new()
+            .with_alpha_size(8)
+            .with_transparency(transparent)
+            .compatible_with_native_window(window.window_handle()?.as_raw());
+
+        let build_with_preference = |preference| -> Result<Self, Box<dyn std::error::Error>> {
+            let display_builder = DisplayBuilder::new().with_preference(preference);
+            let (_, gl_config) =
+                display_builder.build(event_loop, template.clone(), |configs| {
+                    Self::pick_config(configs, transparent)
+                })?;
+
+            Self::build(&gl_config, window, gpu_resource_cache_limit)
         };
+
+        match build_with_preference(ApiPreference::FallbackEgl) {
+            Ok(driver) => Ok(driver),
+            Err(error) => {
+                tracing::warn!("OpenGL recovery failed, retrying with EGL: {error}");
+                build_with_preference(ApiPreference::PreferEgl)
+            }
+        }
+    }
+
+    fn build(
+        gl_config: &Config,
+        window: &Window,
+        gpu_resource_cache_limit: usize,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        let window_handle = window.window_handle()?.as_raw();
+
+        let context_attributes = [
+            ContextAttributesBuilder::new()
+                .with_profile(GlProfile::Core)
+                .build(Some(window_handle)),
+            ContextAttributesBuilder::new()
+                .with_profile(GlProfile::Compatibility)
+                .build(Some(window_handle)),
+            ContextAttributesBuilder::new()
+                .with_context_api(ContextApi::Gles(None))
+                .build(Some(window_handle)),
+        ];
+
+        let not_current_gl_context = context_attributes
+            .iter()
+            .find_map(|attributes| {
+                unsafe { gl_config.display().create_context(gl_config, attributes) }
+                    .inspect_err(|error| {
+                        tracing::warn!("Failed to create an OpenGL context: {error}")
+                    })
+                    .ok()
+            })
+            .ok_or("could not create an OpenGL context with any profile")?;
 
         let size = window.inner_size();
 
         let attrs = SurfaceAttributesBuilder::<WindowSurface>::new().build(
-            window_handle.as_raw(),
+            window_handle,
             NonZeroU32::new(size.width).ok_or("OpenGL window has zero width")?,
             NonZeroU32::new(size.height).ok_or("OpenGL window has zero height")?,
         );
@@ -138,7 +189,7 @@ impl OpenGLDriver {
         let gl_surface = unsafe {
             gl_config
                 .display()
-                .create_window_surface(&gl_config, &attrs)?
+                .create_window_surface(gl_config, &attrs)?
         };
 
         let gl_context = not_current_gl_context.make_current(&gl_surface)?;
@@ -174,6 +225,13 @@ impl OpenGLDriver {
             }
         };
 
+        let renderer = unsafe { GetString(RENDERER) };
+        let gpu_name = (!renderer.is_null()).then(|| {
+            unsafe { CStr::from_ptr(renderer.cast()) }
+                .to_string_lossy()
+                .into_owned()
+        });
+
         let num_samples = gl_config.num_samples() as usize;
         let stencil_size = gl_config.stencil_size() as usize;
 
@@ -206,9 +264,10 @@ impl OpenGLDriver {
             stencil_size,
             fb_info,
             surface,
+            gpu_name,
         };
 
-        Ok((driver, window))
+        Ok(driver)
     }
 
     pub fn present(&mut self, window: &Window, render: impl FnOnce(&mut SkiaSurface)) {
@@ -249,5 +308,22 @@ impl OpenGLDriver {
         );
 
         self.surface = surface;
+    }
+
+    /// Pick the OpenGL config, preferring transparency then fewer samples.
+    fn pick_config(configs: Box<dyn Iterator<Item = Config> + '_>, transparent: bool) -> Config {
+        configs
+            .reduce(|accum, config| {
+                let transparency_check = transparent
+                    && config.supports_transparency().unwrap_or(false)
+                    && !accum.supports_transparency().unwrap_or(false);
+
+                if transparency_check || config.num_samples() < accum.num_samples() {
+                    config
+                } else {
+                    accum
+                }
+            })
+            .expect("at least one OpenGL config")
     }
 }

@@ -68,11 +68,11 @@
 //! ## Watch Channels with `use_track_watcher`
 //!
 //! You can easily subscribe to tokio watch channels using [`use_track_watcher`](crate::sdk::use_track_watcher)
-//! hook from the `sdk` feature:
+//! hook from the `sdk-tokio` feature:
 //!
 //! ```toml
 //! [dependencies]
-//! freya = { version = "...", features = ["sdk"] }
+//! freya = { version = "...", features = ["sdk-tokio"] }
 //! tokio = { version = "1", features = ["sync"] }
 //! ```
 //!

@@ -55,7 +55,12 @@ impl SoftwareDriver {
         window_attributes: WindowAttributes,
     ) -> Result<(Self, Window), Box<dyn std::error::Error>> {
         let window = event_loop.create_window(window_attributes)?;
+        let driver = Self::from_window(&window)?;
+        Ok((driver, window))
+    }
 
+    /// Build the driver on an existing window instead of creating a new one.
+    pub fn from_window(window: &Window) -> Result<Self, Box<dyn std::error::Error>> {
         let display_handle = window.display_handle()?.as_raw();
         let window_handle = window.window_handle()?.as_raw();
 
@@ -73,13 +78,10 @@ impl SoftwareDriver {
                 .map_err(|err| format!("Could not size softbuffer surface: {err}"))?;
         }
 
-        Ok((
-            Self {
-                _context: context,
-                surface,
-            },
-            window,
-        ))
+        Ok(Self {
+            _context: context,
+            surface,
+        })
     }
 
     pub fn present(

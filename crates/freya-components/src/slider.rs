@@ -49,6 +49,7 @@ pub struct Slider {
     size: Size,
     direction: Direction,
     enabled: bool,
+    scroll_enabled: bool,
     cursor_icon: CursorIcon,
     step: Option<f64>,
     key: DiffKey,
@@ -69,6 +70,7 @@ impl Slider {
             size: Size::fill(),
             direction: Direction::Horizontal,
             enabled: true,
+            scroll_enabled: true,
             cursor_icon: CursorIcon::default(),
             step: None,
             key: DiffKey::None,
@@ -77,6 +79,14 @@ impl Slider {
 
     pub fn enabled(mut self, enabled: impl Into<bool>) -> Self {
         self.enabled = enabled.into();
+        self
+    }
+
+    /// Control whether the value can be changed by scrolling with the mouse wheel. Enabled by default.
+    ///
+    /// You might want to disable it when the slider is inside a scrollable container.
+    pub fn scroll_enabled(mut self, scroll_enabled: impl Into<bool>) -> Self {
+        self.scroll_enabled = scroll_enabled.into();
         self
     }
 
@@ -324,7 +334,7 @@ impl Component for Slider {
                     .on_pointer_down(on_pointer_down)
                     .on_global_pointer_move(on_global_pointer_move)
                     .on_global_pointer_press(on_global_pointer_press)
-                    .on_wheel(on_wheel)
+                    .maybe(self.scroll_enabled, |el| el.on_wheel(on_wheel))
             })
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
