@@ -198,7 +198,8 @@ impl KeyExt for TableRow {
 impl Component for TableRow {
     fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, TableThemePreference, "table");
-        let config = use_try_consume::<TableConfig>().unwrap_or_default();
+        let column_widths = use_try_consume::<TableConfigContext>()
+            .and_then(|config| config.0.read().column_widths.clone());
         let mut state = use_state(|| TableRowState::Idle);
         let TableTheme {
             divider_fill,
@@ -225,8 +226,7 @@ impl Component for TableRow {
                     .horizontal()
                     .content(Content::Flex)
                     .children(self.children.iter().enumerate().map(|(index, child)| {
-                        let width = config
-                            .column_widths
+                        let width = column_widths
                             .as_ref()
                             .and_then(|widths| widths.get(index).cloned())
                             .unwrap_or_else(|| Size::flex(1.));
@@ -462,10 +462,19 @@ impl KeyExt for Table {
     }
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, PartialEq)]
 pub struct TableConfig {
     pub column_widths: Option<Vec<Size>>,
 }
+
+/// The live [TableConfig] a [Table] shares with the [TableRow]s under it.
+///
+/// A [Readable] rather than a plain value, because a table's columns may change while its rows are
+/// mounted: `use_try_consume` runs once per component instance, so a row that read a plain context
+/// would keep the split it was born with. A row reading through this subscribes, and re-renders
+/// when the columns move.
+#[derive(Clone)]
+pub struct TableConfigContext(pub Readable<TableConfig>);
 
 impl TableConfig {
     pub fn new() -> Self {
@@ -493,7 +502,11 @@ impl Component for Table {
             Some(widths) => TableConfig::with_column_widths(widths.clone()),
             None => TableConfig::default(),
         };
-        provide_context(config);
+        let mut state = use_state(|| config.clone());
+        if *state.peek() != config {
+            *state.write() = config;
+        }
+        use_provide_context(|| TableConfigContext(state.into_readable()));
 
         rect()
             .overflow(Overflow::Clip)
@@ -517,5 +530,79 @@ impl Component for Table {
 
     fn render_key(&self) -> DiffKey {
         self.key.clone().or(self.default_key())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use freya::prelude::*;
+    use freya_testing::TestingRunner;
+
+    use crate::table::{
+        Table,
+        TableBody,
+        TableCell,
+        TableRow,
+    };
+
+    /// A table whose column widths change while its rows stay mounted re-lays those rows.
+    ///
+    /// The regression is quiet and permanent: a row reads its split through `use_try_consume`,
+    /// which runs once per component instance, so before [TableConfigContext](super::
+    /// TableConfigContext) held a `Readable` a row kept the widths it was born with. A table that
+    /// starts without widths and gains them (an empty state that fills, a column set that depends
+    /// on state) laid its rows out at an equal share for the rest of their lives.
+    ///
+    /// Measured on the first cell's laid-out width rather than on the element tree, because the
+    /// tree was right the whole time.
+    #[test]
+    fn a_row_follows_column_widths_that_change_under_it() {
+        fn app() -> impl IntoElement {
+            let widths = consume_context::<State<Option<Vec<Size>>>>();
+            Table::new()
+                .map(widths.read().clone(), |table, widths| {
+                    table.column_widths(widths)
+                })
+                .child(
+                    TableBody::new().child(
+                        TableRow::new()
+                            .child(TableCell::new().child("a"))
+                            .child(TableCell::new().child("b")),
+                    ),
+                )
+        }
+
+        let (mut runner, widths) = TestingRunner::new(
+            app,
+            (400., 200.).into(),
+            |runner| runner.provide_root_context(|| State::create(None::<Vec<Size>>)),
+            1.,
+        );
+        runner.sync_and_update();
+
+        /// The width torin gave the row's first cell wrapper.
+        fn first_cell(runner: &TestingRunner) -> f32 {
+            runner
+                .find_many(|node, _| {
+                    let area = node.layout().area;
+                    (area.width() > 0. && area.height() > 0.).then(|| (area.min_y(), area.width()))
+                })
+                .into_iter()
+                .filter(|(_, width)| *width < 400.)
+                .map(|(_, width)| width)
+                .next()
+                .expect("a laid-out cell")
+        }
+
+        let mut widths = widths;
+        widths.set(Some(vec![Size::px(120.), Size::flex(1.)]));
+        runner.sync_and_update();
+        runner.sync_and_update();
+
+        assert_eq!(
+            first_cell(&runner),
+            120.,
+            "the row took the split it was given after it had mounted"
+        );
     }
 }
