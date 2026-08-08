@@ -20,11 +20,9 @@ use freya_core::{
     integration::FxHashSet,
     lifecycle::context::{
         consume_context,
-        provide_context_for_scope_id,
         try_consume_context,
     },
     prelude::*,
-    scope_id::ScopeId,
 };
 use futures_util::stream::{
     FuturesUnordered,
@@ -317,10 +315,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
         let mut storage = match try_consume_context::<QueriesStorage<Q>>() {
             Some(storage) => storage,
             None => {
-                provide_context_for_scope_id(
-                    QueriesStorage::<Q>::new_in_root(),
-                    Some(ScopeId::ROOT),
-                );
+                provide_root_context(QueriesStorage::<Q>::new_in_root());
                 try_consume_context::<QueriesStorage<Q>>().unwrap()
             }
         };
@@ -410,15 +405,14 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
     }
 
     async fn inner_invalidate_all(self) {
-        // Get all the queries
-        let matching_queries = self.storage.read().clone().into_iter().collect::<Vec<_>>();
-        let matching_queries = matching_queries
-            .iter()
-            .map(|(q, d)| (q, d))
-            .collect::<Vec<_>>();
+        let mut all_queries = Vec::new();
+        let storage = self.storage.read();
+        for (query, data) in storage.iter() {
+            all_queries.push((query, data));
+        }
 
         // Invalidate the queries
-        Self::run_queries(&matching_queries).await
+        Self::run_queries(&all_queries).await
     }
 
     /// Acquires query storage from context and invalidates matching queries
@@ -435,15 +429,12 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
     async fn inner_invalidate_matching(self, matching_keys: Q::Keys) {
         // Get those queries that match
         let mut matching_queries = Vec::new();
-        for (query, data) in self.storage.read().iter() {
+        let storage = self.storage.read();
+        for (query, data) in storage.iter() {
             if query.query.matches(&matching_keys) {
-                matching_queries.push((query.clone(), data.clone()));
+                matching_queries.push((query, data));
             }
         }
-        let matching_queries = matching_queries
-            .iter()
-            .map(|(q, d)| (q, d))
-            .collect::<Vec<_>>();
 
         // Invalidate the queries
         Self::run_queries(&matching_queries).await
@@ -759,7 +750,7 @@ pub fn use_query<Q: QueryCapability>(query: Query<Q>) -> UseQuery<Q> {
     let mut storage = match try_consume_context::<QueriesStorage<Q>>() {
         Some(storage) => storage,
         None => {
-            provide_context_for_scope_id(QueriesStorage::<Q>::new_in_root(), Some(ScopeId::ROOT));
+            provide_root_context(QueriesStorage::<Q>::new_in_root());
             try_consume_context::<QueriesStorage<Q>>().unwrap()
         }
     };

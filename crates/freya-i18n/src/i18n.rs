@@ -252,6 +252,9 @@ pub fn use_share_i18n(i18n: impl FnOnce() -> I18n) {
 /// component and then use [`I18n::get`] (or the `t!`, `te!`, `tid!` macros) in any
 /// descendant component to access translations.
 ///
+/// The instance is shared across all windows. If another window already initialized it,
+/// that one is reused and `init` is not called.
+///
 /// See [`I18n::create`] for a manual initialization where you can also handle errors.
 ///
 /// # Panics
@@ -282,9 +285,9 @@ pub fn use_share_i18n(i18n: impl FnOnce() -> I18n) {
 /// }
 /// ```
 pub fn use_init_i18n(init: impl FnOnce() -> I18nConfig) -> I18n {
-    use_provide_context(move || {
+    use_provide_root_context(move || {
         // Coverage false -ve: See https://github.com/xd009642/tarpaulin/issues/1675
-        match I18n::create(init()) {
+        match I18n::create_global(init()) {
             Ok(i18n) => i18n,
             Err(e) => panic!("Failed to create I18n context: {e}"),
         }
