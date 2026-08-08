@@ -38,8 +38,8 @@ impl ScrollRequest {
 
 /// An absolute scroll movement along one axis, in pixels.
 pub enum ScrollEvent {
-    X(i32),
-    Y(i32),
+    X(f32),
+    Y(f32),
 }
 
 /// Handle to drive and read a scrollable area programmatically.
@@ -84,7 +84,7 @@ pub enum ScrollEvent {
 ///
 /// For an exact pixel offset use [`scroll_to_y`](ScrollController::scroll_to_y) or
 /// [`scroll_to_x`](ScrollController::scroll_to_x). The current position is available by converting
-/// the controller into a `(i32, i32)` tuple of `(x, y)` pixels.
+/// the controller into a `(f32, f32)` tuple of `(x, y)` pixels.
 ///
 /// # Keeping scrollables in sync
 ///
@@ -135,10 +135,10 @@ pub struct ScrollController {
     notifier: State<()>,
     requests: State<Vec<ScrollRequest>>,
     on_scroll: State<Callback<ScrollEvent, bool>>,
-    get_scroll: State<Callback<(), (i32, i32)>>,
+    get_scroll: State<Callback<(), (f32, f32)>>,
 }
 
-impl From<ScrollController> for (i32, i32) {
+impl From<ScrollController> for (f32, f32) {
     /// Reads the current `(x, y)` scroll position in pixels.
     fn from(val: ScrollController) -> Self {
         val.get_scroll.read().call(())
@@ -147,7 +147,7 @@ impl From<ScrollController> for (i32, i32) {
 
 impl ScrollController {
     /// Creates a controller starting at scroll position `(x, y)` with a list of requests to apply.
-    pub fn new(x: i32, y: i32, initial_requests: Vec<ScrollRequest>) -> Self {
+    pub fn new(x: f32, y: f32, initial_requests: Vec<ScrollRequest>) -> Self {
         let mut scroll = State::create((x, y));
         Self {
             notifier: State::create(()),
@@ -172,7 +172,7 @@ impl ScrollController {
         notifier: State<()>,
         requests: State<Vec<ScrollRequest>>,
         on_scroll: State<Callback<ScrollEvent, bool>>,
-        get_scroll: State<Callback<(), (i32, i32)>>,
+        get_scroll: State<Callback<(), (f32, f32)>>,
     ) -> Self {
         Self {
             notifier,
@@ -192,14 +192,14 @@ impl ScrollController {
                     direction: Direction::Vertical,
                     ..
                 } => {
-                    self.on_scroll.write().call(ScrollEvent::Y(0));
+                    self.on_scroll.write().call(ScrollEvent::Y(0.));
                 }
                 ScrollRequest {
                     position: ScrollPosition::Start,
                     direction: Direction::Horizontal,
                     ..
                 } => {
-                    self.on_scroll.write().call(ScrollEvent::X(0));
+                    self.on_scroll.write().call(ScrollEvent::X(0.));
                 }
                 ScrollRequest {
                     position: ScrollPosition::End,
@@ -211,9 +211,7 @@ impl ScrollController {
                         continue;
                     }
                     let (_x, y) = self.get_scroll.read().call(());
-                    self.on_scroll
-                        .write()
-                        .call(ScrollEvent::Y(y - height as i32));
+                    self.on_scroll.write().call(ScrollEvent::Y(y - height));
                 }
                 ScrollRequest {
                     position: ScrollPosition::End,
@@ -226,21 +224,19 @@ impl ScrollController {
                     }
 
                     let (x, _y) = self.get_scroll.read().call(());
-                    self.on_scroll
-                        .write()
-                        .call(ScrollEvent::X(x - width as i32));
+                    self.on_scroll.write().call(ScrollEvent::X(x - width));
                 }
             }
         }
     }
 
     /// Scrolls the horizontal axis to `to` pixels. Returns whether the position actually changed.
-    pub fn scroll_to_x(&mut self, to: i32) -> bool {
+    pub fn scroll_to_x(&mut self, to: f32) -> bool {
         self.on_scroll.write().call(ScrollEvent::X(to))
     }
 
     /// Scrolls the vertical axis to `to` pixels. Returns whether the position actually changed.
-    pub fn scroll_to_y(&mut self, to: i32) -> bool {
+    pub fn scroll_to_y(&mut self, to: f32) -> bool {
         self.on_scroll.write().call(ScrollEvent::Y(to))
     }
 
@@ -259,8 +255,8 @@ pub fn use_scroll_controller(init: impl FnOnce() -> ScrollConfig) -> ScrollContr
         let config = init();
 
         ScrollController::new(
-            0,
-            0,
+            0.,
+            0.,
             vec![
                 ScrollRequest {
                     position: config.default_vertical_position,

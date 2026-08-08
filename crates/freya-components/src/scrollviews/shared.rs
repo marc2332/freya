@@ -16,22 +16,22 @@ pub fn get_scroll_position_from_wheel(
     inner_size: f32,
     viewport_size: f32,
     scroll_position: f32,
-) -> i32 {
+) -> f32 {
     if viewport_size >= inner_size {
-        return 0;
+        return 0.0;
     }
 
     let new_position = scroll_position + wheel_movement;
 
     if new_position >= 0.0 && wheel_movement > 0.0 {
-        return 0;
+        return 0.0;
     }
 
     if new_position <= -(inner_size - viewport_size) && wheel_movement < 0.0 {
-        return -(inner_size - viewport_size) as i32;
+        return -(inner_size - viewport_size);
     }
 
-    new_position as i32
+    new_position
 }
 
 #[doc(hidden)]
@@ -103,9 +103,9 @@ pub fn get_scroll_position_from_cursor(
     cursor_position: f32,
     inner_size: f32,
     viewport_size: f32,
-) -> i32 {
+) -> f32 {
     if viewport_size <= MIN_SCROLLBAR_SIZE || viewport_size >= inner_size {
-        return 0;
+        return 0.0;
     }
 
     let viewable_ratio = viewport_size / inner_size;
@@ -118,9 +118,8 @@ pub fn get_scroll_position_from_cursor(
     let cursor_clamped = cursor_position.clamp(0.0, available_thumb_range);
 
     let normalized_scroll = cursor_clamped / available_thumb_range;
-    let new_position = -(normalized_scroll * available_scroll_range);
 
-    new_position as i32
+    -(normalized_scroll * available_scroll_range)
 }
 
 pub fn handle_key_event(

@@ -137,6 +137,7 @@ pub(crate) fn spawn_pty(
         last_write_time: Instant::now(),
         pressed_button: None,
         modifiers: Modifiers::empty(),
+        wheel_remainder: 0.,
     }));
 
     let platform = Platform::get();
