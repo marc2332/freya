@@ -408,8 +408,8 @@ impl ResizableContext {
         if let Some(panel) = grow_index.and_then(|i| self.panels.get_mut(i)) {
             let panel_floor = floor(panel);
             let scale = panel.sizing.flex_scale(flex_factor);
-            let new_size =
-                (panel.size + acc_pixels * scale).clamp(panel_floor.min(panel.max_size), panel.max_size);
+            let new_size = (panel.size + acc_pixels * scale)
+                .clamp(panel_floor.min(panel.max_size), panel.max_size);
             if panel.size != new_size {
                 changed_panels = true;
                 panel.size = new_size;
@@ -750,7 +750,9 @@ impl Component for ResizablePanel {
             let registry = registry.clone();
             let on_resized = self.on_resized.clone();
             move |e: Event<SizedEventData>| {
-                let Some(on_resized) = &on_resized else { return };
+                let Some(on_resized) = &on_resized else {
+                    return;
+                };
                 if !registry.peek().dragging {
                     return;
                 }
@@ -1175,10 +1177,10 @@ mod drag_tests {
     #[test]
     fn both_handles_resize_in_both_directions() {
         for (handle, distance, shrinks) in [
-            (1usize, 5., 1usize),  // sidebar handle right: the middle gives
-            (1, -5., 0),           // sidebar handle left:  the sidebar gives
-            (2, 5., 2),            // inspector handle right: the inspector gives
-            (2, -5., 1),           // inspector handle left:  the middle gives
+            (1usize, 5., 1usize), // sidebar handle right: the middle gives
+            (1, -5., 0),          // sidebar handle left:  the sidebar gives
+            (2, 5., 2),           // inspector handle right: the inspector gives
+            (2, -5., 1),          // inspector handle left:  the middle gives
         ] {
             let mut ctx = shell();
             let before = ctx.panels[shrinks].size;

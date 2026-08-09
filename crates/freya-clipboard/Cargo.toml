@@ -14,7 +14,9 @@ categories = ["gui"]
 workspace = true
 
 [dependencies]
-copypasta = "0.10"
+# `wayland-data-control` so a Wayland session talks to the compositor directly instead of
+# reaching XWayland for a clipboard; arboard falls back to X11 where the protocol is missing.
+arboard = { version = "3.6", features = ["wayland-data-control"] }
 freya-core = { workspace = true }
 
 [dev-dependencies]

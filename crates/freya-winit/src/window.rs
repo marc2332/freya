@@ -7,7 +7,7 @@ use std::{
 };
 
 use accesskit_winit::Adapter;
-use freya_clipboard::copypasta::{
+use freya_clipboard::prelude::{
     ClipboardContext,
     ClipboardProvider,
 };
@@ -28,9 +28,6 @@ use futures_util::task::{
     waker,
 };
 use ragnarok::NodesState;
-use raw_window_handle::HasDisplayHandle;
-#[cfg(target_os = "linux")]
-use raw_window_handle::RawDisplayHandle;
 use torin::prelude::{
     CursorPoint,
     Point2D,
@@ -291,31 +288,9 @@ impl AppWindow {
             }
         });
 
-        let clipboard = {
-            if let Ok(handle) = window.display_handle() {
-                #[allow(clippy::match_single_binding)]
-                match handle.as_raw() {
-                    #[cfg(target_os = "linux")]
-                    RawDisplayHandle::Wayland(handle) => {
-                        let (_primary, clipboard) = unsafe {
-                            use freya_clipboard::copypasta::wayland_clipboard;
-
-                            wayland_clipboard::create_clipboards_from_external(
-                                handle.display.as_ptr(),
-                            )
-                        };
-                        let clipboard: Box<dyn ClipboardProvider> = Box::new(clipboard);
-                        Some(clipboard)
-                    }
-                    _ => ClipboardContext::new().ok().map(|c| {
-                        let clipboard: Box<dyn ClipboardProvider> = Box::new(c);
-                        clipboard
-                    }),
-                }
-            } else {
-                None
-            }
-        };
+        let clipboard = ClipboardContext::new()
+            .ok()
+            .map(|c| Box::new(c) as Box<dyn ClipboardProvider>);
 
         runner.provide_root_context(|| State::create(clipboard));
 

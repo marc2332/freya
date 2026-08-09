@@ -47,7 +47,7 @@ use std::{
     },
 };
 
-use freya_clipboard::copypasta::{
+use freya_clipboard::prelude::{
     ClipboardContext,
     ClipboardProvider,
 };
