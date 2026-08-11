@@ -183,6 +183,9 @@ pub struct Input {
     key: DiffKey,
     style_variant: InputStyleVariant,
     layout_variant: InputLayoutVariant,
+    multiline: bool,
+    min_height: Option<f32>,
+    max_height: Option<f32>,
     text_align: TextAlign,
     a11y_id: Option<AccessibilityId>,
     leading: Option<Element>,
@@ -214,6 +217,9 @@ impl Input {
             key: DiffKey::default(),
             style_variant: InputStyleVariant::Normal,
             layout_variant: InputLayoutVariant::Normal,
+            multiline: false,
+            min_height: None,
+            max_height: None,
             text_align: TextAlign::default(),
             a11y_id: None,
             leading: None,
@@ -266,6 +272,46 @@ impl Input {
 
     pub fn mode(mut self, mode: InputMode) -> Self {
         self.mode = mode;
+        self
+    }
+
+    /// Let the value wrap and hold newlines, instead of being one scrolling line.
+    ///
+    /// The text wraps at the input's width and the box grows with it, so pair this with
+    /// [`height`](Self::height) left at its default [`Size::Inner`] and a `max_height` on
+    /// whatever contains it: past that the text scrolls vertically rather than the box growing
+    /// without end.
+    ///
+    /// **Enter still submits, and `Shift`+`Enter` inserts a newline.** A multiline input that
+    /// took Enter as text would have no way to submit at all, and the shifted variant is what
+    /// every composer in the category binds. Without an
+    /// [`on_submit`](Self::on_submit) there is nothing to submit *to*, so there Enter inserts a
+    /// newline as well and the modifier is simply redundant.
+    pub fn multiline(mut self, multiline: bool) -> Self {
+        self.multiline = multiline;
+        self
+    }
+
+    /// The tallest a [`multiline`](Self::multiline) input may grow before its text scrolls
+    /// instead.
+    ///
+    /// Growing with the content is what a composer wants and growing without end is not, so the
+    /// two halves are one setting: below this the box is exactly as tall as its wrapped text,
+    /// and at it the box stops and the text scrolls inside. Ignored by a single-line input,
+    /// which has nothing to grow.
+    pub fn max_height(mut self, max_height: f32) -> Self {
+        self.max_height = Some(max_height);
+        self
+    }
+
+    /// The shortest a [`multiline`](Self::multiline) input may be, however little is in it.
+    ///
+    /// The floor to [`max_height`](Self::max_height)'s ceiling, for a box the surface wants at a
+    /// stated size rather than at its text's: an expanded composer is that size whether it holds
+    /// one line or forty, which growth alone cannot express — raising only the ceiling gives an
+    /// empty box nothing to grow into. Ignored by a single-line input.
+    pub fn min_height(mut self, min_height: f32) -> Self {
+        self.min_height = Some(min_height);
         self
     }
 
@@ -434,6 +480,21 @@ impl Component for Input {
             }
         });
 
+        // **What a multiline box grows to.** The paragraph reports its laid-out height and the
+        // box takes it, clamped by [`Input::max_height`] — so the box is exactly as tall as its
+        // text until the cap, and the `ScrollView` inside takes over from there. Written only on
+        // an actual change, or each layout pass would schedule the next one.
+        let mut content_height = use_state(|| 0.);
+        let multiline_layout = self.multiline;
+        let resolved_height = match (self.multiline, self.max_height) {
+            (true, Some(max)) => Size::px(
+                (*content_height.read() + theme_layout.inner_margin.vertical())
+                    .clamp(self.min_height.unwrap_or(0.).min(max), max),
+            ),
+            (true, None) => Size::Inner,
+            (false, _) => self.height.clone(),
+        };
+
         let display_placeholder = value.read().is_empty()
             && self.placeholder.is_some()
             && !editable.editor().read().has_preedit();
@@ -458,6 +519,7 @@ impl Component for Input {
         };
 
         let on_pre_key_down = self.on_pre_key_down.clone();
+        let multiline = self.multiline;
         let on_key_down = move |e: Event<KeyboardEventData>| {
             let key = e.key.clone();
             let modifiers = e.modifiers;
@@ -466,9 +528,16 @@ impl Component for Input {
                 return;
             }
 
+            // A multiline input takes `Shift`+`Enter` as a newline and leaves plain Enter to
+            // submit — and, with nothing to submit to, takes both as a newline. See
+            // [`Input::multiline`].
+            let newline = multiline
+                && matches!(key, Key::Named(NamedKey::Enter))
+                && (modifiers.shift() || on_submit.is_none());
+
             match &key {
                 // On submit
-                Key::Named(NamedKey::Enter) => {
+                Key::Named(NamedKey::Enter) if !newline => {
                     if let Some(on_submit) = &on_submit {
                         let text = editable.editor().peek().committed_text();
                         on_submit.call(text);
@@ -693,13 +762,18 @@ impl Component for Input {
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
             .width(self.width.clone())
-            .height(self.height.clone())
+            .height(resolved_height)
             .background(background.mul_if(!self.enabled, 0.85))
             .border(border)
             .corner_radius(theme_layout.corner_radius)
             .content(Content::Flex)
             .direction(Direction::Horizontal)
-            .cross_align(Alignment::center())
+            // A multiline box's leading/trailing sit at the *top*, beside the first line, rather
+            // than floating in the middle of a block that may be ten lines tall.
+            .cross_align(match self.multiline {
+                true => Alignment::Start,
+                false => Alignment::center(),
+            })
             .maybe_child(
                 self.leading
                     .clone()
@@ -708,23 +782,52 @@ impl Component for Input {
             .child(
                 ScrollView::new()
                     .width(Size::flex(1.))
-                    .height(Size::Inner)
-                    .direction(Direction::Horizontal)
-                    .show_scrollbar(false)
+                    // A multiline input scrolls the way its text runs — down, and with a
+                    // scrollbar, because a wrapped block that has outgrown its box gives the
+                    // reader no other clue that there is more of it.
+                    .height(match self.multiline {
+                        true => Size::fill(),
+                        false => Size::Inner,
+                    })
+                    .direction(match self.multiline {
+                        true => Direction::Vertical,
+                        false => Direction::Horizontal,
+                    })
+                    .show_scrollbar(self.multiline)
                     .child(
                         paragraph()
                             .holder(holder.read().clone())
-                            .on_sized(move |e: Event<SizedEventData>| area.set(e.visible_area))
-                            .min_width(Size::func(move |context| {
-                                Some(context.parent - theme_layout.inner_margin.horizontal())
-                            }))
+                            .on_sized(move |e: Event<SizedEventData>| {
+                                area.set(e.visible_area);
+                                // **The text's own height, not the box's.** `area` is what the
+                                // paragraph was *given* — inside a filling `ScrollView` that is
+                                // the box, so feeding it back would pin the box at its cap from
+                                // the first frame. `inner_sizes` is what the text measured to,
+                                // which is the thing the box is meant to follow.
+                                if multiline_layout && *content_height.peek() != e.area.height() {
+                                    content_height.set(e.area.height());
+                                }
+                            })
+                            // A single-line input's text runs as wide as it likes and the
+                            // `ScrollView` carries it sideways, so it takes a *minimum* width and
+                            // no maximum. A multiline one has to **wrap**: fill the box, so the
+                            // text breaks at its edge and the only axis that ever scrolls is the
+                            // one the lines run down.
+                            .maybe(!multiline_layout, |el| {
+                                el.min_width(Size::func(move |context| {
+                                    Some(context.parent - theme_layout.inner_margin.horizontal())
+                                }))
+                            })
+                            .maybe(multiline_layout, |el| el.width(Size::fill()))
                             .maybe(self.enabled, |el| el.on_focus_press(on_focus_press))
                             .margin(theme_layout.inner_margin)
                             .cursor_index(cursor_index)
                             .cursor_color(cursor_color)
                             .color(color)
                             .text_align(self.text_align)
-                            .max_lines(1)
+                            // Unset when multiline, so the paragraph wraps at the input's width
+                            // rather than running off the end of one line.
+                            .maybe(!self.multiline, |el| el.max_lines(1))
                             .highlights(text_selection.map(|h| vec![h]))
                             .maybe(display_placeholder, |el| {
                                 el.span(self.placeholder.as_ref().unwrap().to_string())
