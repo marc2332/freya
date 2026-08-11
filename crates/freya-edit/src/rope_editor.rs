@@ -365,6 +365,7 @@ impl<'a> Iterator for LinesIterator<'a> {
 mod test {
     use std::time::Duration;
 
+    use freya_core::prelude::PressEventType;
     use keyboard_types::{
         Key,
         Modifiers,
@@ -374,9 +375,20 @@ mod test {
     use super::RopeEditor;
     use crate::{
         EditorHistory,
+        TextDragging,
         TextSelection,
         text_editor::TextEditor,
     };
+
+    /// The drag state a press of `press` over `anchor` leaves behind.
+    fn after_press(press: PressEventType, anchor: (usize, usize)) -> TextDragging {
+        let mut dragging = TextDragging {
+            clicked: true,
+            ..TextDragging::default()
+        };
+        dragging.pressed(press, &TextSelection::new_range(anchor));
+        dragging
+    }
 
     fn editor(text: &str) -> RopeEditor {
         RopeEditor::new(
@@ -388,14 +400,241 @@ mod test {
     }
 
     fn press(ed: &mut RopeEditor, key: NamedKey) {
-        ed.process_key(
-            &Key::Named(key),
-            &Modifiers::empty(),
-            true,
-            true,
-            false,
-            false,
+        press_with(ed, key, Modifiers::empty());
+    }
+
+    fn press_with(ed: &mut RopeEditor, key: NamedKey, modifiers: Modifiers) {
+        ed.process_key(&Key::Named(key), &modifiers, true, true, false, false);
+    }
+
+    /// Put the caret at `pos` with nothing selected. `move_cursor_to` alone only moves
+    /// a selection's active end, so a test that reuses an editor after a Shift press
+    /// would otherwise carry the old anchor into the next assertion.
+    fn place(ed: &mut RopeEditor, pos: usize) {
+        ed.clear_selection();
+        ed.move_cursor_to(pos);
+    }
+
+    /// The modifier a word jump sits on for this build's platform, so the assertions
+    /// below read the same on either.
+    #[cfg(target_os = "macos")]
+    const WORD: Modifiers = Modifiers::ALT;
+    #[cfg(not(target_os = "macos"))]
+    const WORD: Modifiers = Modifiers::CONTROL;
+
+    /// The primary modifier, which Home/End widen to the whole document under.
+    #[cfg(target_os = "macos")]
+    const PRIMARY: Modifiers = Modifiers::META;
+    #[cfg(not(target_os = "macos"))]
+    const PRIMARY: Modifiers = Modifiers::CONTROL;
+
+    #[test]
+    fn a_line_span_carries_its_terminator_and_the_line_bounds_do_not() {
+        let ed = editor("hello world\nsecond line");
+
+        // A triple press selects the line so that removing it removes the line.
+        assert_eq!(ed.line_span(5), 0..12);
+        // The caret and a delete-to-line-end both stop in front of the break.
+        assert_eq!(ed.line_bounds(5), 0..11);
+
+        // The last line has no terminator, so the two agree.
+        assert_eq!(ed.line_span(15), 12..23);
+        assert_eq!(ed.line_bounds(15), 12..23);
+    }
+
+    #[test]
+    fn a_drag_extends_by_the_unit_its_press_used() {
+        let ed = editor("hello world");
+        let word = after_press(PressEventType::Double, (0, 5));
+
+        // The pointer twitching inside the word the press selected keeps the word: the
+        // regression a character-wise drag caused, leaving word-start to the pointer.
+        for pointer in [0, 1, 4, 5] {
+            assert_eq!(
+                ed.drag_selection(pointer, &word, TextSelection::new_range((0, 5))),
+                TextSelection::new_range((0, 5)),
+                "pointer {pointer} broke the pressed word"
+            );
+        }
+
+        // Dragging on past it extends by whole words, never mid-word.
+        assert_eq!(
+            ed.drag_selection(8, &word, TextSelection::new_range((0, 5))),
+            TextSelection::new_range((0, 11))
         );
+
+        // Dragging back before it pivots on the far edge of the pressed word.
+        let word = after_press(PressEventType::Double, (6, 11));
+        assert_eq!(
+            ed.drag_selection(1, &word, TextSelection::new_range((6, 11))),
+            TextSelection::new_range((11, 0))
+        );
+
+        // A single press still drags freely, character by character.
+        let caret = after_press(PressEventType::Single, (2, 2));
+        assert_eq!(
+            ed.drag_selection(8, &caret, TextSelection::new_range((2, 2))),
+            TextSelection::new_range((2, 8))
+        );
+    }
+
+    #[test]
+    fn a_drag_after_a_triple_press_extends_by_whole_lines() {
+        let ed = editor("aaa\nbbb\nccc");
+        let line = after_press(PressEventType::Triple, (0, 4));
+
+        assert_eq!(
+            ed.drag_selection(2, &line, TextSelection::new_range((0, 4))),
+            TextSelection::new_range((0, 4))
+        );
+        assert_eq!(
+            ed.drag_selection(5, &line, TextSelection::new_range((0, 4))),
+            TextSelection::new_range((0, 8))
+        );
+    }
+
+    #[test]
+    fn home_and_end_move_by_line_and_primary_widens_them_to_the_document() {
+        let mut ed = editor("hello world\nsecond line");
+
+        place(&mut ed, 5);
+        press(&mut ed, NamedKey::End);
+        // In front of the line break, never past it.
+        assert_eq!(ed.cursor_pos(), 11);
+        press(&mut ed, NamedKey::Home);
+        assert_eq!(ed.cursor_pos(), 0);
+
+        place(&mut ed, 15);
+        press(&mut ed, NamedKey::Home);
+        assert_eq!(ed.cursor_pos(), 12);
+        press(&mut ed, NamedKey::End);
+        assert_eq!(ed.cursor_pos(), 23);
+
+        place(&mut ed, 5);
+        press_with(&mut ed, NamedKey::End, PRIMARY);
+        assert_eq!(ed.cursor_pos(), 23);
+        press_with(&mut ed, NamedKey::Home, PRIMARY);
+        assert_eq!(ed.cursor_pos(), 0);
+    }
+
+    #[test]
+    fn shift_extends_the_selection_over_every_granularity() {
+        let mut ed = editor("hello world");
+
+        place(&mut ed, 5);
+        press_with(&mut ed, NamedKey::Home, Modifiers::SHIFT);
+        assert_eq!(ed.get_selected_text().as_deref(), Some("hello"));
+
+        place(&mut ed, 5);
+        press_with(&mut ed, NamedKey::End, Modifiers::SHIFT);
+        assert_eq!(ed.get_selected_text().as_deref(), Some(" world"));
+
+        place(&mut ed, 0);
+        press_with(&mut ed, NamedKey::ArrowRight, WORD | Modifiers::SHIFT);
+        assert_eq!(ed.get_selected_text().as_deref(), Some("hello"));
+        // A second press grows the same selection rather than starting a new one.
+        press_with(&mut ed, NamedKey::ArrowRight, WORD | Modifiers::SHIFT);
+        assert_eq!(ed.get_selected_text().as_deref(), Some("hello world"));
+    }
+
+    #[test]
+    fn a_plain_arrow_collapses_a_selection_to_the_end_it_points_at() {
+        let mut ed = editor("hello world");
+
+        // Dragged left to right, and then the other way: the arrow answers the same,
+        // because the caret follows the arrow rather than the drag.
+        for (from, to) in [(2, 8), (8, 2)] {
+            ed.set_selection((from, to));
+            press(&mut ed, NamedKey::ArrowLeft);
+            assert_eq!(ed.cursor_pos(), 2);
+            assert!(ed.get_selection().is_none());
+
+            ed.set_selection((from, to));
+            press(&mut ed, NamedKey::ArrowRight);
+            assert_eq!(ed.cursor_pos(), 8);
+            assert!(ed.get_selection().is_none());
+        }
+
+        // A modified arrow collapses to that same end and then travels from it.
+        ed.set_selection((2, 8));
+        press_with(&mut ed, NamedKey::ArrowLeft, WORD);
+        assert_eq!(ed.cursor_pos(), 0);
+    }
+
+    #[test]
+    fn an_arrow_step_collapses_a_selection_and_still_changes_line() {
+        let mut ed = editor("aaa\nbbb\nccc");
+
+        ed.set_selection((4, 6));
+        press(&mut ed, NamedKey::ArrowUp);
+        assert_eq!(ed.cursor_pos(), 0);
+
+        ed.set_selection((4, 6));
+        press(&mut ed, NamedKey::ArrowDown);
+        assert_eq!(ed.cursor_pos(), 10);
+    }
+
+    #[test]
+    fn word_jumps_and_word_deletes_agree() {
+        let mut ed = editor("hello world");
+
+        place(&mut ed, 0);
+        press_with(&mut ed, NamedKey::ArrowRight, WORD);
+        assert_eq!(ed.cursor_pos(), 5);
+        press_with(&mut ed, NamedKey::ArrowLeft, WORD);
+        assert_eq!(ed.cursor_pos(), 0);
+
+        // Backspace removes exactly what the leftward jump skipped over.
+        place(&mut ed, 11);
+        press_with(&mut ed, NamedKey::Backspace, WORD);
+        assert_eq!(ed.rope().to_string(), "hello ");
+        assert_eq!(ed.cursor_pos(), 6);
+
+        let mut ed = editor("hello world");
+        place(&mut ed, 0);
+        press_with(&mut ed, NamedKey::Delete, WORD);
+        assert_eq!(ed.rope().to_string(), " world");
+        assert_eq!(ed.cursor_pos(), 0);
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn cmd_moves_and_deletes_to_the_line_bounds_without_touching_the_break() {
+        let mut ed = editor("hello world\nsecond line");
+
+        place(&mut ed, 5);
+        press_with(&mut ed, NamedKey::ArrowRight, Modifiers::META);
+        assert_eq!(ed.cursor_pos(), 11);
+        press_with(&mut ed, NamedKey::ArrowLeft, Modifiers::META);
+        assert_eq!(ed.cursor_pos(), 0);
+
+        place(&mut ed, 5);
+        press_with(
+            &mut ed,
+            NamedKey::ArrowLeft,
+            Modifiers::META | Modifiers::SHIFT,
+        );
+        assert_eq!(ed.get_selected_text().as_deref(), Some("hello"));
+
+        // Cmd+Up/Down reach the document ends.
+        place(&mut ed, 5);
+        press_with(&mut ed, NamedKey::ArrowDown, Modifiers::META);
+        assert_eq!(ed.cursor_pos(), 23);
+        press_with(&mut ed, NamedKey::ArrowUp, Modifiers::META);
+        assert_eq!(ed.cursor_pos(), 0);
+
+        let mut ed = editor("hello world\nsecond line");
+        place(&mut ed, 5);
+        press_with(&mut ed, NamedKey::Backspace, Modifiers::META);
+        assert_eq!(ed.rope().to_string(), " world\nsecond line");
+        assert_eq!(ed.cursor_pos(), 0);
+
+        let mut ed = editor("hello world\nsecond line");
+        place(&mut ed, 5);
+        press_with(&mut ed, NamedKey::Delete, Modifiers::META);
+        // The line break survives: this deletes to the end of the line, not through it.
+        assert_eq!(ed.rope().to_string(), "hello\nsecond line");
+        assert_eq!(ed.cursor_pos(), 5);
     }
 
     #[test]
@@ -423,7 +662,7 @@ mod test {
         assert_eq!(ed.rope().to_string(), "a🙂");
         assert_eq!(ed.cursor_pos(), 0);
 
-        ed.move_cursor_to(3);
+        place(&mut ed, 3);
         press(&mut ed, NamedKey::Backspace);
         assert_eq!(ed.rope().to_string(), "a");
         assert_eq!(ed.cursor_pos(), 1);
@@ -433,7 +672,7 @@ mod test {
     fn preedit_lifecycle() {
         let mut ed = editor("Hello World");
         // Place cursor at position 5 ("Hello| World")
-        ed.move_cursor_to(5);
+        place(&mut ed, 5);
 
         // Initially no preedit
         assert!(!ed.has_preedit());
@@ -464,7 +703,7 @@ mod test {
     #[test]
     fn preedit_skips_undo_history_and_clear_restores() {
         let mut ed = editor("Hello");
-        ed.move_cursor_to(5);
+        place(&mut ed, 5);
         assert!(!ed.history.can_undo());
 
         // Insert preedit, should NOT create undo history

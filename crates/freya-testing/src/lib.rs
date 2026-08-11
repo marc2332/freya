@@ -445,11 +445,17 @@ impl TestingRunner {
     }
 
     pub fn press_key(&mut self, key: Key) {
+        self.press_key_with_modifiers(key, Modifiers::default());
+    }
+
+    /// Press `key` with `modifiers` held, for the chords a plain [`Self::press_key`]
+    /// cannot reach (Shift to extend a selection, the platform's word and line jumps).
+    pub fn press_key_with_modifiers(&mut self, key: Key, modifiers: Modifiers) {
         self.send_event(PlatformEvent::Keyboard {
             name: KeyboardEventName::KeyDown,
             key,
             code: Code::Unidentified,
-            modifiers: Modifiers::default(),
+            modifiers,
         });
         self.sync_and_update();
     }

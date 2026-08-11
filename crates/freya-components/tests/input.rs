@@ -1,5 +1,111 @@
+use std::collections::HashMap;
+
 use freya::prelude::*;
 use freya_testing::prelude::*;
+
+/// An input over a known font, so a press at a given x lands on a known character.
+fn measured_input(value: &'static str) -> TestingRunner {
+    let mut utils = launch_test(move || {
+        let value = use_state(|| value.to_string());
+        Input::new(value).width(Size::px(300.))
+    });
+    utils.set_fonts(HashMap::from_iter([(
+        "NotoSans",
+        include_bytes!("../../freya-edit/tests/NotoSans-Regular.ttf").as_slice(),
+    )]));
+    utils.set_default_fonts(&["NotoSans".into()]);
+    utils.sync_and_update();
+    utils
+}
+
+fn highlights(utils: &mut TestingRunner) -> Option<Vec<(usize, usize)>> {
+    utils.find(|_, e| Some(Paragraph::try_downcast(e)?.highlights.clone()))
+}
+
+#[test]
+pub fn input_double_click_selects_the_word_under_the_pointer() {
+    let mut utils = measured_input("hello world");
+
+    // Two presses in the same spot inside the first word.
+    utils.click_cursor((20.0, 15.0));
+    utils.click_cursor((20.0, 15.0));
+    // The press that focuses the input renders before the focus lands, and an unfocused
+    // input paints no highlight at all: without this frame the selection is right and
+    // the assertion still reads an empty one.
+    utils.sync_and_update();
+    utils.sync_and_update();
+
+    assert_eq!(highlights(&mut utils), Some(vec![(0, 5)]));
+
+    // A third press widens to the line.
+    utils.click_cursor((20.0, 15.0));
+    assert_eq!(highlights(&mut utils), Some(vec![(0, 11)]));
+}
+
+#[test]
+pub fn input_double_click_survives_the_pointer_moving_under_it() {
+    let mut utils = measured_input("hello world");
+
+    utils.click_cursor((20.0, 15.0));
+    utils.press_cursor((20.0, 15.0));
+    utils.sync_and_update();
+    utils.sync_and_update();
+    assert_eq!(highlights(&mut utils), Some(vec![(0, 5)]));
+
+    // A real double click is never perfectly still. The word the press selected must
+    // survive the pointer twitching inside it, rather than collapsing to the pointer.
+    utils.move_cursor((21.0, 15.0));
+    utils.sync_and_update();
+    assert_eq!(highlights(&mut utils), Some(vec![(0, 5)]));
+
+    // Dragging on past the word extends by whole words, never mid-word.
+    utils.move_cursor((60.0, 15.0));
+    utils.sync_and_update();
+    assert_eq!(highlights(&mut utils), Some(vec![(0, 11)]));
+
+    utils.release_cursor((60.0, 15.0));
+}
+
+/// The line jump: Cmd on macOS, Home/End everywhere.
+#[cfg(target_os = "macos")]
+const LINE_JUMP: (Key, Key, Modifiers) = (
+    Key::Named(NamedKey::ArrowLeft),
+    Key::Named(NamedKey::ArrowRight),
+    Modifiers::META,
+);
+#[cfg(not(target_os = "macos"))]
+const LINE_JUMP: (Key, Key, Modifiers) = (
+    Key::Named(NamedKey::Home),
+    Key::Named(NamedKey::End),
+    Modifiers::empty(),
+);
+
+#[test]
+pub fn input_jumps_and_selects_to_the_line_bounds() {
+    let (to_start, to_end, jump) = LINE_JUMP;
+    let mut utils = measured_input("hello world");
+
+    // Focus with the caret somewhere in the middle.
+    utils.click_cursor((20.0, 15.0));
+    utils.sync_and_update();
+
+    utils.press_key_with_modifiers(to_start.clone(), jump | Modifiers::SHIFT);
+    assert_eq!(highlights(&mut utils), Some(vec![(1, 0)]));
+
+    utils.press_key_with_modifiers(to_end.clone(), jump | Modifiers::SHIFT);
+    assert_eq!(highlights(&mut utils), Some(vec![(1, 11)]));
+
+    // Unshifted, the same chord moves the caret and drops the selection.
+    utils.press_key_with_modifiers(to_start, jump);
+    assert_eq!(highlights(&mut utils), Some(vec![]));
+
+    // Typing now lands at the line start, which is what the jump was for.
+    utils.write_text("X");
+    let text = utils.find(|_, e| {
+        Paragraph::try_downcast(e).filter(|p| p.spans.iter().any(|s| s.text == "Xhello world"))
+    });
+    assert!(text.is_some());
+}
 
 #[test]
 pub fn input_test() {

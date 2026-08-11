@@ -6,6 +6,7 @@ use std::{
 };
 
 use freya_clipboard::clipboard::Clipboard;
+use freya_core::prelude::PressEventType;
 use keyboard_types::{
     Key,
     Modifiers,
@@ -19,6 +20,7 @@ use crate::{
         EditBindings,
     },
     editor_history::EditorHistory,
+    event::TextDragging,
 };
 
 #[derive(PartialEq, Clone, Debug, Copy, Hash)]
@@ -93,6 +95,59 @@ impl TextSelection {
 
     pub fn is_range(&self) -> bool {
         matches!(self, Self::Range { .. })
+    }
+}
+
+/// The characters [`ropey`] ends a line on, which [`TextEditor::line`] yields as part of
+/// the line's own text.
+const LINE_BREAKS: [char; 7] = [
+    '\n', '\r', '\u{0B}', '\u{0C}', '\u{85}', '\u{2028}', '\u{2029}',
+];
+
+/// How far one caret motion travels. The modifiers held decide it (see
+/// [`CaretGranularity::horizontal`] and [`CaretGranularity::vertical`]), and every
+/// motion, selection and modified deletion resolves through the same
+/// [`TextEditor::caret_target`], so a key added to one of them cannot disagree with
+/// the others about where a word or a line ends.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum CaretGranularity {
+    /// One grapheme cluster.
+    Grapheme,
+    /// The next word boundary.
+    Word,
+    /// The start or end of the caret's line, with the line break left outside.
+    LineBoundary,
+    /// The start or end of the whole text.
+    Document,
+}
+
+impl CaretGranularity {
+    /// The distance a left/right motion or a deletion covers, from the modifiers held.
+    ///
+    /// macOS puts word jumps on Alt and line jumps on Cmd (arrows, Backspace and
+    /// Delete alike); everywhere else the word jump is on Control and there is no
+    /// line-jump chord, Home and End serving that role instead.
+    pub fn horizontal(modifiers: &Modifiers) -> Self {
+        if cfg!(target_os = "macos") {
+            if modifiers.contains(Modifiers::META) {
+                Self::LineBoundary
+            } else if modifiers.contains(Modifiers::ALT) {
+                Self::Word
+            } else {
+                Self::Grapheme
+            }
+        } else if modifiers.contains(Modifiers::CONTROL) {
+            Self::Word
+        } else {
+            Self::Grapheme
+        }
+    }
+
+    /// The distance an up/down motion covers. macOS puts document jumps on Cmd; other
+    /// platforms leave Control+Up/Down to the viewport and reach the document ends
+    /// through Control+Home/End.
+    pub fn vertical(modifiers: &Modifiers) -> Option<Self> {
+        (cfg!(target_os = "macos") && modifiers.contains(Modifiers::META)).then_some(Self::Document)
     }
 }
 
@@ -286,15 +341,15 @@ pub trait TextEditor {
         }
     }
 
-    /// Move the cursor to the end of the next word.
-    fn cursor_word_right(&mut self) -> bool {
-        let pos = self.cursor_pos();
+    /// The end of the first word past `pos`, or the end of the text when only
+    /// whitespace follows.
+    fn word_end_after(&self, pos: usize) -> usize {
         let len = self.len_utf16_cu();
         if pos >= len {
-            return false;
+            return len;
         }
 
-        // Walk forward line by line starting at the cursor.
+        // Walk forward line by line starting at `pos`.
         let start_char = self.utf16_cu_to_char(pos);
         let initial_line = self.char_to_line(start_char);
         let initial_offset = start_char - self.line_to_char(initial_line);
@@ -310,31 +365,28 @@ pub trait TextEditor {
                 0
             };
 
-            // Stop at the end of the first non-whitespace segment past the cursor.
+            // Stop at the end of the first non-whitespace segment past `pos`.
             let mut char_offset = 0;
             for word in line.text.split_word_bounds() {
                 char_offset += word.chars().count();
                 if char_offset > from && !word.chars().all(char::is_whitespace) {
-                    let new_pos = self.char_to_utf16_cu(line_char_offset + char_offset);
-                    self.selection_mut().move_to(new_pos);
-                    return true;
+                    return self.char_to_utf16_cu(line_char_offset + char_offset);
                 }
             }
         }
 
         // Trailing whitespace only, snap to text end.
-        self.selection_mut().move_to(len);
-        true
+        len
     }
 
-    /// Move the cursor to the start of the previous word.
-    fn cursor_word_left(&mut self) -> bool {
-        let pos = self.cursor_pos();
+    /// The start of the last word beginning before `pos`, or the start of the text
+    /// when only whitespace precedes it.
+    fn word_start_before(&self, pos: usize) -> usize {
         if pos == 0 {
-            return false;
+            return 0;
         }
 
-        // Walk backward line by line starting at the cursor.
+        // Walk backward line by line starting at `pos`.
         let start_char = self.utf16_cu_to_char(pos);
         let initial_line = self.char_to_line(start_char);
         let initial_offset = start_char - self.line_to_char(initial_line);
@@ -350,7 +402,7 @@ pub trait TextEditor {
                 line.text.chars().count()
             };
 
-            // Track the latest non-whitespace segment that starts before the cursor.
+            // Track the latest non-whitespace segment that starts before `pos`.
             let mut char_offset = 0;
             let mut last_word_start = None;
             for word in line.text.split_word_bounds() {
@@ -363,16 +415,216 @@ pub trait TextEditor {
                 char_offset += word.chars().count();
             }
 
-            // Found one on this line, jump to its start.
+            // Found one on this line, its start is the answer.
             if let Some(start) = last_word_start {
-                let new_pos = self.char_to_utf16_cu(line_char_offset + start);
-                self.selection_mut().move_to(new_pos);
-                return true;
+                return self.char_to_utf16_cu(line_char_offset + start);
             }
         }
 
         // Leading whitespace only, snap to text start.
-        self.selection_mut().move_to(0);
+        0
+    }
+
+    /// The UTF-16 bounds of the line holding `pos`, terminator **included**: selecting
+    /// this and removing it removes the line, which is what a triple press means.
+    fn line_span(&self, pos: usize) -> Range<usize> {
+        let line_idx = self.char_to_line(self.utf16_cu_to_char(pos));
+        let start = self.char_to_utf16_cu(self.line_to_char(line_idx));
+        start..start + self.line(line_idx).map_or(0, |line| line.utf16_len())
+    }
+
+    /// [`Self::line_span`] with the line terminator left **outside**: where the caret
+    /// stops, and how far a delete-to-line-end reaches. Neither may cross into the next
+    /// line, so these are two answers rather than one.
+    fn line_bounds(&self, pos: usize) -> Range<usize> {
+        let span = self.line_span(pos);
+        let Some(line) = self.line(self.char_to_line(self.utf16_cu_to_char(pos))) else {
+            return span;
+        };
+        let text = line.text.as_ref();
+        let body = text.trim_end_matches(LINE_BREAKS);
+        span.start..span.end - text[body.len()..].encode_utf16().count()
+    }
+
+    /// The selection one press makes: the caret for a single press, then the word, the
+    /// line, and the whole text. `at` is the position under the pointer and `current`
+    /// the selection the press starts from, already widened to a range when Shift is
+    /// held.
+    fn press_selection(
+        &self,
+        at: usize,
+        press: PressEventType,
+        current: TextSelection,
+    ) -> TextSelection {
+        match press {
+            PressEventType::Single => current,
+            PressEventType::Double => TextSelection::new_range(self.find_word_boundaries(at)),
+            PressEventType::Triple => {
+                let span = self.line_span(at);
+                TextSelection::new_range((span.start, span.end))
+            }
+            PressEventType::Quadruple => TextSelection::new_range((0, self.len_utf16_cu())),
+        }
+    }
+
+    /// The selection a drag makes: it extends from the range the press established by
+    /// the **unit that press used**, so a drag after a double press moves word by word.
+    ///
+    /// Extending by character instead is what undoes a double press: no real double
+    /// click is perfectly still, and the first pointer sample inside the word the press
+    /// selected would drag the active end back to it, leaving the word start to the
+    /// pointer selected.
+    fn drag_selection(
+        &self,
+        pointer: usize,
+        dragging: &TextDragging,
+        current: TextSelection,
+    ) -> TextSelection {
+        let (anchor_start, anchor_end) = dragging.anchor;
+        match dragging.press {
+            PressEventType::Single => {
+                let mut selection = current;
+                selection.move_to(pointer);
+                return selection;
+            }
+            PressEventType::Quadruple => {
+                return TextSelection::new_range((0, self.len_utf16_cu()));
+            }
+            _ => {}
+        }
+
+        // Still inside what the press selected, so that is the answer: a drag has to
+        // leave the pressed unit before it extends anything. This is the whole fix for
+        // a twitching double click, and it covers the pointer resting exactly on the
+        // pressed word's edge, where the glyph under it is already the next one.
+        if (anchor_start..=anchor_end).contains(&pointer) {
+            return TextSelection::new_range((anchor_start, anchor_end));
+        }
+
+        let (edge_before, edge_after) = match dragging.press {
+            PressEventType::Triple => {
+                let span = self.line_span(pointer);
+                (span.start, span.end)
+            }
+            _ => match self.find_word_boundaries(pointer) {
+                // Whitespace belongs to no word, so there the pointer is its own edge.
+                (from, to) if from == to => (pointer, pointer),
+                bounds => bounds,
+            },
+        };
+
+        if pointer < anchor_start {
+            TextSelection::new_range((anchor_end, edge_before))
+        } else {
+            TextSelection::new_range((anchor_start, edge_after))
+        }
+    }
+
+    /// The position `granularity` away from `pos` in the given direction.
+    fn caret_target(&self, pos: usize, forward: bool, granularity: CaretGranularity) -> usize {
+        match (granularity, forward) {
+            (CaretGranularity::Grapheme, true) => self.grapheme_cluster_at(pos).end,
+            (CaretGranularity::Grapheme, false) if pos > 0 => {
+                self.grapheme_cluster_at(pos - 1).start
+            }
+            (CaretGranularity::Grapheme, false) => 0,
+            (CaretGranularity::Word, true) => self.word_end_after(pos),
+            (CaretGranularity::Word, false) => self.word_start_before(pos),
+            (CaretGranularity::LineBoundary, true) => self.line_bounds(pos).end,
+            (CaretGranularity::LineBoundary, false) => self.line_bounds(pos).start,
+            (CaretGranularity::Document, true) => self.len_utf16_cu(),
+            (CaretGranularity::Document, false) => 0,
+        }
+    }
+
+    /// Apply a left/right caret motion, returning whether the caret ended up elsewhere.
+    ///
+    /// `extend` (Shift) grows the selection; without it the caret collapses to the end
+    /// of the selection it is pointing at, which is the whole motion for a plain arrow
+    /// and the starting point for a modified one.
+    fn move_caret(&mut self, forward: bool, granularity: CaretGranularity, extend: bool) -> bool {
+        let before = self.cursor_pos();
+        let range = self.get_selection_range();
+
+        if extend {
+            self.selection_mut().set_as_range();
+        } else {
+            let collapsed = range.map(|(start, end)| if forward { end } else { start });
+            self.selection_mut().set_as_cursor();
+            if let Some(pos) = collapsed {
+                // Collapse to the end the arrow points at, never to wherever the drag
+                // happened to finish.
+                self.selection_mut().move_to(pos);
+                if granularity == CaretGranularity::Grapheme {
+                    return self.cursor_pos() != before;
+                }
+            }
+        }
+
+        let to = self.caret_target(self.cursor_pos(), forward, granularity);
+        self.selection_mut().move_to(to);
+        self.cursor_pos() != before
+    }
+
+    /// Apply an up/down caret motion, returning whether the caret ended up elsewhere.
+    ///
+    /// `granularity` is [`None`] for a plain line step; [`Some`] carries the modified
+    /// jump (macOS's Cmd+Up/Down to the document ends).
+    fn move_caret_vertically(
+        &mut self,
+        down: bool,
+        granularity: Option<CaretGranularity>,
+        extend: bool,
+    ) -> bool {
+        let before = self.cursor_pos();
+        let range = self.get_selection_range();
+
+        if extend {
+            self.selection_mut().set_as_range();
+        } else {
+            let collapsed = range.map(|(start, end)| if down { end } else { start });
+            self.selection_mut().set_as_cursor();
+            if let Some(pos) = collapsed {
+                // Unlike a plain left/right, a line step still travels from the end it
+                // collapsed to: the caret lands a line away, not at the selection edge.
+                self.selection_mut().move_to(pos);
+            }
+        }
+
+        match granularity {
+            Some(granularity) => {
+                let to = self.caret_target(self.cursor_pos(), down, granularity);
+                self.selection_mut().move_to(to);
+            }
+            None if down => {
+                self.cursor_down();
+            }
+            None => {
+                self.cursor_up();
+            }
+        }
+        self.cursor_pos() != before
+    }
+
+    /// Move the cursor to the end of the next word.
+    fn cursor_word_right(&mut self) -> bool {
+        let pos = self.cursor_pos();
+        if pos >= self.len_utf16_cu() {
+            return false;
+        }
+        let to = self.word_end_after(pos);
+        self.selection_mut().move_to(to);
+        true
+    }
+
+    /// Move the cursor to the start of the previous word.
+    fn cursor_word_left(&mut self) -> bool {
+        let pos = self.cursor_pos();
+        if pos == 0 {
+            return false;
+        }
+        let to = self.word_start_before(pos);
+        self.selection_mut().move_to(to);
         true
     }
 
@@ -496,7 +748,6 @@ pub trait TextEditor {
         let mut event = TextEvent::empty();
 
         let selection = self.get_selection();
-        let skip_arrows_movement = !modifiers.contains(Modifiers::SHIFT) && selection.is_some();
 
         // The rebindable editing chords (see [`EditBindings`]) run before the default
         // handling below since any editing action may sit on any chord. A matching
@@ -574,103 +825,60 @@ pub trait TextEditor {
             Key::Named(NamedKey::Escape) => {
                 self.clear_selection();
             }
-            Key::Named(NamedKey::ArrowDown) => {
-                if modifiers.contains(Modifiers::SHIFT) {
-                    self.selection_mut().set_as_range();
-                } else {
-                    self.selection_mut().set_as_cursor();
-                }
-
-                if !skip_arrows_movement && self.cursor_down() {
+            Key::Named(NamedKey::ArrowLeft) | Key::Named(NamedKey::ArrowRight) => {
+                let forward = *key == Key::Named(NamedKey::ArrowRight);
+                if self.move_caret(
+                    forward,
+                    CaretGranularity::horizontal(modifiers),
+                    modifiers.contains(Modifiers::SHIFT),
+                ) {
                     event.insert(TextEvent::CURSOR_CHANGED);
                 }
             }
-            Key::Named(NamedKey::ArrowLeft) => {
-                if modifiers.contains(Modifiers::SHIFT) {
-                    self.selection_mut().set_as_range();
-                } else {
-                    self.selection_mut().set_as_cursor();
+            Key::Named(NamedKey::ArrowUp) | Key::Named(NamedKey::ArrowDown) => {
+                let down = *key == Key::Named(NamedKey::ArrowDown);
+                if self.move_caret_vertically(
+                    down,
+                    CaretGranularity::vertical(modifiers),
+                    modifiers.contains(Modifiers::SHIFT),
+                ) {
+                    event.insert(TextEvent::CURSOR_CHANGED);
                 }
-
-                let word_jump = if cfg!(target_os = "macos") {
-                    modifiers.contains(Modifiers::ALT)
+            }
+            Key::Named(NamedKey::Home) | Key::Named(NamedKey::End) => {
+                let forward = *key == Key::Named(NamedKey::End);
+                // Primary+Home/End is the document, plain Home/End the line: the
+                // convention wherever these keys exist at all, and on macOS what
+                // Fn+Left/Right produces.
+                let granularity = if modifiers.intersects(Modifiers::META | Modifiers::CONTROL) {
+                    CaretGranularity::Document
                 } else {
-                    modifiers.contains(Modifiers::CONTROL)
+                    CaretGranularity::LineBoundary
                 };
-
-                let moved = !skip_arrows_movement
-                    && if word_jump {
-                        self.cursor_word_left()
-                    } else {
-                        self.cursor_left()
-                    };
-
-                if moved {
+                if self.move_caret(forward, granularity, modifiers.contains(Modifiers::SHIFT)) {
                     event.insert(TextEvent::CURSOR_CHANGED);
                 }
             }
-            Key::Named(NamedKey::ArrowRight) => {
-                if modifiers.contains(Modifiers::SHIFT) {
-                    self.selection_mut().set_as_range();
-                } else {
-                    self.selection_mut().set_as_cursor();
-                }
+            Key::Named(NamedKey::Backspace) | Key::Named(NamedKey::Delete) if allow_changes => {
+                let forward = *key == Key::Named(NamedKey::Delete);
 
-                let word_jump = if cfg!(target_os = "macos") {
-                    modifiers.contains(Modifiers::ALT)
-                } else {
-                    modifiers.contains(Modifiers::CONTROL)
-                };
-
-                let moved = !skip_arrows_movement
-                    && if word_jump {
-                        self.cursor_word_right()
-                    } else {
-                        self.cursor_right()
-                    };
-
-                if moved {
-                    event.insert(TextEvent::CURSOR_CHANGED);
-                }
-            }
-            Key::Named(NamedKey::ArrowUp) => {
-                if modifiers.contains(Modifiers::SHIFT) {
-                    self.selection_mut().set_as_range();
-                } else {
-                    self.selection_mut().set_as_cursor();
-                }
-
-                if !skip_arrows_movement && self.cursor_up() {
-                    event.insert(TextEvent::CURSOR_CHANGED);
-                }
-            }
-            Key::Named(NamedKey::Backspace) if allow_changes => {
-                let cursor_pos = self.cursor_pos();
-                let selection = self.get_selection_range();
-
-                if let Some((start, end)) = selection {
+                if let Some((start, end)) = self.get_selection_range() {
                     self.remove(start..end);
                     self.move_cursor_to(start);
                     event.insert(TextEvent::TEXT_CHANGED);
-                } else if cursor_pos > 0 {
-                    let remove_from = self.grapheme_cluster_at(cursor_pos - 1).start;
-                    self.remove(remove_from..cursor_pos);
-                    self.move_cursor_to(remove_from);
-                    event.insert(TextEvent::TEXT_CHANGED);
-                }
-            }
-            Key::Named(NamedKey::Delete) if allow_changes => {
-                let cursor_pos = self.cursor_pos();
-                let selection = self.get_selection_range();
-
-                if let Some((start, end)) = selection {
-                    self.remove(start..end);
-                    self.move_cursor_to(start);
-                    event.insert(TextEvent::TEXT_CHANGED);
-                } else if cursor_pos < self.len_utf16_cu() {
-                    let remove_to = self.grapheme_cluster_at(cursor_pos).end;
-                    self.remove(cursor_pos..remove_to);
-                    event.insert(TextEvent::TEXT_CHANGED);
+                } else {
+                    // The same granularity as the matching arrow, so Alt+Backspace
+                    // removes exactly what Alt+Left would have skipped over.
+                    let pos = self.cursor_pos();
+                    let to =
+                        self.caret_target(pos, forward, CaretGranularity::horizontal(modifiers));
+                    if to != pos {
+                        let range = if forward { pos..to } else { to..pos };
+                        let start = range.start;
+                        self.remove(range);
+                        self.move_cursor_to(start);
+                        event.insert(TextEvent::TEXT_CHANGED);
+                    }
                 }
             }
             Key::Named(NamedKey::Enter) if allow_changes => {

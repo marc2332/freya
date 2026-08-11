@@ -123,33 +123,18 @@ impl CodeEditorData {
 
                 self.dragging.clicked = true;
 
+                let press = EventsCombos::pressed(location);
                 let char_position = paragraph.get_glyph_position_at_coordinate(
                     location.mul(*scale_factor).to_i32().to_tuple(),
                 );
-                let press_selection =
-                    self.measure_selection(char_position.position as usize, editor_line);
-
-                let new_selection = match EventsCombos::pressed(location) {
-                    PressEventType::Quadruple => {
-                        TextSelection::new_range((0, self.rope.len_utf16_cu()))
-                    }
-                    PressEventType::Triple => {
-                        let line = self.char_to_line(press_selection.pos());
-                        let line_char = self.line_to_char(line);
-                        let line_len = self.line(line).unwrap().utf16_len();
-                        TextSelection::new_range((line_char, line_char + line_len))
-                    }
-                    PressEventType::Double => {
-                        let range = self.find_word_boundaries(press_selection.pos());
-                        TextSelection::new_range(range)
-                    }
-                    PressEventType::Single => press_selection,
-                };
+                let measured = self.measure_selection(char_position.position as usize, editor_line);
+                let new_selection = self.press_selection(measured.pos(), press, measured);
 
                 if *self.selection() != new_selection {
-                    *self.selection_mut() = new_selection;
+                    *self.selection_mut() = new_selection.clone();
                     processed = true;
                 }
+                self.dragging.pressed(press, &new_selection);
             }
             EditableEvent::Move {
                 location,
@@ -177,7 +162,12 @@ impl CodeEditorData {
 
                     let current_selection = self.selection().clone();
 
-                    let new_selection = self.measure_selection(to, editor_line);
+                    // Extends by whatever unit the press used, so a drag after a double
+                    // press moves word by word instead of undoing the word it selected.
+                    let dragging = self.dragging.clone();
+                    let pointer = self.measure_selection(to, editor_line).pos();
+                    let new_selection =
+                        self.drag_selection(pointer, &dragging, current_selection.clone());
 
                     // Update the cursor if it has changed
                     if current_selection != new_selection {

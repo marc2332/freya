@@ -66,74 +66,28 @@ impl EditableEvent<'_> {
                     text_editor.clear_selection();
                 }
 
-                dragging.write().clicked = true;
-
-                match EventsCombos::pressed(location) {
-                    PressEventType::Triple => {
-                        let current_selection = text_editor.selection().clone();
-
-                        let char_position = paragraph.get_glyph_position_at_coordinate(
-                            location.mul(*scale_factor).to_i32().to_tuple(),
-                        );
-                        let press_selection = text_editor
-                            .measure_selection(char_position.position as usize, editor_line);
-
-                        // Get the line start char and its length
-                        let line = text_editor.char_to_line(press_selection.pos());
-                        let line_char = text_editor.line_to_char(line);
-                        let line_len = text_editor.line(line).unwrap().utf16_len();
-                        let new_selection =
-                            TextSelection::new_range((line_char, line_char + line_len));
-
-                        // Select the whole line
-                        if current_selection != new_selection {
-                            *text_editor.selection_mut() = new_selection;
-                        }
-                    }
-                    PressEventType::Double => {
-                        let current_selection = text_editor.selection().clone();
-
-                        let new_selection = if config.select_all_on_double_click {
-                            TextSelection::new_range((0, text_editor.len_utf16_cu()))
-                        } else {
-                            let char_position = paragraph.get_glyph_position_at_coordinate(
-                                location.mul(*scale_factor).to_i32().to_tuple(),
-                            );
-                            let press_selection = text_editor
-                                .measure_selection(char_position.position as usize, editor_line);
-
-                            let range = text_editor.find_word_boundaries(press_selection.pos());
-                            TextSelection::new_range(range)
-                        };
-
-                        if current_selection != new_selection {
-                            *text_editor.selection_mut() = new_selection;
-                        }
-                    }
-                    PressEventType::Quadruple => {
-                        let current_selection = text_editor.selection().clone();
-                        let new_selection =
-                            TextSelection::new_range((0, text_editor.len_utf16_cu()));
-
-                        if current_selection != new_selection {
-                            *text_editor.selection_mut() = new_selection;
-                        }
-                    }
-                    PressEventType::Single => {
-                        let current_selection = text_editor.selection().clone();
-
-                        let char_position = paragraph.get_glyph_position_at_coordinate(
-                            location.mul(*scale_factor).to_i32().to_tuple(),
-                        );
-                        let new_selection = text_editor
-                            .measure_selection(char_position.position as usize, editor_line);
-
-                        // Move the cursor
-                        if current_selection != new_selection {
-                            *text_editor.selection_mut() = new_selection;
-                        }
-                    }
+                let mut press = EventsCombos::pressed(location);
+                // A masked input has no words to offer, so a double press there means
+                // what a triple one would.
+                if press == PressEventType::Double && config.select_all_on_double_click {
+                    press = PressEventType::Quadruple;
                 }
+
+                let char_position = paragraph.get_glyph_position_at_coordinate(
+                    location.mul(*scale_factor).to_i32().to_tuple(),
+                );
+                let measured =
+                    text_editor.measure_selection(char_position.position as usize, editor_line);
+                let current_selection = text_editor.selection().clone();
+                let new_selection = text_editor.press_selection(measured.pos(), press, measured);
+
+                if current_selection != new_selection {
+                    *text_editor.selection_mut() = new_selection.clone();
+                }
+
+                let mut dragging = dragging.write();
+                dragging.clicked = true;
+                dragging.pressed(press, &new_selection);
             }
             EditableEvent::Move {
                 location,
@@ -158,9 +112,13 @@ impl EditableEvent<'_> {
                         editor.write().selection_mut().set_as_range();
                     }
 
-                    let current_selection = editor.peek().selection().clone();
-
-                    let new_selection = editor.peek().measure_selection(to, editor_line);
+                    let drag = dragging.peek().clone();
+                    let text_editor = editor.peek();
+                    let current_selection = text_editor.selection().clone();
+                    let pointer = text_editor.measure_selection(to, editor_line).pos();
+                    let new_selection =
+                        text_editor.drag_selection(pointer, &drag, current_selection.clone());
+                    drop(text_editor);
 
                     // Update the cursor if it has changed
                     if current_selection != new_selection {
@@ -210,4 +168,17 @@ impl EditableEvent<'_> {
 pub struct TextDragging {
     pub shift: bool,
     pub clicked: bool,
+    /// What the press that started this drag selected, and the bounds it selected.
+    /// A drag extends by the same unit, see [`TextEditor::drag_selection`].
+    pub press: PressEventType,
+    pub anchor: (usize, usize),
+}
+
+impl TextDragging {
+    /// Record what a press selected, so the drag that may follow extends from it.
+    pub fn pressed(&mut self, press: PressEventType, selection: &TextSelection) {
+        self.press = press;
+        let (start, end) = (selection.start(), selection.end());
+        self.anchor = (start.min(end), start.max(end));
+    }
 }

@@ -59,8 +59,9 @@ impl EventsCombos {
 const LOCATION_THRESHOLD: f64 = 5.0;
 const MULTI_PRESS_ELAPSED: Duration = Duration::from_millis(500);
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum PressEventType {
+    #[default]
     Single,
     Double,
     Triple,
