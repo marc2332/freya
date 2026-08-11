@@ -121,6 +121,7 @@ pub struct MarkdownViewer {
     key: DiffKey,
     pub(crate) theme: Option<MarkdownViewerThemePartial>,
     inline_element: Option<Callback<String, Option<Element>>>,
+    code_block: Option<Callback<CodeBlock, Option<Element>>>,
     code_editor_font_family: Cow<'static, str>,
     #[cfg(feature = "code-editor")]
     language_resolver: Option<code_editor::LanguageResolver>,
@@ -134,6 +135,7 @@ impl MarkdownViewer {
             key: DiffKey::None,
             theme: None,
             inline_element: None,
+            code_block: None,
             code_editor_font_family: Cow::Borrowed("Jetbrains Mono"),
             #[cfg(feature = "code-editor")]
             language_resolver: None,
@@ -159,6 +161,32 @@ impl MarkdownViewer {
         let handler = handler.into();
         self.inline_element = Some(Callback::new(move |html| {
             handler.call(html).map(IntoElement::into_element)
+        }));
+        self
+    }
+
+    /// Set a handler that renders fenced code blocks, replacing the built-in one.
+    ///
+    /// For a surface that wants code to carry its own affordances — a copy press, a run press, a
+    /// header naming the language — rather than the plain themed panel this renders by default.
+    /// Returning `None` for a block falls back to that default, so a handler can take over one
+    /// language and leave the rest alone.
+    ///
+    /// ```rust
+    /// # use freya::prelude::*;
+    /// # use freya_markdown::{CodeBlock, MarkdownViewer};
+    /// fn app() -> impl IntoElement {
+    ///     MarkdownViewer::new("```sql\nSELECT 1\n```")
+    ///         .code_block(|block: CodeBlock| Some(label().text(block.code)))
+    /// }
+    /// ```
+    pub fn code_block<ReturnedElement: IntoElement + 'static>(
+        mut self,
+        handler: impl Into<Callback<CodeBlock, Option<ReturnedElement>>>,
+    ) -> Self {
+        let handler = handler.into();
+        self.code_block = Some(Callback::new(move |block| {
+            handler.call(block).map(IntoElement::into_element)
         }));
         self
     }
@@ -193,6 +221,14 @@ impl LayoutExt for MarkdownViewer {
 }
 
 impl ContainerExt for MarkdownViewer {}
+
+/// One fenced code block, as handed to a [`MarkdownViewer::code_block`] handler.
+#[derive(Clone, PartialEq)]
+pub struct CodeBlock {
+    pub code: String,
+    /// The fence's info string, when it carried one.
+    pub language: Option<String>,
+}
 
 #[derive(Clone)]
 enum MarkdownElement {
@@ -843,13 +879,20 @@ impl Component for MarkdownViewer {
                 )
                 .key(idx)
                 .into(),
-                MarkdownElement::CodeBlock {
-                    code,
-                    #[cfg(feature = "code-editor")]
-                    language,
+                MarkdownElement::CodeBlock { code, language } => {
+                    // A handler takes the block whole, and may decline it — so a surface can
+                    // dress one language and leave the rest to the default below.
+                    let custom = self.code_block.as_ref().and_then(|render| {
+                        render.call(CodeBlock {
+                            code: code.clone(),
+                            language: language.clone(),
+                        })
+                    });
+                    if let Some(custom) = custom {
+                        custom
+                    } else {
                     #[cfg(not(feature = "code-editor"))]
-                        language: _,
-                } => {
+                    let _ = &language;
                     #[cfg(feature = "code-editor")]
                     let element = CodeBlockEditor::new(
                         move || Cow::Owned(code.clone()),
@@ -878,6 +921,7 @@ impl Component for MarkdownViewer {
                         .into();
 
                     element
+                    }
                 }
                 MarkdownElement::List(list) => render_list(
                     &list,
