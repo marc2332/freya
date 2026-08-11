@@ -305,6 +305,38 @@ impl ScrollController {
         }
     }
 
+    /// Whether `direction` is scrolled to its end, within a pixel.
+    ///
+    /// The predicate a **stick-to-the-end** surface is built on — a chat transcript, a log tail:
+    /// follow the content while the reader is at the end, and stop the moment they scroll away
+    /// from it.
+    ///
+    /// **Peeks, like [`scroll_to_item`](Self::scroll_to_item), and for a sharper reason than
+    /// looping.** A follower asks this to decide whether to keep following, and the two things it
+    /// compares move for two different reasons: the reader scrolls, and the content grows under
+    /// them. Subscribing would answer "not at the end" the instant the content outgrew the
+    /// viewport — before the follower had scrolled — and a follower that read it reactively would
+    /// conclude the reader had scrolled away and stop, on the very first message too long to fit.
+    /// So the caller chooses what to re-ask on, and the honest trigger is the **scroll position**
+    /// (`(i32, i32)::from(controller)`), which only the reader and the follower move.
+    ///
+    /// Content that does not overflow is **at** its end: there is nowhere else to be, and a
+    /// follower gated on this must keep following as the first lines arrive.
+    pub fn is_at_end(&self, direction: Direction) -> bool {
+        let (inner_width, inner_height) = *self.inner.peek();
+        let viewport = *self.viewport.peek();
+        let (position, inner, shown) = match direction {
+            Direction::Horizontal => (self.scroll.peek().0, inner_width, viewport.width()),
+            Direction::Vertical => (self.scroll.peek().1, inner_height, viewport.height()),
+        };
+        if !crate::scrollviews::shared::is_scrollable(inner, shown) {
+            return true;
+        }
+        // The scroll position is negative-going: the content is offset up by how far down the
+        // reader is, so the end is where that offset covers everything the viewport does not.
+        (position.unsigned_abs() as f32 + shown) >= inner - 1.0
+    }
+
     /// Scrolls the minimum amount needed to bring `item` fully into view, on whichever axes it
     /// overflows the viewport. `item` is the target's own measured window-space rectangle — e.g.
     /// straight from an [`on_sized`](freya_core::prelude::EventHandlersExt::on_sized)
