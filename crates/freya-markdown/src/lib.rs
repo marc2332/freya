@@ -167,8 +167,8 @@ impl MarkdownViewer {
 
     /// Set a handler that renders fenced code blocks, replacing the built-in one.
     ///
-    /// For a surface that wants code to carry its own affordances — a copy press, a run press, a
-    /// header naming the language — rather than the plain themed panel this renders by default.
+    /// For a surface that wants code to carry its own affordances (a copy press, a run press, a
+    /// header naming the language) rather than the plain themed panel this renders by default.
     /// Returning `None` for a block falls back to that default, so a handler can take over one
     /// language and leave the rest alone.
     ///
@@ -880,7 +880,7 @@ impl Component for MarkdownViewer {
                 .key(idx)
                 .into(),
                 MarkdownElement::CodeBlock { code, language } => {
-                    // A handler takes the block whole, and may decline it — so a surface can
+                    // A handler takes the block whole, and may decline it, so a surface can
                     // dress one language and leave the rest to the default below.
                     let custom = self.code_block.as_ref().and_then(|render| {
                         render.call(CodeBlock {

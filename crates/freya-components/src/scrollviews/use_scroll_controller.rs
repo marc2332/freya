@@ -307,7 +307,7 @@ impl ScrollController {
 
     /// Whether `direction` is scrolled to its end, within a pixel.
     ///
-    /// The predicate a **stick-to-the-end** surface is built on — a chat transcript, a log tail:
+    /// The predicate a **stick-to-the-end** surface is built on, such as a chat transcript or a log tail:
     /// follow the content while the reader is at the end, and stop the moment they scroll away
     /// from it.
     ///
@@ -315,7 +315,7 @@ impl ScrollController {
     /// looping.** A follower asks this to decide whether to keep following, and the two things it
     /// compares move for two different reasons: the reader scrolls, and the content grows under
     /// them. Subscribing would answer "not at the end" the instant the content outgrew the
-    /// viewport — before the follower had scrolled — and a follower that read it reactively would
+    /// viewport, before the follower had scrolled, and a follower that read it reactively would
     /// conclude the reader had scrolled away and stop, on the very first message too long to fit.
     /// So the caller chooses what to re-ask on, and the honest trigger is the **scroll position**
     /// (`(i32, i32)::from(controller)`), which only the reader and the follower move.
@@ -338,9 +338,9 @@ impl ScrollController {
     }
 
     /// Scrolls the minimum amount needed to bring `item` fully into view, on whichever axes it
-    /// overflows the viewport. `item` is the target's own measured window-space rectangle — e.g.
+    /// overflows the viewport. `item` is the target's own measured window-space rectangle, e.g.
     /// straight from an [`on_sized`](freya_core::prelude::EventHandlersExt::on_sized)
-    /// [`Area`](torin::prelude::Area) — so the caller never has to know the viewport or scroll
+    /// [`Area`](torin::prelude::Area), so the caller never has to know the viewport or scroll
     /// position. A no-op once the item is already visible, so it is safe to call every render (an
     /// item larger than the viewport aligns to its start and stops, rather than oscillating).
     pub fn scroll_to_item(&mut self, item: impl Into<Area>) {
@@ -348,7 +348,7 @@ impl ScrollController {
         // Peek, never read: this is imperative. Reading inside a reactive effect would subscribe the
         // effect to the viewport/scroll and loop it against the `on_scroll` write below.
         let viewport = *self.viewport.peek();
-        // Not laid out yet — nothing meaningful to reveal against.
+        // Not laid out yet: nothing meaningful to reveal against.
         if viewport.width() <= 0.0 || viewport.height() <= 0.0 {
             return;
         }
@@ -382,13 +382,13 @@ impl ScrollController {
 
 /// The signed distance to add to the scroll offset on one axis to reveal `[item_min, item_max]`
 /// within `[vp_min, vp_max]`. Only a *clipped* item moves: if the item sits anywhere inside the
-/// visible span — hugging the start, hugging the end, or covering the whole viewport — it's a no-op.
+/// visible span (hugging the start, hugging the end, or covering the whole viewport) it's a no-op.
 /// A clipped item is pulled in by the minimum amount (aligning the offending edge). The covering
 /// case (item wider than the viewport, spanning it) is caught first, so an over-large item settles
 /// once its edge is reached instead of oscillating start↔end.
 fn reveal_delta(item_min: f32, item_max: f32, vp_min: f32, vp_max: f32) -> f32 {
     if item_min <= vp_min && item_max >= vp_max {
-        0.0 // item already covers the viewport — visible
+        0.0 // item already covers the viewport, visible
     } else if item_min < vp_min {
         vp_min - item_min // clipped at the start edge → pull it in
     } else if item_max > vp_max {

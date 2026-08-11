@@ -568,6 +568,7 @@ pub struct MenuButton {
     pub(crate) theme: Option<MenuItemThemePartial>,
     children: Vec<Element>,
     on_press: Option<EventHandler<Event<PressEventData>>>,
+    selected: bool,
     enabled: bool,
     key: DiffKey,
 }
@@ -578,6 +579,7 @@ impl Default for MenuButton {
             theme: None,
             children: Vec::new(),
             on_press: None,
+            selected: false,
             enabled: true,
             key: DiffKey::None,
         }
@@ -606,6 +608,16 @@ impl MenuButton {
         self
     }
 
+    /// Draw this button as the selected one, in [`MenuItem`]'s selected background.
+    ///
+    /// For a menu that is a list of choices with a current one, or one a surface is driving from
+    /// the keyboard: the highlighted row reads the same whether the pointer is on it or the arrow
+    /// keys are.
+    pub fn selected(mut self, selected: bool) -> Self {
+        self.selected = selected;
+        self
+    }
+
     /// Whether the button is interactive. A disabled button renders dimmed and does nothing on
     /// press.
     pub fn enabled(mut self, enabled: impl Into<bool>) -> Self {
@@ -627,6 +639,7 @@ impl ComponentOwned for MenuButton {
 
         MenuItem::new()
             .map(self.theme, |el, theme| el.theme(theme))
+            .selected(self.selected)
             .enabled(self.enabled)
             .on_pointer_enter(move |_| close_menus_until(&mut menus, parent_menu_id))
             .map(self.on_press, |el, on_press| el.on_press(on_press))

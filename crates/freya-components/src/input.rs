@@ -177,6 +177,7 @@ pub struct Input {
     mode: InputMode,
     auto_focus: bool,
     select_all_on_init: bool,
+    caret: Option<Writable<usize>>,
     width: Size,
     height: Size,
     enabled: bool,
@@ -211,6 +212,7 @@ impl Input {
             mode: InputMode::default(),
             auto_focus: false,
             select_all_on_init: false,
+            caret: None,
             width: Size::px(150.),
             height: Size::Inner,
             enabled: true,
@@ -224,15 +226,26 @@ impl Input {
             a11y_id: None,
             leading: None,
             trailing: None,
-            on_pre_key_down: Callback::new(|e: Event<KeyboardEventData>| match &e.key {
-                Key::Named(NamedKey::Enter) | Key::Named(NamedKey::Escape) => true,
-                Key::Named(NamedKey::Tab) => false,
-                _ => {
-                    e.stop_propagation();
-                    e.prevent_default();
-                    true
-                }
-            }),
+            on_pre_key_down: Callback::new(Self::key_down_default),
+        }
+    }
+
+    /// What the input does with a key press when nothing has claimed it: the rule
+    /// [`on_pre_key_down`](Self::on_pre_key_down) applies unless it is replaced.
+    ///
+    /// A surface that overrides that callback usually wants to claim **two or three** keys and
+    /// leave the rest alone, so it is public: hand anything you did not claim to this rather than
+    /// re-deciding it, or an override quietly changes what `Tab` does to focus and lets every
+    /// keystroke through to the global listeners behind the input.
+    pub fn key_down_default(e: Event<KeyboardEventData>) -> bool {
+        match &e.key {
+            Key::Named(NamedKey::Enter) | Key::Named(NamedKey::Escape) => true,
+            Key::Named(NamedKey::Tab) => false,
+            _ => {
+                e.stop_propagation();
+                e.prevent_default();
+                true
+            }
         }
     }
 
@@ -259,14 +272,30 @@ impl Input {
     /// Start with the value selected rather than the cursor at its beginning, so the first
     /// keystroke replaces it.
     ///
-    /// For an input that opens over text the user came to replace — a rename affordance seeded
-    /// with the current name — this is the difference between typing *over* that name and typing
+    /// For an input that opens over text the user came to replace (a rename affordance seeded
+    /// with the current name) this is the difference between typing *over* that name and typing
     /// in front of it. Pair it with [`auto_focus`](Self::auto_focus).
     ///
     /// Applies to the value the input **mounts** with. A value that changes underneath it later
     /// syncs as a plain edit, cursor and selection untouched.
     pub fn select_all_on_init(mut self, select_all_on_init: bool) -> Self {
         self.select_all_on_init = select_all_on_init;
+        self
+    }
+
+    /// **Two-way binding for the cursor**, in UTF-16 code units, exactly like the offsets
+    /// [`freya_edit::TextEditor`] takes.
+    ///
+    /// The input writes the cursor out whenever it moves, by any means: typing, the arrow keys, a
+    /// press, a drag, an IME commit. A value written from *outside* moves the cursor there.
+    ///
+    /// Bound alongside the value, this is what lets a caller make an edit **on the user's behalf**
+    /// land the way the user's own edits do: replace the span you meant to replace, then put the
+    /// cursor at the end of what you inserted. Accepting a completion is the case this exists for,
+    /// and without it such a caller can only rewrite the whole value and hope the cursor was at
+    /// the end of it.
+    pub fn caret(mut self, caret: impl Into<Writable<usize>>) -> Self {
+        self.caret = Some(caret.into());
         self
     }
 
@@ -308,7 +337,7 @@ impl Input {
     ///
     /// The floor to [`max_height`](Self::max_height)'s ceiling, for a box the surface wants at a
     /// stated size rather than at its text's: an expanded composer is that size whether it holds
-    /// one line or forty, which growth alone cannot express — raising only the ceiling gives an
+    /// one line or forty, which growth alone cannot express: raising only the ceiling gives an
     /// empty box nothing to grow into. Ignored by a single-line input.
     pub fn min_height(mut self, min_height: f32) -> Self {
         self.min_height = Some(min_height);
@@ -481,7 +510,7 @@ impl Component for Input {
         });
 
         // **What a multiline box grows to.** The paragraph reports its laid-out height and the
-        // box takes it, clamped by [`Input::max_height`] — so the box is exactly as tall as its
+        // box takes it, clamped by [`Input::max_height`], so the box is exactly as tall as its
         // text until the cap, and the `ScrollView` inside takes over from there. Written only on
         // an actual change, or each layout pass would schedule the next one.
         let mut content_height = use_state(|| 0.);
@@ -509,6 +538,43 @@ impl Component for Input {
             editor.clear_selection();
         }
 
+        // **The caret binding, both ways.** Publishing is an effect over the editor signal rather
+        // than a line in each handler, so every way the cursor can move is covered by
+        // construction: the arrow keys and a press move it without changing a character, and a
+        // publish hung off the change path alone would miss both.
+        //
+        // `published` is what tells an outside write from this input's own echo. The effect runs
+        // *after* the render that consumes, so without it the render following a keystroke would
+        // read a caret the effect had not yet caught up to and drag the cursor back a character.
+        let mut published = use_state(|| None::<usize>);
+        {
+            let mut bound = self.caret.clone();
+            use_side_effect(move || {
+                // Unconditionally registered, and it reads nothing when nothing is bound: a hook
+                // must run the same number of times on every render, and an unbound input must
+                // not subscribe to its own cursor for an effect with no work to do.
+                let Some(caret) = bound.as_mut() else {
+                    return;
+                };
+                let pos = editable.editor().read().cursor_pos();
+                if *caret.peek() != pos {
+                    caret.set(pos);
+                }
+                published.set(Some(pos));
+            });
+        }
+        // Consumed here, beside the value sync, because a caller that rewrites the text and moves
+        // the cursor writes both in one go and the text has to land first.
+        if let Some(caret) = &self.caret {
+            let wanted = *caret.read();
+            if *published.peek() != Some(wanted) {
+                let mut editor = editable.editor_mut().write();
+                let wanted = wanted.min(editor.len_utf16_cu());
+                editor.move_cursor_to(wanted);
+                published.set(Some(wanted));
+            }
+        }
+
         let on_ime_preedit = move |e: Event<ImePreeditEventData>| {
             let mut editor = editable.editor_mut().write();
             if e.data().text.is_empty() {
@@ -529,7 +595,7 @@ impl Component for Input {
             }
 
             // A multiline input takes `Shift`+`Enter` as a newline and leaves plain Enter to
-            // submit — and, with nothing to submit to, takes both as a newline. See
+            // submit, and with nothing to submit to, takes both as a newline. See
             // [`Input::multiline`].
             let newline = multiline
                 && matches!(key, Key::Named(NamedKey::Enter))
@@ -782,7 +848,7 @@ impl Component for Input {
             .child(
                 ScrollView::new()
                     .width(Size::flex(1.))
-                    // A multiline input scrolls the way its text runs — down, and with a
+                    // A multiline input scrolls the way its text runs: down, and with a
                     // scrollbar, because a wrapped block that has outgrown its box gives the
                     // reader no other clue that there is more of it.
                     .height(match self.multiline {
