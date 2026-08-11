@@ -799,11 +799,13 @@ impl Component for Input {
                             .holder(holder.read().clone())
                             .on_sized(move |e: Event<SizedEventData>| {
                                 area.set(e.visible_area);
-                                // **The text's own height, not the box's.** `area` is what the
-                                // paragraph was *given* — inside a filling `ScrollView` that is
-                                // the box, so feeding it back would pin the box at its cap from
-                                // the first frame. `inner_sizes` is what the text measured to,
-                                // which is the thing the box is meant to follow.
+                                // **The paragraph's own laid-out height.** `area` is the right
+                                // signal here and `inner_sizes` is not: a paragraph's children
+                                // are spans rather than laid-out nodes, so its accumulated inner
+                                // size measures ~0 and a box following it collapses to its
+                                // margins. The `ScrollView` above does not force this paragraph
+                                // to fill, so `area` is the text's height rather than the box's,
+                                // and the feedback settles rather than ratcheting.
                                 if multiline_layout && *content_height.peek() != e.area.height() {
                                     content_height.set(e.area.height());
                                 }
