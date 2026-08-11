@@ -248,28 +248,40 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
         query_data.clone()
     }
 
+    fn replace_clean_task(self, query_data: &QueryData<Q>, query: Query<Q>) {
+        if let Some(clean_task) = query_data.clean_task.take() {
+            clean_task.cancel();
+        }
+        *query_data.clean_task.borrow_mut() = Some(spawn_forever(async move {
+            // Wait as long as the clean time is configured
+            Timer::after(query.clean_time).await;
+
+            // Finally clear the query unless it got subscribers again
+            let mut storage = self.storage.write_unchecked();
+            let is_abandoned = storage
+                .get(&query)
+                .is_some_and(|query_data| query_data.reactive_contexts.borrow().is_empty());
+            if is_abandoned {
+                storage.remove(&query);
+            }
+        }));
+    }
+
     fn update_tasks(&mut self, query: Query<Q>) {
-        let storage_clone = self.storage;
+        let queries_storage = *self;
         let mut storage = self.storage.write_unchecked();
 
-        let query_data = storage.get_mut(&query).unwrap();
+        let Some(query_data) = storage.get_mut(&query) else {
+            return;
+        };
 
         // Cancel interval task
         if let Some((_, interval_task)) = query_data.interval_task.take() {
             interval_task.cancel();
         }
 
-        // Spawn clean up task if there no more reactive contexts
-        if query_data.reactive_contexts.borrow().len() == 1 {
-            *query_data.clean_task.borrow_mut() = Some(spawn_forever(async move {
-                // Wait as long as the stale time is configured
-                Timer::after(query.clean_time).await;
-
-                // Finally clear the query
-                let mut storage = storage_clone.write_unchecked();
-                storage.remove(&query);
-            }));
-        }
+        // The clean task checks by itself if the query is still subscribed
+        queries_storage.replace_clean_task(query_data, query);
     }
 
     pub async fn get(get_query: GetQuery<Q>) -> QueryReader<Q> {
@@ -320,16 +332,9 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
             }
         }
 
-        // Spawn clean up task if there no more reactive contexts
+        // Spawn clean up task if there are no subscribers
         if query_data.reactive_contexts.borrow().is_empty() {
-            *query_data.clean_task.borrow_mut() = Some(spawn_forever(async move {
-                // Wait as long as the stale time is configured
-                Timer::after(query.clean_time).await;
-
-                // Finally clear the query
-                let mut storage = storage.storage.write_unchecked();
-                storage.remove(&query);
-            }));
+            storage.replace_clean_task(&query_data, query);
         }
 
         QueryReader {
@@ -702,8 +707,14 @@ pub fn use_query<Q: QueryCapability>(query: Query<Q>) -> UseQuery<Q> {
         }
     };
 
+    let mut reactive_context = use_hook(|| ReactiveContext::new_for_task().1);
+
     let mut make_query = |query: &Query<Q>, mut prev_query: Option<Query<Q>>| {
         let query_data = storage.insert_or_get_query(query.clone());
+
+        // Keep this use_query call subscribed to its current query
+        reactive_context.clear_subscriptions();
+        reactive_context.subscribe(&query_data.reactive_contexts);
 
         // Update the query tasks if there has been a change in the query
         if let Some(prev_query) = prev_query.take() {
@@ -736,14 +747,7 @@ pub fn use_query<Q: QueryCapability>(query: Query<Q>) -> UseQuery<Q> {
         }
     });
 
-    let query = UseQuery {
+    UseQuery {
         query: current_query,
-    };
-
-    // Used to consider this use_query call as a subscriber without rerunning the component
-    use_side_effect(move || {
-        let _ = query.read();
-    });
-
-    query
+    }
 }
