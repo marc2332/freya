@@ -160,6 +160,9 @@ pub enum TasksPollStage {
     Finished,
 }
 
+/// Parents receiving additions, keyed by new tree path, with their lazily found current path.
+type AdditionParents = FxHashMap<Box<[u32]>, (NodeId, Option<Vec<u32>>)>;
+
 pub struct Runner {
     pub scopes: FxHashMap<ScopeId, Rc<RefCell<Scope>>>,
     pub scopes_storages: Rc<RefCell<FxHashMap<ScopeId, ScopeStorage>>>,
@@ -997,7 +1000,7 @@ impl Runner {
         path_element: &PathElement,
         mutations: &mut Mutations,
         parents_to_resync_scopes: &mut FxHashSet<Box<[u32]>>,
-        addition_parents: &mut FxHashMap<Box<[u32]>, (NodeId, Option<Vec<u32>>)>,
+        addition_parents: &mut AdditionParents,
     ) {
         let (parent_node_id, index_inside_parent, insertion_path) = if added == [0] {
             let parent_id = scope.borrow().parent_id;
