@@ -419,33 +419,42 @@ fn register_base_component_themes(theme: &mut Theme) {
         "input",
         InputColorsThemePreference {
             background: Preference::reference("surface_tertiary"),
+            hover_background: Preference::reference("surface_tertiary"),
             focus_background: Preference::reference("background"),
             color: Preference::reference("text_primary"),
             placeholder_color: Preference::reference("text_secondary"),
             border_fill: Preference::reference("border"),
+            hover_border_fill: Preference::reference("border_focus"),
             focus_border_fill: Preference::reference("border_focus"),
+            focus_ring_fill: Preference::reference("focus"),
         },
     );
     theme.set(
         "filled_input",
         InputColorsThemePreference {
             background: Preference::reference("primary"),
+            hover_background: Preference::reference("tertiary"),
             focus_background: Preference::reference("tertiary"),
             color: Preference::reference("text_inverse"),
             placeholder_color: Preference::reference("text_inverse"),
             border_fill: Preference::Specific(Color::TRANSPARENT),
+            hover_border_fill: Preference::Specific(Color::TRANSPARENT),
             focus_border_fill: Preference::reference("secondary"),
+            focus_ring_fill: Preference::reference("secondary"),
         },
     );
     theme.set(
         "flat_input",
         InputColorsThemePreference {
             background: Preference::Specific(Color::TRANSPARENT),
+            hover_background: Preference::reference("surface_tertiary"),
             focus_background: Preference::reference("surface_tertiary"),
             color: Preference::reference("text_primary"),
             placeholder_color: Preference::reference("text_secondary"),
             border_fill: Preference::Specific(Color::TRANSPARENT),
+            hover_border_fill: Preference::Specific(Color::TRANSPARENT),
             focus_border_fill: Preference::reference("border"),
+            focus_ring_fill: Preference::reference("focus"),
         },
     );
     theme.set(

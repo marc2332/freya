@@ -47,9 +47,17 @@ define_theme! {
     pub InputColors {
         %[fields]
         background: Color,
+        /// Fill while the pointer is over the box. A variant with no outline of its own
+        /// (filled, flat) has nothing else to answer a hover with.
+        hover_background: Color,
         focus_background: Color,
         border_fill: Color,
+        /// Outline while the pointer is over the box.
+        hover_border_fill: Color,
         focus_border_fill: Color,
+        /// The keyboard focus ring, drawn outside the box on top of the focus outline. See
+        /// [`Input`]'s note on why the two are separate.
+        focus_ring_fill: Color,
         color: Color,
         placeholder_color: Color,
     }
@@ -156,6 +164,18 @@ impl InputValidator {
 /// #   rect().center().expanded().child(app())
 /// # }, "./images/gallery_flat_input.png").render();
 /// ```
+///
+/// ## **States**
+///
+/// Every variant dresses four states from [`InputColorsTheme`]: rest, hover
+/// (`hover_background` / `hover_border_fill`), focus (`focus_background` /
+/// `focus_border_fill`) and disabled, which dims the rest dress rather than carrying colours
+/// of its own.
+///
+/// Focus is drawn in two layers because a pointer press focuses the box as well: the outline
+/// says the box is focused however it got there, and `focus_ring_fill` paints an extra ring
+/// outside it only under [`Focus::Keyboard`], so keyboard focus stays distinguishable from a
+/// click.
 ///
 /// # Preview
 /// ![Input Preview][input]
@@ -767,6 +787,8 @@ impl Component for Input {
             }
         };
 
+        let hovered = self.enabled && status() == InputStatus::Hovering;
+
         let (background, cursor_index, text_selection) = if enabled() && focus() != Focus::Not {
             (
                 theme_colors.focus_background,
@@ -776,6 +798,8 @@ impl Component for Input {
                     .read()
                     .get_visible_selection(EditorLine::SingleParagraph),
             )
+        } else if hovered {
+            (theme_colors.hover_background, None, None)
         } else {
             (theme_colors.background, None, None)
         };
@@ -785,12 +809,26 @@ impl Component for Input {
                 .fill(theme_colors.focus_border_fill)
                 .width(2.)
                 .alignment(BorderAlignment::Inner)
+        } else if hovered {
+            Border::new()
+                .fill(theme_colors.hover_border_fill)
+                .width(1.)
+                .alignment(BorderAlignment::Inner)
         } else {
             Border::new()
                 .fill(theme_colors.border_fill.mul_if(!self.enabled, 0.85))
                 .width(1.)
                 .alignment(BorderAlignment::Inner)
         };
+
+        // Layered over the focus outline rather than replacing it, because a pointer press
+        // focuses the box too. See the states section of `Input`'s docs.
+        let focus_ring = (focus() == Focus::Keyboard).then(|| {
+            Border::new()
+                .fill(theme_colors.focus_ring_fill)
+                .width(2.)
+                .alignment(BorderAlignment::Outer)
+        });
 
         let color = if display_placeholder {
             theme_colors.placeholder_color
@@ -831,6 +869,7 @@ impl Component for Input {
             .height(resolved_height)
             .background(background.mul_if(!self.enabled, 0.85))
             .border(border)
+            .border(focus_ring)
             .corner_radius(theme_layout.corner_radius)
             .content(Content::Flex)
             .direction(Direction::Horizontal)
