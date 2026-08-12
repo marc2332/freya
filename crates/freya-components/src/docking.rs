@@ -493,12 +493,10 @@ impl<M: DockingModel> ComponentOwned for DockPanelView<M> {
                     tab_id,
                     is_drop_target: hovered == Some(HoverTarget::Tab(tab_id)),
                 });
-                let dragger = DragZone::<DockDrag<M::DropValue>>::new(
-                    DockDrag::new(M::DropValue::from(tab_id)),
-                    handle,
-                )
-                .drag_element(renderers.drag.call(tab_id))
-                .into_element();
+                let dragger = DragZone::new(DockDrag::new(M::DropValue::from(tab_id)))
+                    .drag_element(renderers.drag.call(tab_id))
+                    .child(handle)
+                    .into_element();
 
                 let activatable = rect()
                     .on_press({
@@ -510,7 +508,7 @@ impl<M: DockingModel> ComponentOwned for DockPanelView<M> {
                     .child(dragger)
                     .into_element();
 
-                DropZone::<DockDrag<M::DropValue>>::new(activatable, {
+                DropZone::new({
                     let mut controller = controller.clone();
                     move |payload: DockDrag<M::DropValue>| {
                         controller.write().on_drop(
@@ -522,6 +520,7 @@ impl<M: DockingModel> ComponentOwned for DockPanelView<M> {
                         );
                     }
                 })
+                .child(activatable)
                 .on_drag_over(move |hovering| {
                     toggle_hover(hover, HoverTarget::Tab(tab_id), hovering)
                 })
@@ -531,7 +530,7 @@ impl<M: DockingModel> ComponentOwned for DockPanelView<M> {
             .collect();
 
         tab_children.push(
-            DropZone::<DockDrag<M::DropValue>>::new(rect().expanded().into_element(), {
+            DropZone::new({
                 let mut controller = controller.clone();
                 move |payload: DockDrag<M::DropValue>| {
                     controller.write().on_drop(
@@ -543,6 +542,7 @@ impl<M: DockingModel> ComponentOwned for DockPanelView<M> {
                     );
                 }
             })
+            .child(rect().expanded())
             .into_element(),
         );
         let tab_bar = renderers.bar.call(TabBarContext {
@@ -593,17 +593,17 @@ impl<M: DockingModel> ComponentOwned for DockPanelView<M> {
                     .into_element()
             };
 
-            let center_drop =
-                DropZone::<DockDrag<M::DropValue>>::new(rect().expanded().into_element(), {
-                    let mut controller = controller.clone();
-                    move |payload: DockDrag<M::DropValue>| {
-                        controller
-                            .write()
-                            .on_drop(payload.value, DropTarget::Center(panel_id));
-                    }
-                })
-                .on_drag_over(move |hovering| toggle_hover(hover, HoverTarget::Center, hovering))
-                .into_element();
+            let center_drop = DropZone::new({
+                let mut controller = controller.clone();
+                move |payload: DockDrag<M::DropValue>| {
+                    controller
+                        .write()
+                        .on_drop(payload.value, DropTarget::Center(panel_id));
+                }
+            })
+            .on_drag_over(move |hovering| toggle_hover(hover, HoverTarget::Center, hovering))
+            .child(rect().expanded())
+            .into_element();
 
             let middle_row = rect()
                 .width(Size::percent(100.))
@@ -658,15 +658,13 @@ fn drop_zone_for_side<M: DockingModel>(
     mut controller: Writable<M>,
     hover: State<Option<HoverTarget<M::TabId>>>,
 ) -> Element {
-    DropZone::<DockDrag<M::DropValue>>::new(
-        rect().expanded().into_element(),
-        move |payload: DockDrag<M::DropValue>| {
-            controller
-                .write()
-                .on_drop(payload.value, DropTarget::Split { panel_id, side });
-        },
-    )
+    DropZone::new(move |payload: DockDrag<M::DropValue>| {
+        controller
+            .write()
+            .on_drop(payload.value, DropTarget::Split { panel_id, side });
+    })
     .on_drag_over(move |hovering| toggle_hover(hover, HoverTarget::Edge(side), hovering))
+    .child(rect().expanded())
     .into_element()
 }
 
