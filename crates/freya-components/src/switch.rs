@@ -282,7 +282,8 @@ impl Component for Switch {
             .maybe(self.enabled, |rect| {
                 rect.on_press({
                     let on_toggle = self.on_toggle.clone();
-                    move |_| {
+                    move |event: Event<PressEventData>| {
+                        event.stop_propagation();
                         if let Some(on_toggle) = &on_toggle {
                             on_toggle.call(())
                         }
