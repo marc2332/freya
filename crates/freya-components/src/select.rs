@@ -250,12 +250,18 @@ impl Component for Select {
             open.set_if_modified(false);
         };
 
+        // A key the select actually handles is consumed, so listeners later in document
+        // order (a dialog's Escape close, a form's Enter confirm) do not also act on it. An
+        // Escape with the list already closed is left alone: it belongs to whatever surface
+        // contains the select.
         let on_global_key_down = move |e: Event<KeyboardEventData>| match e.key {
-            Key::Named(NamedKey::Escape) => {
-                open.set_if_modified(false);
+            Key::Named(NamedKey::Escape) if *open.peek() => {
+                open.set(false);
+                e.prevent_default();
             }
             Key::Named(NamedKey::Enter) if a11y_id.is_focused() => {
                 open.toggle();
+                e.prevent_default();
             }
             _ => {}
         };
