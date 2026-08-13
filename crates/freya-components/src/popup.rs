@@ -204,7 +204,8 @@ impl Component for Popup {
             )
         });
 
-        let should_render = show || *background_animation.is_running().read();
+        let background_color = background_animation.get().value();
+        let should_render = show || background_color.a() > 0;
 
         let PopupTheme {
             background,
@@ -238,8 +239,6 @@ impl Component for Popup {
             .layer(Layer::Overlay)
             .position(Position::new_global())
             .maybe_child(should_render.then(|| {
-                let background_color = background_animation.get().value();
-
                 let (scale, opacity) = &*content_animation.read();
 
                 let (scale, opacity) = if show {
