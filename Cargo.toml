@@ -43,7 +43,7 @@ members = [
   "./crates/freya-material-design",
   "./crates/freya-plotters-backend",
   "./crates/freya-query",
-  "./crates/freya-webview",
+  "./crates/freya-html",
   "./crates/freya-terminal",
   "./crates/freya-code-editor",
   "./crates/freya-camera",
@@ -55,8 +55,6 @@ members = [
   "./examples/feature_camera",
   "./examples/feature_tray",
   "./examples/feature_tray_radio_state",
-  "./examples/feature_webview",
-  "./examples/feature_webviews_resizable",
 ]
 
 [workspace.dependencies]
@@ -85,7 +83,7 @@ freya-sdk = { path = "./crates/freya-sdk", version = "0.5.0-rc.2" }
 freya-material-design = { path = "./crates/freya-material-design", version = "0.5.0-rc.2" }
 freya-plotters-backend = { path = "./crates/freya-plotters-backend", version = "0.5.0-rc.2" }
 freya-query = { path = "./crates/freya-query", version = "0.5.0-rc.2" }
-freya-webview = { path = "./crates/freya-webview", version = "0.5.0-rc.2" }
+freya-html = { path = "./crates/freya-html", version = "0.5.0-rc.2" }
 freya-terminal = { path = "./crates/freya-terminal", version = "0.5.0-rc.2" }
 freya-code-editor = { path = "./crates/freya-code-editor", version = "0.5.0-rc.2" }
 freya-camera = { path = "./crates/freya-camera", version = "0.5.0-rc.2" }
@@ -175,7 +173,7 @@ anyhow = "1.0.100"
 thiserror = "2.0.17"
 
 # Images
-image = "0.25.8"
+image = "0.25.6"
 
 # Video
 ffmpeg-sidecar = "2.3"
@@ -201,6 +199,7 @@ freya-query = { workspace = true }
 freya-icons = { workspace = true, features = ["all"] }
 freya-sdk = { workspace = true, features = ["all"] }
 freya-devtools = { workspace = true, features = ["server", "client"] }
+freya-html = { workspace = true }
 freya-terminal = { workspace = true }
 freya-code-editor = { workspace = true }
 tree-sitter-rust = "0.24"
@@ -251,4 +250,33 @@ opt-level = 3
 
 # Optimizes the freya devtools server
 [profile.dev.package.freya-devtools]
+opt-level = 3
+
+# Always optimize the Blitz HTML stack (parsing, styling, layout), even in dev
+# builds, otherwise resolving documents is too slow.
+[profile.dev.package.blitz-dom]
+opt-level = 3
+[profile.dev.package.blitz-html]
+opt-level = 3
+[profile.dev.package.blitz-paint]
+opt-level = 3
+[profile.dev.package.blitz-traits]
+opt-level = 3
+[profile.dev.package.anyrender]
+opt-level = 3
+[profile.dev.package.stylo]
+opt-level = 3
+[profile.dev.package.selectors]
+opt-level = 3
+[profile.dev.package.servo_arc]
+opt-level = 3
+[profile.dev.package.parley]
+opt-level = 3
+[profile.dev.package.skrifa]
+opt-level = 3
+[profile.dev.package.fontique]
+opt-level = 3
+[profile.dev.package.kurbo]
+opt-level = 3
+[profile.dev.package.peniko]
 opt-level = 3

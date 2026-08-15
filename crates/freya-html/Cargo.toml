@@ -1,0 +1,49 @@
+[package]
+name = "freya-html"
+version = "0.5.0-rc.2"
+description = "HTML + CSS rendering for Freya using Blitz"
+edition = "2024"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "ui", "desktop", "html", "css"]
+categories = ["gui"]
+
+[lints]
+workspace = true
+
+[dependencies]
+freya-core = { workspace = true }
+freya-engine = { workspace = true }
+freya-skia-safe = { workspace = true }
+tracing = { workspace = true }
+rustc-hash = { workspace = true }
+
+keyboard-types = "=0.7.0"
+smol_str = "0.3"
+
+reqwest = { workspace = true }
+blocking = { workspace = true }
+futures-channel = { workspace = true }
+futures-lite = { workspace = true }
+
+blitz-dom = { version = "=0.3.0-beta.1", features = [
+  "default",
+  "floats",
+  "incremental",
+] }
+blitz-html = "=0.3.0-beta.1"
+blitz-paint = "=0.3.0-beta.1"
+blitz-traits = "=0.3.0-beta.1"
+atomic_refcell = "0.1"
+
+anyrender = "0.11"
+kurbo = "0.13.1"
+peniko = "0.6"
+hashbrown = "0.17.0"
+
+[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
+oaty = "0.2"
+
+[dev-dependencies]
+freya = { path = "../freya" }
