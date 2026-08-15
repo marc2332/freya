@@ -535,7 +535,10 @@ pub fn use_animation_with_dependencies<Animated: AnimatedValue, D: 'static + Clo
         } else {
             match animation.config.peek().on_change {
                 OnChange::Finish => animation.finish(),
-                OnChange::Rerun => animation.run(*animation.last_direction.peek()),
+                OnChange::Rerun => {
+                    let last_direction = *animation.last_direction.peek();
+                    animation.run(last_direction);
+                }
                 OnChange::Reset => animation.reset(),
                 _ => {}
             }
