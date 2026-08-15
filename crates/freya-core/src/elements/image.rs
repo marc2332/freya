@@ -430,6 +430,7 @@ impl EffectExt for Image {
     }
 }
 
+#[derive(Clone)]
 pub struct Image {
     key: DiffKey,
     element: ImageElement,

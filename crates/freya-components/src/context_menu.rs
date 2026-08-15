@@ -155,7 +155,11 @@ impl ComponentOwned for ContextMenuViewer {
                 let location = location.to_f32();
                 rect()
                     .layer(Layer::Overlay)
-                    .position(Position::new_global().left(location.x).top(location.y))
+                    .position(
+                        Position::new_global()
+                            .left(location.x.round())
+                            .top(location.y.round()),
+                    )
                     .child(
                         menu.on_close(move |_| {
                             if (context.close_phase)() == ClosePhase::CloseAllowed {

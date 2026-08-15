@@ -202,6 +202,8 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
             task.cancel();
         }
 
+        self.is_running.set_if_modified(false);
+
         self.animated_value
             .write()
             .prepare(*self.last_direction.peek());
@@ -214,6 +216,8 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
         if let Some(task) = self.task.write().take() {
             task.cancel();
         }
+
+        self.is_running.set_if_modified(false);
 
         self.animated_value
             .write()
@@ -253,7 +257,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
             task.cancel();
         }
 
-        let mut ticker = RenderingTicker::get();
+        let ticker = RenderingTicker::get();
         let platform = Platform::get();
         let animation_clock = AnimationClock::get();
 

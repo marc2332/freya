@@ -85,6 +85,7 @@ pub struct WinitRenderer {
     pub(crate) tray_icon: Option<TrayIcon>,
     pub resumed: bool,
     pub windows: FxHashMap<WindowId, AppWindow>,
+    pub global_contexts: GlobalContexts,
     pub proxy: EventLoopProxy<NativeEvent>,
     pub plugins: PluginsManager,
     pub fallback_fonts: Vec<Cow<'static, str>>,
@@ -98,6 +99,7 @@ pub struct WinitRenderer {
 
 pub struct RendererContext<'a> {
     pub windows: &'a mut FxHashMap<WindowId, AppWindow>,
+    pub global_contexts: &'a GlobalContexts,
     pub proxy: &'a mut EventLoopProxy<NativeEvent>,
     pub plugins: &'a mut PluginsManager,
     pub fallback_fonts: &'a mut Vec<Cow<'static, str>>,
@@ -118,6 +120,7 @@ impl RendererContext<'_> {
             self.font_manager,
             self.fallback_fonts,
             self.gpu_resource_cache_limit,
+            self.global_contexts,
         );
 
         let window_id = app_window.window.id();
@@ -288,6 +291,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     &self.font_manager,
                     &self.fallback_fonts,
                     self.gpu_resource_cache_limit,
+                    &self.global_contexts,
                 );
 
                 self.proxy
@@ -351,6 +355,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     font_manager: &mut self.font_manager,
                     font_collection: &mut self.font_collection,
                     gpu_resource_cache_limit: self.gpu_resource_cache_limit,
+                    global_contexts: &self.global_contexts,
                 };
                 (cb)(&mut renderer_context);
             }
@@ -372,6 +377,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     fallback_fonts: &mut self.fallback_fonts,
                     active_event_loop,
                     windows: &mut self.windows,
+                    global_contexts: &self.global_contexts,
                     proxy: &mut self.proxy,
                     plugins: &mut self.plugins,
                     font_manager: &mut self.font_manager,
@@ -405,6 +411,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             &self.font_manager,
                             &self.fallback_fonts,
                             self.gpu_resource_cache_limit,
+                            &self.global_contexts,
                         );
 
                         self.proxy
@@ -589,6 +596,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                             &self.font_manager,
                                             &self.fallback_fonts,
                                             self.gpu_resource_cache_limit,
+                                            &self.global_contexts,
                                         );
 
                                         let window_id = app_window.window.id();
@@ -630,6 +638,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                             fallback_fonts: &mut self.fallback_fonts,
                                             active_event_loop,
                                             windows: &mut self.windows,
+                                            global_contexts: &self.global_contexts,
                                             proxy: &mut self.proxy,
                                             plugins: &mut self.plugins,
                                             font_manager: &mut self.font_manager,
@@ -691,6 +700,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             fallback_fonts: &mut self.fallback_fonts,
                             active_event_loop: event_loop,
                             windows: &mut self.windows,
+                            global_contexts: &self.global_contexts,
                             proxy: &mut self.proxy,
                             plugins: &mut self.plugins,
                             font_manager: &mut self.font_manager,
@@ -734,6 +744,33 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 }
                 WindowEvent::Focused(is_focused) => {
                     app.platform.is_app_focused.set_if_modified(is_focused);
+
+                    // Window switches (e.g. Alt+Tab) swallow key releases, so release held keys on focus loss.
+                    if !is_focused && !app.pressed_keys.is_empty() {
+                        let modifiers = winit_mappings::map_winit_modifiers(app.modifiers_state);
+                        let mut platform_events: Vec<_> = app
+                            .pressed_keys
+                            .drain(..)
+                            .map(|(key, code)| PlatformEvent::Keyboard {
+                                name: KeyboardEventName::KeyUp,
+                                key,
+                                code,
+                                modifiers,
+                            })
+                            .collect();
+                        let mut events_measurer_adapter = EventsMeasurerAdapter {
+                            scale_factor: app.effective_scale_factor(),
+                            tree: &mut app.tree,
+                        };
+                        let processed_events = events_measurer_adapter.run(
+                            &mut platform_events,
+                            &mut app.nodes_state,
+                            app.accessibility.focused_node_id(),
+                        );
+                        app.events_sender
+                            .unbounded_send(EventsChunk::Processed(processed_events))
+                            .unwrap();
+                    }
                 }
                 WindowEvent::RedrawRequested => {
                     let scale_factor = app.effective_scale_factor();
@@ -846,14 +883,19 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 app.process_accessibility_update(mode);
                             }
                             AccessibilityTask::Init => {
-                                let update = app.accessibility.init(&mut app.tree);
+                                let title = app.window.title();
+                                let update = app.accessibility.init(&mut app.tree, &title);
                                 app.platform
                                     .focused_accessibility_id
                                     .set_if_modified(update.focus);
                                 let node_id = app.accessibility.focused_node_id().unwrap();
                                 let layout_node = app.tree.layout.get(&node_id).unwrap();
-                                let focused_node =
-                                    AccessibilityTree::create_node(node_id, layout_node, &app.tree);
+                                let focused_node = AccessibilityTree::create_node(
+                                    node_id,
+                                    layout_node,
+                                    &app.tree,
+                                    &title,
+                                );
                                 app.window.set_ime_allowed(is_ime_role(focused_node.role()));
                                 app.platform
                                     .focused_accessibility_node
@@ -880,7 +922,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             PluginHandle::new(&self.proxy),
                         );
 
-                        app.ticker_sender.send(()).ok();
+                        app.ticker_sender.notify();
 
                         self.plugins.send(
                             PluginEvent::AfterRedraw {
@@ -954,6 +996,12 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     let key = winit_mappings::map_winit_key(&event.logical_key);
                     let code = winit_mappings::map_winit_physical_key(&event.physical_key);
                     let modifiers = winit_mappings::map_winit_modifiers(app.modifiers_state);
+
+                    app.pressed_keys
+                        .retain(|(_, pressed_code)| *pressed_code != code);
+                    if event.state.is_pressed() {
+                        app.pressed_keys.push((key.clone(), code));
+                    }
 
                     self.plugins.send(
                         PluginEvent::KeyboardInput {
