@@ -90,6 +90,7 @@ pub struct AppWindow {
     pub(crate) screen_reader: ScreenReader,
 
     pub(crate) process_layout_on_next_render: bool,
+    pub(crate) synthetic_mouse_move_on_next_layout: bool,
 
     pub(crate) waker: Waker,
 
@@ -352,6 +353,7 @@ impl AppWindow {
             screen_reader,
 
             process_layout_on_next_render: true,
+            synthetic_mouse_move_on_next_layout: false,
 
             waker,
 

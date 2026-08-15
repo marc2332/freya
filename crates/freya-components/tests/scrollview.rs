@@ -39,6 +39,51 @@ pub fn scroll_view_wheel() {
 }
 
 #[test]
+pub fn scroll_view_hover_updates_on_scroll() {
+    fn scroll_view_hover_app() -> impl IntoElement {
+        let mut hovered = use_state(|| None::<usize>);
+
+        rect()
+            .child(label().height(Size::px(100.)).text(match hovered() {
+                Some(i) => format!("hovered: {i}"),
+                None => "hovered: none".to_string(),
+            }))
+            .child(
+                ScrollView::new()
+                    .height(Size::px(400.))
+                    .children((0..4).map(|i| {
+                        rect()
+                            .key(i)
+                            .height(Size::px(200.))
+                            .width(Size::px(200.))
+                            .on_pointer_enter(move |_| hovered.set(Some(i)))
+                            .into()
+                    })),
+            )
+    }
+
+    let mut test = launch_test(scroll_view_hover_app);
+
+    let find_label = |test: &TestingRunner, text: &str| {
+        test.find(|node, element| {
+            Label::try_downcast(element)
+                .filter(|label| label.text.as_ref() == text)
+                .map(|_| node)
+        })
+    };
+
+    assert!(find_label(&test, "hovered: none").is_some());
+
+    test.move_cursor((100., 350.));
+    test.sync_and_update();
+    assert!(find_label(&test, "hovered: 1").is_some());
+
+    // Scrolling moves the third item under the static cursor
+    test.scroll((100., 350.), (0., -300.));
+    assert!(find_label(&test, "hovered: 2").is_some());
+}
+
+#[test]
 pub fn scroll_view_scrollbar() {
     fn scroll_view_scrollbar_app() -> impl IntoElement {
         ScrollView::new()

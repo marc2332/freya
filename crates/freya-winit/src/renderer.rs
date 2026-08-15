@@ -616,6 +616,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             }
                         },
                         NativeWindowEventAction::PlatformEvent(platform_event) => {
+                            if matches!(platform_event, PlatformEvent::Wheel { .. }) {
+                                app.synthetic_mouse_move_on_next_layout = true;
+                            }
                             let mut events_measurer_adapter = EventsMeasurerAdapter {
                                 scale_factor: app.effective_scale_factor(),
                                 tree: &mut app.tree,
@@ -746,6 +749,28 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 },
                                 PluginHandle::new(&self.proxy),
                             );
+
+                            if std::mem::take(&mut app.synthetic_mouse_move_on_next_layout)
+                                && app.position != CursorPoint::from((-1., -1.))
+                            {
+                                let platform_event = PlatformEvent::Mouse {
+                                    name: MouseEventName::MouseMove,
+                                    cursor: app.position,
+                                    button: None,
+                                };
+                                let mut events_measurer_adapter = EventsMeasurerAdapter {
+                                    scale_factor,
+                                    tree: &mut app.tree,
+                                };
+                                let processed_events = events_measurer_adapter.run(
+                                    &mut vec![platform_event],
+                                    &mut app.nodes_state,
+                                    app.accessibility.focused_node_id(),
+                                );
+                                app.events_sender
+                                    .unbounded_send(EventsChunk::Processed(processed_events))
+                                    .unwrap();
+                            }
                         }
 
                         app.driver.present(
@@ -1018,6 +1043,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         app.events_sender
                             .unbounded_send(EventsChunk::Processed(processed_events))
                             .unwrap();
+                        app.synthetic_mouse_move_on_next_layout = true;
                     }
                 }
 

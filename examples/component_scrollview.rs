@@ -11,11 +11,12 @@ fn main() {
 fn app() -> impl IntoElement {
     rect()
         .child(ScrollView::new().height(Size::percent(50.)).child(
-            rect().spacing(6.).padding(6.).children((0..30).map(|_| {
-                rect()
-                    .width(Size::fill())
-                    .height(Size::px(80.))
+            rect().spacing(6.).padding(6.).children((0..30).map(|i| {
+                Button::new()
+                    .key(i)
                     .background((182, 119, 0))
+                    .hover_background((222, 159, 40))
+                    .child(format!("Item {i}"))
                     .into()
             })),
         ))
@@ -25,11 +26,12 @@ fn app() -> impl IntoElement {
                     .direction(Direction::Horizontal)
                     .spacing(6.)
                     .padding(6.)
-                    .children((0..30).map(|_| {
-                        rect()
-                            .width(Size::px(80.))
-                            .height(Size::fill())
+                    .children((0..30).map(|i| {
+                        Button::new()
+                            .key(i)
                             .background((0, 119, 182))
+                            .hover_background((40, 159, 222))
+                            .child(label().text(format!("Item {i}")).max_lines(1))
                             .into()
                     })),
             ),
