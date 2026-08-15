@@ -78,28 +78,29 @@ impl Component for HtmlView {
         let client = use_hook(http_client);
         let mut handle = self.handle;
 
-        let state = use_hook({
-            let platform = platform.clone();
-            let client = client.clone();
-            move || {
-                let (wake_tx, mut wake_rx) = futures_channel::mpsc::unbounded::<()>();
-                let (nav_tx, mut nav_rx) = futures_channel::mpsc::unbounded::<String>();
-                let state = Rc::new(RefCell::new(BlitzState::new(client, wake_tx, nav_tx)));
+        let state = use_hook(move || {
+            let platform = Platform::get();
+            let (wake_tx, mut wake_rx) = futures_channel::mpsc::unbounded::<()>();
+            let (nav_tx, mut nav_rx) = futures_channel::mpsc::unbounded::<String>();
+            let state = Rc::new(RefCell::new(BlitzState::new(
+                http_client(),
+                wake_tx,
+                nav_tx,
+            )));
 
-                spawn(async move {
-                    while wake_rx.next().await.is_some() {
-                        platform.send(UserEvent::RequestRedraw);
-                    }
-                });
+            spawn(async move {
+                while wake_rx.next().await.is_some() {
+                    platform.send(UserEvent::RequestRedraw);
+                }
+            });
 
-                spawn(async move {
-                    while let Some(url) = nav_rx.next().await {
-                        handle.navigate(url);
-                    }
-                });
+            spawn(async move {
+                while let Some(url) = nav_rx.next().await {
+                    handle.navigate(url);
+                }
+            });
 
-                state
-            }
+            state
         });
 
         use_side_effect_with_deps(&handle.location(), {
