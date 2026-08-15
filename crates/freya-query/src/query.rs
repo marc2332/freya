@@ -19,12 +19,10 @@ use async_io::Timer;
 use freya_core::{
     integration::FxHashSet,
     lifecycle::context::{
-        consume_context,
-        provide_context_for_scope_id,
-        try_consume_context,
+        consume_root_context,
+        try_consume_root_context,
     },
     prelude::*,
-    scope_id::ScopeId,
 };
 use futures_util::stream::{
     FuturesUnordered,
@@ -314,15 +312,9 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
     pub async fn get(get_query: GetQuery<Q>) -> QueryReader<Q> {
         let query: Query<Q> = get_query.into();
 
-        let mut storage = match try_consume_context::<QueriesStorage<Q>>() {
+        let mut storage = match try_consume_root_context::<QueriesStorage<Q>>() {
             Some(storage) => storage,
-            None => {
-                provide_context_for_scope_id(
-                    QueriesStorage::<Q>::new_in_root(),
-                    Some(ScopeId::ROOT),
-                );
-                try_consume_context::<QueriesStorage<Q>>().unwrap()
-            }
+            None => provide_root_context(QueriesStorage::<Q>::new_in_root()),
         };
 
         let mut map = storage.storage.write();
@@ -383,7 +375,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
     ///
     /// Returns an empty [Vec] if the query storage is not in context.
     pub fn peek_matching(matching_keys: Q::Keys) -> Vec<QueryReader<Q>> {
-        let Some(storage) = try_consume_context::<QueriesStorage<Q>>() else {
+        let Some(storage) = try_consume_root_context::<QueriesStorage<Q>>() else {
             return Vec::new();
         };
 
@@ -402,7 +394,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
     ///
     /// Does nothing if the query storage is not in context
     pub async fn invalidate_all() {
-        let Some(storage) = try_consume_context::<QueriesStorage<Q>>() else {
+        let Some(storage) = try_consume_root_context::<QueriesStorage<Q>>() else {
             return;
         };
 
@@ -410,22 +402,21 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
     }
 
     async fn inner_invalidate_all(self) {
-        // Get all the queries
-        let matching_queries = self.storage.read().clone().into_iter().collect::<Vec<_>>();
-        let matching_queries = matching_queries
-            .iter()
-            .map(|(q, d)| (q, d))
-            .collect::<Vec<_>>();
+        let mut all_queries = Vec::new();
+        let storage = self.storage.read();
+        for (query, data) in storage.iter() {
+            all_queries.push((query, data));
+        }
 
         // Invalidate the queries
-        Self::run_queries(&matching_queries).await
+        Self::run_queries(&all_queries).await
     }
 
     /// Acquires query storage from context and invalidates matching queries
     ///
     /// Does nothing if the query storage is not in context
     pub async fn invalidate_matching(matching_keys: Q::Keys) {
-        let Some(storage) = try_consume_context::<QueriesStorage<Q>>() else {
+        let Some(storage) = try_consume_root_context::<QueriesStorage<Q>>() else {
             return;
         };
 
@@ -435,15 +426,12 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
     async fn inner_invalidate_matching(self, matching_keys: Q::Keys) {
         // Get those queries that match
         let mut matching_queries = Vec::new();
-        for (query, data) in self.storage.read().iter() {
+        let storage = self.storage.read();
+        for (query, data) in storage.iter() {
             if query.query.matches(&matching_keys) {
-                matching_queries.push((query.clone(), data.clone()));
+                matching_queries.push((query, data));
             }
         }
-        let matching_queries = matching_queries
-            .iter()
-            .map(|(q, d)| (q, d))
-            .collect::<Vec<_>>();
 
         // Invalidate the queries
         Self::run_queries(&matching_queries).await
@@ -559,7 +547,7 @@ impl<Q: QueryCapability> Query<Q> {
     async fn run(&self) -> Result<Q::Ok, Q::Err> {
         #[cfg(debug_assertions)]
         {
-            let mock = try_consume_context::<QueriesStorage<Q>>()
+            let mock = try_consume_root_context::<QueriesStorage<Q>>()
                 .and_then(|storage| storage.mock.peek().clone());
 
             if let Some(mock) = mock {
@@ -667,7 +655,7 @@ impl<Q: QueryCapability> UseQuery<Q> {
     /// This **will** automatically subscribe.
     /// If you want a **non-subscribing** method have a look at [UseQuery::peek].
     pub fn read(&self) -> QueryReader<Q> {
-        let storage = consume_context::<QueriesStorage<Q>>();
+        let storage = consume_root_context::<QueriesStorage<Q>>();
         let map = storage.storage.peek();
         let query_data = map.get(&self.query.read()).cloned().unwrap();
 
@@ -686,7 +674,7 @@ impl<Q: QueryCapability> UseQuery<Q> {
     /// This **will not** automatically subscribe.
     /// If you want a **subscribing** method have a look at [UseQuery::read].
     pub fn peek(&self) -> QueryReader<Q> {
-        let storage = consume_context::<QueriesStorage<Q>>();
+        let storage = consume_root_context::<QueriesStorage<Q>>();
         let map = storage.storage.peek();
         let query_data = map.get(&self.query.peek()).cloned().unwrap();
 
@@ -699,7 +687,7 @@ impl<Q: QueryCapability> UseQuery<Q> {
     ///
     /// For a `sync` version use [UseQuery::invalidate].
     pub async fn invalidate_async(&self) -> QueryReader<Q> {
-        let storage = consume_context::<QueriesStorage<Q>>();
+        let storage = consume_root_context::<QueriesStorage<Q>>();
 
         let query = self.query.peek().clone();
         let map = storage.storage.peek();
@@ -717,7 +705,7 @@ impl<Q: QueryCapability> UseQuery<Q> {
     ///
     /// For an `async` version use [UseQuery::invalidate_async].
     pub fn invalidate(&self) {
-        let storage = consume_context::<QueriesStorage<Q>>();
+        let storage = consume_root_context::<QueriesStorage<Q>>();
 
         let query = self.query.peek().clone();
         let map = storage.storage.peek();
@@ -756,12 +744,9 @@ impl<Q: QueryCapability> UseQuery<Q> {
 ///
 /// See [Query::interval_time].
 pub fn use_query<Q: QueryCapability>(query: Query<Q>) -> UseQuery<Q> {
-    let mut storage = match try_consume_context::<QueriesStorage<Q>>() {
+    let mut storage = match try_consume_root_context::<QueriesStorage<Q>>() {
         Some(storage) => storage,
-        None => {
-            provide_context_for_scope_id(QueriesStorage::<Q>::new_in_root(), Some(ScopeId::ROOT));
-            try_consume_context::<QueriesStorage<Q>>().unwrap()
-        }
+        None => provide_root_context(QueriesStorage::<Q>::new_in_root()),
     };
 
     let mut make_query = |query: &Query<Q>, mut prev_query: Option<Query<Q>>| {

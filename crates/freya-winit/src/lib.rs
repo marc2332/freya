@@ -4,6 +4,8 @@ pub mod reexports {
 
 use std::sync::Arc;
 
+use freya_core::integration::GlobalContexts;
+
 use crate::{
     config::LaunchConfig,
     renderer::{
@@ -123,6 +125,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
 
     let mut renderer = WinitRenderer {
         windows: HashMap::default(),
+        global_contexts: GlobalContexts::default(),
         #[cfg(feature = "tray")]
         tray: launch_config.tray,
         #[cfg(all(feature = "tray", not(target_os = "linux")))]

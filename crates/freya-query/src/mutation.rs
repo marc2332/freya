@@ -19,12 +19,10 @@ use async_io::Timer;
 use freya_core::{
     integration::FxHashSet,
     lifecycle::context::{
-        consume_context,
-        provide_context_for_scope_id,
-        try_consume_context,
+        consume_root_context,
+        try_consume_root_context,
     },
     prelude::*,
-    scope_id::ScopeId,
 };
 
 pub trait MutationCapability
@@ -305,7 +303,7 @@ impl<Q: MutationCapability> Mutation<Q> {
     async fn run(&self, keys: &Q::Keys) -> Result<Q::Ok, Q::Err> {
         #[cfg(debug_assertions)]
         {
-            let mock = try_consume_context::<MutationsStorage<Q>>()
+            let mock = try_consume_root_context::<MutationsStorage<Q>>()
                 .and_then(|storage| storage.mock.peek().clone());
 
             if let Some(mock) = mock {
@@ -359,7 +357,7 @@ impl<Q: MutationCapability> UseMutation<Q> {
     /// This **will** automatically subscribe.
     /// If you want a **subscribing** method have a look at [UseMutation::peek].
     pub fn read(&self) -> MutationReader<Q> {
-        let storage = consume_context::<MutationsStorage<Q>>();
+        let storage = consume_root_context::<MutationsStorage<Q>>();
         let map = storage.storage.peek();
         let mutation_data = map.get(&self.mutation.read()).cloned().unwrap();
 
@@ -378,7 +376,7 @@ impl<Q: MutationCapability> UseMutation<Q> {
     /// This **will not** automatically subscribe.
     /// If you want a **subscribing** method have a look at [UseMutation::read].
     pub fn peek(&self) -> MutationReader<Q> {
-        let storage = consume_context::<MutationsStorage<Q>>();
+        let storage = consume_root_context::<MutationsStorage<Q>>();
         let map = storage.storage.peek();
         let mutation_data = map.get(&self.mutation.peek()).cloned().unwrap();
 
@@ -391,9 +389,9 @@ impl<Q: MutationCapability> UseMutation<Q> {
     ///
     /// For a `sync` version use [UseMutation::mutate].
     pub async fn mutate_async(&self, keys: Q::Keys) -> MutationReader<Q> {
-        let storage = consume_context::<MutationsStorage<Q>>();
+        let storage = consume_root_context::<MutationsStorage<Q>>();
 
-        let mutation = self.mutation.peek().clone();
+        let mutation = self.mutation.peek();
         let map = storage.storage.peek();
         let mutation_data = map.get(&mutation).cloned().unwrap();
 
@@ -409,9 +407,9 @@ impl<Q: MutationCapability> UseMutation<Q> {
     ///
     /// For an `async` version use [UseMutation::mutate_async].
     pub fn mutate(&self, keys: Q::Keys) {
-        let storage = consume_context::<MutationsStorage<Q>>();
+        let storage = consume_root_context::<MutationsStorage<Q>>();
 
-        let mutation = self.mutation.peek().clone();
+        let mutation = self.mutation.peek();
         let map = storage.storage.peek();
         let mutation_data = map.get(&mutation).cloned().unwrap();
 
@@ -428,12 +426,9 @@ impl<Q: MutationCapability> UseMutation<Q> {
 /// See [Mutation::clean_time].
 pub fn use_mutation<Q: MutationCapability>(mutation: impl Into<Mutation<Q>>) -> UseMutation<Q> {
     let mutation = mutation.into();
-    let mut storage = match try_consume_context::<MutationsStorage<Q>>() {
+    let mut storage = match try_consume_root_context::<MutationsStorage<Q>>() {
         Some(storage) => storage,
-        None => {
-            provide_context_for_scope_id(MutationsStorage::<Q>::new_in_root(), Some(ScopeId::ROOT));
-            try_consume_context::<MutationsStorage<Q>>().unwrap()
-        }
+        None => provide_root_context(MutationsStorage::<Q>::new_in_root()),
     };
 
     let mut make_mutation = |mutation: &Mutation<Q>, mut prev_mutation: Option<Mutation<Q>>| {
