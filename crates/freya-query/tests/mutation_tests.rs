@@ -175,3 +175,44 @@ fn mutation_reactive_context_reruns_on_identity_change() {
         "the reactive context was not notified when the mutation re-ran"
     );
 }
+
+#[test]
+#[cfg(debug_assertions)]
+fn mocked_mutation_records_the_calls() {
+    fn app() -> impl IntoElement {
+        let client = use_hook(|| Captured(Rc::new(RefCell::new(String::from("Marc")))));
+        let mutation = use_mutation(Mutation::new(SetUserName(client)));
+
+        use_after_side_effect(move || {
+            mutation.mutate((0, "John".to_string()));
+        });
+
+        rect()
+    }
+
+    let calls = Rc::new(RefCell::new(Vec::new()));
+    let (mut test, _) = TestingRunner::new(
+        app,
+        (200., 200.).into(),
+        {
+            let calls = calls.clone();
+            move |runner| {
+                runner.provide_root_context(move || {
+                    MutationsStorage::<SetUserName>::mocked(move |keys| {
+                        calls.borrow_mut().push(keys);
+                        Ok(())
+                    })
+                })
+            }
+        },
+        1.,
+    );
+
+    test.sync_and_update();
+    test.poll(
+        std::time::Duration::from_millis(10),
+        std::time::Duration::from_millis(200),
+    );
+
+    assert_eq!(&*calls.borrow(), &[(0, "John".to_string())]);
+}
