@@ -40,9 +40,7 @@ pub fn use_drag<T: 'static>() -> State<Option<T>> {
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     DragZone::new(0usize)
-///         .drag_element(label().text("Dragging"))
-///         .child("Drag me!")
+///     DragZone::new(0).drag_element("Dragging").child("Drag me!")
 /// }
 /// ```
 #[derive(Clone, PartialEq)]
@@ -177,7 +175,7 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
             .layout(self.layout.clone())
             .on_global_pointer_press(on_global_pointer_press)
             .on_global_pointer_move(on_global_pointer_move)
-            .maybe(self.enabled, |rect| rect.on_pointer_down(on_pointer_down))
+            .maybe(self.enabled, |el| el.on_pointer_down(on_pointer_down))
             .maybe_child((dragging.zip(self.drag_element.clone())).map(
                 |((position, offset), drag_element)| {
                     let size = *drag_element_size.read();

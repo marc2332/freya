@@ -62,7 +62,7 @@ impl Component for Card {
             .height(Size::px(60.))
             .scale(scale)
             .shadow((0., 2., 4., 0., (0, 0, 0, 25)))
-            .child(label().text(self.0.title.clone()))
+            .child(self.0.title.clone())
     }
 }
 
@@ -80,7 +80,7 @@ fn app() -> impl IntoElement {
 
     rect().expanded().center().child(
         rect()
-            .direction(Direction::Horizontal)
+            .horizontal()
             .width(Size::px(800.))
             .height(Size::fill())
             .content(Content::Flex)
@@ -100,7 +100,7 @@ fn column(mut tasks: State<Vec<Task>>, status: TaskStatus, title: String) -> imp
     let dragging = use_drag::<usize>().read().is_some();
 
     rect()
-        .direction(Direction::Vertical)
+        .vertical()
         .width(Size::flex(1.))
         .height(Size::fill())
         .child(
@@ -119,7 +119,7 @@ fn column(mut tasks: State<Vec<Task>>, status: TaskStatus, title: String) -> imp
             })
             .child(
                 rect()
-                    .direction(Direction::Vertical)
+                    .vertical()
                     .expanded()
                     .padding(16.0)
                     .spacing(8.0)
@@ -161,7 +161,7 @@ fn column(mut tasks: State<Vec<Task>>, status: TaskStatus, title: String) -> imp
                                                     .width(Size::px(200.))
                                                     .height(Size::px(60.))
                                                     .shadow((0., 2., 4., 0., (0, 0, 0, 25)))
-                                                    .child(label().text(task.title.clone())),
+                                                    .child(task.title.clone()),
                                             ),
                                     )
                                     .show_while_dragging(false)

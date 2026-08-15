@@ -520,10 +520,10 @@ impl<M: DockingModel> ComponentOwned for DockPanelView<M> {
                         );
                     }
                 })
-                .child(activatable)
                 .on_drag_over(move |hovering| {
                     toggle_hover(hover, HoverTarget::Tab(tab_id), hovering)
                 })
+                .child(activatable)
                 .key(tab_id)
                 .into_element()
             })

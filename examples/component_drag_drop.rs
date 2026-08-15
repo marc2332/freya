@@ -45,7 +45,7 @@ fn app() -> impl IntoElement {
                         rect()
                             .center()
                             .height(Size::fill())
-                            .child(label().text("Drop me here!"))
+                            .child("Drop me here!")
                             .into_element()
                     }),
                 )
