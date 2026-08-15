@@ -5,28 +5,13 @@ use std::{
 
 use freya_core::prelude::*;
 use futures_lite::StreamExt;
-use reqwest::blocking::Client;
 
 use crate::{
     element::Html,
-    handle::{
-        HtmlHandle,
-        HtmlSource,
-    },
-    net::{
-        fetch_html,
-        http_client,
-    },
+    handle::HtmlHandle,
+    net::http_client,
     state::BlitzState,
 };
-
-async fn load_url(state: Rc<RefCell<BlitzState>>, url: String, client: Client) {
-    let (fetched, url) = blocking::unblock(move || (fetch_html(&client, &url), url)).await;
-    match fetched {
-        Ok(html) => state.borrow_mut().load(&html, Some(url)),
-        Err(err) => tracing::error!("Failed to load {url}: {err}"),
-    }
-}
 
 /// Embeds an HTML + CSS document, rendered by [Blitz](https://github.com/DioxusLabs/blitz)
 /// straight into Freya's Skia canvas. Its content is driven by an [HtmlHandle],
@@ -75,7 +60,6 @@ impl ContainerExt for HtmlView {}
 impl Component for HtmlView {
     fn render(&self) -> impl IntoElement {
         let platform = Platform::get();
-        let client = use_hook(http_client);
         let mut handle = self.handle;
 
         let state = use_hook(move || {
@@ -87,6 +71,7 @@ impl Component for HtmlView {
                 wake_tx,
                 nav_tx,
             )));
+            handle.attach(state.clone());
 
             spawn(async move {
                 while wake_rx.next().await.is_some() {
@@ -101,21 +86,6 @@ impl Component for HtmlView {
             });
 
             state
-        });
-
-        use_side_effect_with_deps(&handle.location(), {
-            let state = state.clone();
-            move |location| {
-                let Some((_, source)) = location else {
-                    return;
-                };
-                match source {
-                    HtmlSource::Url(url) => {
-                        spawn(load_url(state.clone(), url.clone(), client.clone()));
-                    }
-                    HtmlSource::Html(html) => state.borrow_mut().load(html, None),
-                }
-            }
         });
 
         let a11y_id = use_hook(AccessibilityId::new_unique);

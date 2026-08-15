@@ -1,4 +1,18 @@
+use std::{
+    cell::RefCell,
+    rc::Rc,
+};
+
 use freya_core::prelude::*;
+use reqwest::blocking::Client;
+
+use crate::{
+    net::{
+        fetch_html,
+        http_client,
+    },
+    state::BlitzState,
+};
 
 /// A document for an [HtmlView](crate::HtmlView), either remote or inline.
 #[derive(Clone, PartialEq)]
@@ -42,16 +56,43 @@ struct HtmlHistory {
 #[derive(PartialEq, Clone, Copy)]
 pub struct HtmlHandle {
     history: State<HtmlHistory>,
+    view: State<Option<Rc<RefCell<BlitzState>>>>,
 }
 
 impl HtmlHandle {
-    pub(crate) fn new(initial: HtmlSource) -> Self {
+    /// A handle starting at `initial`.
+    pub fn create(initial: HtmlSource) -> Self {
+        let mut handle = Self::create_empty();
+        handle.push(initial);
+        handle
+    }
+
+    /// A handle with an empty history.
+    pub fn create_empty() -> Self {
         Self {
             history: State::create(HtmlHistory {
-                entries: vec![initial],
+                entries: Vec::new(),
                 index: 0,
             }),
+            view: State::create(None),
         }
+    }
+
+    /// A handle with an empty history, backed by global states.
+    pub fn create_global_empty() -> Self {
+        Self {
+            history: State::create_global(HtmlHistory {
+                entries: Vec::new(),
+                index: 0,
+            }),
+            view: State::create_global(None),
+        }
+    }
+
+    /// Attaches the view's document state and loads the current source into it.
+    pub(crate) fn attach(&mut self, view: Rc<RefCell<BlitzState>>) {
+        *self.view.write() = Some(view);
+        self.reload();
     }
 
     /// Load the URL, discarding any forward history.
@@ -68,6 +109,7 @@ impl HtmlHandle {
     pub fn back(&mut self) {
         if self.can_go_back() {
             self.history.write().index -= 1;
+            self.reload();
         }
     }
 
@@ -75,6 +117,14 @@ impl HtmlHandle {
     pub fn forward(&mut self) {
         if self.can_go_forward() {
             self.history.write().index += 1;
+            self.reload();
+        }
+    }
+
+    /// Load the current history entry again.
+    pub fn reload(&self) {
+        if let Some(source) = self.current_source() {
+            self.load(&source);
         }
     }
 
@@ -97,24 +147,46 @@ impl HtmlHandle {
     }
 
     fn push(&mut self, source: HtmlSource) {
+        self.load(&source);
         let mut history = self.history.write();
-        let index = history.index + 1;
+        let index = if history.entries.is_empty() {
+            0
+        } else {
+            history.index + 1
+        };
         history.entries.truncate(index);
         history.entries.push(source);
         history.index = index;
     }
 
-    /// Current source paired with its history position.
-    pub(crate) fn location(&self) -> Option<(usize, HtmlSource)> {
-        let history = self.history.read();
-        history
-            .entries
-            .get(history.index)
-            .map(|source| (history.index, source.clone()))
+    fn current_source(&self) -> Option<HtmlSource> {
+        let history = self.history.peek();
+        history.entries.get(history.index).cloned()
+    }
+
+    /// Loads `source` into the attached view.
+    fn load(&self, source: &HtmlSource) {
+        let Some(view) = self.view.peek().clone() else {
+            return;
+        };
+        match source {
+            HtmlSource::Url(url) => {
+                spawn(load_url(view, url.clone(), http_client()));
+            }
+            HtmlSource::Html(html) => view.borrow_mut().load(html, None),
+        }
+    }
+}
+
+async fn load_url(view: Rc<RefCell<BlitzState>>, url: String, client: Client) {
+    let (fetched, url) = blocking::unblock(move || (fetch_html(&client, &url), url)).await;
+    match fetched {
+        Ok(html) => view.borrow_mut().load(&html, Some(url)),
+        Err(err) => tracing::error!("Failed to load {url}: {err}"),
     }
 }
 
 /// Creates an [HtmlHandle] starting at the source returned by `init`.
 pub fn use_html_handle(init: impl FnOnce() -> HtmlSource) -> HtmlHandle {
-    use_hook(move || HtmlHandle::new(init()))
+    use_hook(move || HtmlHandle::create(init()))
 }
