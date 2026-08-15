@@ -58,7 +58,6 @@ pub fn scroll_view_hover_updates_on_scroll() {
                             .height(Size::px(200.))
                             .width(Size::px(200.))
                             .on_pointer_enter(move |_| hovered.set(Some(i)))
-                            .into()
                     })),
             )
     }
