@@ -365,7 +365,7 @@ impl I18n {
     /// live for the entire duration of the application. [`use_init_i18n`] uses this internally
     /// and shares the instance across all windows, so you rarely need to call it directly.
     /// Call it when you need explicit error handling and share the result yourself with
-    /// [`use_provide_root_context`](freya_core::prelude::use_provide_root_context).
+    /// [`use_provide_root_context`].
     pub fn create_global(
         I18nConfig {
             id: selected_language,
