@@ -349,7 +349,7 @@ impl LayerExt for Label {
 
 impl MaybeExt for Label {}
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Label {
     key: DiffKey,
     element: LabelElement,

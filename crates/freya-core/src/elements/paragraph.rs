@@ -852,7 +852,7 @@ impl LayerExt for Paragraph {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Paragraph {
     key: DiffKey,
     element: ParagraphElement,
