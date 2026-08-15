@@ -283,8 +283,8 @@ impl Component for Switch {
                 rect.on_press({
                     let on_toggle = self.on_toggle.clone();
                     move |event: Event<PressEventData>| {
-                        event.stop_propagation();
                         if let Some(on_toggle) = &on_toggle {
+                            event.stop_propagation();
                             on_toggle.call(())
                         }
                         a11y_id.request_focus();
