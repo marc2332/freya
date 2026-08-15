@@ -397,6 +397,30 @@ impl AppWindow {
             .set(self.effective_scale_factor());
     }
 
+    /// Measures the given platform events and emits the results.
+    /// Wheel events schedule a mouse move to refresh hover states.
+    pub(crate) fn process_platform_events(&mut self, mut platform_events: Vec<PlatformEvent>) {
+        if platform_events
+            .iter()
+            .any(|platform_event| matches!(platform_event, PlatformEvent::Wheel { .. }))
+        {
+            self.synthetic_mouse_move_on_next_layout = true;
+        }
+
+        let mut events_measurer_adapter = EventsMeasurerAdapter {
+            scale_factor: self.effective_scale_factor(),
+            tree: &mut self.tree,
+        };
+        let processed_events = events_measurer_adapter.run(
+            &mut platform_events,
+            &mut self.nodes_state,
+            self.accessibility.focused_node_id(),
+        );
+        self.events_sender
+            .unbounded_send(EventsChunk::Processed(processed_events))
+            .unwrap();
+    }
+
     /// Sets `user_zoom`, clamped to `[MIN_USER_ZOOM, MAX_USER_ZOOM]`. On change,
     /// resets layout/text caches and requests a redraw, mirroring `ScaleFactorChanged`.
     pub fn set_user_zoom(&mut self, zoom: f32) {

@@ -44,10 +44,11 @@ pub fn scroll_view_hover_updates_on_scroll() {
         let mut hovered = use_state(|| None::<usize>);
 
         rect()
-            .child(label().height(Size::px(100.)).text(match hovered() {
-                Some(i) => format!("hovered: {i}"),
-                None => "hovered: none".to_string(),
-            }))
+            .child(
+                label()
+                    .height(Size::px(100.))
+                    .text(format!("hovered {:?}", hovered())),
+            )
             .child(
                 ScrollView::new()
                     .height(Size::px(400.))
@@ -64,23 +65,20 @@ pub fn scroll_view_hover_updates_on_scroll() {
 
     let mut test = launch_test(scroll_view_hover_app);
 
-    let find_label = |test: &TestingRunner, text: &str| {
-        test.find(|node, element| {
-            Label::try_downcast(element)
-                .filter(|label| label.text.as_ref() == text)
-                .map(|_| node)
-        })
+    let hovered_label = |test: &TestingRunner| {
+        test.find(|_, element| Label::try_downcast(element).map(|label| label.text.to_string()))
+            .unwrap()
     };
 
-    assert!(find_label(&test, "hovered: none").is_some());
+    assert_eq!(hovered_label(&test), "hovered None");
 
     test.move_cursor((100., 350.));
     test.sync_and_update();
-    assert!(find_label(&test, "hovered: 1").is_some());
+    assert_eq!(hovered_label(&test), "hovered Some(1)");
 
-    // Scrolling moves the third item under the static cursor
+    // Scrolling moves the third item under the cursor
     test.scroll((100., 350.), (0., -300.));
-    assert!(find_label(&test, "hovered: 2").is_some());
+    assert_eq!(hovered_label(&test), "hovered Some(2)");
 }
 
 #[test]

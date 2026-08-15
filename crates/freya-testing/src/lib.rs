@@ -529,7 +529,7 @@ impl TestingRunner {
             source: WheelSource::Device,
         });
         self.sync_and_update();
-        // Refresh hover states once the scroll has been applied
+        // Refresh hover states after the scroll
         self.send_event(PlatformEvent::Mouse {
             name: MouseEventName::MouseMove,
             cursor,

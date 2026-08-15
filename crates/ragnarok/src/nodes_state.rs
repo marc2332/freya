@@ -148,7 +148,7 @@ impl<Key: NodeKey> NodesState<Key> {
         &mut self,
         emmitable_events: &mut Vec<Emmitable>,
     ) {
-        // The exclusive enter event (at most one per batch) identifies the entered node
+        // The exclusive enter event identifies the entered node
         let entered_node = emmitable_events
             .iter()
             .find(|e| e.name().is_exclusive_enter())
