@@ -23,41 +23,42 @@ use crate::{
 /// # fn app() -> impl IntoElement {
 /// // Inline HTML
 /// let inline = use_html_handle(|| HtmlSource::html("<p>Hello <b>world</b></p>"));
-/// HtmlView::new(inline)
-///     .width(Size::px(400.))
-///     .height(Size::px(300.));
-/// // Or a remote document
+/// HtmlViewer::new(inline);
+/// // Or a remote document, sized explicitly instead of filling the parent
 /// let remote = use_html_handle(|| HtmlSource::url("https://example.com"));
-/// HtmlView::new(remote)
+/// HtmlViewer::new(remote)
 ///     .width(Size::px(400.))
 ///     .height(Size::px(300.))
 /// # }
 /// ```
 #[derive(PartialEq)]
-pub struct HtmlView {
+pub struct HtmlViewer {
     handle: HtmlHandle,
     layout: LayoutData,
 }
 
-impl HtmlView {
+impl HtmlViewer {
     /// Render the document navigated by `handle`, created with [use_html_handle](crate::use_html_handle).
+    /// Fills its parent by default, use [width](ContainerSizeExt::width) and
+    /// [height](ContainerSizeExt::height) to size it explicitly.
     pub fn new(handle: HtmlHandle) -> Self {
         Self {
             handle,
             layout: LayoutData::default(),
         }
+        .expanded()
     }
 }
 
-impl LayoutExt for HtmlView {
+impl LayoutExt for HtmlViewer {
     fn get_layout(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
 
-impl ContainerExt for HtmlView {}
+impl ContainerExt for HtmlViewer {}
 
-impl Component for HtmlView {
+impl Component for HtmlViewer {
     fn render(&self) -> impl IntoElement {
         let platform = Platform::get();
         let mut handle = self.handle;

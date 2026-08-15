@@ -55,5 +55,5 @@ fn app() -> impl IntoElement {
                         .on_submit(move |value: String| handle.navigate(value)),
                 ),
         )
-        .child(HtmlView::new(handle).expanded())
+        .child(HtmlViewer::new(handle))
 }

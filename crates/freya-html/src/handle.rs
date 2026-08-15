@@ -14,7 +14,7 @@ use crate::{
     state::BlitzState,
 };
 
-/// A document for an [HtmlView](crate::HtmlView), either remote or inline.
+/// A document for an [HtmlViewer](crate::HtmlViewer), either remote or inline.
 #[derive(Clone, PartialEq)]
 pub enum HtmlSource {
     Url(String),
@@ -38,7 +38,7 @@ struct HtmlHistory {
     index: usize,
 }
 
-/// Controls an [HtmlView](crate::HtmlView), lets you navigate programmatically
+/// Controls an [HtmlViewer](crate::HtmlViewer), lets you navigate programmatically
 /// and inspect the browsing history. Link clicks and form submissions inside
 /// the document are recorded into it as well.
 ///
@@ -50,7 +50,7 @@ struct HtmlHistory {
 ///
 /// rect()
 ///     .child(Button::new().child("Back").on_press(move |_| handle.back()))
-///     .child(HtmlView::new(handle).expanded())
+///     .child(HtmlViewer::new(handle))
 /// # }
 /// ```
 #[derive(PartialEq, Clone, Copy)]

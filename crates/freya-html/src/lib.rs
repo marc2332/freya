@@ -6,7 +6,7 @@ mod handle;
 mod net;
 mod state;
 
-pub use component::HtmlView;
+pub use component::HtmlViewer;
 pub use handle::{
     HtmlHandle,
     HtmlSource,
@@ -15,7 +15,7 @@ pub use handle::{
 
 pub mod prelude {
     pub use crate::{
-        component::HtmlView,
+        component::HtmlViewer,
         handle::{
             HtmlHandle,
             HtmlSource,

@@ -100,5 +100,5 @@ fn app() -> impl IntoElement {
         .expanded()
         .center()
         .background((30, 30, 40))
-        .child(HtmlView::new(handle).expanded())
+        .child(HtmlViewer::new(handle))
 }
