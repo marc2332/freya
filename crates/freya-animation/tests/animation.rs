@@ -336,8 +336,7 @@ pub fn animation_with_dependencies_reruns_in_same_render() {
     let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
     assert_eq!(rect.area.width(), 100.0);
 
-    // The rerun must be prepared in the very first render after the change,
-    // otherwise a stale finished-value frame gets painted
+    // The rerun must be reflected in the first render after the change
     test.click_cursor((15.0, 15.0));
     test.sync_and_update();
 
