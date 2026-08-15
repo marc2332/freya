@@ -216,8 +216,7 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     DropZone::new(|data: usize| println!("Dropped {data}"))
-///         .child("Drop here!")
+///     DropZone::new(|data: usize| println!("Dropped {data}")).child("Drop here!")
 /// }
 /// ```
 #[derive(PartialEq, Clone)]
