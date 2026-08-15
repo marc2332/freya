@@ -305,3 +305,46 @@ pub fn animation_with_dependencies_on_change_rerun() {
     let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
     assert_eq!(rect.area.width(), 200.0);
 }
+
+#[test]
+pub fn animation_with_dependencies_reruns_in_same_render() {
+    fn use_animation_app() -> impl IntoElement {
+        let mut target = use_state(|| 100.0);
+
+        let animation = use_animation_with_dependencies(&target(), |conf, target| {
+            conf.on_creation(OnCreation::Finish);
+            conf.on_change(OnChange::Rerun);
+
+            AnimNum::new(0., *target).time(50)
+        });
+
+        let progress = animation.get().value();
+
+        rect()
+            .width(Size::px(progress))
+            .height(Size::fill())
+            .background(Color::WHITE)
+            .child(
+                Button::new()
+                    .on_press(move |_| target.set(200.0))
+                    .child("Change Target"),
+            )
+    }
+
+    let mut test = launch_test(use_animation_app);
+
+    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    assert_eq!(rect.area.width(), 100.0);
+
+    // The rerun must be prepared in the very first render after the change,
+    // otherwise a stale finished-value frame gets painted
+    test.click_cursor((15.0, 15.0));
+    test.sync_and_update();
+
+    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    assert_eq!(rect.area.width(), 0.0);
+
+    test.poll(Duration::from_millis(1), Duration::from_millis(100));
+    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    assert_eq!(rect.area.width(), 200.0);
+}
