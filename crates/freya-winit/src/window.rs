@@ -31,7 +31,10 @@ use keyboard_types::{
     Code,
     Key,
 };
-use ragnarok::NodesState;
+use ragnarok::{
+    EventsMeasurerRunner,
+    NodesState,
+};
 use raw_window_handle::HasDisplayHandle;
 #[cfg(target_os = "linux")]
 use raw_window_handle::RawDisplayHandle;
