@@ -24,7 +24,6 @@ use freya_engine::prelude::{
     SkRect,
     raster_from_data,
 };
-use rustc_hash::FxHashMap;
 use torin::prelude::Size2D;
 
 use crate::{
@@ -40,11 +39,10 @@ use crate::{
         ClipContext,
         Element,
         ElementExt,
-        EventHandlerType,
+        EventHandlers,
         LayoutContext,
         RenderContext,
     },
-    events::name::EventName,
     layers::Layer,
     prelude::{
         AccessibilityExt,
@@ -189,7 +187,7 @@ pub struct ImageData {
 pub struct ImageElement {
     pub accessibility: AccessibilityData,
     pub layout: LayoutData,
-    pub event_handlers: FxHashMap<EventName, EventHandlerType>,
+    pub event_handlers: EventHandlers,
     pub image_handle: ImageHandle,
     pub image_data: ImageData,
     pub relative_layer: Layer,
@@ -274,7 +272,7 @@ impl ElementExt for ImageElement {
         self.relative_layer
     }
 
-    fn events_handlers(&'_ self) -> Option<Cow<'_, FxHashMap<EventName, EventHandlerType>>> {
+    fn events_handlers(&'_ self) -> Option<Cow<'_, EventHandlers>> {
         Some(Cow::Borrowed(&self.event_handlers))
     }
 
@@ -387,7 +385,7 @@ impl KeyExt for Image {
 }
 
 impl EventHandlersExt for Image {
-    fn get_event_handlers(&mut self) -> &mut FxHashMap<EventName, EventHandlerType> {
+    fn get_event_handlers(&mut self) -> &mut EventHandlers {
         &mut self.element.event_handlers
     }
 }
@@ -432,6 +430,7 @@ impl EffectExt for Image {
     }
 }
 
+#[derive(Clone)]
 pub struct Image {
     key: DiffKey,
     element: ImageElement,

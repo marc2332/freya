@@ -55,7 +55,6 @@ pub enum SelectStatus {
 ///                 .selected(selected_select() == i)
 ///                 .on_press(move |_| selected_select.set(i))
 ///                 .child(val.to_string())
-///                 .into()
 ///         }))
 /// }
 ///

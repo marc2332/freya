@@ -8,10 +8,10 @@ pub struct ScrollViewDemo;
 
 impl Component for ScrollViewDemo {
     fn render(&self) -> impl IntoElement {
-        VirtualScrollView::new(|i, _| {
+        VirtualScrollView::new(|item, _| {
             AnimatedContainer {
                 height: 70.,
-                i,
+                i: item.index,
                 children: rect()
                     .width(Size::fill())
                     .height(Size::fill())
@@ -19,7 +19,7 @@ impl Component for ScrollViewDemo {
                     .corner_radius(8.)
                     .color((255, 255, 255))
                     .background((0, 119, 182))
-                    .child(format!("Item {i}"))
+                    .child(format!("Item {}", item.index))
                     .into(),
             }
             .into()

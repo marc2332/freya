@@ -5,13 +5,6 @@ use std::{
     rc::Rc,
 };
 
-use alacritty_terminal::{
-    grid::Dimensions,
-    term::{
-        TermMode,
-        cell::Cell,
-    },
-};
 use freya_core::{
     data::{
         AccessibilityData,
@@ -21,13 +14,13 @@ use freya_core::{
     element::{
         Element,
         ElementExt,
-        EventHandlerType,
+        EventHandlers,
         LayoutContext,
         RenderContext,
     },
-    events::name::EventName,
     fifo_cache::FifoCache,
     prelude::*,
+    style::default_fonts::default_monospace_fonts,
     tree::DiffModifies,
 };
 use freya_engine::prelude::{
@@ -41,10 +34,14 @@ use freya_engine::prelude::{
     ParagraphStyle,
     TextStyle,
 };
-use rustc_hash::FxHashMap;
+use rio_vt::ansi::CursorShape;
 use torin::prelude::Size2D;
 
 use crate::{
+    cell::{
+        TermCell,
+        snapshot_row,
+    },
     handle::TerminalHandle,
     rendering::{
         CachedRow,
@@ -58,7 +55,7 @@ struct TerminalMeasure {
     line_height: f32,
     baseline_offset: f32,
     font: Font,
-    font_family: String,
+    font_families: Vec<Cow<'static, str>>,
     font_size: f32,
     row_cache: RefCell<FifoCache<u64, CachedRow>>,
 }
@@ -68,20 +65,20 @@ pub struct Terminal {
     handle: TerminalHandle,
     layout_data: LayoutData,
     accessibility: AccessibilityData,
-    font_family: String,
+    font_families: Vec<Cow<'static, str>>,
     font_size: f32,
     foreground: Color,
     background: Color,
     selection_color: Color,
     on_measured: Option<EventHandler<(f32, f32)>>,
-    event_handlers: FxHashMap<EventName, EventHandlerType>,
+    event_handlers: EventHandlers,
 }
 
 impl PartialEq for Terminal {
     fn eq(&self, other: &Self) -> bool {
         self.handle == other.handle
             && self.font_size == other.font_size
-            && self.font_family == other.font_family
+            && self.font_families == other.font_families
             && self.foreground == other.foreground
             && self.background == other.background
             && self.event_handlers.len() == other.event_handlers.len()
@@ -96,13 +93,13 @@ impl Terminal {
             handle,
             layout_data: Default::default(),
             accessibility,
-            font_family: "Cascadia Code".to_string(),
+            font_families: default_monospace_fonts(),
             font_size: 14.,
             foreground: (220, 220, 220).into(),
             background: (10, 10, 10).into(),
             selection_color: (60, 179, 214, 0.3).into(),
             on_measured: None,
-            event_handlers: FxHashMap::default(),
+            event_handlers: EventHandlers::default(),
         }
     }
 
@@ -116,8 +113,9 @@ impl Terminal {
         self
     }
 
-    pub fn font_family(mut self, font_family: impl Into<String>) -> Self {
-        self.font_family = font_family.into();
+    /// Sets the preferred font family, keeping the default fonts as fallbacks.
+    pub fn font_family(mut self, font_family: impl Into<Cow<'static, str>>) -> Self {
+        self.font_families.insert(0, font_family.into());
         self
     }
 
@@ -138,7 +136,7 @@ impl Terminal {
 }
 
 impl EventHandlersExt for Terminal {
-    fn get_event_handlers(&mut self) -> &mut FxHashMap<EventName, EventHandlerType> {
+    fn get_event_handlers(&mut self) -> &mut EventHandlers {
         &mut self.event_handlers
     }
 }
@@ -164,7 +162,7 @@ impl ElementExt for Terminal {
         let mut diff = DiffModifies::empty();
 
         if self.font_size != terminal.font_size
-            || self.font_family != terminal.font_family
+            || self.font_families != terminal.font_families
             || self.handle != terminal.handle
             || self.event_handlers.len() != terminal.event_handlers.len()
         {
@@ -194,7 +192,7 @@ impl ElementExt for Terminal {
         Cow::Borrowed(&self.accessibility)
     }
 
-    fn events_handlers(&'_ self) -> Option<Cow<'_, FxHashMap<EventName, EventHandlerType>>> {
+    fn events_handlers(&'_ self) -> Option<Cow<'_, EventHandlers>> {
         Some(Cow::Borrowed(&self.event_handlers))
     }
 
@@ -211,7 +209,7 @@ impl ElementExt for Terminal {
 
         let mut style = TextStyle::new();
         style.set_font_size(scaled_font_size);
-        style.set_font_families(&[self.font_family.as_str()]);
+        style.set_font_families(&self.font_families);
         builder.push_style(&style);
         builder.add_text("W");
 
@@ -250,7 +248,7 @@ impl ElementExt for Terminal {
 
         let typeface = context
             .font_collection
-            .find_typefaces(&[&self.font_family], FontStyle::default())
+            .find_typefaces(&self.font_families, FontStyle::default())
             .into_iter()
             .next()
             .expect("Terminal font family not found");
@@ -274,7 +272,7 @@ impl ElementExt for Terminal {
                 line_height,
                 baseline_offset,
                 font,
-                font_family: self.font_family.clone(),
+                font_families: self.font_families.clone(),
                 font_size: scaled_font_size,
                 row_cache: RefCell::new(FifoCache::new()),
             }),
@@ -292,12 +290,9 @@ impl ElementExt for Terminal {
             .unwrap();
 
         let term = self.handle.term();
-        let grid = term.grid();
-        let columns = grid.columns();
-        let screen_lines = grid.screen_lines();
-        let display_offset = grid.display_offset();
-        let total_scrollback = grid.history_size();
-        let selection = term.selection.as_ref().and_then(|s| s.to_range(&*term));
+        let screen_lines = term.screen_lines();
+        let display_offset = term.display_offset();
+        let total_scrollback = term.history_size();
 
         let mut paint = Paint::default();
         paint.set_anti_alias(true);
@@ -316,33 +311,34 @@ impl ElementExt for Terminal {
             foreground: self.foreground,
             background: self.background,
             selection_color: self.selection_color,
-            font_family: &measure.font_family,
+            font_families: &measure.font_families,
             font_size: measure.font_size,
-            selection,
+            selection: term.selection.as_ref().and_then(|s| s.to_range(&*term)),
             display_offset,
         };
 
         renderer.render_background();
 
-        // Reused row buffer so redraws don't allocate a `Vec<Vec<Cell>>`.
-        let mut row: Vec<Cell> = Vec::with_capacity(columns);
-        let mut display_iter = grid.display_iter();
+        let mut row: Vec<TermCell> = Vec::with_capacity(term.columns());
         let mut y = area.min_y();
         for row_idx in 0..screen_lines {
             if y + measure.line_height > area.max_y() {
                 break;
             }
-            row.clear();
-            row.extend(display_iter.by_ref().take(columns).map(|c| c.cell.clone()));
+            snapshot_row(&term, row_idx, &mut row);
             renderer.render_row(row_idx, &row, y);
             y += measure.line_height;
         }
 
-        if display_offset == 0 && term.mode().contains(TermMode::SHOW_CURSOR) {
-            let cursor_point = grid.cursor.point;
-            let cursor_y = area.min_y() + (cursor_point.line.0 as f32) * measure.line_height;
-            if cursor_y + measure.line_height <= area.max_y() {
-                renderer.render_cursor(&grid[cursor_point], cursor_y, cursor_point.column.0);
+        let cursor = term.cursor();
+        if cursor.content != CursorShape::Hidden {
+            let cursor_line = cursor.pos.row.0.max(0) as usize;
+            let cursor_y = area.min_y() + (cursor_line as f32) * measure.line_height;
+            if cursor_line < screen_lines && cursor_y + measure.line_height <= area.max_y() {
+                snapshot_row(&term, cursor_line, &mut row);
+                if let Some(cursor_cell) = row.get(cursor.pos.col.0) {
+                    renderer.render_cursor(cursor_cell, cursor_y, cursor.pos.col.0);
+                }
             }
         }
 

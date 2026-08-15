@@ -46,8 +46,16 @@ fn app() -> impl IntoElement {
     });
 
     let a11y_id = use_a11y();
+    let focus = use_focus(a11y_id);
     let mut dimensions = use_state(|| (0.0, 0.0));
     let mut click_origin = use_state(|| None::<(usize, usize)>);
+
+    use_side_effect(move || {
+        let focused = *Platform::get().is_app_focused.read() && focus().is_focused();
+        if let Some(handle) = handle.read().clone() {
+            handle.focus_changed(focused);
+        }
+    });
 
     rect()
         .expanded()

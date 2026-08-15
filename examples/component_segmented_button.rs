@@ -29,7 +29,6 @@ fn app() -> impl IntoElement {
                     }
                 })
                 .child(format!("Option {i}"))
-                .into()
         })))
         .child(format!(
             "Selected: {:?}",

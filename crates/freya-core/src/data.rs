@@ -339,7 +339,7 @@ impl EffectState {
         };
 
         match layer {
-            Layer::Overlay => {
+            Layer::Overlay | Layer::OverlayLevel(_) => {
                 self.clips = Rc::default();
             }
             Layer::Relative(_) if parent_effect_state.overflow == Overflow::Clip => {
@@ -444,7 +444,7 @@ impl AccessibilityState {
         }
 
         if data.a11y_auto_focus {
-            accessibility_diff.request_focus(AccessibilityFocusStrategy::Node(a11y_id));
+            accessibility_diff.request_auto_focus(AccessibilityFocusStrategy::Node(a11y_id));
         }
 
         Self {

@@ -97,6 +97,8 @@ impl LayoutExt for Skeleton {
 
 impl ContainerExt for Skeleton {}
 
+impl ContainerWithContentExt for Skeleton {}
+
 impl Default for Skeleton {
     fn default() -> Self {
         Self::new(false)

@@ -17,11 +17,38 @@ Latest stable release:
 freya = "0.4"
 ```
 
+Next release:
+
+```toml
+freya = "0.5.0-rc.2"
+```
+
 `main` branch:
 
 ```toml
 freya = { git = "https://github.com/marc2332/freya", branch = "main" }
 ```
+
+### Trying it out 🚀
+
+Make sure to have [Development Setup](https://docs.rs/freya/latest/freya/_docs/development_setup/index.html) ready.
+
+> ⚠️ **This repo uses git submodules**, cloning without `--recurse-submodules` will make the examples fail to compile.
+
+```shell
+git clone --recurse-submodules https://github.com/marc2332/freya.git
+cd freya
+```
+
+> **Already cloned without submodules?** Run `git submodule update --init --recursive` to fetch them.
+
+Then run an example:
+
+```shell
+cargo run --example counter
+```
+
+> ⚠️ If you happen to be on Windows using `windows-gnu` and get compile errors, maybe go check this [issue](https://github.com/marc2332/freya/issues/794).
 
 ### Components & State 
 
@@ -749,27 +776,6 @@ Enable the `devtools` feature in `freya` and then run the devtools app.
   <img src="https://github.com/user-attachments/assets/906fdbec-7b3c-4dc4-a420-95fdf852b1e4">
 </div>
 
-### Trying it out
-
-Make sure to have [Development Setup](https://docs.rs/freya/latest/freya/_docs/development_setup/index.html) ready.
-
-> ⚠️ If you happen to be on Windows using `windows-gnu` and get compile errors, maybe go check this [issue](https://github.com/marc2332/freya/issues/794).
-
-Clone this repo (this project uses git submodules, so make sure to clone with `--recurse-submodules`):
-
-```shell
-git clone --recurse-submodules https://github.com/marc2332/freya.git
-cd freya
-```
-
-> **Already cloned without submodules?** Run `git submodule update --init --recursive` to fetch them.
-
-Then run an example:
-
-```shell
-cargo run --example counter
-```
-
 ### Contributing 🧙‍♂️
 If you are interested in contributing please make sure to have read the [Contributing](CONTRIBUTING.md) guide first!
 
@@ -782,7 +788,7 @@ If you are interested in supporting the development of this project feel free to
 
 Thanks to my sponsors for supporting this project! 😄 
 
-<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;github.com&#x2F;piny4man.png" width="60px" alt="User avatar: " /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;github.com&#x2F;gqf2008.png" width="60px" alt="User avatar: 高庆丰" /></a><a href="https://github.com/d3rpp"><img src="https:&#x2F;&#x2F;github.com&#x2F;d3rpp.png" width="60px" alt="User avatar: Huddy Buddy" /></a><a href="https://github.com/DrigsterI"><img src="https:&#x2F;&#x2F;github.com&#x2F;DrigsterI.png" width="60px" alt="User avatar: Gabriel Jõe" /></a><a href="https://github.com/markalexander"><img src="https:&#x2F;&#x2F;github.com&#x2F;markalexander.png" width="60px" alt="User avatar: Mark" /></a><!-- sponsors -->
+<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;github.com&#x2F;piny4man.png" width="60px" alt="User avatar: " /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;github.com&#x2F;gqf2008.png" width="60px" alt="User avatar: 高庆丰" /></a><a href="https://github.com/d3rpp"><img src="https:&#x2F;&#x2F;github.com&#x2F;d3rpp.png" width="60px" alt="User avatar: Huddy Buddy" /></a><a href="https://github.com/DrigsterI"><img src="https:&#x2F;&#x2F;github.com&#x2F;DrigsterI.png" width="60px" alt="User avatar: Gabriel Jõe" /></a><a href="https://github.com/markalexander"><img src="https:&#x2F;&#x2F;github.com&#x2F;markalexander.png" width="60px" alt="User avatar: Mark" /></a><a href="https://github.com/ivan-kiselev"><img src="https:&#x2F;&#x2F;github.com&#x2F;ivan-kiselev.png" width="60px" alt="User avatar: Ivan Kiselev" /></a><!-- sponsors -->
 
 ### Special thanks 💪
 

@@ -42,7 +42,7 @@ fn app() -> impl IntoElement {
                 .lists
                 .iter()
                 .enumerate()
-                .map(|(list_n, _)| ListComp(list_n).into()),
+                .map(|(list_n, _)| ListComp(list_n)),
         )
 }
 
@@ -65,7 +65,7 @@ impl Component for ListComp {
                 radio.read().lists[list_n]
                     .iter()
                     .enumerate()
-                    .map(move |(i, item)| label().key(i).text(item.clone()).into()),
+                    .map(move |(i, item)| label().key(i).text(item.clone())),
             )
     }
 }

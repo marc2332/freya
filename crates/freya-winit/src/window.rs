@@ -27,6 +27,10 @@ use futures_util::task::{
     ArcWake,
     waker,
 };
+use keyboard_types::{
+    Code,
+    Key,
+};
 use ragnarok::NodesState;
 use raw_window_handle::HasDisplayHandle;
 #[cfg(target_os = "linux")]
@@ -36,7 +40,10 @@ use torin::prelude::{
     Size2D,
 };
 use winit::{
-    dpi::LogicalSize,
+    dpi::{
+        LogicalPosition,
+        LogicalSize,
+    },
     event::ElementState,
     event_loop::{
         ActiveEventLoop,
@@ -58,6 +65,7 @@ use crate::{
         WindowConfig,
     },
     drivers::GraphicsDriver,
+    integration::is_ime_role,
     plugins::{
         PluginEvent,
         PluginHandle,
@@ -80,6 +88,7 @@ pub struct AppWindow {
     pub(crate) position: CursorPoint,
     pub(crate) mouse_state: ElementState,
     pub(crate) modifiers_state: ModifiersState,
+    pub(crate) pressed_keys: Vec<(Key, Code)>,
 
     pub(crate) events_receiver: futures_channel::mpsc::UnboundedReceiver<EventsChunk>,
     pub(crate) events_sender: futures_channel::mpsc::UnboundedSender<EventsChunk>,
@@ -108,18 +117,60 @@ pub struct AppWindow {
 
     pub(crate) window_attributes: WindowAttributes,
 
-    pub(crate) user_zoom: f32,
     #[cfg(feature = "hotreload")]
     pub(crate) hot_reload_pending: Arc<std::sync::atomic::AtomicBool>,
 }
 
-pub(crate) const MIN_USER_ZOOM: f32 = 0.25;
-pub(crate) const MAX_USER_ZOOM: f32 = 5.0;
+const MIN_CUSTOM_SCALE_FACTOR: f64 = 0.25;
+const MAX_CUSTOM_SCALE_FACTOR: f64 = 5.0;
 
-#[cfg(feature = "zoom-shortcuts")]
-pub(crate) const ZOOM_STEP: f32 = 0.10;
+fn clamp_custom_scale_factor(custom_scale_factor: f64) -> f64 {
+    custom_scale_factor.clamp(MIN_CUSTOM_SCALE_FACTOR, MAX_CUSTOM_SCALE_FACTOR)
+}
 
 impl AppWindow {
+    pub(crate) fn process_accessibility_update(&mut self, mode: Option<NavigationMode>) {
+        let title = self.window.title();
+        let update =
+            self.accessibility
+                .process_updates(&mut self.tree, &self.events_sender, &title);
+        self.platform
+            .focused_accessibility_id
+            .set_if_modified(update.focus);
+        let node_id = self.accessibility.focused_node_id().unwrap();
+        let layout_node = self.tree.layout.get(&node_id).unwrap();
+        let focused_node = AccessibilityTree::create_node(node_id, layout_node, &self.tree, &title);
+        self.window
+            .set_ime_allowed(is_ime_role(focused_node.role()));
+        self.platform
+            .focused_accessibility_node
+            .set_if_modified(focused_node);
+        if let Some(mode) = mode {
+            self.platform.navigation_mode.set(mode);
+        }
+
+        let area = layout_node.visible_area();
+        self.window.set_ime_cursor_area(
+            LogicalPosition::new(area.min_x(), area.min_y()),
+            LogicalSize::new(area.width(), area.height()),
+        );
+
+        if self.screen_reader.is_on() {
+            self.accessibility_adapter.update_if_active(|| update);
+        }
+    }
+
+    /// Set the window title and refresh the accessibility label of the root node.
+    pub fn set_title(&mut self, title: &str) {
+        if self.window.title() == title {
+            return;
+        }
+        self.window.set_title(title);
+        self.tree.accessibility_diff.add_or_update(NodeId::ROOT);
+        self.accessibility_tasks_for_next_render |= AccessibilityTask::ProcessUpdate { mode: None };
+        self.window.request_redraw();
+    }
+
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         mut window_config: WindowConfig,
@@ -130,6 +181,7 @@ impl AppWindow {
         font_manager: &FontMgr,
         fallback_fonts: &[Cow<'static, str>],
         gpu_resource_cache_limit: usize,
+        global_contexts: &GlobalContexts,
     ) -> Self {
         #[cfg(feature = "hotreload")]
         let hot_reload_pending = Arc::new(std::sync::atomic::AtomicBool::new(false));
@@ -181,6 +233,8 @@ impl AppWindow {
             }
         });
 
+        runner.provide_root_context(|| global_contexts.clone());
+
         let screen_reader = ScreenReader::new();
         runner.provide_root_context(|| screen_reader.clone());
 
@@ -193,6 +247,9 @@ impl AppWindow {
         runner.provide_root_context(AssetCacher::create);
         let mut tree = Tree::default();
 
+        let custom_scale_factor = clamp_custom_scale_factor(window_config.custom_scale_factor);
+        let scale_factor = window.scale_factor() * custom_scale_factor;
+
         let window_size = window.inner_size();
         let accent_color_preference = accent_color_preference();
         let platform = runner.provide_root_context({
@@ -203,7 +260,6 @@ impl AppWindow {
                 _ => PreferredTheme::Light,
             };
             let is_app_focused = window.has_focus();
-            let scale_factor = window.scale_factor();
             move || Platform {
                 focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
                 focused_accessibility_node: State::create(accesskit::Node::new(
@@ -214,17 +270,16 @@ impl AppWindow {
                     window_size.height as f32,
                 )),
                 scale_factor: State::create(scale_factor),
+                custom_scale_factor: State::create(custom_scale_factor),
                 navigation_mode: State::create(NavigationMode::NotKeyboard),
                 preferred_theme: State::create(theme),
                 is_app_focused: State::create(is_app_focused),
                 accent_color: State::create(accent_color_preference.accent_color),
                 sender: Rc::new(move |user_event| {
-                    event_loop_proxy
-                        .send_event(NativeEvent::Window(NativeWindowEvent {
-                            window_id,
-                            action: NativeWindowEventAction::User(user_event),
-                        }))
-                        .unwrap();
+                    let _ = event_loop_proxy.send_event(NativeEvent::Window(NativeWindowEvent {
+                        window_id,
+                        action: NativeWindowEventAction::User(user_event),
+                    }));
                 }),
             }
         });
@@ -271,7 +326,10 @@ impl AppWindow {
         );
 
         let mutations = runner.sync_and_update();
-        tree.apply_mutations(mutations);
+        let result = tree.apply_mutations(mutations);
+        if let Some(strategy) = result.auto_focus {
+            tree.accessibility_diff.request_focus(strategy);
+        }
         tree.measure_layout(
             (
                 window.inner_size().width as f32,
@@ -281,7 +339,7 @@ impl AppWindow {
             font_collection,
             font_manager,
             &events_sender,
-            window.scale_factor(),
+            scale_factor,
             fallback_fonts,
         );
 
@@ -329,6 +387,7 @@ impl AppWindow {
                 animation_clock: &animation_clock,
                 runner: &mut runner,
                 graphics_driver: driver.name(),
+                gpu_name: driver.gpu_name(),
             },
             PluginHandle::new(event_loop_proxy),
         );
@@ -343,6 +402,7 @@ impl AppWindow {
             mouse_state: ElementState::Released,
             position: CursorPoint::default(),
             modifiers_state: ModifiersState::default(),
+            pressed_keys: Vec::new(),
 
             events_receiver,
             events_sender,
@@ -371,8 +431,6 @@ impl AppWindow {
 
             window_attributes,
 
-            user_zoom: 1.0,
-
             #[cfg(feature = "hotreload")]
             hot_reload_pending,
         }
@@ -387,14 +445,18 @@ impl AppWindow {
     }
 
     pub fn effective_scale_factor(&self) -> f64 {
-        self.window.scale_factor() * self.user_zoom as f64
+        self.window.scale_factor() * *self.platform.custom_scale_factor.peek()
     }
 
-    /// Syncs the effective scale factor on [`Platform`].
-    pub fn sync_scale_factor(&mut self) {
+    /// Syncs the effective scale factor on [`Platform`] and invalidates layout.
+    pub fn scale_factor_changed(&mut self) {
         self.platform
             .scale_factor
             .set(self.effective_scale_factor());
+        self.process_layout_on_next_render = true;
+        self.tree.layout.reset();
+        self.tree.text_cache.reset();
+        self.window.request_redraw();
     }
 
     /// Measures the given platform events and emits the results.
@@ -421,47 +483,14 @@ impl AppWindow {
             .unwrap();
     }
 
-    /// Sets `user_zoom`, clamped to `[MIN_USER_ZOOM, MAX_USER_ZOOM]`. On change,
-    /// resets layout/text caches and requests a redraw, mirroring `ScaleFactorChanged`.
-    pub fn set_user_zoom(&mut self, zoom: f32) {
-        let clamped = zoom.clamp(MIN_USER_ZOOM, MAX_USER_ZOOM);
-        if (clamped - self.user_zoom).abs() < f32::EPSILON {
+    /// Sets the custom scale factor, clamped to a reasonable range.
+    pub fn set_custom_scale_factor(&mut self, custom_scale_factor: f64) {
+        let clamped = clamp_custom_scale_factor(custom_scale_factor);
+        if (clamped - *self.platform.custom_scale_factor.peek()).abs() < f64::EPSILON {
             return;
         }
-        self.user_zoom = clamped;
-        self.sync_scale_factor();
-        self.process_layout_on_next_render = true;
-        self.tree.layout.reset();
-        self.tree.text_cache.reset();
-        self.window.request_redraw();
-    }
-
-    /// Returns `true` when the combo matched. Releases are also consumed so
-    /// press/release pairs stay symmetrical for upstream listeners.
-    #[cfg(feature = "zoom-shortcuts")]
-    pub fn try_handle_zoom_shortcut(
-        &mut self,
-        key: &keyboard_types::Key,
-        modifiers: keyboard_types::Modifiers,
-        is_pressed: bool,
-    ) -> bool {
-        use keyboard_types::{
-            Key,
-            Modifiers,
-        };
-        if !modifiers.contains(Modifiers::ctrl_or_meta()) {
-            return false;
-        }
-        let new_zoom = match key {
-            Key::Character(c) if c == "+" || c == "=" => self.user_zoom + ZOOM_STEP,
-            Key::Character(c) if c == "-" => self.user_zoom - ZOOM_STEP,
-            Key::Character(c) if c == "0" => 1.0,
-            _ => return false,
-        };
-        if is_pressed {
-            self.set_user_zoom(new_zoom);
-        }
-        true
+        self.platform.custom_scale_factor.set(clamped);
+        self.scale_factor_changed();
     }
 }
 

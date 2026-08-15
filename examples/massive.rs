@@ -30,9 +30,7 @@ fn app() -> impl IntoElement {
                     .key((row, col))
                     .width(Size::percent(100. / cols as f32))
                     .child(from_fn_standalone(stateful_switch))
-                    .into()
             }))
-            .into()
     }))
 }
 

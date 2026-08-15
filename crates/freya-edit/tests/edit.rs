@@ -1,9 +1,13 @@
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    time::Duration,
+};
 
 use freya::{
     helpers::*,
     prelude::*,
 };
+use freya_core::events::modifiers::ModifiersExt;
 use freya_edit::*;
 use freya_testing::prelude::*;
 
@@ -1164,11 +1168,7 @@ fn highlight_all_text() {
         name: KeyboardEventName::KeyDown,
         key: Key::Character("a".to_string()),
         code: Code::KeyA,
-        modifiers: if cfg!(target_os = "macos") {
-            Modifiers::META
-        } else {
-            Modifiers::CONTROL
-        },
+        modifiers: Modifiers::ctrl_or_meta(),
     });
 
     utils.sync_and_update();
@@ -1380,11 +1380,7 @@ fn cursor_word_navigation() {
     )]));
     utils.set_default_fonts(&["NotoSans".into()]);
 
-    let word_modifier = if cfg!(target_os = "macos") {
-        Modifiers::ALT
-    } else {
-        Modifiers::CONTROL
-    };
+    let word_modifier = Modifiers::ctrl_or_alt();
 
     utils.send_event(PlatformEvent::Keyboard {
         name: KeyboardEventName::KeyDown,
@@ -1531,11 +1527,7 @@ fn cursor_word_navigation_with_selection() {
     )]));
     utils.set_default_fonts(&["NotoSans".into()]);
 
-    let shift_word_modifier = if cfg!(target_os = "macos") {
-        Modifiers::ALT | Modifiers::SHIFT
-    } else {
-        Modifiers::CONTROL | Modifiers::SHIFT
-    };
+    let shift_word_modifier = Modifiers::ctrl_or_alt() | Modifiers::SHIFT;
 
     utils.send_event(PlatformEvent::Keyboard {
         name: KeyboardEventName::KeyDown,
@@ -1566,4 +1558,181 @@ fn cursor_word_navigation_with_selection() {
     utils.sync_and_update();
     let highlights = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.highlights.clone()));
     assert_eq!(highlights, Some(vec![(0, 6)]));
+}
+
+#[test]
+fn word_deletion() {
+    fn app() -> impl IntoElement {
+        let mut editable = use_editable(|| "Hello\nFoo bar\nbaz".to_string(), EditableConfig::new);
+        let holder = use_state(ParagraphHolder::default);
+        let editor = editable.editor().read();
+        let cursor_pos = editor.cursor_pos();
+
+        let on_global_key_down = move |e: Event<KeyboardEventData>| {
+            editable.process_event(EditableEvent::KeyDown {
+                key: &e.key,
+                modifiers: e.modifiers,
+            });
+        };
+
+        rect()
+            .font_family("NotoSans")
+            .width(Size::fill())
+            .height(Size::fill())
+            .background((255, 255, 255))
+            .child(
+                paragraph()
+                    .holder(holder.read().clone())
+                    .height(Size::percent(50.0))
+                    .width(Size::fill())
+                    .cursor_index(cursor_pos)
+                    .cursor_color((0, 0, 0))
+                    .on_global_key_down(on_global_key_down)
+                    .span(Span::new(editor.to_string())),
+            )
+            .child(
+                label()
+                    .color((0, 0, 0))
+                    .height(Size::percent(50.0))
+                    .text(format!("{}:{}", editor.cursor_row(), editor.cursor_col())),
+            )
+    }
+
+    let mut utils = launch_test(app);
+    utils.set_fonts(HashMap::from_iter([(
+        "NotoSans",
+        include_bytes!("./NotoSans-Regular.ttf").as_slice(),
+    )]));
+    utils.set_default_fonts(&["NotoSans".into()]);
+
+    let word_modifier = Modifiers::ctrl_or_alt();
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::ArrowRight),
+        code: Code::Unidentified,
+        modifiers: word_modifier,
+    });
+    utils.sync_and_update();
+    let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
+    assert_eq!(cursor.as_deref(), Some("0:5"));
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::Delete),
+        code: Code::Unidentified,
+        modifiers: word_modifier,
+    });
+    utils.sync_and_update();
+    let content = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.to_string()));
+    let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
+    assert_eq!(content.as_deref(), Some("Hello bar\nbaz"));
+    assert_eq!(cursor.as_deref(), Some("0:5"));
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::Delete),
+        code: Code::Unidentified,
+        modifiers: word_modifier,
+    });
+    utils.sync_and_update();
+    let content = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.to_string()));
+    let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
+    assert_eq!(content.as_deref(), Some("Hello\nbaz"));
+    assert_eq!(cursor.as_deref(), Some("0:5"));
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::ArrowRight),
+        code: Code::Unidentified,
+        modifiers: word_modifier,
+    });
+    utils.sync_and_update();
+    let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
+    assert_eq!(cursor.as_deref(), Some("1:3"));
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::Backspace),
+        code: Code::Unidentified,
+        modifiers: word_modifier,
+    });
+    utils.sync_and_update();
+    let content = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.to_string()));
+    let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
+    assert_eq!(content.as_deref(), Some("Hello\n"));
+    assert_eq!(cursor.as_deref(), Some("1:0"));
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::Backspace),
+        code: Code::Unidentified,
+        modifiers: word_modifier,
+    });
+    utils.sync_and_update();
+    let content = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.to_string()));
+    let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
+    assert_eq!(content.as_deref(), Some(""));
+    assert_eq!(cursor.as_deref(), Some("0:0"));
+}
+
+#[test]
+fn arrow_down_clamps_to_last_line_end() {
+    let mut editor = RopeEditor::new(
+        "Hello! Rustaceans\nHello".to_string(),
+        TextSelection::new_cursor(17),
+        4,
+        EditorHistory::new(Duration::from_millis(10)),
+    );
+
+    editor.cursor_down();
+
+    assert_eq!(editor.cursor_row(), 1);
+    assert_eq!(editor.cursor_col(), 5);
+
+    editor.cursor_up();
+
+    assert_eq!(editor.cursor_row(), 0);
+    assert_eq!(editor.cursor_col(), 5);
+
+    let mut editor = RopeEditor::new(
+        "Hello! Rustaceans\u{2028}Hi\nHello".to_string(),
+        TextSelection::new_cursor(17),
+        4,
+        EditorHistory::new(Duration::from_millis(10)),
+    );
+
+    editor.cursor_down();
+
+    assert_eq!(editor.cursor_row(), 1);
+    assert_eq!(editor.cursor_col(), 2);
+}
+
+#[test]
+fn home_end_navigation() {
+    let mut editor = RopeEditor::new(
+        "Hello Rustaceans\nHello".to_string(),
+        TextSelection::new_cursor(3),
+        4,
+        EditorHistory::new(Duration::from_millis(10)),
+    );
+
+    let press = |editor: &mut RopeEditor, key: NamedKey, modifiers: Modifiers| {
+        editor.process_key(&Key::Named(key), &modifiers, false, true, true, true);
+    };
+
+    press(&mut editor, NamedKey::End, Modifiers::empty());
+    assert_eq!(editor.cursor_pos(), 16);
+
+    press(&mut editor, NamedKey::Home, Modifiers::empty());
+    assert_eq!(editor.cursor_pos(), 0);
+
+    press(&mut editor, NamedKey::End, Modifiers::ctrl_or_meta());
+    assert_eq!(editor.cursor_pos(), 22);
+
+    press(&mut editor, NamedKey::Home, Modifiers::ctrl_or_meta());
+    assert_eq!(editor.cursor_pos(), 0);
+
+    press(&mut editor, NamedKey::End, Modifiers::SHIFT);
+    assert_eq!(editor.get_selection(), Some((0, 16)));
 }

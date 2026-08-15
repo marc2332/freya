@@ -35,10 +35,10 @@ impl Component for PortalDemo {
                                     .height(Size::px(120.))
                                     .function(Function::Expo)
                                     .duration(Duration::from_millis(500))
+                                    .animation_dependency(show_popup())
                                     .child(portal_card(i)),
                             )
                             .on_press(move |_| show_popup.set(Some(i)))
-                            .into()
                     })),
             )
     }
@@ -70,6 +70,7 @@ fn portal_popup(mut show_popup: State<Option<i32>>) -> impl IntoElement {
                             .height(Size::px(150.))
                             .function(Function::Expo)
                             .duration(Duration::from_millis(500))
+                            .animation_dependency(i)
                             .child(portal_card(i)),
                     ),
                 )

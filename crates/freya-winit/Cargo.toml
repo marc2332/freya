@@ -1,6 +1,6 @@
 [package]
 name = "freya-winit"
-version = "0.4.0"
+version = "0.5.0-rc.2"
 description = "Winit renderer for Freya"
 edition = "2024"
 license = "MIT"
@@ -66,6 +66,15 @@ rfd = { workspace = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 gtk = { version = "0.18.2", optional = true }
+freya-engine = { workspace = true, features = [
+  "gl",
+  "vulkan",
+  "x11",
+  "wayland",
+] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+freya-engine = { workspace = true, features = ["gl", "vulkan"] }
 
 # Rendering OpenGL + Vulkan (Linux/Windows)
 [target.'cfg(any(target_os = "linux", target_os = "windows"))'.dependencies]
@@ -80,6 +89,7 @@ ash-window = { workspace = true }
 gl = { workspace = true }
 glutin = { workspace = true }
 glutin-winit = { workspace = true }
+freya-engine = { workspace = true, features = ["gl"] }
 
 # Rendering Metal (macOS)
 [target.'cfg(target_os = "macos")'.dependencies]
@@ -88,6 +98,7 @@ objc2 = { version = "0.6" }
 objc2-metal = { version = "0.3" }
 objc2-quartz-core = { version = "0.3" }
 objc2-app-kit = { version = "0.3" }
+freya-engine = { workspace = true, features = ["metal"] }
 
 [dev-dependencies]
 freya = { path = "../freya" }
@@ -97,4 +108,3 @@ hotpath = ["hotpath/hotpath"]
 hotreload = ["freya-core/hotreload"]
 tray = ["dep:tray-icon", "dep:gtk"]
 tracing = []
-zoom-shortcuts = []
