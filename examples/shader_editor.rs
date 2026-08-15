@@ -197,7 +197,7 @@ impl Component for ShaderView {
         let editable = self.0;
 
         use_hook(|| {
-            let mut ticker = consume_root_context::<RenderingTicker>();
+            let ticker = RenderingTicker::get();
             let platform = Platform::get();
 
             spawn(async move {

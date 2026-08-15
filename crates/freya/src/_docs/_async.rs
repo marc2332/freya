@@ -26,7 +26,8 @@
 //!   [`Pending`](crate::prelude::FutureState::Pending),
 //!   [`Loading`](crate::prelude::FutureState::Loading) and
 //!   [`Fulfilled`](crate::prelude::FutureState::Fulfilled) cases without
-//!   managing the task by hand.
+//!   managing the task by hand. Its callback is reactive, any state read inside
+//!   of it (outside the async block) restarts the future when it changes.
 //!
 //! ## See also
 //!

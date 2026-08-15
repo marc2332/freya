@@ -1,11 +1,9 @@
-use alacritty_terminal::term::cell::{
-    Cell,
-    Flags,
-};
 use linkify::{
     LinkFinder,
     LinkKind,
 };
+
+use crate::cell::TermCell;
 
 thread_local! {
     static FINDER: LinkFinder = {
@@ -18,15 +16,15 @@ thread_local! {
 /// Column ranges `[start_col, end_col)` of clickable runs in `row`: OSC 8
 /// hyperlinks attached by the terminal program plus plain-text URLs detected
 /// by linkify.
-pub(crate) fn link_ranges(row: &[Cell]) -> Vec<(usize, usize)> {
+pub(crate) fn link_ranges(row: &[TermCell]) -> Vec<(usize, usize)> {
     let mut ranges = Vec::new();
 
     let mut run_start: Option<usize> = None;
     for (col, cell) in row.iter().enumerate() {
-        if cell.flags.contains(Flags::WIDE_CHAR_SPACER) {
+        if cell.wide_spacer {
             continue;
         }
-        if cell.hyperlink().is_some() {
+        if cell.has_hyperlink {
             run_start.get_or_insert(col);
         } else if let Some(start) = run_start.take() {
             ranges.push((start, col));
@@ -49,7 +47,7 @@ pub(crate) fn link_ranges(row: &[Cell]) -> Vec<(usize, usize)> {
 }
 
 /// URL at column `col` in `row`, if any.
-pub(crate) fn url_at(row: &[Cell], col: usize) -> Option<String> {
+pub(crate) fn url_at(row: &[TermCell], col: usize) -> Option<String> {
     if !row_has_url_marker(row) {
         return None;
     }
@@ -64,35 +62,32 @@ pub(crate) fn url_at(row: &[Cell], col: usize) -> Option<String> {
 }
 
 /// Cheap pre-scan: skips the row-text allocation when no `://` triplet exists in `row`.
-fn row_has_url_marker(row: &[Cell]) -> bool {
-    let (mut a, mut b) = ('\0', '\0');
-    for cell in row
-        .iter()
-        .filter(|c| !c.flags.contains(Flags::WIDE_CHAR_SPACER))
-    {
-        if a == ':' && b == '/' && cell.c == '/' {
+fn row_has_url_marker(row: &[TermCell]) -> bool {
+    let (mut before_previous, mut previous) = ('\0', '\0');
+    for cell in row.iter().filter(|cell| !cell.wide_spacer) {
+        if before_previous == ':' && previous == '/' && cell.character == '/' {
             return true;
         }
-        a = b;
-        b = cell.c;
+        before_previous = previous;
+        previous = cell.character;
     }
     false
 }
 
 /// Visible text for a row paired with a byte→column map. Wide-char spacers
 /// are skipped to mirror the renderer's text layout.
-fn row_text(row: &[Cell]) -> (String, Vec<usize>) {
+fn row_text(row: &[TermCell]) -> (String, Vec<usize>) {
     let mut text = String::with_capacity(row.len());
     let mut byte_to_col = Vec::with_capacity(row.len());
     for (col, cell) in row.iter().enumerate() {
-        if cell.flags.contains(Flags::WIDE_CHAR_SPACER) {
+        if cell.wide_spacer {
             continue;
         }
-        let c = match cell.c {
+        let character = match cell.character {
             '\0' | '\t' => ' ',
-            c => c,
+            character => character,
         };
-        text.push(c);
+        text.push(character);
         byte_to_col.resize(text.len(), col);
     }
     (text, byte_to_col)

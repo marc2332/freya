@@ -1,11 +1,14 @@
-use crate::prelude::consume_root_context;
+use crate::{
+    notify::BroadcastNotify,
+    prelude::consume_root_context,
+};
 
-pub type RenderingTickerSender = async_watch::Sender<()>;
+pub type RenderingTickerSender = BroadcastNotify;
 
 /// Receives frame notifications.
 #[derive(Clone)]
 pub struct RenderingTicker {
-    rx: async_watch::Receiver<()>,
+    notify: BroadcastNotify,
 }
 
 impl RenderingTicker {
@@ -14,12 +17,12 @@ impl RenderingTicker {
     }
 
     pub fn new() -> (RenderingTickerSender, Self) {
-        let (tx, rx) = async_watch::channel(());
-        (tx, Self { rx })
+        let notify = BroadcastNotify::new();
+        (notify.clone(), Self { notify })
     }
 
     /// Wait until the next frame should be processed.
-    pub async fn tick(&mut self) {
-        self.rx.changed().await.ok();
+    pub async fn tick(&self) {
+        self.notify.notified().await;
     }
 }

@@ -1,4 +1,7 @@
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    time::Duration,
+};
 
 use freya::{
     helpers::*,
@@ -1671,4 +1674,65 @@ fn word_deletion() {
     let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
     assert_eq!(content.as_deref(), Some(""));
     assert_eq!(cursor.as_deref(), Some("0:0"));
+}
+
+#[test]
+fn arrow_down_clamps_to_last_line_end() {
+    let mut editor = RopeEditor::new(
+        "Hello! Rustaceans\nHello".to_string(),
+        TextSelection::new_cursor(17),
+        4,
+        EditorHistory::new(Duration::from_millis(10)),
+    );
+
+    editor.cursor_down();
+
+    assert_eq!(editor.cursor_row(), 1);
+    assert_eq!(editor.cursor_col(), 5);
+
+    editor.cursor_up();
+
+    assert_eq!(editor.cursor_row(), 0);
+    assert_eq!(editor.cursor_col(), 5);
+
+    let mut editor = RopeEditor::new(
+        "Hello! Rustaceans\u{2028}Hi\nHello".to_string(),
+        TextSelection::new_cursor(17),
+        4,
+        EditorHistory::new(Duration::from_millis(10)),
+    );
+
+    editor.cursor_down();
+
+    assert_eq!(editor.cursor_row(), 1);
+    assert_eq!(editor.cursor_col(), 2);
+}
+
+#[test]
+fn home_end_navigation() {
+    let mut editor = RopeEditor::new(
+        "Hello Rustaceans\nHello".to_string(),
+        TextSelection::new_cursor(3),
+        4,
+        EditorHistory::new(Duration::from_millis(10)),
+    );
+
+    let press = |editor: &mut RopeEditor, key: NamedKey, modifiers: Modifiers| {
+        editor.process_key(&Key::Named(key), &modifiers, false, true, true, true);
+    };
+
+    press(&mut editor, NamedKey::End, Modifiers::empty());
+    assert_eq!(editor.cursor_pos(), 16);
+
+    press(&mut editor, NamedKey::Home, Modifiers::empty());
+    assert_eq!(editor.cursor_pos(), 0);
+
+    press(&mut editor, NamedKey::End, Modifiers::ctrl_or_meta());
+    assert_eq!(editor.cursor_pos(), 22);
+
+    press(&mut editor, NamedKey::Home, Modifiers::ctrl_or_meta());
+    assert_eq!(editor.cursor_pos(), 0);
+
+    press(&mut editor, NamedKey::End, Modifiers::SHIFT);
+    assert_eq!(editor.get_selection(), Some((0, 16)));
 }
