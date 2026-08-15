@@ -51,14 +51,13 @@ pub fn provide_context<T: Clone + 'static>(value: T) {
 /// Only needed for specific cases like values consumed by queries or mutations, which run in
 /// the root scope. Prefer [provide_context] otherwise.
 pub fn provide_root_context<T: Clone + 'static>(value: T) -> T {
-    let value = match try_consume_root_context::<GlobalContexts>() {
+    match try_consume_root_context::<GlobalContexts>() {
         Some(global_contexts) => global_contexts.get_or_insert(value),
-        None => value,
-    };
-
-    provide_context_for_scope_id(value.clone(), Some(ScopeId::ROOT));
-
-    value
+        None => {
+            provide_context_for_scope_id(value.clone(), Some(ScopeId::ROOT));
+            value
+        }
+    }
 }
 
 pub fn provide_context_for_scope_id<T: Clone + 'static>(
@@ -94,7 +93,11 @@ pub fn try_consume_own_context<T: Clone + 'static>() -> Option<T> {
 }
 
 pub fn try_consume_root_context<T: Clone + 'static>() -> Option<T> {
-    try_consume_context_from_scope_id(Some(ScopeId::ROOT))
+    try_consume_context_from_scope_id(Some(ScopeId::ROOT)).or_else(|| {
+        let global_contexts =
+            try_consume_context_from_scope_id::<GlobalContexts>(Some(ScopeId::ROOT))?;
+        global_contexts.get::<T>()
+    })
 }
 
 pub fn consume_context<T: Clone + 'static>() -> T {
@@ -103,7 +106,7 @@ pub fn consume_context<T: Clone + 'static>() -> T {
 }
 
 pub fn consume_root_context<T: Clone + 'static>() -> T {
-    try_consume_context_from_scope_id(Some(ScopeId::ROOT)).unwrap_or_else(|| {
+    try_consume_root_context().unwrap_or_else(|| {
         panic!(
             "Root context <{}> was not found.",
             std::any::type_name::<T>()
@@ -131,13 +134,7 @@ pub fn try_consume_context_from_scope_id<T: Clone + 'static>(
             }
         }
 
-        // Fall back to the shared contexts
-        let root_scope_storage = scopes_storages.get(&ScopeId::ROOT)?;
-        let global_contexts = root_scope_storage
-            .contexts
-            .get(&TypeId::of::<GlobalContexts>())?
-            .downcast_ref::<GlobalContexts>()?;
-        global_contexts.get::<T>()
+        None
     })
 }
 

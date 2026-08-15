@@ -221,31 +221,6 @@ fn is_ftl_file(entry: &std::path::Path) -> bool {
     entry.is_file() && entry.extension().map(|ext| ext == "ftl").unwrap_or(false)
 }
 
-/// Provide an existing [`I18n`] instance to descendant components.
-///
-/// This is useful for sharing the same global i18n state across different parts of the
-/// component tree or across multiple windows. Typically paired with [`I18n::create_global`].
-///
-/// ```rust,no_run
-/// # use freya::prelude::*;
-/// # use freya::i18n::*;
-/// struct MyApp {
-///     i18n: I18n,
-/// }
-///
-/// impl App for MyApp {
-///     fn render(&self) -> impl IntoElement {
-///         // Make the I18n instance available to all descendant components
-///         use_share_i18n(move || self.i18n);
-///
-///         rect().child(t!("hello_world"))
-///     }
-/// }
-/// ```
-pub fn use_share_i18n(i18n: impl FnOnce() -> I18n) {
-    use_provide_context(i18n);
-}
-
 /// Initialize an [`I18n`] instance and provide it to descendant components.
 ///
 /// This is the recommended way to set up i18n in your application. Call it once in a root
@@ -301,11 +276,10 @@ pub fn use_init_i18n(init: impl FnOnce() -> I18nConfig) -> I18n {
 /// so it can be freely passed around in components.
 ///
 /// There are several ways to obtain an `I18n` instance:
-/// - [`use_init_i18n`] to create and provide it to descendant components.
+/// - [`use_init_i18n`] to create it and share it across all windows.
 /// - [`I18n::create`] to manually create one from an [`I18nConfig`] (useful when you need to handle errors).
 /// - [`I18n::create_global`] to create one with global lifetime, suitable for multi-window apps.
-/// - [`I18n::get`] or [`I18n::try_get`] to retrieve an already-provided instance from the component context.
-/// - [`use_share_i18n`] to re-provide an existing instance to a different part of the component tree.
+/// - [`I18n::get`] or [`I18n::try_get`] to retrieve an already-provided instance.
 #[derive(Clone, Copy)]
 pub struct I18n {
     selected_language: State<LanguageIdentifier>,
@@ -316,22 +290,21 @@ pub struct I18n {
 }
 
 impl I18n {
-    /// Try to retrieve the [`I18n`] instance from the component context.
+    /// Try to retrieve the [`I18n`] instance from the root context.
     ///
-    /// Returns `None` if no [`I18n`] has been provided via [`use_init_i18n`] or [`use_share_i18n`]
-    /// in an ancestor component.
+    /// Returns `None` if no [`I18n`] has been provided via [`use_init_i18n`] in any window.
     pub fn try_get() -> Option<Self> {
-        try_consume_context()
+        try_consume_root_context()
     }
 
-    /// Retrieve the [`I18n`] instance from the component context.
+    /// Retrieve the [`I18n`] instance from the root context.
     ///
-    /// This is the primary way to access the i18n state from within a component that is a
-    /// descendant of a component that called [`use_init_i18n`] or [`use_share_i18n`].
+    /// This is the primary way to access the i18n state once any window has called
+    /// [`use_init_i18n`].
     ///
     /// # Panics
     ///
-    /// Panics if no [`I18n`] has been provided in an ancestor component.
+    /// Panics if no [`I18n`] has been provided.
     ///
     /// ```rust
     /// # use freya::prelude::*;
@@ -352,14 +325,14 @@ impl I18n {
     /// }
     /// ```
     pub fn get() -> Self {
-        consume_context()
+        consume_root_context()
     }
 
     /// Manually create an [`I18n`] instance from an [`I18nConfig`].
     ///
-    /// Unlike [`use_init_i18n`], this does not automatically provide the instance to descendant
-    /// components. Use [`use_share_i18n`] to share it afterwards, or call this when you need
-    /// explicit error handling during initialization.
+    /// Unlike [`use_init_i18n`], this does not provide the instance anywhere, so the `t!`
+    /// macros will not see it. Call this when you need explicit error handling during
+    /// initialization and pass the instance around by value.
     ///
     /// The created state is scoped to the current component. For global state that outlives
     /// any single component, see [`I18n::create_global`].
@@ -389,41 +362,10 @@ impl I18n {
     /// Create an [`I18n`] instance with global lifetime.
     ///
     /// Unlike [`I18n::create`], the state created here is not scoped to any component and will
-    /// live for the entire duration of the application. This is useful for multi-window apps
-    /// where i18n state needs to be created in `main` and then shared across different windows
-    /// via [`use_share_i18n`].
-    ///
-    /// This is **not** a hook, do not use it inside components like you would [`use_init_i18n`].
-    /// You would usually want to call this in your `main` function.
-    ///
-    /// ```rust,no_run
-    /// # use freya::prelude::*;
-    /// # use freya::i18n::*;
-    /// struct MyApp {
-    ///     i18n: I18n,
-    /// }
-    ///
-    /// impl App for MyApp {
-    ///     fn render(&self) -> impl IntoElement {
-    ///         // Re-provide the global I18n to this window's component tree
-    ///         use_share_i18n(move || self.i18n);
-    ///
-    ///         rect().child(t!("hello_world"))
-    ///     }
-    /// }
-    ///
-    /// fn main() {
-    ///     // Create I18n with global lifetime in main, before any window is opened
-    ///     let i18n = I18n::create_global(I18nConfig::new(langid!("en-US")).with_locale((
-    ///         langid!("en-US"),
-    ///         include_str!("../../../examples/i18n/en-US.ftl"),
-    ///     )))
-    ///     .expect("Failed to create I18n");
-    ///
-    ///     // Pass it to each window's app struct
-    ///     launch(LaunchConfig::new().with_window(WindowConfig::new_app(MyApp { i18n })))
-    /// }
-    /// ```
+    /// live for the entire duration of the application. [`use_init_i18n`] uses this internally
+    /// and shares the instance across all windows, so you rarely need to call it directly.
+    /// Call it when you need explicit error handling and share the result yourself with
+    /// [`use_provide_root_context`](freya_core::prelude::use_provide_root_context).
     pub fn create_global(
         I18nConfig {
             id: selected_language,
