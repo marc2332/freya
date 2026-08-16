@@ -652,7 +652,7 @@ impl ParagraphElement {
 /// Rect of the grapheme cluster at `cursor_index` (in UTF-16 code units),
 /// or a caret stub when there is nothing to measure. A caret after a
 /// trailing line break lands on the empty last line.
-fn cursor_character_rect(
+pub fn cursor_character_rect(
     paragraph: &SkParagraph,
     text: &str,
     cursor_index: usize,
