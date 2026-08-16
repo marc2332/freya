@@ -250,42 +250,6 @@ pub fn input_shift_wheel_scroll_test() {
 }
 
 #[test]
-pub fn input_typing_scrolls_to_cursor_test() {
-    fn typing_app() -> impl IntoElement {
-        let value = use_state(String::new);
-
-        rect().child(Input::new(value).width(Size::px(150.)))
-    }
-
-    let mut test = launch_test(typing_app);
-
-    let paragraph_x = |test: &TestingRunner| {
-        test.find(|node, element| {
-            Paragraph::try_downcast(element).map(|_| node.layout().area.min_x())
-        })
-        .unwrap()
-    };
-
-    // Focus
-    test.click_cursor((15.0, 15.0));
-    let initial_x = paragraph_x(&test);
-
-    // Type text wider than the input, it should scroll so the cursor at the end stays visible
-    test.write_text("this is a very long text that overflows the input width");
-    test.sync_and_update();
-    test.sync_and_update();
-
-    let typed_x = paragraph_x(&test);
-    assert!(typed_x < initial_x);
-
-    // Moving the cursor back to the start scrolls the input back to the beginning
-    test.press_key(Key::Named(NamedKey::Home));
-    test.sync_and_update();
-
-    assert_eq!(paragraph_x(&test), initial_x);
-}
-
-#[test]
 pub fn input_drag_scrolls_to_cursor_test() {
     fn drag_app() -> impl IntoElement {
         let value =
@@ -365,6 +329,7 @@ pub fn input_long_typing_follows_cursor_test() {
     };
 
     test.click_cursor((15.0, 15.0));
+    let (initial_x, _) = paragraph_metrics(&test);
 
     // Keep typing way beyond the input width, the scroll must follow the cursor every time
     for _ in 0..20 {
@@ -381,4 +346,11 @@ pub fn input_long_typing_follows_cursor_test() {
             );
         }
     }
+
+    // Moving the cursor back to the start scrolls the input back to the beginning
+    test.press_key(Key::Named(NamedKey::Home));
+    test.sync_and_update();
+
+    let (home_x, _) = paragraph_metrics(&test);
+    assert_eq!(home_x, initial_x);
 }
