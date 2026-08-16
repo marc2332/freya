@@ -85,6 +85,7 @@ pub struct WinitRenderer {
     pub(crate) tray_icon: Option<TrayIcon>,
     pub resumed: bool,
     pub windows: FxHashMap<WindowId, AppWindow>,
+    pub global_contexts: GlobalContexts,
     pub proxy: EventLoopProxy<NativeEvent>,
     pub plugins: PluginsManager,
     pub fallback_fonts: Vec<Cow<'static, str>>,
@@ -98,6 +99,7 @@ pub struct WinitRenderer {
 
 pub struct RendererContext<'a> {
     pub windows: &'a mut FxHashMap<WindowId, AppWindow>,
+    pub global_contexts: &'a GlobalContexts,
     pub proxy: &'a mut EventLoopProxy<NativeEvent>,
     pub plugins: &'a mut PluginsManager,
     pub fallback_fonts: &'a mut Vec<Cow<'static, str>>,
@@ -118,6 +120,7 @@ impl RendererContext<'_> {
             self.font_manager,
             self.fallback_fonts,
             self.gpu_resource_cache_limit,
+            self.global_contexts,
         );
 
         let window_id = app_window.window.id();
@@ -288,6 +291,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     &self.font_manager,
                     &self.fallback_fonts,
                     self.gpu_resource_cache_limit,
+                    &self.global_contexts,
                 );
 
                 self.proxy
@@ -351,6 +355,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     font_manager: &mut self.font_manager,
                     font_collection: &mut self.font_collection,
                     gpu_resource_cache_limit: self.gpu_resource_cache_limit,
+                    global_contexts: &self.global_contexts,
                 };
                 (cb)(&mut renderer_context);
             }
@@ -372,6 +377,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     fallback_fonts: &mut self.fallback_fonts,
                     active_event_loop,
                     windows: &mut self.windows,
+                    global_contexts: &self.global_contexts,
                     proxy: &mut self.proxy,
                     plugins: &mut self.plugins,
                     font_manager: &mut self.font_manager,
@@ -405,6 +411,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             &self.font_manager,
                             &self.fallback_fonts,
                             self.gpu_resource_cache_limit,
+                            &self.global_contexts,
                         );
 
                         self.proxy
@@ -589,6 +596,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                             &self.font_manager,
                                             &self.fallback_fonts,
                                             self.gpu_resource_cache_limit,
+                                            &self.global_contexts,
                                         );
 
                                         let window_id = app_window.window.id();
@@ -630,6 +638,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                             fallback_fonts: &mut self.fallback_fonts,
                                             active_event_loop,
                                             windows: &mut self.windows,
+                                            global_contexts: &self.global_contexts,
                                             proxy: &mut self.proxy,
                                             plugins: &mut self.plugins,
                                             font_manager: &mut self.font_manager,
@@ -691,6 +700,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             fallback_fonts: &mut self.fallback_fonts,
                             active_event_loop: event_loop,
                             windows: &mut self.windows,
+                            global_contexts: &self.global_contexts,
                             proxy: &mut self.proxy,
                             plugins: &mut self.plugins,
                             font_manager: &mut self.font_manager,
