@@ -55,7 +55,7 @@
 //! - [Material Design](freya_material_design)
 //! - [Plotters](freya_plotters_backend)
 //! - [Testing](freya_testing)
-//! - [WebView](freya_webview)
+//! - [HTML](freya_html)
 //! - [Terminal](freya_terminal)
 //! - [Camera](freya_camera)
 //! - [Video](freya_video)
@@ -84,7 +84,7 @@
 //! - `radio`: Reexport [freya_radio] under [radio].
 //! - `query`: Reexport [freya_query] under [query].
 //! - `markdown`: Reexport [freya_markdown] under [markdown].
-//! - `webview`: Reexport [freya_webview] under [webview].
+//! - `html`: Reexport [freya_html] under [html].
 //! - `titlebar`: Enables the [TitlebarButton](components::TitlebarButton) component.
 //! - `terminal`: Reexport [freya_terminal] under [terminal].
 //! - `code-editor`: Reexport [freya_code_editor] under [code_editor].
@@ -343,11 +343,11 @@ pub mod query {
     pub use freya_query::prelude::*;
 }
 
-/// Reexport `freya-webview` when the `webview` feature is enabled.
-#[cfg(feature = "webview")]
-#[cfg_attr(feature = "docs", doc(cfg(feature = "webview")))]
-pub mod webview {
-    pub use freya_webview::prelude::*;
+/// Reexport `freya-html` when the `html` feature is enabled.
+#[cfg(feature = "html")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "html")))]
+pub mod html {
+    pub use freya_html::prelude::*;
 }
 
 /// Reexport `freya-terminal` when the `terminal` feature is enabled.
