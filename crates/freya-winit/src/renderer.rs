@@ -17,10 +17,7 @@ use futures_util::{
     StreamExt,
     select,
 };
-use ragnarok::{
-    EventsExecutorRunner,
-    EventsMeasurerRunner,
-};
+use ragnarok::EventsExecutorRunner;
 use rustc_hash::FxHashMap;
 use torin::prelude::{
     CursorPoint,
@@ -737,7 +734,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     // Window switches (e.g. Alt+Tab) swallow key releases, so release held keys on focus loss.
                     if !is_focused && !app.pressed_keys.is_empty() {
                         let modifiers = winit_mappings::map_winit_modifiers(app.modifiers_state);
-                        let mut platform_events: Vec<_> = app
+                        let platform_events: Vec<_> = app
                             .pressed_keys
                             .drain(..)
                             .map(|(key, code)| PlatformEvent::Keyboard {
@@ -747,18 +744,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 modifiers,
                             })
                             .collect();
-                        let mut events_measurer_adapter = EventsMeasurerAdapter {
-                            scale_factor: app.effective_scale_factor(),
-                            tree: &mut app.tree,
-                        };
-                        let processed_events = events_measurer_adapter.run(
-                            &mut platform_events,
-                            &mut app.nodes_state,
-                            app.accessibility.focused_node_id(),
-                        );
-                        app.events_sender
-                            .unbounded_send(EventsChunk::Processed(processed_events))
-                            .unwrap();
+                        app.process_platform_events(platform_events);
                     }
                 }
                 WindowEvent::RedrawRequested => {
@@ -959,23 +945,11 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     } else {
                         MouseEventName::MouseUp
                     };
-                    let platform_event = PlatformEvent::Mouse {
+                    app.process_platform_events(vec![PlatformEvent::Mouse {
                         name,
                         cursor: (app.position.x, app.position.y).into(),
                         button: Some(map_winit_mouse_button(button)),
-                    };
-                    let mut events_measurer_adapter = EventsMeasurerAdapter {
-                        scale_factor: app.effective_scale_factor(),
-                        tree: &mut app.tree,
-                    };
-                    let processed_events = events_measurer_adapter.run(
-                        &mut vec![platform_event],
-                        &mut app.nodes_state,
-                        app.accessibility.focused_node_id(),
-                    );
-                    app.events_sender
-                        .unbounded_send(EventsChunk::Processed(processed_events))
-                        .unwrap();
+                    }]);
                 }
 
                 WindowEvent::KeyboardInput {
@@ -1013,24 +987,12 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         PluginHandle::new(&self.proxy),
                     );
 
-                    let platform_event = PlatformEvent::Keyboard {
+                    app.process_platform_events(vec![PlatformEvent::Keyboard {
                         name,
                         key,
                         code,
                         modifiers,
-                    };
-                    let mut events_measurer_adapter = EventsMeasurerAdapter {
-                        scale_factor: app.effective_scale_factor(),
-                        tree: &mut app.tree,
-                    };
-                    let processed_events = events_measurer_adapter.run(
-                        &mut vec![platform_event],
-                        &mut app.nodes_state,
-                        app.accessibility.focused_node_id(),
-                    );
-                    app.events_sender
-                        .unbounded_send(EventsChunk::Processed(processed_events))
-                        .unwrap();
+                    }]);
                 }
 
                 WindowEvent::MouseWheel { delta, phase, .. } => {
@@ -1063,54 +1025,31 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 WindowEvent::CursorLeft { .. } => {
                     if app.mouse_state == ElementState::Released {
                         app.position = CursorPoint::from((-1., -1.));
-                        let platform_event = PlatformEvent::Mouse {
+                        app.process_platform_events(vec![PlatformEvent::Mouse {
                             name: MouseEventName::MouseMove,
                             cursor: app.position,
                             button: None,
-                        };
-                        let mut events_measurer_adapter = EventsMeasurerAdapter {
-                            scale_factor: app.effective_scale_factor(),
-                            tree: &mut app.tree,
-                        };
-                        let processed_events = events_measurer_adapter.run(
-                            &mut vec![platform_event],
-                            &mut app.nodes_state,
-                            app.accessibility.focused_node_id(),
-                        );
-                        app.events_sender
-                            .unbounded_send(EventsChunk::Processed(processed_events))
-                            .unwrap();
+                        }]);
                     }
                 }
                 WindowEvent::CursorMoved { position, .. } => {
                     app.position = CursorPoint::from((position.x, position.y));
 
-                    let mut platform_event = vec![PlatformEvent::Mouse {
+                    let mut platform_events = vec![PlatformEvent::Mouse {
                         name: MouseEventName::MouseMove,
                         cursor: app.position,
                         button: None,
                     }];
 
                     if !app.dropped_file_paths.is_empty() {
-                        platform_event.push(PlatformEvent::File {
+                        platform_events.push(PlatformEvent::File {
                             name: FileEventName::FileDrop,
                             file_paths: app.dropped_file_paths.drain(..).collect(),
                             cursor: app.position,
                         });
                     }
 
-                    let mut events_measurer_adapter = EventsMeasurerAdapter {
-                        scale_factor: app.effective_scale_factor(),
-                        tree: &mut app.tree,
-                    };
-                    let processed_events = events_measurer_adapter.run(
-                        &mut platform_event,
-                        &mut app.nodes_state,
-                        app.accessibility.focused_node_id(),
-                    );
-                    app.events_sender
-                        .unbounded_send(EventsChunk::Processed(processed_events))
-                        .unwrap();
+                    app.process_platform_events(platform_events);
                 }
 
                 WindowEvent::Touch(Touch {
@@ -1129,106 +1068,45 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         TouchPhase::Started => TouchEventName::TouchStart,
                     };
 
-                    let platform_event = PlatformEvent::Touch {
+                    app.process_platform_events(vec![PlatformEvent::Touch {
                         name,
                         location: app.position,
                         finger_id: id,
                         phase: map_winit_touch_phase(phase),
                         force: force.map(map_winit_touch_force),
-                    };
-                    let mut events_measurer_adapter = EventsMeasurerAdapter {
-                        scale_factor: app.effective_scale_factor(),
-                        tree: &mut app.tree,
-                    };
-                    let processed_events = events_measurer_adapter.run(
-                        &mut vec![platform_event],
-                        &mut app.nodes_state,
-                        app.accessibility.focused_node_id(),
-                    );
-                    app.events_sender
-                        .unbounded_send(EventsChunk::Processed(processed_events))
-                        .unwrap();
-                    app.position = CursorPoint::from((location.x, location.y));
+                    }]);
                 }
                 WindowEvent::Ime(Ime::Commit(text)) => {
-                    let platform_event = PlatformEvent::Keyboard {
+                    app.process_platform_events(vec![PlatformEvent::Keyboard {
                         name: KeyboardEventName::KeyDown,
                         key: keyboard_types::Key::Character(text),
                         code: keyboard_types::Code::Unidentified,
                         modifiers: winit_mappings::map_winit_modifiers(app.modifiers_state),
-                    };
-                    let mut events_measurer_adapter = EventsMeasurerAdapter {
-                        scale_factor: app.effective_scale_factor(),
-                        tree: &mut app.tree,
-                    };
-                    let processed_events = events_measurer_adapter.run(
-                        &mut vec![platform_event],
-                        &mut app.nodes_state,
-                        app.accessibility.focused_node_id(),
-                    );
-                    app.events_sender
-                        .unbounded_send(EventsChunk::Processed(processed_events))
-                        .unwrap();
+                    }]);
                 }
                 WindowEvent::Ime(Ime::Preedit(text, pos)) => {
-                    let platform_event = PlatformEvent::ImePreedit {
+                    app.process_platform_events(vec![PlatformEvent::ImePreedit {
                         name: ImeEventName::Preedit,
                         text,
                         cursor: pos,
-                    };
-                    let mut events_measurer_adapter = EventsMeasurerAdapter {
-                        scale_factor: app.effective_scale_factor(),
-                        tree: &mut app.tree,
-                    };
-                    let processed_events = events_measurer_adapter.run(
-                        &mut vec![platform_event],
-                        &mut app.nodes_state,
-                        app.accessibility.focused_node_id(),
-                    );
-                    app.events_sender
-                        .unbounded_send(EventsChunk::Processed(processed_events))
-                        .unwrap();
+                    }]);
                 }
                 WindowEvent::DroppedFile(file_path) => {
                     app.dropped_file_paths.push(file_path);
                 }
                 WindowEvent::HoveredFile(file_path) => {
-                    let platform_event = PlatformEvent::File {
+                    app.process_platform_events(vec![PlatformEvent::File {
                         name: FileEventName::FileHover,
                         file_paths: vec![file_path],
                         cursor: app.position,
-                    };
-                    let mut events_measurer_adapter = EventsMeasurerAdapter {
-                        scale_factor: app.effective_scale_factor(),
-                        tree: &mut app.tree,
-                    };
-                    let processed_events = events_measurer_adapter.run(
-                        &mut vec![platform_event],
-                        &mut app.nodes_state,
-                        app.accessibility.focused_node_id(),
-                    );
-                    app.events_sender
-                        .unbounded_send(EventsChunk::Processed(processed_events))
-                        .unwrap();
+                    }]);
                 }
                 WindowEvent::HoveredFileCancelled => {
-                    let platform_event = PlatformEvent::File {
+                    app.process_platform_events(vec![PlatformEvent::File {
                         name: FileEventName::FileHoverCancelled,
                         file_paths: Vec::new(),
                         cursor: app.position,
-                    };
-                    let mut events_measurer_adapter = EventsMeasurerAdapter {
-                        scale_factor: app.effective_scale_factor(),
-                        tree: &mut app.tree,
-                    };
-                    let processed_events = events_measurer_adapter.run(
-                        &mut vec![platform_event],
-                        &mut app.nodes_state,
-                        app.accessibility.focused_node_id(),
-                    );
-                    app.events_sender
-                        .unbounded_send(EventsChunk::Processed(processed_events))
-                        .unwrap();
+                    }]);
                 }
                 _ => {}
             }
