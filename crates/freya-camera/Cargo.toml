@@ -1,6 +1,6 @@
 [package]
 name = "freya-camera"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 description = "Camera capture support for Freya."
 edition = "2024"
 license = "MIT"
