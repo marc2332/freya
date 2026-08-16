@@ -782,7 +782,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 PluginHandle::new(&self.proxy),
                             );
 
-                            if std::mem::take(&mut app.synthetic_mouse_move_on_next_layout)
+                            if std::mem::take(&mut app.send_mouse_move_on_next_layout)
                                 && app.position != CursorPoint::from((-1., -1.))
                             {
                                 app.process_platform_events(vec![PlatformEvent::Mouse {
