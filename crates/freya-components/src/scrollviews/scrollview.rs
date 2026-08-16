@@ -206,13 +206,13 @@ impl Component for ScrollView {
         let corrected_scrolled_x = get_corrected_scroll_position(
             size.read().inner_sizes.width,
             size.read().area.width(),
-            scrolled_x as f32,
+            scrolled_x,
         );
 
         let corrected_scrolled_y = get_corrected_scroll_position(
             size.read().inner_sizes.height,
             size.read().area.height(),
-            scrolled_y as f32,
+            scrolled_y,
         );
         let horizontal_scrollbar_is_visible = !timeout.elapsed()
             && is_scrollbar_visible(
@@ -302,8 +302,8 @@ impl Component for ScrollView {
                     let coords = e.global_location();
                     let delta = prev - coords;
 
-                    scroll_controller.scroll_to_y((corrected_scrolled_y - delta.y as f32) as i32);
-                    scroll_controller.scroll_to_x((corrected_scrolled_x - delta.x as f32) as i32);
+                    scroll_controller.scroll_to_y(corrected_scrolled_y - delta.y as f32);
+                    scroll_controller.scroll_to_x(corrected_scrolled_x - delta.x as f32);
 
                     dragging_content.set(Some(coords));
                     e.prevent_default();
@@ -321,10 +321,8 @@ impl Component for ScrollView {
                     if distance.x > DRAG_THRESHOLD || distance.y > DRAG_THRESHOLD {
                         let delta = origin - coords;
 
-                        scroll_controller
-                            .scroll_to_y((corrected_scrolled_y - delta.y as f32) as i32);
-                        scroll_controller
-                            .scroll_to_x((corrected_scrolled_x - delta.x as f32) as i32);
+                        scroll_controller.scroll_to_y(corrected_scrolled_y - delta.y as f32);
+                        scroll_controller.scroll_to_x(corrected_scrolled_x - delta.x as f32);
 
                         dragging_content.set(Some(coords));
                         e.prevent_default();
@@ -392,8 +390,8 @@ impl Component for ScrollView {
                 viewport_width,
                 direction,
             ) {
-                scroll_controller.scroll_to_x(x as i32);
-                scroll_controller.scroll_to_y(y as i32);
+                scroll_controller.scroll_to_x(x);
+                scroll_controller.scroll_to_y(y);
                 e.stop_propagation();
                 timeout.reset();
             }
