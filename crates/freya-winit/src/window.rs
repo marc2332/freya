@@ -31,7 +31,10 @@ use keyboard_types::{
     Code,
     Key,
 };
-use ragnarok::NodesState;
+use ragnarok::{
+    EventsMeasurerRunner,
+    NodesState,
+};
 use raw_window_handle::HasDisplayHandle;
 #[cfg(target_os = "linux")]
 use raw_window_handle::RawDisplayHandle;
@@ -99,6 +102,7 @@ pub struct AppWindow {
     pub(crate) screen_reader: ScreenReader,
 
     pub(crate) process_layout_on_next_render: bool,
+    pub(crate) send_mouse_move_on_next_layout: bool,
 
     pub(crate) waker: Waker,
 
@@ -412,6 +416,7 @@ impl AppWindow {
             screen_reader,
 
             process_layout_on_next_render: true,
+            send_mouse_move_on_next_layout: false,
 
             waker,
 
@@ -455,6 +460,30 @@ impl AppWindow {
         self.tree.layout.reset();
         self.tree.text_cache.reset();
         self.window.request_redraw();
+    }
+
+    /// Measures the given platform events and emits the results.
+    /// Wheel events schedule a mouse move to refresh hover states.
+    pub(crate) fn process_platform_events(&mut self, mut platform_events: Vec<PlatformEvent>) {
+        if platform_events
+            .iter()
+            .any(|platform_event| matches!(platform_event, PlatformEvent::Wheel { .. }))
+        {
+            self.send_mouse_move_on_next_layout = true;
+        }
+
+        let mut events_measurer_adapter = EventsMeasurerAdapter {
+            scale_factor: self.effective_scale_factor(),
+            tree: &mut self.tree,
+        };
+        let processed_events = events_measurer_adapter.run(
+            &mut platform_events,
+            &mut self.nodes_state,
+            self.accessibility.focused_node_id(),
+        );
+        self.events_sender
+            .unbounded_send(EventsChunk::Processed(processed_events))
+            .unwrap();
     }
 
     /// Sets the custom scale factor, clamped to a reasonable range.

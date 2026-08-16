@@ -544,6 +544,13 @@ impl TestingRunner {
             source: WheelSource::Device,
         });
         self.sync_and_update();
+        // Refresh hover states after the scroll
+        self.send_event(PlatformEvent::Mouse {
+            name: MouseEventName::MouseMove,
+            cursor,
+            button: None,
+        });
+        self.sync_and_update();
     }
 
     pub fn animation_clock(&mut self) -> &mut AnimationClock {
