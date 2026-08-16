@@ -68,6 +68,73 @@ fn query_basic() {
     );
 }
 
+#[derive(PartialEq)]
+struct QuerySubscriber;
+
+impl Component for QuerySubscriber {
+    fn render(&self) -> impl IntoElement {
+        use_query(
+            Query::new(0usize, GetUserName(Captured(FancyClient)))
+                .clean_time(std::time::Duration::from_millis(50)),
+        );
+        rect()
+    }
+}
+
+#[derive(PartialEq)]
+struct SubscriberSlot {
+    mounted: bool,
+}
+
+impl Component for SubscriberSlot {
+    fn render(&self) -> impl IntoElement {
+        rect().maybe_child(self.mounted.then(|| QuerySubscriber))
+    }
+}
+
+#[test]
+fn query_survives_subscriber_handover() {
+    fn app() -> impl IntoElement {
+        let mut stage = use_state(|| 0usize);
+        let stage_value = *stage.read();
+        rect()
+            .width(Size::fill())
+            .height(Size::fill())
+            .on_press(move |_| {
+                *stage.write() += 1;
+            })
+            .child(SubscriberSlot {
+                mounted: stage_value == 1,
+            })
+            .child(SubscriberSlot {
+                mounted: stage_value == 0,
+            })
+    }
+
+    let mut test = launch_test(app);
+    test.sync_and_update();
+    test.poll(
+        std::time::Duration::from_millis(10),
+        std::time::Duration::from_millis(100),
+    );
+
+    // Mount the second subscriber before the first one unmounts
+    test.click_cursor((100.0, 100.0));
+
+    // Wait past the clean time so the wrongly scheduled clean task fires
+    test.poll(
+        std::time::Duration::from_millis(10),
+        std::time::Duration::from_millis(200),
+    );
+
+    // Unmounting the surviving subscriber used to panic in update_tasks
+    test.click_cursor((100.0, 100.0));
+    test.poll(
+        std::time::Duration::from_millis(10),
+        std::time::Duration::from_millis(200),
+    );
+}
+
 #[test]
 fn query_reactive_subcontext_reruns_on_keys_change() {
     fn app() -> impl IntoElement {

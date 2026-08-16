@@ -797,7 +797,9 @@ pub trait TextEditor {
 
     fn redo(&mut self) -> Option<TextSelection>;
 
-    fn editor_history(&mut self) -> &mut EditorHistory;
+    fn editor_history(&self) -> &EditorHistory;
+
+    fn editor_history_mut(&mut self) -> &mut EditorHistory;
 
     fn get_selection_range(&self) -> Option<(usize, usize)>;
 
