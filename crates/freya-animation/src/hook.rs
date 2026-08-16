@@ -278,9 +278,6 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
                 // Wait for the event loop to tick
                 ticker.tick().await;
 
-                // Request another redraw to move the animation forward
-                platform.send(UserEvent::RequestRedraw);
-
                 let elapsed = animation_clock.correct_elapsed_duration(prev_frame.elapsed());
 
                 index += elapsed.as_millis();
@@ -317,6 +314,9 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
                     // Restart/reverse the animation
                     animated_value.write().prepare(direction);
                 }
+
+                // Request another redraw to move the animation forward
+                platform.send(UserEvent::RequestRedraw);
 
                 prev_frame = Instant::now();
             }
