@@ -533,7 +533,7 @@ impl ElementExt for RectElement {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Rect {
     element: RectElement,
     elements: Vec<Element>,
