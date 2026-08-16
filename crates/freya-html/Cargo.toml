@@ -15,7 +15,6 @@ workspace = true
 [dependencies]
 freya-core = { workspace = true }
 freya-engine = { workspace = true }
-freya-skia-safe = { workspace = true }
 tracing = { workspace = true }
 rustc-hash = { workspace = true }
 

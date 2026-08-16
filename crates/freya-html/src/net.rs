@@ -31,7 +31,7 @@ use reqwest::blocking::{
 
 type FetchError = Box<dyn std::error::Error + Send + Sync>;
 
-const USER_AGENT: &str = "Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/81.0";
+const USER_AGENT: &str = "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0";
 
 /// App-wide blocking HTTP client.
 pub(crate) fn http_client() -> Client {

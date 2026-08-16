@@ -3041,7 +3041,6 @@ dependencies = [
  "freya",
  "freya-core",
  "freya-engine",
- "freya-skia-safe",
  "futures-channel",
  "futures-lite",
  "hashbrown 0.17.1",

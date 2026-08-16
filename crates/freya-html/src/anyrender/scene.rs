@@ -11,17 +11,18 @@ use anyrender::{
         component_transfer::TransferFunction,
     },
 };
-use peniko::color::AlphaColor;
-use skia_safe::{
+use freya_engine::prelude::{
     BlurStyle,
     Canvas,
     Color,
     ColorSpace,
     Font,
     FontArguments,
+    FontEdging as Edging,
     FontHinting,
     FontMgr,
     GlyphId,
+    GlyphPositions,
     ImageFilter,
     MaskFilter,
     Paint,
@@ -32,18 +33,13 @@ use skia_safe::{
     Point,
     RRect,
     Rect,
+    SaveLayerRec,
     Shader,
     Typeface,
-    canvas::{
-        GlyphPositions,
-        SaveLayerRec,
-    },
-    font::Edging,
-    font_arguments::{
-        VariationPosition,
-        variation_position::Coordinate,
-    },
+    VariationCoordinate as Coordinate,
+    VariationPosition,
 };
+use peniko::color::AlphaColor;
 
 use crate::anyrender::{
     cache::{
@@ -405,10 +401,7 @@ impl SkiaScenePainter<'_> {
                         .get_font(font.index)
                         .and_then(|font| font.copy_data())
                     else {
-                        eprintln!(
-                            "WARNING: failed to extract font {} {}",
-                            cache_key.0, cache_key.1
-                        );
+                        tracing::warn!("Failed to extract font {} {}", cache_key.0, cache_key.1);
                         return None;
                     };
 
@@ -429,14 +422,7 @@ impl SkiaScenePainter<'_> {
             .font_mgr
             .new_from_data(font.data.data(), font.index as usize)
         else {
-            let tf = Typeface::make_deserialize(font.data.data(), None);
-            eprintln!(
-                "WARNING: failed to load font {} {} {} {}",
-                cache_key.0,
-                cache_key.1,
-                tf.is_some(),
-                font.index
-            );
+            tracing::warn!("Failed to load font {} {}", cache_key.0, cache_key.1);
             return None;
         };
 
@@ -635,16 +621,17 @@ fn convert_filter_effect(filter: &Filter, id: FilterId) -> Option<ImageFilter> {
     // Clone to avoid borrow checking issues. Cloning is cheap as filters are refcounted.
     let input_clone = input.clone();
 
-    use skia_safe::{
+    use freya_engine::prelude::{
         color_filters,
         image_filters,
+        shaders,
     };
 
     let filter: Option<ImageFilter> = match &node.effect {
         FilterEffect::Flood(color) => {
             let rgba8 = color.to_rgba8();
             let sk_color = Color::from_argb(rgba8.a, rgba8.r, rgba8.g, rgba8.b);
-            let shader = skia_safe::shaders::color(sk_color);
+            let shader = shaders::color(sk_color);
             image_filters::shader(shader, None)
         }
         FilterEffect::GaussianBlur(blur) => {
@@ -759,6 +746,36 @@ fn convert_filter_effect(filter: &Filter, id: FilterId) -> Option<ImageFilter> {
 }
 
 mod sk_peniko {
+    use freya_engine::prelude::{
+        AlphaType as SkAlphaType,
+        BlendMode as SkBlendMode,
+        Color4f as SkColor4f,
+        ColorType as SkColorType,
+        Colors,
+        Data as SkData,
+        FilterMode,
+        ImageInfo as SkImageInfo,
+        MipmapMode,
+        PathFillType as SkPathFillType,
+        SamplingOptions as SkSamplingOptions,
+        Shader as SkShader,
+        TileMode as SkTileMode,
+        gradient::{
+            self,
+            interpolation::{
+                ColorSpace as SkGradientShaderColorSpace,
+                HueMethod as SkGradientShaderHueMethod,
+            },
+        },
+        images,
+        shaders::{
+            self,
+            linear_gradient,
+            radial_gradient,
+            sweep_gradient,
+            two_point_conical_gradient,
+        },
+    };
     use peniko::{
         BlendMode,
         Compose,
@@ -777,29 +794,6 @@ mod sk_peniko {
             DynamicColor,
             HueDirection,
             Srgb,
-        },
-    };
-    use skia_safe::{
-        AlphaType as SkAlphaType,
-        BlendMode as SkBlendMode,
-        Color4f as SkColor4f,
-        ColorType as SkColorType,
-        Data as SkData,
-        ImageInfo as SkImageInfo,
-        PathFillType as SkPathFillType,
-        SamplingOptions as SkSamplingOptions,
-        Shader as SkShader,
-        TileMode as SkTileMode,
-        gradient::Colors,
-        gradient_shader::interpolation::{
-            ColorSpace as SkGradientShaderColorSpace,
-            HueMethod as SkGradientShaderHueMethod,
-        },
-        shaders::{
-            linear_gradient,
-            radial_gradient,
-            sweep_gradient,
-            two_point_conical_gradient,
         },
     };
 
@@ -826,23 +820,21 @@ mod sk_peniko {
             SkData::new_bytes(image_data.data.data()) // We have to ensure the src image data lives long enough
         };
         let image =
-            skia_safe::images::raster_from_data(&image_info, pixels, image_info.min_row_bytes())
-                .unwrap();
+            images::raster_from_data(&image_info, pixels, image_info.min_row_bytes()).unwrap();
 
         let sampling = match image_brush.sampler.quality {
             peniko::ImageQuality::Low => {
-                SkSamplingOptions::new(skia_safe::FilterMode::Nearest, skia_safe::MipmapMode::None)
+                SkSamplingOptions::new(FilterMode::Nearest, MipmapMode::None)
             }
-            peniko::ImageQuality::Medium => SkSamplingOptions::new(
-                skia_safe::FilterMode::Linear,
-                skia_safe::MipmapMode::Nearest,
-            ),
+            peniko::ImageQuality::Medium => {
+                SkSamplingOptions::new(FilterMode::Linear, MipmapMode::Nearest)
+            }
             peniko::ImageQuality::High => {
-                SkSamplingOptions::new(skia_safe::FilterMode::Linear, skia_safe::MipmapMode::Linear)
+                SkSamplingOptions::new(FilterMode::Linear, MipmapMode::Linear)
             }
         };
 
-        skia_safe::shaders::image(
+        shaders::image(
             image,
             (
                 tile_mode_from_extend(image_brush.sampler.x_extend),
@@ -877,9 +869,9 @@ mod sk_peniko {
                 let start = super::sk_kurbo::pt_from(linear_gradient_position.start);
                 let end = super::sk_kurbo::pt_from(linear_gradient_position.end);
 
-                let interpolation = skia_safe::gradient_shader::Interpolation {
+                let interpolation = gradient::Interpolation {
                     color_space: gradient_shader_cs_from_cs_tag(gradient.interpolation_cs),
-                    in_premul: skia_safe::gradient_shader::interpolation::InPremul::Yes,
+                    in_premul: gradient::interpolation::InPremul::Yes,
                     hue_method: gradient_shader_hue_method_from_hue_direction(
                         gradient.hue_direction,
                     ),
@@ -887,7 +879,7 @@ mod sk_peniko {
 
                 linear_gradient(
                     (start, end),
-                    &skia_safe::gradient::Gradient::new(
+                    &gradient::Gradient::new(
                         Colors::new(
                             &colors[..],
                             Some(&positions[..]),
@@ -914,9 +906,9 @@ mod sk_peniko {
                 let end_center = super::sk_kurbo::pt_from(radial_gradient_position.end_center);
                 let end_radius = radial_gradient_position.end_radius;
 
-                let interpolation = skia_safe::gradient_shader::Interpolation {
+                let interpolation = gradient::Interpolation {
                     color_space: gradient_shader_cs_from_cs_tag(gradient.interpolation_cs),
-                    in_premul: skia_safe::gradient_shader::interpolation::InPremul::Yes,
+                    in_premul: gradient::interpolation::InPremul::Yes,
                     hue_method: gradient_shader_hue_method_from_hue_direction(
                         gradient.hue_direction,
                     ),
@@ -925,7 +917,7 @@ mod sk_peniko {
                 if start_center == end_center && start_radius == end_radius {
                     radial_gradient(
                         (start_center, start_radius),
-                        &skia_safe::gradient::Gradient::new(
+                        &gradient::Gradient::new(
                             Colors::new(
                                 &colors[..],
                                 Some(&positions[..]),
@@ -941,7 +933,7 @@ mod sk_peniko {
                     two_point_conical_gradient(
                         (start_center, start_radius),
                         (end_center, end_radius),
-                        &skia_safe::gradient::Gradient::new(
+                        &gradient::Gradient::new(
                             Colors::new(
                                 &colors[..],
                                 Some(&positions[..]),
@@ -965,9 +957,9 @@ mod sk_peniko {
                 }
                 let center = super::sk_kurbo::pt_from(sweep_gradient_position.center);
 
-                let interpolation = skia_safe::gradient_shader::Interpolation {
+                let interpolation = gradient::Interpolation {
                     color_space: gradient_shader_cs_from_cs_tag(gradient.interpolation_cs),
-                    in_premul: skia_safe::gradient_shader::interpolation::InPremul::Yes,
+                    in_premul: gradient::interpolation::InPremul::Yes,
                     hue_method: gradient_shader_hue_method_from_hue_direction(
                         gradient.hue_direction,
                     ),
@@ -979,7 +971,7 @@ mod sk_peniko {
                         rad_to_deg(sweep_gradient_position.start_angle),
                         rad_to_deg(sweep_gradient_position.end_angle),
                     ),
-                    &skia_safe::gradient::Gradient::new(
+                    &gradient::Gradient::new(
                         Colors::new(
                             &colors[..],
                             Some(&positions[..]),
@@ -1103,15 +1095,7 @@ mod sk_peniko {
 }
 
 mod sk_kurbo {
-    use kurbo::{
-        Affine,
-        PathEl,
-        Point,
-        Rect,
-        RoundedRect,
-        Shape,
-    };
-    use skia_safe::{
+    use freya_engine::prelude::{
         M44 as SkM44,
         Matrix as SkMatrix,
         Path as SkPath,
@@ -1119,6 +1103,14 @@ mod sk_kurbo {
         Point as SkPoint,
         RRect as SkRRect,
         Rect as SkRect,
+    };
+    use kurbo::{
+        Affine,
+        PathEl,
+        Point,
+        Rect,
+        RoundedRect,
+        Shape,
     };
 
     pub(super) fn rect_from(rect: Rect) -> SkRect {

@@ -22,13 +22,13 @@ use blitz_traits::{
         Viewport,
     },
 };
+use freya_engine::prelude::{
+    Color,
+    raster_n32_premul,
+};
 use freya_html::anyrender::{
     SkiaSceneCache,
     SkiaScenePainter,
-};
-use skia_safe::{
-    Color,
-    surfaces,
 };
 
 const HTML: &str = r#"<html><head><link rel="stylesheet" href="https://test.local/style.css"></head>
@@ -70,7 +70,7 @@ fn late_stylesheet_with_transition_settles() {
     }
     assert!(!document.is_animating(), "transition never settled");
 
-    let mut surface = surfaces::raster_n32_premul((200, 200)).unwrap();
+    let mut surface = raster_n32_premul((200, 200)).unwrap();
     let mut cache = SkiaSceneCache::new();
     let mut painter = SkiaScenePainter::new(surface.canvas(), &mut cache);
     paint_scene(&mut painter, &mut document, 1.0, 200, 200, 0, 0);

@@ -46,7 +46,13 @@ use freya_core::prelude::{
     Modifiers as FreyaModifiers,
     MouseButton as FreyaMouseButton,
 };
-use freya_engine::prelude::Canvas;
+use freya_engine::prelude::{
+    Canvas,
+    Matrix,
+    Picture,
+    PictureRecorder,
+    Rect,
+};
 use futures_channel::mpsc::UnboundedSender;
 use keyboard_types::{
     Code as BlitzCode,
@@ -55,12 +61,6 @@ use keyboard_types::{
     Modifiers as BlitzModifiers,
 };
 use reqwest::blocking::Client;
-use skia_safe::{
-    Matrix,
-    Picture,
-    PictureRecorder,
-    Rect,
-};
 use smol_str::SmolStr;
 
 use crate::{
