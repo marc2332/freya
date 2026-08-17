@@ -19,20 +19,20 @@ fn app() -> impl IntoElement {
         .expanded()
         .color(Color::GREEN)
         .child(
-            svg(icons::lucide::antenna())
+            SvgViewer::new(icons::lucide::antenna())
                 .theme_accent_color()
                 .width(Size::px(100.))
                 .height(Size::px(100.)),
         )
         .child(
-            svg(icons::lucide::shield())
+            SvgViewer::new(icons::lucide::shield())
                 .color((120, 50, 255))
                 .stroke_width(4.0)
                 .width(Size::px(100.))
                 .height(Size::px(100.)),
         )
         .child(
-            svg(icons::lucide::settings())
+            SvgViewer::new(icons::lucide::settings())
                 .width(Size::px(100.))
                 .height(Size::px(100.)),
         )

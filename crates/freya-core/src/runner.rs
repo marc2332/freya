@@ -1,5 +1,8 @@
 use std::{
-    any::TypeId,
+    any::{
+        Any,
+        TypeId,
+    },
     cell::RefCell,
     cmp::Ordering,
     collections::{
@@ -148,6 +151,13 @@ impl Debug for Mutations {
 pub enum Message {
     MarkScopeAsDirty(ScopeId),
     PollTask(TaskId),
+}
+
+/// Reported around every batch of dirty tasks polled by the [Runner].
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum TasksPollStage {
+    Started,
+    Finished,
 }
 
 pub struct Runner {
@@ -433,6 +443,22 @@ impl Runner {
                                             }
                                         }
                                     }
+                                    EventType::Styled(data) => {
+                                        let event_handlers = element.events_handlers();
+                                        if let Some(event_handlers) = event_handlers {
+                                            match event_handlers.get(&event_name) {
+                                                Some(EventHandlerType::Styled(handler)) => {
+                                                    handler.call(Event {
+                                                        data: data.clone(),
+                                                        propagate: propagate.clone(),
+                                                        default: default.clone(),
+                                                    });
+                                                }
+                                                Some(_) => unreachable!(),
+                                                _ => {}
+                                            }
+                                        }
+                                    }
                                     EventType::Wheel(data) => {
                                         let event_handlers = element.events_handlers();
                                         if let Some(event_handlers) = event_handlers {
@@ -563,6 +589,11 @@ impl Runner {
 
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     pub async fn handle_events(&mut self) {
+        self.handle_events_with(&mut |_| {}).await
+    }
+
+    /// Like [Self::handle_events], notifying the observer around every tasks polling batch.
+    pub async fn handle_events_with(&mut self, observer: &mut dyn FnMut(TasksPollStage)) {
         loop {
             while let Ok(msg) = self.receiver.try_recv() {
                 match msg {
@@ -579,49 +610,21 @@ impl Runner {
                 return;
             }
 
-            while let Some(task_id) = self.dirty_tasks.pop_front() {
-                let Some(task) = self.tasks.borrow().get(&task_id).cloned() else {
-                    continue;
-                };
-                let mut task = task.borrow_mut();
-                let waker = task.waker.clone();
-
-                let mut cx = std::task::Context::from_waker(&waker);
-
-                CurrentContext::run(
-                    {
-                        let Some(scope) = self.scopes.get(&task.scope_id) else {
-                            continue;
-                        };
-                        CurrentContext {
-                            scope_id: scope.borrow().id,
-                            scopes_storages: self.scopes_storages.clone(),
-                            tasks: self.tasks.clone(),
-                            task_id_counter: self.task_id_counter.clone(),
-                            sender: self.sender.clone(),
-                        }
-                    },
-                    || {
-                        let poll_result = task.future.poll(&mut cx);
-                        if poll_result.is_ready() {
-                            let _ = self.tasks.borrow_mut().remove(&task_id);
-                        }
-                    },
-                );
-            }
+            self.poll_dirty_tasks(observer);
 
             if !self.dirty_scopes.is_empty() {
                 return;
             }
 
-            while let Some(msg) = self.receiver.next().await {
-                match msg {
-                    Message::MarkScopeAsDirty(scope_id) => {
-                        self.dirty_scopes.insert(scope_id);
-                    }
-                    Message::PollTask(task_id) => {
-                        self.dirty_tasks.push_back(task_id);
-                    }
+            let Some(msg) = self.receiver.next().await else {
+                return;
+            };
+            match msg {
+                Message::MarkScopeAsDirty(scope_id) => {
+                    self.dirty_scopes.insert(scope_id);
+                }
+                Message::PollTask(task_id) => {
+                    self.dirty_tasks.push_back(task_id);
                 }
             }
         }
@@ -630,6 +633,12 @@ impl Runner {
     /// Useful for freya-testing
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     pub fn handle_events_immediately(&mut self) {
+        self.handle_events_immediately_with(&mut |_| {})
+    }
+
+    /// Like [Self::handle_events_immediately], notifying the observer around every tasks polling
+    /// batch.
+    pub fn handle_events_immediately_with(&mut self, observer: &mut dyn FnMut(TasksPollStage)) {
         while let Ok(msg) = self.receiver.try_recv() {
             match msg {
                 Message::MarkScopeAsDirty(scope_id) => {
@@ -645,7 +654,17 @@ impl Runner {
             return;
         }
 
-        // Poll here
+        self.poll_dirty_tasks(observer);
+    }
+
+    /// Poll the dirty tasks, notifying the observer around the batch.
+    fn poll_dirty_tasks(&mut self, observer: &mut dyn FnMut(TasksPollStage)) {
+        if self.dirty_tasks.is_empty() {
+            return;
+        }
+
+        observer(TasksPollStage::Started);
+
         while let Some(task_id) = self.dirty_tasks.pop_front() {
             let Some(task) = self.tasks.borrow().get(&task_id).cloned() else {
                 continue;
@@ -676,6 +695,8 @@ impl Runner {
                 },
             );
         }
+
+        observer(TasksPollStage::Finished);
     }
 
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
@@ -809,11 +830,16 @@ impl Runner {
                     .map(|s| s.try_borrow_mut())
                 {
                     let key_changed = existing_scope.key != *key;
-                    if key_changed || existing_scope.props.changed(props.as_ref()) {
+                    // Colliding keys can pair components of different types, which requires a full reset
+                    let type_changed = (existing_scope.props.as_ref() as &dyn Any).type_id()
+                        != (props.as_ref() as &dyn Any).type_id();
+                    if key_changed || type_changed || existing_scope.props.changed(props.as_ref()) {
                         self.dirty_scopes.insert(assigned_scope_id);
                         existing_scope.props = props.clone();
 
-                        if key_changed {
+                        if key_changed || type_changed {
+                            existing_scope.key = key.clone();
+                            existing_scope.comp = comp.clone();
                             self.scopes_storages
                                 .borrow_mut()
                                 .get_mut(&assigned_scope_id)
@@ -1056,8 +1082,8 @@ impl Runner {
         // later be rearranged once the removals and additions have been done
         for (parent, movements) in &diff.moved {
             parents_to_resync_scopes.insert(parent.clone());
-            // `parent` is a new-tree path; if the parent itself was moved, its path in the
-            // old nodes tree will differ — resolve it before any lookup.
+            // `parent` is a new-tree path. If the parent itself was moved, its path in the
+            // old nodes tree will differ, so resolve it before any lookup.
             let old_parent = resolve_old_path(parent, &diff.moved);
             let paths = moved_nodes.entry(parent.clone()).or_insert_with(|| {
                 let parent_node_id = scope.borrow().nodes.get(&old_parent).unwrap().node_id;
@@ -1421,7 +1447,6 @@ impl Runner {
         self.dirty_tasks.clear();
         while self.receiver.try_recv().is_ok() {}
 
-        let mut scopes_storages = self.scopes_storages.borrow_mut();
         let scopes = self
             .scopes
             .iter()
@@ -1439,9 +1464,11 @@ impl Runner {
                     sender: self.sender.clone(),
                 },
                 || {
-                    if let Some(storage) = scopes_storages.get_mut(&scope_id) {
-                        storage.reset_hooks();
-                    }
+                    let _hooks = self
+                        .scopes_storages
+                        .borrow_mut()
+                        .get_mut(&scope_id)
+                        .map(|storage| storage.reset_hooks());
                 },
             );
         }

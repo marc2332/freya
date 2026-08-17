@@ -182,10 +182,11 @@ impl TestingRunner {
         let app = app.into();
         let mut runner = Runner::new(move || integration(app.clone()).into_element());
 
+        runner.provide_root_context(GlobalContexts::default);
+
         runner.provide_root_context(ScreenReader::new);
 
-        let (mut ticker_sender, ticker) = RenderingTicker::new();
-        ticker_sender.set_overflow(true);
+        let (ticker_sender, ticker) = RenderingTicker::new();
         runner.provide_root_context(|| ticker);
 
         let animation_clock = runner.provide_root_context(AnimationClock::new);
@@ -207,22 +208,20 @@ impl TestingRunner {
                 )),
                 root_size: State::create(size),
                 scale_factor: State::create(scale_factor),
+                custom_scale_factor: State::create(1.0),
                 navigation_mode: State::create(NavigationMode::NotKeyboard),
                 preferred_theme: State::create(PreferredTheme::Light),
                 is_app_focused: State::create(true),
                 accent_color: State::create(AccentColor::default()),
                 sender: Rc::new(move |user_event| {
                     match user_event {
-                        UserEvent::RequestRedraw => {
-                            // Nothing
-                        }
                         UserEvent::FocusAccessibilityNode(strategy) => {
                             requested_focus_strategy.borrow_mut().replace(strategy);
                         }
-                        UserEvent::SetCursorIcon(_) => {
-                            // Nothing
-                        }
-                        UserEvent::Erased(_) => {
+                        UserEvent::RequestRedraw
+                        | UserEvent::SetCursorIcon(_)
+                        | UserEvent::SetCustomScaleFactor(_)
+                        | UserEvent::Erased(_) => {
                             // Nothing
                         }
                     }
@@ -316,8 +315,13 @@ impl TestingRunner {
         );
         self.tree.borrow_mut().accessibility_diff.clear();
         self.accessibility.focused_id = ACCESSIBILITY_ROOT_ID;
-        self.accessibility.init(&mut self.tree.borrow_mut());
+        self.accessibility.init(&mut self.tree.borrow_mut(), "");
         self.sync_and_update();
+    }
+
+    /// Run a closure inside the app runtime.
+    pub fn run_in<T>(&self, run: impl FnOnce() -> T) -> T {
+        self.runner.run_in(run)
     }
 
     pub async fn handle_events(&mut self) {
@@ -358,9 +362,12 @@ impl TestingRunner {
         }
 
         let mutations = self.runner.sync_and_update();
-        self.runner.run_in(|| {
-            self.tree.borrow_mut().apply_mutations(mutations);
-        });
+        let result = self
+            .runner
+            .run_in(|| self.tree.borrow_mut().apply_mutations(mutations));
+        if let Some(strategy) = result.auto_focus {
+            self.requested_focus_strategy.borrow_mut().replace(strategy);
+        }
         self.tree.borrow_mut().measure_layout(
             self.size,
             &mut self.font_collection,
@@ -371,9 +378,11 @@ impl TestingRunner {
             &self.default_fonts,
         );
 
-        let accessibility_update = self
-            .accessibility
-            .process_updates(&mut self.tree.borrow_mut(), &self.events_sender);
+        let accessibility_update = self.accessibility.process_updates(
+            &mut self.tree.borrow_mut(),
+            &self.events_sender,
+            "",
+        );
 
         self.platform
             .focused_accessibility_id
@@ -383,7 +392,12 @@ impl TestingRunner {
         let layout_node = tree.layout.get(&node_id).unwrap();
         self.platform
             .focused_accessibility_node
-            .set_if_modified(AccessibilityTree::create_node(node_id, layout_node, &tree));
+            .set_if_modified(AccessibilityTree::create_node(
+                node_id,
+                layout_node,
+                &tree,
+                "",
+            ));
     }
 
     /// Poll async tasks and events every `step` time for a total time of `duration`.
@@ -394,7 +408,7 @@ impl TestingRunner {
             self.handle_events_immediately();
             self.sync_and_update();
             std::thread::sleep(step);
-            self.ticker_sender.broadcast_blocking(()).unwrap();
+            self.ticker_sender.notify();
         }
     }
 
@@ -405,7 +419,7 @@ impl TestingRunner {
             self.handle_events_immediately();
             self.sync_and_update();
             std::thread::sleep(step);
-            self.ticker_sender.broadcast_blocking(()).unwrap();
+            self.ticker_sender.notify();
         }
     }
 
@@ -530,6 +544,13 @@ impl TestingRunner {
             scroll,
             cursor,
             source: WheelSource::Device,
+        });
+        self.sync_and_update();
+        // Refresh hover states after the scroll
+        self.send_event(PlatformEvent::Mouse {
+            name: MouseEventName::MouseMove,
+            cursor,
+            button: None,
         });
         self.sync_and_update();
     }

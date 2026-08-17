@@ -150,10 +150,11 @@ impl<Key: NodeKey> NodesState<Key> {
         &mut self,
         emmitable_events: &mut Vec<Emmitable>,
     ) {
+        // The exclusive enter event identifies the entered node
         let entered_node = emmitable_events
             .iter()
-            .rev()
-            .find(|e| e.name().is_moved() || e.name().is_exclusive_enter())
+            .find(|e| e.name().is_exclusive_enter())
+            .or_else(|| emmitable_events.iter().rev().find(|e| e.name().is_moved()))
             .map(|e| e.key());
 
         emmitable_events.retain(|ev| match ev.name() {

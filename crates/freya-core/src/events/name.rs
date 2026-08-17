@@ -43,6 +43,8 @@ pub enum EventName {
 
     Visible,
 
+    Styled,
+
     FileDrop,
 
     ImePreedit,

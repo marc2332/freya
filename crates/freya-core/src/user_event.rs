@@ -17,6 +17,9 @@ pub enum UserEvent {
     /// Set a new cursor icon.
     SetCursorIcon(CursorIcon),
 
+    /// Set a custom scale factor.
+    SetCustomScaleFactor(f64),
+
     Erased(SingleThreadErasedEvent),
 }
 

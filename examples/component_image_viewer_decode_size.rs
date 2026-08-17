@@ -44,7 +44,6 @@ fn app() -> impl IntoElement {
                     Button::new()
                         .on_press(move |_| *preset.write() = index)
                         .child(*label)
-                        .into()
                 })),
         )
 }

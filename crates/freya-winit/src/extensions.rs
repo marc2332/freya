@@ -85,6 +85,21 @@ pub trait WinitPlatformExt {
     /// ```
     fn focus_window(&self, window_id: Option<WindowId>);
 
+    /// Set the title of a window, also updating its accessibility label.
+    ///
+    /// If `window_id` is `None`, the title will be applied to the current window.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use freya::prelude::*;
+    ///
+    /// fn rename_current_window() {
+    ///     Platform::get().set_window_title(None, "New Title");
+    /// }
+    /// ```
+    fn set_window_title(&self, window_id: Option<WindowId>, title: impl Into<String>);
+
     /// Execute a callback with mutable access to a [`Window`].
     ///
     /// If `window_id` is `None`, the callback will be executed on the current window.
@@ -95,16 +110,7 @@ pub trait WinitPlatformExt {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use freya::{
-    ///     prelude::*,
-    ///     winit::window::WindowId,
-    /// };
-    ///
-    /// fn set_window_title(window_id: Option<WindowId>, title: &'static str) {
-    ///     Platform::get().with_window(window_id, move |window| {
-    ///         window.set_title(title);
-    ///     });
-    /// }
+    /// use freya::prelude::*;
     ///
     /// fn minimize_current_window() {
     ///     Platform::get().with_window(None, |window| {
@@ -120,14 +126,14 @@ pub trait WinitPlatformExt {
 
     /// Queue a callback to be run on the renderer thread with access to a [`RendererContext`].
     ///
-    /// The call dispatches an event to the winit event loop and returns right away; the
+    /// The call dispatches an event to the winit event loop and returns right away. The
     /// callback runs later, when the event loop picks it up. The [`WindowId`] passed to the
     /// callback is the id of the window this [`Platform`] instance was bound to. The return
     /// value is delivered through the returned oneshot
     /// [`Receiver`](futures_channel::oneshot::Receiver), which can be `.await`ed or dropped.
     ///
     /// The callback runs outside any component scope, so you can't call [`Platform::get`] or
-    /// consume context from inside it; use the [`RendererContext`] argument instead.
+    /// consume context from inside it. Use the [`RendererContext`] argument instead.
     fn post_callback<F, T: 'static>(&self, f: F) -> futures_channel::oneshot::Receiver<T>
     where
         F: FnOnce(WindowId, &mut RendererContext) -> T + 'static;
@@ -166,7 +172,7 @@ impl WinitPlatformExt for Platform {
         let (tx, rx) = futures_channel::oneshot::channel();
         self.send(UserEvent::Erased(SingleThreadErasedEvent(Box::new(
             NativeWindowErasedEventAction::LaunchWindow {
-                window_config,
+                window_config: Box::new(window_config),
                 ack: tx,
             },
         ))));
@@ -181,6 +187,16 @@ impl WinitPlatformExt for Platform {
 
     fn focus_window(&self, window_id: Option<WindowId>) {
         self.with_window(window_id, |w| w.focus_window());
+    }
+
+    fn set_window_title(&self, window_id: Option<WindowId>, title: impl Into<String>) {
+        let title = title.into();
+        self.send(UserEvent::Erased(SingleThreadErasedEvent(Box::new(
+            NativeWindowErasedEventAction::RendererCallback(Box::new(move |id, context| {
+                let app = context.windows.get_mut(&window_id.unwrap_or(id)).unwrap();
+                app.set_title(&title);
+            })),
+        ))));
     }
 
     fn with_window(

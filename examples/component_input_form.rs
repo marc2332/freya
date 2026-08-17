@@ -19,17 +19,17 @@ fn app() -> impl IntoElement {
     rect().center().expanded().spacing(6.).child(
         Input::new(password)
             .placeholder("Password")
-            .mode(mode.read().clone())
+            .mode(*mode.read())
             .width(Size::px(200.))
             .leading(
-                svg(icons::lucide::lock())
+                SvgViewer::new(icons::lucide::lock())
                     .width(Size::px(18.))
                     .height(Size::px(18.))
                     .color((150, 150, 150)),
             )
             .trailing(
                 CursorArea::new().icon(CursorIcon::Pointer).child(
-                    svg(if matches!(*mode.read(), InputMode::Shown) {
+                    SvgViewer::new(if matches!(*mode.read(), InputMode::Shown) {
                         icons::lucide::eye()
                     } else {
                         icons::lucide::eye_off()

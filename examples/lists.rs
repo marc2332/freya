@@ -57,15 +57,15 @@ impl ComponentOwned for List {
                         .on_press(move |_| {
                             *count.write() += 1;
                         })
-                        .children([format!("Element {i}").into()])
-                        .into()
+                        .children([format!("Element {i}")])
+                        .into_element()
                 })
                 .chain([Button::new()
                     .on_press(move |_| {
                         self.state.write().remove(self.i);
                     })
                     .child("Remove")
-                    .into()]),
+                    .into_element()]),
         )
     }
 }

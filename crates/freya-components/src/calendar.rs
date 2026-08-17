@@ -226,7 +226,6 @@ impl Component for Calendar {
                 .height(Size::px(36.))
                 .center()
                 .child(label().text(*name).color(header_color).font_size(12.))
-                .into()
         });
 
         let day_cells = (0..total_cells).map(|i| {
@@ -270,7 +269,6 @@ impl Component for Calendar {
                         .color(day_color)
                         .font_size(14.),
                 )
-                .into()
         });
 
         rect()

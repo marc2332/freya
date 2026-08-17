@@ -21,6 +21,8 @@ pub mod drag_drop;
 pub mod draggable_canvas;
 pub mod element_expansions;
 pub mod floating_tab;
+#[cfg(feature = "remote-asset")]
+pub(crate) mod http;
 pub mod icons;
 pub mod image_viewer;
 pub mod input;
@@ -40,6 +42,7 @@ pub mod selectable_text;
 pub mod sidebar;
 pub mod skeleton;
 pub mod slider;
+pub mod svg_viewer;
 pub mod switch;
 pub mod table;
 pub mod theming;
@@ -50,7 +53,7 @@ pub mod tooltip;
 pub mod typography;
 
 #[cfg(feature = "remote-asset")]
-pub use ureq::http::Uri;
+pub use reqwest::Url;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "router")] {
