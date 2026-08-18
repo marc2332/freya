@@ -310,7 +310,7 @@ impl TestingRunner {
             .font_collection
             .fallback_manager()
             .unwrap()
-            .new_from_data(font_data, None)
+            .new_from_data(SkData::new_copy(font_data), None)
             .unwrap_or_else(|| panic!("Failed to load font {font_name}."));
         self.font_provider
             .register_typeface(typeface, Some(font_name));

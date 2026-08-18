@@ -10,6 +10,7 @@ use freya_core::integration::*;
 use freya_engine::prelude::{
     FontCollection,
     FontMgr,
+    SkData,
     TypefaceFontProvider,
 };
 use futures_lite::future::FutureExt as _;
@@ -154,7 +155,7 @@ impl WinitRenderer {
     fn load_font(&mut self, font_name: &str, font_data: &[u8]) {
         let Some(typeface) = FontMgr::custom_empty()
             .unwrap_or_default()
-            .new_from_data(font_data, None)
+            .new_from_data(SkData::new_copy(font_data), None)
         else {
             tracing::error!("Failed to load font {font_name}.");
             return;

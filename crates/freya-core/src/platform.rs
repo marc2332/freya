@@ -80,11 +80,6 @@ impl Platform {
 
     /// Load a font at runtime, making it available under the given name in all windows.
     ///
-    /// Names are matched exactly. Loading more fonts under one name adds them as styles of
-    /// that family, so a name cannot be reassigned.
-    ///
-    /// Runtime fonts are never used as fallbacks.
-    ///
     /// # Example
     ///
     /// ```rust,no_run
