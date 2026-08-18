@@ -28,6 +28,7 @@ fn main() {
     accessibility();
 }
 
+#[cfg_attr(not(feature = "hotpath"), allow(unused_variables))]
 fn bench<T>(name: &'static str, mut scenario: impl FnMut() -> T) {
     for _ in 0..ITERATIONS {
         hotpath::measure_block!(name, {
