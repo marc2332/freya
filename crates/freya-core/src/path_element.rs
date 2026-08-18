@@ -115,6 +115,7 @@ impl PathElement {
         self.diff_inner(previous, diff, false)
     }
 
+    #[cfg_attr(feature = "hotpath", hotpath::measure)]
     fn diff_inner(&self, previous: Option<&Self>, diff: &mut Diff, parent_removed: bool) {
         match previous {
             None => {
