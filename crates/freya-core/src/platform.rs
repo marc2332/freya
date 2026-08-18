@@ -1,5 +1,9 @@
-use std::rc::Rc;
+use std::{
+    borrow::Cow,
+    rc::Rc,
+};
 
+use bytes::Bytes;
 pub use mundy::{
     AccentColor,
     Srgba,
@@ -72,5 +76,29 @@ impl Platform {
     /// OS scale factor. The value might get clamped to a reasonable range.
     pub fn set_custom_scale_factor(&self, custom_scale_factor: f64) {
         self.send(UserEvent::SetCustomScaleFactor(custom_scale_factor));
+    }
+
+    /// Load a font at runtime, making it available under the given name in all windows.
+    ///
+    /// Names are matched exactly. Loading more fonts under one name adds them as styles of
+    /// that family, so a name cannot be reassigned.
+    ///
+    /// Runtime fonts are never used as fallbacks.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use freya_core::prelude::*;
+    ///
+    /// fn load_rubik() {
+    ///     let font = std::fs::read("./Rubik.ttf").expect("Failed to read the font file.");
+    ///     Platform::get().load_font("Rubik", font);
+    /// }
+    /// ```
+    pub fn load_font(&self, font_name: impl Into<Cow<'static, str>>, font_data: impl Into<Bytes>) {
+        self.send(UserEvent::LoadFont {
+            font_name: font_name.into(),
+            font_data: font_data.into(),
+        });
     }
 }

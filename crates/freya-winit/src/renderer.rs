@@ -10,6 +10,7 @@ use freya_core::integration::*;
 use freya_engine::prelude::{
     FontCollection,
     FontMgr,
+    TypefaceFontProvider,
 };
 use futures_lite::future::FutureExt as _;
 use futures_util::{
@@ -86,6 +87,7 @@ pub struct WinitRenderer {
     pub proxy: EventLoopProxy<NativeEvent>,
     pub plugins: PluginsManager,
     pub fallback_fonts: Vec<Cow<'static, str>>,
+    pub font_provider: TypefaceFontProvider,
     pub font_manager: FontMgr,
     pub font_collection: FontCollection,
     pub futures: Vec<Pin<Box<dyn std::future::Future<Output = ()>>>>,
@@ -144,6 +146,30 @@ impl RendererContext<'_> {
 
     pub fn exit(&mut self) {
         self.active_event_loop.exit();
+    }
+}
+
+impl WinitRenderer {
+    /// Registers a font for every window and invalidates their text layouts.
+    fn load_font(&mut self, font_name: &str, font_data: &[u8]) {
+        let Some(typeface) = FontMgr::custom_empty()
+            .unwrap_or_default()
+            .new_from_data(font_data, None)
+        else {
+            tracing::error!("Failed to load font {font_name}.");
+            return;
+        };
+
+        self.font_provider
+            .register_typeface(typeface, Some(font_name));
+        self.font_collection.clear_caches();
+
+        for app in self.windows.values_mut() {
+            app.process_layout_on_next_render = true;
+            app.tree.layout.reset();
+            app.tree.text_cache.reset();
+            app.window.request_redraw();
+        }
     }
 }
 
@@ -423,6 +449,15 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 }
             }
             NativeEvent::Window(NativeWindowEvent { action, window_id }) => {
+                if let NativeWindowEventAction::User(UserEvent::LoadFont {
+                    font_name,
+                    font_data,
+                }) = &action
+                {
+                    self.load_font(font_name, font_data);
+                    return;
+                }
+
                 if let Some(app) = &mut self.windows.get_mut(&window_id) {
                     match action {
                         NativeWindowEventAction::PollRunner => {
@@ -574,6 +609,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             UserEvent::SetCustomScaleFactor(custom_scale_factor) => {
                                 app.set_custom_scale_factor(custom_scale_factor);
                             }
+                            UserEvent::LoadFont { .. } => unreachable!(),
                             UserEvent::Erased(data) => {
                                 let action = data
                                     .0
