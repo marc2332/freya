@@ -15,11 +15,11 @@ fn app() -> impl IntoElement {
         .expanded()
         .child(format!("{} items", *length.read()))
         .child(
-            VirtualScrollView::new(move |i, _| {
-                let is_last = i == *length.read() - 1;
+            VirtualScrollView::new(move |item, _| {
+                let is_last = item.index == *length.read() - 1;
                 rect()
-                    .key(i)
-                    .height(Size::px(50.))
+                    .key(item.index)
+                    .height(Size::px(item.size))
                     .padding(4.)
                     .maybe(is_last, |el| el.on_visible(move |_| *length.write() += 10))
                     .child(
@@ -30,7 +30,7 @@ fn app() -> impl IntoElement {
                             .corner_radius(8.)
                             .color((255, 255, 255))
                             .background((0, 119, 182))
-                            .child(format!("Item {i}")),
+                            .child(format!("Item {}", item.index)),
                     )
                     .into()
             })
