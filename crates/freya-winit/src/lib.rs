@@ -81,6 +81,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
     use freya_engine::prelude::{
         FontCollection,
         FontMgr,
+        SkData,
         TypefaceFontProvider,
     };
     use winit::event_loop::EventLoop;
@@ -99,7 +100,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
     let mut provider = TypefaceFontProvider::new();
     for (font_name, font_data) in launch_config.embedded_fonts {
         let typeface = font_mgr
-            .new_from_data(&font_data, None)
+            .new_from_data(SkData::new_copy(&font_data), None)
             .unwrap_or_else(|| panic!("Failed to load font {font_name}."));
         provider.register_typeface(typeface, Some(font_name.as_ref()));
     }
