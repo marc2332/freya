@@ -249,6 +249,10 @@ redundant_clone = "warn"
 lto = true
 opt-level = 3
 
+[profile.bench]
+lto = true
+opt-level = 3
+
 # Optimizes the freya devtools server
 [profile.dev.package.freya-devtools]
 opt-level = 3
