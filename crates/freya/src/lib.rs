@@ -211,6 +211,7 @@ pub mod components {
         },
         image_viewer::*,
         input::*,
+        lazy::*,
         loader::*,
         menu::*,
         overflowed_content::*,

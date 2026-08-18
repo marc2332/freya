@@ -319,6 +319,15 @@ pub trait EventHandlersExt: Sized {
         self
     }
 
+    /// Fires when the element stops being visible inside the viewports of its clipping ancestors.
+    fn on_hidden(mut self, on_hidden: impl Into<EventHandler<Event<VisibleEventData>>>) -> Self {
+        self.get_event_handlers().insert(
+            EventName::Hidden,
+            EventHandlerType::Visible(on_hidden.into()),
+        );
+        self
+    }
+
     /// Fires when the element's inherited text style is resolved or changes.
     fn on_styled(mut self, on_styled: impl Into<EventHandler<Event<StyledEventData>>>) -> Self {
         self.get_event_handlers().insert(
