@@ -1,5 +1,6 @@
 use std::{
     cell::RefCell,
+    io::ErrorKind,
     rc::Rc,
     time::Instant,
 };
@@ -165,7 +166,20 @@ pub(crate) fn spawn_pty(
                         output_notifier.notify();
                         platform.send(UserEvent::RequestRedraw);
                     }
-                    Some(Ok(0)) | Some(Err(_)) => break,
+                    // Interruptions and empty reads are transient.
+                    Some(Err(err))
+                        if matches!(err.kind(), ErrorKind::Interrupted | ErrorKind::WouldBlock) =>
+                    {
+                        tracing::debug!("Ignoring transient PTY read error: {err}");
+                    }
+                    Some(Err(err)) => {
+                        tracing::error!("Closing terminal after PTY read error: {err}");
+                        break;
+                    }
+                    Some(Ok(0)) => {
+                        tracing::debug!("Closing terminal after the PTY reached EOF");
+                        break;
+                    }
                     Some(Ok(n)) => {
                         processor.advance(&mut *term.borrow_mut(), &buf[..n]);
                         output_notifier.notify();

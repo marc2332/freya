@@ -20,6 +20,7 @@ rustc-hash = { workspace = true }
 thiserror = { workspace = true }
 blocking = { workspace = true }
 keyboard-types = { workspace = true }
+tracing = { workspace = true }
 
 # PTY and terminal emulator
 portable-pty = "0.9"
