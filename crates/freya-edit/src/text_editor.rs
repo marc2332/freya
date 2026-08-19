@@ -249,8 +249,10 @@ pub trait TextEditor {
     ) -> bool {
         if let Some(editor_line) = editor_line
             && let Some(holder) = holder
-            && self.cursor_visual_line(holder, editor_line, 1)
+            && let Some(position) = self.visual_line_position(holder, editor_line, 1)
         {
+            self.selection_mut().move_to(position);
+
             return true;
         }
 
@@ -281,8 +283,10 @@ pub trait TextEditor {
     ) -> bool {
         if let Some(editor_line) = editor_line
             && let Some(holder) = holder
-            && self.cursor_visual_line(holder, editor_line, -1)
+            && let Some(position) = self.visual_line_position(holder, editor_line, -1)
         {
+            self.selection_mut().move_to(position);
+
             return true;
         }
 
@@ -347,22 +351,6 @@ pub trait TextEditor {
             .max(0) as usize;
 
         Some(line_start + position)
-    }
-
-    /// Move the cursor one visual line up or down, following the wrapped lines of `holder`.
-    fn cursor_visual_line(
-        &mut self,
-        holder: &ParagraphHolder,
-        editor_line: EditorLine,
-        line_offset: isize,
-    ) -> bool {
-        let Some(position) = self.visual_line_position(holder, editor_line, line_offset) else {
-            return false;
-        };
-
-        self.selection_mut().move_to(position);
-
-        true
     }
 
     /// Move the cursor 1 grapheme cluster to the right
