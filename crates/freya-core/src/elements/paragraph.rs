@@ -484,11 +484,8 @@ impl ElementExt for ParagraphElement {
             highlights_paint.set_color(self.cursor_style_data.highlight_color);
 
             if rects.is_empty() && *from == 0 {
-                let caret_rect = paragraph.cursor_rect(
-                    &self.text(),
-                    *from,
-                    context.text_style_state.text_align,
-                );
+                let caret_rect =
+                    paragraph.cursor_rect(&self.text(), *from, context.text_style_state.text_align);
                 context
                     .canvas
                     .draw_rect(to_cursor_area(caret_rect), &highlights_paint);
@@ -712,7 +709,6 @@ impl ParagraphCursorExt for SkParagraph {
 
         SkRect::new(left, 0., left + 6., self.height())
     }
-
 }
 
 impl From<Paragraph> for Element {
