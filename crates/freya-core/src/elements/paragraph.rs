@@ -643,12 +643,9 @@ impl ParagraphElement {
     }
 }
 
-/// Cursor measuring over a laid out paragraph, in scaled coordinates relative to it.
 pub trait ParagraphCursorExt {
-    /// Rect of the grapheme cluster at `cursor_index`, or `None` when the paragraph has no lines.
     fn measured_cursor_rect(&self, text: &str, cursor_index: usize) -> Option<SkRect>;
 
-    /// Rect of the grapheme cluster at `cursor_index`, or a caret stub when there is nothing to measure.
     fn cursor_rect(&self, text: &str, cursor_index: usize, text_align: TextAlign) -> SkRect;
 }
 
@@ -665,7 +662,6 @@ impl ParagraphCursorExt for SkParagraph {
         }
 
         if !cluster.is_empty() {
-            // A line below the final cluster is the empty line after a trailing line break
             if cluster.end <= cursor_index
                 && let Some(cluster_line) = self.get_line_number_at(cluster_byte_index)
                 && let Some(line) = self.get_line_metrics_at(cluster_line + 1)
