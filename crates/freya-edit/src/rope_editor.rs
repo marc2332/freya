@@ -387,6 +387,8 @@ mod test {
         ed.process_key(
             &Key::Named(key),
             &Modifiers::empty(),
+            None,
+            None,
             true,
             true,
             false,
