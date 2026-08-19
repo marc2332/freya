@@ -2629,7 +2629,7 @@ dependencies = [
 
 [[package]]
 name = "freya"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "cfg-if 1.0.4",
  "freya-android",
@@ -2666,7 +2666,7 @@ dependencies = [
 
 [[package]]
 name = "freya-android"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "freya-components",
  "freya-core",
@@ -2678,7 +2678,7 @@ dependencies = [
 
 [[package]]
 name = "freya-animation"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "async-io",
  "easer",
@@ -2689,7 +2689,7 @@ dependencies = [
 
 [[package]]
 name = "freya-borderless-plugin"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "freya-core",
  "freya-engine",
@@ -2699,7 +2699,7 @@ dependencies = [
 
 [[package]]
 name = "freya-camera"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "blocking",
  "bytes",
@@ -2712,7 +2712,7 @@ dependencies = [
 
 [[package]]
 name = "freya-clipboard"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "copypasta",
  "freya",
@@ -2721,7 +2721,7 @@ dependencies = [
 
 [[package]]
 name = "freya-code-editor"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "freya-components",
  "freya-core",
@@ -2737,7 +2737,7 @@ dependencies = [
 
 [[package]]
 name = "freya-components"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "accesskit",
  "anyhow",
@@ -2769,7 +2769,7 @@ dependencies = [
 
 [[package]]
 name = "freya-core"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "accesskit",
  "bitflags 2.13.1",
@@ -2802,7 +2802,7 @@ dependencies = [
 
 [[package]]
 name = "freya-devtools"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "accesskit",
  "anyhow",
@@ -2821,7 +2821,7 @@ dependencies = [
 
 [[package]]
 name = "freya-devtools-app"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "accesskit",
  "async-lock",
@@ -2840,7 +2840,7 @@ dependencies = [
 
 [[package]]
 name = "freya-edit"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "bitflags 2.13.1",
  "freya",
@@ -2855,14 +2855,14 @@ dependencies = [
 
 [[package]]
 name = "freya-engine"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "freya-skia-safe",
 ]
 
 [[package]]
 name = "freya-i18n"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "fluent",
  "freya",
@@ -2876,7 +2876,7 @@ dependencies = [
 
 [[package]]
 name = "freya-icons"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "bytes",
  "freya",
@@ -2884,7 +2884,7 @@ dependencies = [
 
 [[package]]
 name = "freya-markdown"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "freya",
  "freya-code-editor",
@@ -2897,7 +2897,7 @@ dependencies = [
 
 [[package]]
 name = "freya-material-design"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "freya",
  "freya-animation",
@@ -2910,7 +2910,7 @@ dependencies = [
 
 [[package]]
 name = "freya-performance-plugin"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "freya-core",
  "freya-engine",
@@ -2919,7 +2919,7 @@ dependencies = [
 
 [[package]]
 name = "freya-plotters-backend"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "freya-engine",
  "plotters",
@@ -2928,7 +2928,7 @@ dependencies = [
 
 [[package]]
 name = "freya-query"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "async-io",
  "freya",
@@ -2939,7 +2939,7 @@ dependencies = [
 
 [[package]]
 name = "freya-radio"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "freya",
  "freya-core",
@@ -2950,7 +2950,7 @@ dependencies = [
 
 [[package]]
 name = "freya-router"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "freya",
  "freya-core",
@@ -2962,7 +2962,7 @@ dependencies = [
 
 [[package]]
 name = "freya-router-macro"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "freya",
  "freya-router",
@@ -2974,7 +2974,7 @@ dependencies = [
 
 [[package]]
 name = "freya-sdk"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "async-io",
  "freya-core",
@@ -2983,9 +2983,9 @@ dependencies = [
 
 [[package]]
 name = "freya-skia-bindings"
-version = "0.98.1"
+version = "0.99.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e3b9c668f9711350e499fc1f07724f6e66f92379cdbda8f2ba61c3373c857f7"
+checksum = "baef28a7f4c755de2ffda2347c41533badf23300531695ac2253a8604dbb7e2b"
 dependencies = [
  "bindgen 0.72.1",
  "cc",
@@ -3000,11 +3000,11 @@ dependencies = [
 
 [[package]]
 name = "freya-skia-safe"
-version = "0.98.1"
+version = "0.99.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6498ad326bbce161e52567f10f38e53a106bed1e8d575396fce28f5d67a5d311"
+checksum = "03c680594a9037f0481dfa7bfba6817d8aefb10af0f45695575a84a2074935e7"
 dependencies = [
- "base64 0.22.1",
+ "base64 0.23.1",
  "bitflags 2.13.1",
  "freya-skia-bindings",
  "freya-skia-svg-macros",
@@ -3024,7 +3024,7 @@ dependencies = [
 
 [[package]]
 name = "freya-terminal"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "async-io",
  "blocking",
@@ -3044,7 +3044,7 @@ dependencies = [
 
 [[package]]
 name = "freya-testing"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "accesskit",
  "freya",
@@ -3059,7 +3059,7 @@ dependencies = [
 
 [[package]]
 name = "freya-video"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "anyhow",
  "async-channel",
@@ -3079,7 +3079,7 @@ dependencies = [
 
 [[package]]
 name = "freya-webview"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "accesskit",
  "freya",
@@ -3096,7 +3096,7 @@ dependencies = [
 
 [[package]]
 name = "freya-winit"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "accesskit",
  "accesskit_winit",
@@ -5826,7 +5826,7 @@ dependencies = [
 
 [[package]]
 name = "pathgraph"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 
 [[package]]
 name = "peeking_take_while"
@@ -6377,7 +6377,7 @@ checksum = "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf"
 
 [[package]]
 name = "ragnarok"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "euclid",
  "hotpath",
@@ -8185,7 +8185,7 @@ checksum = "7d56353a2a665ad0f41a421187180aab746c8c325620617ad883a99a1cbe66d2"
 
 [[package]]
 name = "torin"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 dependencies = [
  "criterion",
  "euclid",

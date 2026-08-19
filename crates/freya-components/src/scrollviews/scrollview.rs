@@ -74,6 +74,7 @@ pub struct ScrollView {
     scroll_controller: Option<ScrollController>,
     invert_scroll_wheel: bool,
     drag_scrolling: bool,
+    on_sized: Option<EventHandler<Event<SizedEventData>>>,
     key: DiffKey,
 }
 
@@ -104,6 +105,7 @@ impl Default for ScrollView {
             scroll_controller: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
+            on_sized: None,
             key: DiffKey::None,
         }
     }
@@ -156,6 +158,12 @@ impl ScrollView {
     /// Toggles scrolling by dragging the content, useful mainly for touch input.
     pub fn drag_scrolling(mut self, drag_scrolling: bool) -> Self {
         self.drag_scrolling = drag_scrolling;
+        self
+    }
+
+    /// Sets a handler called with the scroll view's area whenever it is laid out.
+    pub fn on_sized(mut self, on_sized: impl Into<EventHandler<Event<SizedEventData>>>) -> Self {
+        self.on_sized = Some(on_sized.into());
         self
     }
 
@@ -432,6 +440,7 @@ impl Component for ScrollView {
                 node.set_scroll_y(corrected_scrolled_y as f64)
             })
             .scrollable(true)
+            .map(self.on_sized.clone(), |el, on_sized| el.on_sized(on_sized))
             .on_wheel(on_wheel)
             .on_capture_global_pointer_press(on_capture_global_pointer_press)
             .on_mouse_move(on_mouse_move)

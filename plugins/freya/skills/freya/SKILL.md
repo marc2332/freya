@@ -782,7 +782,7 @@ let mut i18n = I18n::get(); // retrieve from any descendant
 i18n.set_language(langid!("es-ES"));
 ```
 
-For multi-window apps, create with `I18n::create_global` in `main` and share with `use_share_i18n`.
+The instance lives in the root context shared by all windows, so calling `use_init_i18n` in each window reuses the same state.
 
 ## Animations
 

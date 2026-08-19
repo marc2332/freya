@@ -182,6 +182,8 @@ impl TestingRunner {
         let app = app.into();
         let mut runner = Runner::new(move || integration(app.clone()).into_element());
 
+        runner.provide_root_context(GlobalContexts::default);
+
         runner.provide_root_context(ScreenReader::new);
 
         let (ticker_sender, ticker) = RenderingTicker::new();
@@ -288,7 +290,7 @@ impl TestingRunner {
                 .font_collection
                 .fallback_manager()
                 .unwrap()
-                .new_from_data(font_data, None)
+                .new_from_data(SkData::new_copy(font_data), None)
                 .unwrap_or_else(|| panic!("Failed to load font {font_name}."));
             provider.register_typeface(ft_type, Some(font_name));
         }
@@ -314,6 +316,11 @@ impl TestingRunner {
         self.accessibility.focused_id = ACCESSIBILITY_ROOT_ID;
         self.accessibility.init(&mut self.tree.borrow_mut(), "");
         self.sync_and_update();
+    }
+
+    /// Run a closure inside the app runtime.
+    pub fn run_in<T>(&self, run: impl FnOnce() -> T) -> T {
+        self.runner.run_in(run)
     }
 
     pub async fn handle_events(&mut self) {
@@ -535,6 +542,13 @@ impl TestingRunner {
             scroll,
             cursor,
             source: WheelSource::Device,
+        });
+        self.sync_and_update();
+        // Refresh hover states after the scroll
+        self.send_event(PlatformEvent::Mouse {
+            name: MouseEventName::MouseMove,
+            cursor,
+            button: None,
         });
         self.sync_and_update();
     }

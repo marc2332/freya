@@ -1,6 +1,6 @@
 [package]
 name = "freya-borderless-plugin"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.3"
 edition = "2024"
 description = "Borderless window plugin for Freya, with resize bands and rounded window clipping."
 license = "MIT"
