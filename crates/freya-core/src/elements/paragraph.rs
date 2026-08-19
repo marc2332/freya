@@ -660,7 +660,7 @@ pub trait ParagraphCursorExt {
     /// Area of the character at `cursor_index`.
     fn cursor_rect(&self, text: &str, cursor_index: usize, text_align: TextAlign) -> SkRect;
 
-    /// UTF-16 index of the glyph at `point`, snapped back into the visual line the point lands on.
+    /// Cursor position at the given point.
     fn cursor_index_at_point(&self, point: (f64, f64)) -> usize;
 }
 
