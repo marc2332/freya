@@ -38,11 +38,11 @@ fn click_past_a_wrapped_line_end() {
                     .on_mouse_down(on_mouse_down)
                     .span(Span::new(editor.to_string())),
             )
-            .child(
-                label()
-                    .color((0, 0, 0))
-                    .text(format!("{}:{}", editor.cursor_row(), editor.cursor_col())),
-            )
+            .child(label().color((0, 0, 0)).text(format!(
+                "{}:{}",
+                editor.cursor_row(),
+                editor.cursor_col()
+            )))
     });
     utils.set_fonts(HashMap::from_iter([(
         "NotoSans",
