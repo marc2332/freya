@@ -317,6 +317,9 @@ fn drag_after_drag_is_not_a_multi_press() {
                     holder: &holder.read(),
                 });
             })
+            .on_mouse_up(move |_: Event<MouseEventData>| {
+                editable.process_event(EditableEvent::Release);
+            })
             .span(Span::new(editor.to_string()))
     });
     utils.set_fonts(HashMap::from_iter([(
@@ -351,7 +354,7 @@ fn drag_after_drag_is_not_a_multi_press() {
     utils.sync_and_update();
 
     let highlights = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.highlights.clone()));
-    assert_eq!(highlights, None);
+    assert_eq!(highlights, Some(vec![]));
 }
 
 #[test]
