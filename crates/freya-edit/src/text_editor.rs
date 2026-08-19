@@ -164,7 +164,6 @@ pub trait TextEditor {
     /// Get a line from the text
     fn line(&self, line_idx: usize) -> Option<Line<'_>>;
 
-    /// Whole text of the editor.
     fn text(&self) -> Cow<'_, str>;
 
     /// Total of lines
@@ -241,7 +240,7 @@ pub trait TextEditor {
         self.selection_mut().move_to(pos);
     }
 
-    /// Move the cursor 1 line down, following the wrapped lines of `holder` when given.
+    /// Move the cursor 1 line down
     fn cursor_down(
         &mut self,
         editor_line: Option<EditorLine>,
@@ -275,7 +274,7 @@ pub trait TextEditor {
         }
     }
 
-    /// Move the cursor 1 line up, following the wrapped lines of `holder` when given.
+    /// Move the cursor 1 line up
     fn cursor_up(
         &mut self,
         editor_line: Option<EditorLine>,
@@ -307,7 +306,6 @@ pub trait TextEditor {
         }
     }
 
-    /// UTF-16 index one visual line up or down from the cursor, keeping its horizontal offset.
     fn visual_line_position(
         &self,
         holder: &ParagraphHolder,
@@ -341,7 +339,6 @@ pub trait TextEditor {
 
         let mut x = cursor_rect.left as i32;
         if !line.hard_break {
-            // Past a soft wrap the caret belongs to the end of the line, not to the next one
             x = x.min((line.left + line.width) as i32 - 1);
         }
 
