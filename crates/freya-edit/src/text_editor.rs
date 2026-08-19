@@ -586,6 +586,7 @@ pub trait TextEditor {
     }
 
     // Process a Keyboard event
+    #[allow(clippy::too_many_arguments)]
     fn process_key(
         &mut self,
         key: &Key,
