@@ -15,7 +15,6 @@ use std::{
     },
 };
 
-use async_io::Timer;
 use freya_core::{
     integration::FxHashSet,
     lifecycle::context::{
@@ -236,7 +235,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
             let task = spawn_forever(async move {
                 loop {
                     // Wait as long as the stale time is configured
-                    Timer::after(interval).await;
+                    sleep(interval).await;
 
                     // Run the query
                     QueriesStorage::<Q>::run_queries(&[(&query_clone, &query_data_clone)]).await;
@@ -263,7 +262,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
         if query_data.reactive_contexts.borrow().len() == 1 {
             *query_data.clean_task.borrow_mut() = Some(spawn_forever(async move {
                 // Wait as long as the stale time is configured
-                Timer::after(query.clean_time).await;
+                sleep(query.clean_time).await;
 
                 // Finally clear the query
                 let mut storage = storage_clone.write_unchecked();
@@ -324,7 +323,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
         if query_data.reactive_contexts.borrow().is_empty() {
             *query_data.clean_task.borrow_mut() = Some(spawn_forever(async move {
                 // Wait as long as the stale time is configured
-                Timer::after(query.clean_time).await;
+                sleep(query.clean_time).await;
 
                 // Finally clear the query
                 let mut storage = storage.storage.write_unchecked();

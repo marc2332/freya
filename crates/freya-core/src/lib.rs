@@ -27,6 +27,8 @@ pub mod rendering_ticker;
 pub mod runner;
 pub mod scope;
 pub mod scope_id;
+pub mod sleep;
+pub mod unblock;
 pub mod style;
 pub mod text_cache;
 pub mod tree;
@@ -132,6 +134,8 @@ pub mod prelude {
         reactive_context::ReactiveContext,
         rendering_ticker::RenderingTicker,
         scope_id::ScopeId,
+        sleep::sleep,
+        unblock::unblock,
         style::{
             border::*,
             color::*,

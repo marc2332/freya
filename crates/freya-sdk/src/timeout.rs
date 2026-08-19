@@ -3,7 +3,6 @@ use std::time::{
     Instant,
 };
 
-use async_io::Timer;
 use freya_core::prelude::*;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -20,7 +19,7 @@ impl Timeout {
 
         spawn(async move {
             loop {
-                Timer::after(duration).await;
+                sleep(duration).await;
                 if instant.read().elapsed() >= duration && !elapsed() {
                     elapsed.set(true);
                 }

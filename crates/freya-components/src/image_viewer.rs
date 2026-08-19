@@ -206,7 +206,7 @@ impl ImageSource {
         #[cfg(feature = "remote-asset")]
         let client = Http::get();
         let _decode_permit = DECODE_LIMIT.acquire().await;
-        blocking::unblock(move || {
+        unblock(move || {
             #[cfg(feature = "remote-asset")]
             let bytes = source.fetch(&client)?;
             #[cfg(not(feature = "remote-asset"))]

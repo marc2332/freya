@@ -80,3 +80,8 @@ debug-integrity = []
 devtools = ["serde"]
 serde = ["dep:serde"]
 test = []
+
+# Emscripten is single threaded, see `sleep.rs` and `unblock.rs`.
+[target.'cfg(not(target_os = "emscripten"))'.dependencies]
+async-io = { workspace = true }
+blocking = { workspace = true }

@@ -567,6 +567,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             UserEvent::SetCursorIcon(cursor_icon) => {
                                 app.window.set_cursor(cursor_icon);
                             }
+                            UserEvent::OpenUrl(url) => {
+                                let _ = open::that(url);
+                            }
                             UserEvent::SetCustomScaleFactor(custom_scale_factor) => {
                                 app.set_custom_scale_factor(custom_scale_factor);
                             }

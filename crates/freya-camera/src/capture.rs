@@ -6,7 +6,6 @@ use std::sync::{
     Weak,
 };
 
-use blocking::unblock;
 use bytes::Bytes;
 use freya_core::notify::ArcNotify;
 use nokhwa::{
@@ -80,7 +79,7 @@ pub fn spawn_capture(config: CameraConfig) -> CaptureHandle {
         wake: handle.wake.clone(),
     };
 
-    unblock(move || {
+    blocking::unblock(move || {
         if let Err(err) = run_capture(config, &producer) {
             producer.publish(|slot| slot.error = Some(err));
         }

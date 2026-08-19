@@ -60,6 +60,9 @@ tray-icon = { workspace = true, optional = true }
 # Clipboard
 freya-clipboard = { workspace = true }
 
+# Opening urls
+open = { workspace = true }
+
 [target.'cfg(not(target_os = "android"))'.dependencies]
 # Crash handler
 rfd = { workspace = true }

@@ -1,6 +1,5 @@
 use std::time::Duration;
 
-use async_io::Timer;
 use freya_core::{
     elements::image::ImageHandle,
     prelude::*,
@@ -155,7 +154,7 @@ impl VideoPlayer {
         let source = self.source.peek().clone();
         let player = *self;
         let handle = spawn(async move {
-            Timer::after(debounce).await;
+            sleep(debounce).await;
             player.run(source, position, start_paused).await;
         })
         .owned();

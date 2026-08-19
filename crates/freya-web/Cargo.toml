@@ -1,0 +1,27 @@
+[package]
+name = "freya-web"
+version = "0.5.0-rc.1"
+description = "Web renderer for Freya"
+edition = "2024"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "web", "wasm"]
+categories = ["gui", "wasm"]
+
+[lints]
+workspace = true
+
+[target.'cfg(target_os = "emscripten")'.dependencies]
+freya-core = { workspace = true }
+freya-components = { workspace = true }
+freya-clipboard = { workspace = true }
+freya-engine = { workspace = true, features = ["gl"] }
+torin = { workspace = true }
+ragnarok = { workspace = true }
+accesskit = { workspace = true }
+futures-channel = { workspace = true }
+tracing = { workspace = true }
+gl = { workspace = true }

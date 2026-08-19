@@ -18,7 +18,7 @@ workspace = true
 features = ["docs"]
 
 [features]
-router = ["dep:open", "dep:freya-router"]
+router = ["dep:freya-router"]
 remote-asset = ["dep:reqwest"]
 docs = ["dep:embed-doc-image"]
 gif = ["dep:gif"]
@@ -43,17 +43,14 @@ paste = "1.0.15"
 chrono = { version = "0.4", optional = true }
 
 # Router
-open = { workspace = true, optional = true }
 freya-router = { workspace = true, optional = true }
 
 # Cache
-async-io = { workspace = true }
 
 # Remote Image
 reqwest = { workspace = true, optional = true }
 
 # Image viewer
-blocking = { workspace = true }
 bytes = { version = "1.10.1" }
 euclid = { workspace = true }
 async-lock = "3"

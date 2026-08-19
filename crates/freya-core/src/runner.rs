@@ -611,7 +611,7 @@ impl Runner {
         }
     }
 
-    /// Useful for freya-testing
+    /// Like [Self::handle_events], but returns instead of waiting for more work.
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     pub fn handle_events_immediately(&mut self) {
         self.handle_events_immediately_with(&mut |_| {})
@@ -619,6 +619,9 @@ impl Runner {
 
     /// Like [Self::handle_events_immediately], notifying the observer around every tasks polling
     /// batch.
+    ///
+    /// Tasks are polled even when there are dirty scopes, otherwise a constant flow of events
+    /// would starve them.
     pub fn handle_events_immediately_with(&mut self, observer: &mut dyn FnMut(TasksPollStage)) {
         while let Ok(msg) = self.receiver.try_recv() {
             match msg {
@@ -629,10 +632,6 @@ impl Runner {
                     self.dirty_tasks.push_back(task_id);
                 }
             }
-        }
-
-        if !self.dirty_scopes.is_empty() {
-            return;
         }
 
         self.poll_dirty_tasks(observer);

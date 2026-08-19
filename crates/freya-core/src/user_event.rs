@@ -17,6 +17,9 @@ pub enum UserEvent {
     /// Set a new cursor icon.
     SetCursorIcon(CursorIcon),
 
+    /// Open an url with whatever the platform uses to browse the web.
+    OpenUrl(String),
+
     /// Set a custom scale factor.
     SetCustomScaleFactor(f64),
 

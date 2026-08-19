@@ -77,7 +77,7 @@ all-tests = [
 ]
 docs = ["all-debug"]
 # Features
-winit = ["dep:freya-winit"]
+winit = ["dep:freya-winit", "dep:freya-performance-plugin"]
 router = [
   "dep:freya-router",
   "freya-components/router",
@@ -87,7 +87,8 @@ remote-asset = ["freya-components/remote-asset", "freya-markdown?/remote-asset"]
 i18n = ["dep:freya-i18n"]
 engine = []
 devtools = ["dep:freya-devtools", "freya-core/devtools"]
-performance = []
+# The overlay plugin depends on freya-winit.
+performance = ["winit"]
 plot = ["dep:plotters", "dep:freya-plotters-backend"]
 hotreload = ["winit", "freya-core/hotreload", "freya-winit/hotreload"]
 gif = ["freya-components/gif"]
@@ -135,7 +136,7 @@ freya-video = { workspace = true, optional = true }
 freya-camera = { workspace = true, optional = true }
 
 # Performance
-freya-performance-plugin = { workspace = true }
+freya-performance-plugin = { workspace = true, optional = true }
 freya-material-design = { workspace = true, optional = true }
 freya-testing = { workspace = true, optional = true }
 

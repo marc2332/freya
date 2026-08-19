@@ -16,8 +16,6 @@ use std::{
 };
 
 use anyhow::Context;
-use async_io::Timer;
-use blocking::unblock;
 use bytes::Bytes;
 use freya_core::{
     elements::image::{
@@ -166,7 +164,7 @@ impl GifSource {
         let source = self.clone();
         #[cfg(feature = "remote-asset")]
         let client = Http::get();
-        blocking::unblock(move || {
+        unblock(move || {
             let bytes = match source {
                 #[cfg(feature = "remote-asset")]
                 Self::Uri(uri) => client.get(uri).send()?.error_for_status()?.bytes()?,
@@ -359,7 +357,7 @@ impl Component for GifViewer {
             loop {
                 for (i, frame) in frames.frames.iter().enumerate() {
                     *status.write() = Status::Playing(i);
-                    Timer::after(frame.delay).await;
+                    sleep(frame.delay).await;
                 }
             }
         };

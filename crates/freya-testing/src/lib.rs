@@ -217,6 +217,7 @@ impl TestingRunner {
                             requested_focus_strategy.borrow_mut().replace(strategy);
                         }
                         UserEvent::RequestRedraw
+                        | UserEvent::OpenUrl(_)
                         | UserEvent::SetCursorIcon(_)
                         | UserEvent::SetCustomScaleFactor(_)
                         | UserEvent::Erased(_) => {
