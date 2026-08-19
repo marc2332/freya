@@ -306,6 +306,7 @@ pub trait TextEditor {
         }
     }
 
+    /// Cursor position one visual line up or down.
     fn visual_line_position(
         &self,
         holder: &ParagraphHolder,
@@ -337,13 +338,14 @@ pub trait TextEditor {
             .position(|line| (cursor_rect.top as f64) < line.baseline + line.descent)?;
         let line = lines.get(current.checked_add_signed(line_offset)?)?;
 
-        let mut x = cursor_rect.left as i32;
+        // Clamp to the end of soft wrapped lines
+        let mut horizontal_position = cursor_rect.left as i32;
         if !line.hard_break {
-            x = x.min((line.left + line.width) as i32 - 1);
+            horizontal_position = horizontal_position.min((line.left + line.width) as i32 - 1);
         }
 
         let position = paragraph
-            .get_glyph_position_at_coordinate((x, line.baseline as i32))
+            .get_glyph_position_at_coordinate((horizontal_position, line.baseline as i32))
             .position
             .max(0) as usize;
 
