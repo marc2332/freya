@@ -713,20 +713,19 @@ impl ParagraphCursorExt for SkParagraph {
     }
 
     fn cursor_index_at_point(&self, point: (f64, f64)) -> usize {
-        let (mut x, y) = point;
+        let (horizontal_position, vertical_position) = point;
+        let mut horizontal_position = horizontal_position as i32;
         if let Some(line) = self
             .get_line_metrics()
             .into_iter()
-            .find(|line| y < line.baseline + line.descent)
+            .find(|line| vertical_position < line.baseline + line.descent)
+            && !line.hard_break
         {
-            // Past a soft wrap the caret belongs to the end of the line, not to the next one
-            let line_end = line.left + line.width;
-            if !line.hard_break && x > line_end {
-                x = line_end - 0.5;
-            }
+            // Clamp to the end of soft wrapped lines
+            horizontal_position = horizontal_position.min((line.left + line.width) as i32 - 1);
         }
 
-        self.get_glyph_position_at_coordinate((x as i32, y as i32))
+        self.get_glyph_position_at_coordinate((horizontal_position, vertical_position as i32))
             .position
             .max(0) as usize
     }
