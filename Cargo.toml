@@ -34,6 +34,7 @@ members = [
   "./crates/freya-testing",
   "./crates/freya-i18n",
   "./crates/freya-performance-plugin",
+  "./crates/freya-borderless-plugin",
   "./crates/freya-radio",
   "./crates/freya-engine",
   "./crates/freya-devtools",
@@ -77,6 +78,7 @@ freya-router-macro = { path = "./crates/freya-router-macro", version = "0.5.0-rc
 freya-testing = { path = "./crates/freya-testing", version = "0.5.0-rc.2" }
 freya-i18n = { path = "./crates/freya-i18n", version = "0.5.0-rc.2" }
 freya-performance-plugin = { path = "./crates/freya-performance-plugin", version = "0.5.0-rc.2" }
+freya-borderless-plugin = { path = "./crates/freya-borderless-plugin", version = "0.5.0-rc.2" }
 freya-radio = { path = "./crates/freya-radio", version = "0.5.0-rc.2" }
 freya-engine = { path = "./crates/freya-engine", version = "0.5.0-rc.2" }
 freya-devtools = { path = "./crates/freya-devtools", version = "0.5.0-rc.2" }

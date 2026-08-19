@@ -434,3 +434,42 @@ fn file_drop_with_multiple_files() {
         vec![PathBuf::from("first.txt"), PathBuf::from("second.txt")]
     );
 }
+
+#[test]
+fn overlays_escape_clip() {
+    #[derive(Clone, Copy)]
+    struct Counter(State<i32>);
+
+    fn app() -> Element {
+        let mut counter = use_consume::<Counter>().0;
+        rect()
+            .width(Size::px(100.))
+            .height(Size::px(100.))
+            .overflow(Overflow::Clip)
+            .child(
+                rect()
+                    .layer(Layer::Overlay)
+                    .width(Size::px(300.))
+                    .height(Size::px(300.))
+                    .position(Position::new_global().top(0.).left(0.))
+                    .background((255, 0, 0))
+                    .on_pointer_down(move |_| *counter.write() += 1),
+            )
+            .into()
+    }
+
+    let (mut test, counter) = TestingRunner::new(
+        app,
+        (500., 500.).into(),
+        |runner| runner.provide_root_context(|| Counter(State::create(0))),
+        1.,
+    );
+    test.sync_and_update();
+
+    test.click_cursor((50., 50.));
+    assert_eq!(*counter.0.peek(), 1);
+
+    // The overlay escapes the container's clip
+    test.click_cursor((200., 200.));
+    assert_eq!(*counter.0.peek(), 2);
+}
