@@ -654,8 +654,10 @@ impl ParagraphElement {
 }
 
 pub trait ParagraphCursorExt {
+    /// Area of the character at `cursor_index`, if there is any.
     fn measured_cursor_rect(&self, text: &str, cursor_index: usize) -> Option<SkRect>;
 
+    /// Area of the character at `cursor_index`.
     fn cursor_rect(&self, text: &str, cursor_index: usize, text_align: TextAlign) -> SkRect;
 }
 
@@ -707,6 +709,7 @@ impl ParagraphCursorExt for SkParagraph {
             return rect;
         }
 
+        // In case of no rect we just center the cursor
         let left = match text_align {
             TextAlign::Center => self.max_width() / 2.,
             TextAlign::Right | TextAlign::End => self.max_width() - 6.,
