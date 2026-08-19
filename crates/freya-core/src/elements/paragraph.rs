@@ -649,6 +649,9 @@ pub trait ParagraphCursorExt {
 
     /// Area of the character at `cursor_index`.
     fn cursor_rect(&self, text: &str, cursor_index: usize, text_align: TextAlign) -> SkRect;
+
+    /// UTF-16 index of the glyph at `point`, snapped back into the visual line the point lands on.
+    fn cursor_index_at_point(&self, point: (f64, f64)) -> usize;
 }
 
 impl ParagraphCursorExt for SkParagraph {
@@ -707,6 +710,25 @@ impl ParagraphCursorExt for SkParagraph {
         };
 
         SkRect::new(left, 0., left + 6., self.height())
+    }
+
+    fn cursor_index_at_point(&self, point: (f64, f64)) -> usize {
+        let (mut x, y) = point;
+        if let Some(line) = self
+            .get_line_metrics()
+            .into_iter()
+            .find(|line| y < line.baseline + line.descent)
+        {
+            // Past a soft wrap the caret belongs to the end of the line, not to the next one
+            let line_end = line.left + line.width;
+            if !line.hard_break && x > line_end {
+                x = line_end - 0.5;
+            }
+        }
+
+        self.get_glyph_position_at_coordinate((x as i32, y as i32))
+            .position
+            .max(0) as usize
     }
 }
 
