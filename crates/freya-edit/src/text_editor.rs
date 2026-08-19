@@ -316,21 +316,11 @@ pub trait TextEditor {
         let holder = holder.0.borrow();
         let ParagraphHolderInner { paragraph, .. } = holder.as_ref()?;
 
-        let cursor_pos = self.cursor_pos();
-        let (cursor_rect, line_start) = match editor_line {
-            EditorLine::SingleParagraph => {
-                (paragraph.measured_cursor_rect(&self.text(), cursor_pos)?, 0)
-            }
-            EditorLine::Paragraph(line_index) => {
-                let line = self.line(line_index)?;
-                let line_start = self.char_to_utf16_cu(self.line_to_char(line_index));
-                (
-                    paragraph
-                        .measured_cursor_rect(&line.text, cursor_pos.saturating_sub(line_start))?,
-                    line_start,
-                )
-            }
-        };
+        if !matches!(editor_line, EditorLine::SingleParagraph) {
+            return None;
+        }
+
+        let cursor_rect = paragraph.measured_cursor_rect(&self.text(), self.cursor_pos())?;
 
         let lines = paragraph.get_line_metrics();
         let current = lines
@@ -349,7 +339,7 @@ pub trait TextEditor {
             .position
             .max(0) as usize;
 
-        Some(line_start + position)
+        Some(position)
     }
 
     /// Move the cursor 1 grapheme cluster to the right
