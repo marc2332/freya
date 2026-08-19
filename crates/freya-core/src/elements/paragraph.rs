@@ -484,8 +484,7 @@ impl ElementExt for ParagraphElement {
             highlights_paint.set_color(self.cursor_style_data.highlight_color);
 
             if rects.is_empty() && *from == 0 {
-                let caret_rect = cursor_character_rect(
-                    paragraph,
+                let caret_rect = paragraph.cursor_rect(
                     &self.text(),
                     *from,
                     context.text_style_state.text_align,
@@ -518,8 +517,7 @@ impl ElementExt for ParagraphElement {
         if let Some(cursor_index) = self.cursor_index
             && self.cursor_style == CursorStyle::Block
         {
-            let mut cursor_rect = cursor_character_rect(
-                paragraph,
+            let mut cursor_rect = paragraph.cursor_rect(
                 &self.text(),
                 cursor_index,
                 context.text_style_state.text_align,
@@ -544,8 +542,7 @@ impl ElementExt for ParagraphElement {
             && !visible_highlights
             && self.cursor_style != CursorStyle::Block
         {
-            let mut cursor_rect = cursor_character_rect(
-                paragraph,
+            let mut cursor_rect = paragraph.cursor_rect(
                 &self.text(),
                 cursor_index,
                 context.text_style_state.text_align,
@@ -649,62 +646,73 @@ impl ParagraphElement {
     }
 }
 
-/// Rect of the grapheme cluster at `cursor_index` (in UTF-16 code units),
-/// or a caret stub when there is nothing to measure. A caret after a
-/// trailing line break lands on the empty last line.
-pub fn cursor_character_rect(
-    paragraph: &SkParagraph,
-    text: &str,
-    cursor_index: usize,
-    text_align: TextAlign,
-) -> SkRect {
-    let mut cluster = 0..0;
-    let mut cluster_byte_index = 0;
-    for (byte_index, grapheme) in text.grapheme_indices(true) {
-        cluster = cluster.end..cluster.end + grapheme.encode_utf16().count();
-        cluster_byte_index = byte_index;
-        if cluster.end > cursor_index {
-            break;
+/// Cursor measuring over a laid out paragraph, in scaled coordinates relative to it.
+pub trait ParagraphCursorExt {
+    /// Rect of the grapheme cluster at `cursor_index`, or `None` when the paragraph has no lines.
+    fn measured_cursor_rect(&self, text: &str, cursor_index: usize) -> Option<SkRect>;
+
+    /// Rect of the grapheme cluster at `cursor_index`, or a caret stub when there is nothing to measure.
+    fn cursor_rect(&self, text: &str, cursor_index: usize, text_align: TextAlign) -> SkRect;
+}
+
+impl ParagraphCursorExt for SkParagraph {
+    fn measured_cursor_rect(&self, text: &str, cursor_index: usize) -> Option<SkRect> {
+        let mut cluster = 0..0;
+        let mut cluster_byte_index = 0;
+        for (byte_index, grapheme) in text.grapheme_indices(true) {
+            cluster = cluster.end..cluster.end + grapheme.encode_utf16().count();
+            cluster_byte_index = byte_index;
+            if cluster.end > cursor_index {
+                break;
+            }
         }
+
+        if !cluster.is_empty() {
+            // A line below the final cluster is the empty line after a trailing line break
+            if cluster.end <= cursor_index
+                && let Some(cluster_line) = self.get_line_number_at(cluster_byte_index)
+                && let Some(line) = self.get_line_metrics_at(cluster_line + 1)
+            {
+                let left = line.left as f32;
+                let top = (line.baseline - line.ascent) as f32;
+                let bottom = (line.baseline + line.descent) as f32;
+                return Some(SkRect::new(left, top, left, bottom));
+            }
+
+            let rects = self.get_rects_for_range(
+                cluster.clone(),
+                RectHeightStyle::Tight,
+                RectWidthStyle::Tight,
+            );
+            if let Some(rect) = rects.first() {
+                let mut rect = rect.rect;
+                if cluster.end <= cursor_index {
+                    rect.left = rect.right;
+                }
+                return Some(rect);
+            }
+        }
+
+        let line = self.get_line_metrics_at(0)?;
+        let left = line.left as f32;
+
+        Some(SkRect::new(left, 0., left + 6., line.height as f32))
     }
 
-    if !cluster.is_empty() {
-        // A line below the final cluster is the empty line after a trailing line break
-        if cluster.end <= cursor_index
-            && let Some(cluster_line) = paragraph.get_line_number_at(cluster_byte_index)
-            && let Some(line) = paragraph.get_line_metrics_at(cluster_line + 1)
-        {
-            let left = line.left as f32;
-            let top = (line.baseline - line.ascent) as f32;
-            let bottom = (line.baseline + line.descent) as f32;
-            return SkRect::new(left, top, left, bottom);
-        }
-
-        let rects = paragraph.get_rects_for_range(
-            cluster.clone(),
-            RectHeightStyle::Tight,
-            RectWidthStyle::Tight,
-        );
-        if let Some(rect) = rects.first() {
-            let mut rect = rect.rect;
-            if cluster.end <= cursor_index {
-                rect.left = rect.right;
-            }
+    fn cursor_rect(&self, text: &str, cursor_index: usize, text_align: TextAlign) -> SkRect {
+        if let Some(rect) = self.measured_cursor_rect(text, cursor_index) {
             return rect;
         }
+
+        let left = match text_align {
+            TextAlign::Center => self.max_width() / 2.,
+            TextAlign::Right | TextAlign::End => self.max_width() - 6.,
+            _ => 0.,
+        };
+
+        SkRect::new(left, 0., left + 6., self.height())
     }
 
-    if let Some(line) = paragraph.get_line_metrics_at(0) {
-        let left = line.left as f32;
-        return SkRect::new(left, 0., left + 6., line.height as f32);
-    }
-
-    let left = match text_align {
-        TextAlign::Center => paragraph.max_width() / 2.,
-        TextAlign::Right | TextAlign::End => paragraph.max_width() - 6.,
-        _ => 0.,
-    };
-    SkRect::new(left, 0., left + 6., paragraph.height())
 }
 
 impl From<Paragraph> for Element {

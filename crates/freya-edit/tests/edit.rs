@@ -33,6 +33,8 @@ fn multiple_lines_single_editor() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -143,6 +145,8 @@ fn single_line_multiple_editors() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -239,6 +243,8 @@ fn highlight_multiple_lines_single_editor() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -301,6 +307,8 @@ fn highlights_single_line_multiple_editors() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -404,6 +412,8 @@ fn special_text_editing() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -463,6 +473,8 @@ fn backspace_remove() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -539,6 +551,8 @@ fn highlight_shift_click_multiple_lines_single_editor() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -606,6 +620,8 @@ fn highlights_shift_click_single_line_multiple_editors() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -725,6 +741,8 @@ fn double_click_select_word() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -795,6 +813,8 @@ fn triple_click_select_line() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -866,6 +886,8 @@ fn quadruple_click_select_all() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -929,6 +951,8 @@ fn double_click_select_word_single_line_multiple_editors() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -1016,6 +1040,8 @@ fn triple_click_select_line_single_line_multiple_editors() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -1126,6 +1152,8 @@ fn highlight_all_text() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -1215,6 +1243,8 @@ fn replace_text() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -1291,6 +1321,8 @@ fn navigate_empty_lines() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -1347,6 +1379,8 @@ fn cursor_word_navigation() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -1495,6 +1529,8 @@ fn cursor_word_navigation_with_selection() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -1572,6 +1608,8 @@ fn word_deletion() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -1685,12 +1723,12 @@ fn arrow_down_clamps_to_last_line_end() {
         EditorHistory::new(Duration::from_millis(10)),
     );
 
-    editor.cursor_down();
+    editor.cursor_down(None, None);
 
     assert_eq!(editor.cursor_row(), 1);
     assert_eq!(editor.cursor_col(), 5);
 
-    editor.cursor_up();
+    editor.cursor_up(None, None);
 
     assert_eq!(editor.cursor_row(), 0);
     assert_eq!(editor.cursor_col(), 5);
@@ -1702,7 +1740,7 @@ fn arrow_down_clamps_to_last_line_end() {
         EditorHistory::new(Duration::from_millis(10)),
     );
 
-    editor.cursor_down();
+    editor.cursor_down(None, None);
 
     assert_eq!(editor.cursor_row(), 1);
     assert_eq!(editor.cursor_col(), 2);
@@ -1718,7 +1756,16 @@ fn home_end_navigation() {
     );
 
     let press = |editor: &mut RopeEditor, key: NamedKey, modifiers: Modifiers| {
-        editor.process_key(&Key::Named(key), &modifiers, false, true, true, true);
+        editor.process_key(
+        &Key::Named(key),
+        &modifiers,
+        None,
+        None,
+        false,
+        true,
+        true,
+        true,
+    );
     };
 
     press(&mut editor, NamedKey::End, Modifiers::empty());

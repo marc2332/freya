@@ -9,8 +9,8 @@ use std::{
 
 use freya_core::{
     elements::paragraph::{
+        ParagraphCursorExt,
         ParagraphHolderInner,
-        cursor_character_rect,
     },
     prelude::*,
 };
@@ -462,8 +462,7 @@ impl Component for Input {
                 InputMode::Shown => editor.rope().to_string(),
             };
 
-            let cursor_rect =
-                cursor_character_rect(paragraph, &text, editor.cursor_pos(), text_align);
+            let cursor_rect = paragraph.cursor_rect(&text, editor.cursor_pos(), text_align);
             let cursor_x = cursor_rect.left / (*scale_factor as f32);
 
             // Visible window start
@@ -517,6 +516,8 @@ impl Component for Input {
                     editable.process_event(EditableEvent::KeyDown {
                         key: &key,
                         modifiers,
+                        editor_line: Some(EditorLine::SingleParagraph),
+                        holder: Some(&holder.read()),
                     });
                     let text = editable.editor().read().committed_text();
 

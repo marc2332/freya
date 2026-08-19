@@ -1,4 +1,5 @@
 use std::{
+    borrow::Cow,
     fmt::Display,
     ops::Range,
 };
@@ -228,6 +229,10 @@ impl TextEditor for RopeEditor {
 
     fn char_to_utf16_cu(&self, idx: usize) -> usize {
         self.rope.char_to_utf16_cu(idx)
+    }
+
+    fn text(&self) -> Cow<'_, str> {
+        self.rope.slice(..).into()
     }
 
     fn line(&self, line_idx: usize) -> Option<Line<'_>> {

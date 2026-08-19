@@ -33,6 +33,8 @@ pub enum EditableEvent<'a> {
     KeyDown {
         key: &'a Key,
         modifiers: Modifiers,
+        editor_line: Option<EditorLine>,
+        holder: Option<&'a ParagraphHolder>,
     },
     KeyUp {
         key: &'a Key,
@@ -172,7 +174,12 @@ impl EditableEvent<'_> {
             EditableEvent::Release => {
                 dragging.write().clicked = false;
             }
-            EditableEvent::KeyDown { key, modifiers } => {
+            EditableEvent::KeyDown {
+                key,
+                modifiers,
+                editor_line,
+                holder,
+            } => {
                 match key {
                     // Handle dragging
                     Key::Named(NamedKey::Shift) => {
@@ -184,6 +191,8 @@ impl EditableEvent<'_> {
                             let event = editor.process_key(
                                 key,
                                 &modifiers,
+                                editor_line,
+                                holder,
                                 config.allow_tabs,
                                 config.allow_changes,
                                 config.allow_read_clipboard,
