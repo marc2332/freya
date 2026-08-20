@@ -124,7 +124,8 @@ pub(crate) fn spawn_pty(
             .map_err(|_| TerminalError::NotInitialized)?,
     );
 
-    pair.slave
+    let mut child = pair
+        .slave
         .spawn_command(command)
         .map_err(|_| TerminalError::NotInitialized)?;
     let mut reader = blocking::Unblock::new(
@@ -166,28 +167,37 @@ pub(crate) fn spawn_pty(
                         output_notifier.notify();
                         platform.send(UserEvent::RequestRedraw);
                     }
-                    // Interruptions and empty reads are transient.
-                    Some(Err(err))
-                        if matches!(err.kind(), ErrorKind::Interrupted | ErrorKind::WouldBlock) =>
-                    {
-                        tracing::debug!("Ignoring transient PTY read error: {err}");
-                    }
-                    Some(Err(err)) => {
-                        tracing::error!("Closing terminal after PTY read error: {err}");
-                        break;
-                    }
-                    Some(Ok(0)) => {
-                        tracing::debug!("Closing terminal after the PTY reached EOF");
-                        break;
-                    }
-                    Some(Ok(n)) => {
-                        processor.advance(&mut *term.borrow_mut(), &buf[..n]);
+                    Some(Ok(read_bytes)) if read_bytes > 0 => {
+                        processor.advance(&mut *term.borrow_mut(), &buf[..read_bytes]);
                         output_notifier.notify();
                         platform.send(UserEvent::RequestRedraw);
                     }
+                    Some(Err(err))
+                        if matches!(err.kind(), ErrorKind::Interrupted | ErrorKind::WouldBlock) =>
+                    {
+                        tracing::debug!("Retrying interrupted PTY read, {err}");
+                    }
+                    Some(Err(err)) => {
+                        tracing::warn!(
+                            "PTY read failed with {err}, kind {:?}, os error {:?}",
+                            err.kind(),
+                            err.raw_os_error()
+                        );
+                        break;
+                    }
+                    Some(Ok(_)) => {
+                        tracing::info!("PTY reached EOF, waiting for the shell to exit");
+                        break;
+                    }
                 }
             }
-            // PTY closed: drop the writer and notify observers.
+
+            // Nothing left to read does not mean the shell is gone, only its exit says so.
+            match blocking::unblock(move || child.wait()).await {
+                Ok(status) => tracing::info!("Terminal closed, the shell exited with {status}"),
+                Err(err) => tracing::warn!("Terminal closed, the shell was unreachable, {err}"),
+            }
+
             *writer.borrow_mut() = None;
             closer_notifier.notify();
             platform.send(UserEvent::RequestRedraw);

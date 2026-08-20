@@ -114,6 +114,7 @@ pub(crate) struct TerminalInner {
 
 impl Drop for TerminalCleaner {
     fn drop(&mut self) {
+        tracing::info!("Dropping the last terminal handle, closing the PTY");
         *self.writer.borrow_mut() = None;
         self.pty_task.try_cancel();
         self.closer_notifier.notify();
