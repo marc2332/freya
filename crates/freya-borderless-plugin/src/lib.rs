@@ -125,16 +125,10 @@ impl FreyaPlugin for BorderlessPlugin {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 struct BorderlessRoot {
     thickness: f32,
     inner: Element,
-}
-
-impl PartialEq for BorderlessRoot {
-    fn eq(&self, other: &Self) -> bool {
-        self.thickness == other.thickness
-    }
 }
 
 impl Component for BorderlessRoot {
