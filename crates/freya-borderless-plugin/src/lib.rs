@@ -140,8 +140,7 @@ impl PartialEq for BorderlessRoot {
 impl Component for BorderlessRoot {
     fn render(&self) -> impl IntoElement {
         rect()
-            .width(Size::fill())
-            .height(Size::fill())
+            .expanded()
             .child(self.inner.clone())
             .child(ResizeBands {
                 thickness: self.thickness,
