@@ -260,12 +260,14 @@ fn is_ftl_file(entry: &std::path::Path) -> bool {
 /// }
 /// ```
 pub fn use_init_i18n(init: impl FnOnce() -> I18nConfig) -> I18n {
-    use_provide_root_context(move || {
-        // Coverage false -ve: See https://github.com/xd009642/tarpaulin/issues/1675
-        match I18n::create_global(init()) {
-            Ok(i18n) => i18n,
-            Err(e) => panic!("Failed to create I18n context: {e}"),
-        }
+    use_hook(move || {
+        GlobalContexts::get().insert_context({
+            // Coverage false -ve: See https://github.com/xd009642/tarpaulin/issues/1675
+            match I18n::create_global(init()) {
+                Ok(i18n) => i18n,
+                Err(e) => panic!("Failed to create I18n context: {e}"),
+            }
+        })
     })
 }
 
