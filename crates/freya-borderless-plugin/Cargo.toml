@@ -2,7 +2,7 @@
 name = "freya-borderless-plugin"
 version = "0.5.0-rc.3"
 edition = "2024"
-description = "Borderless window plugin for Freya, with resize bands and rounded window clipping."
+description = "Borderless window plugin for Freya."
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
 readme = "../../README.md"
