@@ -33,8 +33,12 @@ const DIRECTIONS: [ResizeDirection; 8] = [
 
 /// Plugin for windows without native decorations.
 ///
-/// It overlays [ResizeBands] on top of the app and can optionally clip the whole
-/// canvas with rounded corners. The bands are skipped on macOS.
+/// # Platforms
+///
+/// - **Linux** and **Windows**: overlays [ResizeBands] on top of the app, so dragging
+///   the window borders resizes it and hovering them shows the resize cursors.
+/// - **macOS**: no bands, resizing is left to the system.
+/// - **All**: an optional corner radius clips the whole canvas, overlay layers included.
 ///
 /// # Example
 ///
