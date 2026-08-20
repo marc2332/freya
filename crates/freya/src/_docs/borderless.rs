@@ -1,12 +1,11 @@
 //! # Borderless Windows
 //!
-//! Windows created with `.with_decorations(false)` lose the titlebar and the resize borders
-//! the OS would otherwise draw, leaving the app in charge of both. Freya ships helpers for this:
+//! Windows created with `.with_decorations(false)` have no titlebar and no resize borders,
+//! so the app provides them:
 //!
-//! - The `BorderlessPlugin` plugin from the `freya-borderless-plugin` crate, gated behind
-//!   the `borderless` feature.
-//! - The [TitlebarButton](crate::components::TitlebarButton) component (`titlebar` feature) and the
-//!   [window_drag](freya_winit::WindowDragExt::window_drag) method to build a custom titlebar.
+//! - `BorderlessPlugin`, from the `freya-borderless-plugin` crate, behind the `borderless` feature.
+//! - [TitlebarButton](crate::components::TitlebarButton) (`titlebar` feature) and
+//!   [window_drag](freya_winit::WindowDragExt::window_drag), to build a custom titlebar.
 //!
 //! Register the plugin when launching:
 //!
@@ -30,3 +29,10 @@
 //!     )
 //! }
 //! ```
+//!
+//! ## Platforms
+//!
+//! - **Linux** and **Windows**: the plugin overlays invisible resize bands on top of the app, so
+//!   dragging the window borders resizes it and hovering them shows the resize cursors.
+//! - **macOS**: no bands, resizing is left to the system.
+//! - **All**: an optional corner radius clips the whole canvas, overlay layers included.
