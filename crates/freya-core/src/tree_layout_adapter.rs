@@ -44,6 +44,6 @@ impl TreeAdapter<NodeId> for TreeAdapterFreya<'_> {
     }
 
     fn parent_of(&self, node_id: &NodeId) -> Option<NodeId> {
-        self.parents.get(node_id).cloned()
+        self.parents.get(node_id).copied()
     }
 }
