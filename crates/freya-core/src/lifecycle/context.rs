@@ -100,18 +100,23 @@ pub fn try_consume_root_context<T: Clone + 'static>() -> Option<T> {
     })
 }
 
+#[track_caller]
 pub fn consume_context<T: Clone + 'static>() -> T {
-    try_consume_context_from_scope_id(None)
-        .unwrap_or_else(|| panic!("Context <{}> was not found.", std::any::type_name::<T>()))
+    match try_consume_context_from_scope_id(None) {
+        Some(context) => context,
+        None => panic!("Context <{}> was not found.", std::any::type_name::<T>()),
+    }
 }
 
+#[track_caller]
 pub fn consume_root_context<T: Clone + 'static>() -> T {
-    try_consume_root_context().unwrap_or_else(|| {
-        panic!(
+    match try_consume_root_context() {
+        Some(context) => context,
+        None => panic!(
             "Root context <{}> was not found.",
             std::any::type_name::<T>()
-        )
-    })
+        ),
+    }
 }
 
 pub fn try_consume_context_from_scope_id<T: Clone + 'static>(
@@ -161,8 +166,12 @@ pub fn use_provide_root_context<T: Clone + 'static>(init: impl FnOnce() -> T) ->
 }
 
 /// Get access to a value stored in this component instance or some ancestor.
+#[track_caller]
 pub fn use_consume<T: Clone + 'static>() -> T {
-    use_hook(|| consume_context())
+    match use_hook(|| try_consume_context()) {
+        Some(context) => context,
+        None => panic!("Context <{}> was not found.", std::any::type_name::<T>()),
+    }
 }
 
 /// Try to get access to a value stored in this component instance or some ancestor.

@@ -324,6 +324,7 @@ impl I18n {
     ///     }
     /// }
     /// ```
+    #[track_caller]
     pub fn get() -> Self {
         consume_root_context()
     }
