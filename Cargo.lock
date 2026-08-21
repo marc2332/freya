@@ -2797,6 +2797,7 @@ dependencies = [
  "subsecond",
  "torin",
  "tracing",
+ "tracing-subscriber",
  "unicode-segmentation",
 ]
 

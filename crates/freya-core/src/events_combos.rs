@@ -32,6 +32,18 @@ impl EventsCombos {
         }
     }
 
+    /// Break the multi press chain when the pointer drags away from the last press.
+    pub fn moved(location: CursorPoint) {
+        let mut combos = Self::get();
+        let dragged_away = matches!(
+            &*combos.last_press.read(),
+            Some((_, last_location, _)) if last_location.distance_to(location) > LOCATION_THRESHOLD
+        );
+        if dragged_away {
+            combos.last_press.set(None);
+        }
+    }
+
     pub fn pressed(location: CursorPoint) -> PressEventType {
         let mut combos = Self::get();
         let (event_type, click_count) = match &*combos.last_press.read() {
