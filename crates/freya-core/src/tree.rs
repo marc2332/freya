@@ -111,10 +111,18 @@ pub struct Tree {
 }
 
 impl Tree {
+    /// The scaled layout node of an element.
+    fn scaled_layout_node(element: &Rc<dyn ElementExt>, scale_factor: f32) -> Node {
+        let mut layout_node = element.layout().layout.clone();
+        layout_node.depends_on_inner = element.needs_post_measure();
+        layout_node.scale(scale_factor);
+        layout_node
+    }
+
     /// Register an element and its scaled layout node.
     fn insert_element(&mut self, node_id: NodeId, element: Rc<dyn ElementExt>, scale_factor: f32) {
         self.layout_nodes
-            .insert(node_id, scaled_layout_node(&element, scale_factor));
+            .insert(node_id, Self::scaled_layout_node(&element, scale_factor));
         self.elements.insert(node_id, element);
     }
 
@@ -129,17 +137,9 @@ impl Tree {
         self.layout_nodes.clear();
         for (node_id, element) in &self.elements {
             self.layout_nodes
-                .insert(*node_id, scaled_layout_node(element, scale_factor));
+                .insert(*node_id, Self::scaled_layout_node(element, scale_factor));
         }
     }
-}
-
-/// The scaled layout node of an element.
-fn scaled_layout_node(element: &Rc<dyn ElementExt>, scale_factor: f32) -> Node {
-    let mut layout_node = element.layout().layout.clone();
-    layout_node.depends_on_inner = element.needs_post_measure();
-    layout_node.scale(scale_factor);
-    layout_node
 }
 
 impl Debug for Tree {
