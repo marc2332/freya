@@ -288,6 +288,76 @@ fn highlight_multiple_lines_single_editor() {
 }
 
 #[test]
+fn drag_after_drag_is_not_a_multi_press() {
+    let mut utils = launch_test(|| {
+        let mut editable = use_editable(|| "Hello Rustaceans".to_string(), EditableConfig::new);
+        let holder = use_state(ParagraphHolder::default);
+        let editor = editable.editor().read();
+
+        paragraph()
+            .holder(holder.read().clone())
+            .width(Size::fill())
+            .height(Size::fill())
+            .highlights(
+                editor
+                    .get_visible_selection(EditorLine::SingleParagraph)
+                    .map(|h| vec![h]),
+            )
+            .on_mouse_down(move |e: Event<MouseEventData>| {
+                editable.process_event(EditableEvent::Down {
+                    location: e.element_location,
+                    editor_line: EditorLine::SingleParagraph,
+                    holder: &holder.read(),
+                });
+            })
+            .on_mouse_move(move |e: Event<MouseEventData>| {
+                editable.process_event(EditableEvent::Move {
+                    location: e.element_location,
+                    editor_line: EditorLine::SingleParagraph,
+                    holder: &holder.read(),
+                });
+            })
+            .on_mouse_up(move |_: Event<MouseEventData>| {
+                editable.process_event(EditableEvent::Release);
+            })
+            .span(Span::new(editor.to_string()))
+    });
+    utils.set_fonts(HashMap::from_iter([(
+        "NotoSans",
+        include_bytes!("./NotoSans-Regular.ttf").as_slice(),
+    )]));
+    utils.set_default_fonts(&["NotoSans".into()]);
+
+    utils.send_event(PlatformEvent::Mouse {
+        name: MouseEventName::MouseDown,
+        cursor: (35.0, 3.0).into(),
+        button: Some(MouseButton::Left),
+    });
+    utils.sync_and_update();
+    utils.move_cursor((80.0, 3.0));
+    utils.send_event(PlatformEvent::Mouse {
+        name: MouseEventName::MouseUp,
+        cursor: (80.0, 3.0).into(),
+        button: Some(MouseButton::Left),
+    });
+    utils.sync_and_update();
+
+    let highlights = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.highlights.clone()));
+    assert_eq!(highlights, Some(vec![(5, 10)]));
+
+    utils.move_cursor((35.0, 3.0));
+    utils.send_event(PlatformEvent::Mouse {
+        name: MouseEventName::MouseDown,
+        cursor: (35.0, 3.0).into(),
+        button: Some(MouseButton::Left),
+    });
+    utils.sync_and_update();
+
+    let highlights = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.highlights.clone()));
+    assert_eq!(highlights, Some(vec![]));
+}
+
+#[test]
 fn highlights_single_line_multiple_editors() {
     let mut utils = launch_test(|| {
         let mut editable = use_editable(

@@ -248,7 +248,7 @@ fn criterion_benchmark(c: &mut Criterion) {
 
         g.bench_function(name, |b| {
             let root_area = Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0));
-            b.iter_batched(
+            b.iter_batched_ref(
                 || {
                     let mut measurer = Some(NoopMeasurer);
                     let mut mocked_tree = TestingTree::default();
@@ -336,11 +336,11 @@ fn criterion_benchmark(c: &mut Criterion) {
 
                     (mocked_tree, measurer, layout)
                 },
-                |(mut mocked_tree, mut measurer, mut layout)| {
-                    layout.find_best_root(&mut mocked_tree);
-                    layout.measure(0, root_area, &mut measurer, &mut mocked_tree)
+                |(mocked_tree, measurer, layout)| {
+                    layout.find_best_root(mocked_tree);
+                    layout.measure(0, root_area, measurer, mocked_tree)
                 },
-                criterion::BatchSize::SmallInput,
+                criterion::BatchSize::PerIteration,
             )
         });
     }
