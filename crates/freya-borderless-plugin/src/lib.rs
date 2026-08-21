@@ -16,7 +16,11 @@ use freya_winit::{
 };
 use torin::{
     position::Position,
-    prelude::Size2D,
+    prelude::{
+        Area,
+        Point2D,
+        Size2D,
+    },
     size::Size,
 };
 
@@ -143,19 +147,19 @@ impl Component for BorderlessRoot {
 }
 
 /// Whether the window is fullscreen or maximized.
-pub fn use_edge_to_edge() -> State<bool> {
-    let mut edge_to_edge = use_state(|| false);
+pub fn use_maximized() -> State<bool> {
+    let mut maximized = use_state(|| false);
 
     use_side_effect(move || {
         let _ = Platform::get().root_size.read();
         Platform::get().with_window(None, move |window| {
-            if let Some(mut edge_to_edge) = edge_to_edge.try_write() {
-                *edge_to_edge = window.fullscreen().is_some() || window.is_maximized();
+            if let Some(mut maximized) = maximized.try_write() {
+                *maximized = window.fullscreen().is_some() || window.is_maximized();
             }
         });
     });
 
-    edge_to_edge
+    maximized
 }
 
 /// Invisible bands along the window borders that drive a native resize.
@@ -167,9 +171,9 @@ pub struct ResizeBands {
 
 impl Component for ResizeBands {
     fn render(&self) -> impl IntoElement {
-        let edge_to_edge = use_edge_to_edge();
+        let maximized = use_maximized();
 
-        if edge_to_edge() {
+        if maximized() {
             return rect().into_element();
         }
 
@@ -190,31 +194,13 @@ impl Component for ResizeBands {
 }
 
 fn band(direction: ResizeDirection, size: Size2D, thickness: f32) -> Element {
-    let (left, top, width, height) = geometry(direction, size, thickness);
-
-    rect()
-        .position(Position::new_global().top(top).left(left))
-        .width(Size::px(width))
-        .height(Size::px(height))
-        .on_pointer_enter(move |_| Cursor::set(cursor(direction)))
-        .on_pointer_leave(move |_| Cursor::set(CursorIcon::Default))
-        .on_pointer_down(move |_| {
-            Platform::get().with_window(None, move |window| {
-                let _ = window.drag_resize_window(direction);
-            });
-        })
-        .into_element()
-}
-
-/// Band placement as `(left, top, width, height)`.
-fn geometry(direction: ResizeDirection, size: Size2D, thickness: f32) -> (f32, f32, f32, f32) {
     let corner = thickness * 2.;
     let span_x = (size.width - corner).max(0.);
     let span_y = (size.height - corner).max(0.);
     let far_x = (size.width - thickness).max(0.);
     let far_y = (size.height - thickness).max(0.);
 
-    match direction {
+    let (left, top, width, height) = match direction {
         ResizeDirection::North => (thickness, 0., span_x, thickness),
         ResizeDirection::South => (thickness, far_y, span_x, thickness),
         ResizeDirection::West => (0., thickness, thickness, span_y),
@@ -223,7 +209,25 @@ fn geometry(direction: ResizeDirection, size: Size2D, thickness: f32) -> (f32, f
         ResizeDirection::NorthEast => (span_x, 0., corner, corner),
         ResizeDirection::SouthWest => (0., span_y, corner, corner),
         ResizeDirection::SouthEast => (span_x, span_y, corner, corner),
-    }
+    };
+    let area = Area::new(Point2D::new(left, top), Size2D::new(width, height));
+
+    rect()
+        .position(
+            Position::new_global()
+                .top(area.origin.y)
+                .left(area.origin.x),
+        )
+        .width(Size::px(area.width()))
+        .height(Size::px(area.height()))
+        .on_pointer_enter(move |_| Cursor::set(cursor(direction)))
+        .on_pointer_leave(move |_| Cursor::set(CursorIcon::Default))
+        .on_pointer_down(move |_| {
+            Platform::get().with_window(None, move |window| {
+                let _ = window.drag_resize_window(direction);
+            });
+        })
+        .into_element()
 }
 
 fn cursor(direction: ResizeDirection) -> CursorIcon {
