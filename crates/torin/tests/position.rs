@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 #[cfg(test)]
 use torin::{
     prelude::*,
@@ -36,7 +38,7 @@ pub fn absolute() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Absolute(Box::new(PositionSides {
+            Position::Absolute(Arc::new(PositionSides {
                 top: Some(100.0),
                 right: None,
                 bottom: None,
@@ -51,7 +53,7 @@ pub fn absolute() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Absolute(Box::new(PositionSides {
+            Position::Absolute(Arc::new(PositionSides {
                 top: Some(100.0),
                 right: Some(50.0),
                 bottom: None,
@@ -66,7 +68,7 @@ pub fn absolute() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Absolute(Box::new(PositionSides {
+            Position::Absolute(Arc::new(PositionSides {
                 top: None,
                 right: Some(50.0),
                 bottom: Some(100.0),
@@ -81,7 +83,7 @@ pub fn absolute() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Absolute(Box::new(PositionSides {
+            Position::Absolute(Arc::new(PositionSides {
                 top: None,
                 right: None,
                 bottom: Some(100.0),
@@ -150,7 +152,7 @@ pub fn absolute_inside_offset_container() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(50.0)),
             Size::Pixels(Length::new(50.0)),
-            Position::Absolute(Box::new(PositionSides {
+            Position::Absolute(Arc::new(PositionSides {
                 top: Some(20.0),
                 right: None,
                 bottom: None,
@@ -209,7 +211,7 @@ pub fn global() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Global(Box::new(PositionSides {
+            Position::Global(Arc::new(PositionSides {
                 top: Some(100.0),
                 right: None,
                 bottom: None,
@@ -224,7 +226,7 @@ pub fn global() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Global(Box::new(PositionSides {
+            Position::Global(Arc::new(PositionSides {
                 top: Some(100.0),
                 right: Some(50.0),
                 bottom: None,
@@ -239,7 +241,7 @@ pub fn global() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Global(Box::new(PositionSides {
+            Position::Global(Arc::new(PositionSides {
                 top: None,
                 right: Some(50.0),
                 bottom: Some(100.0),
@@ -254,7 +256,7 @@ pub fn global() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Global(Box::new(PositionSides {
+            Position::Global(Arc::new(PositionSides {
                 top: None,
                 right: None,
                 bottom: Some(100.0),
