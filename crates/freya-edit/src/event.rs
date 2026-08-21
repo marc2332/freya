@@ -141,6 +141,8 @@ impl EditableEvent<'_> {
                 holder,
             } => {
                 if dragging.peek().clicked {
+                    EventsCombos::moved(location);
+
                     let paragraph = holder.0.borrow();
                     let ParagraphHolderInner {
                         paragraph,
