@@ -65,19 +65,13 @@ pub fn provide_context<T: Clone + 'static>(value: T) {
     provide_context_for_scope_id(value, None)
 }
 
-/// Store the given value in the root scope, shared across windows. If a value of the same
+/// Store the given value in the root scope of the current window. If a value of the same
 /// type already exists, it is replaced.
 ///
-/// Only needed for specific cases like values consumed by queries or mutations, which run in
-/// the root scope. Prefer [provide_context] otherwise.
+/// For state shared across all windows use [GlobalContexts] instead.
 pub fn provide_root_context<T: Clone + 'static>(value: T) -> T {
-    match try_consume_root_context::<GlobalContexts>() {
-        Some(global_contexts) => global_contexts.insert_context(value),
-        None => {
-            provide_context_for_scope_id(value.clone(), Some(ScopeId::ROOT));
-            value
-        }
-    }
+    provide_context_for_scope_id(value.clone(), Some(ScopeId::ROOT));
+    value
 }
 
 pub fn provide_context_for_scope_id<T: Clone + 'static>(
@@ -109,11 +103,7 @@ pub fn try_consume_own_context<T: Clone + 'static>() -> Option<T> {
 }
 
 pub fn try_consume_root_context<T: Clone + 'static>() -> Option<T> {
-    try_consume_context_from_scope_id(Some(ScopeId::ROOT)).or_else(|| {
-        let global_contexts =
-            try_consume_context_from_scope_id::<GlobalContexts>(Some(ScopeId::ROOT))?;
-        global_contexts.try_get_context::<T>()
-    })
+    try_consume_context_from_scope_id(Some(ScopeId::ROOT))
 }
 
 pub fn try_consume_context<T: Clone + 'static>() -> Option<T> {
@@ -168,11 +158,10 @@ pub fn use_provide_context<T: Clone + 'static>(init: impl FnOnce() -> T) -> T {
     })
 }
 
-/// Store the given value in the root scope, shared across windows. If a value of the same
+/// Store the given value in the root scope of the current window. If a value of the same
 /// type already exists, that one is returned and `init` is not called.
 ///
-/// Only needed for specific cases like values consumed by queries or mutations, which run in
-/// the root scope. Prefer [use_provide_context] otherwise.
+/// For state shared across all windows use [GlobalContexts] instead.
 pub fn use_provide_root_context<T: Clone + 'static>(init: impl FnOnce() -> T) -> T {
     use_hook(|| match try_consume_root_context::<T>() {
         Some(context) => context,
