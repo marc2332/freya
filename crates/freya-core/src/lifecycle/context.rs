@@ -20,6 +20,7 @@ use crate::{
 pub struct GlobalContexts(Rc<RefCell<FxHashMap<TypeId, Rc<dyn Any>>>>);
 
 impl GlobalContexts {
+    #[track_caller]
     pub fn get() -> GlobalContexts {
         consume_context()
     }
@@ -30,13 +31,15 @@ impl GlobalContexts {
         value
     }
 
+    #[track_caller]
     pub fn get_context<T: Clone + 'static>(&self) -> T {
-        self.try_get_context().unwrap_or_else(|| {
-            panic!(
+        match self.try_get_context() {
+            Some(context) => context,
+            None => panic!(
                 "Global context <{}> was not found.",
                 std::any::type_name::<T>()
-            )
-        })
+            ),
+        }
     }
 
     pub fn try_get_context<T: Clone + 'static>(&self) -> Option<T> {
