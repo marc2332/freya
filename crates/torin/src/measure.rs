@@ -54,7 +54,7 @@ where
     pub layout_metadata: LayoutMetadata,
 }
 
-impl<'a, Key, L, D> MeasureContext<'a, Key, L, D>
+impl<Key, L, D> MeasureContext<'_, Key, L, D>
 where
     Key: NodeKey,
     L: LayoutMeasurer<Key>,
