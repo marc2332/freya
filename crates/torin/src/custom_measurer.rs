@@ -93,6 +93,6 @@ impl LayoutMeasurer<usize> for NoopMeasurer {
     }
 
     fn should_measure_inner_children(&mut self, _node_id: usize) -> bool {
-        false
+        true
     }
 }
