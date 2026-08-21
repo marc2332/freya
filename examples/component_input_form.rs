@@ -19,7 +19,7 @@ fn app() -> impl IntoElement {
     rect().center().expanded().spacing(6.).child(
         Input::new(password)
             .placeholder("Password")
-            .mode(mode.read().clone())
+            .mode(*mode.read())
             .width(Size::px(200.))
             .leading(
                 SvgViewer::new(icons::lucide::lock())

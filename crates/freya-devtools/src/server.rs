@@ -104,9 +104,9 @@ pub(crate) async fn run_server(
     plugin: DevtoolsPlugin,
     plugin_handle: PluginHandle,
 ) -> anyhow::Result<()> {
-    println!("Running the Devtools Server in [::1]:7354");
+    println!("Running the Devtools Server in 0.0.0.0:7354");
 
-    let listener = TcpListener::bind("[::1]:7354").await?;
+    let listener = TcpListener::bind("0.0.0.0:7354").await?;
     loop {
         let (stream, _) = listener.accept().await?;
         let plugin = plugin.clone();

@@ -39,6 +39,48 @@ pub fn scroll_view_wheel() {
 }
 
 #[test]
+pub fn scroll_view_hover_updates_on_scroll() {
+    fn scroll_view_hover_app() -> impl IntoElement {
+        let mut hovered = use_state(|| None::<usize>);
+
+        rect()
+            .child(
+                label()
+                    .height(Size::px(100.))
+                    .text(format!("hovered {:?}", hovered())),
+            )
+            .child(
+                ScrollView::new()
+                    .height(Size::px(400.))
+                    .children((0..4).map(|i| {
+                        rect()
+                            .key(i)
+                            .height(Size::px(200.))
+                            .width(Size::px(200.))
+                            .on_pointer_enter(move |_| hovered.set(Some(i)))
+                    })),
+            )
+    }
+
+    let mut test = launch_test(scroll_view_hover_app);
+
+    let hovered_label = |test: &TestingRunner| {
+        test.find(|_, element| Label::try_downcast(element).map(|label| label.text.to_string()))
+            .unwrap()
+    };
+
+    assert_eq!(hovered_label(&test), "hovered None");
+
+    test.move_cursor((100., 350.));
+    test.sync_and_update();
+    assert_eq!(hovered_label(&test), "hovered Some(1)");
+
+    // Scrolling moves the third item under the cursor
+    test.scroll((100., 350.), (0., -300.));
+    assert_eq!(hovered_label(&test), "hovered Some(2)");
+}
+
+#[test]
 pub fn scroll_view_scrollbar() {
     fn scroll_view_scrollbar_app() -> impl IntoElement {
         ScrollView::new()
