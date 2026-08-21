@@ -56,7 +56,7 @@ fn app() -> impl IntoElement {
 
     use_future(move || {
         async move {
-            let mut ticket = RenderingTicker::get();
+            let ticket = RenderingTicker::get();
             loop {
                 // Continuously render the app so that the shader updates on live
                 ticket.tick().await;

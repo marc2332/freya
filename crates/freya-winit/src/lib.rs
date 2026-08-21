@@ -4,6 +4,8 @@ pub mod reexports {
 
 use std::sync::Arc;
 
+use freya_core::integration::GlobalContexts;
+
 use crate::{
     config::LaunchConfig,
     renderer::{
@@ -79,6 +81,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
     use freya_engine::prelude::{
         FontCollection,
         FontMgr,
+        SkData,
         TypefaceFontProvider,
     };
     use winit::event_loop::EventLoop;
@@ -97,7 +100,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
     let mut provider = TypefaceFontProvider::new();
     for (font_name, font_data) in launch_config.embedded_fonts {
         let typeface = font_mgr
-            .new_from_data(&font_data, None)
+            .new_from_data(SkData::new_copy(&font_data), None)
             .unwrap_or_else(|| panic!("Failed to load font {font_name}."));
         provider.register_typeface(typeface, Some(font_name.as_ref()));
     }
@@ -123,6 +126,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
 
     let mut renderer = WinitRenderer {
         windows: HashMap::default(),
+        global_contexts: GlobalContexts::default(),
         #[cfg(feature = "tray")]
         tray: launch_config.tray,
         #[cfg(all(feature = "tray", not(target_os = "linux")))]

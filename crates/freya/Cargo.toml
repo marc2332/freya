@@ -1,6 +1,6 @@
 [package]
 name = "freya"
-version = "0.4.0"
+version = "0.5.0-rc.3"
 description = "Cross-platform and non-web GUI Library powered by Skia."
 edition = "2024"
 license = "MIT"
@@ -33,9 +33,11 @@ all-crossplatform = [
   "material-design",
   "calendar",
   "sdk",
+  "sdk-tokio",
   "markdown",
   "markdown-code-editor",
   "icons",
+  "icons-lucide",
   "radio",
   "titlebar",
   "terminal",
@@ -94,10 +96,12 @@ calendar = ["freya-components/calendar"]
 markdown = ["dep:freya-markdown"]
 markdown-code-editor = ["markdown", "code-editor", "freya-markdown/code-editor"]
 sdk = ["dep:freya-sdk"]
+sdk-tokio = ["sdk", "freya-sdk/tokio"]
 tray = ["winit", "freya-winit/tray", "dep:tray-icon"]
 material-design = ["dep:freya-material-design"]
 hotpath = ["winit", "freya-core/hotpath", "freya-winit/hotpath"]
 icons = ["dep:freya-icons"]
+icons-lucide = ["icons", "freya-icons/lucide"]
 radio = ["dep:freya-radio"]
 query = ["dep:freya-query"]
 webview = ["dep:freya-webview"]

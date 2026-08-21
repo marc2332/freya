@@ -64,10 +64,7 @@ use crate::{
 /// }
 /// ```
 pub fn label() -> Label {
-    Label {
-        key: DiffKey::None,
-        element: LabelElement::default(),
-    }
+    Label::default()
 }
 
 impl From<&str> for Element {
@@ -352,6 +349,7 @@ impl LayerExt for Label {
 
 impl MaybeExt for Label {}
 
+#[derive(Default, Clone)]
 pub struct Label {
     key: DiffKey,
     element: LabelElement,

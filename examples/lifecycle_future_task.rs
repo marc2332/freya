@@ -12,15 +12,24 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    let mut future = use_future(|| async {
-        Timer::after(Duration::from_secs(1)).await;
-        123
+    let mut counter = use_state(|| 1);
+    let mut future = use_future(move || {
+        let counter = counter();
+        async move {
+            Timer::after(Duration::from_secs(1)).await;
+            counter * 2
+        }
     });
 
     rect()
         .width(Size::fill())
         .height(Size::fill())
         .center()
+        .child(
+            Button::new()
+                .on_press(move |_| counter.set(counter() + 1))
+                .child(format!("Increase counter: {}", counter())),
+        )
         .child(
             Button::new()
                 .on_press(move |_| future.start())

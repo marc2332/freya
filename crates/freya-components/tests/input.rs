@@ -201,6 +201,93 @@ pub fn input_escape_unfocus_test() {
 }
 
 #[test]
+pub fn input_shift_wheel_scroll_test() {
+    fn scroll_app() -> impl IntoElement {
+        let value = use_state(String::new);
+
+        rect().child(Input::new(value).width(Size::px(150.)))
+    }
+
+    let mut test = launch_test(scroll_app);
+
+    // Focus and fill with text wider than the input
+    test.click_cursor((15.0, 15.0));
+    test.write_text("this is a very long text that overflows the input width");
+    test.sync_and_update();
+    test.sync_and_update();
+
+    let paragraph_x = |test: &TestingRunner| {
+        test.find(|node, element| {
+            Paragraph::try_downcast(element).map(|_| node.layout().area.min_x())
+        })
+        .unwrap()
+    };
+
+    // Move the cursor back to the start so the input is scrolled to the beginning
+    test.press_key(Key::Named(NamedKey::Home));
+    test.sync_and_update();
+    let initial_x = paragraph_x(&test);
+
+    // Hold Shift and wheel over the input to scroll it horizontally while focused
+    test.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::Shift),
+        code: Code::ShiftLeft,
+        modifiers: Modifiers::SHIFT,
+    });
+    test.sync_and_update();
+
+    test.send_event(PlatformEvent::Wheel {
+        name: WheelEventName::Wheel,
+        scroll: (0.0, -50.0).into(),
+        cursor: (75.0, 15.0).into(),
+        source: WheelSource::Device,
+    });
+    test.sync_and_update();
+
+    let scrolled_x = paragraph_x(&test);
+    assert!(scrolled_x < initial_x);
+}
+
+#[test]
+pub fn input_drag_scrolls_to_cursor_test() {
+    fn drag_app() -> impl IntoElement {
+        let value =
+            use_state(|| "this is a very long text that overflows the input width".to_string());
+
+        rect().child(Input::new(value).width(Size::px(150.)))
+    }
+
+    let mut test = launch_test(drag_app);
+    test.sync_and_update();
+
+    let paragraph_x = |test: &TestingRunner| {
+        test.find(|node, element| {
+            Paragraph::try_downcast(element).map(|_| node.layout().area.min_x())
+        })
+        .unwrap()
+    };
+    let initial_x = paragraph_x(&test);
+
+    // Start dragging inside the input and move past its right edge
+    test.press_cursor((100.0, 15.0));
+    test.sync_and_update();
+    test.move_cursor((400.0, 15.0));
+    test.sync_and_update();
+
+    let dragged_x = paragraph_x(&test);
+    assert!(dragged_x < initial_x);
+
+    // Dragging back past the left edge scrolls back to the beginning
+    test.move_cursor((-500.0, 15.0));
+    test.sync_and_update();
+
+    assert_eq!(paragraph_x(&test), initial_x);
+
+    test.release_cursor((-500.0, 15.0));
+}
+
+#[test]
 pub fn input_auto_focus_test() {
     fn auto_focus_app() -> impl IntoElement {
         let value = use_state(String::new);
@@ -221,4 +308,49 @@ pub fn input_auto_focus_test() {
         Label::try_downcast(element).filter(|label| label.text.as_ref() == "value=typed")
     });
     assert!(label.is_some());
+}
+
+#[test]
+pub fn input_long_typing_follows_cursor_test() {
+    fn typing_app() -> impl IntoElement {
+        let value = use_state(String::new);
+
+        rect().child(Input::new(value).width(Size::px(150.)))
+    }
+
+    let mut test = launch_test(typing_app);
+
+    let paragraph_metrics = |test: &TestingRunner| {
+        test.find(|node, element| {
+            Paragraph::try_downcast(element)
+                .map(|_| (node.layout().area.min_x(), node.layout().area.width()))
+        })
+        .unwrap()
+    };
+
+    test.click_cursor((15.0, 15.0));
+    let (initial_x, _) = paragraph_metrics(&test);
+
+    // Keep typing way beyond the input width, the scroll must follow the cursor every time
+    for _ in 0..20 {
+        test.write_text("some more text ");
+        test.sync_and_update();
+        test.sync_and_update();
+
+        let (min_x, width) = paragraph_metrics(&test);
+        if width > 150.0 {
+            let right_edge = min_x + width;
+            assert!(
+                (right_edge - 150.0).abs() < 2.0,
+                "text end should stay at the right edge, min_x={min_x} width={width}"
+            );
+        }
+    }
+
+    // Moving the cursor back to the start scrolls the input back to the beginning
+    test.press_key(Key::Named(NamedKey::Home));
+    test.sync_and_update();
+
+    let (home_x, _) = paragraph_metrics(&test);
+    assert_eq!(home_x, initial_x);
 }

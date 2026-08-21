@@ -169,6 +169,11 @@ impl Color {
         color.with_a(a).into()
     }
 
+    /// Like [Color::with_a] but with the alpha as `f32` in `0.0..=1.0`.
+    pub fn with_af32(self, a: f32) -> Self {
+        self.with_a((255. * a) as u8)
+    }
+
     pub fn a(self) -> u8 {
         (self.0 >> 24) as _
     }

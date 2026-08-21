@@ -24,7 +24,7 @@ jobs:
         with:
           tool: just
       - name: Install hotpath-utils CLI
-        run: cargo install hotpath --version '^0.15' --bin hotpath-utils --features=utils
+        run: cargo install hotpath --version '^0.22' --bin hotpath-utils --features=utils
       - name: Install linux dependencies
         if: runner.os == 'Linux'
         run: |
@@ -59,7 +59,21 @@ jobs:
         run: |
           git checkout ${{ github.event.pull_request.base.sha }}
           just pa-ci
-      - name: Post PR comment - alloc mode
+      - name: Head core metrics
+        env:
+          HOTPATH_OUTPUT_FORMAT: json
+          HOTPATH_OUTPUT_PATH: /tmp/metrics/head_core.json
+        run: |
+          git checkout ${{ github.event.pull_request.head.sha }}
+          just pc-ci
+      - name: Base core metrics
+        env:
+          HOTPATH_OUTPUT_FORMAT: json
+          HOTPATH_OUTPUT_PATH: /tmp/metrics/base_core.json
+        run: |
+          git checkout ${{ github.event.pull_request.base.sha }}
+          just pc-ci || echo "core_perf is not available in the base branch"
+      - name: Post PR comment alloc mode
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -71,7 +85,7 @@ jobs:
             --benchmark-id "alloc" \
             --github-token "$GH_TOKEN"
 
-      - name: Post PR comment - timing mode
+      - name: Post PR comment timing mode
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -81,4 +95,20 @@ jobs:
             --base-metrics /tmp/metrics/base_timing.json \
             --pr-number '${{ github.event.pull_request.number }}' \
             --benchmark-id "timing" \
+            --github-token "$GH_TOKEN"
+
+      - name: Post PR comment core mode
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ ! -f /tmp/metrics/base_core.json ]; then
+            echo "No base metrics to compare against"
+            exit 0
+          fi
+          hotpath-utils profile-pr \
+            --head-metrics /tmp/metrics/head_core.json \
+            --base-metrics /tmp/metrics/base_core.json \
+            --pr-number '${{ github.event.pull_request.number }}' \
+            --benchmark-id "core" \
             --github-token "$GH_TOKEN"
