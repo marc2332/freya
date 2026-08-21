@@ -260,12 +260,14 @@ fn is_ftl_file(entry: &std::path::Path) -> bool {
 /// }
 /// ```
 pub fn use_init_i18n(init: impl FnOnce() -> I18nConfig) -> I18n {
-    use_provide_root_context(move || {
-        // Coverage false -ve: See https://github.com/xd009642/tarpaulin/issues/1675
-        match I18n::create_global(init()) {
-            Ok(i18n) => i18n,
-            Err(e) => panic!("Failed to create I18n context: {e}"),
-        }
+    use_hook(move || {
+        GlobalContexts::get().insert_context({
+            // Coverage false -ve: See https://github.com/xd009642/tarpaulin/issues/1675
+            match I18n::create_global(init()) {
+                Ok(i18n) => i18n,
+                Err(e) => panic!("Failed to create I18n context: {e}"),
+            }
+        })
     })
 }
 
@@ -290,14 +292,14 @@ pub struct I18n {
 }
 
 impl I18n {
-    /// Try to retrieve the [`I18n`] instance from the root context.
+    /// Try to retrieve the [`I18n`] instance from the global contexts.
     ///
     /// Returns `None` if no [`I18n`] has been provided via [`use_init_i18n`] in any window.
     pub fn try_get() -> Option<Self> {
-        try_consume_root_context()
+        GlobalContexts::get().try_get_context()
     }
 
-    /// Retrieve the [`I18n`] instance from the root context.
+    /// Retrieve the [`I18n`] instance from the global contexts.
     ///
     /// This is the primary way to access the i18n state once any window has called
     /// [`use_init_i18n`].
@@ -325,7 +327,7 @@ impl I18n {
     /// }
     /// ```
     pub fn get() -> Self {
-        consume_root_context()
+        GlobalContexts::get().get_context()
     }
 
     /// Manually create an [`I18n`] instance from an [`I18nConfig`].
@@ -364,8 +366,8 @@ impl I18n {
     /// Unlike [`I18n::create`], the state created here is not scoped to any component and will
     /// live for the entire duration of the application. [`use_init_i18n`] uses this internally
     /// and shares the instance across all windows, so you rarely need to call it directly.
-    /// Call it when you need explicit error handling and share the result yourself with
-    /// [`use_provide_root_context`].
+    /// Call it when you need explicit error handling and share the result yourself by
+    /// inserting it into the [`GlobalContexts`].
     pub fn create_global(
         I18nConfig {
             id: selected_language,
