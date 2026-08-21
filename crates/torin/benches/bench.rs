@@ -334,8 +334,8 @@ fn criterion_benchmark(c: &mut Criterion) {
                     (mocked_tree, measurer, layout)
                 },
                 |(mocked_tree, measurer, layout)| {
-                    layout.find_best_root(&*mocked_tree);
-                    layout.measure(0, root_area, measurer, &*mocked_tree)
+                    layout.find_best_root(mocked_tree);
+                    layout.measure(0, root_area, measurer, mocked_tree)
                 },
                 criterion::BatchSize::PerIteration,
             )
