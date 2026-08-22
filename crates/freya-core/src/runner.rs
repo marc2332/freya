@@ -5,11 +5,7 @@ use std::{
     },
     cell::RefCell,
     cmp::Ordering,
-    collections::{
-        HashMap,
-        HashSet,
-        VecDeque,
-    },
+    collections::VecDeque,
     fmt::Debug,
     rc::Rc,
     sync::atomic::AtomicU64,
@@ -119,7 +115,7 @@ pub struct Mutations {
     pub added: Vec<MutationAdd>,
     pub modified: Vec<MutationModified>,
     pub removed: Vec<MutationRemove>,
-    pub moved: HashMap<NodeId, Vec<MutationMove>>,
+    pub moved: FxHashMap<NodeId, Vec<MutationMove>>,
 }
 
 impl Debug for Mutations {
@@ -1122,7 +1118,7 @@ impl Runner {
         }
 
         // Collect a set of branches to remove in cascade
-        let mut selected_roots: HashMap<&[u32], HashSet<&[u32]>> = HashMap::default();
+        let mut selected_roots: FxHashMap<&[u32], FxHashSet<&[u32]>> = FxHashMap::default();
         let mut scope_removal_buffer = vec![];
 
         // Given some removals like:
@@ -1487,14 +1483,14 @@ pub struct Diff {
 
     pub removed: Vec<Box<[u32]>>,
 
-    pub moved: HashMap<Box<[u32]>, Vec<(u32, u32)>>,
+    pub moved: FxHashMap<Box<[u32]>, Vec<(u32, u32)>>,
 }
 
 /// Converts a new-tree path to its corresponding old-tree path by checking, for each
 /// segment, whether that position was the destination of a movement in `moved`. If so,
 /// the original (`from`) index is substituted so the result can be used to look up nodes
 /// in the pre-diff nodes tree.
-fn resolve_old_path(new_path: &[u32], moved: &HashMap<Box<[u32]>, Vec<(u32, u32)>>) -> Vec<u32> {
+fn resolve_old_path(new_path: &[u32], moved: &FxHashMap<Box<[u32]>, Vec<(u32, u32)>>) -> Vec<u32> {
     let mut old_path = Vec::with_capacity(new_path.len());
     for i in 0..new_path.len() {
         let new_parent = &new_path[..i];
