@@ -326,6 +326,7 @@ impl I18n {
     ///     }
     /// }
     /// ```
+    #[track_caller]
     pub fn get() -> Self {
         GlobalContexts::get().get_context()
     }

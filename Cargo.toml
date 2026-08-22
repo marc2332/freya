@@ -189,25 +189,16 @@ freya = { workspace = true, features = ["all-crossplatform"] }
 freya-core = { workspace = true, features = ["debug-integrity", "test"] }
 freya-engine = { workspace = true }
 torin = { workspace = true }
-ragnarok = { workspace = true }
 freya-edit = { workspace = true }
-freya-router = { workspace = true }
 freya-winit = { workspace = true }
 freya-testing = { workspace = true }
 freya-i18n = { workspace = true }
 freya-performance-plugin = { workspace = true }
 freya-radio = { workspace = true }
-freya-query = { workspace = true }
-freya-icons = { workspace = true, features = ["all"] }
-freya-sdk = { workspace = true, features = ["all"] }
-freya-devtools = { workspace = true, features = ["server", "client"] }
-freya-terminal = { workspace = true }
-freya-code-editor = { workspace = true }
 tree-sitter-rust = "0.24"
 
 freya-skia-safe = { workspace = true }
 
-tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 
 rand = "0.10"
@@ -217,8 +208,6 @@ futures-lite = { workspace = true }
 futures-channel = { workspace = true }
 
 ropey = { workspace = true }
-bitflags = { workspace = true }
-keyboard-types = { workspace = true }
 
 hotpath = { workspace = true }
 
@@ -233,13 +222,11 @@ rfd = { workspace = true }
 # Hacker News example
 serde = { workspace = true }
 serde_json = { workspace = true }
-url = { workspace = true }
 open = { workspace = true }
 ureq = { workspace = true }
 blocking = { workspace = true }
 
 portable-pty = "0.9"
-vt100 = "0.16"
 futures-util = { workspace = true }
 
 [workspace.lints.clippy]

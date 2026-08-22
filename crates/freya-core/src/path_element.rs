@@ -224,8 +224,6 @@ impl PathElement {
                         for i in indexes {
                             let (PathElement::Element { path, .. }
                             | PathElement::Component { path, .. }) = &e2[*i];
-                            // The same element might have mistakenly gotten marked as moved in a previous call
-                            diff.moved.remove(path);
                             diff.removed.push(path.clone());
                             // No need to remove recursively here because scope and tree diff handling already runs recursively
                         }
