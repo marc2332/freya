@@ -649,6 +649,9 @@ pub trait ParagraphCursorExt {
 
     /// Area of the character at `cursor_index`.
     fn cursor_rect(&self, text: &str, cursor_index: usize, text_align: TextAlign) -> SkRect;
+
+    /// Cursor position at the given point.
+    fn cursor_index_at_point(&self, point: (f64, f64)) -> usize;
 }
 
 impl ParagraphCursorExt for SkParagraph {
@@ -707,6 +710,24 @@ impl ParagraphCursorExt for SkParagraph {
         };
 
         SkRect::new(left, 0., left + 6., self.height())
+    }
+
+    fn cursor_index_at_point(&self, point: (f64, f64)) -> usize {
+        let (horizontal_position, vertical_position) = point;
+        let mut horizontal_position = horizontal_position as i32;
+        if let Some(line) = self
+            .get_line_metrics()
+            .into_iter()
+            .find(|line| vertical_position < line.baseline + line.descent)
+            && !line.hard_break
+        {
+            // Clamp to the end of soft wrapped lines
+            horizontal_position = horizontal_position.min((line.left + line.width) as i32 - 1);
+        }
+
+        self.get_glyph_position_at_coordinate((horizontal_position, vertical_position as i32))
+            .position
+            .max(0) as usize
     }
 }
 
