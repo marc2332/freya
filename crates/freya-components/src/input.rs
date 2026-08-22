@@ -20,6 +20,7 @@ use torin::{
     prelude::{
         Alignment,
         Area,
+        AreaModel,
         Content,
         Direction,
     },
@@ -565,9 +566,9 @@ impl Component for Input {
             }
             movement_timeout.reset();
             if !display_placeholder {
-                let area = area.read().to_f64();
-                let global_location = e.global_location().clamp(area.min(), area.max());
-                let location = (global_location - area.min()).to_point();
+                let text_area = area.read().without_gaps(&inner_margin).to_f64();
+                let global_location = e.global_location().clamp(text_area.min(), text_area.max());
+                let location = (global_location - text_area.min()).to_point();
                 editable.process_event(EditableEvent::Down {
                     location,
                     editor_line: EditorLine::SingleParagraph,
@@ -601,9 +602,8 @@ impl Component for Input {
 
         let on_global_pointer_move = move |e: Event<PointerEventData>| {
             if a11y_id.is_focused() && *is_dragging.read() {
-                let mut location = e.global_location();
-                location.x -= area.read().min_x() as f64;
-                location.y -= area.read().min_y() as f64;
+                let text_area = area.read().without_gaps(&inner_margin).to_f64();
+                let location = (e.global_location() - text_area.min()).to_point();
                 editable.process_event(EditableEvent::Move {
                     location,
                     editor_line: EditorLine::SingleParagraph,

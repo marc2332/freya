@@ -102,7 +102,7 @@ impl Component for ProgressBar {
         });
 
         rect()
-            .a11y_alt(format!("Progress {}%", progress()))
+            .a11y_alt(format!("Progress {:.2}%", self.progress))
             .a11y_focusable(true)
             .a11y_role(AccessibilityRole::ProgressIndicator)
             .horizontal()
@@ -132,7 +132,7 @@ impl Component for ProgressBar {
                                 .width(Size::fill())
                                 .color(progressbar_theme.color)
                                 .text_align(TextAlign::Center)
-                                .text(format!("{}%", self.progress))
+                                .text(format!("{:.2}%", self.progress))
                                 .max_lines(1),
                         )
                     }),
