@@ -16,6 +16,7 @@ use torin::{
         Alignment,
         Direction,
         Length,
+        Order,
         Position,
         VisibleSize,
     },
@@ -500,6 +501,24 @@ where
     /// Set how children share the available space along the direction axis. See [`Content`].
     fn content(mut self, content: Content) -> Self {
         self.get_layout().layout.content = content;
+        self
+    }
+
+    /// Set the order children are stacked in along the direction axis. See [`Order`].
+    fn order(mut self, order: impl Into<Order>) -> Self {
+        self.get_layout().layout.order = order.into();
+        self
+    }
+
+    /// Stack children in their natural order along the direction axis. Shorthand for [`order`](Self::order) set to [`Order::Forward`].
+    fn forward_order(mut self) -> Self {
+        self.get_layout().layout.order = Order::forward();
+        self
+    }
+
+    /// Stack children in reverse order along the direction axis. Shorthand for [`order`](Self::order) set to [`Order::Backward`].
+    fn backward_order(mut self) -> Self {
+        self.get_layout().layout.order = Order::backward();
         self
     }
     /// Center children on both axes. Shorthand for [`main_align`](Self::main_align) and [`cross_align`](Self::cross_align) set to [`Alignment::Center`].

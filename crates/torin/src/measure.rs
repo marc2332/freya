@@ -543,7 +543,10 @@ where
         // Parent Node is dirty.
         parent_is_dirty: bool,
     ) {
-        let children = self.tree_adapter.children_of(parent_node_id);
+        let mut children = self.tree_adapter.children_of(parent_node_id);
+        if parent_node.order.is_backward() {
+            children.reverse();
+        }
 
         let initial_area = *inner_area;
 

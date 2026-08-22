@@ -23,6 +23,7 @@ use torin::{
     direction::Direction,
     gaps::Gaps,
     geometry::Length,
+    order::Order,
     prelude::{
         Area,
         AreaOf,
@@ -83,6 +84,7 @@ impl NodeState {
                 "direction",
                 AttributeType::Direction(&self.layout.direction),
             ),
+            ("order", AttributeType::Order(&self.layout.order)),
             ("padding", AttributeType::Measures(self.layout.padding)),
             ("margin", AttributeType::Measures(self.layout.margin)),
             ("position", AttributeType::Position(&self.layout.position)),
@@ -190,6 +192,7 @@ pub enum AttributeType<'a> {
     Measures(Gaps),
     CornerRadius(CornerRadius),
     Direction(&'a Direction),
+    Order(&'a Order),
     Position(&'a Position),
     Content(&'a Content),
     Alignment(&'a Alignment),

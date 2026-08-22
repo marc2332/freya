@@ -44,6 +44,7 @@ pub fn attribute_element(name: &str, attribute: AttributeType<'_>) -> Element {
             .into(),
         AttributeType::Text(text) => Property::new(name, text).into(),
         AttributeType::Direction(direction) => Property::new(name, direction.pretty()).into(),
+        AttributeType::Order(order) => Property::new(name, order.pretty()).into(),
         AttributeType::Position(position) => Property::new(name, position.pretty()).into(),
         AttributeType::Content(content) => Property::new(name, content.pretty()).into(),
         AttributeType::Alignment(alignment) => Property::new(name, alignment.pretty()).into(),
