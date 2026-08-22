@@ -1,9 +1,9 @@
 use std::{
     cell::Cell,
     rc::Rc,
+    time::Duration,
 };
 
-#[cfg(debug_assertions)]
 use async_io::Timer;
 use freya::prelude::Size;
 use freya_query::prelude::*;
@@ -66,6 +66,61 @@ fn query_basic() {
             .text
             .contains("Settled")
     );
+}
+
+#[derive(Clone, PartialEq, Hash, Eq)]
+struct GetGreeting;
+
+impl QueryCapability for GetGreeting {
+    type Ok = String;
+    type Err = ();
+    type Keys = usize;
+
+    fn run(
+        &self,
+        id: &Self::Keys,
+    ) -> impl core::future::Future<Output = Result<Self::Ok, Self::Err>> {
+        async move {
+            Timer::after(Duration::from_millis(50)).await;
+            Ok(format!("greeting-{id}"))
+        }
+    }
+}
+
+#[test]
+fn query_keeps_old_data_on_keys_change() {
+    fn app() -> impl IntoElement {
+        let mut id = use_state(|| 0usize);
+        let greeting = use_query(Query::new(*id.read(), GetGreeting).keep_old_data(true));
+
+        rect()
+            .expanded()
+            .on_press(move |_| *id.write() = 1)
+            .child(greeting.read().state().ok().cloned().unwrap_or_default())
+    }
+
+    fn greeting(test: &mut TestingRunner) -> String {
+        let label = test
+            .find(|node, element| Label::try_downcast(element).map(|_| node))
+            .unwrap();
+        Label::try_downcast(&*label.element())
+            .unwrap()
+            .text
+            .to_string()
+    }
+
+    let mut test = launch_test(app);
+    test.sync_and_update();
+    test.poll(Duration::from_millis(10), Duration::from_millis(200));
+    assert_eq!(greeting(&mut test), "greeting-0");
+
+    // While the new keys load, the previous data is kept.
+    test.click_cursor((100.0, 100.0));
+    test.sync_and_update();
+    assert_eq!(greeting(&mut test), "greeting-0");
+
+    test.poll(Duration::from_millis(10), Duration::from_millis(200));
+    assert_eq!(greeting(&mut test), "greeting-1");
 }
 
 #[derive(PartialEq)]
