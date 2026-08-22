@@ -1,0 +1,21 @@
+[package]
+name = "freya-borderless-plugin"
+version = "0.5.0-rc.3"
+edition = "2024"
+description = "Borderless window plugin for Freya."
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui"]
+categories = ["gui", "asynchronous"]
+
+[lints]
+workspace = true
+
+[dependencies]
+freya-core = { workspace = true }
+freya-winit = { workspace = true }
+freya-engine = { workspace = true }
+torin = { workspace = true }
