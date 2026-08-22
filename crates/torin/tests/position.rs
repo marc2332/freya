@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 #[cfg(test)]
 use torin::{
     prelude::*,
@@ -36,7 +38,7 @@ pub fn absolute() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Absolute(Box::new(PositionSides {
+            Position::Absolute(Arc::new(PositionSides {
                 top: Some(100.0),
                 right: None,
                 bottom: None,
@@ -51,7 +53,7 @@ pub fn absolute() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Absolute(Box::new(PositionSides {
+            Position::Absolute(Arc::new(PositionSides {
                 top: Some(100.0),
                 right: Some(50.0),
                 bottom: None,
@@ -66,7 +68,7 @@ pub fn absolute() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Absolute(Box::new(PositionSides {
+            Position::Absolute(Arc::new(PositionSides {
                 top: None,
                 right: Some(50.0),
                 bottom: Some(100.0),
@@ -81,7 +83,7 @@ pub fn absolute() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Absolute(Box::new(PositionSides {
+            Position::Absolute(Arc::new(PositionSides {
                 top: None,
                 right: None,
                 bottom: Some(100.0),
@@ -94,7 +96,7 @@ pub fn absolute() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -150,7 +152,7 @@ pub fn absolute_inside_offset_container() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(50.0)),
             Size::Pixels(Length::new(50.0)),
-            Position::Absolute(Box::new(PositionSides {
+            Position::Absolute(Arc::new(PositionSides {
                 top: Some(20.0),
                 right: None,
                 bottom: None,
@@ -163,7 +165,7 @@ pub fn absolute_inside_offset_container() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -209,7 +211,7 @@ pub fn global() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Global(Box::new(PositionSides {
+            Position::Global(Arc::new(PositionSides {
                 top: Some(100.0),
                 right: None,
                 bottom: None,
@@ -224,7 +226,7 @@ pub fn global() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Global(Box::new(PositionSides {
+            Position::Global(Arc::new(PositionSides {
                 top: Some(100.0),
                 right: Some(50.0),
                 bottom: None,
@@ -239,7 +241,7 @@ pub fn global() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Global(Box::new(PositionSides {
+            Position::Global(Arc::new(PositionSides {
                 top: None,
                 right: Some(50.0),
                 bottom: Some(100.0),
@@ -254,7 +256,7 @@ pub fn global() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Global(Box::new(PositionSides {
+            Position::Global(Arc::new(PositionSides {
                 top: None,
                 right: None,
                 bottom: Some(100.0),
@@ -267,7 +269,7 @@ pub fn global() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -338,7 +340,7 @@ pub fn absolute_with_inner_sized_height_and_bottom() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -397,7 +399,7 @@ pub fn absolute_with_inner_sized_width_and_right() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -451,7 +453,7 @@ pub fn global_with_inner_sized_and_bottom() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(500.0, 500.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(

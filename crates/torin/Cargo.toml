@@ -23,7 +23,7 @@ euclid = { workspace = true }
 rustc-hash = { workspace = true }
 itertools = { workspace = true }
 
-serde = { version = "1.0", optional = true }
+serde = { version = "1.0", optional = true, features = ["rc"] }
 
 [dev-dependencies]
 criterion = "0.5.1"

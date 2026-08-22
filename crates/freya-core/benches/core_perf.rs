@@ -40,7 +40,7 @@ fn bench<T>(name: &'static str, mut scenario: impl FnMut() -> T) {
 fn mounted_runner(app: impl Fn() -> Element + 'static) -> (Runner, Tree, NodeId) {
     let mut runner = Runner::new(app);
     let mut tree = Tree::default();
-    tree.apply_mutations(runner.sync_and_update());
+    tree.apply_mutations(runner.sync_and_update(), 1.0);
     let target = tree
         .listeners
         .get(&EventName::MouseUp)
@@ -56,7 +56,7 @@ fn update(runner: &mut Runner, tree: &mut Tree, target: NodeId, event: EventName
         EventType::Mouse(MouseEventData::default()),
         false,
     );
-    tree.apply_mutations(runner.sync_and_update());
+    tree.apply_mutations(runner.sync_and_update(), 1.0);
 }
 
 fn build_row(index: usize) -> Element {
