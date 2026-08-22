@@ -150,7 +150,10 @@ impl SvgViewer {
             source: source.into(),
             asset_age: AssetAge::default(),
             layout: LayoutData::default(),
-            image_data: ImageData::default(),
+            image_data: ImageData {
+                snap_to_grid: true,
+                ..ImageData::default()
+            },
             accessibility,
             effect: EffectData::default(),
             event_handlers: EventHandlers::default(),

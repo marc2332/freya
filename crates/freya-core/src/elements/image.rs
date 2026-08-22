@@ -181,6 +181,8 @@ pub struct ImageData {
     pub sampling_mode: SamplingMode,
     pub aspect_ratio: AspectRatio,
     pub image_cover: ImageCover,
+    /// Snap the image to the pixels grid.
+    pub snap_to_grid: bool,
 }
 
 #[derive(PartialEq, Clone)]
@@ -343,6 +345,15 @@ impl ElementExt for ImageElement {
             rect.right -= width_offset;
             rect.top -= height_offset;
             rect.bottom -= height_offset;
+        }
+
+        if self.image_data.snap_to_grid {
+            rect = SkRect::new(
+                rect.left.round(),
+                rect.top.round(),
+                rect.right.round(),
+                rect.bottom.round(),
+            );
         }
 
         context.canvas.save();
