@@ -357,19 +357,18 @@ impl AccessibilityTree {
     }
 
     fn element_text(element: &dyn Any) -> Option<String> {
-        if let Some(label) = element.downcast_ref::<LabelElement>() {
-            Some(label.text.to_string())
-        } else if let Some(paragraph) = element.downcast_ref::<ParagraphElement>() {
-            Some(
-                paragraph
-                    .spans
-                    .iter()
-                    .map(|span| span.text.as_ref())
-                    .collect(),
-            )
-        } else {
-            None
-        }
+        element
+            .downcast_ref::<LabelElement>()
+            .map(|label| label.text.to_string())
+            .or_else(|| {
+                element.downcast_ref::<ParagraphElement>().map(|paragraph| {
+                    paragraph
+                        .spans
+                        .iter()
+                        .map(|span| span.text.as_ref())
+                        .collect()
+                })
+            })
     }
 
     /// Create an accessibility node
