@@ -112,6 +112,7 @@ impl AssetCacher {
         try_consume_root_context()
     }
 
+    #[track_caller]
     pub fn get() -> Self {
         consume_root_context()
     }
