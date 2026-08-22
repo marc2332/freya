@@ -4,7 +4,6 @@ use std::{
     time::Duration,
 };
 
-#[cfg(debug_assertions)]
 use async_io::Timer;
 use freya::prelude::Size;
 use freya_query::prelude::*;
@@ -81,7 +80,10 @@ impl QueryCapability for GetGreeting {
         &self,
         id: &Self::Keys,
     ) -> impl core::future::Future<Output = Result<Self::Ok, Self::Err>> {
-        async move { Ok(format!("greeting-{id}")) }
+        async move {
+            Timer::after(Duration::from_millis(50)).await;
+            Ok(format!("greeting-{id}"))
+        }
     }
 }
 
