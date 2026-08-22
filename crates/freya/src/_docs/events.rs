@@ -29,7 +29,7 @@
 //!   `on_pointer_move`, `on_pointer_enter`, `on_pointer_leave`, `on_pointer_over`, `on_pointer_out`.
 //! - Keyboard: `on_key_down`, `on_key_up`.
 //! - Wheel: `on_wheel`.
-//! - Layout: `on_sized`.
+//! - Layout: `on_sized`, `on_visible`.
 //! - Files: `on_file_drop`.
 //!
 //! Each handler receives an [`Event<D>`](freya_core::prelude::Event) where `D` is the payload

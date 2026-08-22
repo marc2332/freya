@@ -332,6 +332,7 @@ impl TestingRunner {
             &mut self.font_collection,
             &self.font_manager,
             &self.events_sender,
+            &mut self.nodes_state,
             self.scale_factor,
             &self.default_fonts,
         );
@@ -402,6 +403,7 @@ impl TestingRunner {
             &mut self.font_collection,
             &self.font_manager,
             &self.events_sender,
+            &mut self.nodes_state,
             self.scale_factor,
             &self.default_fonts,
         );
