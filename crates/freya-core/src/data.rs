@@ -8,6 +8,7 @@ use std::{
     rc::Rc,
 };
 
+use cursor_icon::CursorIcon;
 use torin::{
     prelude::Area,
     torin::Torin,
@@ -98,6 +99,7 @@ pub struct StyleState {
     pub corner_radius: CornerRadius,
     pub borders: Vec<Border>,
     pub shadows: Vec<Shadow>,
+    pub cursor: Option<CursorIcon>,
 }
 
 #[derive(Debug, Clone, PartialEq)]

@@ -10,6 +10,7 @@ use std::{
 };
 
 use bitflags::bitflags;
+use cursor_icon::CursorIcon;
 use freya_engine::prelude::{
     FontCollection,
     FontMgr,
@@ -140,6 +141,23 @@ impl Tree {
             }
             then(node_id);
         }
+    }
+
+    /// Resolve the [CursorIcon] for the currently hovered nodes,
+    /// checking from the topmost node (by layer) downwards until one defines a cursor.
+    pub fn cursor_icon(&self, nodes_state: &ragnarok::NodesState<NodeId>) -> CursorIcon {
+        nodes_state
+            .hovered_nodes()
+            .sorted_by_key(|node_id| {
+                std::cmp::Reverse(
+                    self.layer_state
+                        .get(node_id)
+                        .map(|layer_state| layer_state.layer)
+                        .unwrap_or_default(),
+                )
+            })
+            .find_map(|node_id| self.elements.get(node_id).and_then(|el| el.style().cursor))
+            .unwrap_or_default()
     }
 
     pub fn traverse_depth_cancel(&self, mut then: impl FnMut(NodeId) -> bool) {

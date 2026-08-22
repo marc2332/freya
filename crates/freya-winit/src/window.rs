@@ -17,7 +17,10 @@ use freya_components::{
 };
 use freya_core::{
     integration::*,
-    prelude::Color,
+    prelude::{
+        Color,
+        CursorIcon,
+    },
 };
 use freya_engine::prelude::{
     FontCollection,
@@ -91,6 +94,7 @@ pub struct AppWindow {
     pub(crate) position: CursorPoint,
     pub(crate) mouse_state: ElementState,
     pub(crate) modifiers_state: ModifiersState,
+    pub(crate) cursor_icon: CursorIcon,
     pub(crate) pressed_keys: Vec<(Key, Code)>,
 
     pub(crate) events_receiver: futures_channel::mpsc::UnboundedReceiver<EventsChunk>,
@@ -405,6 +409,7 @@ impl AppWindow {
             mouse_state: ElementState::Released,
             position: CursorPoint::default(),
             modifiers_state: ModifiersState::default(),
+            cursor_icon: CursorIcon::default(),
             pressed_keys: Vec::new(),
 
             events_receiver,
@@ -436,6 +441,18 @@ impl AppWindow {
 
             #[cfg(feature = "hotreload")]
             hot_reload_pending,
+        }
+    }
+
+    /// Resolve the cursor icon from the hovered nodes and update the window cursor if it changed.
+    pub(crate) fn update_cursor_icon(&mut self) {
+        if self.mouse_state == ElementState::Pressed {
+            return;
+        }
+        let cursor_icon = self.tree.cursor_icon(&self.nodes_state);
+        if cursor_icon != self.cursor_icon {
+            self.cursor_icon = cursor_icon;
+            self.window.set_cursor(cursor_icon);
         }
     }
 

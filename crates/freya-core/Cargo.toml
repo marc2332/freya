@@ -77,7 +77,7 @@ hotpath-alloc = ["hotpath/hotpath-alloc"]
 hotreload = ["dep:subsecond", "dep:dioxus-devtools"]
 debug-integrity = []
 devtools = ["serde"]
-serde = ["dep:serde"]
+serde = ["dep:serde", "cursor-icon/serde"]
 test = []
 
 [[bench]]
