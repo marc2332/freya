@@ -62,6 +62,5 @@ fn app() -> impl IntoElement {
                     .background((255, 108, 34))
                     .corner_radius(100.),
             )
-            .into()
     }))
 }

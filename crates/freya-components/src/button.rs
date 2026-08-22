@@ -364,25 +364,23 @@ impl Component for Button {
                         on_pointer_down.call(e);
                     })
                 })
+                .map(self.on_secondary_down.clone(), |el, on_secondary_down| {
+                    el.on_secondary_down(move |e: Event<PressEventData>| {
+                        on_secondary_down.call(e);
+                    })
+                })
                 .on_all_press({
                     let on_press = self.on_press.clone();
-                    let on_secondary_down = self.on_secondary_down.clone();
                     move |e: Event<PressEventData>| {
                         a11y_id.request_focus();
                         match e.data() {
-                            PressEventData::Mouse(data) => match data.button {
-                                Some(MouseButton::Left) => {
-                                    if let Some(handler) = &on_press {
-                                        handler.call(e);
-                                    }
+                            PressEventData::Mouse(data) => {
+                                if data.button == Some(MouseButton::Left)
+                                    && let Some(handler) = &on_press
+                                {
+                                    handler.call(e);
                                 }
-                                Some(MouseButton::Right) => {
-                                    if let Some(handler) = &on_secondary_down {
-                                        handler.call(e);
-                                    }
-                                }
-                                _ => {}
-                            },
+                            }
                             PressEventData::Touch(_) | PressEventData::Keyboard(_) => {
                                 if let Some(handler) = &on_press {
                                     handler.call(e);

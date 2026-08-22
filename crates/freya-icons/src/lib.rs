@@ -1,10 +1,11 @@
 //! Icon assets for Freya UI.
 //!
 //! Currently the `lucide` feature enables the Lucide icons.
+//! When depending on the `freya` crate, enable them with its `icons-lucide` feature.
 //!
 //! # Example
 //!
-//! The example below shows using an icon with the `svg` element.
+//! The example below shows using an icon with the `SvgViewer` component.
 //!
 //! See `examples/feature_icons.rs` for a live example.
 //!
@@ -12,7 +13,7 @@
 //! # use freya::prelude::*;
 //! # #[cfg(feature = "lucide")]
 //! fn app() -> impl IntoElement {
-//!     svg(freya_icons::lucide::antenna())
+//!     SvgViewer::new(("antenna", freya_icons::lucide::antenna()))
 //!         .color((120, 50, 255))
 //!         .width(Size::px(48.))
 //!         .height(Size::px(48.))

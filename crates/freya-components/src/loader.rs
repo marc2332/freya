@@ -3,8 +3,10 @@ use freya_core::prelude::*;
 use torin::size::Size;
 
 use crate::{
+    cache::AssetAge,
     define_theme,
     get_theme,
+    svg_viewer::SvgViewer,
 };
 
 define_theme! {
@@ -92,7 +94,7 @@ impl Component for CircularLoader {
             AnimNum::new(0.0, 360.0).time(650)
         });
 
-        svg(Bytes::from_static(
+        SvgViewer::new(
             r#"<svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
                 <circle class="spin" cx="300" cy="300" fill="none"
                 r="250" stroke-width="64" stroke="{color}"
@@ -100,13 +102,15 @@ impl Component for CircularLoader {
                 stroke-linecap="round" />
             </svg>"#
                 .as_bytes(),
-        ))
+        )
+        .show_loader(false)
+        .asset_age(AssetAge::zero())
         .accessibility(self.accessibility.clone())
         .a11y_role(AccessibilityRole::ProgressIndicator)
         .width(Size::px(self.size))
         .height(Size::px(self.size))
         .stroke(theme.primary_color)
-        .rotate(animation.get().value())
+        .rotation(animation.get().value())
     }
 
     fn render_key(&self) -> DiffKey {

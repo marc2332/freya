@@ -106,9 +106,7 @@ impl ReactiveContext {
     }
 
     pub fn run<T>(new_context: Self, run: impl FnOnce() -> T) -> T {
-        for subscription in new_context.inner.write().subscriptions.drain(..) {
-            subscription.borrow_mut().remove(&new_context);
-        }
+        new_context.clear_subscriptions();
         REACTIVE_CONTEXTS_STACK.with_borrow_mut(|context| context.push(new_context));
         let res = run();
         REACTIVE_CONTEXTS_STACK.with_borrow_mut(|context| context.pop());
@@ -136,6 +134,13 @@ impl ReactiveContext {
     pub fn subscribe(&mut self, subscribers: &Rc<RefCell<FxHashSet<ReactiveContext>>>) {
         subscribers.borrow_mut().insert(self.clone());
         self.inner.write().subscriptions.push(subscribers.clone())
+    }
+
+    /// Unsubscribe this reactive context from all its current subscriptions.
+    pub fn clear_subscriptions(&self) {
+        for subscription in self.inner.write().subscriptions.drain(..) {
+            subscription.borrow_mut().remove(self);
+        }
     }
 }
 

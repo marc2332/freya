@@ -202,7 +202,7 @@ impl Component for TableRow {
                             .and_then(|widths| widths.get(index).cloned())
                             .unwrap_or_else(|| Size::flex(1.));
 
-                        rect().width(width).child(child.clone()).into()
+                        rect().width(width).child(child.clone())
                     })),
             )
             .child(

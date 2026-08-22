@@ -24,6 +24,8 @@ pub struct SelectableText {
     layout: LayoutData,
     accessibility: AccessibilityData,
     text_style_data: TextStyleData,
+    event_handlers: EventHandlers,
+    layer: Layer,
     max_lines: Option<usize>,
     line_height: Option<f32>,
     key: DiffKey,
@@ -55,6 +57,18 @@ impl TextStyleExt for SelectableText {
     }
 }
 
+impl EventHandlersExt for SelectableText {
+    fn get_event_handlers(&mut self) -> &mut EventHandlers {
+        &mut self.event_handlers
+    }
+}
+
+impl LayerExt for SelectableText {
+    fn get_layer(&mut self) -> &mut Layer {
+        &mut self.layer
+    }
+}
+
 impl Default for SelectableText {
     fn default() -> Self {
         Self::new()
@@ -68,6 +82,8 @@ impl SelectableText {
             layout: LayoutData::default(),
             accessibility: AccessibilityData::default(),
             text_style_data: TextStyleData::default(),
+            event_handlers: EventHandlers::default(),
+            layer: Layer::default(),
             max_lines: None,
             line_height: None,
             key: DiffKey::None,
@@ -124,7 +140,7 @@ impl Component for SelectableText {
 
         if value.as_str() != editable.editor().read().rope() {
             editable.editor_mut().write().set(value.as_str());
-            editable.editor_mut().write().editor_history().clear();
+            editable.editor_mut().write().editor_history_mut().clear();
         }
 
         let highlights = editable
@@ -212,6 +228,8 @@ impl Component for SelectableText {
             .layout(self.layout.clone())
             .accessibility(self.accessibility.clone())
             .text_style(self.text_style_data.clone())
+            .event_handlers(self.event_handlers.clone())
+            .layer(self.layer)
             .max_lines(self.max_lines)
             .line_height(self.line_height)
             .a11y_id(a11y_id)

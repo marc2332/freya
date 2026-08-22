@@ -60,12 +60,9 @@ fn app() -> impl IntoElement {
         .spacing(8.)
         .background((30, 30, 30, 0.8))
         .children(apps.iter().filter_map(|app| {
-            app.icon_path.as_ref().map(|icon_path| {
-                DockIcon {
-                    icon_path: icon_path.clone(),
-                    name: app.name.clone(),
-                }
-                .into()
+            app.icon_path.as_ref().map(|icon_path| DockIcon {
+                icon_path: icon_path.clone(),
+                name: app.name.clone(),
             })
         }))
 }
@@ -88,13 +85,7 @@ impl Component for DockIcon {
             .is_some_and(|ext| ext.eq_ignore_ascii_case("svg"));
 
         let icon_element: Element = if is_svg {
-            let icon_path = self.icon_path.clone();
-            let svg_data = use_hook(|| {
-                std::fs::read(&icon_path)
-                    .map(Bytes::from)
-                    .unwrap_or_default()
-            });
-            svg(svg_data)
+            SvgViewer::new(self.icon_path.clone())
                 .width(Size::px(28.))
                 .height(Size::px(28.))
                 .into()

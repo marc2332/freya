@@ -44,16 +44,13 @@ fn app() -> impl IntoElement {
             .iter()
             .enumerate()
             .map(|(i, url)| {
-                Card::default()
-                    .selected(i == selected() - 1)
-                    .child(
-                        ImageViewer::new(*url)
-                            .aspect_ratio(AspectRatio::Max)
-                            .image_cover(ImageCover::Center)
-                            .width(Size::fill())
-                            .height(Size::fill()),
-                    )
-                    .into()
+                Card::default().selected(i == selected() - 1).child(
+                    ImageViewer::new(*url)
+                        .aspect_ratio(AspectRatio::Max)
+                        .image_cover(ImageCover::Center)
+                        .width(Size::fill())
+                        .height(Size::fill()),
+                )
             }),
         )
 }

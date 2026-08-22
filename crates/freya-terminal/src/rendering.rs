@@ -1,15 +1,11 @@
-use std::hash::{
-    Hash,
-    Hasher,
-};
-
-use alacritty_terminal::{
-    selection::SelectionRange,
-    term::cell::{
-        Cell,
-        Flags,
+use std::{
+    borrow::Cow,
+    hash::{
+        Hash,
+        Hasher,
     },
 };
+
 use freya_core::{
     fifo_cache::FifoCache,
     prelude::Color,
@@ -26,10 +22,12 @@ use freya_engine::prelude::{
     TextBlob,
     TextStyle,
 };
+use rio_vt::selection::SelectionRange;
 use rustc_hash::FxHasher;
 use torin::prelude::Area;
 
 use crate::{
+    cell::TermCell,
     colors::map_ansi_color,
     url::link_ranges,
 };
@@ -57,7 +55,7 @@ pub(crate) struct Renderer<'a> {
     pub foreground: Color,
     pub background: Color,
     pub selection_color: Color,
-    pub font_family: &'a str,
+    pub font_families: &'a [Cow<'static, str>],
     pub font_size: f32,
     pub selection: Option<SelectionRange>,
     pub display_offset: usize,
@@ -78,14 +76,14 @@ impl Renderer<'_> {
     }
 
     /// Render one row: cell backgrounds, glyphs, hyperlink underlines, then any selection overlay.
-    pub fn render_row(&mut self, row_idx: usize, row: &[Cell], y: f32) {
+    pub fn render_row(&mut self, row_idx: usize, row: &[TermCell], y: f32) {
         self.render_cell_backgrounds(row, y);
         self.render_text_row(row, y);
         self.render_hyperlink_underlines(row, y);
         self.render_selection(row_idx, row.len(), y);
     }
 
-    pub fn render_cursor(&mut self, cell: &Cell, y: f32, cursor_col: usize) {
+    pub fn render_cursor(&mut self, cell: &TermCell, y: f32, cursor_col: usize) {
         let left = self.area.min_x() + (cursor_col as f32) * self.char_width;
         let right = left + self.char_width.max(1.0);
         let bottom = y + self.line_height.max(1.0);
@@ -96,9 +94,9 @@ impl Renderer<'_> {
             self.paint,
         );
 
-        let glyph = match cell.c {
+        let glyph = match cell.character {
             '\0' | '\t' => ' ',
-            c => c,
+            character => character,
         };
         let mut buf = [0u8; 4];
         let content: &str = glyph.encode_utf8(&mut buf);
@@ -156,25 +154,21 @@ impl Renderer<'_> {
         );
     }
 
-    fn render_cell_backgrounds(&mut self, row: &[Cell], y: f32) {
+    fn render_cell_backgrounds(&mut self, row: &[TermCell], y: f32) {
         let mut run_start: Option<(usize, Color)> = None;
         let mut col = 0;
         while col < row.len() {
             let cell = &row[col];
-            if cell.flags.contains(Flags::WIDE_CHAR_SPACER) {
+            if cell.wide_spacer {
                 col += 1;
                 continue;
             }
-            let cell_bg = if cell.flags.contains(Flags::INVERSE) {
-                map_ansi_color(cell.fg, self.foreground, self.background)
+            let cell_bg = if cell.inverse {
+                map_ansi_color(cell.foreground, self.foreground, self.background)
             } else {
-                map_ansi_color(cell.bg, self.foreground, self.background)
+                map_ansi_color(cell.background, self.foreground, self.background)
             };
-            let end_col = if cell.flags.contains(Flags::WIDE_CHAR) {
-                col + 2
-            } else {
-                col + 1
-            };
+            let end_col = if cell.wide { col + 2 } else { col + 1 };
 
             if cell_bg != self.background {
                 match &run_start {
@@ -208,7 +202,7 @@ impl Renderer<'_> {
     }
 
     /// Draw a thin underline beneath OSC 8 hyperlink runs and detected plain-text URLs.
-    fn render_hyperlink_underlines(&mut self, row: &[Cell], y: f32) {
+    fn render_hyperlink_underlines(&mut self, row: &[TermCell], y: f32) {
         let underline_y = (y + self.line_height - 2.0).round();
         self.paint.set_color(self.foreground);
         for (start, end) in link_ranges(row) {
@@ -226,19 +220,19 @@ impl Renderer<'_> {
             return;
         };
         let offset = self.display_offset as i64;
-        let start_row = range.start.line.0 as i64 + offset;
-        let end_row = range.end.line.0 as i64 + offset;
+        let start_row = range.start.row.0 as i64 + offset;
+        let end_row = range.end.row.0 as i64 + offset;
         let row_i = row_idx as i64;
         if row_i < start_row || row_i > end_row {
             return;
         }
         let sel_start = if row_i == start_row {
-            range.start.column.0
+            range.start.col.0
         } else {
             0
         };
         let sel_end = if row_i == end_row {
-            (range.end.column.0 + 1).min(row_len)
+            (range.end.col.0 + 1).min(row_len)
         } else {
             row_len
         };
@@ -257,19 +251,20 @@ impl Renderer<'_> {
     /// Draw a row's glyphs, hashing the row contents to hit `row_cache` on
     /// repeat frames. Picks the fast `TextBlob` path or the `Paragraph` path
     /// when font fallback (emoji, wide chars) is needed.
-    fn render_text_row(&mut self, row: &[Cell], y: f32) {
+    fn render_text_row(&mut self, row: &[TermCell], y: f32) {
         let mut hasher = FxHasher::default();
         let mut needs_fallback = false;
+        let mut text = String::new();
         for cell in row.iter() {
-            if cell.flags.contains(Flags::WIDE_CHAR_SPACER) {
+            if cell.wide_spacer {
                 continue;
             }
-            let text = cell_text(cell);
+            write_cell_text(cell, &mut text);
             let cell_fg = self.cell_foreground(cell);
             text.hash(&mut hasher);
             cell_fg.hash(&mut hasher);
             if !needs_fallback {
-                needs_fallback = cell.flags.contains(Flags::WIDE_CHAR)
+                needs_fallback = cell.wide
                     || (!text.is_ascii() && self.font.text_to_glyphs_vec(&text).contains(&0));
             }
         }
@@ -297,29 +292,33 @@ impl Renderer<'_> {
         }
     }
 
-    fn cell_foreground(&self, cell: &Cell) -> Color {
-        let raw = if cell.flags.contains(Flags::INVERSE) {
-            cell.bg
-        } else {
-            cell.fg
-        };
-        map_ansi_color(raw, self.foreground, self.background)
+    fn cell_foreground(&self, cell: &TermCell) -> Color {
+        map_ansi_color(
+            if cell.inverse {
+                cell.background
+            } else {
+                cell.foreground
+            },
+            self.foreground,
+            self.background,
+        )
     }
 
     /// Fast path: same-color glyphs batched into one `TextBlob`, each glyph
     /// pinned to its grid x-offset to preserve monospace alignment.
-    fn render_textblob(&mut self, row: &[Cell], text_y: f32, cache_key: u64) {
+    fn render_textblob(&mut self, row: &[TermCell], text_y: f32, cache_key: u64) {
         let mut current_color: Option<Color> = None;
         let mut glyphs = String::new();
         let mut glyph_positions: Vec<f32> = Vec::new();
         let mut blobs: Vec<(TextBlob, Color)> = Vec::new();
+        let mut text = String::new();
 
         for (col_idx, cell) in row.iter().enumerate() {
-            if cell.flags.contains(Flags::WIDE_CHAR_SPACER) {
+            if cell.wide_spacer {
                 continue;
             }
             let cell_fg = self.cell_foreground(cell);
-            let text = cell_text(cell);
+            write_cell_text(cell, &mut text);
             let x = (col_idx as f32) * self.char_width;
 
             if current_color != Some(cell_fg) {
@@ -363,23 +362,25 @@ impl Renderer<'_> {
     }
 
     /// Slow path: Paragraph with font fallback for emoji/wide chars.
-    fn render_paragraph(&mut self, row: &[Cell], row_y: f32, cache_key: u64) {
+    fn render_paragraph(&mut self, row: &[TermCell], row_y: f32, cache_key: u64) {
         let mut text_style = TextStyle::new();
         text_style.set_font_size(self.font_size);
-        text_style.set_font_families(&[self.font_family]);
+        text_style.set_font_families(self.font_families);
         text_style.set_color(self.foreground);
 
         let mut builder =
             ParagraphBuilder::new(&ParagraphStyle::default(), self.font_collection.clone());
 
+        let mut text = String::new();
         for cell in row.iter() {
-            if cell.flags.contains(Flags::WIDE_CHAR_SPACER) {
+            if cell.wide_spacer {
                 continue;
             }
             let mut cell_style = text_style.clone();
             cell_style.set_color(self.cell_foreground(cell));
             builder.push_style(&cell_style);
-            builder.add_text(cell_text(cell).as_str());
+            write_cell_text(cell, &mut text);
+            builder.add_text(text.as_str());
         }
 
         let mut paragraph = builder.build();
@@ -391,17 +392,12 @@ impl Renderer<'_> {
     }
 }
 
-/// Visible text for a cell, mapping empty (`\0`) and tab (`\t`) cells to a space.
-fn cell_text(cell: &Cell) -> String {
-    let mut s = String::new();
-    s.push(match cell.c {
+/// Write the visible text for a cell into `text`, mapping empty (`\0`) and tab (`\t`) cells to a space.
+fn write_cell_text(cell: &TermCell, text: &mut String) {
+    text.clear();
+    text.push(match cell.character {
         '\0' | '\t' => ' ',
-        c => c,
+        character => character,
     });
-    if let Some(extra) = cell.zerowidth() {
-        for c in extra {
-            s.push(*c);
-        }
-    }
-    s
+    text.extend(&cell.zerowidth);
 }

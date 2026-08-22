@@ -32,6 +32,13 @@ use crate::scrollviews::{
 
 /// Scrollable area with bidirectional support and scrollbars.
 ///
+/// It renders all of its children and scrolls over them, which makes it a good fit for small or
+/// medium amounts of content. For large data sets prefer
+/// [`VirtualScrollView`](crate::scrollviews::VirtualScrollView), which only renders the visible
+/// items. It scrolls vertically by default, use [`direction`](ScrollView::direction) for a
+/// horizontal layout. To drive the scroll position from code, build it with
+/// [`new_controlled`](ScrollView::new_controlled) and a [`ScrollController`].
+///
 /// # Example
 ///
 /// ```rust
@@ -67,6 +74,7 @@ pub struct ScrollView {
     scroll_controller: Option<ScrollController>,
     invert_scroll_wheel: bool,
     drag_scrolling: bool,
+    on_sized: Option<EventHandler<Event<SizedEventData>>>,
     key: DiffKey,
 }
 
@@ -97,16 +105,19 @@ impl Default for ScrollView {
             scroll_controller: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
+            on_sized: None,
             key: DiffKey::None,
         }
     }
 }
 
 impl ScrollView {
+    /// Creates an uncontrolled scroll view that manages its own scroll position.
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Creates a scroll view driven by the given [`ScrollController`].
     pub fn new_controlled(scroll_controller: ScrollController) -> Self {
         Self {
             scroll_controller: Some(scroll_controller),
@@ -114,41 +125,55 @@ impl ScrollView {
         }
     }
 
+    /// Toggles whether the scrollbars are shown when the content overflows.
     pub fn show_scrollbar(mut self, show_scrollbar: bool) -> Self {
         self.show_scrollbar = show_scrollbar;
         self
     }
 
+    /// Sets the layout direction the children flow and scroll in.
     pub fn direction(mut self, direction: Direction) -> Self {
         self.layout.direction = direction;
         self
     }
 
-    pub fn spacing(mut self, spacing: impl Into<f32>) -> Self {
-        self.layout.spacing = Length::new(spacing.into());
+    /// Sets the gap between children along the scroll direction.
+    pub fn spacing(mut self, spacing: f32) -> Self {
+        self.layout.spacing = Length::new(spacing);
         self
     }
 
+    /// Toggles whether the arrow keys scroll the view while it is focused.
     pub fn scroll_with_arrows(mut self, scroll_with_arrows: impl Into<bool>) -> Self {
         self.scroll_with_arrows = scroll_with_arrows.into();
         self
     }
 
+    /// Inverts the direction of the mouse wheel relative to the content.
     pub fn invert_scroll_wheel(mut self, invert_scroll_wheel: impl Into<bool>) -> Self {
         self.invert_scroll_wheel = invert_scroll_wheel.into();
         self
     }
 
+    /// Toggles scrolling by dragging the content, useful mainly for touch input.
     pub fn drag_scrolling(mut self, drag_scrolling: bool) -> Self {
         self.drag_scrolling = drag_scrolling;
         self
     }
 
+    /// Sets a handler called with the scroll view's area whenever it is laid out.
+    pub fn on_sized(mut self, on_sized: impl Into<EventHandler<Event<SizedEventData>>>) -> Self {
+        self.on_sized = Some(on_sized.into());
+        self
+    }
+
+    /// Caps the width of the scroll view.
     pub fn max_width(mut self, max_width: impl Into<Size>) -> Self {
         self.layout.maximum_width = max_width.into();
         self
     }
 
+    /// Caps the height of the scroll view.
     pub fn max_height(mut self, max_height: impl Into<Size>) -> Self {
         self.layout.maximum_height = max_height.into();
         self
@@ -162,6 +187,7 @@ impl LayoutExt for ScrollView {
 }
 
 impl ContainerSizeExt for ScrollView {}
+impl ContainerPositionExt for ScrollView {}
 
 impl Component for ScrollView {
     fn render(self: &ScrollView) -> impl IntoElement {
@@ -414,6 +440,7 @@ impl Component for ScrollView {
                 node.set_scroll_y(corrected_scrolled_y as f64)
             })
             .scrollable(true)
+            .map(self.on_sized.clone(), |el, on_sized| el.on_sized(on_sized))
             .on_wheel(on_wheel)
             .on_capture_global_pointer_press(on_capture_global_pointer_press)
             .on_mouse_move(on_mouse_move)

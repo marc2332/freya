@@ -23,7 +23,6 @@ pub fn attributes_list(attributes: Vec<(&str, AttributeType)>) -> Element {
                         .background(background)
                         .padding((5., 16.))
                         .child(attribute_element(name, attribute))
-                        .into()
                 }),
         )
         .into()

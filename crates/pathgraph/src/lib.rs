@@ -26,7 +26,7 @@ impl<V> PathGraphEntry<V> {
                         items: Vec::new(),
                     });
                 }
-                // Only shift on collision with a real sibling; empty
+                // Only shift on collision with a real sibling. Empty
                 // placeholders from prior moves are filled in place.
                 Some(existing) if path.len() == 1 && existing.value.is_some() => {
                     self.items.insert(
@@ -85,32 +85,26 @@ impl<V> PathGraphEntry<V> {
         }
     }
 
-    pub fn find_path(
-        &self,
-        path: Vec<u32>,
-        finder: &impl Fn(Option<&V>) -> bool,
-    ) -> Option<Vec<u32>> {
+    pub fn find_path(&self, path: &mut Vec<u32>, finder: &impl Fn(Option<&V>) -> bool) -> bool {
         if finder(self.value.as_ref()) {
-            return Some(path);
+            return true;
         }
         for (i, item) in self.items.iter().enumerate() {
-            let mut path = path.clone();
             path.push(i as u32);
-            if let Some(path) = item.find_path(path, finder) {
-                return Some(path);
+            if item.find_path(path, finder) {
+                return true;
             }
+            path.pop();
         }
-        None
+        false
     }
 
-    pub fn find(&self, path: Vec<u32>, finder: &impl Fn(Option<&V>) -> bool) -> Option<&V> {
+    pub fn find(&self, finder: &impl Fn(Option<&V>) -> bool) -> Option<&V> {
         if finder(self.value.as_ref()) {
             return self.value.as_ref();
         }
-        for (i, item) in self.items.iter().enumerate() {
-            let mut path = path.clone();
-            path.push(i as u32);
-            if let Some(res) = item.find(path, finder) {
+        for item in self.items.iter() {
+            if let Some(res) = item.find(finder) {
                 return Some(res);
             }
         }
@@ -138,17 +132,18 @@ impl<V> PathGraphEntry<V> {
 
     pub fn find_child_path(
         &self,
-        path: Vec<u32>,
         target: &[u32],
         finder: &impl Fn(Option<&V>) -> bool,
     ) -> Option<Vec<u32>> {
-        if !path.is_empty() && &path[0..path.len() - 1] == target && finder(self.value.as_ref()) {
-            return Some(path);
+        let mut parent = self;
+        for step in target {
+            parent = parent.items.get(*step as usize)?;
         }
-        for (i, item) in self.items.iter().enumerate() {
-            let mut path = path.clone();
-            path.push(i as u32);
-            if let Some(path) = item.find_child_path(path, target, finder) {
+        for (i, item) in parent.items.iter().enumerate() {
+            if finder(item.value.as_ref()) {
+                let mut path = Vec::with_capacity(target.len() + 1);
+                path.extend_from_slice(target);
+                path.push(i as u32);
                 return Some(path);
             }
         }
@@ -188,19 +183,19 @@ impl<V> PathGraphEntry<V> {
     pub fn traverse(
         &self,
         target: &[u32],
-        mut path: Vec<u32>,
+        path: &mut Vec<u32>,
         traverser: &mut impl FnMut(&[u32], &V),
     ) {
         if path.starts_with(target)
             && let Some(value) = self.value.as_ref()
         {
-            traverser(&path, value);
+            traverser(path, value);
         }
 
         for (i, item) in self.items.iter().enumerate() {
             path.push(i as u32);
-            if target.starts_with(&path) || path.starts_with(target) {
-                item.traverse(target, path.clone(), traverser);
+            if target.starts_with(path) || path.starts_with(target) {
+                item.traverse(target, path, traverser);
             }
             path.pop();
         }
@@ -210,7 +205,7 @@ impl<V> PathGraphEntry<V> {
         &mut self,
         target: &[u32],
         parent_is_retained: bool,
-        mut path: Vec<u32>,
+        path: &mut Vec<u32>,
         retainer: &mut impl FnMut(&[u32], &V) -> bool,
         traverser: &mut impl FnMut(&[u32], &V),
     ) -> bool {
@@ -219,11 +214,11 @@ impl<V> PathGraphEntry<V> {
             && let Some(value) = self.value.as_ref()
         {
             if parent_is_retained {
-                retain = retainer(&path, value);
+                retain = retainer(path, value);
             }
 
             if !retain {
-                traverser(&path, value);
+                traverser(path, value);
             }
         }
 
@@ -231,8 +226,8 @@ impl<V> PathGraphEntry<V> {
         self.items.retain_mut(|item| {
             let mut retain = retain;
             path.push(i as u32);
-            if target.starts_with(&path) || path.starts_with(target) {
-                retain = item.retain(target, retain, path.clone(), retainer, traverser);
+            if target.starts_with(path) || path.starts_with(target) {
+                retain = item.retain(target, retain, path, retainer, traverser);
             }
             path.pop();
             i += 1;
@@ -244,21 +239,21 @@ impl<V> PathGraphEntry<V> {
     pub fn traverse_1_level(
         &self,
         target: &[u32],
-        mut path: Vec<u32>,
+        path: &mut Vec<u32>,
         traverser: &mut impl FnMut(&[u32], &V),
     ) {
-        if path == target {
+        if path.as_slice() == target {
             for (i, item) in self.items.iter().enumerate() {
                 if let Some(value) = item.value.as_ref() {
                     path.push(i as u32);
-                    traverser(&path, value);
+                    traverser(path, value);
                     path.pop();
                 }
             }
         } else {
             for (i, item) in self.items.iter().enumerate() {
                 path.push(i as u32);
-                item.traverse_1_level(target, path.clone(), traverser);
+                item.traverse_1_level(target, path, traverser);
                 path.pop();
             }
         }
@@ -328,7 +323,12 @@ impl<V> PathGraph<V> {
 
     pub fn find_path(&self, finder: impl Fn(Option<&V>) -> bool) -> Option<Vec<u32>> {
         if let Some(entry) = &self.entry {
-            entry.find_path(vec![], &finder)
+            let mut path = Vec::new();
+            if entry.find_path(&mut path, &finder) {
+                Some(path)
+            } else {
+                None
+            }
         } else {
             None
         }
@@ -336,7 +336,7 @@ impl<V> PathGraph<V> {
 
     pub fn find(&self, finder: impl Fn(Option<&V>) -> bool) -> Option<&V> {
         if let Some(entry) = &self.entry {
-            entry.find(vec![], &finder)
+            entry.find(&finder)
         } else {
             None
         }
@@ -360,7 +360,7 @@ impl<V> PathGraph<V> {
         finder: impl Fn(Option<&V>) -> bool,
     ) -> Option<Vec<u32>> {
         if let Some(entry) = &self.entry {
-            entry.find_child_path(vec![], target, &finder)
+            entry.find_child_path(target, &finder)
         } else {
             None
         }
@@ -392,7 +392,7 @@ impl<V> PathGraph<V> {
 
     pub fn traverse(&self, target: &[u32], mut traverser: impl FnMut(&[u32], &V)) {
         if let Some(entry) = &self.entry {
-            entry.traverse(target, vec![], &mut traverser);
+            entry.traverse(target, &mut Vec::new(), &mut traverser);
         }
     }
 
@@ -403,7 +403,7 @@ impl<V> PathGraph<V> {
         mut traverser: impl FnMut(&[u32], &V),
     ) {
         if let Some(entry) = &mut self.entry
-            && !entry.retain(target, true, vec![], &mut retainer, &mut traverser)
+            && !entry.retain(target, true, &mut Vec::new(), &mut retainer, &mut traverser)
         {
             let _ = self.entry.take();
         }
@@ -411,7 +411,7 @@ impl<V> PathGraph<V> {
 
     pub fn traverse_1_level(&self, target: &[u32], mut traverser: impl FnMut(&[u32], &V)) {
         if let Some(entry) = &self.entry {
-            entry.traverse_1_level(target, vec![], &mut traverser);
+            entry.traverse_1_level(target, &mut Vec::new(), &mut traverser);
         }
     }
 }

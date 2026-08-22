@@ -4,7 +4,7 @@
 //!
 //! This crate provides a way to embed interactive terminal emulators in your Freya applications.
 //! It uses PTY (pseudo-terminal) to spawn shell processes and drives an
-//! [`alacritty_terminal`] grid for parsing and reflow.
+//! [`rio_vt`] grid for parsing and reflow.
 //!
 //! ## Features
 //!
@@ -13,6 +13,7 @@
 //! - **256-Color Support**: ANSI 16 colors, 6x6x6 RGB cube, and 24-level grayscale
 //! - **Keyboard Input**: Handle all standard terminal key sequences
 //! - **Auto-resize**: Terminal automatically resizes based on available space
+//! - **Focus reporting**: Focus changes are reported to programs that enable mode 1004
 //!
 //! ## Basic Usage
 //!
@@ -67,10 +68,10 @@
 //! ## Advance usage
 //!
 //! Check the `feature_terminal.rs` example in the repository.
+mod cell;
 pub mod colors;
 pub mod element;
 pub mod handle;
-mod osc7;
 pub mod parser;
 pub mod pty;
 mod rendering;
@@ -78,8 +79,8 @@ mod url;
 
 /// Prelude module for convenient imports.
 pub mod prelude {
-    pub use alacritty_terminal::selection::SelectionType;
     pub use portable_pty::CommandBuilder;
+    pub use rio_vt::selection::SelectionType;
 
     pub use crate::{
         element::Terminal,

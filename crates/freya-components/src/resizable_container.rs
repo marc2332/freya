@@ -325,9 +325,12 @@ impl Component for ResizableContainer {
             .content(Content::flex())
             .children(self.panels.iter().enumerate().flat_map(|(i, e)| {
                 if i > 0 {
-                    vec![ResizableHandle::new(i).into(), e.clone().into()]
+                    vec![
+                        ResizableHandle::new(i).into_element(),
+                        e.clone().into_element(),
+                    ]
                 } else {
-                    vec![e.clone().into()]
+                    vec![e.clone().into_element()]
                 }
             }))
     }
@@ -371,8 +374,8 @@ impl ResizablePanel {
     }
 
     /// Set the minimum size for this panel (in the same units as the panel's sizing mode).
-    pub fn min_size(mut self, min_size: impl Into<f32>) -> Self {
-        self.min_size = Some(min_size.into());
+    pub fn min_size(mut self, min_size: f32) -> Self {
+        self.min_size = Some(min_size);
         self
     }
 

@@ -1,8 +1,10 @@
 use std::{
     any::Any,
+    borrow::Cow,
     fmt::Debug,
 };
 
+use bytes::Bytes;
 use cursor_icon::CursorIcon;
 
 use crate::prelude::AccessibilityFocusStrategy;
@@ -16,6 +18,15 @@ pub enum UserEvent {
 
     /// Set a new cursor icon.
     SetCursorIcon(CursorIcon),
+
+    /// Set a custom scale factor.
+    SetCustomScaleFactor(f64),
+
+    /// Load a font at runtime.
+    LoadFont {
+        font_name: Cow<'static, str>,
+        font_data: Bytes,
+    },
 
     Erased(SingleThreadErasedEvent),
 }

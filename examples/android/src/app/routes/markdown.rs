@@ -8,7 +8,6 @@ This is a **MarkdownViewer** running on Android.
 ## Features
 
 - **Bold text** and *italic text*
-- ~~Strikethrough~~ text
 - `inline code` snippets
 
 ## Code Example

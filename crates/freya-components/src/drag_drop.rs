@@ -7,8 +7,14 @@ use torin::prelude::*;
 #[derive(Clone, Copy)]
 enum DragPhase {
     Idle,
-    Pressing(CursorPoint),
-    Dragging(CursorPoint),
+    Pressing {
+        press_point: CursorPoint,
+        offset: CursorPoint,
+    },
+    Dragging {
+        position: CursorPoint,
+        offset: CursorPoint,
+    },
 }
 
 /// Access the global drag state for payloads of type `T`.
@@ -27,20 +33,32 @@ pub fn use_drag<T: 'static>() -> State<Option<T>> {
     }
 }
 
-/// Properties for the [`DragZone`] component.
+/// A container whose children can be dragged into a [`DropZone`] expecting the same payload type.
+///
+/// # Example
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> impl IntoElement {
+///     DragZone::new(0).drag_element("Dragging").child("Drag me!")
+/// }
+/// ```
 #[derive(Clone, PartialEq)]
 pub struct DragZone<T: Clone + 'static + PartialEq> {
-    /// Element visible when dragging the element. This follows the cursor.
+    children: Vec<Element>,
     drag_element: Option<Element>,
-    /// Inner children for the DropZone.
-    children: Element,
-    /// Data that will be handled to the destination [`DropZone`].
     data: T,
-    /// Show the children when dragging. Defaults to `true`.
     show_while_dragging: bool,
-    /// Minimum distance in pixels the cursor must move before dragging starts. Defaults to `4.0`.
     drag_threshold: f64,
+    enabled: bool,
+    layout: LayoutData,
     key: DiffKey,
+}
+
+impl<T: Clone + PartialEq + 'static> ChildrenExt for DragZone<T> {
+    fn get_children(&mut self) -> &mut Vec<Element> {
+        &mut self.children
+    }
 }
 
 impl<T: Clone + PartialEq + 'static> KeyExt for DragZone<T> {
@@ -49,30 +67,50 @@ impl<T: Clone + PartialEq + 'static> KeyExt for DragZone<T> {
     }
 }
 
+impl<T: Clone + PartialEq + 'static> LayoutExt for DragZone<T> {
+    fn get_layout(&mut self) -> &mut LayoutData {
+        &mut self.layout
+    }
+}
+
+impl<T: Clone + PartialEq + 'static> ContainerExt for DragZone<T> {}
+
 impl<T: Clone + PartialEq + 'static> DragZone<T> {
-    pub fn new(data: T, children: impl Into<Element>) -> Self {
+    /// Create a drag zone carrying `data`, which is handed to the destination [`DropZone`].
+    pub fn new(data: T) -> Self {
         Self {
             data,
-            children: children.into(),
+            children: Vec::new(),
             drag_element: None,
             show_while_dragging: true,
             drag_threshold: 4.0,
+            enabled: true,
+            layout: LayoutData::default(),
             key: DiffKey::default(),
         }
     }
 
+    /// Whether the children stay visible while dragging. Defaults to `true`.
     pub fn show_while_dragging(mut self, show_while_dragging: bool) -> Self {
         self.show_while_dragging = show_while_dragging;
         self
     }
 
+    /// Element visible while dragging, which follows the cursor.
     pub fn drag_element(mut self, drag_element: impl Into<Element>) -> Self {
         self.drag_element = Some(drag_element.into());
         self
     }
 
+    /// Minimum distance in pixels the cursor must move before dragging starts. Defaults to `4.0`.
     pub fn drag_threshold(mut self, drag_threshold: f64) -> Self {
         self.drag_threshold = drag_threshold;
+        self
+    }
+
+    /// Whether dragging can start. Defaults to `true`.
+    pub fn enabled(mut self, enabled: bool) -> Self {
+        self.enabled = enabled;
         self
     }
 }
@@ -81,20 +119,30 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
     fn render(&self) -> impl IntoElement {
         let mut drags = use_drag::<T>();
         let mut phase = use_state(|| DragPhase::Idle);
+        let mut drag_element_size = use_state(|| None::<Size2D>);
         let data = self.data.clone();
         let drag_threshold = self.drag_threshold;
 
         let on_global_pointer_move = move |e: Event<PointerEventData>| match phase() {
-            DragPhase::Dragging(_) => {
-                phase.set(DragPhase::Dragging(e.global_location()));
+            DragPhase::Dragging { offset, .. } => {
+                phase.set(DragPhase::Dragging {
+                    position: e.global_location(),
+                    offset,
+                });
             }
-            DragPhase::Pressing(press_point) => {
+            DragPhase::Pressing {
+                press_point,
+                offset,
+            } => {
                 let current = e.global_location();
                 let dx = current.x - press_point.x;
                 let dy = current.y - press_point.y;
 
                 if (dx * dx + dy * dy).sqrt() >= drag_threshold {
-                    phase.set(DragPhase::Dragging(current));
+                    phase.set(DragPhase::Dragging {
+                        position: current,
+                        offset,
+                    });
                     *drags.write() = Some(data.clone());
                 }
             }
@@ -105,7 +153,10 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
             if e.data().button() != Some(MouseButton::Left) {
                 return;
             }
-            phase.set(DragPhase::Pressing(e.global_location()));
+            phase.set(DragPhase::Pressing {
+                press_point: e.global_location(),
+                offset: e.element_location(),
+            });
         };
 
         let on_global_pointer_press = move |_: Event<PointerEventData>| {
@@ -115,34 +166,40 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
             }
         };
 
-        let dragging_position = match phase() {
-            DragPhase::Dragging(pos) => Some(pos),
+        let dragging = match phase() {
+            DragPhase::Dragging { position, offset } => Some((position, offset)),
             _ => None,
         };
 
         rect()
+            .layout(self.layout.clone())
             .on_global_pointer_press(on_global_pointer_press)
             .on_global_pointer_move(on_global_pointer_move)
-            .on_pointer_down(on_pointer_down)
-            .maybe_child((dragging_position.zip(self.drag_element.clone())).map(
-                |(position, drag_element)| {
-                    let (x, y) = position.to_f32().to_tuple();
+            .maybe(self.enabled, |el| el.on_pointer_down(on_pointer_down))
+            .maybe_child((dragging.zip(self.drag_element.clone())).map(
+                |((position, offset), drag_element)| {
+                    let size = *drag_element_size.read();
+                    let anchor = size.map_or(offset, |size| {
+                        offset.min(CursorPoint::new(size.width as f64, size.height as f64))
+                    });
+                    let (x, y) = (position - anchor).to_f32().to_tuple();
                     rect()
                         .position(Position::new_global())
                         .layer(Layer::Overlay)
                         .interactive(false)
-                        .width(Size::px(0.))
-                        .height(Size::px(0.))
+                        .opacity(if size.is_some() { 1. } else { 0. })
                         // Extend by 1. so that the cursor click can reach the drop zone
                         .offset_x(x + 1.)
                         .offset_y(y + 1.)
+                        .on_sized(move |e: Event<SizedEventData>| {
+                            drag_element_size.set_if_modified(Some(e.area.size))
+                        })
                         .child(drag_element)
                 },
             ))
-            .maybe_child(
-                (self.show_while_dragging || dragging_position.is_none())
-                    .then(|| self.children.clone()),
-            )
+            .maybe(self.show_while_dragging || dragging.is_none(), |el| {
+                el.children(self.children.clone())
+            })
     }
 
     fn render_key(&self) -> DiffKey {
@@ -150,14 +207,29 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
     }
 }
 
+/// A container that receives the payload of a [`DragZone`] released over it.
+///
+/// # Example
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> impl IntoElement {
+///     DropZone::new(|data: usize| println!("Dropped {data}")).child("Drop here!")
+/// }
+/// ```
 #[derive(PartialEq, Clone)]
 pub struct DropZone<T: 'static + PartialEq + Clone> {
-    children: Element,
+    children: Vec<Element>,
     on_drop: EventHandler<T>,
     on_drag_over: Option<EventHandler<bool>>,
-    width: Size,
-    height: Size,
+    layout: LayoutData,
     key: DiffKey,
+}
+
+impl<T: Clone + PartialEq + 'static> ChildrenExt for DropZone<T> {
+    fn get_children(&mut self) -> &mut Vec<Element> {
+        &mut self.children
+    }
 }
 
 impl<T: Clone + PartialEq + 'static> KeyExt for DropZone<T> {
@@ -166,14 +238,22 @@ impl<T: Clone + PartialEq + 'static> KeyExt for DropZone<T> {
     }
 }
 
+impl<T: Clone + PartialEq + 'static> LayoutExt for DropZone<T> {
+    fn get_layout(&mut self) -> &mut LayoutData {
+        &mut self.layout
+    }
+}
+
+impl<T: Clone + PartialEq + 'static> ContainerExt for DropZone<T> {}
+
 impl<T: PartialEq + Clone + 'static> DropZone<T> {
-    pub fn new(children: impl Into<Element>, on_drop: impl Into<EventHandler<T>>) -> Self {
+    /// Create a drop zone, `on_drop` is called with the payload of the released [`DragZone`].
+    pub fn new(on_drop: impl Into<EventHandler<T>>) -> Self {
         Self {
-            children: children.into(),
+            children: Vec::new(),
             on_drop: on_drop.into(),
             on_drag_over: None,
-            width: Size::auto(),
-            height: Size::auto(),
+            layout: LayoutData::default(),
             key: DiffKey::default(),
         }
     }
@@ -196,10 +276,9 @@ impl<T: Clone + PartialEq + 'static> Component for DropZone<T> {
             let on_drag_over = on_drag_over.clone();
             move |e: Event<MouseEventData>| {
                 e.stop_propagation();
-                if let Some(current_drags) = &*drags.read() {
-                    on_drop.call(current_drags.clone());
-                }
-                if drags.read().is_some() {
+                let payload = (*drags.read()).clone();
+                if let Some(payload) = payload {
+                    on_drop.call(payload);
                     *drags.write() = None;
                     if let Some(on_drag_over) = &on_drag_over {
                         on_drag_over.call(false);
@@ -209,9 +288,8 @@ impl<T: Clone + PartialEq + 'static> Component for DropZone<T> {
         };
 
         rect()
+            .layout(self.layout.clone())
             .on_mouse_up(on_mouse_up)
-            .width(self.width.clone())
-            .height(self.height.clone())
             .map(on_drag_over, move |el, on_drag_over| {
                 el.on_pointer_enter({
                     let on_drag_over = on_drag_over.clone();
@@ -227,7 +305,7 @@ impl<T: Clone + PartialEq + 'static> Component for DropZone<T> {
                     }
                 })
             })
-            .child(self.children.clone())
+            .children(self.children.clone())
     }
 
     fn render_key(&self) -> DiffKey {

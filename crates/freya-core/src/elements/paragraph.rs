@@ -30,7 +30,6 @@ use freya_engine::prelude::{
     TextBaseline,
     TextStyle,
 };
-use rustc_hash::FxHashMap;
 use torin::prelude::{
     Area,
     Length,
@@ -39,6 +38,7 @@ use torin::prelude::{
     PostMeasure,
     Size2D,
 };
+use unicode_segmentation::UnicodeSegmentation;
 
 use crate::{
     data::{
@@ -54,14 +54,13 @@ use crate::{
     element::{
         Element,
         ElementExt,
-        EventHandlerType,
+        EventHandlers,
         IntoElement,
         LayoutContext,
         PostMeasureContext,
         RenderContext,
     },
     elements::rect::rect,
-    events::name::EventName,
     layers::Layer,
     node_id::NodeId,
     prelude::{
@@ -69,6 +68,7 @@ use crate::{
         ChildrenExt,
         Color,
         ContainerExt,
+        ContainerPositionExt,
         EventHandlersExt,
         Fill,
         KeyExt,
@@ -100,11 +100,7 @@ use crate::{
 /// }
 /// ```
 pub fn paragraph() -> Paragraph {
-    Paragraph {
-        key: DiffKey::None,
-        element: ParagraphElement::default(),
-        children: Vec::new(),
-    }
+    Paragraph::default()
 }
 
 pub struct ParagraphHolderInner {
@@ -150,7 +146,7 @@ pub struct ParagraphElement {
     pub accessibility: AccessibilityData,
     pub text_style_data: TextStyleData,
     pub cursor_style_data: CursorStyleData,
-    pub event_handlers: FxHashMap<EventName, EventHandlerType>,
+    pub event_handlers: EventHandlers,
     pub sk_paragraph: ParagraphHolder,
     pub cursor_index: Option<usize>,
     pub highlights: Vec<(usize, usize)>,
@@ -273,6 +269,10 @@ impl ElementExt for ParagraphElement {
 
     fn style(&'_ self) -> Cow<'_, StyleState> {
         Cow::Owned(StyleState::default())
+    }
+
+    fn is_transparent(&self) -> bool {
+        false
     }
 
     fn text_style(&'_ self) -> Cow<'_, TextStyleData> {
@@ -427,7 +427,7 @@ impl ElementExt for ParagraphElement {
         }
     }
 
-    fn events_handlers(&'_ self) -> Option<Cow<'_, FxHashMap<EventName, EventHandlerType>>> {
+    fn events_handlers(&'_ self) -> Option<Cow<'_, EventHandlers>> {
         Some(Cow::Borrowed(&self.event_handlers))
     }
 
@@ -457,6 +457,15 @@ impl ElementExt for ParagraphElement {
             CursorMode::Expanded => vertical_offset * 2.,
         };
 
+        let to_cursor_area = |rect: SkRect| {
+            SkRect::new(
+                cursor_area.min_x() + rect.left,
+                cursor_area.min_y() + rect.top + cursor_vertical_offset,
+                cursor_area.min_x() + rect.right,
+                cursor_area.min_y() + rect.bottom + cursor_vertical_size_offset,
+            )
+        };
+
         // Draw highlights
         for (from, to) in self.highlights.iter() {
             if from == to {
@@ -475,87 +484,54 @@ impl ElementExt for ParagraphElement {
             highlights_paint.set_color(self.cursor_style_data.highlight_color);
 
             if rects.is_empty() && *from == 0 {
-                let avg_line_height =
-                    paragraph.height() / paragraph.get_line_metrics().len().max(1) as f32;
-                let rect = SkRect::new(
-                    cursor_area.min_x(),
-                    cursor_area.min_y() + cursor_vertical_offset,
-                    cursor_area.min_x() + 6.,
-                    cursor_area.min_y() + avg_line_height + cursor_vertical_size_offset,
+                let caret_rect = cursor_character_rect(
+                    paragraph,
+                    &self.text(),
+                    *from,
+                    context.text_style_state.text_align,
                 );
-
-                context.canvas.draw_rect(rect, &highlights_paint);
+                context
+                    .canvas
+                    .draw_rect(to_cursor_area(caret_rect), &highlights_paint);
             }
 
             for rect in rects {
-                let rect = SkRect::new(
-                    cursor_area.min_x() + rect.rect.left,
-                    cursor_area.min_y() + rect.rect.top + cursor_vertical_offset,
-                    cursor_area.min_x() + rect.rect.right.max(6.),
-                    cursor_area.min_y() + rect.rect.bottom + cursor_vertical_size_offset,
-                );
-                context.canvas.draw_rect(rect, &highlights_paint);
+                let mut rect = rect.rect;
+                rect.right = rect.right.max(6.);
+                context
+                    .canvas
+                    .draw_rect(to_cursor_area(rect), &highlights_paint);
             }
         }
 
-        // We exclude those highlights that on the same start and end (e.g the user just started dragging)
         let visible_highlights = self
             .highlights
             .iter()
-            .filter(|highlight| highlight.0 != highlight.1)
-            .count()
-            > 0;
+            .any(|highlight| highlight.0 != highlight.1);
 
-        // Draw block cursor behind text if needed
+        let mut cursor_paint = Paint::default();
+        cursor_paint.set_anti_alias(true);
+        cursor_paint.set_style(PaintStyle::Fill);
+        cursor_paint.set_color(self.cursor_style_data.color);
+
+        // Draw block cursor
         if let Some(cursor_index) = self.cursor_index
             && self.cursor_style == CursorStyle::Block
-            && let Some(cursor_rect) = paragraph
-                .get_rects_for_range(
-                    cursor_index..cursor_index + 1,
-                    RectHeightStyle::Tight,
-                    RectWidthStyle::Tight,
-                )
-                .first()
-                .map(|text| text.rect)
-                .or_else(|| {
-                    // Show the cursor at the end of the text if possible
-                    let text_len = paragraph
-                        .get_glyph_position_at_coordinate((f32::MAX, f32::MAX))
-                        .position as usize;
-                    let last_rects = paragraph.get_rects_for_range(
-                        text_len.saturating_sub(1)..text_len,
-                        RectHeightStyle::Tight,
-                        RectWidthStyle::Tight,
-                    );
-
-                    if let Some(last_rect) = last_rects.first() {
-                        let mut caret = last_rect.rect;
-                        caret.left = caret.right;
-                        Some(caret)
-                    } else {
-                        let avg_line_height =
-                            paragraph.height() / paragraph.get_line_metrics().len().max(1) as f32;
-                        Some(SkRect::new(0., 0., 6., avg_line_height))
-                    }
-                })
         {
-            let width = (cursor_rect.right - cursor_rect.left).max(6.0);
-            let cursor_rect = SkRect::new(
-                cursor_area.min_x() + cursor_rect.left,
-                cursor_area.min_y() + cursor_rect.top + cursor_vertical_offset,
-                cursor_area.min_x() + cursor_rect.left + width,
-                cursor_area.min_y() + cursor_rect.bottom + cursor_vertical_size_offset,
+            let mut cursor_rect = cursor_character_rect(
+                paragraph,
+                &self.text(),
+                cursor_index,
+                context.text_style_state.text_align,
             );
-
-            let mut paint = Paint::default();
-            paint.set_anti_alias(true);
-            paint.set_style(PaintStyle::Fill);
-            paint.set_color(self.cursor_style_data.color);
-
-            context.canvas.draw_rect(cursor_rect, &paint);
+            let width = (cursor_rect.right - cursor_rect.left).max(6.0);
+            cursor_rect.right = cursor_rect.left + width;
+            context
+                .canvas
+                .draw_rect(to_cursor_area(cursor_rect), &cursor_paint);
         }
 
-        // Draw text (always uses visible_area with vertical_offset)
+        // Draw text
         paint_paragraph_with_fill(
             paragraph,
             context.canvas,
@@ -566,68 +542,21 @@ impl ElementExt for ParagraphElement {
         // Draw cursor
         if let Some(cursor_index) = self.cursor_index
             && !visible_highlights
+            && self.cursor_style != CursorStyle::Block
         {
-            let cursor_rects = paragraph.get_rects_for_range(
-                cursor_index..cursor_index + 1,
-                RectHeightStyle::Tight,
-                RectWidthStyle::Tight,
+            let mut cursor_rect = cursor_character_rect(
+                paragraph,
+                &self.text(),
+                cursor_index,
+                context.text_style_state.text_align,
             );
-            if let Some(cursor_rect) = cursor_rects.first().map(|text| text.rect).or_else(|| {
-                // Show the cursor at the end of the text if possible
-                let text_len = paragraph
-                    .get_glyph_position_at_coordinate((f32::MAX, f32::MAX))
-                    .position as usize;
-                let last_rects = paragraph.get_rects_for_range(
-                    text_len.saturating_sub(1)..text_len,
-                    RectHeightStyle::Tight,
-                    RectWidthStyle::Tight,
-                );
-
-                if let Some(last_rect) = last_rects.first() {
-                    let mut caret = last_rect.rect;
-                    caret.left = caret.right;
-                    Some(caret)
-                } else {
-                    None
-                }
-            }) {
-                let paint_color = self.cursor_style_data.color;
-                match self.cursor_style {
-                    CursorStyle::Underline => {
-                        let thickness = 2.0;
-                        let underline_rect = SkRect::new(
-                            cursor_area.min_x() + cursor_rect.left,
-                            cursor_area.min_y() + cursor_rect.bottom - thickness
-                                + cursor_vertical_offset,
-                            cursor_area.min_x() + cursor_rect.right,
-                            cursor_area.min_y() + cursor_rect.bottom + cursor_vertical_size_offset,
-                        );
-
-                        let mut paint = Paint::default();
-                        paint.set_anti_alias(true);
-                        paint.set_style(PaintStyle::Fill);
-                        paint.set_color(paint_color);
-
-                        context.canvas.draw_rect(underline_rect, &paint);
-                    }
-                    CursorStyle::Line => {
-                        let cursor_rect = SkRect::new(
-                            cursor_area.min_x() + cursor_rect.left,
-                            cursor_area.min_y() + cursor_rect.top + cursor_vertical_offset,
-                            cursor_area.min_x() + cursor_rect.left + 2.,
-                            cursor_area.min_y() + cursor_rect.bottom + cursor_vertical_size_offset,
-                        );
-
-                        let mut paint = Paint::default();
-                        paint.set_anti_alias(true);
-                        paint.set_style(PaintStyle::Fill);
-                        paint.set_color(paint_color);
-
-                        context.canvas.draw_rect(cursor_rect, &paint);
-                    }
-                    _ => {}
-                }
+            match self.cursor_style {
+                CursorStyle::Underline => cursor_rect.top = cursor_rect.bottom - 2.,
+                _ => cursor_rect.right = cursor_rect.left + 2.,
             }
+            context
+                .canvas
+                .draw_rect(to_cursor_area(cursor_rect), &cursor_paint);
         }
     }
 }
@@ -637,6 +566,23 @@ impl ParagraphElement {
         self.contents
             .iter()
             .any(|content| matches!(content, ParagraphContent::Element))
+    }
+
+    /// The paragraph text as Skia indexes it, with inline children as placeholder characters.
+    fn text(&self) -> String {
+        let mut text = String::new();
+        let mut spans = self.spans.iter();
+        for content in &self.contents {
+            match content {
+                ParagraphContent::Span => {
+                    if let Some(span) = spans.next() {
+                        text.push_str(&span.text);
+                    }
+                }
+                ParagraphContent::Element => text.push('\u{FFFC}'),
+            }
+        }
+        text
     }
 
     /// Builds the Skia paragraph from the content, reserving a placeholder (sized from
@@ -701,6 +647,64 @@ impl ParagraphElement {
         paragraph.layout(width);
         paragraph
     }
+}
+
+/// Rect of the grapheme cluster at `cursor_index` (in UTF-16 code units),
+/// or a caret stub when there is nothing to measure. A caret after a
+/// trailing line break lands on the empty last line.
+pub fn cursor_character_rect(
+    paragraph: &SkParagraph,
+    text: &str,
+    cursor_index: usize,
+    text_align: TextAlign,
+) -> SkRect {
+    let mut cluster = 0..0;
+    let mut cluster_byte_index = 0;
+    for (byte_index, grapheme) in text.grapheme_indices(true) {
+        cluster = cluster.end..cluster.end + grapheme.encode_utf16().count();
+        cluster_byte_index = byte_index;
+        if cluster.end > cursor_index {
+            break;
+        }
+    }
+
+    if !cluster.is_empty() {
+        // A line below the final cluster is the empty line after a trailing line break
+        if cluster.end <= cursor_index
+            && let Some(cluster_line) = paragraph.get_line_number_at(cluster_byte_index)
+            && let Some(line) = paragraph.get_line_metrics_at(cluster_line + 1)
+        {
+            let left = line.left as f32;
+            let top = (line.baseline - line.ascent) as f32;
+            let bottom = (line.baseline + line.descent) as f32;
+            return SkRect::new(left, top, left, bottom);
+        }
+
+        let rects = paragraph.get_rects_for_range(
+            cluster.clone(),
+            RectHeightStyle::Tight,
+            RectWidthStyle::Tight,
+        );
+        if let Some(rect) = rects.first() {
+            let mut rect = rect.rect;
+            if cluster.end <= cursor_index {
+                rect.left = rect.right;
+            }
+            return rect;
+        }
+    }
+
+    if let Some(line) = paragraph.get_line_metrics_at(0) {
+        let left = line.left as f32;
+        return SkRect::new(left, 0., left + 6., line.height as f32);
+    }
+
+    let left = match text_align {
+        TextAlign::Center => paragraph.max_width() / 2.,
+        TextAlign::Right | TextAlign::End => paragraph.max_width() - 6.,
+        _ => 0.,
+    };
+    SkRect::new(left, 0., left + 6., paragraph.height())
 }
 
 impl From<Paragraph> for Element {
@@ -835,7 +839,7 @@ impl KeyExt for Paragraph {
 }
 
 impl EventHandlersExt for Paragraph {
-    fn get_event_handlers(&mut self) -> &mut FxHashMap<EventName, EventHandlerType> {
+    fn get_event_handlers(&mut self) -> &mut EventHandlers {
         &mut self.element.event_handlers
     }
 }
@@ -848,6 +852,7 @@ impl LayerExt for Paragraph {
     }
 }
 
+#[derive(Default, Clone)]
 pub struct Paragraph {
     key: DiffKey,
     element: ParagraphElement,
@@ -875,7 +880,7 @@ impl ChildrenExt for Paragraph {
         self
     }
 
-    fn children(self, children: impl IntoIterator<Item = Element>) -> Self {
+    fn children(self, children: impl IntoIterator<Item = impl IntoElement>) -> Self {
         children
             .into_iter()
             .fold(self, |paragraph, child| paragraph.child(child))
@@ -929,6 +934,12 @@ impl Paragraph {
     fn push_span(&mut self, span: Span<'static>) {
         self.element.contents.push(ParagraphContent::Span);
         self.element.spans.push(span);
+    }
+
+    /// Replace all of the paragraph's cursor style data at once. See [`CursorStyleData`].
+    pub fn cursor_style_data(mut self, cursor_style_data: CursorStyleData) -> Self {
+        self.element.cursor_style_data = cursor_style_data;
+        self
     }
 
     /// Set the color of the text cursor. See [`Color`].
