@@ -43,6 +43,8 @@ pub enum EventName {
 
     Visible,
 
+    Hidden,
+
     Styled,
 
     FileDrop,
