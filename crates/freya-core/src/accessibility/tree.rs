@@ -356,21 +356,6 @@ impl AccessibilityTree {
             .unwrap();
     }
 
-    fn element_text(element: &dyn Any) -> Option<String> {
-        element
-            .downcast_ref::<LabelElement>()
-            .map(|label| label.text.to_string())
-            .or_else(|| {
-                element.downcast_ref::<ParagraphElement>().map(|paragraph| {
-                    paragraph
-                        .spans
-                        .iter()
-                        .map(|span| span.text.as_ref())
-                        .collect()
-                })
-            })
-    }
-
     /// Create an accessibility node
     pub fn create_node(
         node_id: NodeId,
@@ -407,13 +392,18 @@ impl AccessibilityTree {
         });
 
         // Set inner text
-        let inner_text = Self::element_text(element.as_ref() as &dyn Any).or_else(|| {
-            tree.children.get(&node_id).and_then(|children| {
-                children.iter().find_map(|child| {
-                    Self::element_text(tree.elements.get(child).unwrap().as_ref() as &dyn Any)
+        let inner_text = accessibility_data
+            .builder
+            .value()
+            .map(String::from)
+            .or_else(|| {
+                tree.children.get(&node_id).and_then(|children| {
+                    children.iter().find_map(|child| {
+                        let child_accessibility = tree.elements.get(child).unwrap().accessibility();
+                        child_accessibility.builder.value().map(String::from)
+                    })
                 })
-            })
-        });
+            });
 
         if let Some(inner_text) = inner_text {
             // Accesskit derives the name of Role::Label nodes from the value, not the label

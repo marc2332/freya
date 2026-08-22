@@ -708,7 +708,15 @@ pub fn cursor_character_rect(
 }
 
 impl From<Paragraph> for Element {
-    fn from(value: Paragraph) -> Self {
+    fn from(mut value: Paragraph) -> Self {
+        let text = value
+            .element
+            .spans
+            .iter()
+            .map(|span| span.text.as_ref())
+            .collect::<String>();
+        value.element.accessibility.builder.set_value(text);
+
         let elements = value
             .children
             .into_iter()
@@ -915,8 +923,6 @@ impl Paragraph {
 
     /// Append every [`Span`] yielded by the iterator to the paragraph.
     pub fn spans_iter(mut self, spans: impl Iterator<Item = Span<'static>>) -> Self {
-        // TODO: Accessible paragraphs
-        // self.element.accessibility.builder.set_value(text.clone());
         for span in spans {
             self.push_span(span);
         }
@@ -925,8 +931,6 @@ impl Paragraph {
 
     /// Append a single [`Span`] of styled text to the paragraph.
     pub fn span(mut self, span: impl Into<Span<'static>>) -> Self {
-        // TODO: Accessible paragraphs
-        // self.element.accessibility.builder.set_value(text.clone());
         self.push_span(span.into());
         self
     }

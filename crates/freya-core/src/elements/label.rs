@@ -308,7 +308,10 @@ impl ElementExt for LabelElement {
 }
 
 impl From<Label> for Element {
-    fn from(value: Label) -> Self {
+    fn from(mut value: Label) -> Self {
+        let text = value.element.text.clone();
+        value.element.accessibility.builder.set_value(text);
+
         Element::Element {
             key: value.key,
             element: Rc::new(value.element),
