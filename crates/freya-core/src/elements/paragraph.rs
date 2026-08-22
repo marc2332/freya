@@ -216,6 +216,7 @@ impl ElementExt for ParagraphElement {
         if self.spans != paragraph.spans || self.contents != paragraph.contents {
             diff.insert(DiffModifies::STYLE);
             diff.insert(DiffModifies::LAYOUT);
+            diff.insert(DiffModifies::ACCESSIBILITY);
         }
 
         if self.accessibility != paragraph.accessibility {
@@ -281,6 +282,15 @@ impl ElementExt for ParagraphElement {
 
     fn accessibility(&'_ self) -> Cow<'_, AccessibilityData> {
         Cow::Borrowed(&self.accessibility)
+    }
+
+    fn finish_accessibility(&self, builder: &mut accesskit::Node) {
+        builder.set_value(
+            self.spans
+                .iter()
+                .map(|span| span.text.as_ref())
+                .collect::<String>(),
+        );
     }
 
     fn layer(&self) -> Layer {
@@ -708,15 +718,7 @@ pub fn cursor_character_rect(
 }
 
 impl From<Paragraph> for Element {
-    fn from(mut value: Paragraph) -> Self {
-        let text = value
-            .element
-            .spans
-            .iter()
-            .map(|span| span.text.as_ref())
-            .collect::<String>();
-        value.element.accessibility.builder.set_value(text);
-
+    fn from(value: Paragraph) -> Self {
         let elements = value
             .children
             .into_iter()

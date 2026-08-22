@@ -365,6 +365,7 @@ impl AccessibilityTree {
     ) -> Node {
         let element = tree.elements.get(&node_id).unwrap();
         let mut accessibility_data = element.accessibility().into_owned();
+        element.finish_accessibility(&mut accessibility_data.builder);
 
         if node_id == NodeId::ROOT {
             accessibility_data.builder.set_role(Role::Window);
@@ -399,8 +400,10 @@ impl AccessibilityTree {
             .or_else(|| {
                 tree.children.get(&node_id).and_then(|children| {
                     children.iter().find_map(|child| {
-                        let child_accessibility = tree.elements.get(child).unwrap().accessibility();
-                        child_accessibility.builder.value().map(String::from)
+                        let child_element = tree.elements.get(child).unwrap();
+                        let mut child_builder = child_element.accessibility().builder.clone();
+                        child_element.finish_accessibility(&mut child_builder);
+                        child_builder.value().map(String::from)
                     })
                 })
             });
