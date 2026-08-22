@@ -610,7 +610,7 @@ impl Runner {
         }
     }
 
-    /// Useful for freya-testing
+    /// Like [Self::handle_events], but returns instead of waiting for more work.
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     pub fn handle_events_immediately(&mut self) {
         self.handle_events_immediately_with(&mut |_| {})
@@ -628,10 +628,6 @@ impl Runner {
                     self.dirty_tasks.push_back(task_id);
                 }
             }
-        }
-
-        if !self.dirty_scopes.is_empty() {
-            return;
         }
 
         self.poll_dirty_tasks(observer);
