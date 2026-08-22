@@ -356,6 +356,22 @@ impl AccessibilityTree {
             .unwrap();
     }
 
+    fn element_text(element: &dyn Any) -> Option<String> {
+        if let Some(label) = element.downcast_ref::<LabelElement>() {
+            Some(label.text.to_string())
+        } else if let Some(paragraph) = element.downcast_ref::<ParagraphElement>() {
+            Some(
+                paragraph
+                    .spans
+                    .iter()
+                    .map(|span| span.text.as_ref())
+                    .collect(),
+            )
+        } else {
+            None
+        }
+    }
+
     /// Create an accessibility node
     pub fn create_node(
         node_id: NodeId,
@@ -392,20 +408,20 @@ impl AccessibilityTree {
         });
 
         // Set inner text
-        if let Some(children) = tree.children.get(&node_id) {
-            for child in children {
-                let child_element = tree.elements.get(child).unwrap().as_ref() as &dyn Any;
-                if let Some(label) = child_element.downcast_ref::<LabelElement>() {
-                    accessibility_data.builder.set_label(label.text.as_ref());
-                } else if let Some(paragraph) = child_element.downcast_ref::<ParagraphElement>() {
-                    accessibility_data.builder.set_label(
-                        paragraph
-                            .spans
-                            .iter()
-                            .map(|span| span.text.as_ref())
-                            .collect::<String>(),
-                    );
-                }
+        let inner_text = Self::element_text(element.as_ref() as &dyn Any).or_else(|| {
+            tree.children.get(&node_id).and_then(|children| {
+                children.iter().find_map(|child| {
+                    Self::element_text(tree.elements.get(child).unwrap().as_ref() as &dyn Any)
+                })
+            })
+        });
+
+        if let Some(inner_text) = inner_text {
+            // Accesskit derives the name of Role::Label nodes from the value, not the label
+            if accessibility_data.builder.role() == Role::Label {
+                accessibility_data.builder.set_value(inner_text);
+            } else {
+                accessibility_data.builder.set_label(inner_text);
             }
         }
 
