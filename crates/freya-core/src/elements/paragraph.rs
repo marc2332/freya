@@ -12,7 +12,6 @@ use std::{
 };
 
 use freya_engine::prelude::{
-    BlendMode,
     Canvas,
     FontCollection,
     FontStyle,
@@ -24,7 +23,6 @@ use freya_engine::prelude::{
     PlaceholderStyle,
     RectHeightStyle,
     RectWidthStyle,
-    SaveLayerRec,
     SkParagraph,
     SkRect,
     TextBaseline,
@@ -70,7 +68,6 @@ use crate::{
         ContainerExt,
         ContainerPositionExt,
         EventHandlersExt,
-        Fill,
         KeyExt,
         LayerExt,
         LayoutExt,
@@ -537,11 +534,9 @@ impl ElementExt for ParagraphElement {
         }
 
         // Draw text
-        paint_paragraph_with_fill(
-            paragraph,
+        paragraph.paint_at(
             context.canvas,
             Point2D::new(visible_area.min_x(), visible_area.min_y() + vertical_offset),
-            &context.text_style_state.color,
         );
 
         // Draw cursor
@@ -589,8 +584,17 @@ impl ParagraphElement {
         text
     }
 
-    /// Builds the Skia paragraph from the content, reserving a placeholder (sized from
-    /// `placeholders`, in order) for each inline child, laid out against `width`.
+    fn has_shader_fill(&self, text_style_state: &TextStyleState) -> bool {
+        text_style_state.color.as_color().is_none()
+            || self.spans.iter().any(|span| {
+                span.text_style_data
+                    .color
+                    .as_ref()
+                    .is_some_and(|color| color.as_color().is_none())
+            })
+    }
+
+    /// Builds the Skia paragraph from the content.
     fn build_paragraph(
         &self,
         text_style_state: &TextStyleState,
@@ -600,55 +604,67 @@ impl ParagraphElement {
         width: f32,
         placeholders: &[Size2D],
     ) -> SkParagraph {
-        let mut paragraph_style = ParagraphStyle::default();
+        let build = |fill_area: Area| {
+            let mut paragraph_style = ParagraphStyle::default();
 
-        if let Some(ellipsis) = text_style_state.text_overflow.get_ellipsis() {
-            paragraph_style.set_ellipsis(ellipsis);
-        }
+            if let Some(ellipsis) = text_style_state.text_overflow.get_ellipsis() {
+                paragraph_style.set_ellipsis(ellipsis);
+            }
 
-        paragraph_style.set_text_style(&base_text_style(
-            text_style_state,
-            fallback_fonts,
-            scale_factor,
-            self.line_height,
-        ));
-        paragraph_style.set_max_lines(self.max_lines);
-        paragraph_style.set_text_align(text_style_state.text_align.into());
+            paragraph_style.set_text_style(&text_style_state.to_text_style(
+                fallback_fonts,
+                scale_factor,
+                self.line_height,
+                fill_area,
+            ));
+            paragraph_style.set_max_lines(self.max_lines);
+            paragraph_style.set_text_align(text_style_state.text_align.into());
 
-        let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
+            let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
 
-        let mut spans = self.spans.iter();
-        let mut placeholders = placeholders.iter();
-        for content in &self.contents {
-            match content {
-                ParagraphContent::Span => {
-                    let Some(span) = spans.next() else { continue };
-                    paragraph_builder.push_style(&span_text_style(
-                        text_style_state,
-                        fallback_fonts,
-                        scale_factor,
-                        span,
-                        self.line_height,
-                    ));
-                    paragraph_builder.add_text(&span.text);
-                }
-                ParagraphContent::Element => {
-                    let Some(size) = placeholders.next() else {
-                        continue;
-                    };
-                    paragraph_builder.add_placeholder(&PlaceholderStyle::new(
-                        size.width,
-                        size.height,
-                        PlaceholderAlignment::Middle,
-                        TextBaseline::Alphabetic,
-                        0.0,
-                    ));
+            let mut spans = self.spans.iter();
+            let mut placeholders = placeholders.iter();
+            for content in &self.contents {
+                match content {
+                    ParagraphContent::Span => {
+                        let Some(span) = spans.next() else { continue };
+                        paragraph_builder.push_style(&span.to_text_style(
+                            text_style_state,
+                            fallback_fonts,
+                            scale_factor,
+                            self.line_height,
+                            fill_area,
+                        ));
+                        paragraph_builder.add_text(&span.text);
+                    }
+                    ParagraphContent::Element => {
+                        let Some(size) = placeholders.next() else {
+                            continue;
+                        };
+                        paragraph_builder.add_placeholder(&PlaceholderStyle::new(
+                            size.width,
+                            size.height,
+                            PlaceholderAlignment::Middle,
+                            TextBaseline::Alphabetic,
+                            0.0,
+                        ));
+                    }
                 }
             }
+
+            let mut paragraph = paragraph_builder.build();
+            paragraph.layout(width);
+            paragraph
+        };
+
+        let paragraph = build(Area::default());
+
+        // Paragraphs that contain even one shader must be
+        // rebuilt so that we can pass the correct area to the shaders
+        if self.has_shader_fill(text_style_state) {
+            return build(paragraph.fill_area());
         }
 
-        let mut paragraph = paragraph_builder.build();
-        paragraph.layout(width);
         paragraph
     }
 }
@@ -762,108 +778,114 @@ impl From<Paragraph> for Element {
     }
 }
 
-/// Builds the paragraph-level base [TextStyle] from the inherited text style state.
-fn base_text_style(
-    text_style_state: &TextStyleState,
-    fallback_fonts: &[Cow<'static, str>],
-    scale_factor: f64,
-    line_height: Option<f32>,
-) -> TextStyle {
-    let mut text_style = TextStyle::default();
+impl TextStyleState {
+    /// Builds the Skia [TextStyle], anchoring non-color [Fill]s to `fill_area`.
+    pub(crate) fn to_text_style(
+        &self,
+        fallback_fonts: &[Cow<'static, str>],
+        scale_factor: f64,
+        line_height: Option<f32>,
+        fill_area: Area,
+    ) -> TextStyle {
+        let mut text_style = TextStyle::default();
 
-    let mut font_families = text_style_state.font_families.clone();
-    font_families.extend_from_slice(fallback_fonts);
+        let mut font_families = self.font_families.clone();
+        font_families.extend_from_slice(fallback_fonts);
 
-    text_style.set_color(text_style_state.color.as_color().unwrap_or(Color::WHITE));
-    text_style.set_font_size(f32::from(text_style_state.font_size) * scale_factor as f32);
-    text_style.set_font_families(&font_families);
-    text_style.set_font_style(FontStyle::new(
-        text_style_state.font_weight.into(),
-        text_style_state.font_width.into(),
-        text_style_state.font_slant.into(),
-    ));
+        self.color.apply_to_text_style(&mut text_style, fill_area);
+        text_style.set_font_size(f32::from(self.font_size) * scale_factor as f32);
+        text_style.set_font_families(&font_families);
+        text_style.set_font_style(FontStyle::new(
+            self.font_weight.into(),
+            self.font_width.into(),
+            self.font_slant.into(),
+        ));
 
-    if text_style_state.text_height.needs_custom_height() {
-        text_style.set_height_override(true);
-        text_style.set_half_leading(true);
+        if self.text_height.needs_custom_height() {
+            text_style.set_height_override(true);
+            text_style.set_half_leading(true);
+        }
+
+        if let Some(line_height) = line_height {
+            text_style.set_height_override(true);
+            text_style.set_height(line_height);
+        }
+
+        for text_shadow in self.text_shadows.iter() {
+            text_style.add_shadow((*text_shadow).into());
+        }
+
+        text_style
     }
-
-    if let Some(line_height) = line_height {
-        text_style.set_height_override(true);
-        text_style.set_height(line_height);
-    }
-
-    for text_shadow in text_style_state.text_shadows.iter() {
-        text_style.add_shadow((*text_shadow).into());
-    }
-
-    text_style
 }
 
-/// Builds the [TextStyle] for a single [Span], layering its overrides over the inherited state.
-fn span_text_style(
-    text_style_state: &TextStyleState,
-    fallback_fonts: &[Cow<'static, str>],
-    scale_factor: f64,
-    span: &Span,
-    line_height: Option<f32>,
-) -> TextStyle {
-    let span_style = TextStyleState::from_data(text_style_state, &span.text_style_data);
-    let mut text_style = TextStyle::new();
-    let mut font_families = text_style_state.font_families.clone();
-    font_families.extend_from_slice(fallback_fonts);
+impl Span<'_> {
+    /// Builds the Skia [TextStyle] for this span.
+    fn to_text_style(
+        &self,
+        text_style_state: &TextStyleState,
+        fallback_fonts: &[Cow<'static, str>],
+        scale_factor: f64,
+        line_height: Option<f32>,
+        fill_area: Area,
+    ) -> TextStyle {
+        let span_style = TextStyleState::from_data(text_style_state, &self.text_style_data);
+        let mut text_style = TextStyle::new();
 
-    for text_shadow in span_style.text_shadows.iter() {
-        text_style.add_shadow((*text_shadow).into());
-    }
+        let mut font_families = text_style_state.font_families.clone();
+        font_families.extend_from_slice(fallback_fonts);
 
-    text_style.set_color(span_style.color.as_color().unwrap_or(Color::WHITE));
-    text_style.set_font_size(f32::from(span_style.font_size) * scale_factor as f32);
-    text_style.set_font_families(&font_families);
-    text_style.set_font_style(FontStyle::new(
-        span_style.font_weight.into(),
-        span_style.font_width.into(),
-        span_style.font_slant.into(),
-    ));
-    text_style.set_decoration_type(span_style.text_decoration.into());
-    if let Some(line_height) = line_height {
-        text_style.set_height_override(true);
-        text_style.set_height(line_height);
+        span_style
+            .color
+            .apply_to_text_style(&mut text_style, fill_area);
+        text_style.set_font_size(f32::from(span_style.font_size) * scale_factor as f32);
+        text_style.set_font_families(&font_families);
+        text_style.set_font_style(FontStyle::new(
+            span_style.font_weight.into(),
+            span_style.font_width.into(),
+            span_style.font_slant.into(),
+        ));
+        text_style.set_decoration_type(span_style.text_decoration.into());
+
+        if let Some(line_height) = line_height {
+            text_style.set_height_override(true);
+            text_style.set_height(line_height);
+        }
+
+        for text_shadow in span_style.text_shadows.iter() {
+            text_style.add_shadow((*text_shadow).into());
+        }
+
+        text_style
     }
-    text_style
 }
 
-/// Paints a paragraph with a [Fill] as the text color. Non-color fills are masked
-/// onto the rendered glyph alpha via an offscreen layer + [BlendMode::SrcIn].
-pub(crate) fn paint_paragraph_with_fill(
-    paragraph: &SkParagraph,
-    canvas: &Canvas,
-    origin: Point2D,
-    fill: &Fill,
-) {
-    if matches!(fill, Fill::Color(_)) {
-        paragraph.paint(canvas, origin.to_tuple());
-        return;
+pub(crate) trait ParagraphPaintExt {
+    /// Paints at `origin` by translating the canvas, so text shaders follow the paragraph.
+    fn paint_at(&self, canvas: &Canvas, origin: Point2D);
+
+    /// The box that non-color [Fill]s anchor to, in paragraph coordinates.
+    fn fill_area(&self) -> Area;
+}
+
+impl ParagraphPaintExt for SkParagraph {
+    fn paint_at(&self, canvas: &Canvas, origin: Point2D) {
+        let layer = canvas.save();
+        canvas.translate(origin.to_tuple());
+        self.paint(canvas, (0., 0.));
+        canvas.restore_to_count(layer);
     }
 
-    let width = paragraph.longest_line();
-    let height = paragraph.height();
-    let area = Area::new(origin, Size2D::new(width, height));
-    let bounds_rect = SkRect::from_xywh(area.min_x(), area.min_y(), width, height);
+    fn fill_area(&self) -> Area {
+        let max_width = self.max_width();
+        let width = if max_width < f32::MAX {
+            max_width
+        } else {
+            self.longest_line()
+        };
 
-    let layer = canvas.save_layer(&SaveLayerRec::default().bounds(&bounds_rect));
-
-    paragraph.paint(canvas, origin.to_tuple());
-
-    let mut paint = Paint::default();
-    paint.set_anti_alias(true);
-    paint.set_style(PaintStyle::Fill);
-    paint.set_blend_mode(BlendMode::SrcIn);
-    fill.apply_to_paint(&mut paint, area);
-
-    canvas.draw_rect(bounds_rect, &paint);
-
-    canvas.restore_to_count(layer);
+        Area::new(Point2D::zero(), Size2D::new(width, self.height()))
+    }
 }
 
 impl KeyExt for Paragraph {

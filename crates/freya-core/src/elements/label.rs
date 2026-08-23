@@ -8,14 +8,15 @@ use std::{
 
 use freya_engine::prelude::{
     ClipOp,
-    FontStyle,
     ParagraphBuilder,
     ParagraphStyle,
     SkParagraph,
     SkRect,
-    TextStyle,
 };
-use torin::prelude::Size2D;
+use torin::prelude::{
+    Area,
+    Size2D,
+};
 
 use crate::{
     data::{
@@ -34,11 +35,10 @@ use crate::{
         LayoutContext,
         RenderContext,
     },
-    elements::paragraph::paint_paragraph_with_fill,
+    elements::paragraph::ParagraphPaintExt,
     layers::Layer,
     prelude::{
         AccessibilityExt,
-        Color,
         ContainerExt,
         EventHandlersExt,
         KeyExt,
@@ -211,66 +211,46 @@ impl ElementExt for LabelElement {
             .text_cache
             .utilize(context.node_id, &cached_paragraph)
             .unwrap_or_else(|| {
-                let mut paragraph_style = ParagraphStyle::default();
-                let mut text_style = TextStyle::default();
+                let build = |fill_area: Area| {
+                    let mut paragraph_style = ParagraphStyle::default();
 
-                let mut font_families = context.text_style_state.font_families.clone();
-                font_families.extend_from_slice(context.fallback_fonts);
+                    if let Some(ellipsis) = context.text_style_state.text_overflow.get_ellipsis() {
+                        paragraph_style.set_ellipsis(ellipsis);
+                    }
 
-                text_style.set_color(
-                    context
-                        .text_style_state
-                        .color
-                        .as_color()
-                        .unwrap_or(Color::WHITE),
-                );
-                text_style.set_font_size(
-                    f32::from(context.text_style_state.font_size) * context.scale_factor as f32,
-                );
-                text_style.set_font_families(&font_families);
-                text_style.set_font_style(FontStyle::new(
-                    context.text_style_state.font_weight.into(),
-                    context.text_style_state.font_width.into(),
-                    context.text_style_state.font_slant.into(),
-                ));
+                    paragraph_style.set_text_style(&context.text_style_state.to_text_style(
+                        context.fallback_fonts,
+                        context.scale_factor,
+                        self.line_height,
+                        fill_area,
+                    ));
+                    paragraph_style.set_max_lines(self.max_lines);
+                    paragraph_style.set_text_align(context.text_style_state.text_align.into());
 
-                if context.text_style_state.text_height.needs_custom_height() {
-                    text_style.set_height_override(true);
-                    text_style.set_half_leading(true);
+                    let mut paragraph_builder =
+                        ParagraphBuilder::new(&paragraph_style, &*context.font_collection);
+
+                    paragraph_builder.add_text(&self.text);
+
+                    let mut paragraph = paragraph_builder.build();
+                    paragraph.layout(
+                        if self.max_lines == Some(1)
+                            && context.text_style_state.text_align == TextAlign::default()
+                            && !paragraph_style.ellipsized()
+                        {
+                            f32::MAX
+                        } else {
+                            context.area_size.width + 1.0
+                        },
+                    );
+                    paragraph
+                };
+
+                let mut paragraph = build(Area::default());
+
+                if context.text_style_state.color.as_color().is_none() {
+                    paragraph = build(paragraph.fill_area());
                 }
-
-                if let Some(line_height) = self.line_height {
-                    text_style.set_height_override(true).set_height(line_height);
-                }
-
-                for text_shadow in context.text_style_state.text_shadows.iter() {
-                    text_style.add_shadow((*text_shadow).into());
-                }
-
-                if let Some(ellipsis) = context.text_style_state.text_overflow.get_ellipsis() {
-                    paragraph_style.set_ellipsis(ellipsis);
-                }
-
-                paragraph_style.set_text_style(&text_style);
-                paragraph_style.set_max_lines(self.max_lines);
-                paragraph_style.set_text_align(context.text_style_state.text_align.into());
-
-                let mut paragraph_builder =
-                    ParagraphBuilder::new(&paragraph_style, &*context.font_collection);
-
-                paragraph_builder.add_text(&self.text);
-
-                let mut paragraph = paragraph_builder.build();
-                paragraph.layout(
-                    if self.max_lines == Some(1)
-                        && context.text_style_state.text_align == TextAlign::default()
-                        && !paragraph_style.ellipsized()
-                    {
-                        f32::MAX
-                    } else {
-                        context.area_size.width + 1.0
-                    },
-                );
 
                 context
                     .text_cache
@@ -303,12 +283,7 @@ impl ElementExt for LabelElement {
         let layout_data = context.layout_node.data.as_ref().unwrap();
         let paragraph = layout_data.downcast_ref::<SkParagraph>().unwrap();
 
-        paint_paragraph_with_fill(
-            paragraph,
-            context.canvas,
-            context.layout_node.visible_area().origin,
-            &context.text_style_state.color,
-        );
+        paragraph.paint_at(context.canvas, context.layout_node.visible_area().origin);
     }
 }
 
