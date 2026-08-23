@@ -252,10 +252,10 @@ impl AppWindow {
         runner.provide_root_context(|| animation_clock.clone());
 
         runner.provide_root_context(AssetCacher::create);
-        let mut tree = Tree::default();
-
         let custom_scale_factor = clamp_custom_scale_factor(window_config.custom_scale_factor);
         let scale_factor = window.scale_factor() * custom_scale_factor;
+
+        let mut tree = Tree::default();
 
         let window_size = window.inner_size();
         let accent_color_preference = accent_color_preference();
@@ -335,7 +335,7 @@ impl AppWindow {
         let mut nodes_state = NodesState::default();
 
         let mutations = runner.sync_and_update();
-        let result = tree.apply_mutations(mutations);
+        let result = tree.apply_mutations(mutations, scale_factor as f32);
         if let Some(strategy) = result.auto_focus {
             tree.accessibility_diff.request_focus(strategy);
         }
@@ -477,6 +477,8 @@ impl AppWindow {
             .scale_factor
             .set(self.effective_scale_factor());
         self.process_layout_on_next_render = true;
+        self.tree
+            .set_scale_factor(self.effective_scale_factor() as f32);
         self.tree.layout.reset();
         self.tree.text_cache.reset();
         self.window.request_redraw();

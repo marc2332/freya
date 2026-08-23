@@ -1,10 +1,7 @@
 use std::{
     any::Any,
     borrow::Cow,
-    collections::{
-        VecDeque,
-        hash_map::Entry,
-    },
+    collections::VecDeque,
     fmt::Debug,
     rc::Rc,
 };
@@ -23,11 +20,13 @@ use rustc_hash::{
     FxHashSet,
 };
 use torin::{
+    node::Node,
     prelude::{
         Area,
         LayoutMeasurer,
         LayoutNode,
         PostMeasure,
+        Scaled,
         Size2D,
     },
     torin::{
@@ -88,6 +87,9 @@ pub struct Tree {
 
     pub elements: FxHashMap<NodeId, Rc<dyn ElementExt>>,
 
+    /// Scaled layout nodes of `elements`.
+    layout_nodes: FxHashMap<NodeId, Node>,
+
     // Event listeners
     pub listeners: FxHashMap<EventName, Vec<NodeId>>,
 
@@ -111,12 +113,45 @@ pub struct Tree {
     pub accessibility_generator: AccessibilityGenerator,
 }
 
+impl Tree {
+    /// The scaled layout node of an element.
+    fn scaled_layout_node(element: &Rc<dyn ElementExt>, scale_factor: f32) -> Node {
+        let mut layout_node = element.layout().layout.clone();
+        layout_node.depends_on_inner = element.needs_post_measure();
+        layout_node.scale(scale_factor);
+        layout_node
+    }
+
+    /// Register an element and its scaled layout node.
+    fn insert_element(&mut self, node_id: NodeId, element: Rc<dyn ElementExt>, scale_factor: f32) {
+        self.layout_nodes
+            .insert(node_id, Self::scaled_layout_node(&element, scale_factor));
+        self.elements.insert(node_id, element);
+    }
+
+    /// Unregister an element and its scaled layout node.
+    fn remove_element(&mut self, node_id: NodeId) -> Option<Rc<dyn ElementExt>> {
+        self.layout_nodes.remove(&node_id);
+        self.elements.remove(&node_id)
+    }
+
+    /// Rescale every layout node.
+    pub fn set_scale_factor(&mut self, scale_factor: f32) {
+        self.layout_nodes.clear();
+        for (node_id, element) in &self.elements {
+            self.layout_nodes
+                .insert(*node_id, Self::scaled_layout_node(element, scale_factor));
+        }
+    }
+}
+
 impl Debug for Tree {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Tree")
             .field("children", &self.children.capacity())
             .field("parents", &self.parents.capacity())
             .field("elements", &self.elements.capacity())
+            .field("layout_nodes", &self.layout_nodes.capacity())
             .field("heights", &self.heights.capacity())
             .field("listeners", &self.listeners.capacity())
             .field("layer_state", &self.layer_state.capacity())
@@ -175,7 +210,11 @@ impl Tree {
     }
 
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
-    pub fn apply_mutations(&mut self, mutations: Mutations) -> MutationsApplyResult {
+    pub fn apply_mutations(
+        &mut self,
+        mutations: Mutations,
+        scale_factor: f32,
+    ) -> MutationsApplyResult {
         let mut needs_render = !mutations.removed.is_empty();
         let mut needs_accessibility = !mutations.removed.is_empty();
         let mut dirty = Vec::<(NodeId, DiffModifies)>::default();
@@ -183,8 +222,8 @@ impl Tree {
         #[cfg(debug_assertions)]
         tracing::info!("{mutations:?}");
 
-        if let Entry::Vacant(e) = self.elements.entry(NodeId::ROOT) {
-            e.insert(Rc::new(RectElement::default()));
+        if !self.elements.contains_key(&NodeId::ROOT) {
+            self.insert_element(NodeId::ROOT, Rc::new(RectElement::default()), scale_factor);
             self.heights.insert(NodeId::ROOT, 0);
             dirty.push((NodeId::ROOT, DiffModifies::all()));
         }
@@ -206,7 +245,7 @@ impl Tree {
                     let parent_id = self.parents.remove(&node_id).unwrap();
 
                     // Remove element
-                    let old_element = self.elements.remove(&node_id).unwrap();
+                    let old_element = self.remove_element(node_id).unwrap();
 
                     if let Some(children) = self.children.get_mut(&parent_id) {
                         match remove {
@@ -295,7 +334,7 @@ impl Tree {
                     }
                 }
 
-                self.elements.insert(node_id, element);
+                self.insert_element(node_id, element, scale_factor);
                 dirty.push((node_id, DiffModifies::all()));
             }
 
@@ -323,7 +362,7 @@ impl Tree {
             {
                 dirty.push((node_id, flags));
 
-                let old_element = self.elements.remove(&node_id).unwrap();
+                let old_element = self.remove_element(node_id).unwrap();
 
                 if flags.contains(DiffModifies::EVENT_HANDLERS) {
                     // Remove old events
@@ -344,7 +383,7 @@ impl Tree {
                     }
                 }
 
-                self.elements.insert(node_id, element);
+                self.insert_element(node_id, element, scale_factor);
             }
         });
 
@@ -644,12 +683,11 @@ impl Tree {
         scale_factor: f64,
         fallback_fonts: &[Cow<'static, str>],
     ) {
-        let mut tree_adapter = TreeAdapterFreya {
-            elements: &self.elements,
+        let tree_adapter = TreeAdapterFreya {
+            layout_nodes: &self.layout_nodes,
             parents: &self.parents,
             children: &self.children,
             heights: &self.heights,
-            scale_factor,
         };
 
         let layout_adapter = LayoutMeasurerAdapter {
@@ -663,12 +701,12 @@ impl Tree {
             text_cache: &mut self.text_cache,
         };
 
-        self.layout.find_best_root(&mut tree_adapter);
+        self.layout.find_best_root(&tree_adapter);
         self.layout.measure(
             NodeId::ROOT,
             Area::from_size(size),
             &mut Some(layout_adapter),
-            &mut tree_adapter,
+            &tree_adapter,
         );
         self.measure_visibility_events(nodes_state, scale_factor);
         events_sender
@@ -774,7 +812,8 @@ impl Tree {
                 buffer.extend(children);
             }
         }
-        assert_eq!(size, visited.len())
+        assert_eq!(size, visited.len());
+        assert_eq!(size, self.layout_nodes.len());
     }
 }
 
