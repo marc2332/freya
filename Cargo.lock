@@ -1489,18 +1489,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "core-text"
-version = "20.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c9d2790b5c08465d49f8dc05c8bcae9fea467855947db39b0f8145c091aaced5"
-dependencies = [
- "core-foundation 0.9.4",
- "core-graphics 0.23.2",
- "foreign-types 0.5.0",
- "libc",
-]
-
-[[package]]
 name = "core-video-sys"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2056,18 +2044,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "92773504d58c093f6de2459af4af33faa518c13451eb8f2b5698ed3d36e7c813"
 
 [[package]]
-name = "dwrote"
-version = "0.11.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e1b35532432acc8b19ceed096e35dfa088d3ea037fe4f3c085f1f97f33b4d02"
-dependencies = [
- "lazy_static",
- "libc",
- "winapi",
- "wio",
-]
-
-[[package]]
 name = "dyn-clone"
 version = "1.0.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2274,23 +2250,15 @@ name = "examples"
 version = "0.0.0"
 dependencies = [
  "async-io",
- "bitflags 2.13.1",
  "blocking",
  "freya",
- "freya-code-editor",
  "freya-core",
- "freya-devtools",
  "freya-edit",
  "freya-engine",
  "freya-i18n",
- "freya-icons",
  "freya-performance-plugin",
- "freya-query",
  "freya-radio",
- "freya-router",
- "freya-sdk",
  "freya-skia-safe",
- "freya-terminal",
  "freya-testing",
  "freya-winit",
  "futures-channel",
@@ -2298,10 +2266,8 @@ dependencies = [
  "futures-util",
  "hotpath",
  "itertools 0.14.0",
- "keyboard-types 0.8.3",
  "open",
  "portable-pty",
- "ragnarok",
  "rand 0.10.2",
  "rfd",
  "ropey",
@@ -2309,12 +2275,9 @@ dependencies = [
  "serde_json",
  "tokio",
  "torin",
- "tracing",
  "tracing-subscriber",
  "tree-sitter-rust",
  "ureq",
- "url",
- "vt100",
 ]
 
 [[package]]
@@ -2469,12 +2432,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "float-ord"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ce81f49ae8a0482e4c55ea62ebbd7e5a686af544c00b9d090bba3ff9be97b3d"
-
-[[package]]
 name = "fluent"
 version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2544,31 +2501,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77ce24cb58228fbb8aa041425bb1050850ac19177686ea6e0f41a70416f56fdb"
 
 [[package]]
-name = "font-kit"
-version = "0.14.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c7e611d49285d4c4b2e1727b72cf05353558885cc5252f93707b845dfcaf3d3"
-dependencies = [
- "bitflags 2.13.1",
- "byteorder",
- "core-foundation 0.9.4",
- "core-graphics 0.23.2",
- "core-text",
- "dirs",
- "dwrote",
- "float-ord",
- "freetype-sys",
- "lazy_static",
- "libc",
- "log",
- "pathfinder_geometry",
- "pathfinder_simd",
- "walkdir",
- "winapi",
- "yeslogic-fontconfig-sys",
-]
-
-[[package]]
 name = "foreign-types"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2617,17 +2549,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cb4cb245038516f5f85277875cdaa4f7d2c9a0fa0468de06ed190163b1581fcf"
 dependencies = [
  "percent-encoding",
-]
-
-[[package]]
-name = "freetype-sys"
-version = "0.20.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e7edc5b9669349acfda99533e9e0bcf26a51862ab43b08ee7745c55d28eb134"
-dependencies = [
- "cc",
- "libc",
- "pkg-config",
 ]
 
 [[package]]
@@ -2757,7 +2678,6 @@ dependencies = [
  "freya-core",
  "freya-edit",
  "freya-engine",
- "freya-icons",
  "freya-router",
  "freya-sdk",
  "freya-testing",
@@ -2827,7 +2747,6 @@ dependencies = [
 name = "freya-devtools-app"
 version = "0.5.0-rc.3"
 dependencies = [
- "accesskit",
  "async-lock",
  "async-tungstenite",
  "freya",
@@ -2894,7 +2813,6 @@ dependencies = [
  "freya-code-editor",
  "freya-components",
  "freya-core",
- "freya-testing",
  "pulldown-cmark",
  "torin",
 ]
@@ -2907,8 +2825,6 @@ dependencies = [
  "freya-animation",
  "freya-components",
  "freya-core",
- "freya-engine",
- "freya-testing",
  "torin",
 ]
 
@@ -2926,7 +2842,6 @@ name = "freya-plotters-backend"
 version = "0.5.0-rc.3"
 dependencies = [
  "freya-engine",
- "plotters",
  "plotters-backend",
 ]
 
@@ -3035,7 +2950,6 @@ dependencies = [
  "freya",
  "freya-core",
  "freya-engine",
- "futures-channel",
  "futures-lite",
  "keyboard-types 0.8.3",
  "linkify",
@@ -3089,10 +3003,7 @@ dependencies = [
  "freya",
  "freya-core",
  "freya-winit",
- "futures-channel",
- "futures-lite",
  "gtk",
- "raw-window-handle",
  "torin",
  "tracing",
  "wry",
@@ -3429,16 +3340,6 @@ dependencies = [
  "r-efi 6.0.0",
  "rand_core 0.10.1",
  "wasm-bindgen",
-]
-
-[[package]]
-name = "gif"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "80792593675e051cf94a4b111980da2ba60d4a83e43e0048c5693baab3977045"
-dependencies = [
- "color_quant",
- "weezl",
 ]
 
 [[package]]
@@ -5740,7 +5641,7 @@ version = "0.25.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "36820e9051aca1014ddc75770aab4d68bc1e9e632f0f5627c4086bc216fb583b"
 dependencies = [
- "ttf-parser 0.25.1",
+ "ttf-parser",
 ]
 
 [[package]]
@@ -5808,25 +5709,6 @@ name = "pastey"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "35fb2e5f958ec131621fdd531e9fc186ed768cbe395337403ae56c17a74c68ec"
-
-[[package]]
-name = "pathfinder_geometry"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b7b7e7b4ea703700ce73ebf128e1450eb69c3a8329199ffbfb9b2a0418e5ad3"
-dependencies = [
- "log",
- "pathfinder_simd",
-]
-
-[[package]]
-name = "pathfinder_simd"
-version = "0.5.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4500030c302e4af1d423f36f3b958d1aecb6c04184356ed5a833bf6b60435777"
-dependencies = [
- "rustc_version",
-]
 
 [[package]]
 name = "pathgraph"
@@ -5953,15 +5835,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5aeb6f403d7a4911efb1e33402027fc44f29b5bf6def3effcc22d7bb75f2b747"
 dependencies = [
  "chrono",
- "font-kit",
  "image 0.24.9",
- "lazy_static",
  "num-traits",
- "pathfinder_geometry",
  "plotters-backend",
- "plotters-bitmap",
  "plotters-svg",
- "ttf-parser 0.20.0",
  "wasm-bindgen",
  "web-sys",
 ]
@@ -5971,17 +5848,6 @@ name = "plotters-backend"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df42e13c12958a16b3f7f4386b9ab1f3e7933914ecea48da7139435263a4172a"
-
-[[package]]
-name = "plotters-bitmap"
-version = "0.3.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72ce181e3f6bf82d6c1dc569103ca7b1bd964c60ba03d7e6cdfbb3e3eb7f7405"
-dependencies = [
- "gif 0.12.0",
- "image 0.24.9",
- "plotters-backend",
-]
 
 [[package]]
 name = "plotters-svg"
@@ -8377,12 +8243,6 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "ttf-parser"
-version = "0.20.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "17f77d76d837a7830fe1d4f12b7b4ba4192c1888001c7164257e4bc6d21d96b4"
-
-[[package]]
-name = "ttf-parser"
 version = "0.25.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2df906b07856748fa3f6e0ad0cbaa047052d4a7dd609e231c4f72cee8c36f31"
@@ -8680,27 +8540,6 @@ name = "version_check"
 version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
-
-[[package]]
-name = "vt100"
-version = "0.16.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "054ff75fb8fa83e609e685106df4faeffdf3a735d3c74ebce97ec557d5d36fd9"
-dependencies = [
- "itoa",
- "unicode-width 0.2.2",
- "vte",
-]
-
-[[package]]
-name = "vte"
-version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5924018406ce0063cd67f8e008104968b74b563ee1b85dde3ed1f7cb87d3dbd"
-dependencies = [
- "arrayvec",
- "memchr",
-]
 
 [[package]]
 name = "walkdir"
@@ -9729,15 +9568,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "wio"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d129932f4644ac2396cb456385cbf9e63b5b30c6e8dc4820bdca4eb082037a5"
-dependencies = [
- "winapi",
-]
-
-[[package]]
 name = "wit-bindgen"
 version = "0.57.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9900,17 +9730,6 @@ name = "y4m"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a5a4b21e1a62b67a2970e6831bc091d7b87e119e7f9791aef9702e3bef04448"
-
-[[package]]
-name = "yeslogic-fontconfig-sys"
-version = "6.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d8b8abf912b9a29ff112e1671c97c33636903d13a69712037190e6805af4f76"
-dependencies = [
- "dlib",
- "once_cell",
- "pkg-config",
-]
 
 [[package]]
 name = "yoke"

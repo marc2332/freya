@@ -4,6 +4,7 @@ use crate::{
 };
 
 #[must_use]
+#[track_caller]
 pub fn use_route<R: Routable + Clone>() -> R {
     match use_router_internal() {
         Some(r) => r.current(),
