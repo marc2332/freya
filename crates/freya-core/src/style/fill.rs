@@ -13,6 +13,7 @@ use std::{
 use freya_engine::prelude::{
     Paint,
     SkColor,
+    TextStyle,
 };
 use torin::prelude::Area;
 
@@ -72,6 +73,19 @@ impl Fill {
             Fill::Color(color) => Some(*color),
             _ => None,
         }
+    }
+
+    /// Applies this fill as a text color.
+    pub fn apply_to_text_style(&self, text_style: &mut TextStyle, area: Area) {
+        if let Some(color) = self.as_color() {
+            text_style.set_color(color);
+            return;
+        }
+
+        let mut paint = Paint::default();
+        paint.set_anti_alias(true);
+        self.apply_to_paint(&mut paint, area);
+        text_style.set_foreground_paint(&paint);
     }
 
     pub fn apply_to_paint(&self, paint: &mut Paint, area: Area) {

@@ -26,6 +26,7 @@ pub mod icons;
 pub mod image_viewer;
 pub mod input;
 pub mod integration;
+pub mod lazy;
 pub mod loader;
 pub mod menu;
 pub mod overflowed_content;
