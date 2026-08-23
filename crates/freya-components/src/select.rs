@@ -140,30 +140,22 @@ impl Component for Select {
             conf.on_change(OnChange::Rerun);
             conf.on_creation(OnCreation::Finish);
 
-            let scale = AnimNum::new(0.9, 1.)
-                .time(125)
-                .ease(Ease::Out)
-                .function(Function::Quart);
             let opacity = AnimNum::new(0., 1.)
-                .time(125)
+                .time(90)
                 .ease(Ease::Out)
-                .function(Function::Quart);
-            let offset_y = AnimNum::new(-8., 1.)
-                .time(125)
+                .function(Function::Quad);
+            let offset_y = AnimNum::new(-3., 1.)
+                .time(90)
                 .ease(Ease::Out)
-                .function(Function::Quart);
+                .function(Function::Quad);
             if open() {
-                (scale, opacity, offset_y)
+                (opacity, offset_y)
             } else {
-                (
-                    scale.into_reversed(),
-                    opacity.into_reversed(),
-                    offset_y.into_reversed(),
-                )
+                (opacity.into_reversed(), offset_y.into_reversed())
             }
         });
 
-        let (scale, opacity, slide) = animation.read().value();
+        let (opacity, slide) = animation.read().value();
 
         // Clear the list size when the select dropdown is not rendered
         if !open() && opacity == 0. && list_size().is_some() {
@@ -305,12 +297,11 @@ impl Component for Select {
                                         .alignment(BorderAlignment::Inner),
                                 )
                                 .overflow(Overflow::Clip)
-                                .corner_radius(8.)
+                                .corner_radius(10.)
                                 .background(theme.select_background)
-                                .padding(4.)
+                                .padding(6.)
                                 .content(Content::Fit)
                                 .opacity(opacity)
-                                .scale(scale)
                                 .children(self.children.clone()),
                         ),
                 )
