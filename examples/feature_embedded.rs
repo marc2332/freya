@@ -65,6 +65,7 @@ struct EmbeddedFreya {
 
     events_sender: UnboundedSender<EventsChunk>,
     events_receiver: UnboundedReceiver<EventsChunk>,
+    nodes_state: NodesState<NodeId>,
 
     size: Size2D,
     scale_factor: f64,
@@ -93,6 +94,7 @@ impl EmbeddedFreya {
             default_fonts: default_fonts(),
             events_sender,
             events_receiver,
+            nodes_state: NodesState::default(),
             size,
             scale_factor,
         }
@@ -112,6 +114,7 @@ impl EmbeddedFreya {
             &mut self.font_collection,
             &self.font_manager,
             &self.events_sender,
+            &mut self.nodes_state,
             self.scale_factor,
             &self.default_fonts,
         );

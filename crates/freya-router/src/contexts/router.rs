@@ -151,6 +151,7 @@ impl RouterContext {
         try_consume_context()
     }
 
+    #[track_caller]
     pub fn get() -> Self {
         consume_context()
     }
