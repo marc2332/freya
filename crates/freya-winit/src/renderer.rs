@@ -526,6 +526,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             let result = app
                                 .runner
                                 .run_in(|| app.tree.apply_mutations(mutations, scale_factor));
+                            app.update_cursor_icon();
                             if result.needs_render {
                                 app.process_layout_on_next_render = true;
                                 app.window.request_redraw();
@@ -600,9 +601,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 app.tree.accessibility_diff.request_focus(strategy);
                                 app.accessibility_tasks_for_next_render |= task;
                                 app.window.request_redraw();
-                            }
-                            UserEvent::SetCursorIcon(cursor_icon) => {
-                                app.window.set_cursor(cursor_icon);
                             }
                             UserEvent::SetCustomScaleFactor(custom_scale_factor) => {
                                 app.set_custom_scale_factor(custom_scale_factor);
@@ -1058,7 +1056,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 }
 
                 WindowEvent::CursorLeft { .. } => {
-                    if app.mouse_state == ElementState::Released {
+                    if std::mem::replace(&mut app.mouse_state, ElementState::Released)
+                        == ElementState::Released
+                    {
                         app.position = CursorPoint::from((-1., -1.));
                         app.process_platform_events(vec![PlatformEvent::Mouse {
                             name: MouseEventName::MouseMove,

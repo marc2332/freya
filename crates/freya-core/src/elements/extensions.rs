@@ -887,6 +887,15 @@ where
         self.get_style().corner_radius = corner_radius.into();
         self
     }
+
+    /// Set the [`CursorIcon`] shown while the element is hovered.
+    ///
+    /// When multiple hovered elements define a cursor, the one painted on top wins.
+    /// While a mouse button is pressed the cursor stays still.
+    fn cursor(mut self, cursor: impl Into<Option<CursorIcon>>) -> Self {
+        self.get_style().cursor = cursor.into();
+        self
+    }
 }
 
 impl<T: StyleExt> CornerRadiusExt for T {

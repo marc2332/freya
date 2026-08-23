@@ -232,6 +232,11 @@ impl<Key: NodeKey> NodesState<Key> {
         self.hovered_nodes.contains(&key)
     }
 
+    /// Nodes currently under the cursor.
+    pub fn hovered_nodes(&self) -> impl Iterator<Item = &Key> {
+        self.hovered_nodes.iter()
+    }
+
     pub fn is_pressed(&self, key: Key) -> bool {
         self.pressed_nodes.contains(&key)
     }

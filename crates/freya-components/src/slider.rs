@@ -128,17 +128,8 @@ impl Component for Slider {
         let theme = get_theme!(&self.theme, SliderThemePreference, "slider");
         let a11y_id = use_a11y();
         let focus = use_focus(a11y_id);
-        let mut hovering = use_state(|| false);
         let mut clicking = use_state(|| false);
         let mut size = use_state(Area::default);
-
-        let enabled = use_reactive(&self.enabled);
-        let cursor_icon = self.cursor_icon;
-        use_drop(move || {
-            if hovering() {
-                Cursor::set(CursorIcon::default());
-            }
-        });
 
         let direction_is_vertical = self.direction == Direction::Vertical;
         let value = self.value;
@@ -175,20 +166,6 @@ impl Component for Slider {
                 }
                 _ => {}
             }
-        };
-
-        let on_pointer_enter = move |_| {
-            hovering.set(true);
-            if enabled() {
-                Cursor::set(cursor_icon);
-            } else {
-                Cursor::set(CursorIcon::NotAllowed);
-            }
-        };
-
-        let on_pointer_leave = move |_| {
-            Cursor::set(CursorIcon::default());
-            hovering.set(false);
         };
 
         let calc_percentage = move |x: f64, y: f64| -> f64 {
@@ -336,8 +313,11 @@ impl Component for Slider {
                     .on_global_pointer_press(on_global_pointer_press)
                     .maybe(self.scroll_enabled, |el| el.on_wheel(on_wheel))
             })
-            .on_pointer_enter(on_pointer_enter)
-            .on_pointer_leave(on_pointer_leave)
+            .cursor(if self.enabled {
+                self.cursor_icon
+            } else {
+                CursorIcon::NotAllowed
+            })
             .border(border)
             .corner_radius(50.)
             .padding(padding)
