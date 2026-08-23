@@ -24,7 +24,11 @@ use freya_engine::prelude::{
     SkRect,
     raster_from_data,
 };
-use torin::prelude::Size2D;
+use torin::prelude::{
+    Area,
+    Point2D,
+    Size2D,
+};
 
 use crate::{
     data::{
@@ -329,7 +333,7 @@ impl ElementExt for ImageElement {
             .downcast_ref::<Size2D>()
             .unwrap();
 
-        let area = context.layout_node.visible_area();
+        let mut area = context.layout_node.visible_area();
 
         let mut rect = SkRect::new(
             area.min_x(),
@@ -354,6 +358,10 @@ impl ElementExt for ImageElement {
                 rect.right.round(),
                 rect.bottom.round(),
             );
+            area = Area::from_points([
+                Point2D::new(area.min_x().round(), area.min_y().round()),
+                Point2D::new(area.max_x().round(), area.max_y().round()),
+            ]);
         }
 
         context.canvas.save();
