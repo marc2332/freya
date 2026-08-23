@@ -18,9 +18,7 @@ workspace = true
 freya-core = { workspace = true }
 freya-animation = { workspace = true }
 torin = { workspace = true }
-freya-engine = { workspace = true }
 freya-components = { workspace = true }
 
 [dev-dependencies]
 freya = { path = "../freya", features = ["material-design"] }
-freya-testing = { path = "../freya-testing" }

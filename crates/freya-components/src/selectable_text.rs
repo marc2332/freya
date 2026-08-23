@@ -199,6 +199,8 @@ impl Component for SelectableText {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: Some(EditorLine::SingleParagraph),
+                holder: Some(&holder.read()),
             });
         };
 

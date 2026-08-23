@@ -328,6 +328,8 @@ impl AppWindow {
             PluginHandle::new(event_loop_proxy),
         );
 
+        let mut nodes_state = NodesState::default();
+
         let mutations = runner.sync_and_update();
         let result = tree.apply_mutations(mutations, scale_factor as f32);
         if let Some(strategy) = result.auto_focus {
@@ -342,11 +344,10 @@ impl AppWindow {
             font_collection,
             font_manager,
             &events_sender,
+            &mut nodes_state,
             scale_factor,
             fallback_fonts,
         );
-
-        let nodes_state = NodesState::default();
 
         let accessibility_adapter =
             Adapter::with_event_loop_proxy(active_event_loop, &window, event_loop_proxy.clone());

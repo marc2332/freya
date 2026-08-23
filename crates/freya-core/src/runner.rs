@@ -5,11 +5,7 @@ use std::{
     },
     cell::RefCell,
     cmp::Ordering,
-    collections::{
-        HashMap,
-        HashSet,
-        VecDeque,
-    },
+    collections::VecDeque,
     fmt::Debug,
     rc::Rc,
     sync::atomic::AtomicU64,
@@ -119,7 +115,7 @@ pub struct Mutations {
     pub added: Vec<MutationAdd>,
     pub modified: Vec<MutationModified>,
     pub removed: Vec<MutationRemove>,
-    pub moved: HashMap<NodeId, Vec<MutationMove>>,
+    pub moved: FxHashMap<NodeId, Vec<MutationMove>>,
 }
 
 impl Debug for Mutations {
@@ -159,6 +155,9 @@ pub enum TasksPollStage {
     Started,
     Finished,
 }
+
+/// Parents receiving additions, keyed by new tree path, with their lazily found current path.
+type AdditionParents = FxHashMap<Box<[u32]>, (NodeId, Option<Vec<u32>>)>;
 
 pub struct Runner {
     pub scopes: FxHashMap<ScopeId, Rc<RefCell<Scope>>>,
@@ -416,6 +415,22 @@ impl Runner {
                                         if let Some(event_handlers) = event_handlers {
                                             match event_handlers.get(&event_name) {
                                                 Some(EventHandlerType::Sized(handler)) => {
+                                                    handler.call(Event {
+                                                        data: data.clone(),
+                                                        propagate: propagate.clone(),
+                                                        default: default.clone(),
+                                                    });
+                                                }
+                                                Some(_) => unreachable!(),
+                                                _ => {}
+                                            }
+                                        }
+                                    }
+                                    EventType::Visible(data) => {
+                                        let event_handlers = element.events_handlers();
+                                        if let Some(event_handlers) = event_handlers {
+                                            match event_handlers.get(&event_name) {
+                                                Some(EventHandlerType::Visible(handler)) => {
                                                     handler.call(Event {
                                                         data: data.clone(),
                                                         propagate: propagate.clone(),
@@ -984,6 +999,8 @@ impl Runner {
         }
     }
 
+    /// Inserts an added node in `scope.nodes` and emits the matching mutation. Parents are
+    /// resolved by identity because paths in `scope.nodes` shift while a diff is applied.
     fn process_addition(
         &mut self,
         scope: &Rc<RefCell<Scope>>,
@@ -991,58 +1008,78 @@ impl Runner {
         path_element: &PathElement,
         mutations: &mut Mutations,
         parents_to_resync_scopes: &mut FxHashSet<Box<[u32]>>,
+        addition_parents: &mut AdditionParents,
     ) {
-        let (parent_node_id, index_inside_parent) = if added == [0] {
+        let (parent_node_id, index_inside_parent, insertion_path) = if added == [0] {
             let parent_id = scope.borrow().parent_id;
             let scope_id = scope.borrow().id;
             let parent_node_id = scope.borrow().parent_node_id_in_parent;
-            self.find_scope_root_parent_info(parent_id, parent_node_id, scope_id)
+            let (parent_node_id, index_inside_parent) =
+                self.find_scope_root_parent_info(parent_id, parent_node_id, scope_id);
+            (parent_node_id, index_inside_parent, vec![0])
         } else {
-            parents_to_resync_scopes.insert(Box::from(&added[..added.len() - 1]));
-            (
-                scope
-                    .borrow()
-                    .nodes
-                    .get(&added[..added.len() - 1])
-                    .unwrap()
-                    .node_id,
-                added[added.len() - 1],
-            )
+            let parent_path = &added[..added.len() - 1];
+            parents_to_resync_scopes.insert(Box::from(parent_path));
+
+            let (parent_node_id, cached_path) = addition_parents.get_mut(parent_path).unwrap();
+            let parent_node_id = *parent_node_id;
+
+            // Pre existing parents are found once and cached, added parents get cached on insertion
+            let mut insertion_path = cached_path
+                .get_or_insert_with(|| {
+                    // The parent usually already sits at its new path, search only if it shifted
+                    let is_at_new_path = scope
+                        .borrow()
+                        .nodes
+                        .get(parent_path)
+                        .is_some_and(|node| node.node_id == parent_node_id);
+                    if is_at_new_path {
+                        parent_path.to_vec()
+                    } else {
+                        scope
+                            .borrow()
+                            .nodes
+                            .find_path(|v| v.is_some_and(|node| node.node_id == parent_node_id))
+                            .unwrap()
+                    }
+                })
+                .clone();
+            insertion_path.push(added[added.len() - 1]);
+            (parent_node_id, added[added.len() - 1], insertion_path)
         };
 
         self.node_id_counter += 1;
 
-        path_element.with_element(added, |element| match element {
-            PathElement::Component { .. } => {
-                self.scope_id_counter += 1;
-                let scope_id = self.scope_id_counter;
-
-                scope.borrow_mut().nodes.insert(
-                    added,
-                    PathNode {
+        path_element.with_element(added, |element| {
+            let scope_id = match element {
+                PathElement::Component { .. } => {
+                    self.scope_id_counter += 1;
+                    Some(self.scope_id_counter)
+                }
+                PathElement::Element { element, .. } => {
+                    mutations.added.push(MutationAdd {
                         node_id: self.node_id_counter,
-                        scope_id: Some(scope_id),
-                    },
-                );
-            }
-            PathElement::Element { element, .. } => {
-                mutations.added.push(MutationAdd {
+                        parent_id: parent_node_id,
+                        index: index_inside_parent,
+                        element: element.clone(),
+                    });
+                    self.node_to_scope
+                        .insert(self.node_id_counter, scope.borrow().id);
+                    None
+                }
+            };
+
+            scope.borrow_mut().nodes.insert(
+                &insertion_path,
+                PathNode {
                     node_id: self.node_id_counter,
-                    parent_id: parent_node_id,
-                    index: index_inside_parent,
-                    element: element.clone(),
-                });
-
-                self.node_to_scope
-                    .insert(self.node_id_counter, scope.borrow().id);
-                scope.borrow_mut().nodes.insert(
-                    added,
-                    PathNode {
-                        node_id: self.node_id_counter,
-                        scope_id: None,
-                    },
-                );
-            }
+                    scope_id,
+                },
+            );
+            addition_parents.insert(
+                Box::from(added),
+                (self.node_id_counter, Some(insertion_path)),
+            );
         });
     }
 
@@ -1080,8 +1117,24 @@ impl Runner {
             }
         }
 
+        // Capture the identity of addition parents while their old tree paths are still valid
+        let mut addition_parents = FxHashMap::default();
+        for added in &diff.added {
+            if added.len() <= 1 {
+                continue;
+            }
+            let parent = &added[..added.len() - 1];
+            if addition_parents.contains_key(parent) {
+                continue;
+            }
+            let old_parent = resolve_old_path(parent, &diff.moved);
+            if let Some(node) = scope.borrow().nodes.get(&old_parent) {
+                addition_parents.insert(Box::from(parent), (node.node_id, None));
+            }
+        }
+
         // Collect a set of branches to remove in cascade
-        let mut selected_roots: HashMap<&[u32], HashSet<&[u32]>> = HashMap::default();
+        let mut selected_roots: FxHashMap<&[u32], FxHashSet<&[u32]>> = FxHashMap::default();
         let mut scope_removal_buffer = vec![];
 
         // Given some removals like:
@@ -1264,11 +1317,6 @@ impl Runner {
         // ]
         //
         // This way, no addition offsets the next additions in line.
-        // Additions whose parent is a move destination must be deferred until
-        // after moves are applied, because the nodes graph still has old-tree
-        // layout and the parent element hasn't been repositioned yet.
-        let mut deferred_adds = Vec::new();
-
         for added in diff
             .added
             .iter()
@@ -1283,19 +1331,13 @@ impl Runner {
             })
             .rev()
         {
-            let parent = &added[..added.len() - 1];
-            let has_moved_ancestor = resolve_old_path(parent, &diff.moved) != *parent;
-            if has_moved_ancestor {
-                deferred_adds.push(added.clone());
-                continue;
-            }
-
             self.process_addition(
                 scope,
                 added,
                 path_element,
                 mutations,
                 &mut parents_to_resync_scopes,
+                &mut addition_parents,
             );
         }
 
@@ -1358,17 +1400,6 @@ impl Runner {
                         .push(MutationMove { index: to, node_id });
                 }
             }
-        }
-
-        // Process deferred additions now that moves have repositioned parents
-        for added in &deferred_adds {
-            self.process_addition(
-                scope,
-                added,
-                path_element,
-                mutations,
-                &mut parents_to_resync_scopes,
-            );
         }
 
         for (modified, flags) in diff.modified {
@@ -1468,14 +1499,14 @@ pub struct Diff {
 
     pub removed: Vec<Box<[u32]>>,
 
-    pub moved: HashMap<Box<[u32]>, Vec<(u32, u32)>>,
+    pub moved: FxHashMap<Box<[u32]>, Vec<(u32, u32)>>,
 }
 
 /// Converts a new-tree path to its corresponding old-tree path by checking, for each
 /// segment, whether that position was the destination of a movement in `moved`. If so,
 /// the original (`from`) index is substituted so the result can be used to look up nodes
 /// in the pre-diff nodes tree.
-fn resolve_old_path(new_path: &[u32], moved: &HashMap<Box<[u32]>, Vec<(u32, u32)>>) -> Vec<u32> {
+fn resolve_old_path(new_path: &[u32], moved: &FxHashMap<Box<[u32]>, Vec<(u32, u32)>>) -> Vec<u32> {
     let mut old_path = Vec::with_capacity(new_path.len());
     for i in 0..new_path.len() {
         let new_parent = &new_path[..i];

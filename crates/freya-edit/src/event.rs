@@ -1,7 +1,10 @@
 use std::ops::Mul;
 
 use freya_core::{
-    elements::paragraph::ParagraphHolderInner,
+    elements::paragraph::{
+        ParagraphCursorExt,
+        ParagraphHolderInner,
+    },
     prelude::*,
 };
 use keyboard_types::NamedKey;
@@ -33,6 +36,8 @@ pub enum EditableEvent<'a> {
     KeyDown {
         key: &'a Key,
         modifiers: Modifiers,
+        editor_line: Option<EditorLine>,
+        holder: Option<&'a ParagraphHolder>,
     },
     KeyUp {
         key: &'a Key,
@@ -72,11 +77,10 @@ impl EditableEvent<'_> {
                     PressEventType::Triple => {
                         let current_selection = text_editor.selection().clone();
 
-                        let char_position = paragraph.get_glyph_position_at_coordinate(
-                            location.mul(*scale_factor).to_i32().to_tuple(),
-                        );
-                        let press_selection = text_editor
-                            .measure_selection(char_position.position as usize, editor_line);
+                        let char_position =
+                            paragraph.cursor_index_at_point(location.mul(*scale_factor).to_tuple());
+                        let press_selection =
+                            text_editor.measure_selection(char_position, editor_line);
 
                         // Get the line start char and its length
                         let line = text_editor.char_to_line(press_selection.pos());
@@ -96,11 +100,10 @@ impl EditableEvent<'_> {
                         let new_selection = if config.select_all_on_double_click {
                             TextSelection::new_range((0, text_editor.len_utf16_cu()))
                         } else {
-                            let char_position = paragraph.get_glyph_position_at_coordinate(
-                                location.mul(*scale_factor).to_i32().to_tuple(),
-                            );
-                            let press_selection = text_editor
-                                .measure_selection(char_position.position as usize, editor_line);
+                            let char_position = paragraph
+                                .cursor_index_at_point(location.mul(*scale_factor).to_tuple());
+                            let press_selection =
+                                text_editor.measure_selection(char_position, editor_line);
 
                             let range = text_editor.find_word_boundaries(press_selection.pos());
                             TextSelection::new_range(range)
@@ -122,11 +125,10 @@ impl EditableEvent<'_> {
                     PressEventType::Single => {
                         let current_selection = text_editor.selection().clone();
 
-                        let char_position = paragraph.get_glyph_position_at_coordinate(
-                            location.mul(*scale_factor).to_i32().to_tuple(),
-                        );
-                        let new_selection = text_editor
-                            .measure_selection(char_position.position as usize, editor_line);
+                        let char_position =
+                            paragraph.cursor_index_at_point(location.mul(*scale_factor).to_tuple());
+                        let new_selection =
+                            text_editor.measure_selection(char_position, editor_line);
 
                         // Move the cursor
                         if current_selection != new_selection {
@@ -152,9 +154,7 @@ impl EditableEvent<'_> {
                     let dist_position = location.mul(*scale_factor);
 
                     // Calculate the end of the highlighting
-                    let dist_char = paragraph
-                        .get_glyph_position_at_coordinate(dist_position.to_i32().to_tuple());
-                    let to = dist_char.position as usize;
+                    let to = paragraph.cursor_index_at_point(dist_position.to_tuple());
 
                     if editor.peek().get_selection().is_none() {
                         editor.write().selection_mut().set_as_range();
@@ -174,7 +174,12 @@ impl EditableEvent<'_> {
             EditableEvent::Release => {
                 dragging.write().clicked = false;
             }
-            EditableEvent::KeyDown { key, modifiers } => {
+            EditableEvent::KeyDown {
+                key,
+                modifiers,
+                editor_line,
+                holder,
+            } => {
                 match key {
                     // Handle dragging
                     Key::Named(NamedKey::Shift) => {
@@ -186,6 +191,8 @@ impl EditableEvent<'_> {
                             let event = editor.process_key(
                                 key,
                                 &modifiers,
+                                editor_line,
+                                holder,
                                 config.allow_tabs,
                                 config.allow_changes,
                                 config.allow_read_clipboard,

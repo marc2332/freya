@@ -1995,3 +1995,128 @@ fn tree_keyed_list_reorders() {
 
     replay_keyed_list(&history);
 }
+
+type NestedLayout = Vec<(u8, Vec<(u8, u8, bool)>)>;
+
+/// Replays layouts of keyed outer rects holding (key, grandchildren count, is component)
+/// children, verifying each scope's nodes graph matches its element tree at every step.
+fn replay_nested_keyed_layouts(history: &[NestedLayout]) {
+    fn collect_element_paths(element: &PathElement, output: &mut Vec<Vec<u32>>) {
+        match element {
+            PathElement::Component { path, .. } => output.push(path.to_vec()),
+            PathElement::Element { path, elements, .. } => {
+                output.push(path.to_vec());
+                for child in elements.iter() {
+                    collect_element_paths(child, output);
+                }
+            }
+        }
+    }
+
+    fn nested_comp(grandchildren_count: &u8) -> Element {
+        rect()
+            .children((0..*grandchildren_count).map(|_| rect()))
+            .into()
+    }
+
+    fn app() -> Element {
+        let layout = consume_context::<State<NestedLayout>>();
+        rect()
+            .children(layout.read().iter().map(|(key, children)| {
+                rect().key(*key).children(children.iter().map(
+                    |(child_key, grandchildren_count, is_component)| {
+                        if *is_component {
+                            from_fn(*child_key, *grandchildren_count, nested_comp)
+                        } else {
+                            rect()
+                                .key(*child_key)
+                                .children((0..*grandchildren_count).map(|_| rect()))
+                                .into()
+                        }
+                    },
+                ))
+            }))
+            .into()
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+    let mut layout = runner.provide_root_context(|| State::create(NestedLayout::new()));
+    let mutations = runner.sync_and_update();
+    tree.apply_mutations(mutations);
+
+    for step in history {
+        layout.set(step.clone());
+        let mutations = runner.sync_and_update();
+        tree.apply_mutations(mutations);
+        tree.verify_tree_integrity();
+        assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+
+        for scope_rc in runner.scopes.values() {
+            let scope = scope_rc.borrow();
+
+            let mut element_paths = Vec::new();
+            if let Some(element) = scope.element.as_ref() {
+                collect_element_paths(element, &mut element_paths);
+            }
+            element_paths.sort();
+
+            let mut node_paths = Vec::new();
+            scope.nodes.traverse(&[], |path, _| {
+                if !path.is_empty() {
+                    node_paths.push(path.to_vec());
+                }
+            });
+            node_paths.sort();
+
+            assert_eq!(
+                element_paths, node_paths,
+                "scope {:?} nodes diverged from its element tree after {step:?}",
+                scope.id,
+            );
+        }
+    }
+}
+
+/// The removed outer rect's old path equals the new path of the sibling whose
+/// children get reordered, which used to wipe those movements from the diff.
+#[test]
+fn removed_sibling_path_collides_with_reordered_children_parent() {
+    replay_nested_keyed_layouts(&[
+        vec![(1, vec![]), (2, vec![(0, 0, true), (2, 0, false)])],
+        vec![(2, vec![(2, 0, false), (0, 0, true)])],
+    ]);
+}
+
+/// A child is inserted at the head of a moved parent whose other children get
+/// reordered, so the addition must be applied before those movements.
+#[test]
+fn addition_at_head_of_moved_parent_with_reordered_children() {
+    replay_nested_keyed_layouts(&[
+        vec![(2, vec![]), (1, vec![(0, 0, false), (2, 0, false)])],
+        vec![
+            (1, vec![(3, 0, false), (2, 0, false), (0, 0, false)]),
+            (2, vec![]),
+        ],
+    ]);
+}
+
+/// A child is added under a parent that got shifted by a new sibling inserted
+/// before it while another sibling is due to move away.
+#[test]
+fn addition_under_parent_shifted_by_inserted_sibling() {
+    replay_nested_keyed_layouts(&[
+        vec![(1, vec![]), (2, vec![])],
+        vec![(0, vec![]), (2, vec![(0, 0, false)]), (1, vec![])],
+    ]);
+}
+
+/// Grandchildren are added under a parent whose index did not change but whose slot got
+/// shifted by a sibling removal, so the path based parent lookup grabbed the wrong node.
+#[test]
+fn grandchild_addition_under_parent_shifted_by_removal() {
+    replay_nested_keyed_layouts(&[
+        vec![(0, vec![]), (2, vec![(1, 0, false)]), (3, vec![])],
+        vec![(3, vec![]), (2, vec![(1, 2, false)])],
+    ]);
+}
