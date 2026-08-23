@@ -138,7 +138,7 @@ euclid = "0.22.9"
 itertools = "0.14.0"
 
 # Rendering
-freya-skia-safe = { version = "0.99.0", features = [
+freya-skia-safe = { version = "0.99.1", features = [
   "textlayout",
   "svg",
   "webp",
