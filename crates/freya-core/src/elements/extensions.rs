@@ -50,6 +50,7 @@ use crate::{
             MouseEventData,
             SizedEventData,
             StyledEventData,
+            VisibleEventData,
             WheelEventData,
         },
         name::EventName,
@@ -306,6 +307,24 @@ pub trait EventHandlersExt: Sized {
         self.get_event_handlers()
             .insert(EventName::Sized, EventHandlerType::Sized(on_sized.into()));
         self.get_layout().layout.has_layout_references = true;
+        self
+    }
+
+    /// Fires when the element becomes visible, even partially, inside the viewports of its clipping ancestors.
+    fn on_visible(mut self, on_visible: impl Into<EventHandler<Event<VisibleEventData>>>) -> Self {
+        self.get_event_handlers().insert(
+            EventName::Visible,
+            EventHandlerType::Visible(on_visible.into()),
+        );
+        self
+    }
+
+    /// Fires when the element stops being visible inside the viewports of its clipping ancestors.
+    fn on_hidden(mut self, on_hidden: impl Into<EventHandler<Event<VisibleEventData>>>) -> Self {
+        self.get_event_handlers().insert(
+            EventName::Hidden,
+            EventHandlerType::Visible(on_hidden.into()),
+        );
         self
     }
 
@@ -872,6 +891,15 @@ where
     /// Round the element's corners. See [`CornerRadius`].
     fn corner_radius(mut self, corner_radius: impl Into<CornerRadius>) -> Self {
         self.get_style().corner_radius = corner_radius.into();
+        self
+    }
+
+    /// Set the [`CursorIcon`] shown while the element is hovered.
+    ///
+    /// When multiple hovered elements define a cursor, the one painted on top wins.
+    /// While a mouse button is pressed the cursor stays still.
+    fn cursor(mut self, cursor: impl Into<Option<CursorIcon>>) -> Self {
+        self.get_style().cursor = cursor.into();
         self
     }
 }

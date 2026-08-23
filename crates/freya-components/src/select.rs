@@ -140,42 +140,27 @@ impl Component for Select {
             conf.on_change(OnChange::Rerun);
             conf.on_creation(OnCreation::Finish);
 
-            let scale = AnimNum::new(0.9, 1.)
-                .time(125)
-                .ease(Ease::Out)
-                .function(Function::Quart);
             let opacity = AnimNum::new(0., 1.)
-                .time(125)
+                .time(90)
                 .ease(Ease::Out)
-                .function(Function::Quart);
-            let offset_y = AnimNum::new(-8., 1.)
-                .time(125)
+                .function(Function::Quad);
+            let offset_y = AnimNum::new(-3., 1.)
+                .time(90)
                 .ease(Ease::Out)
-                .function(Function::Quart);
+                .function(Function::Quad);
             if open() {
-                (scale, opacity, offset_y)
+                (opacity, offset_y)
             } else {
-                (
-                    scale.into_reversed(),
-                    opacity.into_reversed(),
-                    offset_y.into_reversed(),
-                )
+                (opacity.into_reversed(), offset_y.into_reversed())
             }
         });
 
-        let (scale, opacity, slide) = animation.read().value();
+        let (opacity, slide) = animation.read().value();
 
         // Clear the list size when the select dropdown is not rendered
         if !open() && opacity == 0. && list_size().is_some() {
             let _ = list_size.take();
         }
-
-        let cursor_icon = self.cursor_icon;
-        use_drop(move || {
-            if status() == SelectStatus::Hovering {
-                Cursor::set(CursorIcon::default());
-            }
-        });
 
         // Close the select when the focus leaves it.
         use_side_effect(move || {
@@ -197,12 +182,10 @@ impl Component for Select {
 
         let on_pointer_enter = move |_| {
             *status.write() = SelectStatus::Hovering;
-            Cursor::set(cursor_icon);
         };
 
         let on_pointer_leave = move |_| {
             *status.write() = SelectStatus::Idle;
-            Cursor::set(CursorIcon::default());
         };
 
         // Close the select if clicked anywhere
@@ -263,6 +246,7 @@ impl Component for Select {
                     .a11y_focusable(Focusable::Enabled)
                     .on_pointer_enter(on_pointer_enter)
                     .on_pointer_leave(on_pointer_leave)
+                    .cursor(self.cursor_icon)
                     .on_press(on_press)
                     .on_global_key_down(on_global_key_down)
                     .on_global_pointer_press(on_global_pointer_press)
@@ -305,12 +289,11 @@ impl Component for Select {
                                         .alignment(BorderAlignment::Inner),
                                 )
                                 .overflow(Overflow::Clip)
-                                .corner_radius(8.)
+                                .corner_radius(10.)
                                 .background(theme.select_background)
-                                .padding(4.)
+                                .padding(6.)
                                 .content(Content::Fit)
                                 .opacity(opacity)
-                                .scale(scale)
                                 .children(self.children.clone()),
                         ),
                 )

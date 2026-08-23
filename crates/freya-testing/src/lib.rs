@@ -240,7 +240,6 @@ impl TestingRunner {
                             pending_fonts.borrow_mut().push((font_name, font_data));
                         }
                         UserEvent::RequestRedraw
-                        | UserEvent::SetCursorIcon(_)
                         | UserEvent::SetCustomScaleFactor(_)
                         | UserEvent::Erased(_) => {
                             // Nothing
@@ -332,6 +331,7 @@ impl TestingRunner {
             &mut self.font_collection,
             &self.font_manager,
             &self.events_sender,
+            &mut self.nodes_state,
             self.scale_factor,
             &self.default_fonts,
         );
@@ -402,6 +402,7 @@ impl TestingRunner {
             &mut self.font_collection,
             &self.font_manager,
             &self.events_sender,
+            &mut self.nodes_state,
             self.scale_factor,
             &self.default_fonts,
         );
@@ -449,6 +450,11 @@ impl TestingRunner {
             std::thread::sleep(step);
             self.ticker_sender.notify();
         }
+    }
+
+    /// Resolve the [CursorIcon] for the currently hovered nodes.
+    pub fn cursor_icon(&self) -> CursorIcon {
+        self.tree.borrow().cursor_icon(&self.nodes_state)
     }
 
     pub fn send_event(&mut self, platform_event: PlatformEvent) {

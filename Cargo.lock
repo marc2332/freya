@@ -1695,6 +1695,9 @@ name = "cursor-icon"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f27ae1dd37df86211c42e150270f82743308803d90a6f6e6651cd730d5e1732f"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "dasp_sample"
@@ -2555,6 +2558,7 @@ dependencies = [
  "cfg-if 1.0.4",
  "freya-android",
  "freya-animation",
+ "freya-borderless-plugin",
  "freya-camera",
  "freya-clipboard",
  "freya-code-editor",
@@ -2605,6 +2609,16 @@ dependencies = [
  "freya",
  "freya-core",
  "freya-testing",
+]
+
+[[package]]
+name = "freya-borderless-plugin"
+version = "0.5.0-rc.3"
+dependencies = [
+ "freya-core",
+ "freya-engine",
+ "freya-winit",
+ "torin",
 ]
 
 [[package]]
