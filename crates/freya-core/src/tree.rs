@@ -665,8 +665,6 @@ impl Tree {
         scale_factor: f64,
         fallback_fonts: &[Cow<'static, str>],
     ) {
-        debug_assert_eq!(self.elements.len(), self.layout_nodes.len());
-
         let tree_adapter = TreeAdapterFreya {
             layout_nodes: &self.layout_nodes,
             parents: &self.parents,
@@ -796,7 +794,8 @@ impl Tree {
                 buffer.extend(children);
             }
         }
-        assert_eq!(size, visited.len())
+        assert_eq!(size, visited.len());
+        assert_eq!(size, self.layout_nodes.len());
     }
 }
 

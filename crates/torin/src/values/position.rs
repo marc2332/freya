@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use crate::{
     prelude::{
         Area,
@@ -37,12 +35,12 @@ pub struct PositionSides {
 #[derive(PartialEq, Clone, Debug)]
 pub enum Position {
     /// Placed by the normal layout flow alongside its siblings. This is the default.
-    Stacked(Arc<PositionSides>),
+    Stacked(Box<PositionSides>),
 
     /// Taken out of the flow and positioned by offsets relative to its parent.
-    Absolute(Arc<PositionSides>),
+    Absolute(Box<PositionSides>),
     /// Taken out of the flow and positioned by offsets relative to the window.
-    Global(Arc<PositionSides>),
+    Global(Box<PositionSides>),
 }
 
 impl Default for Position {
@@ -54,7 +52,7 @@ impl Default for Position {
 impl Position {
     /// Create an [`Absolute`](Position::Absolute) position, offset relative to the parent.
     pub fn new_absolute() -> Self {
-        Self::Absolute(Arc::new(PositionSides {
+        Self::Absolute(Box::new(PositionSides {
             top: None,
             right: None,
             bottom: None,
@@ -64,7 +62,7 @@ impl Position {
 
     /// Create a [`Global`](Position::Global) position, offset relative to the window.
     pub fn new_global() -> Self {
-        Self::Global(Arc::new(PositionSides {
+        Self::Global(Box::new(PositionSides {
             top: None,
             right: None,
             bottom: None,
@@ -74,7 +72,7 @@ impl Position {
 
     /// Create a [`Stacked`](Position::Stacked) position that follows the normal layout flow.
     pub fn new_stacked() -> Self {
-        Self::Stacked(Arc::new(PositionSides {
+        Self::Stacked(Box::new(PositionSides {
             top: None,
             right: None,
             bottom: None,
@@ -112,9 +110,7 @@ impl Position {
 
     fn position_mut(&mut self) -> &mut PositionSides {
         match self {
-            Self::Absolute(position) | Self::Global(position) | Self::Stacked(position) => {
-                Arc::make_mut(position)
-            }
+            Self::Absolute(position) | Self::Global(position) | Self::Stacked(position) => position,
         }
     }
 
@@ -201,7 +197,6 @@ impl Scaled for Position {
     fn scale(&mut self, scale_factor: f32) {
         match self {
             Self::Absolute(position) | Self::Global(position) => {
-                let position = Arc::make_mut(position);
                 if let Some(top) = &mut position.top {
                     *top *= scale_factor;
                 }

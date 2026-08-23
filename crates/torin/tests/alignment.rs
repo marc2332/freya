@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use euclid::Length;
 use torin::{
     prelude::*,
@@ -629,7 +627,7 @@ pub fn alignment_with_absolute_child() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(100.)),
             Size::Pixels(Length::new(100.)),
-            Position::Absolute(Arc::default()),
+            Position::Absolute(Box::default()),
         ),
     );
     mocked_tree.add(
