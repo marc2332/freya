@@ -75,5 +75,10 @@ gif = { version = "0.13.3", optional = true }
 accesskit = { workspace = true }
 
 [dev-dependencies]
-freya = { path = "../freya" }
+freya = { path = "../freya", features = [
+  "markdown",
+  "gif",
+  "remote-asset",
+  "calendar",
+] }
 freya-testing = { path = "../freya-testing" }

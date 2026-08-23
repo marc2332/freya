@@ -23,12 +23,13 @@ keyboard-types = { workspace = true }
 
 # PTY and terminal emulator
 portable-pty = "0.9"
-alacritty_terminal = "0.26"
+rio-vt = "0.5.5"
 
 # URL detection in terminal output
 linkify = { workspace = true }
 
 # Async
+async-io = { workspace = true }
 futures-channel = { workspace = true }
 futures-lite = { workspace = true }
 
