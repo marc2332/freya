@@ -20,6 +20,7 @@ use freya_core::{
 use freya_engine::prelude::{
     FontCollection,
     FontMgr,
+    SkData,
     TypefaceFontProvider,
 };
 use ragnarok::{
@@ -239,7 +240,7 @@ impl WebApp {
         }
 
 
-        self.ticker_sender.send(()).ok();
+        self.ticker_sender.notify();
     }
 
     /// Applies whatever the runner has pending.
@@ -291,14 +292,14 @@ impl WebApp {
 
         let update = self
             .accessibility
-            .process_updates(&mut self.tree, &self.events_sender);
+            .process_updates(&mut self.tree, &self.events_sender, "");
         self.platform
             .focused_accessibility_id
             .set_if_modified(update.focus);
         if let Some(node_id) = self.accessibility.focused_node_id()
             && let Some(layout_node) = self.tree.layout.get(&node_id)
         {
-            let focused_node = AccessibilityTree::create_node(node_id, layout_node, &self.tree);
+            let focused_node = AccessibilityTree::create_node(node_id, layout_node, &self.tree, "");
             self.platform
                 .focused_accessibility_node
                 .set_if_modified(focused_node);
@@ -343,7 +344,7 @@ fn create_fonts(fonts: &[(String, Vec<u8>)]) -> (FontMgr, FontCollection, Vec<Co
     let mut registered = Vec::new();
 
     for (name, data) in fonts {
-        let Some(typeface) = system_manager.new_from_data(data, None) else {
+        let Some(typeface) = system_manager.new_from_data(SkData::new_copy(data), None) else {
             tracing::error!("Failed to load the font {name}.");
             continue;
         };

@@ -201,6 +201,8 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
             task.cancel();
         }
 
+        self.is_running.set_if_modified(false);
+
         self.animated_value
             .write()
             .prepare(*self.last_direction.peek());
@@ -213,6 +215,8 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
         if let Some(task) = self.task.write().take() {
             task.cancel();
         }
+
+        self.is_running.set_if_modified(false);
 
         self.animated_value
             .write()
@@ -252,7 +256,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
             task.cancel();
         }
 
-        let mut ticker = RenderingTicker::get();
+        let ticker = RenderingTicker::get();
         let platform = Platform::get();
         let animation_clock = AnimationClock::get();
 
@@ -272,9 +276,6 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
             loop {
                 // Wait for the event loop to tick
                 ticker.tick().await;
-
-                // Request another redraw to move the animation forward
-                platform.send(UserEvent::RequestRedraw);
 
                 let elapsed = animation_clock.correct_elapsed_duration(prev_frame.elapsed());
 
@@ -312,6 +313,9 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
                     // Restart/reverse the animation
                     animated_value.write().prepare(direction);
                 }
+
+                // Request another redraw to move the animation forward
+                platform.send(UserEvent::RequestRedraw);
 
                 prev_frame = Instant::now();
             }
@@ -476,6 +480,9 @@ pub fn use_animation<Animated: AnimatedValue>(
 
 /// Like [use_animation] but supports passing manual dependencies.
 ///
+/// The callback reruns synchronously when the dependencies change. States read
+/// inside the callback do not rerun it, pass them as dependencies instead.
+///
 /// ```rust, no_run
 /// # use freya::prelude::*;
 /// # use freya::animation::*;
@@ -494,59 +501,50 @@ pub fn use_animation_with_dependencies<Animated: AnimatedValue, D: 'static + Clo
     dependencies: &D,
     mut run: impl 'static + FnMut(&mut AnimConfiguration, &D) -> Animated,
 ) -> UseAnimation<Animated> {
-    let dependencies = use_reactive(dependencies);
-    use_hook(|| {
-        let mut config = State::create(AnimConfiguration::default());
-        let mut animated_value = State::create(Animated::default());
-        let is_running = State::create(false);
-        let has_run_yet = State::create(false);
-        let runs = State::create(0);
-        let task = State::create(None);
-        let last_direction = State::create(AnimDirection::Forward);
+    let mut last_dependencies = use_state(|| None::<D>);
 
-        let mut animation = UseAnimation {
-            animated_value,
-            config,
-            is_running,
-            has_run_yet,
-            runs,
-            task,
-            last_direction,
-        };
+    let mut animation = use_hook(|| UseAnimation {
+        animated_value: State::create(Animated::default()),
+        config: State::create(AnimConfiguration::default()),
+        is_running: State::create(false),
+        has_run_yet: State::create(false),
+        runs: State::create(0),
+        task: State::create(None),
+        last_direction: State::create(AnimDirection::Forward),
+    });
 
-        Effect::create_sync_with_gen(move |current_gen| {
-            let dependencies = dependencies.read();
-            let mut anim_conf = AnimConfiguration::default();
-            animated_value.set(run(&mut anim_conf, &dependencies));
-            *config.write() = anim_conf;
+    // Dependency changes are handled synchronously so the updated animation values
+    // are ready in this same render, before the frame is painted
+    if last_dependencies.peek().as_ref() != Some(dependencies) {
+        let is_creation = last_dependencies.peek().is_none();
+        last_dependencies.set(Some(dependencies.clone()));
 
-            match config.peek().on_change {
-                OnChange::Finish if current_gen > 0 => {
-                    animation.finish();
-                }
-                OnChange::Rerun if current_gen > 0 => {
+        let mut anim_conf = AnimConfiguration::default();
+        animation
+            .animated_value
+            .set(run(&mut anim_conf, dependencies));
+        *animation.config.write() = anim_conf;
+
+        if is_creation {
+            match animation.config.peek().on_creation {
+                OnCreation::Run => animation.run(AnimDirection::Forward),
+                OnCreation::Finish => animation.finish(),
+                _ => {}
+            }
+        } else {
+            match animation.config.peek().on_change {
+                OnChange::Finish => animation.finish(),
+                OnChange::Rerun => {
                     let last_direction = *animation.last_direction.peek();
                     animation.run(last_direction);
                 }
-                OnChange::Reset if current_gen > 0 => {
-                    animation.reset();
-                }
+                OnChange::Reset => animation.reset(),
                 _ => {}
             }
-        });
-
-        match config.peek().on_creation {
-            OnCreation::Run => {
-                animation.run(AnimDirection::Forward);
-            }
-            OnCreation::Finish => {
-                animation.finish();
-            }
-            _ => {}
         }
+    }
 
-        animation
-    })
+    animation
 }
 
 macro_rules! impl_tuple_call {

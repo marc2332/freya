@@ -182,6 +182,8 @@ impl TestingRunner {
         let app = app.into();
         let mut runner = Runner::new(move || integration(app.clone()).into_element());
 
+        runner.provide_root_context(GlobalContexts::default);
+
         runner.provide_root_context(ScreenReader::new);
 
         let (ticker_sender, ticker) = RenderingTicker::new();
@@ -289,7 +291,7 @@ impl TestingRunner {
                 .font_collection
                 .fallback_manager()
                 .unwrap()
-                .new_from_data(font_data, None)
+                .new_from_data(SkData::new_copy(font_data), None)
                 .unwrap_or_else(|| panic!("Failed to load font {font_name}."));
             provider.register_typeface(ft_type, Some(font_name));
         }
@@ -313,8 +315,13 @@ impl TestingRunner {
         );
         self.tree.borrow_mut().accessibility_diff.clear();
         self.accessibility.focused_id = ACCESSIBILITY_ROOT_ID;
-        self.accessibility.init(&mut self.tree.borrow_mut());
+        self.accessibility.init(&mut self.tree.borrow_mut(), "");
         self.sync_and_update();
+    }
+
+    /// Run a closure inside the app runtime.
+    pub fn run_in<T>(&self, run: impl FnOnce() -> T) -> T {
+        self.runner.run_in(run)
     }
 
     pub async fn handle_events(&mut self) {
@@ -370,9 +377,11 @@ impl TestingRunner {
             &self.default_fonts,
         );
 
-        let accessibility_update = self
-            .accessibility
-            .process_updates(&mut self.tree.borrow_mut(), &self.events_sender);
+        let accessibility_update = self.accessibility.process_updates(
+            &mut self.tree.borrow_mut(),
+            &self.events_sender,
+            "",
+        );
 
         self.platform
             .focused_accessibility_id
@@ -382,7 +391,12 @@ impl TestingRunner {
         let layout_node = tree.layout.get(&node_id).unwrap();
         self.platform
             .focused_accessibility_node
-            .set_if_modified(AccessibilityTree::create_node(node_id, layout_node, &tree));
+            .set_if_modified(AccessibilityTree::create_node(
+                node_id,
+                layout_node,
+                &tree,
+                "",
+            ));
     }
 
     /// Poll async tasks and events every `step` time for a total time of `duration`.
@@ -393,7 +407,7 @@ impl TestingRunner {
             self.handle_events_immediately();
             self.sync_and_update();
             std::thread::sleep(step);
-            self.ticker_sender.send(()).ok();
+            self.ticker_sender.notify();
         }
     }
 
@@ -404,7 +418,7 @@ impl TestingRunner {
             self.handle_events_immediately();
             self.sync_and_update();
             std::thread::sleep(step);
-            self.ticker_sender.send(()).ok();
+            self.ticker_sender.notify();
         }
     }
 
@@ -529,6 +543,13 @@ impl TestingRunner {
             scroll,
             cursor,
             source: WheelSource::Device,
+        });
+        self.sync_and_update();
+        // Refresh hover states after the scroll
+        self.send_event(PlatformEvent::Mouse {
+            name: MouseEventName::MouseMove,
+            cursor,
+            button: None,
         });
         self.sync_and_update();
     }

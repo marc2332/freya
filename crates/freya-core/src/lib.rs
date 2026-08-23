@@ -187,6 +187,7 @@ pub mod integration {
             platform::*,
         },
         lifecycle::{
+            context::GlobalContexts,
             state::State,
             writable_utils::WritableUtils,
         },
