@@ -542,11 +542,12 @@ fn register_base_component_themes(theme: &mut Theme) {
         MenuItemThemePreference {
             background: Preference::Specific(Color::TRANSPARENT),
             hover_background: Preference::Reference("surface_secondary"),
-            select_background: Preference::Reference("surface_secondary"),
+            select_background: Preference::Reference("surface_primary"),
             border_fill: Preference::Specific(Color::TRANSPARENT),
-            select_border_fill: Preference::Reference("border_focus"),
-            corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
+            focus_border_fill: Preference::Reference("border_focus"),
+            corner_radius: Preference::Specific(CornerRadius::new_all(10.)),
             color: Preference::Reference("text_primary"),
+            select_color: Preference::Reference("text_primary"),
         },
     );
     theme.set(
