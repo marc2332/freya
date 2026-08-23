@@ -162,13 +162,6 @@ impl Component for Select {
             let _ = list_size.take();
         }
 
-        let cursor_icon = self.cursor_icon;
-        use_drop(move || {
-            if status() == SelectStatus::Hovering {
-                Cursor::set(CursorIcon::default());
-            }
-        });
-
         // Close the select when the focus leaves it.
         use_side_effect(move || {
             let platform = Platform::get();
@@ -189,12 +182,10 @@ impl Component for Select {
 
         let on_pointer_enter = move |_| {
             *status.write() = SelectStatus::Hovering;
-            Cursor::set(cursor_icon);
         };
 
         let on_pointer_leave = move |_| {
             *status.write() = SelectStatus::Idle;
-            Cursor::set(CursorIcon::default());
         };
 
         // Close the select if clicked anywhere
@@ -255,6 +246,7 @@ impl Component for Select {
                     .a11y_focusable(Focusable::Enabled)
                     .on_pointer_enter(on_pointer_enter)
                     .on_pointer_leave(on_pointer_leave)
+                    .cursor(self.cursor_icon)
                     .on_press(on_press)
                     .on_global_key_down(on_global_key_down)
                     .on_global_pointer_press(on_global_pointer_press)

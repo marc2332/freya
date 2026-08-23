@@ -1,7 +1,6 @@
 pub mod accessibility;
 pub mod animation_clock;
 pub mod current_context;
-pub mod cursor;
 pub mod data;
 pub mod debug;
 pub mod diff_key;
@@ -61,7 +60,6 @@ pub mod prelude {
             screen_reader::*,
         },
         animation_clock::AnimationClock,
-        cursor::*,
         data::*,
         debug::*,
         diff_key::DiffKey,

@@ -5,7 +5,6 @@ use std::{
 };
 
 use bytes::Bytes;
-use cursor_icon::CursorIcon;
 
 use crate::prelude::AccessibilityFocusStrategy;
 
@@ -15,9 +14,6 @@ pub enum UserEvent {
 
     /// Focus with the given strategy
     FocusAccessibilityNode(AccessibilityFocusStrategy),
-
-    /// Set a new cursor icon.
-    SetCursorIcon(CursorIcon),
 
     /// Set a custom scale factor.
     SetCustomScaleFactor(f64),
