@@ -182,6 +182,8 @@ impl TestingRunner {
         let app = app.into();
         let mut runner = Runner::new(move || integration(app.clone()).into_element());
 
+        runner.provide_root_context(GlobalContexts::default);
+
         runner.provide_root_context(ScreenReader::new);
 
         let (ticker_sender, ticker) = RenderingTicker::new();
@@ -314,6 +316,11 @@ impl TestingRunner {
         self.accessibility.focused_id = ACCESSIBILITY_ROOT_ID;
         self.accessibility.init(&mut self.tree.borrow_mut(), "");
         self.sync_and_update();
+    }
+
+    /// Run a closure inside the app runtime.
+    pub fn run_in<T>(&self, run: impl FnOnce() -> T) -> T {
+        self.runner.run_in(run)
     }
 
     pub async fn handle_events(&mut self) {

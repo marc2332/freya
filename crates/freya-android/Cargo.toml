@@ -1,6 +1,6 @@
 [package]
 name = "freya-android"
-version = "0.5.0-rc.1"
+version = "0.5.0-rc.2"
 description = "Android integration for Freya"
 edition = "2024"
 license = "MIT"
