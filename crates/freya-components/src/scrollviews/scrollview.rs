@@ -268,12 +268,18 @@ impl Component for ScrollView {
                 (e.delta_x as f32, e.delta_y as f32)
             };
 
+            let (scrolled_x, scrolled_y) = scroll_controller.into();
+
             // Vertical scroll
             let scroll_position_y = get_scroll_position_from_wheel(
                 y_movement,
                 size.read().inner_sizes.height,
                 size.read().area.height(),
-                corrected_scrolled_y,
+                get_corrected_scroll_position(
+                    size.read().inner_sizes.height,
+                    size.read().area.height(),
+                    scrolled_y,
+                ),
             );
             scroll_controller.scroll_to_y(scroll_position_y).then(|| {
                 e.stop_propagation();
@@ -284,7 +290,11 @@ impl Component for ScrollView {
                 x_movement,
                 size.read().inner_sizes.width,
                 size.read().area.width(),
-                corrected_scrolled_x,
+                get_corrected_scroll_position(
+                    size.read().inner_sizes.width,
+                    size.read().area.width(),
+                    scrolled_x,
+                ),
             );
             scroll_controller.scroll_to_x(scroll_position_x).then(|| {
                 e.stop_propagation();

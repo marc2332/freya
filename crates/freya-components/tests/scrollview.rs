@@ -271,3 +271,34 @@ pub fn scroll_view_scrollbar_smaller_than_thumb() {
         .min_y();
     assert_eq!(scrolled_before, scrolled_after);
 }
+
+#[test]
+pub fn scroll_view_wheel_burst() {
+    fn scroll_view_wheel_burst_app() -> impl IntoElement {
+        ScrollView::new()
+            .children((0..4).map(|i| rect().key(i).height(Size::px(200.)).width(Size::px(200.))))
+    }
+
+    let mut test = launch_test(scroll_view_wheel_burst_app);
+    let scrollview = test
+        .find(|node, element| {
+            Rect::try_downcast(element)
+                .filter(|rect| rect.accessibility.builder.role() == AccessibilityRole::ScrollView)
+                .map(move |_| node)
+        })
+        .unwrap();
+    let content = scrollview.children()[0].children()[0].children();
+
+    // Three wheel events landing before the next render must all move the content
+    for _ in 0..3 {
+        test.send_event(PlatformEvent::Wheel {
+            name: WheelEventName::Wheel,
+            scroll: CursorPoint::new(0., -100.),
+            cursor: CursorPoint::new(5., 5.),
+            source: WheelSource::Device,
+        });
+    }
+    test.sync_and_update();
+
+    assert_eq!(content[0].layout().area.min_y(), -300.);
+}
