@@ -921,6 +921,25 @@ CameraViewer::new(camera)
 
 On macOS, call `freya::camera::init()` from `main` to request authorization before launching.
 
+## Borderless Windows
+
+Enable with `features = ["borderless"]`. For windows using `.with_decorations(false)`, register `BorderlessPlugin` (crate `freya-borderless-plugin`). Combine with `TitlebarButton` (`titlebar` feature) and `rect().window_drag()` for a custom titlebar.
+
+```rust
+use freya::borderless::BorderlessPlugin;
+
+launch(
+    LaunchConfig::new()
+        .with_plugin(BorderlessPlugin::new().with_corner_radius(12.))
+        .with_window(
+            WindowConfig::new(app)
+                .with_decorations(false)
+                .with_transparency(true)
+                .with_background(Color::TRANSPARENT),
+        ),
+)
+```
+
 ## Developer Tools
 
 Enable with `features = ["devtools"]`. Adds a real-time component tree inspector. Run the devtools app alongside your app to examine layout, props, and state.
@@ -953,6 +972,7 @@ freya = { version = "...", features = ["router", "radio"] }
 | `camera` | Webcam capture (`freya-camera`) |
 | `tray` | System tray support |
 | `titlebar` | Custom window titlebar component |
+| `borderless` | `BorderlessPlugin` helpers for undecorated windows (`freya-borderless-plugin`) |
 | `devtools` | Developer tools overlay |
 | `performance` | Performance monitoring plugin |
 | `hotpath` | Hot-path optimization |

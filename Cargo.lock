@@ -2558,6 +2558,7 @@ dependencies = [
  "cfg-if 1.0.4",
  "freya-android",
  "freya-animation",
+ "freya-borderless-plugin",
  "freya-camera",
  "freya-clipboard",
  "freya-code-editor",
@@ -2608,6 +2609,16 @@ dependencies = [
  "freya",
  "freya-core",
  "freya-testing",
+]
+
+[[package]]
+name = "freya-borderless-plugin"
+version = "0.5.0-rc.3"
+dependencies = [
+ "freya-core",
+ "freya-engine",
+ "freya-winit",
+ "torin",
 ]
 
 [[package]]
