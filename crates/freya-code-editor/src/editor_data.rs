@@ -461,7 +461,11 @@ impl TextEditor for CodeEditorData {
         self.history.redo(&mut self.rope)
     }
 
-    fn editor_history(&mut self) -> &mut EditorHistory {
+    fn editor_history(&self) -> &EditorHistory {
+        &self.history
+    }
+
+    fn editor_history_mut(&mut self) -> &mut EditorHistory {
         &mut self.history
     }
 

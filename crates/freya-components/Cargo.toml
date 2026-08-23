@@ -1,6 +1,6 @@
 [package]
 name = "freya-components"
-version = "0.5.0-rc.1"
+version = "0.5.0-rc.3"
 edition = "2024"
 description = "Components for Freya apps"
 license = "MIT"
@@ -23,7 +23,7 @@ remote-asset = ["dep:reqwest"]
 docs = ["dep:embed-doc-image"]
 gif = ["dep:gif"]
 calendar = ["dep:chrono"]
-titlebar = ["dep:freya-icons"]
+titlebar = []
 zoom-shortcuts = []
 
 [dependencies]
@@ -33,7 +33,6 @@ torin = { workspace = true }
 freya-engine = { workspace = true }
 freya-edit = { workspace = true }
 freya-sdk = { workspace = true }
-freya-icons = { workspace = true, optional = true }
 tracing = { workspace = true }
 
 # Theming

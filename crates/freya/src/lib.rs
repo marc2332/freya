@@ -116,6 +116,7 @@ pub mod prelude {
             WindowConfig,
         },
         renderer::{
+            LaunchProxy,
             NativeEvent,
             RendererContext,
         },

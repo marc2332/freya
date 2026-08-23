@@ -7,24 +7,36 @@ use std::{
     rc::Rc,
 };
 
-use freya_core::prelude::*;
+use freya_core::{
+    elements::paragraph::{
+        ParagraphHolderInner,
+        cursor_character_rect,
+    },
+    prelude::*,
+};
 use freya_edit::*;
 use torin::{
     gaps::Gaps,
     prelude::{
         Alignment,
         Area,
+        AreaModel,
         Content,
         Direction,
     },
     size::Size,
 };
+use tracing::warn;
 
 use crate::{
     cursor_blink::use_cursor_blink,
     define_theme,
     get_theme,
-    scrollviews::ScrollView,
+    scrollviews::{
+        ScrollConfig,
+        ScrollView,
+        use_scroll_controller,
+    },
 };
 
 define_theme! {
@@ -69,7 +81,7 @@ pub enum InputLayoutVariant {
     Expanded,
 }
 
-#[derive(Default, Clone, PartialEq)]
+#[derive(Default, Clone, Copy, PartialEq)]
 pub enum InputMode {
     #[default]
     Shown,
@@ -348,6 +360,8 @@ impl Component for Input {
         let focus = use_focus(a11y_id);
         let holder = use_state(ParagraphHolder::default);
         let mut area = use_state(Area::default);
+        let mut viewport_area = use_state(Area::default);
+        let mut scroll_controller = use_scroll_controller(ScrollConfig::default);
         let mut status = use_state(InputStatus::default);
         let is_masked = matches!(self.mode, InputMode::Hidden(_));
         let mut editable = use_editable(
@@ -412,9 +426,58 @@ impl Component for Input {
             let mut editor = editable.editor_mut().write();
             editor.clear_preedit();
             editor.set(&value.read());
-            editor.editor_history().clear();
+            editor.editor_history_mut().clear();
             editor.clear_selection();
         }
+
+        let mode = self.mode;
+        let text_align = self.text_align;
+        let inner_margin = theme_layout.inner_margin;
+        let mut follow_cursor = move || {
+            if !a11y_id.is_focused() || display_placeholder {
+                return;
+            }
+
+            let holder = holder.peek();
+            let holder = holder.0.borrow();
+            let Some(ParagraphHolderInner {
+                paragraph,
+                scale_factor,
+            }) = holder.as_ref()
+            else {
+                warn!("Paragraph should be build by now.");
+                return;
+            };
+
+            let viewport = viewport_area();
+            if viewport.width() == 0. {
+                return;
+            }
+
+            // Text as currently displayed
+            let editor = editable.editor().peek();
+            let text = match mode {
+                InputMode::Hidden(character) => {
+                    character.to_string().repeat(editor.rope().len_chars())
+                }
+                InputMode::Shown => editor.rope().to_string(),
+            };
+
+            let cursor_rect =
+                cursor_character_rect(paragraph, &text, editor.cursor_pos(), text_align);
+            let cursor_x = cursor_rect.left / (*scale_factor as f32);
+
+            // Visible window start
+            let visible_start = viewport.min_x() - area.peek().min_x();
+
+            // Minimally reveal the cursor
+            if cursor_x < visible_start {
+                scroll_controller.scroll_to_x(-cursor_x as i32);
+            } else if cursor_x + inner_margin.horizontal() > visible_start + viewport.width() {
+                scroll_controller
+                    .scroll_to_x(-(cursor_x + inner_margin.horizontal() - viewport.width()) as i32);
+            }
+        };
 
         let on_ime_preedit = move |e: Event<ImePreeditEventData>| {
             let mut editor = editable.editor_mut().write();
@@ -450,6 +513,8 @@ impl Component for Input {
                 // On change
                 _ => {
                     movement_timeout.reset();
+                    let previous_history_version =
+                        editable.editor().peek().editor_history().version;
                     editable.process_event(EditableEvent::KeyDown {
                         key: &key,
                         modifiers,
@@ -465,7 +530,7 @@ impl Component for Input {
                                 if let Some(selection) = editor.undo() {
                                     *editor.selection_mut() = selection;
                                 }
-                                editor.editor_history().clear_redos();
+                                editor.editor_history_mut().clear_redos();
                             }
                             validator.is_valid()
                         }
@@ -474,6 +539,10 @@ impl Component for Input {
 
                     if apply_change {
                         *value.write() = text;
+                    }
+                    if editable.editor().peek().editor_history().version == previous_history_version
+                    {
+                        follow_cursor();
                     }
                 }
             }
@@ -497,9 +566,9 @@ impl Component for Input {
             }
             movement_timeout.reset();
             if !display_placeholder {
-                let area = area.read().to_f64();
-                let global_location = e.global_location().clamp(area.min(), area.max());
-                let location = (global_location - area.min()).to_point();
+                let text_area = area.read().without_gaps(&inner_margin).to_f64();
+                let global_location = e.global_location().clamp(text_area.min(), text_area.max());
+                let location = (global_location - text_area.min()).to_point();
                 editable.process_event(EditableEvent::Down {
                     location,
                     editor_line: EditorLine::SingleParagraph,
@@ -533,14 +602,14 @@ impl Component for Input {
 
         let on_global_pointer_move = move |e: Event<PointerEventData>| {
             if a11y_id.is_focused() && *is_dragging.read() {
-                let mut location = e.global_location();
-                location.x -= area.read().min_x() as f64;
-                location.y -= area.read().min_y() as f64;
+                let text_area = area.read().without_gaps(&inner_margin).to_f64();
+                let location = (e.global_location() - text_area.min()).to_point();
                 editable.process_event(EditableEvent::Move {
                     location,
                     editor_line: EditorLine::SingleParagraph,
                     holder: &holder.read(),
                 });
+                follow_cursor();
             }
         };
 
@@ -600,6 +669,14 @@ impl Component for Input {
             }
         };
 
+        let on_paragraph_sized = move |e: Event<SizedEventData>| {
+            let text_width_changed = area.peek().width() != e.area.width();
+            area.set_if_modified(e.area);
+            if text_width_changed {
+                follow_cursor();
+            }
+        };
+
         let (background, cursor_index, text_selection) = if enabled() && focus() != Focus::Not {
             (
                 theme_colors.focus_background,
@@ -632,7 +709,7 @@ impl Component for Input {
         };
 
         let value = self.value.read();
-        let a11y_text: Cow<str> = match (self.mode.clone(), &self.placeholder) {
+        let a11y_text: Cow<str> = match (self.mode, &self.placeholder) {
             (_, Some(ph)) if display_placeholder => Cow::Borrowed(ph.as_ref()),
             (InputMode::Hidden(ch), _) => Cow::Owned(ch.to_string().repeat(value.len())),
             (InputMode::Shown, _) => Cow::Borrowed(value.as_ref()),
@@ -673,15 +750,16 @@ impl Component for Input {
                     .map(|leading| rect().padding(Gaps::new(0., 0., 0., 8.)).child(leading)),
             )
             .child(
-                ScrollView::new()
+                ScrollView::new_controlled(scroll_controller)
                     .width(Size::flex(1.))
                     .height(Size::Inner)
                     .direction(Direction::Horizontal)
                     .show_scrollbar(false)
+                    .on_sized(move |e: Event<SizedEventData>| viewport_area.set_if_modified(e.area))
                     .child(
                         paragraph()
                             .holder(holder.read().clone())
-                            .on_sized(move |e: Event<SizedEventData>| area.set(e.visible_area))
+                            .on_sized(on_paragraph_sized)
                             .min_width(Size::func(move |context| {
                                 Some(context.parent - theme_layout.inner_margin.horizontal())
                             }))
@@ -700,7 +778,7 @@ impl Component for Input {
                                 let editor = editable.editor().read();
                                 if editor.has_preedit() {
                                     let (b, p, a) = editor.preedit_text_segments();
-                                    let (b, p, a) = match self.mode.clone() {
+                                    let (b, p, a) = match self.mode {
                                         InputMode::Hidden(ch) => {
                                             let ch = ch.to_string();
                                             (
@@ -717,7 +795,7 @@ impl Component for Input {
                                         )
                                         .span(a)
                                 } else {
-                                    let text = match self.mode.clone() {
+                                    let text = match self.mode {
                                         InputMode::Hidden(ch) => {
                                             ch.to_string().repeat(editor.rope().len_chars())
                                         }

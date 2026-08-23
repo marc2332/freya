@@ -134,6 +134,7 @@ impl ElementExt for LabelElement {
         if self.text != label.text {
             diff.insert(DiffModifies::STYLE);
             diff.insert(DiffModifies::LAYOUT);
+            diff.insert(DiffModifies::ACCESSIBILITY);
         }
 
         if self.accessibility != label.accessibility {
@@ -184,6 +185,10 @@ impl ElementExt for LabelElement {
 
     fn accessibility(&'_ self) -> Cow<'_, AccessibilityData> {
         Cow::Borrowed(&self.accessibility)
+    }
+
+    fn finish_accessibility(&self, builder: &mut accesskit::Node) {
+        builder.set_value(self.text.clone());
     }
 
     fn layer(&self) -> Layer {
@@ -349,7 +354,7 @@ impl LayerExt for Label {
 
 impl MaybeExt for Label {}
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Label {
     key: DiffKey,
     element: LabelElement,

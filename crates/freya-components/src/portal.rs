@@ -130,13 +130,17 @@ impl<T: Clone + Eq + Hash + Debug + 'static> Component for Portal<T> {
         let mut should_animate = use_state(|| false);
 
         let mut animation = use_animation_with_dependencies(
-            &(self.function, self.duration, self.ease),
-            move |conf, (function, duration, ease)| {
+            &(
+                self.function,
+                self.duration,
+                self.ease,
+                previous_size(),
+                current_size(),
+            ),
+            move |conf, (function, duration, ease, previous_size, current_size)| {
                 conf.on_change(OnChange::Nothing);
-                let from_size = previous_size
-                    .read()
-                    .unwrap_or(init_size.unwrap_or_default());
-                let to_size = current_size.read().unwrap_or_default();
+                let from_size = previous_size.or(init_size).unwrap_or_default();
+                let to_size = current_size.unwrap_or_default();
                 (
                     AnimNum::new(from_size.origin.x, to_size.origin.x)
                         .duration(*duration)

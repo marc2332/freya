@@ -57,10 +57,6 @@ pub struct EventProxy {
 }
 
 impl EventListener for EventProxy {
-    fn event(&self) -> (Option<RioEvent>, bool) {
-        (None, false)
-    }
-
     fn send_event(&self, event: RioEvent, _window_id: WindowId) {
         match event {
             RioEvent::PtyWrite(_route, text) => {
