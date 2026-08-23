@@ -2043,12 +2043,12 @@ fn replay_nested_keyed_layouts(history: &[NestedLayout]) {
     let mut tree = Tree::default();
     let mut layout = runner.provide_root_context(|| State::create(NestedLayout::new()));
     let mutations = runner.sync_and_update();
-    tree.apply_mutations(mutations);
+    tree.apply_mutations(mutations, 1.0);
 
     for step in history {
         layout.set(step.clone());
         let mutations = runner.sync_and_update();
-        tree.apply_mutations(mutations);
+        tree.apply_mutations(mutations, 1.0);
         tree.verify_tree_integrity();
         assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 
