@@ -283,8 +283,10 @@ fn mocked_query() {
         app,
         (200., 200.).into(),
         |runner| {
-            runner.provide_root_context(|| {
-                QueriesStorage::<GetUserName>::mocked(|_keys| Ok("Mocked".to_string()))
+            runner.run_in(|| {
+                GlobalContexts::get().insert_context(QueriesStorage::<GetUserName>::mocked(
+                    |_keys| Ok("Mocked".to_string()),
+                ))
             })
         },
         1.,
@@ -320,11 +322,13 @@ fn mocked_async_query() {
         app,
         (200., 200.).into(),
         |runner| {
-            runner.provide_root_context(|| {
-                QueriesStorage::<GetUserName>::mocked_async(|keys| async move {
-                    Timer::after(std::time::Duration::from_millis(20)).await;
-                    Ok(format!("Mocked {keys}"))
-                })
+            runner.run_in(|| {
+                GlobalContexts::get().insert_context(QueriesStorage::<GetUserName>::mocked_async(
+                    |keys| async move {
+                        Timer::after(std::time::Duration::from_millis(20)).await;
+                        Ok(format!("Mocked {keys}"))
+                    },
+                ))
             })
         },
         1.,

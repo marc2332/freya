@@ -38,25 +38,7 @@ use crate::{
 /// # }
 /// ```
 pub fn spawn_forever(future: impl Future<Output = ()> + 'static) -> TaskHandle {
-    CurrentContext::with(|context| {
-        let task_id = TaskId(context.task_id_counter.fetch_add(1, Ordering::Relaxed));
-        context.tasks.borrow_mut().insert(
-            task_id,
-            Rc::new(RefCell::new(Task {
-                scope_id: ScopeId::ROOT,
-                future: Box::pin(future),
-                waker: futures_util::task::waker(Arc::new(TaskWaker {
-                    task_id,
-                    sender: context.sender.clone(),
-                })),
-            })),
-        );
-        context
-            .sender
-            .unbounded_send(Message::PollTask(task_id))
-            .unwrap();
-        task_id.into()
-    })
+    spawn_in_scope(future, ScopeId::ROOT)
 }
 
 /// Spawn a task attached to the current component scope.
@@ -78,12 +60,21 @@ pub fn spawn_forever(future: impl Future<Output = ()> + 'static) -> TaskHandle {
 /// # }
 /// ```
 pub fn spawn(future: impl Future<Output = ()> + 'static) -> TaskHandle {
+    spawn_in_scope(future, None)
+}
+
+/// Spawn a task attached to the given scope, or to the current one when passing `None`.
+pub fn spawn_in_scope(
+    future: impl Future<Output = ()> + 'static,
+    scope_id: impl Into<Option<ScopeId>>,
+) -> TaskHandle {
+    let scope_id = scope_id.into().unwrap_or_else(current_scope_id);
     CurrentContext::with(|context| {
         let task_id = TaskId(context.task_id_counter.fetch_add(1, Ordering::Relaxed));
         context.tasks.borrow_mut().insert(
             task_id,
             Rc::new(RefCell::new(Task {
-                scope_id: current_scope_id(),
+                scope_id,
                 future: Box::pin(future),
                 waker: futures_util::task::waker(Arc::new(TaskWaker {
                     task_id,

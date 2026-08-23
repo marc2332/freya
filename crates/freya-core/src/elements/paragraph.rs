@@ -216,6 +216,7 @@ impl ElementExt for ParagraphElement {
         if self.spans != paragraph.spans || self.contents != paragraph.contents {
             diff.insert(DiffModifies::STYLE);
             diff.insert(DiffModifies::LAYOUT);
+            diff.insert(DiffModifies::ACCESSIBILITY);
         }
 
         if self.accessibility != paragraph.accessibility {
@@ -281,6 +282,15 @@ impl ElementExt for ParagraphElement {
 
     fn accessibility(&'_ self) -> Cow<'_, AccessibilityData> {
         Cow::Borrowed(&self.accessibility)
+    }
+
+    fn finish_accessibility(&self, builder: &mut accesskit::Node) {
+        builder.set_value(
+            self.spans
+                .iter()
+                .map(|span| span.text.as_ref())
+                .collect::<String>(),
+        );
     }
 
     fn layer(&self) -> Layer {
@@ -915,8 +925,6 @@ impl Paragraph {
 
     /// Append every [`Span`] yielded by the iterator to the paragraph.
     pub fn spans_iter(mut self, spans: impl Iterator<Item = Span<'static>>) -> Self {
-        // TODO: Accessible paragraphs
-        // self.element.accessibility.builder.set_value(text.clone());
         for span in spans {
             self.push_span(span);
         }
@@ -925,8 +933,6 @@ impl Paragraph {
 
     /// Append a single [`Span`] of styled text to the paragraph.
     pub fn span(mut self, span: impl Into<Span<'static>>) -> Self {
-        // TODO: Accessible paragraphs
-        // self.element.accessibility.builder.set_value(text.clone());
         self.push_span(span.into());
         self
     }

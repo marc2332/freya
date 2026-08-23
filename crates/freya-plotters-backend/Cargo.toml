@@ -16,6 +16,3 @@ workspace = true
 [dependencies]
 freya-engine = { workspace = true }
 plotters-backend = "0.3.7"
-
-[dev-dependencies]
-plotters = "0.3.7"

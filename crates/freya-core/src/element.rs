@@ -164,6 +164,9 @@ pub trait ElementExt: Any {
             ],
         )
     }
+
+    /// Mutate the accessibility node right before it enters the accessibility tree.
+    fn finish_accessibility(&self, _builder: &mut accesskit::Node) {}
 }
 
 #[allow(dead_code)]

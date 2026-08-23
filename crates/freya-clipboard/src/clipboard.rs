@@ -29,11 +29,13 @@ pub enum ClipboardError {
 pub struct Clipboard;
 
 impl Clipboard {
+    #[track_caller]
     pub(crate) fn create_or_create() -> State<Option<Box<dyn ClipboardProvider>>> {
         consume_root_context()
     }
 
     // Read from the clipboard
+    #[track_caller]
     pub fn get() -> Result<String, ClipboardError> {
         Self::create_or_create()
             .write()
@@ -44,6 +46,7 @@ impl Clipboard {
     }
 
     // Write to the clipboard
+    #[track_caller]
     pub fn set(contents: String) -> Result<(), ClipboardError> {
         Self::create_or_create()
             .write()

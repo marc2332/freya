@@ -29,4 +29,3 @@ pulldown-cmark = "0.13"
 
 [dev-dependencies]
 freya = { path = "../freya", features = ["markdown"] }
-freya-testing = { path = "../freya-testing" }
