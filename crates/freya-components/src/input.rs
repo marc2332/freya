@@ -189,6 +189,8 @@ pub struct Input {
     mode: InputMode,
     auto_focus: bool,
     width: Size,
+    height: Size,
+    multiline: bool,
     enabled: bool,
     key: DiffKey,
     style_variant: InputStyleVariant,
@@ -197,7 +199,7 @@ pub struct Input {
     a11y_id: Option<AccessibilityId>,
     leading: Option<Element>,
     trailing: Option<Element>,
-    on_pre_key_down: Callback<Event<KeyboardEventData>, bool>,
+    on_pre_key_down: Option<Callback<Event<KeyboardEventData>, bool>>,
 }
 
 impl KeyExt for Input {
@@ -218,6 +220,8 @@ impl Input {
             mode: InputMode::default(),
             auto_focus: false,
             width: Size::px(150.),
+            height: Size::default(),
+            multiline: false,
             enabled: true,
             key: DiffKey::default(),
             style_variant: InputStyleVariant::Normal,
@@ -226,17 +230,7 @@ impl Input {
             a11y_id: None,
             leading: None,
             trailing: None,
-            on_pre_key_down: Callback::new(|e: Event<KeyboardEventData>| match &e.key {
-                Key::Named(NamedKey::Enter)
-                | Key::Named(NamedKey::Escape)
-                | Key::Named(NamedKey::Shift) => true,
-                Key::Named(NamedKey::Tab) => false,
-                _ => {
-                    e.stop_propagation();
-                    e.prevent_default();
-                    true
-                }
-            }),
+            on_pre_key_down: None,
         }
     }
 
@@ -272,6 +266,18 @@ impl Input {
 
     pub fn width(mut self, width: impl Into<Size>) -> Self {
         self.width = width.into();
+        self
+    }
+
+    pub fn height(mut self, height: impl Into<Size>) -> Self {
+        self.height = height.into();
+        self
+    }
+
+    /// Allow writing multiple lines, `Enter` inserts a line break instead of submitting.
+    /// Combine it with [Self::height] to get a scrollable input of a bounded size.
+    pub fn multiline(mut self, multiline: impl Into<bool>) -> Self {
+        self.multiline = multiline.into();
         self
     }
 
@@ -343,7 +349,7 @@ impl Input {
         mut self,
         on_pre_key_down: impl Into<Callback<Event<KeyboardEventData>, bool>>,
     ) -> Self {
-        self.on_pre_key_down = on_pre_key_down.into();
+        self.on_pre_key_down = Some(on_pre_key_down.into());
         self
     }
 }
@@ -433,6 +439,7 @@ impl Component for Input {
         let mode = self.mode;
         let text_align = self.text_align;
         let inner_margin = theme_layout.inner_margin;
+        let multiline = self.multiline;
         let mut follow_cursor = move || {
             if !a11y_id.is_focused() || display_placeholder {
                 return;
@@ -467,14 +474,30 @@ impl Component for Input {
             let cursor_x = cursor_rect.left / (*scale_factor as f32);
 
             // Visible window start
-            let visible_start = viewport.min_x() - area.peek().min_x();
+            let visible_start_x = viewport.min_x() - area.peek().min_x();
 
             // Minimally reveal the cursor
-            if cursor_x < visible_start {
+            if cursor_x < visible_start_x {
                 scroll_controller.scroll_to_x(-cursor_x as i32);
-            } else if cursor_x + inner_margin.horizontal() > visible_start + viewport.width() {
+            } else if cursor_x + inner_margin.horizontal() > visible_start_x + viewport.width() {
                 scroll_controller
                     .scroll_to_x(-(cursor_x + inner_margin.horizontal() - viewport.width()) as i32);
+            }
+
+            if multiline {
+                let cursor_top = cursor_rect.top / (*scale_factor as f32);
+                let cursor_bottom = cursor_rect.bottom / (*scale_factor as f32);
+                let visible_start_y = viewport.min_y() - area.peek().min_y();
+
+                if cursor_top < visible_start_y {
+                    scroll_controller.scroll_to_y(-cursor_top as i32);
+                } else if cursor_bottom + inner_margin.vertical()
+                    > visible_start_y + viewport.height()
+                {
+                    scroll_controller.scroll_to_y(
+                        -(cursor_bottom + inner_margin.vertical() - viewport.height()) as i32,
+                    );
+                }
             }
         };
 
@@ -487,7 +510,18 @@ impl Component for Input {
             }
         };
 
-        let on_pre_key_down = self.on_pre_key_down.clone();
+        let on_pre_key_down = self.on_pre_key_down.clone().unwrap_or_else(|| {
+            Callback::new(move |e: Event<KeyboardEventData>| match &e.key {
+                Key::Named(NamedKey::Enter) if !multiline => true,
+                Key::Named(NamedKey::Escape) | Key::Named(NamedKey::Shift) => true,
+                Key::Named(NamedKey::Tab) => false,
+                _ => {
+                    e.stop_propagation();
+                    e.prevent_default();
+                    true
+                }
+            })
+        });
         let on_key_down = move |e: Event<KeyboardEventData>| {
             let key = e.key.clone();
             let modifiers = e.modifiers;
@@ -498,7 +532,7 @@ impl Component for Input {
 
             match &key {
                 // On submit
-                Key::Named(NamedKey::Enter) => {
+                Key::Named(NamedKey::Enter) if !multiline => {
                     if let Some(on_submit) = &on_submit {
                         let text = editable.editor().peek().committed_text();
                         on_submit.call(text);
@@ -671,9 +705,9 @@ impl Component for Input {
         };
 
         let on_paragraph_sized = move |e: Event<SizedEventData>| {
-            let text_width_changed = area.peek().width() != e.area.width();
+            let text_size_changed = area.peek().size != e.area.size;
             area.set_if_modified(e.area);
-            if text_width_changed {
+            if text_size_changed {
                 follow_cursor();
             }
         };
@@ -718,6 +752,7 @@ impl Component for Input {
 
         let a11_role = match self.mode {
             InputMode::Hidden(_) => AccessibilityRole::PasswordInput,
+            _ if self.multiline => AccessibilityRole::MultilineTextInput,
             _ => AccessibilityRole::TextInput,
         };
 
@@ -739,6 +774,7 @@ impl Component for Input {
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
             .width(self.width.clone())
+            .height(self.height.clone())
             .background(background.mul_if(!self.enabled, 0.85))
             .border(border)
             .corner_radius(theme_layout.corner_radius)
@@ -753,9 +789,17 @@ impl Component for Input {
             .child(
                 ScrollView::new_controlled(scroll_controller)
                     .width(Size::flex(1.))
-                    .height(Size::Inner)
-                    .direction(Direction::Horizontal)
-                    .show_scrollbar(false)
+                    .height(if self.multiline && !matches!(self.height, Size::Inner) {
+                        Size::fill()
+                    } else {
+                        Size::Inner
+                    })
+                    .direction(if self.multiline {
+                        Direction::Vertical
+                    } else {
+                        Direction::Horizontal
+                    })
+                    .show_scrollbar(self.multiline)
                     .on_sized(move |e: Event<SizedEventData>| viewport_area.set_if_modified(e.area))
                     .child(
                         paragraph()
@@ -764,13 +808,18 @@ impl Component for Input {
                             .min_width(Size::func(move |context| {
                                 Some(context.parent - theme_layout.inner_margin.horizontal())
                             }))
+                            .maybe(self.multiline, |el| {
+                                el.max_width(Size::func(move |context| {
+                                    Some(context.parent - theme_layout.inner_margin.horizontal())
+                                }))
+                            })
                             .maybe(self.enabled, |el| el.on_focus_press(on_focus_press))
                             .margin(theme_layout.inner_margin)
                             .cursor_index(cursor_index)
                             .cursor_color(cursor_color)
                             .color(color)
                             .text_align(self.text_align)
-                            .max_lines(1)
+                            .maybe(!self.multiline, |el| el.max_lines(1))
                             .highlights(text_selection.map(|h| vec![h]))
                             .maybe(display_placeholder, |el| {
                                 el.span(self.placeholder.as_ref().unwrap().to_string())
