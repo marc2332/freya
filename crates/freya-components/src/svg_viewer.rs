@@ -111,6 +111,8 @@ fn store_raster(
 /// Rasterizes the SVG synchronously or asynchronously and caches the result.
 /// See [`ImageSource`] for all supported sources.
 ///
+/// Snaps to the pixels grid by default, opt out with `.snap_to_grid(false)`.
+///
 /// # Example
 ///
 /// ```rust
