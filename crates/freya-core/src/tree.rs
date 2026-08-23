@@ -352,6 +352,7 @@ impl Tree {
         let mut text_style_cascades: Vec<NodeId> = Vec::new();
         let mut styled_nodes: FxHashSet<NodeId> = FxHashSet::default();
 
+        #[cfg(debug_assertions)]
         assert_eq!(dirty.len(), FxHashSet::from_iter(&dirty).len());
 
         hotpath::measure_block!("dirty run", {

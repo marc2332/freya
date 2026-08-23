@@ -63,6 +63,7 @@ pub struct Platform {
 
 impl Platform {
     /// Retrieve the [`Platform`] from the root context.
+    #[track_caller]
     pub fn get() -> Self {
         consume_root_context()
     }

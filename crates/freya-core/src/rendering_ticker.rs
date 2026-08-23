@@ -12,6 +12,7 @@ pub struct RenderingTicker {
 }
 
 impl RenderingTicker {
+    #[track_caller]
     pub fn get() -> Self {
         consume_root_context()
     }

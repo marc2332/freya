@@ -75,6 +75,7 @@ impl<R: Routable + 'static + PartialEq> Component for AnimatedRouter<R> {
 }
 
 /// Shortcut to get access to the [AnimatedRouterContext].
+#[track_caller]
 pub fn use_animated_router<Route: Routable + PartialEq>() -> State<AnimatedRouterContext<Route>> {
     use_consume()
 }

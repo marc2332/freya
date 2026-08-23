@@ -52,6 +52,7 @@ impl ContextMenu {
     /// # Panics
     ///
     /// Panics if no [`ContextMenuViewer`] is mounted in an ancestor scope.
+    #[track_caller]
     pub fn get() -> Self {
         try_consume_root_context()
             .expect("ContextMenu requires a `ContextMenuViewer` in an ancestor scope")
