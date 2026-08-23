@@ -108,7 +108,9 @@ impl EmbeddedFreya {
     /// Advances one frame, applying the tree mutations and measuring layout.
     fn advance(&mut self) {
         let mutations = self.runner.sync_and_update();
-        self.runner.run_in(|| self.tree.apply_mutations(mutations));
+        let scale_factor = self.scale_factor as f32;
+        self.runner
+            .run_in(|| self.tree.apply_mutations(mutations, scale_factor));
         self.tree.measure_layout(
             self.size,
             &mut self.font_collection,

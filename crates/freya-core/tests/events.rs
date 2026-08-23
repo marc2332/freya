@@ -62,7 +62,7 @@ fn event_propagate() {
     assert!(!mutations.added.is_empty());
     assert!(mutations.modified.is_empty());
     assert!(mutations.removed.is_empty());
-    tree.apply_mutations(mutations);
+    tree.apply_mutations(mutations, 1.0);
     assert_eq!(
         tree.children,
         convert_ids(FxHashMap::from_iter([
@@ -78,7 +78,7 @@ fn event_propagate() {
     assert!(mutations.added.is_empty());
     assert!(mutations.modified.is_empty());
     assert!(mutations.removed.is_empty());
-    tree.apply_mutations(mutations);
+    tree.apply_mutations(mutations, 1.0);
     assert_eq!(
         tree.children,
         convert_ids(FxHashMap::from_iter([
@@ -100,7 +100,7 @@ fn event_propagate() {
     assert!(mutations.added.is_empty());
     assert!(!mutations.modified.is_empty());
     assert!(mutations.removed.is_empty());
-    tree.apply_mutations(mutations);
+    tree.apply_mutations(mutations, 1.0);
     assert_eq!(
         tree.children,
         convert_ids(FxHashMap::from_iter([
