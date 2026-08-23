@@ -703,6 +703,12 @@ where
         self.get_image_data().image_cover = image_cover;
         self
     }
+
+    /// Snap the image to the pixels grid. Defaults to `false`, but `SvgViewer` enables it.
+    fn snap_to_grid(mut self, snap_to_grid: bool) -> Self {
+        self.get_image_data().snap_to_grid = snap_to_grid;
+        self
+    }
 }
 
 /// Methods for describing an element in the accessibility tree.
