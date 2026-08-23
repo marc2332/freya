@@ -652,17 +652,33 @@ impl Tree {
             &mut Some(layout_adapter),
             &mut tree_adapter,
         );
-        self.measure_visible_events(nodes_state, scale_factor);
+        self.measure_visibility_events(nodes_state, scale_factor);
         events_sender
             .unbounded_send(EventsChunk::Batch(self.events.drain(..).collect()))
             .unwrap();
     }
 
-    /// Measure all the Visible listeners, emitting events for those that just became visible.
-    fn measure_visible_events(&mut self, nodes_state: &mut NodesState<NodeId>, scale_factor: f64) {
+    /// Measure the Visible and Hidden listeners, emitting events for those whose visibility just changed.
+    fn measure_visibility_events(
+        &mut self,
+        nodes_state: &mut NodesState<NodeId>,
+        scale_factor: f64,
+    ) {
+        let visible_listeners = self.listeners.get(&EventName::Visible);
+        let hidden_listeners = self.listeners.get(&EventName::Hidden);
+        let listeners = visible_listeners
+            .into_iter()
+            .flatten()
+            .map(|node_id| (node_id, EventName::Visible))
+            .chain(
+                hidden_listeners
+                    .into_iter()
+                    .flatten()
+                    .map(|node_id| (node_id, EventName::Hidden)),
+            );
+
         let mut visible_nodes = FxHashSet::default();
-        let listeners = self.listeners.get(&EventName::Visible);
-        for node_id in listeners.into_iter().flatten() {
+        for (node_id, event_name) in listeners {
             let Some(layout_node) = self.layout.get(node_id) else {
                 continue;
             };
@@ -670,22 +686,28 @@ impl Tree {
                 && self.effect_state.get(node_id).is_none_or(|effect_state| {
                     effect_state.is_visible(&self.layout, &layout_node.area)
                 });
-            if !is_visible {
+            if is_visible {
+                visible_nodes.insert(*node_id);
+            }
+
+            let was_visible = nodes_state.is_visible(*node_id);
+            let just_changed = match event_name {
+                EventName::Visible => is_visible && !was_visible,
+                _ => !is_visible && was_visible,
+            };
+            if !just_changed {
                 continue;
             }
 
-            visible_nodes.insert(*node_id);
-            if !nodes_state.is_visible(*node_id) {
-                let mut data = VisibleEventData::new(layout_node.area);
-                data.div(scale_factor as f32);
-                self.events.push(EmmitableEvent {
-                    node_id: *node_id,
-                    name: EventName::Visible,
-                    data: EventType::Visible(data),
-                    bubbles: false,
-                    source_event: EventName::Visible,
-                });
-            }
+            let mut data = VisibleEventData::new(layout_node.area);
+            data.div(scale_factor as f32);
+            self.events.push(EmmitableEvent {
+                node_id: *node_id,
+                name: event_name,
+                data: EventType::Visible(data),
+                bubbles: false,
+                source_event: event_name,
+            });
         }
         nodes_state.set_visible_nodes(visible_nodes);
     }
