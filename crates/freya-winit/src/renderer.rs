@@ -1052,7 +1052,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 }
 
                 WindowEvent::CursorLeft { .. } => {
-                    if app.mouse_state == ElementState::Released {
+                    if std::mem::replace(&mut app.mouse_state, ElementState::Released)
+                        == ElementState::Released
+                    {
                         app.position = CursorPoint::from((-1., -1.));
                         app.process_platform_events(vec![PlatformEvent::Mouse {
                             name: MouseEventName::MouseMove,

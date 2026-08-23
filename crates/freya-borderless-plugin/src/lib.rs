@@ -140,9 +140,7 @@ impl Component for BorderlessRoot {
         rect()
             .expanded()
             .child(self.inner.clone())
-            .child(ResizeBands {
-                thickness: self.thickness,
-            })
+            .child(ResizeBands::new(self.thickness))
     }
 }
 
@@ -165,18 +163,29 @@ pub fn use_maximized() -> State<bool> {
 /// Invisible bands along the window borders that drive a native resize.
 #[derive(PartialEq)]
 pub struct ResizeBands {
-    /// How far into the window each band reaches.
-    pub thickness: f32,
+    thickness: f32,
+    key: DiffKey,
+}
+
+impl KeyExt for ResizeBands {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
+}
+
+impl ResizeBands {
+    /// Create the bands, with `thickness` as how far into the window each one reaches.
+    pub fn new(thickness: f32) -> Self {
+        Self {
+            thickness,
+            key: DiffKey::None,
+        }
+    }
 }
 
 impl Component for ResizeBands {
     fn render(&self) -> impl IntoElement {
         let maximized = use_maximized();
-
-        if maximized() {
-            return rect().into_element();
-        }
-
         let size = *Platform::get().root_size.read();
         let thickness = self.thickness;
 
@@ -184,12 +193,13 @@ impl Component for ResizeBands {
             .layer(Layer::Overlay)
             .width(Size::px(0.))
             .height(Size::px(0.))
-            .children(
-                DIRECTIONS
-                    .iter()
-                    .map(|direction| band(*direction, size, thickness)),
-            )
-            .into_element()
+            .maybe(!maximized(), |el| {
+                el.children(
+                    DIRECTIONS
+                        .iter()
+                        .map(|direction| band(*direction, size, thickness)),
+                )
+            })
     }
 }
 
@@ -220,8 +230,7 @@ fn band(direction: ResizeDirection, size: Size2D, thickness: f32) -> Element {
         )
         .width(Size::px(area.width()))
         .height(Size::px(area.height()))
-        .on_pointer_enter(move |_| Cursor::set(cursor(direction)))
-        .on_pointer_leave(move |_| Cursor::set(CursorIcon::Default))
+        .cursor(cursor(direction))
         .on_pointer_down(move |_| {
             Platform::get().with_window(None, move |window| {
                 let _ = window.drag_resize_window(direction);
@@ -232,13 +241,9 @@ fn band(direction: ResizeDirection, size: Size2D, thickness: f32) -> Element {
 
 fn cursor(direction: ResizeDirection) -> CursorIcon {
     match direction {
-        ResizeDirection::North => CursorIcon::NResize,
-        ResizeDirection::South => CursorIcon::SResize,
-        ResizeDirection::West => CursorIcon::WResize,
-        ResizeDirection::East => CursorIcon::EResize,
-        ResizeDirection::NorthWest => CursorIcon::NwResize,
-        ResizeDirection::NorthEast => CursorIcon::NeResize,
-        ResizeDirection::SouthWest => CursorIcon::SwResize,
-        ResizeDirection::SouthEast => CursorIcon::SeResize,
+        ResizeDirection::North | ResizeDirection::South => CursorIcon::NsResize,
+        ResizeDirection::West | ResizeDirection::East => CursorIcon::EwResize,
+        ResizeDirection::NorthWest | ResizeDirection::SouthEast => CursorIcon::NwseResize,
+        ResizeDirection::NorthEast | ResizeDirection::SouthWest => CursorIcon::NeswResize,
     }
 }
