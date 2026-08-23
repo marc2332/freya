@@ -174,11 +174,13 @@ fn accessibility() {
     let font_manager: FontMgr = TypefaceFontProvider::new().into();
     font_collection.set_default_font_manager(FontMgr::default(), None);
     font_collection.set_dynamic_font_manager(font_manager.clone());
+    let mut nodes_state = NodesState::default();
     tree.measure_layout(
         Size2D::new(1000.0, 1000.0),
         &mut font_collection,
         &font_manager,
         &events_sender,
+        &mut nodes_state,
         1.0,
         &[],
     );
