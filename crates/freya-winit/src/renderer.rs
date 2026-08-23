@@ -800,6 +800,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 &mut self.font_collection,
                                 &self.font_manager,
                                 &app.events_sender,
+                                &mut app.nodes_state,
                                 scale_factor,
                                 &self.fallback_fonts,
                             );
