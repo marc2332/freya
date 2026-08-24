@@ -26,17 +26,13 @@ blocking = { workspace = true }
 futures-channel = { workspace = true }
 futures-lite = { workspace = true }
 
-blitz-dom = { version = "=0.3.0-beta.1", features = [
-  "default",
-  "floats",
-  "incremental",
-] }
-blitz-html = "=0.3.0-beta.1"
-blitz-paint = "=0.3.0-beta.1"
-blitz-traits = "=0.3.0-beta.1"
+blitz-dom = { version = "=0.3.0-beta.2", features = ["default", "floats"] }
+blitz-html = "=0.3.0-beta.2"
+blitz-paint = "=0.3.0-beta.2"
+blitz-traits = "=0.3.0-beta.2"
 atomic_refcell = "0.1"
 
-anyrender = "0.11"
+anyrender = "0.13"
 kurbo = "0.13.1"
 peniko = "0.6"
 hashbrown = "0.17.0"
