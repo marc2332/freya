@@ -147,6 +147,29 @@
 //! `stop_propagation` has no effect on them. A non-global handler that calls
 //! `prevent_default` will, however, suppress the matching global event for that dispatch.
 //!
+//! ## Multi press combos
+//!
+//! [`EventsCombos`](freya_core::prelude::EventsCombos) turns consecutive presses into a
+//! [`PressEventType`](freya_core::prelude::PressEventType). Up to four presses in a row form a
+//! combo while they happen within 500ms of each other and without moving the pointer away.
+//!
+//! ```rust, no_run
+//! # use freya::prelude::*;
+//! # fn app() -> impl IntoElement {
+//! rect().on_pointer_down(|e: Event<PointerEventData>| {
+//!     match EventsCombos::pressed(e.global_location()) {
+//!         PressEventType::Single => println!("Move the cursor"),
+//!         PressEventType::Double => println!("Select the word"),
+//!         PressEventType::Triple => println!("Select the line"),
+//!         PressEventType::Quadruple => println!("Select everything"),
+//!     }
+//! })
+//! # }
+//! ```
+//!
+//! The combo is shared by the whole app and every call advances it, so call `pressed` once per
+//! press.
+//!
 //! ## Components don't have events
 //!
 //! Components are just data and a `render` method. To expose a "click" or "change" hook from
