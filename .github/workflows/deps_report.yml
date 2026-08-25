@@ -43,14 +43,9 @@ jobs:
     - name: Build with default features
       run: just bd
 
-    - name: Print dependencies
+    - name: Count dependencies
       shell: bash
       run: |
-        just deps | tee deps.txt
-        {
-          echo "## Dependencies on ${{ matrix.os }}"
-          echo
-          echo '```'
-          cat deps.txt
-          echo '```'
-        } >> "$GITHUB_STEP_SUMMARY"
+        count=$(just deps-count)
+        echo "$count"
+        echo "${{ matrix.os }}: $count" >> "$GITHUB_STEP_SUMMARY"
