@@ -77,6 +77,13 @@ pc-ci:
 ba:
     cargo build --all-targets --workspace -F freya/all-debug
 
+bd:
+    cargo build --package freya
+
+deps:
+    cargo tree --package freya --edges normal --depth 0 --format "{p} [{f}]"
+    cargo tree --package freya --edges normal
+
 dev-app:
     cargo run --package freya-devtools-app
 
