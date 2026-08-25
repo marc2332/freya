@@ -84,7 +84,6 @@ use crate::{
     },
 };
 
-/// Root context holding the [`WindowId`] of the window a component tree belongs to.
 #[derive(Clone, Copy)]
 pub struct CurrentWindowId(pub WindowId);
 
