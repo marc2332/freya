@@ -84,6 +84,10 @@ use crate::{
     },
 };
 
+/// Root context holding the [`WindowId`] of the window a component tree belongs to.
+#[derive(Clone, Copy)]
+pub struct CurrentWindowId(pub WindowId);
+
 pub struct AppWindow {
     pub(crate) runner: Runner,
     pub(crate) tree: Tree,
@@ -252,6 +256,9 @@ impl AppWindow {
         runner.provide_root_context(|| animation_clock.clone());
 
         runner.provide_root_context(AssetCacher::create);
+
+        runner.provide_root_context(|| CurrentWindowId(window.id()));
+
         let custom_scale_factor = clamp_custom_scale_factor(window_config.custom_scale_factor);
         let scale_factor = window.scale_factor() * custom_scale_factor;
 
