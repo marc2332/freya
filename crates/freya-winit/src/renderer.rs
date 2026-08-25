@@ -861,6 +861,11 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                     },
                                     PluginHandle::new(&self.proxy),
                                 );
+
+                                for render_callback in app.render_callbacks.drain(..) {
+                                    render_callback(&mut *surface);
+                                }
+
                                 self.plugins.send(
                                     PluginEvent::BeforePresenting {
                                         window: &app.window,

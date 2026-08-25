@@ -25,6 +25,7 @@ use freya_core::{
 use freya_engine::prelude::{
     FontCollection,
     FontMgr,
+    Surface as SkiaSurface,
 };
 use futures_util::task::{
     ArcWake,
@@ -107,6 +108,8 @@ pub struct AppWindow {
 
     pub(crate) process_layout_on_next_render: bool,
     pub(crate) send_mouse_move_on_next_layout: bool,
+
+    pub(crate) render_callbacks: Vec<Box<dyn FnOnce(&mut SkiaSurface)>>,
 
     pub(crate) waker: Waker,
 
@@ -423,6 +426,8 @@ impl AppWindow {
 
             process_layout_on_next_render: true,
             send_mouse_move_on_next_layout: false,
+
+            render_callbacks: Vec::new(),
 
             waker,
 
