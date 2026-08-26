@@ -85,6 +85,8 @@ use crate::{
     },
 };
 
+pub type RenderCallback = Box<dyn FnOnce(&mut SkiaSurface)>;
+
 pub struct AppWindow {
     pub(crate) runner: Runner,
     pub(crate) tree: Tree,
@@ -109,7 +111,7 @@ pub struct AppWindow {
     pub(crate) process_layout_on_next_render: bool,
     pub(crate) send_mouse_move_on_next_layout: bool,
 
-    pub(crate) render_callbacks: Vec<Box<dyn FnOnce(&mut SkiaSurface)>>,
+    pub(crate) render_callbacks: Vec<RenderCallback>,
 
     pub(crate) waker: Waker,
 
