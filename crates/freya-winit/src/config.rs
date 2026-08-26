@@ -33,6 +33,28 @@ use crate::{
 pub type WindowBuilderHook =
     Box<dyn FnOnce(WindowAttributes, &ActiveEventLoop) -> WindowAttributes + Send + Sync>;
 pub type WindowHandleHook = Box<dyn FnOnce(&mut Window) + Send + Sync>;
+
+/// Graphics driver preference a window asks for.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum RendererPreference {
+    #[default]
+    Auto,
+    Software,
+    OpenGl,
+    Vulkan,
+}
+
+impl RendererPreference {
+    pub(crate) fn as_name(self) -> Option<&'static str> {
+        match self {
+            Self::Auto => None,
+            Self::Software => Some("software"),
+            Self::OpenGl => Some("opengl"),
+            Self::Vulkan => Some("vulkan"),
+        }
+    }
+}
+
 /// Decision returned by the `on_close` hook to determine whether a window should close.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum CloseDecision {
@@ -74,6 +96,8 @@ pub struct WindowConfig {
     pub(crate) icon: Option<Icon>,
     /// Application ID for the Window.
     pub(crate) app_id: Option<String>,
+    /// Preferred graphics backend for the Window.
+    pub(crate) renderer: RendererPreference,
     /// Hook function called with the Window Attributes.
     pub(crate) window_attributes_hook: Option<WindowBuilderHook>,
     /// Hook function called with the Window.
@@ -96,6 +120,7 @@ impl Debug for WindowConfig {
             .field("custom_scale_factor", &self.custom_scale_factor)
             .field("icon", &self.icon)
             .field("app_id", &self.app_id)
+            .field("renderer", &self.renderer)
             .finish()
     }
 }
@@ -125,6 +150,7 @@ impl WindowConfig {
             custom_scale_factor: 1.0,
             icon: None,
             app_id: None,
+            renderer: RendererPreference::default(),
             window_attributes_hook: None,
             window_handle_hook: None,
             on_close: None,
@@ -204,6 +230,12 @@ impl WindowConfig {
     /// Set the application ID for the Window, should match the `.desktop` file of your program.
     pub fn with_app_id(mut self, app_id: impl Into<String>) -> Self {
         self.app_id = Some(app_id.into());
+        self
+    }
+
+    /// Prefer a graphics backend for this Window, overriding `FREYA_RENDERER`.
+    pub fn with_renderer(mut self, renderer: RendererPreference) -> Self {
+        self.renderer = renderer;
         self
     }
 

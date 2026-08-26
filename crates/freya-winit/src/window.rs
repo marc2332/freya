@@ -68,6 +68,7 @@ use crate::{
     accessibility::AccessibilityTask,
     config::{
         OnCloseHook,
+        RendererPreference,
         WindowConfig,
     },
     drivers::GraphicsDriver,
@@ -126,6 +127,8 @@ pub struct AppWindow {
     pub(crate) on_close: Option<OnCloseHook>,
 
     pub(crate) window_attributes: WindowAttributes,
+
+    pub(crate) renderer: RendererPreference,
 
     #[cfg(feature = "hotreload")]
     pub(crate) hot_reload_pending: Arc<std::sync::atomic::AtomicBool>,
@@ -224,6 +227,7 @@ impl AppWindow {
             active_event_loop,
             window_attributes.clone(),
             gpu_resource_cache_limit,
+            window_config.renderer,
         );
 
         if let Some(window_handle_hook) = window_config.window_handle_hook.take() {
@@ -445,6 +449,8 @@ impl AppWindow {
             on_close,
 
             window_attributes,
+
+            renderer: window_config.renderer,
 
             #[cfg(feature = "hotreload")]
             hot_reload_pending,
