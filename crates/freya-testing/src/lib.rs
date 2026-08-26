@@ -94,6 +94,8 @@ pub mod prelude {
 
 type DocRunnerHook = Box<dyn FnOnce(&mut TestingRunner)>;
 
+type PendingFonts = Rc<RefCell<Vec<(Cow<'static, str>, Bytes)>>>;
+
 pub struct DocRunner {
     app: AppComponent,
     size: Size2D,
@@ -158,7 +160,9 @@ pub struct TestingRunner {
     events_sender: futures_channel::mpsc::UnboundedSender<EventsChunk>,
 
     requested_focus_strategy: Rc<RefCell<Option<AccessibilityFocusStrategy>>>,
+    pending_fonts: PendingFonts,
 
+    font_provider: TypefaceFontProvider,
     font_manager: FontMgr,
     font_collection: FontCollection,
 
@@ -199,8 +203,19 @@ impl TestingRunner {
         let requested_focus_strategy: Rc<RefCell<Option<AccessibilityFocusStrategy>>> =
             Rc::new(RefCell::new(None));
 
+        let mut font_collection = FontCollection::new();
+        let def_mgr = FontMgr::default();
+        let provider = TypefaceFontProvider::new();
+        let font_manager: FontMgr = provider.clone().into();
+        font_collection.set_default_font_manager(def_mgr, None);
+        font_collection.set_dynamic_font_manager(font_manager.clone());
+        font_collection.paragraph_cache_mut().turn_on(false);
+
+        let pending_fonts = Rc::new(RefCell::new(Vec::new()));
+
         let platform = runner.provide_root_context({
             let requested_focus_strategy = requested_focus_strategy.clone();
+            let pending_fonts = pending_fonts.clone();
             || Platform {
                 focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
                 focused_accessibility_node: State::create(accesskit::Node::new(
@@ -218,8 +233,13 @@ impl TestingRunner {
                         UserEvent::FocusAccessibilityNode(strategy) => {
                             requested_focus_strategy.borrow_mut().replace(strategy);
                         }
+                        UserEvent::LoadFont {
+                            font_name,
+                            font_data,
+                        } => {
+                            pending_fonts.borrow_mut().push((font_name, font_data));
+                        }
                         UserEvent::RequestRedraw
-                        | UserEvent::SetCursorIcon(_)
                         | UserEvent::SetCustomScaleFactor(_)
                         | UserEvent::Erased(_) => {
                             // Nothing
@@ -241,14 +261,6 @@ impl TestingRunner {
 
         let hook_result = hook(&mut runner);
 
-        let mut font_collection = FontCollection::new();
-        let def_mgr = FontMgr::default();
-        let provider = TypefaceFontProvider::new();
-        let font_manager: FontMgr = provider.into();
-        font_collection.set_default_font_manager(def_mgr, None);
-        font_collection.set_dynamic_font_manager(font_manager.clone());
-        font_collection.paragraph_cache_mut().turn_on(false);
-
         runner.provide_root_context(|| font_collection.clone());
 
         let nodes_state = NodesState::default();
@@ -267,7 +279,9 @@ impl TestingRunner {
             events_sender,
 
             requested_focus_strategy,
+            pending_fonts,
 
+            font_provider: provider,
             font_manager,
             font_collection,
 
@@ -284,31 +298,40 @@ impl TestingRunner {
     }
 
     pub fn set_fonts(&mut self, fonts: HashMap<&str, &[u8]>) {
-        let mut provider = TypefaceFontProvider::new();
         for (font_name, font_data) in fonts {
-            let ft_type = self
-                .font_collection
-                .fallback_manager()
-                .unwrap()
-                .new_from_data(font_data, None)
-                .unwrap_or_else(|| panic!("Failed to load font {font_name}."));
-            provider.register_typeface(ft_type, Some(font_name));
+            self.register_font(font_name, font_data);
         }
-        let font_manager: FontMgr = provider.into();
-        self.font_manager = font_manager.clone();
-        self.font_collection.set_dynamic_font_manager(font_manager);
+        self.invalidate_text_layout();
+    }
+
+    fn register_font(&mut self, font_name: &str, font_data: &[u8]) {
+        let typeface = self
+            .font_collection
+            .fallback_manager()
+            .unwrap()
+            .new_from_data(SkData::new_copy(font_data), None)
+            .unwrap_or_else(|| panic!("Failed to load font {font_name}."));
+        self.font_provider
+            .register_typeface(typeface, Some(font_name));
+    }
+
+    fn invalidate_text_layout(&mut self) {
+        self.font_collection.clear_caches();
+        let mut tree = self.tree.borrow_mut();
+        tree.layout.reset();
+        tree.text_cache.reset();
     }
 
     pub fn set_default_fonts(&mut self, fonts: &[Cow<'static, str>]) {
         self.default_fonts.clear();
         self.default_fonts.extend_from_slice(fonts);
-        self.tree.borrow_mut().layout.reset();
-        self.tree.borrow_mut().text_cache.reset();
+        self.invalidate_text_layout();
         self.tree.borrow_mut().measure_layout(
             self.size,
             &mut self.font_collection,
             &self.font_manager,
             &self.events_sender,
+            &mut self.nodes_state,
             self.scale_factor,
             &self.default_fonts,
         );
@@ -361,17 +384,27 @@ impl TestingRunner {
         }
 
         let mutations = self.runner.sync_and_update();
-        let result = self
-            .runner
-            .run_in(|| self.tree.borrow_mut().apply_mutations(mutations));
+        let result = self.runner.run_in(|| {
+            self.tree
+                .borrow_mut()
+                .apply_mutations(mutations, self.scale_factor as f32)
+        });
         if let Some(strategy) = result.auto_focus {
             self.requested_focus_strategy.borrow_mut().replace(strategy);
+        }
+        let pending_fonts = self.pending_fonts.take();
+        if !pending_fonts.is_empty() {
+            for (font_name, font_data) in pending_fonts {
+                self.register_font(&font_name, &font_data);
+            }
+            self.invalidate_text_layout();
         }
         self.tree.borrow_mut().measure_layout(
             self.size,
             &mut self.font_collection,
             &self.font_manager,
             &self.events_sender,
+            &mut self.nodes_state,
             self.scale_factor,
             &self.default_fonts,
         );
@@ -419,6 +452,11 @@ impl TestingRunner {
             std::thread::sleep(step);
             self.ticker_sender.notify();
         }
+    }
+
+    /// Resolve the [CursorIcon] for the currently hovered nodes.
+    pub fn cursor_icon(&self) -> CursorIcon {
+        self.tree.borrow().cursor_icon(&self.nodes_state)
     }
 
     pub fn send_event(&mut self, platform_event: PlatformEvent) {

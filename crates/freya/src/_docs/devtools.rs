@@ -42,5 +42,5 @@
 //! ## Limitations
 //!
 //! Only **one** Freya application with devtools enabled can run at a time.
-//! The embedded server listens on a fixed port (`7354` on localhost), so launching a second devtools-enabled app will fail to bind that port.
+//! The embedded server listens on a fixed port (`7354` on all interfaces), so launching a second devtools-enabled app will fail to bind that port.
 //! Make sure to close any previous devtools-enabled instance before starting a new one.

@@ -61,6 +61,7 @@
 //! - [Video](freya_video)
 //! - [Freya Query](freya_query)
 //! - [Tokio Integration](self::_docs::tokio_integration)
+//! - [Borderless Windows](self::_docs::borderless)
 //! - [Devtools](self::_docs::devtools)
 //! - [Hot Reload](self::_docs::hot_reload)
 //!
@@ -86,6 +87,7 @@
 //! - `markdown`: Reexport [freya_markdown] under [markdown].
 //! - `webview`: Reexport [freya_webview] under [webview].
 //! - `titlebar`: Enables the [TitlebarButton](components::TitlebarButton) component.
+//! - `borderless`: Reexport [freya_borderless_plugin] under [borderless]. See [Borderless Windows](self::_docs::borderless).
 //! - `terminal`: Reexport [freya_terminal] under [terminal].
 //! - `code-editor`: Reexport [freya_code_editor] under [code_editor].
 //! - `camera`: Reexport [freya_camera] under [camera].
@@ -196,7 +198,6 @@ pub mod components {
         chip::*,
         color_picker::*,
         context_menu::*,
-        cursor_area::*,
         define_theme,
         docking::*,
         drag_drop::*,
@@ -211,6 +212,7 @@ pub mod components {
         },
         image_viewer::*,
         input::*,
+        lazy::*,
         loader::*,
         menu::*,
         overflowed_content::*,
@@ -387,6 +389,13 @@ pub mod video {
 #[cfg_attr(feature = "docs", doc(cfg(feature = "performance")))]
 pub mod performance {
     pub use freya_performance_plugin::*;
+}
+
+/// Reexport `freya-borderless-plugin` when the `borderless` feature is enabled.
+#[cfg(feature = "borderless")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "borderless")))]
+pub mod borderless {
+    pub use freya_borderless_plugin::*;
 }
 
 /// Reexport `freya-markdown` when the `markdown` feature is enabled.

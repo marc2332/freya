@@ -34,6 +34,7 @@ members = [
   "./crates/freya-testing",
   "./crates/freya-i18n",
   "./crates/freya-performance-plugin",
+  "./crates/freya-borderless-plugin",
   "./crates/freya-radio",
   "./crates/freya-engine",
   "./crates/freya-devtools",
@@ -60,36 +61,37 @@ members = [
 ]
 
 [workspace.dependencies]
-freya = { path = "./crates/freya", version = "0.5.0-rc.3" }
-freya-core = { path = "./crates/freya-core", version = "0.5.0-rc.3" }
-torin = { path = "./crates/torin", version = "0.5.0-rc.3" }
-ragnarok = { path = "./crates/ragnarok", version = "0.5.0-rc.3" }
-freya-clipboard = { path = "./crates/freya-clipboard", version = "0.5.0-rc.3" }
-freya-edit = { path = "./crates/freya-edit", version = "0.5.0-rc.3" }
-freya-winit = { path = "./crates/freya-winit", version = "0.5.0-rc.3" }
-freya-components = { path = "./crates/freya-components", version = "0.5.0-rc.3" }
-freya-video = { path = "./crates/freya-video", version = "0.5.0-rc.3" }
-freya-markdown = { path = "./crates/freya-markdown", version = "0.5.0-rc.3" }
-pathgraph = { path = "./crates/pathgraph/", version = "0.5.0-rc.3" }
-freya-animation = { path = "./crates/freya-animation", version = "0.5.0-rc.3" }
-freya-router = { path = "./crates/freya-router", version = "0.5.0-rc.3" }
-freya-router-macro = { path = "./crates/freya-router-macro", version = "0.5.0-rc.3" }
-freya-testing = { path = "./crates/freya-testing", version = "0.5.0-rc.3" }
-freya-i18n = { path = "./crates/freya-i18n", version = "0.5.0-rc.3" }
-freya-performance-plugin = { path = "./crates/freya-performance-plugin", version = "0.5.0-rc.3" }
-freya-radio = { path = "./crates/freya-radio", version = "0.5.0-rc.3" }
-freya-engine = { path = "./crates/freya-engine", version = "0.5.0-rc.3" }
-freya-devtools = { path = "./crates/freya-devtools", version = "0.5.0-rc.3" }
-freya-icons = { path = "./crates/freya-icons", version = "0.5.0-rc.3" }
-freya-sdk = { path = "./crates/freya-sdk", version = "0.5.0-rc.3" }
-freya-material-design = { path = "./crates/freya-material-design", version = "0.5.0-rc.3" }
-freya-plotters-backend = { path = "./crates/freya-plotters-backend", version = "0.5.0-rc.3" }
-freya-query = { path = "./crates/freya-query", version = "0.5.0-rc.3" }
-freya-webview = { path = "./crates/freya-webview", version = "0.5.0-rc.3" }
-freya-terminal = { path = "./crates/freya-terminal", version = "0.5.0-rc.3" }
-freya-code-editor = { path = "./crates/freya-code-editor", version = "0.5.0-rc.3" }
-freya-camera = { path = "./crates/freya-camera", version = "0.5.0-rc.3" }
-freya-android = { path = "./crates/freya-android", version = "0.5.0-rc.3" }
+freya = { path = "./crates/freya", version = "0.5.0-rc.4" }
+freya-core = { path = "./crates/freya-core", version = "0.5.0-rc.4" }
+torin = { path = "./crates/torin", version = "0.5.0-rc.4" }
+ragnarok = { path = "./crates/ragnarok", version = "0.5.0-rc.4" }
+freya-clipboard = { path = "./crates/freya-clipboard", version = "0.5.0-rc.4" }
+freya-edit = { path = "./crates/freya-edit", version = "0.5.0-rc.4" }
+freya-winit = { path = "./crates/freya-winit", version = "0.5.0-rc.4" }
+freya-components = { path = "./crates/freya-components", version = "0.5.0-rc.4" }
+freya-video = { path = "./crates/freya-video", version = "0.5.0-rc.4" }
+freya-markdown = { path = "./crates/freya-markdown", version = "0.5.0-rc.4" }
+pathgraph = { path = "./crates/pathgraph/", version = "0.5.0-rc.4" }
+freya-animation = { path = "./crates/freya-animation", version = "0.5.0-rc.4" }
+freya-router = { path = "./crates/freya-router", version = "0.5.0-rc.4" }
+freya-router-macro = { path = "./crates/freya-router-macro", version = "0.5.0-rc.4" }
+freya-testing = { path = "./crates/freya-testing", version = "0.5.0-rc.4" }
+freya-i18n = { path = "./crates/freya-i18n", version = "0.5.0-rc.4" }
+freya-performance-plugin = { path = "./crates/freya-performance-plugin", version = "0.5.0-rc.4" }
+freya-borderless-plugin = { path = "./crates/freya-borderless-plugin", version = "0.5.0-rc.4" }
+freya-radio = { path = "./crates/freya-radio", version = "0.5.0-rc.4" }
+freya-engine = { path = "./crates/freya-engine", version = "0.5.0-rc.4" }
+freya-devtools = { path = "./crates/freya-devtools", version = "0.5.0-rc.4" }
+freya-icons = { path = "./crates/freya-icons", version = "0.5.0-rc.4" }
+freya-sdk = { path = "./crates/freya-sdk", version = "0.5.0-rc.4" }
+freya-material-design = { path = "./crates/freya-material-design", version = "0.5.0-rc.4" }
+freya-plotters-backend = { path = "./crates/freya-plotters-backend", version = "0.5.0-rc.4" }
+freya-query = { path = "./crates/freya-query", version = "0.5.0-rc.4" }
+freya-webview = { path = "./crates/freya-webview", version = "0.5.0-rc.4" }
+freya-terminal = { path = "./crates/freya-terminal", version = "0.5.0-rc.4" }
+freya-code-editor = { path = "./crates/freya-code-editor", version = "0.5.0-rc.4" }
+freya-camera = { path = "./crates/freya-camera", version = "0.5.0-rc.4" }
+freya-android = { path = "./crates/freya-android", version = "0.5.0-rc.4" }
 mundy = { version = "0.2.3", default-features = false, features = [
   "async-io",
   "callback",
@@ -136,7 +138,7 @@ euclid = "0.22.9"
 itertools = "0.14.0"
 
 # Rendering
-freya-skia-safe = { version = "0.98.0", features = [
+freya-skia-safe = { version = "0.99.1", features = [
   "textlayout",
   "svg",
   "webp",
@@ -189,25 +191,16 @@ freya = { workspace = true, features = ["all-crossplatform"] }
 freya-core = { workspace = true, features = ["debug-integrity", "test"] }
 freya-engine = { workspace = true }
 torin = { workspace = true }
-ragnarok = { workspace = true }
 freya-edit = { workspace = true }
-freya-router = { workspace = true }
 freya-winit = { workspace = true }
 freya-testing = { workspace = true }
 freya-i18n = { workspace = true }
 freya-performance-plugin = { workspace = true }
 freya-radio = { workspace = true }
-freya-query = { workspace = true }
-freya-icons = { workspace = true, features = ["all"] }
-freya-sdk = { workspace = true, features = ["all"] }
-freya-devtools = { workspace = true, features = ["server", "client"] }
-freya-terminal = { workspace = true }
-freya-code-editor = { workspace = true }
 tree-sitter-rust = "0.24"
 
 freya-skia-safe = { workspace = true }
 
-tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 
 rand = "0.10"
@@ -217,8 +210,6 @@ futures-lite = { workspace = true }
 futures-channel = { workspace = true }
 
 ropey = { workspace = true }
-bitflags = { workspace = true }
-keyboard-types = { workspace = true }
 
 hotpath = { workspace = true }
 
@@ -233,19 +224,21 @@ rfd = { workspace = true }
 # Hacker News example
 serde = { workspace = true }
 serde_json = { workspace = true }
-url = { workspace = true }
 open = { workspace = true }
 ureq = { workspace = true }
 blocking = { workspace = true }
 
 portable-pty = "0.9"
-vt100 = "0.16"
 futures-util = { workspace = true }
 
 [workspace.lints.clippy]
 redundant_clone = "warn"
 
 [profile.release]
+lto = true
+opt-level = 3
+
+[profile.bench]
 lto = true
 opt-level = 3
 

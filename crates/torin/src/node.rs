@@ -79,6 +79,7 @@ impl Scaled for Node {
         self.offset_x *= scale_factor;
         self.offset_y *= scale_factor;
         self.position.scale(scale_factor);
+        self.content.scale(scale_factor);
         self.spacing *= scale_factor;
     }
 }
@@ -314,6 +315,16 @@ impl Node {
             || self.height.inner_sized()
             || self.depends_on_inner
             || self.do_inner_depend_on_parent()
+    }
+
+    /// Whether the alignments of this Node resize its children.
+    pub fn alignments_change_sizes(&self) -> bool {
+        let (main_axis_inner, cross_axis_inner) = match self.direction {
+            Direction::Vertical => (self.height.inner_sized(), self.width.inner_sized()),
+            Direction::Horizontal => (self.width.inner_sized(), self.height.inner_sized()),
+        };
+        (self.main_alignment.is_not_start() && main_axis_inner)
+            || (self.cross_alignment.is_not_start() && cross_axis_inner)
     }
 
     /// Has properties that make its children dependant on it?

@@ -20,7 +20,7 @@ freya = "0.4"
 Next release:
 
 ```toml
-freya = "0.5.0-rc.3"
+freya = "0.5.0-rc.4"
 ```
 
 `main` branch:

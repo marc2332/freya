@@ -34,7 +34,7 @@ pub fn caching() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -56,7 +56,7 @@ pub fn caching() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -105,7 +105,7 @@ pub fn layout_dirty_nodes() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     // CASE 1
@@ -258,7 +258,7 @@ pub fn node_removal() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(layout.size(), 5);
@@ -278,11 +278,11 @@ pub fn node_removal() {
         Rect::new(Point2D::new(0.0, 200.0), Size2D::new(200.0, 200.0)),
     );
 
-    layout.remove(2, &mut mocked_tree, true);
+    layout.remove(2, &mocked_tree, true);
 
     mocked_tree.remove(2);
 
-    layout.find_best_root(&mut mocked_tree);
+    layout.find_best_root(&mocked_tree);
 
     assert_eq!(
         layout.get_dirty_nodes(),
@@ -295,7 +295,7 @@ pub fn node_removal() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -380,12 +380,12 @@ pub fn deep_tree() {
         ),
     );
 
-    layout.find_best_root(&mut mocked_tree);
+    layout.find_best_root(&mocked_tree);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     mocked_tree.set_node(
@@ -398,14 +398,14 @@ pub fn deep_tree() {
     );
     layout.invalidate(4);
 
-    layout.find_best_root(&mut mocked_tree);
+    layout.find_best_root(&mocked_tree);
     assert_eq!(layout.get_root_candidate(), RootNodeCandidate::Valid(4));
 
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(layout.get_root_candidate(), RootNodeCandidate::None);
@@ -451,7 +451,7 @@ pub fn node_reordering() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -483,13 +483,13 @@ pub fn node_reordering() {
         ),
     );
 
-    layout.find_best_root(&mut mocked_tree);
+    layout.find_best_root(&mocked_tree);
 
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -516,7 +516,7 @@ pub fn node_reordering() {
         ),
     );
 
-    layout.find_best_root(&mut mocked_tree);
+    layout.find_best_root(&mocked_tree);
 
     // That is why these nodes still have the same positions as before
 

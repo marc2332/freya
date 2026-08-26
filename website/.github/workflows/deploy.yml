@@ -26,5 +26,5 @@ jobs:
         uses: denoland/deployctl@v1
         with:
           project: freya
-          entrypoint: server/entry.mjs
+          entrypoint: _entrypoint.ts
           root: dist
