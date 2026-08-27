@@ -8,6 +8,7 @@ mod app;
 mod config;
 mod emscripten;
 mod events;
+mod fonts;
 mod surface;
 
 pub use crate::config::WebConfig;

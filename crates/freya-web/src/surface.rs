@@ -27,7 +27,7 @@ pub struct WebSurface {
 
 impl WebSurface {
     pub fn new(width: i32, height: i32) -> Option<Self> {
-        if !create_webgl_context() {
+        if !Self::create_webgl_context() {
             tracing::error!("Failed to create the WebGL context of the #canvas element.");
             return None;
         }
@@ -53,7 +53,7 @@ impl WebSurface {
             ..Default::default()
         };
 
-        let surface = create_surface(&mut context, framebuffer_info, width, height)?;
+        let surface = Self::create_surface(&mut context, framebuffer_info, width, height)?;
 
         Some(Self {
             context,
@@ -70,7 +70,7 @@ impl WebSurface {
         }
 
         if let Some(surface) =
-            create_surface(&mut self.context, self.framebuffer_info, width, height)
+            Self::create_surface(&mut self.context, self.framebuffer_info, width, height)
         {
             self.surface = surface;
             self.width = width;
@@ -86,42 +86,41 @@ impl WebSurface {
     pub fn present(&mut self) {
         self.context.flush_and_submit();
     }
-}
 
-fn create_webgl_context() -> bool {
-    let mut attributes = EmscriptenWebGLContextAttributes::default();
-    unsafe { emscripten_webgl_init_context_attributes(&mut attributes) };
+    fn create_webgl_context() -> bool {
+        let mut attributes = EmscriptenWebGLContextAttributes::default();
+        unsafe { emscripten_webgl_init_context_attributes(&mut attributes) };
 
-    attributes.alpha = false;
-    attributes.stencil = true;
-    attributes.major_version = 2;
-    // Skia antialiases itself and never reads a depth buffer.
-    attributes.antialias = false;
-    attributes.depth = false;
+        attributes.alpha = false;
+        attributes.stencil = true;
+        attributes.major_version = 2;
+        attributes.antialias = false;
+        attributes.depth = false;
 
-    let context = unsafe { emscripten_webgl_create_context(TARGET_CANVAS, &attributes) };
-    if context <= 0 {
-        return false;
+        let context = unsafe { emscripten_webgl_create_context(TARGET_CANVAS, &attributes) };
+        if context <= 0 {
+            return false;
+        }
+
+        unsafe { emscripten_webgl_make_context_current(context) == EMSCRIPTEN_RESULT_SUCCESS }
     }
 
-    unsafe { emscripten_webgl_make_context_current(context) == EMSCRIPTEN_RESULT_SUCCESS }
-}
+    fn create_surface(
+        context: &mut DirectContext,
+        framebuffer_info: FramebufferInfo,
+        width: i32,
+        height: i32,
+    ) -> Option<Surface> {
+        let backend_render_target =
+            backend_render_targets::make_gl((width.max(1), height.max(1)), 1, 8, framebuffer_info);
 
-fn create_surface(
-    context: &mut DirectContext,
-    framebuffer_info: FramebufferInfo,
-    width: i32,
-    height: i32,
-) -> Option<Surface> {
-    let backend_render_target =
-        backend_render_targets::make_gl((width.max(1), height.max(1)), 1, 8, framebuffer_info);
-
-    wrap_backend_render_target(
-        context,
-        &backend_render_target,
-        SurfaceOrigin::BottomLeft,
-        ColorType::RGBA8888,
-        None,
-        None,
-    )
+        wrap_backend_render_target(
+            context,
+            &backend_render_target,
+            SurfaceOrigin::BottomLeft,
+            ColorType::RGBA8888,
+            None,
+            None,
+        )
+    }
 }

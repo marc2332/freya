@@ -33,6 +33,12 @@ pub struct BrowserState {
     pub focused: Option<bool>,
 }
 
+impl BrowserState {
+    pub fn take() -> Self {
+        BROWSER.with_borrow_mut(std::mem::take)
+    }
+}
+
 thread_local! {
     static BROWSER: RefCell<BrowserState> = RefCell::new(BrowserState::default());
 
@@ -41,10 +47,6 @@ thread_local! {
 
     /// Last cursor position, in physical pixels.
     static LAST_CURSOR: Cell<CursorPoint> = const { Cell::new(CursorPoint::new(0., 0.)) };
-}
-
-pub fn take_browser_state() -> BrowserState {
-    BROWSER.with_borrow_mut(std::mem::take)
 }
 
 fn push(event: PlatformEvent) {

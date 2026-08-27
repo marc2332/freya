@@ -18,12 +18,6 @@ use freya_core::{
         CursorIcon,
     },
 };
-use freya_engine::prelude::{
-    FontCollection,
-    FontMgr,
-    SkData,
-    TypefaceFontProvider,
-};
 use ragnarok::{
     EventsExecutorRunner,
     EventsMeasurerRunner,
@@ -35,10 +29,11 @@ use crate::{
     config::WebConfig,
     emscripten::emscripten_run_script,
     events::{
+        BrowserState,
         listen,
         sync_canvas_size,
-        take_browser_state,
     },
+    fonts::Fonts,
     surface::WebSurface,
 };
 
@@ -64,10 +59,7 @@ pub struct WebApp {
 
     requests: Rc<RefCell<Requests>>,
 
-    font_provider: TypefaceFontProvider,
-    font_manager: FontMgr,
-    font_collection: FontCollection,
-    default_fonts: Vec<Cow<'static, str>>,
+    fonts: Fonts,
 
     platform: Platform,
     ticker_sender: RenderingTickerSender,
@@ -91,13 +83,7 @@ impl WebApp {
 
         let surface = WebSurface::new(width, height)?;
 
-        let (font_provider, font_manager, mut font_collection, registered_fonts) =
-            create_fonts(&config.fonts);
-        let default_fonts = if config.default_fonts.is_empty() {
-            registered_fonts
-        } else {
-            config.default_fonts
-        };
+        let mut fonts = Fonts::new(&config.fonts, config.default_fonts);
 
         let (events_sender, events_receiver) = futures_channel::mpsc::unbounded();
 
@@ -154,7 +140,7 @@ impl WebApp {
 
         let mut tree = Tree::default();
         runner.provide_root_context(|| tree.accessibility_generator.clone());
-        runner.provide_root_context(|| font_collection.clone());
+        runner.provide_root_context(|| fonts.collection.clone());
 
         let mut nodes_state = NodesState::default();
 
@@ -165,12 +151,12 @@ impl WebApp {
         }
         tree.measure_layout(
             size,
-            &mut font_collection,
-            &font_manager,
+            &mut fonts.collection,
+            &fonts.manager,
             &events_sender,
             &mut nodes_state,
             pixel_ratio,
-            &default_fonts,
+            &fonts.default_families,
         );
 
         listen();
@@ -184,10 +170,7 @@ impl WebApp {
             events_receiver,
             events_sender,
             requests,
-            font_provider,
-            font_manager,
-            font_collection,
-            default_fonts,
+            fonts,
             platform,
             ticker_sender,
             background: config.background,
@@ -199,8 +182,9 @@ impl WebApp {
         })
     }
 
+    /// Advances the app by one browser frame.
     pub fn frame(&mut self) {
-        let mut browser = take_browser_state();
+        let mut browser = BrowserState::take();
 
         if let Some((width, height, pixel_ratio)) = browser.resized {
             self.surface.resize(width, height);
@@ -253,7 +237,7 @@ impl WebApp {
         self.ticker_sender.notify();
     }
 
-    /// Applies whatever the runner has pending.
+    /// Runs the pending events and applies the resulting mutations to the tree.
     fn sync(&mut self) {
         if let Some(strategy) = self.requests.borrow_mut().focus_strategy.take() {
             self.tree.accessibility_diff.request_focus(strategy);
@@ -293,17 +277,18 @@ impl WebApp {
         self.needs_render |= result.needs_render;
     }
 
+    /// Measures the layout and fulfills the requests made by the app.
     fn finish(&mut self) {
         self.load_pending_fonts();
 
         self.tree.measure_layout(
             self.size,
-            &mut self.font_collection,
-            &self.font_manager,
+            &mut self.fonts.collection,
+            &self.fonts.manager,
             &self.events_sender,
             &mut self.nodes_state,
             self.scale_factor,
-            &self.default_fonts,
+            &self.fonts.default_families,
         );
 
         let update = self
@@ -334,11 +319,11 @@ impl WebApp {
         }
 
         if let Some(url) = requests.url.take() {
-            run_script(&format!("window.open('{}', '_blank');", escape_js(&url)));
+            let url = url.replace('\\', "\\\\").replace('\'', "\\'");
+            run_script(&format!("window.open('{url}', '_blank');"));
         }
     }
 
-    /// Register the fonts loaded at runtime, dropping the caches that were measured without them.
     fn load_pending_fonts(&mut self) {
         let fonts = std::mem::take(&mut self.requests.borrow_mut().fonts);
         if fonts.is_empty() {
@@ -346,18 +331,9 @@ impl WebApp {
         }
 
         for (font_name, font_data) in fonts {
-            let Some(typeface) = self
-                .font_manager
-                .new_from_data(SkData::new_copy(&font_data), None)
-            else {
-                tracing::error!("Failed to load the font {font_name}.");
-                continue;
-            };
-            self.font_provider
-                .register_typeface(typeface, Some(font_name.as_ref()));
+            self.fonts.load(&font_name, &font_data);
         }
 
-        self.font_collection.clear_caches();
         self.tree.layout.reset();
         self.tree.text_cache.reset();
         self.needs_render = true;
@@ -365,8 +341,8 @@ impl WebApp {
 
     fn render(&mut self) {
         let render_pipeline = RenderPipeline {
-            font_collection: &mut self.font_collection,
-            font_manager: &self.font_manager,
+            font_collection: &mut self.fonts.collection,
+            font_manager: &self.fonts.manager,
             tree: &self.tree,
             canvas: self.surface.canvas(),
             scale_factor: self.scale_factor,
@@ -376,40 +352,6 @@ impl WebApp {
 
         self.surface.present();
     }
-}
-
-fn create_fonts(
-    fonts: &[(String, Vec<u8>)],
-) -> (
-    TypefaceFontProvider,
-    FontMgr,
-    FontCollection,
-    Vec<Cow<'static, str>>,
-) {
-    let system_manager = FontMgr::default();
-    let mut provider = TypefaceFontProvider::new();
-    let mut registered = Vec::new();
-
-    for (name, data) in fonts {
-        let Some(typeface) = system_manager.new_from_data(SkData::new_copy(data), None) else {
-            tracing::error!("Failed to load the font {name}.");
-            continue;
-        };
-        provider.register_typeface(typeface, Some(name.as_str()));
-        registered.push(Cow::Owned(name.clone()));
-    }
-
-    let font_manager: FontMgr = provider.clone().into();
-    let mut font_collection = FontCollection::new();
-    font_collection.set_default_font_manager(font_manager.clone(), None);
-    font_collection.set_dynamic_font_manager(font_manager.clone());
-    font_collection.paragraph_cache_mut().turn_on(false);
-
-    (provider, font_manager, font_collection, registered)
-}
-
-fn escape_js(text: &str) -> String {
-    text.replace('\\', "\\\\").replace('\'', "\\'")
 }
 
 fn run_script(script: &str) {
