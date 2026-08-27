@@ -22,3 +22,7 @@ pnpm-debug.log*
 .astro
 
 public/demo/
+
+.vercel/
+.vercel
+.env*
