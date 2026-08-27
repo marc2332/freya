@@ -1,6 +1,6 @@
 [package]
 name = "freya-terminal"
-version = "0.5.0-rc.3"
+version = "0.5.0-rc.4"
 description = "Terminal emulator integration for Freya"
 edition = "2024"
 license = "MIT"
@@ -23,14 +23,13 @@ keyboard-types = { workspace = true }
 
 # PTY and terminal emulator
 portable-pty = "0.9"
-rio-vt = "0.5.5"
+rio-vt = "=0.5.26"
 
 # URL detection in terminal output
 linkify = { workspace = true }
 
 # Async
 async-io = { workspace = true }
-futures-channel = { workspace = true }
 futures-lite = { workspace = true }
 
 [dev-dependencies]

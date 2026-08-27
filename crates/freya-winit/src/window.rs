@@ -17,7 +17,10 @@ use freya_components::{
 };
 use freya_core::{
     integration::*,
-    prelude::Color,
+    prelude::{
+        Color,
+        CursorIcon,
+    },
 };
 use freya_engine::prelude::{
     FontCollection,
@@ -91,6 +94,7 @@ pub struct AppWindow {
     pub(crate) position: CursorPoint,
     pub(crate) mouse_state: ElementState,
     pub(crate) modifiers_state: ModifiersState,
+    pub(crate) cursor_icon: CursorIcon,
     pub(crate) pressed_keys: Vec<(Key, Code)>,
 
     pub(crate) events_receiver: futures_channel::mpsc::UnboundedReceiver<EventsChunk>,
@@ -248,10 +252,10 @@ impl AppWindow {
         runner.provide_root_context(|| animation_clock.clone());
 
         runner.provide_root_context(AssetCacher::create);
-        let mut tree = Tree::default();
-
         let custom_scale_factor = clamp_custom_scale_factor(window_config.custom_scale_factor);
         let scale_factor = window.scale_factor() * custom_scale_factor;
+
+        let mut tree = Tree::default();
 
         let window_size = window.inner_size();
         let accent_color_preference = accent_color_preference();
@@ -328,8 +332,10 @@ impl AppWindow {
             PluginHandle::new(event_loop_proxy),
         );
 
+        let mut nodes_state = NodesState::default();
+
         let mutations = runner.sync_and_update();
-        let result = tree.apply_mutations(mutations);
+        let result = tree.apply_mutations(mutations, scale_factor as f32);
         if let Some(strategy) = result.auto_focus {
             tree.accessibility_diff.request_focus(strategy);
         }
@@ -342,11 +348,10 @@ impl AppWindow {
             font_collection,
             font_manager,
             &events_sender,
+            &mut nodes_state,
             scale_factor,
             fallback_fonts,
         );
-
-        let nodes_state = NodesState::default();
 
         let accessibility_adapter =
             Adapter::with_event_loop_proxy(active_event_loop, &window, event_loop_proxy.clone());
@@ -405,6 +410,7 @@ impl AppWindow {
             mouse_state: ElementState::Released,
             position: CursorPoint::default(),
             modifiers_state: ModifiersState::default(),
+            cursor_icon: CursorIcon::default(),
             pressed_keys: Vec::new(),
 
             events_receiver,
@@ -439,6 +445,20 @@ impl AppWindow {
         }
     }
 
+    /// Resolve the cursor icon from the hovered nodes and update the window cursor if it changed.
+    pub(crate) fn update_cursor_icon(&mut self) {
+        if self.mouse_state == ElementState::Pressed
+            || self.position == CursorPoint::from((-1., -1.))
+        {
+            return;
+        }
+        let cursor_icon = self.tree.cursor_icon(&self.nodes_state);
+        if cursor_icon != self.cursor_icon {
+            self.cursor_icon = cursor_icon;
+            self.window.set_cursor(cursor_icon);
+        }
+    }
+
     pub fn window(&self) -> &Window {
         &self.window
     }
@@ -457,6 +477,8 @@ impl AppWindow {
             .scale_factor
             .set(self.effective_scale_factor());
         self.process_layout_on_next_render = true;
+        self.tree
+            .set_scale_factor(self.effective_scale_factor() as f32);
         self.tree.layout.reset();
         self.tree.text_cache.reset();
         self.window.request_redraw();

@@ -1,7 +1,3 @@
-#![cfg_attr(
-    all(not(debug_assertions), target_os = "windows"),
-    windows_subsystem = "windows"
-)]
 use std::time::Instant;
 
 use freya::helpers::from_fn_captured;
@@ -68,7 +64,7 @@ fn main() {
 
     let instant = Instant::now();
     let updates = runner.sync_and_update();
-    tree.apply_mutations(updates);
+    tree.apply_mutations(updates, 1.0);
     println!("+ {}ms", instant.elapsed().as_millis());
 
     let instant = Instant::now();
@@ -79,12 +75,12 @@ fn main() {
         false,
     );
     let updates = runner.sync_and_update();
-    tree.apply_mutations(updates);
+    tree.apply_mutations(updates, 1.0);
     println!("/ {}ms", instant.elapsed().as_millis());
 
     state.set(1000);
     let instant = Instant::now();
     let updates = runner.sync_and_update();
-    tree.apply_mutations(updates);
+    tree.apply_mutations(updates, 1.0);
     println!("- {}ms", instant.elapsed().as_millis());
 }

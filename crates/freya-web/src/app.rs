@@ -13,6 +13,7 @@ use freya_components::{
 use freya_core::{
     integration::*,
     prelude::{
+        Bytes,
         Color,
         CursorIcon,
     },
@@ -45,8 +46,8 @@ use crate::{
 #[derive(Default)]
 struct Requests {
     focus_strategy: Option<AccessibilityFocusStrategy>,
-    cursor: Option<CursorIcon>,
     url: Option<String>,
+    fonts: Vec<(Cow<'static, str>, Bytes)>,
     redraw: bool,
 }
 
@@ -63,6 +64,7 @@ pub struct WebApp {
 
     requests: Rc<RefCell<Requests>>,
 
+    font_provider: TypefaceFontProvider,
     font_manager: FontMgr,
     font_collection: FontCollection,
     default_fonts: Vec<Cow<'static, str>>,
@@ -89,7 +91,8 @@ impl WebApp {
 
         let surface = WebSurface::new(width, height)?;
 
-        let (font_manager, mut font_collection, registered_fonts) = create_fonts(&config.fonts);
+        let (font_provider, font_manager, mut font_collection, registered_fonts) =
+            create_fonts(&config.fonts);
         let default_fonts = if config.default_fonts.is_empty() {
             registered_fonts
         } else {
@@ -102,6 +105,7 @@ impl WebApp {
         let mut runner = Runner::new(move || integration(app.clone()).into_element());
 
         runner.provide_root_context(ScreenReader::new);
+        runner.provide_root_context(GlobalContexts::default);
 
         let (ticker_sender, ticker) = RenderingTicker::new();
         runner.provide_root_context(|| ticker);
@@ -128,14 +132,17 @@ impl WebApp {
                     UserEvent::FocusAccessibilityNode(strategy) => {
                         requests.borrow_mut().focus_strategy = Some(strategy);
                     }
-                    UserEvent::SetCursorIcon(cursor) => {
-                        requests.borrow_mut().cursor = Some(cursor);
-                    }
                     UserEvent::OpenUrl(url) => {
                         requests.borrow_mut().url = Some(url);
                     }
                     UserEvent::RequestRedraw => {
                         requests.borrow_mut().redraw = true;
+                    }
+                    UserEvent::LoadFont {
+                        font_name,
+                        font_data,
+                    } => {
+                        requests.borrow_mut().fonts.push((font_name, font_data));
                     }
                     UserEvent::SetCustomScaleFactor(_) | UserEvent::Erased(_) => {}
                 }),
@@ -149,8 +156,10 @@ impl WebApp {
         runner.provide_root_context(|| tree.accessibility_generator.clone());
         runner.provide_root_context(|| font_collection.clone());
 
+        let mut nodes_state = NodesState::default();
+
         let mutations = runner.sync_and_update();
-        let result = tree.apply_mutations(mutations);
+        let result = tree.apply_mutations(mutations, pixel_ratio as f32);
         if let Some(strategy) = result.auto_focus {
             tree.accessibility_diff.request_focus(strategy);
         }
@@ -159,6 +168,7 @@ impl WebApp {
             &mut font_collection,
             &font_manager,
             &events_sender,
+            &mut nodes_state,
             pixel_ratio,
             &default_fonts,
         );
@@ -169,11 +179,12 @@ impl WebApp {
             runner,
             tree,
             surface,
-            nodes_state: NodesState::default(),
+            nodes_state,
             accessibility: AccessibilityTree::default(),
             events_receiver,
             events_sender,
             requests,
+            font_provider,
             font_manager,
             font_collection,
             default_fonts,
@@ -271,7 +282,10 @@ impl WebApp {
 
         let mutations = self.runner.sync_and_update();
         let tree = &mut self.tree;
-        let result = self.runner.run_in(|| tree.apply_mutations(mutations));
+        let scale_factor = self.scale_factor as f32;
+        let result = self
+            .runner
+            .run_in(|| tree.apply_mutations(mutations, scale_factor));
         if let Some(strategy) = result.auto_focus {
             self.tree.accessibility_diff.request_focus(strategy);
         }
@@ -280,11 +294,14 @@ impl WebApp {
     }
 
     fn finish(&mut self) {
+        self.load_pending_fonts();
+
         self.tree.measure_layout(
             self.size,
             &mut self.font_collection,
             &self.font_manager,
             &self.events_sender,
+            &mut self.nodes_state,
             self.scale_factor,
             &self.default_fonts,
         );
@@ -307,9 +324,8 @@ impl WebApp {
         let requests = &mut *self.requests.borrow_mut();
         self.needs_render |= std::mem::take(&mut requests.redraw);
 
-        if let Some(cursor) = requests.cursor.take()
-            && cursor != self.cursor
-        {
+        let cursor = self.tree.cursor_icon(&self.nodes_state);
+        if cursor != self.cursor {
             self.cursor = cursor;
             run_script(&format!(
                 "document.querySelector('#canvas').style.cursor = '{}';",
@@ -320,6 +336,31 @@ impl WebApp {
         if let Some(url) = requests.url.take() {
             run_script(&format!("window.open('{}', '_blank');", escape_js(&url)));
         }
+    }
+
+    /// Register the fonts loaded at runtime, dropping the caches that were measured without them.
+    fn load_pending_fonts(&mut self) {
+        let fonts = std::mem::take(&mut self.requests.borrow_mut().fonts);
+        if fonts.is_empty() {
+            return;
+        }
+
+        for (font_name, font_data) in fonts {
+            let Some(typeface) = self
+                .font_manager
+                .new_from_data(SkData::new_copy(&font_data), None)
+            else {
+                tracing::error!("Failed to load the font {font_name}.");
+                continue;
+            };
+            self.font_provider
+                .register_typeface(typeface, Some(font_name.as_ref()));
+        }
+
+        self.font_collection.clear_caches();
+        self.tree.layout.reset();
+        self.tree.text_cache.reset();
+        self.needs_render = true;
     }
 
     fn render(&mut self) {
@@ -337,7 +378,14 @@ impl WebApp {
     }
 }
 
-fn create_fonts(fonts: &[(String, Vec<u8>)]) -> (FontMgr, FontCollection, Vec<Cow<'static, str>>) {
+fn create_fonts(
+    fonts: &[(String, Vec<u8>)],
+) -> (
+    TypefaceFontProvider,
+    FontMgr,
+    FontCollection,
+    Vec<Cow<'static, str>>,
+) {
     let system_manager = FontMgr::default();
     let mut provider = TypefaceFontProvider::new();
     let mut registered = Vec::new();
@@ -351,13 +399,13 @@ fn create_fonts(fonts: &[(String, Vec<u8>)]) -> (FontMgr, FontCollection, Vec<Co
         registered.push(Cow::Owned(name.clone()));
     }
 
-    let font_manager: FontMgr = provider.into();
+    let font_manager: FontMgr = provider.clone().into();
     let mut font_collection = FontCollection::new();
     font_collection.set_default_font_manager(font_manager.clone(), None);
     font_collection.set_dynamic_font_manager(font_manager.clone());
     font_collection.paragraph_cache_mut().turn_on(false);
 
-    (font_manager, font_collection, registered)
+    (provider, font_manager, font_collection, registered)
 }
 
 fn escape_js(text: &str) -> String {

@@ -43,9 +43,10 @@ define_theme! {
         hover_background: Color,
         select_background: Color,
         border_fill: Color,
-        select_border_fill: Color,
+        focus_border_fill: Color,
         corner_radius: CornerRadius,
         color: Color,
+        select_color: Color,
     }
 }
 
@@ -321,7 +322,7 @@ impl Default for MenuItem {
             on_press: None,
             on_pointer_enter: None,
             selected: false,
-            padding: (6.0, 12.0).into(),
+            padding: (8.0, 14.0).into(),
             key: DiffKey::None,
         }
     }
@@ -404,9 +405,15 @@ impl ComponentOwned for MenuItem {
             theme.background
         };
 
+        let color = if self.selected {
+            theme.select_color
+        } else {
+            theme.color
+        };
+
         let border = if focus() == Focus::Keyboard {
             Border::new()
-                .fill(theme.select_border_fill)
+                .fill(theme.focus_border_fill)
                 .width(2.)
                 .alignment(BorderAlignment::Inner)
         } else {
@@ -449,7 +456,7 @@ impl ComponentOwned for MenuItem {
             .corner_radius(theme.corner_radius)
             .background(background)
             .border(border)
-            .color(theme.color)
+            .color(color)
             .text_align(TextAlign::Start)
             .main_align(Alignment::Center)
             .overflow(Overflow::Clip)

@@ -1,6 +1,6 @@
 [package]
 name = "freya-core"
-version = "0.5.0-rc.3"
+version = "0.5.0-rc.4"
 description = "Reactivity runtime, tree management, accessibility integration, rendering pipeline and more, for Freya"
 edition = "2024"
 license = "MIT"
@@ -69,14 +69,24 @@ freya = { path = "../freya" }
 freya-testing = { path = "../freya-testing" }
 freya-core = { path = "../freya-core", features = ["debug-integrity", "test"] }
 freya-engine = { path = "../freya-engine" }
+tracing-subscriber = { workspace = true }
 
 [features]
 hotpath = ["hotpath/hotpath", "ragnarok/hotpath"]
+hotpath-alloc = ["hotpath/hotpath-alloc"]
 hotreload = ["dep:subsecond", "dep:dioxus-devtools"]
 debug-integrity = []
 devtools = ["serde"]
-serde = ["dep:serde"]
+serde = ["dep:serde", "cursor-icon/serde"]
 test = []
+
+[[bench]]
+name = "dev_perf"
+harness = false
+
+[[bench]]
+name = "core_perf"
+harness = false
 
 # Emscripten is single threaded, see `sleep.rs` and `unblock.rs`.
 [target.'cfg(not(target_os = "emscripten"))'.dependencies]

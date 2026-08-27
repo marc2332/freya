@@ -1,7 +1,6 @@
 pub mod accessibility;
 pub mod animation_clock;
 pub mod current_context;
-pub mod cursor;
 pub mod data;
 pub mod debug;
 pub mod diff_key;
@@ -63,7 +62,6 @@ pub mod prelude {
             screen_reader::*,
         },
         animation_clock::AnimationClock,
-        cursor::*,
         data::*,
         debug::*,
         diff_key::DiffKey,
@@ -164,6 +162,7 @@ pub mod prelude {
 
 /// Used by renderers such as freya-testing, freya-winit or just integration crates.
 pub mod integration {
+    pub use ragnarok::NodesState;
     pub use rustc_hash::*;
 
     pub use crate::{

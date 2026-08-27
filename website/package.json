@@ -7,13 +7,12 @@
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",
-    "preview": "deno run --allow-net --allow-read --allow-env ./dist/server/entry.mjs",
+    "preview": "astro preview",
     "astro": "astro",
     "format": "biome format ./src --write "
   },
   "dependencies": {
-    "@deno/astro-adapter": "^0.5.2",
-    "@astrojs/rss": "^4.0.1",
+    "@astrojs/rss": "^4.0.19",
     "@astrojs/tailwind": "^6.0.0",
     "astro": "6.4.6",
     "rehype-accessible-emojis": "^0.3.2",

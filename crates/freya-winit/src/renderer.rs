@@ -10,6 +10,8 @@ use freya_core::integration::*;
 use freya_engine::prelude::{
     FontCollection,
     FontMgr,
+    SkData,
+    TypefaceFontProvider,
 };
 use futures_lite::future::FutureExt as _;
 use futures_util::{
@@ -86,6 +88,7 @@ pub struct WinitRenderer {
     pub proxy: EventLoopProxy<NativeEvent>,
     pub plugins: PluginsManager,
     pub fallback_fonts: Vec<Cow<'static, str>>,
+    pub font_provider: TypefaceFontProvider,
     pub font_manager: FontMgr,
     pub font_collection: FontCollection,
     pub futures: Vec<Pin<Box<dyn std::future::Future<Output = ()>>>>,
@@ -422,6 +425,33 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     }
                 }
             }
+            NativeEvent::Window(NativeWindowEvent {
+                action:
+                    NativeWindowEventAction::User(UserEvent::LoadFont {
+                        font_name,
+                        font_data,
+                    }),
+                ..
+            }) => {
+                let Some(typeface) = FontMgr::custom_empty()
+                    .unwrap_or_default()
+                    .new_from_data(SkData::new_copy(&font_data), None)
+                else {
+                    tracing::error!("Failed to load font {font_name}.");
+                    return;
+                };
+
+                self.font_provider
+                    .register_typeface(typeface, Some(font_name.as_ref()));
+                self.font_collection.clear_caches();
+
+                for app in self.windows.values_mut() {
+                    app.process_layout_on_next_render = true;
+                    app.tree.layout.reset();
+                    app.tree.text_cache.reset();
+                    app.window.request_redraw();
+                }
+            }
             NativeEvent::Window(NativeWindowEvent { action, window_id }) => {
                 if let Some(app) = &mut self.windows.get_mut(&window_id) {
                     match action {
@@ -492,7 +522,11 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 PluginHandle::new(&self.proxy),
                             );
                             let mutations = app.runner.sync_and_update();
-                            let result = app.runner.run_in(|| app.tree.apply_mutations(mutations));
+                            let scale_factor = app.effective_scale_factor() as f32;
+                            let result = app
+                                .runner
+                                .run_in(|| app.tree.apply_mutations(mutations, scale_factor));
+                            app.update_cursor_icon();
                             if result.needs_render {
                                 app.process_layout_on_next_render = true;
                                 app.window.request_redraw();
@@ -568,15 +602,13 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 app.accessibility_tasks_for_next_render |= task;
                                 app.window.request_redraw();
                             }
-                            UserEvent::SetCursorIcon(cursor_icon) => {
-                                app.window.set_cursor(cursor_icon);
-                            }
                             UserEvent::OpenUrl(url) => {
                                 let _ = open::that(url);
                             }
                             UserEvent::SetCustomScaleFactor(custom_scale_factor) => {
                                 app.set_custom_scale_factor(custom_scale_factor);
                             }
+                            UserEvent::LoadFont { .. } => unreachable!(),
                             UserEvent::Erased(data) => {
                                 let action = data
                                     .0
@@ -772,6 +804,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 &mut self.font_collection,
                                 &self.font_manager,
                                 &app.events_sender,
+                                &mut app.nodes_state,
                                 scale_factor,
                                 &self.fallback_fonts,
                             );
@@ -1026,7 +1059,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 }
 
                 WindowEvent::CursorLeft { .. } => {
-                    if app.mouse_state == ElementState::Released {
+                    if std::mem::replace(&mut app.mouse_state, ElementState::Released)
+                        == ElementState::Released
+                    {
                         app.position = CursorPoint::from((-1., -1.));
                         app.process_platform_events(vec![PlatformEvent::Mouse {
                             name: MouseEventName::MouseMove,
