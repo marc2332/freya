@@ -1,13 +1,13 @@
 {
   "redirects": [
     {
-      "source": "/:path*",
+      "source": "/(.*)",
       "has": [{ "type": "host", "value": "book.freyaui.dev" }],
       "destination": "https://docs.rs/freya",
       "permanent": true
     },
     {
-      "source": "/:path*",
+      "source": "/(.*)",
       "has": [{ "type": "host", "value": "docs.freyaui.dev" }],
       "destination": "https://docs.rs/freya",
       "permanent": true
