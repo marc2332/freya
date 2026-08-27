@@ -1,22 +1,17 @@
-# Applies when running cargo from this directory, the rest of the workspace still targets the host.
-
 [build]
 target = "wasm32-unknown-emscripten"
 
-# Unoptimized Skia produces functions with more locals than browsers accept.
 [profile.dev.package.freya-skia-bindings]
 opt-level = 3
 
 [env]
-# Skia and the Rust standard library must agree on the exception model.
 EMCC_CFLAGS = "-fwasm-exceptions"
 
 [target.wasm32-unknown-emscripten]
+runner = ["python3", "serve.py"]
 rustflags = [
   "-Clink-arg=-sMAX_WEBGL_VERSION=2",
   "-Clink-arg=-sALLOW_MEMORY_GROWTH=1",
-  # Emscripten defaults to 64KB, far below what a debug build's recursive layout needs.
-  # The stack is carved out of the initial memory, which has to leave room for it.
   "-Clink-arg=-sSTACK_SIZE=16MB",
   "-Clink-arg=-sINITIAL_MEMORY=256MB",
 ]
