@@ -1,3 +1,2 @@
-greeting = ¡Qué bueno verte por aquí!
-description = Elige un idioma arriba y esta página te sigue.
+greeting = Hola Mundo
 counter = Lo has pulsado { $count } veces.

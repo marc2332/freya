@@ -30,7 +30,6 @@ impl Component for I18nShowcase {
                     ),
             )
             .child(rect().font_size(22.).child(t!("greeting")))
-            .child(t!("description"))
             .child(
                 rect()
                     .horizontal()
