@@ -1,5 +1,3 @@
-//! The subset of Emscripten's `html5.h` and `html5_webgl.h` used by the renderer, layouts match 3.1.57 and newer.
-
 use std::ffi::{
     c_char,
     c_double,

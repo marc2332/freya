@@ -1,4 +1,3 @@
-//! Web renderer for Freya, rendering with Skia on WebGL inside a `<canvas id="canvas">`.
 #![cfg(target_os = "emscripten")]
 
 use std::cell::RefCell;
