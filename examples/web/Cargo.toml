@@ -6,13 +6,13 @@ publish = false
 
 [dependencies]
 freya = { path = "../../crates/freya", default-features = false, features = [
+  "web",
   "router",
   "material-design",
   "icons-lucide",
   "markdown",
   "i18n",
 ] }
-freya-web = { workspace = true }
 
 [[bin]]
 name = "web_example"

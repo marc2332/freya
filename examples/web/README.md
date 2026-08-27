@@ -6,7 +6,7 @@ This is what gets served at [freyaui.dev/demo](https://freyaui.dev/demo).
 ## Requirements
 
 - The `wasm32-unknown-emscripten` Rust target: `rustup target add wasm32-unknown-emscripten`
-- Emscripten 4.0 or newer, with `emcc` in `PATH`. `emcc` is the linker, older versions
+- [Emscripten](https://emscripten.org/docs/getting_started/downloads.html) 4.0 or newer, with `emcc` in `PATH`. `emcc` is the linker, older versions
   reject the wasm features Rust emits and only release builds break.
 
 ## Run

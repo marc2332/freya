@@ -41,6 +41,7 @@
 //! - [Async](self::_docs::_async)
 //! - [Layers](self::_docs::layers)
 //! - [Platforms](self::_docs::platforms)
+//! - [Web](self::_docs::web)
 //! - [Development Setup](self::_docs::development_setup)
 //! - [Extending Components](self::_docs::extending_components)
 //!
@@ -91,6 +92,7 @@
 //! - `terminal`: Reexport [freya_terminal] under [terminal].
 //! - `code-editor`: Reexport [freya_code_editor] under [code_editor].
 //! - `camera`: Reexport [freya_camera] under [camera].
+//! - `web`: Reexport [freya_web] under [web].
 //!
 //! ## Misc features
 //! - `devtools`: Enables devtools support.
@@ -289,6 +291,13 @@ pub mod i18n {
 #[cfg(feature = "engine")]
 pub mod engine {
     pub use freya_engine::*;
+}
+
+/// Reexport `freya-web` when the `web` feature is enabled and the target is the browser.
+#[cfg_attr(feature = "docs", doc(cfg(feature = "web")))]
+#[cfg(all(feature = "web", target_os = "emscripten"))]
+pub mod web {
+    pub use freya_web::*;
 }
 
 /// Reexport `winit` when the `winit` feature is enabled.

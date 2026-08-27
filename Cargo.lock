@@ -2573,6 +2573,7 @@ dependencies = [
  "freya-terminal",
  "freya-testing",
  "freya-video",
+ "freya-web",
  "freya-webview",
  "freya-winit",
  "plotters",
@@ -8786,7 +8787,6 @@ name = "web"
 version = "0.1.0"
 dependencies = [
  "freya",
- "freya-web",
 ]
 
 [[package]]
