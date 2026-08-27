@@ -38,8 +38,6 @@ use ffmpeg_sidecar::{
 use freya_core::{
     elements::image::ImageHandle,
     notify::ArcNotify,
-    sleep::sleep,
-    unblock::unblock,
     prelude::{
         Bytes,
         OwnedTaskHandle,
@@ -47,6 +45,8 @@ use freya_core::{
         spawn,
         try_consume_root_context,
     },
+    sleep::sleep,
+    unblock::unblock,
 };
 use freya_engine::prelude::AlphaType;
 use rodio::cpal::traits::{

@@ -28,11 +28,11 @@ pub mod runner;
 pub mod scope;
 pub mod scope_id;
 pub mod sleep;
-pub mod unblock;
 pub mod style;
 pub mod text_cache;
 pub mod tree;
 pub mod tree_layout_adapter;
+pub mod unblock;
 pub mod user_event;
 
 #[cfg(feature = "hotreload")]
@@ -135,7 +135,6 @@ pub mod prelude {
         rendering_ticker::RenderingTicker,
         scope_id::ScopeId,
         sleep::sleep,
-        unblock::unblock,
         style::{
             border::*,
             color::*,
@@ -158,6 +157,7 @@ pub mod prelude {
             transform_origin::*,
             vertical_align::*,
         },
+        unblock::unblock,
         user_event::UserEvent,
     };
 }

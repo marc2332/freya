@@ -10,6 +10,7 @@ freya = { path = "../../crates/freya", default-features = false, features = [
   "material-design",
   "icons-lucide",
   "markdown",
+  "i18n",
 ] }
 freya-web = { workspace = true }
 

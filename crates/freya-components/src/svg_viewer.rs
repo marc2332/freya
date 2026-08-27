@@ -317,8 +317,7 @@ impl Component for SvgViewer {
                         let result = match bytes {
                             Ok(bytes) => {
                                 let _permit = RASTER_LIMIT.acquire().await;
-                                unblock(move || rasterize_bytes(&bytes, target, style))
-                                    .await
+                                unblock(move || rasterize_bytes(&bytes, target, style)).await
                             }
                             Err(err) => Err(err),
                         };

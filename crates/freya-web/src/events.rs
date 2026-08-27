@@ -240,7 +240,11 @@ extern "C" fn on_touch(
     true
 }
 
-extern "C" fn on_resize(_event_type: c_int, _event: *const c_void, _user_data: *mut c_void) -> bool {
+extern "C" fn on_resize(
+    _event_type: c_int,
+    _event: *const c_void,
+    _user_data: *mut c_void,
+) -> bool {
     sync_canvas_size();
     false
 }

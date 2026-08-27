@@ -239,7 +239,6 @@ impl WebApp {
             self.render();
         }
 
-
         self.ticker_sender.notify();
     }
 
