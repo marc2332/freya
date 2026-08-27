@@ -23,9 +23,9 @@ impl Density {
 }
 
 #[derive(PartialEq)]
-pub struct WidgetsShowcase;
+pub struct ComponentsShowcase;
 
-impl Component for WidgetsShowcase {
+impl Component for ComponentsShowcase {
     fn render(&self) -> impl IntoElement {
         let mut slider_value = use_state(|| 45.0f64);
         let mut is_on = use_state(|| true);
@@ -44,10 +44,7 @@ impl Component for WidgetsShowcase {
         ScrollView::new().child(
             rect()
                 .spacing(20.)
-                .child(super::heading(
-                    "Components",
-                    "A few things to press, pick and type into",
-                ))
+                .child(super::heading("Components", "Components gallery"))
                 .child(
                     rect()
                         .horizontal()

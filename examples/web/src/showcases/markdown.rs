@@ -34,7 +34,7 @@ impl Component for MarkdownShowcase {
         ScrollView::new().child(
             rect()
                 .spacing(20.)
-                .child(super::heading("Markdown", "Notes, written the usual way"))
+                .child(super::heading("Markdown", "Some markdown"))
                 .child(MarkdownViewer::new(CONTENT.to_string())),
         )
     }

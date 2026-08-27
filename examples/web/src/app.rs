@@ -21,8 +21,8 @@ pub fn app() -> impl IntoElement {
 #[rustfmt::skip]
 pub enum Route {
     #[layout(AppShell)]
-        #[route("/", WidgetsShowcase)]
-        Widgets,
+        #[route("/", ComponentsShowcase)]
+        Components,
         #[route("/animation", AnimationShowcase)]
         Animation,
         #[route("/graphics", GraphicsShowcase)]
@@ -76,7 +76,7 @@ impl Component for AppShell {
                                     .font_weight(FontWeight::BOLD)
                                     .child("Freya on the web"),
                             )
-                            .child(item(Route::Widgets, "Components", true))
+                            .child(item(Route::Components, "Components", true))
                             .child(item(Route::Animation, "Animation", false))
                             .child(item(Route::Graphics, "Graphics", false))
                             .child(item(Route::Material, "Material Design", false))

@@ -13,10 +13,7 @@ impl Component for I18nShowcase {
 
         rect()
             .spacing(20.)
-            .child(super::heading(
-                "Internationalization",
-                "The same app, in another language",
-            ))
+            .child(super::heading("Internationalization", "Multiple languages"))
             .child(
                 rect()
                     .horizontal()

@@ -8,10 +8,7 @@ impl Component for ScrollShowcase {
         rect()
             .spacing(20.)
             .expanded()
-            .child(super::heading(
-                "Virtual Scroll",
-                "Ten thousand rows, and it still scrolls smoothly",
-            ))
+            .child(super::heading("Virtual Scroll", "Ten thousand rows"))
             .child(
                 VirtualScrollView::new(|item, _| {
                     rect()

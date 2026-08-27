@@ -28,10 +28,7 @@ impl Component for AnimationShowcase {
 
         rect()
             .spacing(20.)
-            .child(super::heading(
-                "Animation",
-                "Press the button and watch it take its time",
-            ))
+            .child(super::heading("Animation", "Press the button"))
             .child(
                 Button::new()
                     .on_press(move |_| {

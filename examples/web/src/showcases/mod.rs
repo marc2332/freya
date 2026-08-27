@@ -1,23 +1,23 @@
 mod animation;
+mod components;
 mod graphics;
 mod i18n;
 mod kanban;
 mod markdown;
 mod material;
 mod scroll;
-mod widgets;
 
 use freya::prelude::*;
 
 pub use crate::showcases::{
     animation::AnimationShowcase,
+    components::ComponentsShowcase,
     graphics::GraphicsShowcase,
     i18n::I18nShowcase,
     kanban::KanbanShowcase,
     markdown::MarkdownShowcase,
     material::MaterialShowcase,
     scroll::ScrollShowcase,
-    widgets::WidgetsShowcase,
 };
 
 /// Title and subtitle shown at the top of every showcase.

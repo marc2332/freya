@@ -20,3 +20,5 @@ pnpm-debug.log*
 .DS_Store
 
 .astro
+
+public/demo/

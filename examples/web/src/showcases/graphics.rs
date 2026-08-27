@@ -16,10 +16,7 @@ impl Component for GraphicsShowcase {
 
         rect()
             .spacing(20.)
-            .child(super::heading(
-                "Graphics",
-                "Shapes, colors and one thing that keeps turning",
-            ))
+            .child(super::heading("Graphics", "Shapes, colors and rotation"))
             .child(
                 rect()
                     .horizontal()
@@ -75,7 +72,7 @@ impl Component for GraphicsShowcase {
                     .center()
                     .color((255, 255, 255))
                     .font_size(20.)
-                    .child("Made out of rectangles, believe it or not"),
+                    .child("github.com/marc2332/freya"),
             )
     }
 }
