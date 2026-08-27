@@ -1,3 +1,5 @@
+#![cfg_attr(not(target_os = "emscripten"), allow(dead_code))]
+
 mod app;
 mod showcases;
 

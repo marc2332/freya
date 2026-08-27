@@ -3,9 +3,9 @@ use std::{
     rc::Rc,
 };
 
-#[cfg(debug_assertions)]
-use async_io::Timer;
 use freya::prelude::Size;
+#[cfg(debug_assertions)]
+use freya::prelude::sleep;
 use freya_query::prelude::*;
 use freya_testing::prelude::*;
 
@@ -325,7 +325,7 @@ fn mocked_async_query() {
             runner.run_in(|| {
                 GlobalContexts::get().insert_context(QueriesStorage::<GetUserName>::mocked_async(
                     |keys| async move {
-                        Timer::after(std::time::Duration::from_millis(20)).await;
+                        sleep(std::time::Duration::from_millis(20)).await;
                         Ok(format!("Mocked {keys}"))
                     },
                 ))
