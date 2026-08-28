@@ -20,7 +20,6 @@ pub use crate::showcases::{
     scroll::ScrollShowcase,
 };
 
-/// Title and subtitle shown at the top of every showcase.
 pub fn heading(title: &str, subtitle: &str) -> impl IntoElement {
     rect()
         .spacing(4.)

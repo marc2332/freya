@@ -174,7 +174,6 @@ fn sidebar() -> Rect {
         .child(item(Route::I18n, "i18n", false))
 }
 
-/// Sidebar entry that highlights itself while its route is active.
 fn item(route: Route, title: &'static str, exact: bool) -> ActivableRoute<Route> {
     ActivableRoute::new(
         route.clone(),
