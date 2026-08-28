@@ -1,21 +1,20 @@
+#![cfg_attr(
+    all(not(debug_assertions), target_os = "windows"),
+    windows_subsystem = "windows"
+)]
+
 use freya::{
     animation::*,
-    i18n::*,
     icons::lucide,
     prelude::*,
     router::*,
 };
 
-use crate::showcases::*;
+fn main() {
+    launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
+}
 
-pub fn app() -> impl IntoElement {
-    use_init_i18n(|| {
-        I18nConfig::new(langid!("en-US"))
-            .with_locale((langid!("en-US"), include_str!("./i18n/en-US.ftl")))
-            .with_locale((langid!("es-ES"), include_str!("./i18n/es-ES.ftl")))
-            .with_fallback(langid!("en-US"))
-    });
-
+fn app() -> impl IntoElement {
     Router::<Route>::new(RouterConfig::default)
 }
 
@@ -23,22 +22,12 @@ pub fn app() -> impl IntoElement {
 #[rustfmt::skip]
 pub enum Route {
     #[layout(AppShell)]
-        #[route("/", ComponentsShowcase)]
-        Components,
-        #[route("/animation", AnimationShowcase)]
-        Animation,
-        #[route("/graphics", GraphicsShowcase)]
-        Graphics,
-        #[route("/material", MaterialShowcase)]
-        Material,
-        #[route("/markdown", MarkdownShowcase)]
-        Markdown,
-        #[route("/scroll", ScrollShowcase)]
-        Scroll,
-        #[route("/kanban", KanbanShowcase)]
-        Kanban,
-        #[route("/i18n", I18nShowcase)]
-        I18n,
+        #[route("/")]
+        Home,
+        #[route("/settings")]
+        Settings,
+        #[route("/about")]
+        About,
 }
 
 #[derive(PartialEq)]
@@ -148,16 +137,11 @@ fn sidebar() -> Rect {
                 .padding((8., 8., 16., 8.))
                 .font_size(20.)
                 .font_weight(FontWeight::BOLD)
-                .child("Freya on the web"),
+                .child("Collapsible sidebar"),
         )
-        .child(item(Route::Components, "Components", true))
-        .child(item(Route::Animation, "Animation", false))
-        .child(item(Route::Graphics, "Graphics", false))
-        .child(item(Route::Material, "Material Design", false))
-        .child(item(Route::Markdown, "Markdown", false))
-        .child(item(Route::Scroll, "Virtual Scroll", false))
-        .child(item(Route::Kanban, "Kanban", false))
-        .child(item(Route::I18n, "i18n", false))
+        .child(item(Route::Home, "Home", true))
+        .child(item(Route::Settings, "Settings", false))
+        .child(item(Route::About, "About", false))
 }
 
 /// Sidebar entry that highlights itself while its route is active.
@@ -167,4 +151,28 @@ fn item(route: Route, title: &'static str, exact: bool) -> ActivableRoute<Route>
         Link::new(route).child(SideBarItem::new().child(title)),
     )
     .exact(exact)
+}
+
+#[derive(PartialEq)]
+struct Home;
+impl Component for Home {
+    fn render(&self) -> impl IntoElement {
+        "Home Page! Resize the window below 800px to collapse the sidebar."
+    }
+}
+
+#[derive(PartialEq)]
+struct Settings;
+impl Component for Settings {
+    fn render(&self) -> impl IntoElement {
+        "Settings Page!"
+    }
+}
+
+#[derive(PartialEq)]
+struct About;
+impl Component for About {
+    fn render(&self) -> impl IntoElement {
+        "About Page!"
+    }
 }
