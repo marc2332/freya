@@ -295,7 +295,7 @@ pub mod engine {
 
 /// Reexport `freya-web` when the `web` feature is enabled and the target is the browser.
 #[cfg_attr(feature = "docs", doc(cfg(feature = "web")))]
-#[cfg(all(feature = "web", target_os = "emscripten"))]
+#[cfg(all(feature = "web", any(doc, target_os = "emscripten")))]
 pub mod web {
     pub use freya_web::*;
 }

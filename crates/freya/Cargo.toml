@@ -58,6 +58,7 @@ all-debug = [
   "dep:freya-testing",
   "dep:freya-plotters-backend",
   "performance",
+  "web",
 ]
 all-tests = [
   "winit",
