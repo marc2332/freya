@@ -46,29 +46,37 @@ struct AppShell;
 
 impl Component for AppShell {
     fn render(&self) -> impl IntoElement {
+        let route = use_route::<Route>();
         let theme = use_init_theme(light_theme);
         let surface = theme.read().colors.surface_tertiary;
         let icon_color = theme.read().colors.text_primary;
         let mut window_width = use_state(|| f32::MAX);
         let mut sidebar_open = use_state(|| false);
         let mut slide = use_animation(|_| {
-            AnimNum::new(-210., 0.)
+            AnimNum::new(-280., 0.)
                 .time(250)
                 .ease(Ease::Out)
                 .function(Function::Expo)
         });
 
+        let drawer_left = slide.get().value();
+        let progress = 1. + drawer_left / 280.;
+
         let compact = *window_width.read() < 800.;
         let sliding_sidebar = compact && (*sidebar_open.read() || *slide.is_running().read());
 
-        let toggle_sidebar = move |_| {
+        let mut close_sidebar = move || {
             if *sidebar_open.peek() {
                 slide.reverse();
                 sidebar_open.set(false);
-            } else {
-                slide.start();
-                sidebar_open.set(true);
             }
+        };
+
+        use_side_effect_with_deps(&route, move |_| close_sidebar());
+
+        let open_sidebar = move |_| {
+            slide.start();
+            sidebar_open.set(true);
         };
 
         rect()
@@ -99,46 +107,52 @@ impl Component for AppShell {
                             .key("content")
                             .expanded()
                             .height(Size::fill())
-                            .padding(if compact {
-                                (24., 24., 24., 68.)
-                            } else {
-                                (24., 24., 24., 24.)
+                            .padding(24.)
+                            .maybe(compact, |el| {
+                                el.spacing(16.).child(
+                                    Button::new().key("burger").on_press(open_sidebar).child(
+                                        SvgViewer::new(lucide::menu())
+                                            .stroke(icon_color)
+                                            .width(Size::px(20.))
+                                            .height(Size::px(20.)),
+                                    ),
+                                )
                             })
-                            .child(Outlet::<Route>::new()),
-                    )
-                    .maybe_child(sliding_sidebar.then(|| {
-                        sidebar()
-                            .key("floating-sidebar")
-                            .position(Position::new_absolute().left(slide.read().value()).top(0.))
-                            .layer(Layer::Relative(100))
-                            .padding((60., 12., 12., 12.))
-                            .shadow((10., 0., 30., 0., (0, 0, 0, 40)))
-                    }))
-                    .maybe_child(compact.then(|| {
-                        rect()
-                            .key("burger")
-                            .position(Position::new_absolute().left(12.).top(12.))
-                            .layer(Layer::Relative(200))
                             .child(
-                                Button::new().on_press(toggle_sidebar).child(
-                                    SvgViewer::new(if *sidebar_open.read() {
-                                        lucide::x()
-                                    } else {
-                                        lucide::menu()
-                                    })
-                                    .stroke(icon_color)
-                                    .width(Size::px(20.))
-                                    .height(Size::px(20.)),
-                                ),
-                            )
-                    })),
+                                rect()
+                                    .key("page")
+                                    .width(Size::fill())
+                                    .expanded()
+                                    .child(Outlet::<Route>::new()),
+                            ),
+                    )
+                    .maybe(sliding_sidebar, |el| {
+                        el.child(
+                            rect()
+                                .key("backdrop")
+                                .position(Position::new_absolute().left(0.).top(0.))
+                                .width(Size::percent(100.))
+                                .height(Size::percent(100.))
+                                .background((0, 0, 0, (progress * 100.) as u8))
+                                .layer(Layer::Relative(90))
+                                .on_press(move |_| close_sidebar()),
+                        )
+                        .child(
+                            sidebar()
+                                .key("floating-sidebar")
+                                .position(Position::new_absolute().left(drawer_left).top(0.))
+                                .layer(Layer::Relative(100))
+                                .opacity(0.6 + 0.4 * progress)
+                                .shadow((10., 0., 30., 0., (0, 0, 0, 40))),
+                        )
+                    }),
             )
     }
 }
 
 fn sidebar() -> Rect {
     rect()
-        .width(Size::px(210.))
+        .width(Size::px(240.))
         .height(Size::fill())
         .theme_background()
         .padding(12.)
