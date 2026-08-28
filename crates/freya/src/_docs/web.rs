@@ -47,7 +47,7 @@
 //! const INTER: &[u8] = include_bytes!("./Inter.ttf");
 //!
 //! fn main() {
-//!     launch_cfg(WebConfig::new(app).with_font("Inter", INTER));
+//!     launch(WebConfig::new(app).with_font("Inter", INTER));
 //! }
 //!
 //! fn app() -> impl IntoElement {

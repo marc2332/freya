@@ -2,8 +2,6 @@
 
 use std::cell::RefCell;
 
-use freya_core::integration::AppComponent;
-
 mod app;
 mod config;
 mod emscripten;
@@ -21,13 +19,8 @@ thread_local! {
     static APP: RefCell<Option<WebApp>> = const { RefCell::new(None) };
 }
 
-/// Runs a Freya app in the browser.
-pub fn launch(app: impl Into<AppComponent>) {
-    launch_cfg(WebConfig::new(app))
-}
-
 /// Runs a Freya app in the browser with a custom configuration.
-pub fn launch_cfg(config: WebConfig) {
+pub fn launch(config: WebConfig) {
     let Some(app) = WebApp::new(config) else {
         return;
     };
