@@ -3,6 +3,8 @@ use freya::{
     prelude::*,
 };
 
+use crate::showcases::heading;
+
 #[derive(PartialEq)]
 pub struct AnimationShowcase;
 
@@ -28,7 +30,7 @@ impl Component for AnimationShowcase {
 
         rect()
             .spacing(20.)
-            .child(super::heading("Animation", "Press the button"))
+            .child(heading("Animation", "Press the button"))
             .child(
                 Button::new()
                     .on_press(move |_| {

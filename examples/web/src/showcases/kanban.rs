@@ -5,14 +5,16 @@ use freya::{
     prelude::*,
 };
 
-#[derive(PartialEq, Clone, Copy, Debug, Hash)]
-pub enum TaskStatus {
+use crate::showcases::heading;
+
+#[derive(PartialEq, Clone, Copy, Hash)]
+enum TaskStatus {
     Todo,
     Done,
 }
 
-#[derive(PartialEq, Clone, Debug)]
-pub struct Task {
+#[derive(PartialEq, Clone)]
+struct Task {
     id: usize,
     title: String,
     status: TaskStatus,
@@ -76,7 +78,7 @@ impl Component for KanbanShowcase {
         rect()
             .spacing(16.)
             .expanded()
-            .child(super::heading(
+            .child(heading(
                 "Kanban",
                 "Pick up a card and drop it somewhere else",
             ))
@@ -84,7 +86,6 @@ impl Component for KanbanShowcase {
                 rect()
                     .horizontal()
                     .expanded()
-                    .width(Size::fill())
                     .content(Content::Flex)
                     .spacing(12.)
                     .child(Column {
@@ -116,100 +117,86 @@ impl Component for Column {
         let colors = use_theme().read().colors.clone();
         let mut card_width = use_state(|| 0.);
 
-        rect()
-            .vertical()
-            .width(Size::flex(1.))
-            .height(Size::fill())
+        rect().width(Size::flex(1.)).height(Size::fill()).child(
+            DropZone::new(move |task_id: usize| {
+                let Some(mut task) = tasks.read().iter().find(|task| task.id == task_id).cloned()
+                else {
+                    return;
+                };
+                if task.status != status {
+                    tasks.write().retain(|task| task.id != task_id);
+                    task.status = status;
+                    tasks.write().push(task);
+                }
+            })
             .child(
-                DropZone::new(move |task_id: usize| {
-                    let Some(mut task) = tasks.read().iter().find(|t| t.id == task_id).cloned()
-                    else {
-                        return;
-                    };
-                    if task.status != status {
-                        tasks.write().retain(|t| t.id != task_id);
-                        task.status = status;
-                        tasks.write().push(task);
-                    }
-                })
-                .child(
-                    rect()
-                        .vertical()
-                        .expanded()
-                        .padding(12.)
-                        .spacing(8.)
-                        .background(colors.surface_secondary)
-                        .corner_radius(12.)
-                        .child(
-                            label()
-                                .text(self.title)
-                                .font_size(16.)
-                                .font_weight(FontWeight::BOLD),
-                        )
-                        .child(
-                            rect()
-                                .width(Size::fill())
-                                .spacing(8.)
-                                .on_sized(move |e: Event<SizedEventData>| {
-                                    card_width.set_if_modified(e.area.size.width)
-                                })
-                                .children(
-                                    tasks
-                                        .read()
-                                        .iter()
-                                        .filter(|t| t.status == status)
-                                        .enumerate()
-                                        .map(|(index, task)| {
-                                            DragZone::new(task.id)
-                                                .drag_element(
-                                                    Portal::new(task.id)
+                rect()
+                    .expanded()
+                    .padding(12.)
+                    .spacing(8.)
+                    .background(colors.surface_secondary)
+                    .corner_radius(12.)
+                    .child(
+                        label()
+                            .text(self.title)
+                            .font_size(16.)
+                            .font_weight(FontWeight::BOLD),
+                    )
+                    .child(
+                        rect()
+                            .width(Size::fill())
+                            .spacing(8.)
+                            .on_sized(move |event: Event<SizedEventData>| {
+                                card_width.set_if_modified(event.area.width())
+                            })
+                            .children(
+                                tasks
+                                    .read()
+                                    .iter()
+                                    .filter(|task| task.status == status)
+                                    .enumerate()
+                                    .map(|(index, task)| {
+                                        let portal = || {
+                                            Portal::new(task.id)
+                                                .height(Size::px(58.))
+                                                .width(Size::fill())
+                                                .function(Function::Expo)
+                                                .duration(Duration::from_millis(400))
+                                        };
+
+                                        DragZone::new(task.id)
+                                            .drag_element(
+                                                portal().child(
+                                                    rect()
+                                                        .interactive(false)
+                                                        .background(colors.background)
+                                                        .layer(999)
+                                                        .corner_radius(10.)
+                                                        .padding(12.)
+                                                        .width(Size::px(card_width()))
                                                         .height(Size::px(58.))
-                                                        .width(Size::fill())
-                                                        .function(Function::Expo)
-                                                        .duration(Duration::from_millis(400))
+                                                        .shadow((0., 6., 16., 0., (0, 0, 0, 45)))
                                                         .child(
-                                                            rect()
-                                                                .interactive(false)
-                                                                .background(colors.background)
-                                                                .layer(999)
-                                                                .corner_radius(10.)
-                                                                .padding(12.)
-                                                                .width(Size::px(card_width()))
-                                                                .height(Size::px(58.))
-                                                                .shadow((
-                                                                    0.,
-                                                                    6.,
-                                                                    16.,
-                                                                    0.,
-                                                                    (0, 0, 0, 45),
-                                                                ))
-                                                                .child(
-                                                                    label()
-                                                                        .text(task.title.clone())
-                                                                        .max_lines(1)
-                                                                        .text_overflow(
-                                                                            TextOverflow::Ellipsis,
-                                                                        ),
+                                                            label()
+                                                                .text(task.title.clone())
+                                                                .max_lines(1)
+                                                                .text_overflow(
+                                                                    TextOverflow::Ellipsis,
                                                                 ),
                                                         ),
-                                                )
-                                                .show_while_dragging(false)
-                                                .child(
-                                                    Portal::new(task.id)
-                                                        .height(Size::px(58.))
-                                                        .width(Size::fill())
-                                                        .function(Function::Expo)
-                                                        .duration(Duration::from_millis(400))
-                                                        .animation_dependency((
-                                                            status, index, dragging,
-                                                        ))
-                                                        .child(TaskCard(task.clone())),
-                                                )
-                                                .key(task.id)
-                                        }),
-                                ),
-                        ),
-                ),
-            )
+                                                ),
+                                            )
+                                            .show_while_dragging(false)
+                                            .child(
+                                                portal()
+                                                    .animation_dependency((status, index, dragging))
+                                                    .child(TaskCard(task.clone())),
+                                            )
+                                            .key(task.id)
+                                    }),
+                            ),
+                    ),
+            ),
+        )
     }
 }

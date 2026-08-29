@@ -3,6 +3,8 @@ use freya::{
     prelude::*,
 };
 
+use crate::showcases::heading;
+
 const RUST_LOGO: &[u8] = include_bytes!("../rust_logo.png");
 
 #[derive(Clone, Copy, PartialEq)]
@@ -37,14 +39,14 @@ impl Component for ComponentsShowcase {
         let mut show_popup = use_state(|| false);
         let mut theme = use_theme();
 
-        let languages = ["Espresso", "Flat white", "Cortado"];
+        let coffees = ["Espresso", "Flat white", "Cortado"];
         let icon_color = theme.read().colors.text_primary;
         let is_dark = theme.read().name == "dark";
 
         ScrollView::new().child(
             rect()
                 .spacing(20.)
-                .child(super::heading("Components", "Components gallery"))
+                .child(heading("Components", "Components gallery"))
                 .child(
                     rect()
                         .horizontal()
@@ -130,18 +132,16 @@ impl Component for ComponentsShowcase {
                             .child(label().text(value.label()).width(Size::fill()))
                     }),
                 ))
-                .child(
-                    rect().spacing(8.).child("Coffee").child(
-                        Select::new()
-                            .selected_item(languages[selected()].to_string())
-                            .children(languages.iter().enumerate().map(|(index, name)| {
-                                MenuItem::new()
-                                    .selected(selected() == index)
-                                    .on_press(move |_| selected.set(index))
-                                    .child(name.to_string())
-                            })),
+                .child(rect().spacing(8.).child("Coffee").child(
+                    Select::new().selected_item(coffees[selected()]).children(
+                        coffees.iter().enumerate().map(|(index, name)| {
+                            MenuItem::new()
+                                .selected(selected() == index)
+                                .on_press(move |_| selected.set(index))
+                                .child(*name)
+                        }),
                     ),
-                )
+                ))
                 .child(
                     rect()
                         .spacing(8.)

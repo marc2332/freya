@@ -3,6 +3,8 @@ use freya::{
     prelude::*,
 };
 
+use crate::showcases::heading;
+
 const TABS: [&str; 3] = ["Overview", "Details", "Activity"];
 
 #[derive(PartialEq)]
@@ -14,7 +16,7 @@ impl Component for MaterialShowcase {
 
         rect()
             .spacing(20.)
-            .child(super::heading(
+            .child(heading(
                 "Material Design",
                 "Tabs, cards and a ripple under your cursor",
             ))
@@ -28,7 +30,7 @@ impl Component for MaterialShowcase {
                                 .center()
                                 .padding((6., 14., 6., 14.))
                                 .on_press(move |_| selected.set(index))
-                                .child(name.to_string()),
+                                .child(*name),
                         )
                     })),
             )
@@ -43,9 +45,7 @@ impl Component for MaterialShowcase {
                                 rect()
                                     .spacing(8.)
                                     .width(Size::fill())
-                                    .child(
-                                        rect().font_size(18.).child(TABS[selected()].to_string()),
-                                    )
+                                    .child(rect().font_size(18.).child(TABS[selected()]))
                                     .child("Click anywhere on this card."),
                             ),
                         ),

@@ -3,6 +3,8 @@ use freya::{
     prelude::*,
 };
 
+use crate::showcases::heading;
+
 #[derive(PartialEq)]
 pub struct I18nShowcase;
 
@@ -13,7 +15,7 @@ impl Component for I18nShowcase {
 
         rect()
             .spacing(20.)
-            .child(super::heading("Internationalization", "Multiple languages"))
+            .child(heading("Internationalization", "Multiple languages"))
             .child(
                 rect()
                     .horizontal()

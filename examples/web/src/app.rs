@@ -103,21 +103,25 @@ impl Component for AppShell {
                         el.corner_radius(20.)
                             .shadow((0., 10., 30., 0., (0, 0, 0, 40)))
                     })
-                    .maybe_child((!compact).then(|| sidebar().key("sidebar")))
+                    .maybe_child((!compact).then(sidebar))
                     .child(
                         rect()
                             .key("content")
                             .expanded()
-                            .height(Size::fill())
                             .padding(if compact { 12. } else { 24. })
                             .maybe(compact, |el| {
                                 el.spacing(16.).child(
-                                    Button::new().key("burger").on_press(open_sidebar).child(
-                                        SvgViewer::new(lucide::menu())
-                                            .stroke(icon_color)
-                                            .width(Size::px(20.))
-                                            .height(Size::px(20.)),
-                                    ),
+                                    Button::new()
+                                        .flat()
+                                        .expanded()
+                                        .corner_radius(99.)
+                                        .on_press(open_sidebar)
+                                        .child(
+                                            SvgViewer::new(lucide::menu())
+                                                .stroke(icon_color)
+                                                .width(Size::px(20.))
+                                                .height(Size::px(20.)),
+                                        ),
                                 )
                             })
                             .child(rect().key("page").expanded().child(Outlet::<Route>::new())),
@@ -125,17 +129,14 @@ impl Component for AppShell {
                     .maybe(sliding_sidebar, |el| {
                         el.child(
                             rect()
-                                .key("backdrop")
                                 .position(Position::new_absolute().left(0.).top(0.))
-                                .width(Size::percent(100.))
-                                .height(Size::percent(100.))
+                                .expanded()
                                 .background((0, 0, 0, (progress * 100.) as u8))
                                 .layer(Layer::Relative(90))
                                 .on_press(move |_| close_sidebar()),
                         )
                         .child(
                             sidebar()
-                                .key("floating-sidebar")
                                 .position(Position::new_absolute().left(drawer_left).top(0.))
                                 .layer(Layer::Relative(100))
                                 .opacity(0.6 + 0.4 * progress)
@@ -154,26 +155,29 @@ fn sidebar() -> Rect {
         .padding(12.)
         .spacing(4.)
         .child(
-            rect()
+            label()
+                .text("Freya on the web")
                 .padding((8., 8., 16., 8.))
                 .font_size(20.)
-                .font_weight(FontWeight::BOLD)
-                .child("Freya on the web"),
+                .font_weight(FontWeight::BOLD),
         )
-        .child(item(Route::Components, "Components", true))
-        .child(item(Route::Animation, "Animation", false))
-        .child(item(Route::Graphics, "Graphics", false))
-        .child(item(Route::Material, "Material Design", false))
-        .child(item(Route::Markdown, "Markdown", false))
-        .child(item(Route::Scroll, "Virtual Scroll", false))
-        .child(item(Route::Kanban, "Kanban", false))
-        .child(item(Route::I18n, "i18n", false))
-}
-
-fn item(route: Route, title: &'static str, exact: bool) -> ActivableRoute<Route> {
-    ActivableRoute::new(
-        route.clone(),
-        Link::new(route).child(SideBarItem::new().child(title)),
-    )
-    .exact(exact)
+        .children(
+            [
+                (Route::Components, "Components"),
+                (Route::Animation, "Animation"),
+                (Route::Graphics, "Graphics"),
+                (Route::Material, "Material Design"),
+                (Route::Markdown, "Markdown"),
+                (Route::Scroll, "Virtual Scroll"),
+                (Route::Kanban, "Kanban"),
+                (Route::I18n, "i18n"),
+            ]
+            .map(|(route, title)| {
+                ActivableRoute::new(
+                    route.clone(),
+                    Link::new(route).child(SideBarItem::new().child(title)),
+                )
+                .exact(true)
+            }),
+        )
 }
