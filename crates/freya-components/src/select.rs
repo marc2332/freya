@@ -131,9 +131,9 @@ impl Component for Select {
         let a11y_id = use_a11y();
         let focus = use_focus(a11y_id);
         let mut status = use_state(SelectStatus::default);
+        let mut open = use_state(|| false);
         let mut button_area = use_state(|| None::<Area>);
         let mut list_size = use_state(|| None::<Size2D>);
-        let mut open = use_state(|| false);
         use_provide_context(|| MenuGroup { group_id: a11y_id });
 
         let focused = use_memo(move || {
