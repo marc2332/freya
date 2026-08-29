@@ -94,20 +94,22 @@ impl Component for AppShell {
             })
             .child(
                 rect()
-                    .width(Size::percent(85.))
-                    .height(Size::percent(85.))
+                    .width(Size::percent(if compact { 100. } else { 85. }))
+                    .height(Size::percent(if compact { 100. } else { 85. }))
                     .horizontal()
                     .background(surface)
-                    .corner_radius(20.)
-                    .shadow((0., 10., 30., 0., (0, 0, 0, 40)))
                     .overflow(Overflow::Clip)
+                    .maybe(!compact, |el| {
+                        el.corner_radius(20.)
+                            .shadow((0., 10., 30., 0., (0, 0, 0, 40)))
+                    })
                     .maybe_child((!compact).then(|| sidebar().key("sidebar")))
                     .child(
                         rect()
                             .key("content")
                             .expanded()
                             .height(Size::fill())
-                            .padding(24.)
+                            .padding(if compact { 12. } else { 24. })
                             .maybe(compact, |el| {
                                 el.spacing(16.).child(
                                     Button::new().key("burger").on_press(open_sidebar).child(
@@ -118,13 +120,7 @@ impl Component for AppShell {
                                     ),
                                 )
                             })
-                            .child(
-                                rect()
-                                    .key("page")
-                                    .width(Size::fill())
-                                    .expanded()
-                                    .child(Outlet::<Route>::new()),
-                            ),
+                            .child(rect().key("page").expanded().child(Outlet::<Route>::new())),
                     )
                     .maybe(sliding_sidebar, |el| {
                         el.child(

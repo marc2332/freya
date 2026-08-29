@@ -480,7 +480,8 @@ impl TestingRunner {
             name: MouseEventName::MouseMove,
             cursor: cursor.into(),
             button: Some(MouseButton::Left),
-        })
+        });
+        self.sync_and_update();
     }
 
     pub fn write_text(&mut self, text: impl ToString) {

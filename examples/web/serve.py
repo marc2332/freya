@@ -14,15 +14,15 @@ INDEX = """<!doctype html>
       html,
       body {{
         margin: 0;
-        height: 100%;
+        height: 100dvh;
         overflow: hidden;
         background: #ffffff;
       }}
 
       #canvas {{
         display: block;
-        width: 100vw;
-        height: 100vh;
+        width: 100dvw;
+        height: 100dvh;
         outline: none;
         user-select: none;
         -webkit-user-select: none;

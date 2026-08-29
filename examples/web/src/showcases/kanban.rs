@@ -8,7 +8,6 @@ use freya::{
 #[derive(PartialEq, Clone, Copy, Debug, Hash)]
 pub enum TaskStatus {
     Todo,
-    InProgress,
     Done,
 }
 
@@ -51,7 +50,12 @@ impl Component for TaskCard {
             .height(Size::px(58.))
             .scale(animation.read().value())
             .shadow((0., 2., 6., 0., (0, 0, 0, 25)))
-            .child(self.0.title.clone())
+            .child(
+                label()
+                    .text(self.0.title.clone())
+                    .max_lines(1)
+                    .text_overflow(TextOverflow::Ellipsis),
+            )
     }
 }
 
@@ -64,7 +68,7 @@ impl Component for KanbanShowcase {
             vec![
                 Task::new(1, "Buy milk", TaskStatus::Todo),
                 Task::new(2, "Fix the bike", TaskStatus::Todo),
-                Task::new(3, "Call the dentist", TaskStatus::InProgress),
+                Task::new(3, "Call the dentist", TaskStatus::Todo),
                 Task::new(4, "Water the plants", TaskStatus::Done),
             ]
         });
@@ -87,11 +91,6 @@ impl Component for KanbanShowcase {
                         tasks,
                         status: TaskStatus::Todo,
                         title: "To Do",
-                    })
-                    .child(Column {
-                        tasks,
-                        status: TaskStatus::InProgress,
-                        title: "In Progress",
                     })
                     .child(Column {
                         tasks,
@@ -184,7 +183,14 @@ impl Component for Column {
                                                                     0.,
                                                                     (0, 0, 0, 45),
                                                                 ))
-                                                                .child(task.title.clone()),
+                                                                .child(
+                                                                    label()
+                                                                        .text(task.title.clone())
+                                                                        .max_lines(1)
+                                                                        .text_overflow(
+                                                                            TextOverflow::Ellipsis,
+                                                                        ),
+                                                                ),
                                                         ),
                                                 )
                                                 .show_while_dragging(false)
