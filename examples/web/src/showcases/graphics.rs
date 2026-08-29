@@ -3,6 +3,8 @@ use freya::{
     prelude::*,
 };
 
+use crate::showcases::heading;
+
 #[derive(PartialEq)]
 pub struct GraphicsShowcase;
 
@@ -16,7 +18,7 @@ impl Component for GraphicsShowcase {
 
         rect()
             .spacing(20.)
-            .child(super::heading("Graphics", "Shapes, colors and rotation"))
+            .child(heading("Graphics", "Shapes, colors and rotation"))
             .child(
                 rect()
                     .horizontal()

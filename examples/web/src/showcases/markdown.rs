@@ -1,5 +1,7 @@
 use freya::prelude::*;
 
+use crate::showcases::heading;
+
 const CONTENT: &str = r#"
 # Trip notes
 
@@ -34,8 +36,8 @@ impl Component for MarkdownShowcase {
         ScrollView::new().child(
             rect()
                 .spacing(20.)
-                .child(super::heading("Markdown", "Some markdown"))
-                .child(MarkdownViewer::new(CONTENT.to_string())),
+                .child(heading("Markdown", "Some markdown"))
+                .child(MarkdownViewer::new(CONTENT)),
         )
     }
 }

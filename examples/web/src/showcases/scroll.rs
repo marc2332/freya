@@ -1,5 +1,7 @@
 use freya::prelude::*;
 
+use crate::showcases::heading;
+
 #[derive(PartialEq)]
 pub struct ScrollShowcase;
 
@@ -8,7 +10,7 @@ impl Component for ScrollShowcase {
         rect()
             .spacing(20.)
             .expanded()
-            .child(super::heading("Virtual Scroll", "Ten thousand rows"))
+            .child(heading("Virtual Scroll", "Ten thousand rows"))
             .child(
                 VirtualScrollView::new(|item, _| {
                     rect()
@@ -17,8 +19,7 @@ impl Component for ScrollShowcase {
                         .padding(4.)
                         .child(
                             rect()
-                                .width(Size::fill())
-                                .height(Size::fill())
+                                .expanded()
                                 .padding((0., 12., 0., 12.))
                                 .corner_radius(10.)
                                 .main_align(Alignment::center())
