@@ -130,7 +130,8 @@ impl Component for AppShell {
                         el.child(
                             rect()
                                 .position(Position::new_absolute().left(0.).top(0.))
-                                .expanded()
+                                .width(Size::percent(100.))
+                                .height(Size::percent(100.))
                                 .background((0, 0, 0, (progress * 100.) as u8))
                                 .layer(Layer::Relative(90))
                                 .on_press(move |_| close_sidebar()),
