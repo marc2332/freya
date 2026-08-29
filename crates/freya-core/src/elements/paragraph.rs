@@ -800,6 +800,8 @@ impl TextStyleState {
             self.font_width.into(),
             self.font_slant.into(),
         ));
+        text_style.set_letter_spacing(f32::from(self.letter_spacing) * scale_factor as f32);
+        text_style.set_decoration_type(self.text_decoration.into());
 
         if self.text_height.needs_custom_height() {
             text_style.set_height_override(true);
@@ -846,6 +848,7 @@ impl Span<'_> {
             span_style.font_slant.into(),
         ));
         text_style.set_decoration_type(span_style.text_decoration.into());
+        text_style.set_letter_spacing(f32::from(span_style.letter_spacing) * scale_factor as f32);
 
         if let Some(line_height) = line_height {
             text_style.set_height_override(true);
