@@ -36,7 +36,7 @@ impl Component for TaskCard {
     fn render(&self) -> impl IntoElement {
         let colors = use_theme().read().colors.clone();
         let animation = use_animation(|conf| {
-            conf.on_creation(OnCreation::Run);
+            conf.on_creation(OnCreation::Finish);
             AnimNum::new(0.85, 1.)
                 .time(400)
                 .function(Function::Expo)
