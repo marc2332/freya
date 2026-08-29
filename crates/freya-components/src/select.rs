@@ -138,7 +138,11 @@ impl Component for Select {
 
         let focused = use_memo(move || {
             a11y_id.is_focused()
-                || Platform::get().focused_accessibility_node.read().member_of() == Some(a11y_id)
+                || Platform::get()
+                    .focused_accessibility_node
+                    .read()
+                    .member_of()
+                    == Some(a11y_id)
         });
         let visible = open() && focused();
 

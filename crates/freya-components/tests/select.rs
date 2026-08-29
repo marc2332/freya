@@ -101,8 +101,14 @@ pub fn opening_second_select_does_not_close_itself_while_its_focus_is_still_land
     let b_point = label_center(&test, "Select B");
     click_without_settling(&mut test, b_point);
 
-    assert!(label_exists(&test, "A Item 1"), "Select A stays open until it loses focus");
-    assert!(!label_exists(&test, "B Item 1"), "Select B waits for its own focus to land");
+    assert!(
+        label_exists(&test, "A Item 1"),
+        "Select A stays open until it loses focus"
+    );
+    assert!(
+        !label_exists(&test, "B Item 1"),
+        "Select B waits for its own focus to land"
+    );
 
     test.apply_pending_focus_strategy();
     test.commit_accessibility();
