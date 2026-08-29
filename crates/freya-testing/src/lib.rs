@@ -354,14 +354,16 @@ impl TestingRunner {
         self.runner.handle_events_immediately()
     }
 
-    pub fn sync_and_update(&mut self) {
+    pub fn apply_pending_focus_strategy(&mut self) {
         if let Some(strategy) = self.requested_focus_strategy.borrow_mut().take() {
             self.tree
                 .borrow_mut()
                 .accessibility_diff
                 .request_focus(strategy);
         }
+    }
 
+    pub fn process_events_and_layout(&mut self) {
         while let Ok(events_chunk) = self.events_receiver.try_recv() {
             match events_chunk {
                 EventsChunk::Processed(processed_events) => {
@@ -408,7 +410,9 @@ impl TestingRunner {
             self.scale_factor,
             &self.default_fonts,
         );
+    }
 
+    pub fn commit_accessibility(&mut self) {
         let accessibility_update = self.accessibility.process_updates(
             &mut self.tree.borrow_mut(),
             &self.events_sender,
@@ -429,6 +433,12 @@ impl TestingRunner {
                 &tree,
                 "",
             ));
+    }
+
+    pub fn sync_and_update(&mut self) {
+        self.apply_pending_focus_strategy();
+        self.process_events_and_layout();
+        self.commit_accessibility();
     }
 
     /// Poll async tasks and events every `step` time for a total time of `duration`.
