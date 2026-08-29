@@ -167,8 +167,12 @@ impl RenderPipeline<'_> {
                         }
                     }
 
-                    for opacity in effect_state.opacities.iter() {
-                        self.canvas.save_layer_alpha_f(layer_bounds, *opacity);
+                    let opacity = effect_state
+                        .opacities
+                        .iter()
+                        .fold(1., |acc, opacity| acc * opacity);
+                    if opacity < 1. {
+                        self.canvas.save_layer_alpha_f(layer_bounds, opacity);
                     }
 
                     // Transform the canvas area given the scale effects
