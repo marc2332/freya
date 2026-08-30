@@ -18,6 +18,9 @@ f-check:
 f-nix:
     alejandra flake.nix
 
+sa:
+    cargo audit
+
 c:
     taplo check
     cargo clippy --workspace --examples --bins --features "all-debug" -- -D warnings
