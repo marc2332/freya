@@ -47,6 +47,18 @@ thread_local! {
 
     /// Last cursor position, in physical pixels.
     static LAST_CURSOR: Cell<CursorPoint> = const { Cell::new(CursorPoint::new(0., 0.)) };
+
+    /// Whether the hidden IME input holds the browser focus.
+    static IME_FOCUSED: Cell<bool> = const { Cell::new(false) };
+}
+
+/// Whether typing is currently routed through the hidden IME input.
+pub fn ime_focused() -> bool {
+    IME_FOCUSED.get()
+}
+
+pub fn set_ime_focused(focused: bool) {
+    IME_FOCUSED.set(focused);
 }
 
 fn push(event: PlatformEvent) {
@@ -204,12 +216,20 @@ extern "C" fn on_key(
     modifiers.set(Modifiers::ALT, event.alt_key);
     modifiers.set(Modifiers::META, event.meta_key);
 
-    push(PlatformEvent::Keyboard {
-        name,
-        key,
-        code,
-        modifiers,
-    });
+    let is_shortcut = modifiers.intersects(Modifiers::CONTROL | Modifiers::META);
+    let emitted_by_ime = ime_focused()
+        && name == KeyboardEventName::KeyDown
+        && matches!(key, Key::Character(_))
+        && !is_shortcut;
+
+    if !emitted_by_ime {
+        push(PlatformEvent::Keyboard {
+            name,
+            key,
+            code,
+            modifiers,
+        });
+    }
 
     code == Code::Tab
 }
