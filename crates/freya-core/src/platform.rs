@@ -12,9 +12,11 @@ use torin::prelude::Size2D;
 
 use crate::{
     accessibility::id::AccessibilityId,
+    current_context::CurrentContext,
     prelude::{
         State,
         consume_root_context,
+        try_consume_root_context,
     },
     user_event::UserEvent,
 };
@@ -45,10 +47,12 @@ pub enum TargetPlatform {
 }
 
 impl TargetPlatform {
-    /// Get the current [`TargetPlatform`].
-    #[track_caller]
+    /// Get the current [`TargetPlatform`], falling back to [`TargetPlatform::detect`]
+    /// when running outside of a Freya runtime.
     pub fn get() -> Self {
-        consume_root_context()
+        CurrentContext::try_with(|_| try_consume_root_context())
+            .flatten()
+            .unwrap_or_else(Self::detect)
     }
 
     /// Platform of the current compile target.
