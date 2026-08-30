@@ -32,7 +32,7 @@ use crate::scrollviews::{
     },
     smooth_scroll::{
         FLING_MIN_SPEED,
-        FLING_TIME,
+        ScrollFeel,
     },
     use_scroll_controller,
     use_smooth_scroll,
@@ -526,7 +526,7 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                     let velocity = smooth_scroll.drag_velocity();
 
                     if velocity.x.abs() > FLING_MIN_SPEED || velocity.y.abs() > FLING_MIN_SPEED {
-                        let projected = displayed + velocity * FLING_TIME;
+                        let projected = displayed + velocity * TargetPlatform::get().fling_time();
                         let fling_x = get_corrected_scroll_position(
                             inner_width,
                             size.read().area.width(),

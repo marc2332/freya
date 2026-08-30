@@ -15,10 +15,20 @@ const SETTLE_SPEED: f32 = 5.0;
 
 /// Seconds wheel and keyboard scrolls take to reach their destination.
 const SMOOTHING_TIME: f32 = 0.1;
-/// Seconds a fling takes to stop, which also scales how far it travels.
-pub(crate) const FLING_TIME: f32 = 0.5;
 /// Slowest drag release speed that still starts a fling, in pixels per second.
 pub(crate) const FLING_MIN_SPEED: f32 = 50.0;
+
+/// Scrolling feel of a [`TargetPlatform`].
+pub(crate) trait ScrollFeel {
+    /// Seconds a fling takes to stop, which also scales how far it travels.
+    fn fling_time(&self) -> f32;
+}
+
+impl ScrollFeel for TargetPlatform {
+    fn fling_time(&self) -> f32 {
+        if self.is_mobile() { 0.35 } else { 0.5 }
+    }
+}
 
 /// Follows the target held by a [`ScrollController`] with a critically damped `SmoothDamp` filter.
 #[derive(Clone, Copy)]
@@ -61,7 +71,7 @@ impl SmoothScroll {
 
     /// Like [`Self::animate_from`] but launched at `velocity` and decelerating slowly.
     pub fn fling_from(&mut self, current: Point2D, velocity: Vector2D) {
-        self.start(current, Some(velocity), FLING_TIME);
+        self.start(current, Some(velocity), TargetPlatform::get().fling_time());
     }
 
     fn start(&mut self, current: Point2D, velocity: Option<Vector2D>, smooth_time: f32) {
@@ -142,10 +152,13 @@ impl SmoothScroll {
         self.stop();
 
         let now = Instant::now();
-        let elapsed_seconds = now.duration_since(*self.last_drag_move.peek()).as_secs_f32();
+        let elapsed_seconds = now
+            .duration_since(*self.last_drag_move.peek())
+            .as_secs_f32();
         if elapsed_seconds > 0.0 {
             let previous = *self.drag_velocity.peek();
-            self.drag_velocity.set((previous - delta / elapsed_seconds) / 2.0);
+            self.drag_velocity
+                .set((previous - delta / elapsed_seconds) / 2.0);
         }
         self.last_drag_move.set(now);
     }
