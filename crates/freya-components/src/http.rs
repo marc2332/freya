@@ -5,14 +5,12 @@ use reqwest::blocking::Client;
 pub(crate) struct Http;
 
 impl Http {
-    /// Returns the shared [`Client`], lazily creating it in the root context on first use.
+    /// Returns the shared [`Client`], lazily creating it in the global contexts on first use.
     pub(crate) fn get() -> Client {
-        try_consume_root_context::<Client>().unwrap_or_else(|| {
-            let client = Client::builder()
+        GlobalContexts::get().get_context_or_insert(|| {
+            Client::builder()
                 .build()
-                .expect("Failed to build the HTTP client.");
-            provide_root_context(client.clone());
-            client
+                .expect("Failed to build the HTTP client.")
         })
     }
 }

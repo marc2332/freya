@@ -140,7 +140,7 @@ impl Component for SelectableText {
 
         if value.as_str() != editable.editor().read().rope() {
             editable.editor_mut().write().set(value.as_str());
-            editable.editor_mut().write().editor_history().clear();
+            editable.editor_mut().write().editor_history_mut().clear();
         }
 
         let highlights = editable
@@ -199,6 +199,8 @@ impl Component for SelectableText {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: Some(EditorLine::SingleParagraph),
+                holder: Some(&holder.read()),
             });
         };
 

@@ -65,6 +65,7 @@ struct EmbeddedFreya {
 
     events_sender: UnboundedSender<EventsChunk>,
     events_receiver: UnboundedReceiver<EventsChunk>,
+    nodes_state: NodesState<NodeId>,
 
     size: Size2D,
     scale_factor: f64,
@@ -93,6 +94,7 @@ impl EmbeddedFreya {
             default_fonts: default_fonts(),
             events_sender,
             events_receiver,
+            nodes_state: NodesState::default(),
             size,
             scale_factor,
         }
@@ -106,12 +108,15 @@ impl EmbeddedFreya {
     /// Advances one frame, applying the tree mutations and measuring layout.
     fn advance(&mut self) {
         let mutations = self.runner.sync_and_update();
-        self.runner.run_in(|| self.tree.apply_mutations(mutations));
+        let scale_factor = self.scale_factor as f32;
+        self.runner
+            .run_in(|| self.tree.apply_mutations(mutations, scale_factor));
         self.tree.measure_layout(
             self.size,
             &mut self.font_collection,
             &self.font_manager,
             &self.events_sender,
+            &mut self.nodes_state,
             self.scale_factor,
             &self.default_fonts,
         );

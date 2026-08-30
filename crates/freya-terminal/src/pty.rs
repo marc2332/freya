@@ -1,28 +1,10 @@
 use std::{
     cell::RefCell,
-    path::PathBuf,
     rc::Rc,
     time::Instant,
 };
 
-use alacritty_terminal::{
-    event::{
-        Event as AlacrittyEvent,
-        EventListener,
-    },
-    grid::Dimensions,
-    term::{
-        Config as TermConfig,
-        Term,
-    },
-    vte::{
-        Parser as VteParser,
-        ansi::{
-            Processor,
-            StdSyncHandler,
-        },
-    },
-};
+use async_io::Timer;
 use freya_core::{
     notify::ArcNotify,
     prelude::{
@@ -31,50 +13,39 @@ use freya_core::{
         spawn_forever,
     },
 };
-use futures_lite::AsyncReadExt;
+use futures_lite::{
+    AsyncReadExt,
+    future,
+};
 use keyboard_types::Modifiers;
 use portable_pty::{
     CommandBuilder,
     PtySize,
     native_pty_system,
 };
-
-use crate::{
-    handle::{
-        TerminalCleaner,
-        TerminalError,
-        TerminalHandle,
-        TerminalId,
-        TerminalInner,
+use rio_vt::{
+    ansi::CursorShape,
+    crosswords::{
+        Crosswords,
+        CrosswordsSize,
     },
-    osc7::{
-        CwdSink,
-        parse_cwd_url,
+    event::{
+        EventListener,
+        RioEvent,
+        WindowId,
     },
+    performer::handler::Processor,
 };
 
-/// `Dimensions` impl passed to `Term::new` / `Term::resize`.
-#[derive(Clone, Copy)]
-pub(crate) struct TermSize {
-    pub screen_lines: usize,
-    pub columns: usize,
-}
+use crate::handle::{
+    TerminalCleaner,
+    TerminalError,
+    TerminalHandle,
+    TerminalId,
+    TerminalInner,
+};
 
-impl Dimensions for TermSize {
-    fn total_lines(&self) -> usize {
-        self.screen_lines
-    }
-
-    fn screen_lines(&self) -> usize {
-        self.screen_lines
-    }
-
-    fn columns(&self) -> usize {
-        self.columns
-    }
-}
-
-/// Listener proxy passed into alacritty's `Term`. Routes its side-effects
+/// Listener proxy passed into rio-vt's `Crosswords`. Routes its side-effects
 /// (PtyWrite, Title, ClipboardStore) into the freya-side state.
 #[derive(Clone)]
 pub struct EventProxy {
@@ -86,27 +57,27 @@ pub struct EventProxy {
 }
 
 impl EventListener for EventProxy {
-    fn send_event(&self, event: AlacrittyEvent) {
+    fn send_event(&self, event: RioEvent, _window_id: WindowId) {
         match event {
-            AlacrittyEvent::PtyWrite(text) => {
+            RioEvent::PtyWrite(_route, text) => {
                 if let Some(writer) = &mut *self.writer.borrow_mut() {
                     let _ = writer.write_all(text.as_bytes());
                     let _ = writer.flush();
                 }
             }
-            AlacrittyEvent::Title(t) => {
+            RioEvent::Title(t) => {
                 *self.title.borrow_mut() = Some(t);
                 self.title_notifier.notify();
             }
-            AlacrittyEvent::ResetTitle => {
+            RioEvent::ResetTitle => {
                 *self.title.borrow_mut() = None;
                 self.title_notifier.notify();
             }
-            AlacrittyEvent::ClipboardStore(_, text) => {
+            RioEvent::ClipboardStore(_, text) => {
                 *self.clipboard_content.borrow_mut() = Some(text);
                 self.clipboard_notifier.notify();
             }
-            // Bell, MouseCursorDirty, ChildExit, ColorRequest, etc.
+            // Bell, Wakeup, ColorRequest, etc.
             _ => {}
         }
     }
@@ -122,7 +93,6 @@ pub(crate) fn spawn_pty(
     let closer_notifier = ArcNotify::new();
     let output_notifier = ArcNotify::new();
     let title_notifier = ArcNotify::new();
-    let cwd: Rc<RefCell<Option<PathBuf>>> = Rc::new(RefCell::new(None));
     let title: Rc<RefCell<Option<String>>> = Rc::new(RefCell::new(None));
     let clipboard_content: Rc<RefCell<Option<String>>> = Rc::new(RefCell::new(None));
     let clipboard_notifier = ArcNotify::new();
@@ -135,38 +105,32 @@ pub(crate) fn spawn_pty(
         clipboard_notifier: clipboard_notifier.clone(),
     };
 
-    let term_config = TermConfig {
-        scrolling_history: scrollback_size,
-        ..TermConfig::default()
-    };
-    let initial_size = TermSize {
-        screen_lines: 24,
-        columns: 80,
-    };
-    let term = Rc::new(RefCell::new(Term::new(
-        term_config,
-        &initial_size,
+    let term = Rc::new(RefCell::new(Crosswords::new(
+        CrosswordsSize::new(80, 24),
+        CursorShape::Block,
         event_proxy,
+        WindowId::from(0),
+        0,
+        scrollback_size,
     )));
 
-    let pty_system = native_pty_system();
-    let pair = pty_system
+    let pair = native_pty_system()
         .openpty(PtySize::default())
         .map_err(|_| TerminalError::NotInitialized)?;
-    let master_writer = pair
-        .master
-        .take_writer()
-        .map_err(|_| TerminalError::NotInitialized)?;
-    *writer.borrow_mut() = Some(master_writer);
+    *writer.borrow_mut() = Some(
+        pair.master
+            .take_writer()
+            .map_err(|_| TerminalError::NotInitialized)?,
+    );
 
     pair.slave
         .spawn_command(command)
         .map_err(|_| TerminalError::NotInitialized)?;
-    let reader = pair
-        .master
-        .try_clone_reader()
-        .map_err(|_| TerminalError::NotInitialized)?;
-    let mut reader = blocking::Unblock::new(reader);
+    let mut reader = blocking::Unblock::new(
+        pair.master
+            .try_clone_reader()
+            .map_err(|_| TerminalError::NotInitialized)?,
+    );
 
     let inner = Rc::new(RefCell::new(TerminalInner {
         master: pair.master,
@@ -181,29 +145,32 @@ pub(crate) fn spawn_pty(
         let writer = writer.clone();
         let closer_notifier = closer_notifier.clone();
         let output_notifier = output_notifier.clone();
-        let cwd = cwd.clone();
         async move {
-            let mut processor = Processor::<StdSyncHandler>::new();
-            // Side-channel parser for OSC 7 (cwd), which alacritty drops.
-            let mut cwd_parser = VteParser::new();
-            let mut cwd_sink = CwdSink::default();
+            let mut processor = Processor::default();
             loop {
                 let mut buf = [0u8; 4096];
-                match reader.read(&mut buf).await {
-                    Ok(0) => break,
-                    Ok(n) => {
-                        let data = &buf[..n];
-                        processor.advance(&mut *term.borrow_mut(), data);
-
-                        cwd_parser.advance(&mut cwd_sink, data);
-                        if let Some(url) = cwd_sink.take() {
-                            *cwd.borrow_mut() = Some(parse_cwd_url(&url));
-                        }
-
+                let read = async { Some(reader.read(&mut buf).await) };
+                let result = if let Some(deadline) = processor.sync_timeout().sync_timeout() {
+                    let expiry = async {
+                        Timer::at(deadline).await;
+                        None
+                    };
+                    future::or(read, expiry).await
+                } else {
+                    read.await
+                };
+                match result {
+                    None => {
+                        processor.stop_sync(&mut *term.borrow_mut());
                         output_notifier.notify();
                         platform.send(UserEvent::RequestRedraw);
                     }
-                    Err(_) => break,
+                    Some(Ok(0)) | Some(Err(_)) => break,
+                    Some(Ok(n)) => {
+                        processor.advance(&mut *term.borrow_mut(), &buf[..n]);
+                        output_notifier.notify();
+                        platform.send(UserEvent::RequestRedraw);
+                    }
                 }
             }
             // PTY closed: drop the writer and notify observers.
@@ -224,7 +191,6 @@ pub(crate) fn spawn_pty(
         term,
         writer,
         inner,
-        cwd,
         title,
         title_notifier,
         clipboard_content,

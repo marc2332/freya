@@ -283,12 +283,6 @@ impl Component for Button {
         let focus = use_focus(a11y_id);
 
         let enabled = use_reactive(&self.enabled);
-        let cursor_icon = self.cursor_icon;
-        use_drop(move || {
-            if hovering() {
-                Cursor::set(CursorIcon::default());
-            }
-        });
 
         let theme_colors = match self.style_variant {
             ButtonStyleVariant::Normal => {
@@ -364,25 +358,23 @@ impl Component for Button {
                         on_pointer_down.call(e);
                     })
                 })
+                .map(self.on_secondary_down.clone(), |el, on_secondary_down| {
+                    el.on_secondary_down(move |e: Event<PressEventData>| {
+                        on_secondary_down.call(e);
+                    })
+                })
                 .on_all_press({
                     let on_press = self.on_press.clone();
-                    let on_secondary_down = self.on_secondary_down.clone();
                     move |e: Event<PressEventData>| {
                         a11y_id.request_focus();
                         match e.data() {
-                            PressEventData::Mouse(data) => match data.button {
-                                Some(MouseButton::Left) => {
-                                    if let Some(handler) = &on_press {
-                                        handler.call(e);
-                                    }
+                            PressEventData::Mouse(data) => {
+                                if data.button == Some(MouseButton::Left)
+                                    && let Some(handler) = &on_press
+                                {
+                                    handler.call(e);
                                 }
-                                Some(MouseButton::Right) => {
-                                    if let Some(handler) = &on_secondary_down {
-                                        handler.call(e);
-                                    }
-                                }
-                                _ => {}
-                            },
+                            }
                             PressEventData::Touch(_) | PressEventData::Keyboard(_) => {
                                 if let Some(handler) = &on_press {
                                     handler.call(e);
@@ -396,15 +388,10 @@ impl Component for Button {
                 })
                 .on_pointer_out(move |_| hovering.set_if_modified(false))
             })
-            .on_pointer_enter(move |_| {
-                if enabled() {
-                    Cursor::set(cursor_icon);
-                } else {
-                    Cursor::set(CursorIcon::NotAllowed);
-                }
-            })
-            .on_pointer_leave(move |_| {
-                Cursor::set(CursorIcon::default());
+            .cursor(if self.enabled {
+                self.cursor_icon
+            } else {
+                CursorIcon::NotAllowed
             })
             .children(self.elements.clone())
     }

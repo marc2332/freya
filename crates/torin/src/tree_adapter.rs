@@ -71,17 +71,14 @@ impl NodeKey for usize {}
 pub trait TreeAdapter<Key: NodeKey> {
     fn root_id(&self) -> Key;
 
-    /// Get the Node size
-    fn get_node(&self, node_id: &Key) -> Option<Node>;
+    /// Read the Node and its children.
+    fn read_node<R>(&self, node_id: &Key, reader: impl FnOnce(&Node, &[Key]) -> R) -> Option<R>;
 
     /// Get the height in the Tree of the given Node
     fn height(&self, node_id: &Key) -> Option<u16>;
 
     /// Get the parent of a Node
     fn parent_of(&self, node_id: &Key) -> Option<Key>;
-
-    /// Get the children of a Node
-    fn children_of(&mut self, node_id: &Key) -> Vec<Key>;
 
     /// Get the closest common parent Node of two Nodes
     fn closest_common_parent(

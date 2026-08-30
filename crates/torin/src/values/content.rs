@@ -1,3 +1,5 @@
+use crate::scaled::Scaled;
+
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(PartialEq, Clone, Debug, Default)]
 pub enum Content {
@@ -65,6 +67,17 @@ impl Content {
             Self::Fit => "fit".to_owned(),
             Self::Flex => "flex".to_owned(),
             Self::Wrap { .. } => "wrap".to_owned(),
+        }
+    }
+}
+
+impl Scaled for Content {
+    fn scale(&mut self, scale_factor: f32) {
+        if let Self::Wrap {
+            wrap_spacing: Some(wrap_spacing),
+        } = self
+        {
+            *wrap_spacing *= scale_factor;
         }
     }
 }

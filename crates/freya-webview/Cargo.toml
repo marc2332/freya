@@ -1,6 +1,6 @@
 [package]
 name = "freya-webview"
-version = "0.5.0-rc.1"
+version = "0.5.0-rc.4"
 description = "WebView support for Freya using WRY"
 edition = "2024"
 license = "MIT"
@@ -16,12 +16,9 @@ workspace = true
 freya-core = { workspace = true }
 freya-winit = { workspace = true }
 wry = "0.54"
-raw-window-handle = { workspace = true }
 torin = { workspace = true }
 tracing = { workspace = true }
 accesskit = { workspace = true }
-futures-channel = { workspace = true }
-futures-lite = { workspace = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 gtk = "0.18"

@@ -8,6 +8,7 @@ use std::{
     rc::Rc,
 };
 
+use cursor_icon::CursorIcon;
 use torin::{
     prelude::Area,
     torin::Torin,
@@ -98,6 +99,7 @@ pub struct StyleState {
     pub corner_radius: CornerRadius,
     pub borders: Vec<Border>,
     pub shadows: Vec<Shadow>,
+    pub cursor: Option<CursorIcon>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -339,7 +341,7 @@ impl EffectState {
         };
 
         match layer {
-            Layer::Overlay => {
+            Layer::Overlay | Layer::OverlayLevel(_) => {
                 self.clips = Rc::default();
             }
             Layer::Relative(_) if parent_effect_state.overflow == Overflow::Clip => {

@@ -1,6 +1,6 @@
 [package]
 name = "freya-devtools-app"
-version = "0.5.0-rc.1"
+version = "0.5.0-rc.4"
 description = "Devtools App for Freya app"
 edition = "2024"
 license = "MIT"
@@ -24,7 +24,6 @@ freya-devtools = { workspace = true }
 
 torin = { workspace = true }
 
-accesskit = { workspace = true }
 serde_json = { workspace = true }
 
 async-tungstenite = { version = "0.31" }

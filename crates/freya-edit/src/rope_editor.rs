@@ -1,4 +1,5 @@
 use std::{
+    borrow::Cow,
     fmt::Display,
     ops::Range,
 };
@@ -230,6 +231,10 @@ impl TextEditor for RopeEditor {
         self.rope.char_to_utf16_cu(idx)
     }
 
+    fn text(&self) -> Cow<'_, str> {
+        self.rope.slice(..).into()
+    }
+
     fn line(&self, line_idx: usize) -> Option<Line<'_>> {
         let line = self.rope.get_line(line_idx);
 
@@ -321,7 +326,11 @@ impl TextEditor for RopeEditor {
         self.history.redo(&mut self.rope)
     }
 
-    fn editor_history(&mut self) -> &mut EditorHistory {
+    fn editor_history(&self) -> &EditorHistory {
+        &self.history
+    }
+
+    fn editor_history_mut(&mut self) -> &mut EditorHistory {
         &mut self.history
     }
 
@@ -378,6 +387,8 @@ mod test {
         ed.process_key(
             &Key::Named(key),
             &Modifiers::empty(),
+            None,
+            None,
             true,
             true,
             false,
