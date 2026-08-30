@@ -213,6 +213,7 @@ impl TestingRunner {
 
         let pending_fonts = Rc::new(RefCell::new(Vec::new()));
 
+        runner.provide_root_context(|| TargetPlatform::Unknown);
         let platform = runner.provide_root_context({
             let requested_focus_strategy = requested_focus_strategy.clone();
             let pending_fonts = pending_fonts.clone();
@@ -581,7 +582,7 @@ impl TestingRunner {
             name: WheelEventName::Wheel,
             scroll,
             cursor,
-            source: WheelSource::Device,
+            source: WheelSource::Pixel,
         });
         self.sync_and_update();
         // Refresh hover states after the scroll
