@@ -170,6 +170,7 @@ pub mod integration {
             dirty_nodes::*,
             focus_strategy::*,
             id::*,
+            ime::*,
             screen_reader::*,
             tree::*,
         },

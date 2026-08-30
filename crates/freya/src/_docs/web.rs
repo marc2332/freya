@@ -34,6 +34,7 @@
 //!   "-Clink-arg=-sALLOW_MEMORY_GROWTH=1",
 //!   "-Clink-arg=-sSTACK_SIZE=16MB",
 //!   "-Clink-arg=-sINITIAL_MEMORY=256MB",
+//!   "-Clink-arg=-sEXPORTED_FUNCTIONS=['_main','_free']",
 //! ]
 //! ```
 //!

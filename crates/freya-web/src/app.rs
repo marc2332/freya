@@ -1,7 +1,6 @@
 use std::{
     borrow::Cow,
     cell::RefCell,
-    ffi::CString,
     rc::Rc,
 };
 
@@ -26,14 +25,20 @@ use ragnarok::{
 use torin::prelude::Size2D;
 
 use crate::{
+    clipboard::WebClipboard,
     config::WebConfig,
-    emscripten::emscripten_run_script,
+    emscripten::{
+        js_string_literal,
+        run_script,
+    },
     events::{
         BrowserState,
+        ime_focused,
         listen,
         sync_canvas_size,
     },
     fonts::Fonts,
+    ime::WebIme,
     surface::WebSurface,
 };
 
@@ -67,6 +72,7 @@ pub struct WebApp {
     background: Color,
     cursor: CursorIcon,
     needs_render: bool,
+    ime: WebIme,
 
     /// Scratch buffer for the events measured this frame.
     pending_events: Vec<PlatformEvent>,
@@ -136,7 +142,7 @@ impl WebApp {
             }
         });
 
-        let clipboard: Option<Box<dyn ClipboardProvider>> = None;
+        let clipboard: Option<Box<dyn ClipboardProvider>> = Some(Box::new(WebClipboard));
         runner.provide_root_context(|| State::create(clipboard));
 
         let mut tree = Tree::default();
@@ -177,6 +183,7 @@ impl WebApp {
             background: config.background,
             cursor: CursorIcon::Default,
             needs_render: true,
+            ime: WebIme::new(),
             pending_events: Vec::new(),
             size,
             scale_factor: pixel_ratio,
@@ -186,6 +193,12 @@ impl WebApp {
     /// Advances the app by one browser frame.
     pub fn frame(&mut self) {
         let mut browser = BrowserState::take();
+
+        if ime_focused() {
+            while let Some(event) = self.ime.poll() {
+                browser.events.push(event);
+            }
+        }
 
         if let Some((width, height, pixel_ratio)) = browser.resized {
             self.surface.resize(width, height);
@@ -302,6 +315,13 @@ impl WebApp {
             && let Some(layout_node) = self.tree.layout.get(&node_id)
         {
             let focused_node = AccessibilityTree::create_node(node_id, layout_node, &self.tree, "");
+
+            self.ime.sync(
+                focused_node.role(),
+                layout_node.visible_area(),
+                self.scale_factor,
+            );
+
             self.platform
                 .focused_accessibility_node
                 .set_if_modified(focused_node);
@@ -320,8 +340,10 @@ impl WebApp {
         }
 
         if let Some(url) = requests.url.take() {
-            let url = url.replace('\\', "\\\\").replace('\'', "\\'");
-            run_script(&format!("window.open('{url}', '_blank');"));
+            run_script(&format!(
+                "window.open({}, '_blank');",
+                js_string_literal(&url)
+            ));
         }
     }
 
@@ -352,11 +374,5 @@ impl WebApp {
         render_pipeline.render();
 
         self.surface.present();
-    }
-}
-
-fn run_script(script: &str) {
-    if let Ok(script) = CString::new(script) {
-        unsafe { emscripten_run_script(script.as_ptr()) };
     }
 }

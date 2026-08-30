@@ -33,7 +33,7 @@ INDEX = """<!doctype html>
     </style>
   </head>
   <body>
-    <canvas id="canvas" tabindex="0" draggable="false"></canvas>
+    <canvas id="canvas" draggable="false"></canvas>
     <script>
       var Module = {{ canvas: document.getElementById("canvas") }};
     </script>
