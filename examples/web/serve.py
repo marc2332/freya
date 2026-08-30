@@ -23,7 +23,6 @@ INDEX = """<!doctype html>
         display: block;
         width: 100vw;
         height: 100vh;
-        outline: none;
         user-select: none;
         -webkit-user-select: none;
         -webkit-user-drag: none;
@@ -33,7 +32,7 @@ INDEX = """<!doctype html>
     </style>
   </head>
   <body>
-    <canvas id="canvas" tabindex="0" draggable="false"></canvas>
+    <canvas id="canvas" draggable="false"></canvas>
     <script>
       var Module = {{ canvas: document.getElementById("canvas") }};
     </script>
