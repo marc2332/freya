@@ -30,7 +30,10 @@ use crate::scrollviews::{
         handle_key_event,
         is_scrollbar_visible,
     },
-    smooth_scroll::ScrollFeel,
+    smooth_scroll::{
+        FLING_MIN_SPEED,
+        FLING_TIME,
+    },
     use_scroll_controller,
     use_smooth_scroll,
 };
@@ -520,13 +523,10 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
 
             if drag_scrolling && (dragging_content().is_some() || drag_origin().is_some()) {
                 if dragging_content().is_some() {
-                    let target_platform = TargetPlatform::get();
                     let velocity = smooth_scroll.drag_velocity();
 
-                    if velocity.x.abs() > target_platform.fling_min_speed()
-                        || velocity.y.abs() > target_platform.fling_min_speed()
-                    {
-                        let projected = displayed + velocity * target_platform.fling_time();
+                    if velocity.x.abs() > FLING_MIN_SPEED || velocity.y.abs() > FLING_MIN_SPEED {
+                        let projected = displayed + velocity * FLING_TIME;
                         let fling_x = get_corrected_scroll_position(
                             inner_width,
                             size.read().area.width(),
