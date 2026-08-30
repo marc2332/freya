@@ -3,10 +3,12 @@
 use std::cell::RefCell;
 
 mod app;
+mod clipboard;
 mod config;
 mod emscripten;
 mod events;
 mod fonts;
+mod ime;
 mod surface;
 
 pub use crate::config::WebConfig;

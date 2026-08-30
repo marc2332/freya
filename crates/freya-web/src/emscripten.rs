@@ -1,4 +1,6 @@
 use std::ffi::{
+    CStr,
+    CString,
     c_char,
     c_double,
     c_int,
@@ -6,6 +8,47 @@ use std::ffi::{
     c_ushort,
     c_void,
 };
+
+/// Runs a snippet of JavaScript.
+pub fn run_script(script: &str) {
+    if let Ok(script) = CString::new(script) {
+        unsafe { emscripten_run_script(script.as_ptr()) };
+    }
+}
+
+/// Runs a snippet of JavaScript and returns its result as a string.
+pub fn run_script_string(script: &str) -> Option<String> {
+    let script = CString::new(script).ok()?;
+    let result = unsafe { emscripten_run_script_string(script.as_ptr()) };
+    if result.is_null() {
+        return None;
+    }
+
+    let result = unsafe { CStr::from_ptr(result) };
+    Some(result.to_string_lossy().into_owned())
+}
+
+/// Encodes a string as a single-quoted JavaScript string literal.
+pub fn js_string_literal(value: &str) -> String {
+    let mut literal = String::with_capacity(value.len() + 2);
+    literal.push('\'');
+
+    for character in value.chars() {
+        match character {
+            '\'' | '\\' => {
+                literal.push('\\');
+                literal.push(character);
+            }
+            '\0'..='\u{1f}' | '\u{2028}' | '\u{2029}' => {
+                literal.push_str(&format!("\\u{:04x}", character as u32));
+            }
+            other => literal.push(other),
+        }
+    }
+
+    literal.push('\'');
+    literal
+}
 
 pub const EMSCRIPTEN_EVENT_MOUSEDOWN: c_int = 5;
 pub const EMSCRIPTEN_EVENT_MOUSEUP: c_int = 6;
@@ -261,6 +304,8 @@ unsafe extern "C" {
     );
 
     pub fn emscripten_run_script(script: *const c_char);
+
+    pub fn emscripten_run_script_string(script: *const c_char) -> *mut c_char;
 
     pub fn emscripten_GetProcAddress(name: *const c_char) -> *const c_void;
 
