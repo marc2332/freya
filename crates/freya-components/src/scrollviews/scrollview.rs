@@ -30,10 +30,6 @@ use crate::scrollviews::{
         handle_key_event,
         is_scrollbar_visible,
     },
-    smooth_scroll::{
-        FLING_MIN_SPEED,
-        ScrollFeel,
-    },
     use_scroll_controller,
     use_smooth_scroll,
 };
@@ -285,24 +281,9 @@ impl Component for ScrollView {
 
             if drag_scrolling && (dragging_content().is_some() || drag_origin().is_some()) {
                 if dragging_content().is_some() {
-                    let velocity = smooth_scroll.drag_velocity();
-
-                    if velocity.x.abs() > FLING_MIN_SPEED || velocity.y.abs() > FLING_MIN_SPEED {
-                        let projected = displayed + velocity * TargetPlatform::get().fling_time();
-                        let fling_x = get_corrected_scroll_position(
-                            size.read().inner_sizes.width,
-                            size.read().area.width(),
-                            projected.x,
-                        );
-                        let fling_y = get_corrected_scroll_position(
-                            size.read().inner_sizes.height,
-                            size.read().area.height(),
-                            projected.y,
-                        );
-                        smooth_scroll.fling_from(displayed, velocity);
-                        scroll_controller.scroll_to_x(fling_x as i32);
-                        scroll_controller.scroll_to_y(fling_y as i32);
-                    }
+                    let content = size.read().inner_sizes;
+                    let viewport = size.read().area.size;
+                    smooth_scroll.release_drag(displayed, content, viewport);
                 }
                 dragging_content.set(None);
                 drag_origin.set(None);

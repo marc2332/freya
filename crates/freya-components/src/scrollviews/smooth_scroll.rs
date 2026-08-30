@@ -3,10 +3,14 @@ use std::time::Instant;
 use freya_core::prelude::*;
 use torin::geometry::{
     Point2D,
+    Size2D,
     Vector2D,
 };
 
-use crate::scrollviews::ScrollController;
+use crate::scrollviews::{
+    ScrollController,
+    shared::get_corrected_scroll_position,
+};
 
 /// Distance under which the animation is close enough to snap, in pixels.
 const SETTLE_DISTANCE: f32 = 0.5;
@@ -16,7 +20,7 @@ const SETTLE_SPEED: f32 = 5.0;
 /// Seconds wheel and keyboard scrolls take to reach their destination.
 const SMOOTHING_TIME: f32 = 0.1;
 /// Slowest drag release speed that still starts a fling, in pixels per second.
-pub(crate) const FLING_MIN_SPEED: f32 = 50.0;
+const FLING_MIN_SPEED: f32 = 50.0;
 
 /// Scrolling feel of a [`TargetPlatform`].
 pub(crate) trait ScrollFeel {
@@ -70,7 +74,7 @@ impl SmoothScroll {
     }
 
     /// Like [`Self::animate_from`] but launched at `velocity` and decelerating slowly.
-    pub fn fling_from(&mut self, current: Point2D, velocity: Vector2D) {
+    fn fling_from(&mut self, current: Point2D, velocity: Vector2D) {
         self.start(current, Some(velocity), TargetPlatform::get().fling_time());
     }
 
@@ -158,13 +162,25 @@ impl SmoothScroll {
         if elapsed_seconds > 0.0 {
             let previous = *self.drag_velocity.peek();
             self.drag_velocity
-                .set((previous - delta / elapsed_seconds) / 2.0);
+                .set(previous.lerp(-delta / elapsed_seconds, 0.5));
         }
         self.last_drag_move.set(now);
     }
 
-    pub fn drag_velocity(&self) -> Vector2D {
-        *self.drag_velocity.peek()
+    /// Ends a drag, flinging from its velocity when it was fast enough to be a flick.
+    pub fn release_drag(&mut self, from: Point2D, content: Size2D, viewport: Size2D) {
+        let velocity = *self.drag_velocity.peek();
+        if velocity.length() < FLING_MIN_SPEED {
+            return;
+        }
+
+        let projected = from + velocity * TargetPlatform::get().fling_time();
+        let target_x = get_corrected_scroll_position(content.width, viewport.width, projected.x);
+        let target_y = get_corrected_scroll_position(content.height, viewport.height, projected.y);
+
+        self.fling_from(from, velocity);
+        self.scroll_controller.scroll_to_x(target_x as i32);
+        self.scroll_controller.scroll_to_y(target_y as i32);
     }
 
     /// Freezes the scroll at the displayed position, returning the velocity it was moving at.
@@ -172,9 +188,9 @@ impl SmoothScroll {
         if let Some(task) = self.task.write().take() {
             task.cancel();
 
-            let displayed = *self.displayed.peek();
-            self.scroll_controller.scroll_to_x(displayed.x as i32);
-            self.scroll_controller.scroll_to_y(displayed.y as i32);
+            let displayed = self.displayed.peek().to_i32();
+            self.scroll_controller.scroll_to_x(displayed.x);
+            self.scroll_controller.scroll_to_y(displayed.y);
         }
 
         let velocity = *self.velocity.peek();
