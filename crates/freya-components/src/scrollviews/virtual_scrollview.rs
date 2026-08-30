@@ -9,6 +9,7 @@ use torin::{
     geometry::{
         CursorPoint,
         Point2D,
+        Size2D,
     },
     node::Node,
     prelude::Direction,
@@ -29,10 +30,6 @@ use crate::scrollviews::{
         get_scrollbar_pos_and_size,
         handle_key_event,
         is_scrollbar_visible,
-    },
-    smooth_scroll::{
-        FLING_MIN_SPEED,
-        FLING_TIME,
     },
     use_scroll_controller,
     use_smooth_scroll,
@@ -523,24 +520,8 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
 
             if drag_scrolling && (dragging_content().is_some() || drag_origin().is_some()) {
                 if dragging_content().is_some() {
-                    let velocity = smooth_scroll.drag_velocity();
-
-                    if velocity.x.abs() > FLING_MIN_SPEED || velocity.y.abs() > FLING_MIN_SPEED {
-                        let projected = displayed + velocity * FLING_TIME;
-                        let fling_x = get_corrected_scroll_position(
-                            inner_width,
-                            size.read().area.width(),
-                            projected.x,
-                        );
-                        let fling_y = get_corrected_scroll_position(
-                            inner_height,
-                            size.read().area.height(),
-                            projected.y,
-                        );
-                        smooth_scroll.fling_from(displayed, velocity);
-                        scroll_controller.scroll_to_x(fling_x as i32);
-                        scroll_controller.scroll_to_y(fling_y as i32);
-                    }
+                    let content = Size2D::new(inner_width, inner_height);
+                    smooth_scroll.release_drag(displayed, content, size.read().area.size);
                 }
                 dragging_content.set(None);
                 drag_origin.set(None);

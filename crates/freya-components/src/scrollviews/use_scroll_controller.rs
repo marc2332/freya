@@ -239,7 +239,7 @@ impl ScrollController {
 
     pub(crate) fn position(self) -> Point2D {
         let (x, y): (i32, i32) = self.into();
-        Point2D::new(x as f32, y as f32)
+        Point2D::new(x, y).to_f32()
     }
 
     /// Scrolls the horizontal axis to `to` pixels. Returns whether the position actually changed.
