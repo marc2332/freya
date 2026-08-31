@@ -67,6 +67,7 @@ impl Component for EditorLineUI {
                 let processed = editor.write_if(|mut editor_editor| {
                     editor_editor.process(
                         font_size,
+                        line_height,
                         &font_family,
                         EditableEvent::Down {
                             location: e.element_location(),
@@ -87,6 +88,7 @@ impl Component for EditorLineUI {
                 editor.write_if(|mut editor_editor| {
                     editor_editor.process(
                         font_size,
+                        line_height,
                         &font_family,
                         EditableEvent::Move {
                             location: e.element_location(),

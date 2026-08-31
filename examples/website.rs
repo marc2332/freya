@@ -54,7 +54,7 @@ impl Component for Home {
                 tree_sitter_rust::LANGUAGE,
                 tree_sitter_rust::HIGHLIGHTS_QUERY,
             );
-            let mut editor = CodeEditorData::new(rope, language);
+            let mut editor = CodeEditorData::create(rope, language);
             editor.set_theme(EditorSyntaxTheme {
                 comment: (230, 230, 230).into(),
                 ..EditorSyntaxTheme::dark()
