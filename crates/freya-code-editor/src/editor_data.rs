@@ -40,7 +40,7 @@ pub struct CodeEditorData {
 }
 
 impl CodeEditorData {
-    /// Creates the editor data for the given [`Rope`] and wit hthe given language.
+    /// Creates the editor data for the given [`Rope`] and with the given language.
     pub fn create(rope: Rope, language: impl Into<Option<EditorLanguage>>) -> Self {
         let mut data = Self {
             rope,
