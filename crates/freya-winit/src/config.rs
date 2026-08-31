@@ -374,9 +374,6 @@ impl LaunchConfig {
 
     /// Register a value in the [`GlobalContexts`], shared by all the windows.
     ///
-    /// It is inserted before any window is created, so components can read it with
-    /// [`GlobalContexts::get_context`] instead of inserting it themselves.
-    ///
     /// ```rust,no_run
     /// # use freya::prelude::*;
     /// #[derive(Clone)]
