@@ -87,8 +87,8 @@ impl<T> EventHandler<T> {
 
     /// Create an event handler that runs under the scope creating it.
     ///
-    /// Shortcut for [`EventHandler::new_scoped`] with the current scope, so tasks spawned in the
-    /// handler are cancelled once the component creating it unmounts.
+    /// Shortcut for [`EventHandler::new_scoped`] with the current scope, so e.g tasks spawned in
+    /// the handler are cancelled once the component creating it unmounts.
     ///
     /// ```rust,no_run
     /// # use freya::prelude::*;
