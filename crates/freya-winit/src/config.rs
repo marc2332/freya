@@ -277,6 +277,8 @@ pub type TrayHandler =
 pub type TaskHandler =
     Box<dyn FnOnce(crate::renderer::LaunchProxy) -> Pin<Box<dyn Future<Output = ()>>> + 'static>;
 
+pub type GlobalContextInserter = Box<dyn FnOnce(&GlobalContexts)>;
+
 /// Configuration for the initial state of the application.
 ///
 /// Use this to register windows, plugins, fonts, and other settings
@@ -289,6 +291,7 @@ pub struct LaunchConfig {
     pub(crate) embedded_fonts: EmbeddedFonts,
     pub(crate) fallback_fonts: Vec<Cow<'static, str>>,
     pub(crate) tasks: Vec<TaskHandler>,
+    pub(crate) globals: Vec<GlobalContextInserter>,
     pub(crate) exit_on_close: bool,
     pub(crate) event_loop: Option<winit::event_loop::EventLoop<crate::renderer::NativeEvent>>,
     pub(crate) gpu_resource_cache_limit: usize,
@@ -304,6 +307,7 @@ impl Default for LaunchConfig {
             embedded_fonts: Default::default(),
             fallback_fonts: default_fonts(),
             tasks: Vec::new(),
+            globals: Vec::new(),
             exit_on_close: true,
             event_loop: None,
             gpu_resource_cache_limit: 1024 * 1024 * 1024,
@@ -392,6 +396,34 @@ impl LaunchConfig {
     /// Register a default font. Will be used if found.
     pub fn with_default_font(mut self, font_name: impl Into<Cow<'static, str>>) -> Self {
         self.fallback_fonts.insert(0, font_name.into());
+        self
+    }
+
+    /// Register a value in the [`GlobalContexts`], shared by all the windows.
+    ///
+    /// ```rust,no_run
+    /// # use freya::prelude::*;
+    /// #[derive(Clone)]
+    /// struct AppName(String);
+    ///
+    /// fn main() {
+    ///     launch(
+    ///         LaunchConfig::new()
+    ///             .with_global(AppName("Freya".to_string()))
+    ///             .with_window(WindowConfig::new(app)),
+    ///     )
+    /// }
+    ///
+    /// fn app() -> impl IntoElement {
+    ///     let app_name = GlobalContexts::get().get_context::<AppName>();
+    ///
+    ///     label().text(app_name.0)
+    /// }
+    /// ```
+    pub fn with_global<T: Clone + 'static>(mut self, value: T) -> Self {
+        self.globals.push(Box::new(move |global_contexts| {
+            global_contexts.insert_context(value);
+        }));
         self
     }
 
