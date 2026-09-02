@@ -34,69 +34,117 @@ impl ScrollFeel for TargetPlatform {
     }
 }
 
-/// Follows the target held by a [`ScrollController`] with a critically damped `SmoothDamp` filter.
+/// Moves a value towards a target with a smooth and continuous animation.
+#[derive(Clone, Copy)]
+struct SmoothDamp {
+    position: Point2D,
+    velocity: Vector2D,
+    smooth_time: f32,
+}
+
+impl SmoothDamp {
+    /// Returns whether it has settled onto `target`.
+    fn advance(&mut self, target: Point2D, elapsed_seconds: f32) -> bool {
+        let omega = 2.0 / self.smooth_time;
+        let decay = (-omega * elapsed_seconds).exp();
+        let change = self.position - target;
+        let linear_term = (self.velocity + change * omega) * elapsed_seconds;
+
+        let velocity = (self.velocity - linear_term * omega) * decay;
+        let position = target + (change + linear_term) * decay;
+
+        if (target - position).length() < SETTLE_DISTANCE && velocity.length() < SETTLE_SPEED {
+            self.position = target;
+            self.velocity = Vector2D::zero();
+            return true;
+        }
+
+        self.position = position;
+        self.velocity = velocity;
+        false
+    }
+}
+
+/// Velocity tracked while the content is dragged, to fling with on release.
+#[derive(Clone, Copy)]
+struct Drag {
+    velocity: Vector2D,
+    last_move: Instant,
+}
+
+impl Drag {
+    fn track(&mut self, delta: Vector2D) {
+        let now = Instant::now();
+        let elapsed_seconds = now.duration_since(self.last_move).as_secs_f32();
+        if elapsed_seconds > 0.0 {
+            self.velocity = self.velocity.lerp(-delta / elapsed_seconds, 0.5);
+        }
+        self.last_move = now;
+    }
+}
+
+/// Follows the target held by a [`ScrollController`].
 #[derive(Clone, Copy)]
 pub struct SmoothScroll {
     scroll_controller: ScrollController,
-    displayed: State<Point2D>,
-    velocity: State<Vector2D>,
+    damp: State<SmoothDamp>,
+    drag: State<Drag>,
     task: State<Option<TaskHandle>>,
-    smooth_time: State<f32>,
-    drag_velocity: State<Vector2D>,
-    last_drag_move: State<Instant>,
 }
 
 impl SmoothScroll {
     pub fn create(scroll_controller: ScrollController) -> Self {
         Self {
             scroll_controller,
-            displayed: State::create(Point2D::zero()),
-            velocity: State::create(Vector2D::zero()),
+            damp: State::create(SmoothDamp {
+                position: Point2D::zero(),
+                velocity: Vector2D::zero(),
+                smooth_time: SMOOTHING_TIME,
+            }),
+            drag: State::create(Drag {
+                velocity: Vector2D::zero(),
+                last_move: Instant::now(),
+            }),
             task: State::create(None),
-            smooth_time: State::create(SMOOTHING_TIME),
-            drag_velocity: State::create(Vector2D::zero()),
-            last_drag_move: State::create(Instant::now()),
         }
     }
 
     /// Position to render, the animated one while a scroll animation is running.
     pub fn position(&self, target: Point2D) -> Point2D {
         if self.task.read().is_some() {
-            *self.displayed.read()
+            self.damp.read().position
         } else {
             target
         }
     }
 
-    /// Starts chasing the controller position from `current`, keeping the current velocity.
+    /// Chases the controller position from `current`, keeping the current velocity.
     pub fn animate_from(&mut self, current: Point2D) {
         self.start(current, None, SMOOTHING_TIME);
     }
 
-    /// Like [`Self::animate_from`] but launched at `velocity` and decelerating slowly.
+    /// Like [`Self::animate_from`] but launched at `velocity` and slower to stop.
     fn fling_from(&mut self, current: Point2D, velocity: Vector2D) {
         self.start(current, Some(velocity), TargetPlatform::get().fling_time());
     }
 
     fn start(&mut self, current: Point2D, velocity: Option<Vector2D>, smooth_time: f32) {
-        self.smooth_time.set(smooth_time);
+        self.damp.write().smooth_time = smooth_time;
         if let Some(velocity) = velocity {
-            self.velocity.set(velocity);
+            self.damp.write().velocity = velocity;
         }
 
         if self.task.read().is_some() {
             return;
         }
-        self.displayed.set(current);
+        self.damp.write().position = current;
 
         let ticker = RenderingTicker::get();
         let platform = Platform::get();
         let animation_clock = AnimationClock::get();
         let scroll_controller = self.scroll_controller;
-        let mut displayed = self.displayed;
-        let mut velocity = self.velocity;
+        let mut damp = self.damp;
         let mut task = self.task;
-        let smooth_time = self.smooth_time;
 
         let animation_task = spawn(async move {
             platform.send(UserEvent::RequestRedraw);
@@ -111,31 +159,10 @@ impl SmoothScroll {
                 previous_frame = Instant::now();
 
                 let target = scroll_controller.position();
-                let current = *displayed.peek();
-                let current_velocity = *velocity.peek();
-
-                // Pull strength, higher when the smooth time is shorter
-                let omega = 2.0 / *smooth_time.peek();
-                // Share of the distance that survives this frame
-                let decay = (-omega * elapsed_seconds).exp();
-                // Distance still to cover
-                let change = current - target;
-                // How much the current speed and distance push over this frame
-                let linear_term = (current_velocity + change * omega) * elapsed_seconds;
-                // Speed left after the pull has damped it
-                let next_velocity = (current_velocity - linear_term * omega) * decay;
-                // Position once the leftover distance has decayed
-                let next = target + (change + linear_term) * decay;
-
-                let remaining = target - next;
-                if remaining.length() < SETTLE_DISTANCE && next_velocity.length() < SETTLE_SPEED {
-                    displayed.set(target);
-                    velocity.set(Vector2D::zero());
+                if damp.write().advance(target, elapsed_seconds) {
                     break;
                 }
 
-                displayed.set(next);
-                velocity.set(next_velocity);
                 platform.send(UserEvent::RequestRedraw);
             }
 
@@ -144,32 +171,24 @@ impl SmoothScroll {
         task.write().replace(animation_task);
     }
 
-    /// Freezes any running animation and starts tracking a drag from the momentum it caught.
+    /// Freezes the animation and starts a drag from the momentum it caught.
     pub fn begin_drag(&mut self) {
         let caught_velocity = self.stop();
-        self.drag_velocity.set(caught_velocity);
-        self.last_drag_move.set(Instant::now());
+        self.drag.set(Drag {
+            velocity: caught_velocity,
+            last_move: Instant::now(),
+        });
     }
 
-    /// Feeds a drag movement, smoothing it into the velocity a later fling launches at.
+    /// Feeds a drag movement into the tracked velocity.
     pub fn drag(&mut self, delta: Vector2D) {
         self.stop();
-
-        let now = Instant::now();
-        let elapsed_seconds = now
-            .duration_since(*self.last_drag_move.peek())
-            .as_secs_f32();
-        if elapsed_seconds > 0.0 {
-            let previous = *self.drag_velocity.peek();
-            self.drag_velocity
-                .set(previous.lerp(-delta / elapsed_seconds, 0.5));
-        }
-        self.last_drag_move.set(now);
+        self.drag.write().track(delta);
     }
 
-    /// Ends a drag, flinging from its velocity when it was fast enough to be a flick.
+    /// Ends a drag, flinging when it was fast enough to be a flick.
     pub fn release_drag(&mut self, from: Point2D, content: Size2D, viewport: Size2D) {
-        let velocity = *self.drag_velocity.peek();
+        let velocity = self.drag.peek().velocity;
         if velocity.length() < FLING_MIN_SPEED {
             return;
         }
@@ -183,23 +202,22 @@ impl SmoothScroll {
         self.scroll_controller.scroll_to_y(target_y as i32);
     }
 
-    /// Freezes the scroll at the displayed position, returning the velocity it was moving at.
+    /// Freezes the scroll where it is, returning the velocity it was moving at.
     pub fn stop(&mut self) -> Vector2D {
         if let Some(task) = self.task.write().take() {
             task.cancel();
 
-            let displayed = self.displayed.peek().to_i32();
-            self.scroll_controller.scroll_to_x(displayed.x);
-            self.scroll_controller.scroll_to_y(displayed.y);
+            let position = self.damp.peek().position.to_i32();
+            self.scroll_controller.scroll_to_x(position.x);
+            self.scroll_controller.scroll_to_y(position.y);
         }
 
-        let velocity = *self.velocity.peek();
-        self.velocity.set(Vector2D::zero());
+        let velocity = self.damp.peek().velocity;
+        self.damp.write().velocity = Vector2D::zero();
         velocity
     }
 }
 
-/// Creates a [`SmoothScroll`] tied to the component.
 pub fn use_smooth_scroll(scroll_controller: impl FnOnce() -> ScrollController) -> SmoothScroll {
     use_hook(|| SmoothScroll::create(scroll_controller()))
 }
