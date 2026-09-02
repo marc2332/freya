@@ -16,6 +16,7 @@ use freya_engine::prelude::{
     Canvas,
     Color,
     ColorSpace,
+    Data,
     Font,
     FontArguments,
     FontEdging as Edging,
@@ -420,7 +421,7 @@ impl SkiaScenePainter<'_> {
         let Some(typeface) = self
             .cache
             .font_mgr
-            .new_from_data(font.data.data(), font.index as usize)
+            .new_from_data(Data::new_copy(font.data.data()), font.index)
         else {
             tracing::warn!("Failed to load font {} {}", cache_key.0, cache_key.1);
             return None;

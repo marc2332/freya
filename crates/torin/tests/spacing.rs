@@ -65,7 +65,7 @@ pub fn spacing() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(

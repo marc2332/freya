@@ -17,7 +17,10 @@ use freya_components::{
 };
 use freya_core::{
     integration::*,
-    prelude::Color,
+    prelude::{
+        Color,
+        CursorIcon,
+    },
 };
 use freya_engine::prelude::{
     FontCollection,
@@ -31,7 +34,10 @@ use keyboard_types::{
     Code,
     Key,
 };
-use ragnarok::NodesState;
+use ragnarok::{
+    EventsMeasurerRunner,
+    NodesState,
+};
 use raw_window_handle::HasDisplayHandle;
 #[cfg(target_os = "linux")]
 use raw_window_handle::RawDisplayHandle;
@@ -62,6 +68,7 @@ use crate::{
     accessibility::AccessibilityTask,
     config::{
         OnCloseHook,
+        RendererPreference,
         WindowConfig,
     },
     drivers::GraphicsDriver,
@@ -78,6 +85,9 @@ use crate::{
     },
 };
 
+#[derive(Clone, Copy)]
+pub struct CurrentWindowId(pub WindowId);
+
 pub struct AppWindow {
     pub(crate) runner: Runner,
     pub(crate) tree: Tree,
@@ -88,6 +98,7 @@ pub struct AppWindow {
     pub(crate) position: CursorPoint,
     pub(crate) mouse_state: ElementState,
     pub(crate) modifiers_state: ModifiersState,
+    pub(crate) cursor_icon: CursorIcon,
     pub(crate) pressed_keys: Vec<(Key, Code)>,
 
     pub(crate) events_receiver: futures_channel::mpsc::UnboundedReceiver<EventsChunk>,
@@ -99,6 +110,7 @@ pub struct AppWindow {
     pub(crate) screen_reader: ScreenReader,
 
     pub(crate) process_layout_on_next_render: bool,
+    pub(crate) send_mouse_move_on_next_layout: bool,
 
     pub(crate) waker: Waker,
 
@@ -115,6 +127,8 @@ pub struct AppWindow {
     pub(crate) on_close: Option<OnCloseHook>,
 
     pub(crate) window_attributes: WindowAttributes,
+
+    pub(crate) renderer: RendererPreference,
 
     #[cfg(feature = "hotreload")]
     pub(crate) hot_reload_pending: Arc<std::sync::atomic::AtomicBool>,
@@ -180,6 +194,7 @@ impl AppWindow {
         font_manager: &FontMgr,
         fallback_fonts: &[Cow<'static, str>],
         gpu_resource_cache_limit: usize,
+        global_contexts: &GlobalContexts,
     ) -> Self {
         #[cfg(feature = "hotreload")]
         let hot_reload_pending = Arc::new(std::sync::atomic::AtomicBool::new(false));
@@ -212,6 +227,7 @@ impl AppWindow {
             active_event_loop,
             window_attributes.clone(),
             gpu_resource_cache_limit,
+            window_config.renderer,
         );
 
         if let Some(window_handle_hook) = window_config.window_handle_hook.take() {
@@ -231,6 +247,8 @@ impl AppWindow {
             }
         });
 
+        runner.provide_root_context(|| global_contexts.clone());
+
         let screen_reader = ScreenReader::new();
         runner.provide_root_context(|| screen_reader.clone());
 
@@ -241,10 +259,13 @@ impl AppWindow {
         runner.provide_root_context(|| animation_clock.clone());
 
         runner.provide_root_context(AssetCacher::create);
-        let mut tree = Tree::default();
+
+        runner.provide_root_context(|| CurrentWindowId(window.id()));
 
         let custom_scale_factor = clamp_custom_scale_factor(window_config.custom_scale_factor);
         let scale_factor = window.scale_factor() * custom_scale_factor;
+
+        let mut tree = Tree::default();
 
         let window_size = window.inner_size();
         let accent_color_preference = accent_color_preference();
@@ -321,8 +342,10 @@ impl AppWindow {
             PluginHandle::new(event_loop_proxy),
         );
 
+        let mut nodes_state = NodesState::default();
+
         let mutations = runner.sync_and_update();
-        let result = tree.apply_mutations(mutations);
+        let result = tree.apply_mutations(mutations, scale_factor as f32);
         if let Some(strategy) = result.auto_focus {
             tree.accessibility_diff.request_focus(strategy);
         }
@@ -335,11 +358,10 @@ impl AppWindow {
             font_collection,
             font_manager,
             &events_sender,
+            &mut nodes_state,
             scale_factor,
             fallback_fonts,
         );
-
-        let nodes_state = NodesState::default();
 
         let accessibility_adapter =
             Adapter::with_event_loop_proxy(active_event_loop, &window, event_loop_proxy.clone());
@@ -398,6 +420,7 @@ impl AppWindow {
             mouse_state: ElementState::Released,
             position: CursorPoint::default(),
             modifiers_state: ModifiersState::default(),
+            cursor_icon: CursorIcon::default(),
             pressed_keys: Vec::new(),
 
             events_receiver,
@@ -409,6 +432,7 @@ impl AppWindow {
             screen_reader,
 
             process_layout_on_next_render: true,
+            send_mouse_move_on_next_layout: false,
 
             waker,
 
@@ -426,8 +450,24 @@ impl AppWindow {
 
             window_attributes,
 
+            renderer: window_config.renderer,
+
             #[cfg(feature = "hotreload")]
             hot_reload_pending,
+        }
+    }
+
+    /// Resolve the cursor icon from the hovered nodes and update the window cursor if it changed.
+    pub(crate) fn update_cursor_icon(&mut self) {
+        if self.mouse_state == ElementState::Pressed
+            || self.position == CursorPoint::from((-1., -1.))
+        {
+            return;
+        }
+        let cursor_icon = self.tree.cursor_icon(&self.nodes_state);
+        if cursor_icon != self.cursor_icon {
+            self.cursor_icon = cursor_icon;
+            self.window.set_cursor(cursor_icon);
         }
     }
 
@@ -449,9 +489,35 @@ impl AppWindow {
             .scale_factor
             .set(self.effective_scale_factor());
         self.process_layout_on_next_render = true;
+        self.tree
+            .set_scale_factor(self.effective_scale_factor() as f32);
         self.tree.layout.reset();
         self.tree.text_cache.reset();
         self.window.request_redraw();
+    }
+
+    /// Measures the given platform events and emits the results.
+    /// Wheel events schedule a mouse move to refresh hover states.
+    pub(crate) fn process_platform_events(&mut self, mut platform_events: Vec<PlatformEvent>) {
+        if platform_events
+            .iter()
+            .any(|platform_event| matches!(platform_event, PlatformEvent::Wheel { .. }))
+        {
+            self.send_mouse_move_on_next_layout = true;
+        }
+
+        let mut events_measurer_adapter = EventsMeasurerAdapter {
+            scale_factor: self.effective_scale_factor(),
+            tree: &mut self.tree,
+        };
+        let processed_events = events_measurer_adapter.run(
+            &mut platform_events,
+            &mut self.nodes_state,
+            self.accessibility.focused_node_id(),
+        );
+        self.events_sender
+            .unbounded_send(EventsChunk::Processed(processed_events))
+            .unwrap();
     }
 
     /// Sets the custom scale factor, clamped to a reasonable range.

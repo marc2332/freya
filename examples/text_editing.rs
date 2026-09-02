@@ -49,6 +49,8 @@ fn app() -> impl IntoElement {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         })
         .on_key_up(move |e: Event<KeyboardEventData>| {

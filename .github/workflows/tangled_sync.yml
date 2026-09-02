@@ -1,0 +1,38 @@
+name: Tangled Sync
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    tags: [ "*" ]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: tangled-sync
+      cancel-in-progress: false
+
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        fetch-depth: 0
+        fetch-tags: true
+        persist-credentials: false
+    - name: Configure SSH
+      env:
+        TANGLED_SSH_KEY: ${{ secrets.TANGLED_SSH_KEY }}
+      run: |
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        printf '%s\n' "$TANGLED_SSH_KEY" > ~/.ssh/tangled
+        chmod 600 ~/.ssh/tangled
+        printf '%s\n' 'tangled.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAII2UShEm/FFPmYZUizaPnIqOJuynoCQpcLhl5PPHd02n' > ~/.ssh/known_hosts
+        chmod 600 ~/.ssh/known_hosts
+    - name: Push to tangled
+      env:
+        GIT_SSH_COMMAND: ssh -i ~/.ssh/tangled -o IdentitiesOnly=yes -o UserKnownHostsFile=~/.ssh/known_hosts
+      run: |
+        git remote add tangled git@tangled.org:mespin.me/freya
+        git push --force tangled refs/remotes/origin/main:refs/heads/main
+        git push --force --tags tangled

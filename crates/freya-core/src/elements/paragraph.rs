@@ -12,7 +12,6 @@ use std::{
 };
 
 use freya_engine::prelude::{
-    BlendMode,
     Canvas,
     FontCollection,
     FontStyle,
@@ -24,7 +23,6 @@ use freya_engine::prelude::{
     PlaceholderStyle,
     RectHeightStyle,
     RectWidthStyle,
-    SaveLayerRec,
     SkParagraph,
     SkRect,
     TextBaseline,
@@ -70,7 +68,6 @@ use crate::{
         ContainerExt,
         ContainerPositionExt,
         EventHandlersExt,
-        Fill,
         KeyExt,
         LayerExt,
         LayoutExt,
@@ -216,6 +213,7 @@ impl ElementExt for ParagraphElement {
         if self.spans != paragraph.spans || self.contents != paragraph.contents {
             diff.insert(DiffModifies::STYLE);
             diff.insert(DiffModifies::LAYOUT);
+            diff.insert(DiffModifies::ACCESSIBILITY);
         }
 
         if self.accessibility != paragraph.accessibility {
@@ -281,6 +279,15 @@ impl ElementExt for ParagraphElement {
 
     fn accessibility(&'_ self) -> Cow<'_, AccessibilityData> {
         Cow::Borrowed(&self.accessibility)
+    }
+
+    fn finish_accessibility(&self, builder: &mut accesskit::Node) {
+        builder.set_value(
+            self.spans
+                .iter()
+                .map(|span| span.text.as_ref())
+                .collect::<String>(),
+        );
     }
 
     fn layer(&self) -> Layer {
@@ -484,12 +491,8 @@ impl ElementExt for ParagraphElement {
             highlights_paint.set_color(self.cursor_style_data.highlight_color);
 
             if rects.is_empty() && *from == 0 {
-                let caret_rect = cursor_character_rect(
-                    paragraph,
-                    &self.text(),
-                    *from,
-                    context.text_style_state.text_align,
-                );
+                let caret_rect =
+                    paragraph.cursor_rect(&self.text(), *from, context.text_style_state.text_align);
                 context
                     .canvas
                     .draw_rect(to_cursor_area(caret_rect), &highlights_paint);
@@ -518,8 +521,7 @@ impl ElementExt for ParagraphElement {
         if let Some(cursor_index) = self.cursor_index
             && self.cursor_style == CursorStyle::Block
         {
-            let mut cursor_rect = cursor_character_rect(
-                paragraph,
+            let mut cursor_rect = paragraph.cursor_rect(
                 &self.text(),
                 cursor_index,
                 context.text_style_state.text_align,
@@ -532,11 +534,9 @@ impl ElementExt for ParagraphElement {
         }
 
         // Draw text
-        paint_paragraph_with_fill(
-            paragraph,
+        paragraph.paint_at(
             context.canvas,
             Point2D::new(visible_area.min_x(), visible_area.min_y() + vertical_offset),
-            &context.text_style_state.color,
         );
 
         // Draw cursor
@@ -544,8 +544,7 @@ impl ElementExt for ParagraphElement {
             && !visible_highlights
             && self.cursor_style != CursorStyle::Block
         {
-            let mut cursor_rect = cursor_character_rect(
-                paragraph,
+            let mut cursor_rect = paragraph.cursor_rect(
                 &self.text(),
                 cursor_index,
                 context.text_style_state.text_align,
@@ -585,8 +584,17 @@ impl ParagraphElement {
         text
     }
 
-    /// Builds the Skia paragraph from the content, reserving a placeholder (sized from
-    /// `placeholders`, in order) for each inline child, laid out against `width`.
+    fn has_shader_fill(&self, text_style_state: &TextStyleState) -> bool {
+        text_style_state.color.as_color().is_none()
+            || self.spans.iter().any(|span| {
+                span.text_style_data
+                    .color
+                    .as_ref()
+                    .is_some_and(|color| color.as_color().is_none())
+            })
+    }
+
+    /// Builds the Skia paragraph from the content.
     fn build_paragraph(
         &self,
         text_style_state: &TextStyleState,
@@ -596,115 +604,157 @@ impl ParagraphElement {
         width: f32,
         placeholders: &[Size2D],
     ) -> SkParagraph {
-        let mut paragraph_style = ParagraphStyle::default();
+        let build = |fill_area: Area| {
+            let mut paragraph_style = ParagraphStyle::default();
 
-        if let Some(ellipsis) = text_style_state.text_overflow.get_ellipsis() {
-            paragraph_style.set_ellipsis(ellipsis);
-        }
+            if let Some(ellipsis) = text_style_state.text_overflow.get_ellipsis() {
+                paragraph_style.set_ellipsis(ellipsis);
+            }
 
-        paragraph_style.set_text_style(&base_text_style(
-            text_style_state,
-            fallback_fonts,
-            scale_factor,
-            self.line_height,
-        ));
-        paragraph_style.set_max_lines(self.max_lines);
-        paragraph_style.set_text_align(text_style_state.text_align.into());
+            paragraph_style.set_text_style(&text_style_state.to_text_style(
+                fallback_fonts,
+                scale_factor,
+                self.line_height,
+                fill_area,
+            ));
+            paragraph_style.set_max_lines(self.max_lines);
+            paragraph_style.set_text_align(text_style_state.text_align.into());
 
-        let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
+            let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
 
-        let mut spans = self.spans.iter();
-        let mut placeholders = placeholders.iter();
-        for content in &self.contents {
-            match content {
-                ParagraphContent::Span => {
-                    let Some(span) = spans.next() else { continue };
-                    paragraph_builder.push_style(&span_text_style(
-                        text_style_state,
-                        fallback_fonts,
-                        scale_factor,
-                        span,
-                        self.line_height,
-                    ));
-                    paragraph_builder.add_text(&span.text);
-                }
-                ParagraphContent::Element => {
-                    let Some(size) = placeholders.next() else {
-                        continue;
-                    };
-                    paragraph_builder.add_placeholder(&PlaceholderStyle::new(
-                        size.width,
-                        size.height,
-                        PlaceholderAlignment::Middle,
-                        TextBaseline::Alphabetic,
-                        0.0,
-                    ));
+            let mut spans = self.spans.iter();
+            let mut placeholders = placeholders.iter();
+            for content in &self.contents {
+                match content {
+                    ParagraphContent::Span => {
+                        let Some(span) = spans.next() else { continue };
+                        paragraph_builder.push_style(&span.to_text_style(
+                            text_style_state,
+                            fallback_fonts,
+                            scale_factor,
+                            self.line_height,
+                            fill_area,
+                        ));
+                        paragraph_builder.add_text(&span.text);
+                    }
+                    ParagraphContent::Element => {
+                        let Some(size) = placeholders.next() else {
+                            continue;
+                        };
+                        paragraph_builder.add_placeholder(&PlaceholderStyle::new(
+                            size.width,
+                            size.height,
+                            PlaceholderAlignment::Middle,
+                            TextBaseline::Alphabetic,
+                            0.0,
+                        ));
+                    }
                 }
             }
+
+            let mut paragraph = paragraph_builder.build();
+            paragraph.layout(width);
+            paragraph
+        };
+
+        let paragraph = build(Area::default());
+
+        // Paragraphs that contain even one shader must be
+        // rebuilt so that we can pass the correct area to the shaders
+        if self.has_shader_fill(text_style_state) {
+            return build(paragraph.fill_area());
         }
 
-        let mut paragraph = paragraph_builder.build();
-        paragraph.layout(width);
         paragraph
     }
 }
 
-/// Rect of the grapheme cluster at `cursor_index` (in UTF-16 code units),
-/// or a caret stub when there is nothing to measure. A caret after a
-/// trailing line break lands on the empty last line.
-fn cursor_character_rect(
-    paragraph: &SkParagraph,
-    text: &str,
-    cursor_index: usize,
-    text_align: TextAlign,
-) -> SkRect {
-    let mut cluster = 0..0;
-    let mut cluster_byte_index = 0;
-    for (byte_index, grapheme) in text.grapheme_indices(true) {
-        cluster = cluster.end..cluster.end + grapheme.encode_utf16().count();
-        cluster_byte_index = byte_index;
-        if cluster.end > cursor_index {
-            break;
+pub trait ParagraphCursorExt {
+    /// Area of the character at `cursor_index`, if there is any.
+    fn measured_cursor_rect(&self, text: &str, cursor_index: usize) -> Option<SkRect>;
+
+    /// Area of the character at `cursor_index`.
+    fn cursor_rect(&self, text: &str, cursor_index: usize, text_align: TextAlign) -> SkRect;
+
+    /// Cursor position at the given point.
+    fn cursor_index_at_point(&self, point: (f64, f64)) -> usize;
+}
+
+impl ParagraphCursorExt for SkParagraph {
+    fn measured_cursor_rect(&self, text: &str, cursor_index: usize) -> Option<SkRect> {
+        let mut cluster = 0..0;
+        let mut cluster_byte_index = 0;
+        for (byte_index, grapheme) in text.grapheme_indices(true) {
+            cluster = cluster.end..cluster.end + grapheme.encode_utf16().count();
+            cluster_byte_index = byte_index;
+            if cluster.end > cursor_index {
+                break;
+            }
         }
+
+        if !cluster.is_empty() {
+            if cluster.end <= cursor_index
+                && let Some(cluster_line) = self.get_line_number_at(cluster_byte_index)
+                && let Some(line) = self.get_line_metrics_at(cluster_line + 1)
+            {
+                let left = line.left as f32;
+                let top = (line.baseline - line.ascent) as f32;
+                let bottom = (line.baseline + line.descent) as f32;
+                return Some(SkRect::new(left, top, left, bottom));
+            }
+
+            let rects = self.get_rects_for_range(
+                cluster.clone(),
+                RectHeightStyle::Tight,
+                RectWidthStyle::Tight,
+            );
+            if let Some(rect) = rects.first() {
+                let mut rect = rect.rect;
+                if cluster.end <= cursor_index {
+                    rect.left = rect.right;
+                }
+                return Some(rect);
+            }
+        }
+
+        let line = self.get_line_metrics_at(0)?;
+        let left = line.left as f32;
+
+        Some(SkRect::new(left, 0., left + 6., line.height as f32))
     }
 
-    if !cluster.is_empty() {
-        // A line below the final cluster is the empty line after a trailing line break
-        if cluster.end <= cursor_index
-            && let Some(cluster_line) = paragraph.get_line_number_at(cluster_byte_index)
-            && let Some(line) = paragraph.get_line_metrics_at(cluster_line + 1)
-        {
-            let left = line.left as f32;
-            let top = (line.baseline - line.ascent) as f32;
-            let bottom = (line.baseline + line.descent) as f32;
-            return SkRect::new(left, top, left, bottom);
-        }
-
-        let rects = paragraph.get_rects_for_range(
-            cluster.clone(),
-            RectHeightStyle::Tight,
-            RectWidthStyle::Tight,
-        );
-        if let Some(rect) = rects.first() {
-            let mut rect = rect.rect;
-            if cluster.end <= cursor_index {
-                rect.left = rect.right;
-            }
+    fn cursor_rect(&self, text: &str, cursor_index: usize, text_align: TextAlign) -> SkRect {
+        if let Some(rect) = self.measured_cursor_rect(text, cursor_index) {
             return rect;
         }
+
+        // In case of no rect we just center the cursor
+        let left = match text_align {
+            TextAlign::Center => self.max_width() / 2.,
+            TextAlign::Right | TextAlign::End => self.max_width() - 6.,
+            _ => 0.,
+        };
+
+        SkRect::new(left, 0., left + 6., self.height())
     }
 
-    if let Some(line) = paragraph.get_line_metrics_at(0) {
-        let left = line.left as f32;
-        return SkRect::new(left, 0., left + 6., line.height as f32);
-    }
+    fn cursor_index_at_point(&self, point: (f64, f64)) -> usize {
+        let (horizontal_position, vertical_position) = point;
+        let mut horizontal_position = horizontal_position as i32;
+        if let Some(line) = self
+            .get_line_metrics()
+            .into_iter()
+            .find(|line| vertical_position < line.baseline + line.descent)
+            && !line.hard_break
+        {
+            // Clamp to the end of soft wrapped lines
+            horizontal_position = horizontal_position.min((line.left + line.width) as i32 - 1);
+        }
 
-    let left = match text_align {
-        TextAlign::Center => paragraph.max_width() / 2.,
-        TextAlign::Right | TextAlign::End => paragraph.max_width() - 6.,
-        _ => 0.,
-    };
-    SkRect::new(left, 0., left + 6., paragraph.height())
+        self.get_glyph_position_at_coordinate((horizontal_position, vertical_position as i32))
+            .position
+            .max(0) as usize
+    }
 }
 
 impl From<Paragraph> for Element {
@@ -728,108 +778,114 @@ impl From<Paragraph> for Element {
     }
 }
 
-/// Builds the paragraph-level base [TextStyle] from the inherited text style state.
-fn base_text_style(
-    text_style_state: &TextStyleState,
-    fallback_fonts: &[Cow<'static, str>],
-    scale_factor: f64,
-    line_height: Option<f32>,
-) -> TextStyle {
-    let mut text_style = TextStyle::default();
+impl TextStyleState {
+    /// Builds the Skia [TextStyle], anchoring non-color [Fill]s to `fill_area`.
+    pub(crate) fn to_text_style(
+        &self,
+        fallback_fonts: &[Cow<'static, str>],
+        scale_factor: f64,
+        line_height: Option<f32>,
+        fill_area: Area,
+    ) -> TextStyle {
+        let mut text_style = TextStyle::default();
 
-    let mut font_families = text_style_state.font_families.clone();
-    font_families.extend_from_slice(fallback_fonts);
+        let mut font_families = self.font_families.clone();
+        font_families.extend_from_slice(fallback_fonts);
 
-    text_style.set_color(text_style_state.color.as_color().unwrap_or(Color::WHITE));
-    text_style.set_font_size(f32::from(text_style_state.font_size) * scale_factor as f32);
-    text_style.set_font_families(&font_families);
-    text_style.set_font_style(FontStyle::new(
-        text_style_state.font_weight.into(),
-        text_style_state.font_width.into(),
-        text_style_state.font_slant.into(),
-    ));
+        self.color.apply_to_text_style(&mut text_style, fill_area);
+        text_style.set_font_size(f32::from(self.font_size) * scale_factor as f32);
+        text_style.set_font_families(&font_families);
+        text_style.set_font_style(FontStyle::new(
+            self.font_weight.into(),
+            self.font_width.into(),
+            self.font_slant.into(),
+        ));
 
-    if text_style_state.text_height.needs_custom_height() {
-        text_style.set_height_override(true);
-        text_style.set_half_leading(true);
+        if self.text_height.needs_custom_height() {
+            text_style.set_height_override(true);
+            text_style.set_half_leading(true);
+        }
+
+        if let Some(line_height) = line_height {
+            text_style.set_height_override(true);
+            text_style.set_height(line_height);
+        }
+
+        for text_shadow in self.text_shadows.iter() {
+            text_style.add_shadow((*text_shadow).into());
+        }
+
+        text_style
     }
-
-    if let Some(line_height) = line_height {
-        text_style.set_height_override(true);
-        text_style.set_height(line_height);
-    }
-
-    for text_shadow in text_style_state.text_shadows.iter() {
-        text_style.add_shadow((*text_shadow).into());
-    }
-
-    text_style
 }
 
-/// Builds the [TextStyle] for a single [Span], layering its overrides over the inherited state.
-fn span_text_style(
-    text_style_state: &TextStyleState,
-    fallback_fonts: &[Cow<'static, str>],
-    scale_factor: f64,
-    span: &Span,
-    line_height: Option<f32>,
-) -> TextStyle {
-    let span_style = TextStyleState::from_data(text_style_state, &span.text_style_data);
-    let mut text_style = TextStyle::new();
-    let mut font_families = text_style_state.font_families.clone();
-    font_families.extend_from_slice(fallback_fonts);
+impl Span<'_> {
+    /// Builds the Skia [TextStyle] for this span.
+    fn to_text_style(
+        &self,
+        text_style_state: &TextStyleState,
+        fallback_fonts: &[Cow<'static, str>],
+        scale_factor: f64,
+        line_height: Option<f32>,
+        fill_area: Area,
+    ) -> TextStyle {
+        let span_style = TextStyleState::from_data(text_style_state, &self.text_style_data);
+        let mut text_style = TextStyle::new();
 
-    for text_shadow in span_style.text_shadows.iter() {
-        text_style.add_shadow((*text_shadow).into());
-    }
+        let mut font_families = text_style_state.font_families.clone();
+        font_families.extend_from_slice(fallback_fonts);
 
-    text_style.set_color(span_style.color.as_color().unwrap_or(Color::WHITE));
-    text_style.set_font_size(f32::from(span_style.font_size) * scale_factor as f32);
-    text_style.set_font_families(&font_families);
-    text_style.set_font_style(FontStyle::new(
-        span_style.font_weight.into(),
-        span_style.font_width.into(),
-        span_style.font_slant.into(),
-    ));
-    text_style.set_decoration_type(span_style.text_decoration.into());
-    if let Some(line_height) = line_height {
-        text_style.set_height_override(true);
-        text_style.set_height(line_height);
+        span_style
+            .color
+            .apply_to_text_style(&mut text_style, fill_area);
+        text_style.set_font_size(f32::from(span_style.font_size) * scale_factor as f32);
+        text_style.set_font_families(&font_families);
+        text_style.set_font_style(FontStyle::new(
+            span_style.font_weight.into(),
+            span_style.font_width.into(),
+            span_style.font_slant.into(),
+        ));
+        text_style.set_decoration_type(span_style.text_decoration.into());
+
+        if let Some(line_height) = line_height {
+            text_style.set_height_override(true);
+            text_style.set_height(line_height);
+        }
+
+        for text_shadow in span_style.text_shadows.iter() {
+            text_style.add_shadow((*text_shadow).into());
+        }
+
+        text_style
     }
-    text_style
 }
 
-/// Paints a paragraph with a [Fill] as the text color. Non-color fills are masked
-/// onto the rendered glyph alpha via an offscreen layer + [BlendMode::SrcIn].
-pub(crate) fn paint_paragraph_with_fill(
-    paragraph: &SkParagraph,
-    canvas: &Canvas,
-    origin: Point2D,
-    fill: &Fill,
-) {
-    if matches!(fill, Fill::Color(_)) {
-        paragraph.paint(canvas, origin.to_tuple());
-        return;
+pub(crate) trait ParagraphPaintExt {
+    /// Paints at `origin` by translating the canvas, so text shaders follow the paragraph.
+    fn paint_at(&self, canvas: &Canvas, origin: Point2D);
+
+    /// The box that non-color [Fill]s anchor to, in paragraph coordinates.
+    fn fill_area(&self) -> Area;
+}
+
+impl ParagraphPaintExt for SkParagraph {
+    fn paint_at(&self, canvas: &Canvas, origin: Point2D) {
+        let layer = canvas.save();
+        canvas.translate(origin.to_tuple());
+        self.paint(canvas, (0., 0.));
+        canvas.restore_to_count(layer);
     }
 
-    let width = paragraph.longest_line();
-    let height = paragraph.height();
-    let area = Area::new(origin, Size2D::new(width, height));
-    let bounds_rect = SkRect::from_xywh(area.min_x(), area.min_y(), width, height);
+    fn fill_area(&self) -> Area {
+        let max_width = self.max_width();
+        let width = if max_width < f32::MAX {
+            max_width
+        } else {
+            self.longest_line()
+        };
 
-    let layer = canvas.save_layer(&SaveLayerRec::default().bounds(&bounds_rect));
-
-    paragraph.paint(canvas, origin.to_tuple());
-
-    let mut paint = Paint::default();
-    paint.set_anti_alias(true);
-    paint.set_style(PaintStyle::Fill);
-    paint.set_blend_mode(BlendMode::SrcIn);
-    fill.apply_to_paint(&mut paint, area);
-
-    canvas.draw_rect(bounds_rect, &paint);
-
-    canvas.restore_to_count(layer);
+        Area::new(Point2D::zero(), Size2D::new(width, self.height()))
+    }
 }
 
 impl KeyExt for Paragraph {
@@ -852,7 +908,7 @@ impl LayerExt for Paragraph {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Paragraph {
     key: DiffKey,
     element: ParagraphElement,
@@ -915,8 +971,6 @@ impl Paragraph {
 
     /// Append every [`Span`] yielded by the iterator to the paragraph.
     pub fn spans_iter(mut self, spans: impl Iterator<Item = Span<'static>>) -> Self {
-        // TODO: Accessible paragraphs
-        // self.element.accessibility.builder.set_value(text.clone());
         for span in spans {
             self.push_span(span);
         }
@@ -925,8 +979,6 @@ impl Paragraph {
 
     /// Append a single [`Span`] of styled text to the paragraph.
     pub fn span(mut self, span: impl Into<Span<'static>>) -> Self {
-        // TODO: Accessible paragraphs
-        // self.element.accessibility.builder.set_value(text.clone());
         self.push_span(span.into());
         self
     }

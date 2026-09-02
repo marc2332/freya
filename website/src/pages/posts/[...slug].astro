@@ -1,16 +1,17 @@
 ---
-import { getEntry, render } from "astro:content";
+import { getCollection, render } from "astro:content";
 import BlogPostLayout from "../../layouts/BlogPostLayout.astro";
 
-const { slug = "" } = Astro.params;
-
-const entry = await getEntry("blog", slug);
-
-if (entry === undefined) {
-  return Astro.redirect("/404");
+export async function getStaticPaths() {
+  const posts = await getCollection("blog");
+  return posts.map((post) => ({
+    params: { slug: post.data.slug },
+    props: { post },
+  }));
 }
 
-const { Content, remarkPluginFrontmatter, headings } = await render(entry);
+const { post } = Astro.props;
+const { Content, remarkPluginFrontmatter, headings } = await render(post);
 ---
 <BlogPostLayout frontmatter={remarkPluginFrontmatter} headings={headings}>
     <Content/>

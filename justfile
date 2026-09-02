@@ -18,6 +18,9 @@ f-check:
 f-nix:
     alejandra flake.nix
 
+sa:
+    cargo audit
+
 c:
     taplo check
     cargo clippy --workspace --examples --bins --features "all-debug" -- -D warnings
@@ -51,22 +54,28 @@ t-core:
    cargo nextest run --package freya-core --package ragnarok
 
 pe:
-    cargo run --example dev_perf --release
+    cargo bench --package freya-core --bench dev_perf
 
 hr:
     dx serve --hot-patch --example animation_router --verbose --features "hotreload"
 
 ps:
-    cargo run --example dev_perf --features "hotpath" --release
+    cargo bench --package freya-core --bench dev_perf --features "hotpath"
 
 pa:
-    cargo run --example dev_perf --features "hotpath, hotpath-alloc" --release
+    cargo bench --package freya-core --bench dev_perf --features "hotpath, hotpath-alloc"
 
 ps-ci:
-    cargo run --example dev_perf --features "hotpath" --release
+    cargo bench --package freya-core --bench dev_perf --features "hotpath"
 
 pa-ci:
-    cargo run --example dev_perf --features "hotpath, hotpath-alloc" --release
+    cargo bench --package freya-core --bench dev_perf --features "hotpath, hotpath-alloc"
+
+pc:
+    cargo bench --package freya-core --bench core_perf --features "hotpath, hotpath-alloc"
+
+pc-ci:
+    cargo bench --package freya-core --bench core_perf --features "hotpath, hotpath-alloc"
 
 ba:
     cargo build --all-targets --workspace -F freya/all-debug

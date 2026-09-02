@@ -1,6 +1,6 @@
 [package]
 name = "freya-html"
-version = "0.5.0-rc.2"
+version = "0.5.0-rc.4"
 description = "HTML + CSS rendering for Freya using Blitz"
 edition = "2024"
 license = "MIT"

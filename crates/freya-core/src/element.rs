@@ -47,6 +47,7 @@ use crate::{
             SizedEventData,
             StyledEventData,
             TouchEventData,
+            VisibleEventData,
             WheelEventData,
         },
         name::EventName,
@@ -163,6 +164,9 @@ pub trait ElementExt: Any {
             ],
         )
     }
+
+    /// Mutate the accessibility node right before it enters the accessibility tree.
+    fn finish_accessibility(&self, _builder: &mut accesskit::Node) {}
 }
 
 #[allow(dead_code)]
@@ -451,6 +455,7 @@ pub enum EventHandlerType {
     Mouse(EventHandler<Event<MouseEventData>>),
     Keyboard(EventHandler<Event<KeyboardEventData>>),
     Sized(EventHandler<Event<SizedEventData>>),
+    Visible(EventHandler<Event<VisibleEventData>>),
     Styled(EventHandler<Event<StyledEventData>>),
     Wheel(EventHandler<Event<WheelEventData>>),
     Touch(EventHandler<Event<TouchEventData>>),

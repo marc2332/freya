@@ -92,9 +92,10 @@ impl PathElement {
                     .into_iter()
                     .enumerate()
                     .map(|(i, e)| {
-                        let mut path = path.clone();
-                        path.push(i as u32);
-                        PathElement::from_element(path, e)
+                        let mut child_path = Vec::with_capacity(path.len() + 1);
+                        child_path.extend_from_slice(&path);
+                        child_path.push(i as u32);
+                        PathElement::from_element(child_path, e)
                     })
                     .collect::<Box<[PathElement]>>(),
                 path: path.into_boxed_slice(),
@@ -104,8 +105,18 @@ impl PathElement {
         }
     }
 
+    fn key(&self) -> &DiffKey {
+        let (Self::Element { key, .. } | Self::Component { key, .. }) = self;
+        key
+    }
+
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     pub fn diff(&self, previous: Option<&Self>, diff: &mut Diff) {
+        self.diff_inner(previous, diff, false)
+    }
+
+    #[cfg_attr(feature = "hotpath", hotpath::measure)]
+    fn diff_inner(&self, previous: Option<&Self>, diff: &mut Diff, parent_removed: bool) {
         match previous {
             None => {
                 match self {
@@ -117,7 +128,7 @@ impl PathElement {
 
                         // For Elements, recurse into children to mark them as added if needed
                         for element in elements {
-                            element.diff(None, diff);
+                            element.diff_inner(None, diff, false);
                         }
                     }
                 }
@@ -131,12 +142,12 @@ impl PathElement {
                         ..
                     },
                 ) => {
-                    if k1 != k2 || diff.removed.iter().any(|p| **p == path2[..path2.len() - 1]) {
+                    if k1 != k2 || parent_removed {
                         diff.added.push(path.clone());
                         diff.removed.push(path2.clone());
                     } else if !path.is_empty() && path[path.len() - 1] != path2[path2.len() - 1] {
                         diff.moved
-                            .entry(Box::from(path[..path.len() - 1].to_vec()))
+                            .entry(Box::from(&path[..path.len() - 1]))
                             .or_default()
                             .push((*path2.last().unwrap(), *path.last().unwrap()));
                     }
@@ -157,7 +168,8 @@ impl PathElement {
                         ..
                     },
                 ) => {
-                    if k1 != k2 || diff.removed.iter().any(|p| **p == path2[..path2.len() - 1]) {
+                    let removed_here = k1 != k2 || parent_removed;
+                    if removed_here {
                         diff.added.push(path.clone());
                         diff.removed.push(path2.clone());
                     } else {
@@ -167,7 +179,7 @@ impl PathElement {
                         }
                         if !path.is_empty() && path[path.len() - 1] != path2[path2.len() - 1] {
                             diff.moved
-                                .entry(Box::from(path[..path.len() - 1].to_vec()))
+                                .entry(Box::from(&path[..path.len() - 1]))
                                 .or_default()
                                 .push((*path2.last().unwrap(), *path.last().unwrap()));
                         }
@@ -200,34 +212,40 @@ impl PathElement {
                         }
                     }
 
-                    let mut previous_keys = FxHashMap::<&DiffKey, VecDeque<usize>>::default();
-
-                    for (i, e) in e2.iter().enumerate() {
-                        let (PathElement::Element { key, .. } | PathElement::Component { key, .. }) =
-                            e;
-                        previous_keys.entry(key).or_default().push_back(i)
-                    }
-
-                    for e in e1 {
-                        let (PathElement::Element { key, .. } | PathElement::Component { key, .. }) =
-                            e;
-                        if let Some(old_i) =
-                            previous_keys.get_mut(key).and_then(VecDeque::pop_front)
-                        {
-                            e.diff(Some(&e2[old_i]), diff);
-                        } else {
-                            e.diff(None, diff);
+                    // Pair children positionally while their keys match
+                    let mut start = 0;
+                    while start < e1.len() && start < e2.len() {
+                        if e1[start].key() != e2[start].key() {
+                            break;
                         }
+                        e1[start].diff_inner(Some(&e2[start]), diff, removed_here);
+                        start += 1;
                     }
 
-                    for indexes in previous_keys.values() {
-                        for i in indexes {
-                            let (PathElement::Element { path, .. }
-                            | PathElement::Component { path, .. }) = &e2[*i];
-                            // The same element might have mistakenly gotten marked as moved in a previous call
-                            diff.moved.remove(path);
-                            diff.removed.push(path.clone());
-                            // No need to remove recursively here because scope and tree diff handling already runs recursively
+                    if start < e1.len() || start < e2.len() {
+                        let mut previous_keys = FxHashMap::<&DiffKey, VecDeque<usize>>::default();
+
+                        for (i, e) in e2.iter().enumerate().skip(start) {
+                            previous_keys.entry(e.key()).or_default().push_back(i)
+                        }
+
+                        for e in &e1[start..] {
+                            if let Some(old_i) =
+                                previous_keys.get_mut(e.key()).and_then(VecDeque::pop_front)
+                            {
+                                e.diff_inner(Some(&e2[old_i]), diff, removed_here);
+                            } else {
+                                e.diff_inner(None, diff, false);
+                            }
+                        }
+
+                        for indexes in previous_keys.values() {
+                            for i in indexes {
+                                let (PathElement::Element { path, .. }
+                                | PathElement::Component { path, .. }) = &e2[*i];
+                                diff.removed.push(path.clone());
+                                // No need to remove recursively here because scope and tree diff handling already runs recursively
+                            }
                         }
                     }
                 }
@@ -238,7 +256,7 @@ impl PathElement {
                     diff.removed.push(path.clone());
 
                     // Add new recursively
-                    s.diff(None, diff);
+                    s.diff_inner(None, diff, false);
                 }
             },
         }

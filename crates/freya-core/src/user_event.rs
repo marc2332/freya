@@ -1,9 +1,10 @@
 use std::{
     any::Any,
+    borrow::Cow,
     fmt::Debug,
 };
 
-use cursor_icon::CursorIcon;
+use bytes::Bytes;
 
 use crate::prelude::AccessibilityFocusStrategy;
 
@@ -14,11 +15,14 @@ pub enum UserEvent {
     /// Focus with the given strategy
     FocusAccessibilityNode(AccessibilityFocusStrategy),
 
-    /// Set a new cursor icon.
-    SetCursorIcon(CursorIcon),
-
     /// Set a custom scale factor.
     SetCustomScaleFactor(f64),
+
+    /// Load a font at runtime.
+    LoadFont {
+        font_name: Cow<'static, str>,
+        font_data: Bytes,
+    },
 
     Erased(SingleThreadErasedEvent),
 }

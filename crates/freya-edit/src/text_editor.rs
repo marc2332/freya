@@ -6,7 +6,14 @@ use std::{
 };
 
 use freya_clipboard::clipboard::Clipboard;
-use freya_core::events::modifiers::ModifiersExt;
+use freya_core::{
+    elements::paragraph::{
+        ParagraphCursorExt,
+        ParagraphHolder,
+        ParagraphHolderInner,
+    },
+    events::modifiers::ModifiersExt,
+};
 use keyboard_types::{
     Key,
     Modifiers,
@@ -157,6 +164,8 @@ pub trait TextEditor {
     /// Get a line from the text
     fn line(&self, line_idx: usize) -> Option<Line<'_>>;
 
+    fn text(&self) -> Cow<'_, str>;
+
     /// Total of lines
     fn len_lines(&self) -> usize;
 
@@ -232,7 +241,20 @@ pub trait TextEditor {
     }
 
     /// Move the cursor 1 line down
-    fn cursor_down(&mut self) -> bool {
+    fn cursor_down(
+        &mut self,
+        editor_line: Option<EditorLine>,
+        holder: Option<&ParagraphHolder>,
+    ) -> bool {
+        if let Some(editor_line) = editor_line
+            && let Some(holder) = holder
+            && let Some(position) = self.visual_line_position(holder, editor_line, 1)
+        {
+            self.selection_mut().move_to(position);
+
+            return true;
+        }
+
         let old_row = self.cursor_row();
         let old_col = self.cursor_col();
 
@@ -253,7 +275,20 @@ pub trait TextEditor {
     }
 
     /// Move the cursor 1 line up
-    fn cursor_up(&mut self) -> bool {
+    fn cursor_up(
+        &mut self,
+        editor_line: Option<EditorLine>,
+        holder: Option<&ParagraphHolder>,
+    ) -> bool {
+        if let Some(editor_line) = editor_line
+            && let Some(holder) = holder
+            && let Some(position) = self.visual_line_position(holder, editor_line, -1)
+        {
+            self.selection_mut().move_to(position);
+
+            return true;
+        }
+
         let pos = self.cursor_pos();
         let old_row = self.cursor_row();
         let old_col = self.cursor_col();
@@ -269,6 +304,31 @@ pub trait TextEditor {
         } else {
             false
         }
+    }
+
+    /// Cursor position one visual line up or down.
+    fn visual_line_position(
+        &self,
+        holder: &ParagraphHolder,
+        editor_line: EditorLine,
+        line_offset: isize,
+    ) -> Option<usize> {
+        let holder = holder.0.borrow();
+        let ParagraphHolderInner { paragraph, .. } = holder.as_ref()?;
+
+        if !matches!(editor_line, EditorLine::SingleParagraph) {
+            return None;
+        }
+
+        let cursor_rect = paragraph.measured_cursor_rect(&self.text(), self.cursor_pos())?;
+
+        let lines = paragraph.get_line_metrics();
+        let current = lines
+            .iter()
+            .position(|line| (cursor_rect.top as f64) < line.baseline + line.descent)?;
+        let line = lines.get(current.checked_add_signed(line_offset)?)?;
+
+        Some(paragraph.cursor_index_at_point((cursor_rect.left as f64, line.baseline)))
     }
 
     /// Move the cursor 1 grapheme cluster to the right
@@ -295,15 +355,14 @@ pub trait TextEditor {
         }
     }
 
-    /// Move the cursor to the end of the next word.
-    fn cursor_word_right(&mut self) -> bool {
-        let pos = self.cursor_pos();
+    /// Find the end of the next word from the given position, if any.
+    fn next_word_pos(&self, pos: usize) -> Option<usize> {
         let len = self.len_utf16_cu();
         if pos >= len {
-            return false;
+            return None;
         }
 
-        // Walk forward line by line starting at the cursor.
+        // Walk forward line by line starting at the given position.
         let start_char = self.utf16_cu_to_char(pos);
         let initial_line = self.char_to_line(start_char);
         let initial_offset = start_char - self.line_to_char(initial_line);
@@ -319,31 +378,27 @@ pub trait TextEditor {
                 0
             };
 
-            // Stop at the end of the first non-whitespace segment past the cursor.
+            // Stop at the end of the first non-whitespace segment past the position.
             let mut char_offset = 0;
             for word in line.text.split_word_bounds() {
                 char_offset += word.chars().count();
                 if char_offset > from && !word.chars().all(char::is_whitespace) {
-                    let new_pos = self.char_to_utf16_cu(line_char_offset + char_offset);
-                    self.selection_mut().move_to(new_pos);
-                    return true;
+                    return Some(self.char_to_utf16_cu(line_char_offset + char_offset));
                 }
             }
         }
 
         // Trailing whitespace only, snap to text end.
-        self.selection_mut().move_to(len);
-        true
+        Some(len)
     }
 
-    /// Move the cursor to the start of the previous word.
-    fn cursor_word_left(&mut self) -> bool {
-        let pos = self.cursor_pos();
+    /// Find the start of the previous word from the given position, if any.
+    fn prev_word_pos(&self, pos: usize) -> Option<usize> {
         if pos == 0 {
-            return false;
+            return None;
         }
 
-        // Walk backward line by line starting at the cursor.
+        // Walk backward line by line starting at the given position.
         let start_char = self.utf16_cu_to_char(pos);
         let initial_line = self.char_to_line(start_char);
         let initial_offset = start_char - self.line_to_char(initial_line);
@@ -359,7 +414,7 @@ pub trait TextEditor {
                 line.text.chars().count()
             };
 
-            // Track the latest non-whitespace segment that starts before the cursor.
+            // Track the latest non-whitespace segment that starts before the position.
             let mut char_offset = 0;
             let mut last_word_start = None;
             for word in line.text.split_word_bounds() {
@@ -372,17 +427,33 @@ pub trait TextEditor {
                 char_offset += word.chars().count();
             }
 
-            // Found one on this line, jump to its start.
             if let Some(start) = last_word_start {
-                let new_pos = self.char_to_utf16_cu(line_char_offset + start);
-                self.selection_mut().move_to(new_pos);
-                return true;
+                return Some(self.char_to_utf16_cu(line_char_offset + start));
             }
         }
 
         // Leading whitespace only, snap to text start.
-        self.selection_mut().move_to(0);
-        true
+        Some(0)
+    }
+
+    /// Move the cursor to the end of the next word.
+    fn cursor_word_right(&mut self) -> bool {
+        if let Some(new_pos) = self.next_word_pos(self.cursor_pos()) {
+            self.selection_mut().move_to(new_pos);
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Move the cursor to the start of the previous word.
+    fn cursor_word_left(&mut self) -> bool {
+        if let Some(new_pos) = self.prev_word_pos(self.cursor_pos()) {
+            self.selection_mut().move_to(new_pos);
+            true
+        } else {
+            false
+        }
     }
 
     /// Get the cursor position
@@ -493,10 +564,13 @@ pub trait TextEditor {
     }
 
     // Process a Keyboard event
+    #[allow(clippy::too_many_arguments)]
     fn process_key(
         &mut self,
         key: &Key,
         modifiers: &Modifiers,
+        editor_line: Option<EditorLine>,
+        holder: Option<&ParagraphHolder>,
         allow_tabs: bool,
         allow_changes: bool,
         allow_read_clipboard: bool,
@@ -506,6 +580,7 @@ pub trait TextEditor {
 
         let selection = self.get_selection();
         let skip_arrows_movement = !modifiers.contains(Modifiers::SHIFT) && selection.is_some();
+        let word_jump = modifiers.contains(Modifiers::ctrl_or_alt());
 
         match key {
             Key::Named(NamedKey::Shift) => {}
@@ -521,7 +596,7 @@ pub trait TextEditor {
                     self.selection_mut().set_as_cursor();
                 }
 
-                if !skip_arrows_movement && self.cursor_down() {
+                if !skip_arrows_movement && self.cursor_down(editor_line, holder) {
                     event.insert(TextEvent::CURSOR_CHANGED);
                 }
             }
@@ -531,12 +606,6 @@ pub trait TextEditor {
                 } else {
                     self.selection_mut().set_as_cursor();
                 }
-
-                let word_jump = if cfg!(target_os = "macos") {
-                    modifiers.contains(Modifiers::ALT)
-                } else {
-                    modifiers.contains(Modifiers::CONTROL)
-                };
 
                 let moved = !skip_arrows_movement
                     && if word_jump {
@@ -556,12 +625,6 @@ pub trait TextEditor {
                     self.selection_mut().set_as_cursor();
                 }
 
-                let word_jump = if cfg!(target_os = "macos") {
-                    modifiers.contains(Modifiers::ALT)
-                } else {
-                    modifiers.contains(Modifiers::CONTROL)
-                };
-
                 let moved = !skip_arrows_movement
                     && if word_jump {
                         self.cursor_word_right()
@@ -580,7 +643,7 @@ pub trait TextEditor {
                     self.selection_mut().set_as_cursor();
                 }
 
-                if !skip_arrows_movement && self.cursor_up() {
+                if !skip_arrows_movement && self.cursor_up(editor_line, holder) {
                     event.insert(TextEvent::CURSOR_CHANGED);
                 }
             }
@@ -610,30 +673,42 @@ pub trait TextEditor {
             }
             Key::Named(NamedKey::Backspace) if allow_changes => {
                 let cursor_pos = self.cursor_pos();
-                let selection = self.get_selection_range();
 
-                if let Some((start, end)) = selection {
-                    self.remove(start..end);
-                    self.move_cursor_to(start);
-                    event.insert(TextEvent::TEXT_CHANGED);
+                let removal = if let Some((start, end)) = self.get_selection_range() {
+                    Some(start..end)
+                } else if word_jump {
+                    self.prev_word_pos(cursor_pos)
+                        .map(|start| start..cursor_pos)
                 } else if cursor_pos > 0 {
-                    let remove_from = self.grapheme_cluster_at(cursor_pos - 1).start;
-                    self.remove(remove_from..cursor_pos);
-                    self.move_cursor_to(remove_from);
+                    Some(self.grapheme_cluster_at(cursor_pos - 1).start..cursor_pos)
+                } else {
+                    None
+                };
+
+                if let Some(removal) = removal {
+                    let end = removal.end;
+                    let removed_text_len = self.remove(removal);
+                    self.move_cursor_to(end - removed_text_len);
                     event.insert(TextEvent::TEXT_CHANGED);
                 }
             }
             Key::Named(NamedKey::Delete) if allow_changes => {
                 let cursor_pos = self.cursor_pos();
-                let selection = self.get_selection_range();
 
-                if let Some((start, end)) = selection {
-                    self.remove(start..end);
-                    self.move_cursor_to(start);
-                    event.insert(TextEvent::TEXT_CHANGED);
+                let removal = if let Some((start, end)) = self.get_selection_range() {
+                    Some(start..end)
+                } else if word_jump {
+                    self.next_word_pos(cursor_pos).map(|end| cursor_pos..end)
                 } else if cursor_pos < self.len_utf16_cu() {
-                    let remove_to = self.grapheme_cluster_at(cursor_pos).end;
-                    self.remove(cursor_pos..remove_to);
+                    Some(cursor_pos..self.grapheme_cluster_at(cursor_pos).end)
+                } else {
+                    None
+                };
+
+                if let Some(removal) = removal {
+                    let start = removal.start;
+                    self.remove(removal);
+                    self.move_cursor_to(start);
                     event.insert(TextEvent::TEXT_CHANGED);
                 }
             }
@@ -785,7 +860,9 @@ pub trait TextEditor {
 
     fn redo(&mut self) -> Option<TextSelection>;
 
-    fn editor_history(&mut self) -> &mut EditorHistory;
+    fn editor_history(&self) -> &EditorHistory;
+
+    fn editor_history_mut(&mut self) -> &mut EditorHistory;
 
     fn get_selection_range(&self) -> Option<(usize, usize)>;
 
