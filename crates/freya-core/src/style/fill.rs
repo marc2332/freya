@@ -60,10 +60,7 @@ pub enum Fill {
 impl Fill {
     pub fn set_a(&mut self, a: u8) {
         if let Fill::Color(color) = self {
-            // Only actually change the alpha if its non-transparent
-            if *color != Color::TRANSPARENT {
-                *color = color.with_a(a);
-            }
+            *color = color.with_a(a);
         }
     }
 
