@@ -136,7 +136,17 @@ impl Component for Select {
         let mut list_size = use_state(|| None::<Size2D>);
         use_provide_context(|| MenuGroup { group_id: a11y_id });
 
-        let animation = use_animation(move |conf| {
+        let focused = use_memo(move || {
+            a11y_id.is_focused()
+                || Platform::get()
+                    .focused_accessibility_node
+                    .read()
+                    .member_of()
+                    == Some(a11y_id)
+        });
+        let visible = open() && focused();
+
+        let animation = use_animation_with_dependencies(&visible, move |conf, visible| {
             conf.on_change(OnChange::Rerun);
             conf.on_creation(OnCreation::Finish);
 
@@ -148,7 +158,7 @@ impl Component for Select {
                 .time(90)
                 .ease(Ease::Out)
                 .function(Function::Quad);
-            if open() {
+            if *visible {
                 (opacity, offset_y)
             } else {
                 (opacity.into_reversed(), offset_y.into_reversed())
@@ -158,23 +168,18 @@ impl Component for Select {
         let (opacity, slide) = animation.read().value();
 
         // Clear the list size when the select dropdown is not rendered
-        if !open() && opacity == 0. && list_size().is_some() {
+        if !visible && opacity == 0. && list_size().is_some() {
             let _ = list_size.take();
+            open.set_if_modified(false);
         }
 
-        // Close the select when the focus leaves it.
-        use_side_effect(move || {
-            let platform = Platform::get();
-            let focus_within =
-                platform.focused_accessibility_node.read().member_of() == Some(a11y_id);
-            if !focus_within && list_size.peek().is_some() {
-                open.set_if_modified(false);
-            }
-        });
-
         let on_press = move |e: Event<PressEventData>| {
-            a11y_id.request_focus();
-            open.toggle();
+            if a11y_id.is_focused() {
+                open.toggle();
+            } else {
+                a11y_id.request_focus();
+                open.set(true);
+            }
             // Prevent global mouse up
             e.prevent_default();
             e.stop_propagation();
@@ -270,7 +275,7 @@ impl Component for Select {
                             .fill(theme.arrow_fill),
                     ),
             )
-            .maybe_child((open() || opacity > 0.).then(|| {
+            .maybe_child((visible || opacity > 0.).then(|| {
                 rect().height(Size::px(0.)).width(Size::px(0.)).child(
                     rect()
                         .width(Size::window_percent(100.))
