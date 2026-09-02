@@ -31,8 +31,8 @@ use crate::{
 };
 
 pub type WindowBuilderHook =
-    Box<dyn FnOnce(WindowAttributes, &ActiveEventLoop) -> WindowAttributes + Send + Sync>;
-pub type WindowHandleHook = Box<dyn FnOnce(&mut Window) + Send + Sync>;
+    Box<dyn FnOnce(WindowAttributes, &ActiveEventLoop) -> WindowAttributes>;
+pub type WindowHandleHook = Box<dyn FnOnce(&mut Window)>;
 
 /// Graphics driver preference a window asks for.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -67,8 +67,7 @@ pub enum CloseDecision {
 
 /// Hook called when a window close is requested.
 /// Returns a [`CloseDecision`] to determine whether the window should actually close.
-pub type OnCloseHook =
-    Box<dyn FnMut(crate::renderer::RendererContext, WindowId) -> CloseDecision + Send>;
+pub type OnCloseHook = Box<dyn FnMut(crate::renderer::RendererContext, WindowId) -> CloseDecision>;
 
 /// Configuration for a Window.
 pub struct WindowConfig {
@@ -243,9 +242,7 @@ impl WindowConfig {
     pub fn with_window_attributes(
         mut self,
         window_attributes_hook: impl FnOnce(WindowAttributes, &ActiveEventLoop) -> WindowAttributes
-        + 'static
-        + Send
-        + Sync,
+        + 'static,
     ) -> Self {
         self.window_attributes_hook = Some(Box::new(window_attributes_hook));
         self
@@ -254,7 +251,7 @@ impl WindowConfig {
     /// Register a Window handle hook.
     pub fn with_window_handle(
         mut self,
-        window_handle_hook: impl FnOnce(&mut Window) + 'static + Send + Sync,
+        window_handle_hook: impl FnOnce(&mut Window) + 'static,
     ) -> Self {
         self.window_handle_hook = Some(Box::new(window_handle_hook));
         self
@@ -263,9 +260,7 @@ impl WindowConfig {
     /// Register an on-close hook that is called when the window is requested to close by the user.
     pub fn with_on_close(
         mut self,
-        on_close: impl FnMut(crate::renderer::RendererContext, WindowId) -> CloseDecision
-        + 'static
-        + Send,
+        on_close: impl FnMut(crate::renderer::RendererContext, WindowId) -> CloseDecision + 'static,
     ) -> Self {
         self.on_close = Some(Box::new(on_close));
         self
