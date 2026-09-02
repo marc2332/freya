@@ -14,6 +14,7 @@ use torin::{
 
 use crate::scrollviews::{
     ScrollBar,
+    ScrollBarThemePartial,
     ScrollConfig,
     ScrollController,
     ScrollThumb,
@@ -208,6 +209,7 @@ pub struct VirtualScrollView<D, B: Fn(VirtualItem, &D) -> Element> {
     scroll_controller: Option<ScrollController>,
     invert_scroll_wheel: bool,
     drag_scrolling: bool,
+    scrollbar_theme: Option<ScrollBarThemePartial>,
     key: DiffKey,
 }
 
@@ -235,6 +237,7 @@ impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> PartialEq for VirtualScrol
             && self.scroll_with_arrows == other.scroll_with_arrows
             && self.scroll_controller == other.scroll_controller
             && self.invert_scroll_wheel == other.invert_scroll_wheel
+            && self.scrollbar_theme == other.scrollbar_theme
     }
 }
 
@@ -257,6 +260,7 @@ impl<B: Fn(VirtualItem, &()) -> Element> VirtualScrollView<(), B> {
             scroll_controller: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
+            scrollbar_theme: None,
             key: DiffKey::None,
         }
     }
@@ -279,6 +283,7 @@ impl<B: Fn(VirtualItem, &()) -> Element> VirtualScrollView<(), B> {
             scroll_controller: Some(scroll_controller),
             invert_scroll_wheel: false,
             drag_scrolling: true,
+            scrollbar_theme: None,
             key: DiffKey::None,
         }
     }
@@ -325,6 +330,7 @@ impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
             scroll_controller: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
+            scrollbar_theme: None,
             key: DiffKey::None,
         }
     }
@@ -352,6 +358,7 @@ impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
             scroll_controller: Some(scroll_controller),
             invert_scroll_wheel: false,
             drag_scrolling: true,
+            scrollbar_theme: None,
             key: DiffKey::None,
         }
     }
@@ -398,6 +405,12 @@ impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
     /// Toggles scrolling by dragging the content, useful mainly for touch input.
     pub fn drag_scrolling(mut self, drag_scrolling: bool) -> Self {
         self.drag_scrolling = drag_scrolling;
+        self
+    }
+
+    /// Sets the theme used by the scrollbar.
+    pub fn scrollbar_theme(mut self, scrollbar_theme: ScrollBarThemePartial) -> Self {
+        self.scrollbar_theme = Some(scrollbar_theme);
         self
     }
 
@@ -742,13 +755,13 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                     )
                     .maybe_child(vertical_scrollbar_is_visible.then_some({
                         rect().child(ScrollBar {
-                            theme: None,
+                            theme: self.scrollbar_theme.clone(),
                             clicking_scrollbar,
                             axis: Axis::Y,
                             offset: scrollbar_y,
                             size: Size::px(size.read().area.height()),
                             thumb: ScrollThumb {
-                                theme: None,
+                                theme: self.scrollbar_theme.clone(),
                                 clicking_scrollbar,
                                 axis: Axis::Y,
                                 size: scrollbar_height,
@@ -758,13 +771,13 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
             )
             .maybe_child(horizontal_scrollbar_is_visible.then_some({
                 rect().child(ScrollBar {
-                    theme: None,
+                    theme: self.scrollbar_theme.clone(),
                     clicking_scrollbar,
                     axis: Axis::X,
                     offset: scrollbar_x,
                     size: Size::px(size.read().area.width()),
                     thumb: ScrollThumb {
-                        theme: None,
+                        theme: self.scrollbar_theme.clone(),
                         clicking_scrollbar,
                         axis: Axis::X,
                         size: scrollbar_width,
