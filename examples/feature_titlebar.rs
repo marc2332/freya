@@ -9,27 +9,26 @@ fn app() -> impl IntoElement {
 
     use_side_effect(move || {
         let _ = Platform::get().root_size.read();
-        Platform::get().with_window(None, move |window| maximized.set(window.is_maximized()));
+        Platform::get().with_window(Platform::window_id(), move |window| {
+            maximized.set(window.is_maximized())
+        });
     });
 
     let minimize = move |_| {
-        Platform::get().with_window(None, |window| {
+        Platform::get().with_window(Platform::window_id(), |window| {
             window.set_minimized(true);
         });
     };
 
     let toggle_maximize = move |_| {
-        Platform::get().with_window(None, |window| {
+        Platform::get().with_window(Platform::window_id(), |window| {
             let is_max = window.is_maximized();
             window.set_maximized(!is_max);
         });
     };
 
     let close = move |_| {
-        let platform = Platform::get();
-        Platform::get().with_window(None, move |window| {
-            platform.close_window(window.id());
-        });
+        Platform::get().close_window(Platform::window_id());
     };
 
     rect()
