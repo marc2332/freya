@@ -319,6 +319,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     active_event_loop,
                     app_window.window_attributes.clone(),
                     self.gpu_resource_cache_limit,
+                    app_window.renderer,
                 );
 
                 let new_id = new_window.id();
