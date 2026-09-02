@@ -888,13 +888,19 @@ use freya::material_design::*;
 Button::new().ripple().child("Click me")
 ```
 
-## WebView
+## HTML
 
-Enable with `features = ["webview"]`. Embeds a browser view into your UI:
+Enable with `features = ["html"]`. Renders an HTML + CSS document with Blitz, painted directly into Freya's canvas:
 
 ```rust
-use freya::webview::*;
-WebView::new("https://example.com").expanded()
+use freya::html::*;
+// The view is driven by a handle, which also exposes history navigation
+// (back/forward) and the current URL. Sources can be remote or inline.
+let mut handle = use_html_handle(|| HtmlSource::url("https://example.com"));
+HtmlView::new(handle).expanded();
+handle.back();
+handle.navigate("https://freyaui.dev");
+use_html_handle(|| HtmlSource::html("<h1>Hello</h1>"));
 ```
 
 ## Terminal
@@ -966,7 +972,7 @@ freya = { version = "...", features = ["router", "radio"] }
 | `markdown` | `Markdown` renderer component |
 | `icons` | SVG icon library via Lucide (`freya-icons`) |
 | `material-design` | Material Design theme (`freya-material-design`) |
-| `webview` | Embed a WebView (`freya-webview`) |
+| `html` | Render HTML + CSS via Blitz (`freya-html`) |
 | `terminal` | Terminal emulator (`freya-terminal`) |
 | `code-editor` | Code editing APIs (`freya-code-editor`) |
 | `camera` | Webcam capture (`freya-camera`) |
