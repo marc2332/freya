@@ -92,7 +92,7 @@ pub fn opening_second_select_does_not_close_itself_while_its_focus_is_still_land
 
     let a_point = label_center(&test, "Select A");
     click_without_settling(&mut test, a_point);
-    test.apply_pending_focus_strategy();
+    test.process_focus_strategy();
     test.commit_accessibility();
     test.process_events_and_layout();
     test.process_events_and_layout();
@@ -110,7 +110,7 @@ pub fn opening_second_select_does_not_close_itself_while_its_focus_is_still_land
         "Select B waits for its own focus to land"
     );
 
-    test.apply_pending_focus_strategy();
+    test.process_focus_strategy();
     test.commit_accessibility();
     test.process_events_and_layout();
     test.poll_n(Duration::from_millis(5), 100);

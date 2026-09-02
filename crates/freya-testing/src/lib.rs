@@ -354,7 +354,7 @@ impl TestingRunner {
         self.runner.handle_events_immediately()
     }
 
-    pub fn apply_pending_focus_strategy(&mut self) {
+    pub fn process_focus_strategy(&mut self) {
         if let Some(strategy) = self.requested_focus_strategy.borrow_mut().take() {
             self.tree
                 .borrow_mut()
@@ -436,7 +436,7 @@ impl TestingRunner {
     }
 
     pub fn sync_and_update(&mut self) {
-        self.apply_pending_focus_strategy();
+        self.process_focus_strategy();
         self.process_events_and_layout();
         self.commit_accessibility();
     }
