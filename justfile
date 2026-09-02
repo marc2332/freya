@@ -24,6 +24,9 @@ web-demo:
     cp "${CARGO_TARGET_DIR:-target}"/wasm32-unknown-emscripten/release/web_example.js website/public/demo/
     cp "${CARGO_TARGET_DIR:-target}"/wasm32-unknown-emscripten/release/web_example.wasm website/public/demo/
 
+sa:
+    cargo audit
+
 c:
     taplo check
     cargo clippy --workspace --examples --bins --features "all-debug" -- -D warnings

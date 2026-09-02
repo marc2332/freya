@@ -16,6 +16,8 @@ use winit::{
     },
 };
 
+use crate::config::RendererPreference;
+
 /// Unrecoverable graphics error requiring a driver rebuild.
 #[derive(Debug)]
 // Only the Vulkan driver reports these.
@@ -42,11 +44,12 @@ impl GraphicsDriver {
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
         gpu_resource_cache_limit: usize,
+        preference: RendererPreference,
     ) -> (Self, Window) {
-        let renderer = std::env::var("FREYA_RENDERER")
+        let from_env = std::env::var("FREYA_RENDERER")
             .ok()
-            .map(|v| v.to_ascii_lowercase());
-        let renderer = renderer.as_deref();
+            .map(|value| value.to_ascii_lowercase());
+        let renderer = preference.as_name().or(from_env.as_deref());
 
         // Opt-in via FREYA_RENDERER=software, available on every platform.
         if renderer == Some("software") {

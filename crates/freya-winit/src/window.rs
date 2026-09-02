@@ -68,6 +68,7 @@ use crate::{
     accessibility::AccessibilityTask,
     config::{
         OnCloseHook,
+        RendererPreference,
         WindowConfig,
     },
     drivers::GraphicsDriver,
@@ -83,6 +84,9 @@ use crate::{
         NativeWindowEventAction,
     },
 };
+
+#[derive(Clone, Copy)]
+pub struct CurrentWindowId(pub WindowId);
 
 pub struct AppWindow {
     pub(crate) runner: Runner,
@@ -123,6 +127,8 @@ pub struct AppWindow {
     pub(crate) on_close: Option<OnCloseHook>,
 
     pub(crate) window_attributes: WindowAttributes,
+
+    pub(crate) renderer: RendererPreference,
 
     #[cfg(feature = "hotreload")]
     pub(crate) hot_reload_pending: Arc<std::sync::atomic::AtomicBool>,
@@ -221,6 +227,7 @@ impl AppWindow {
             active_event_loop,
             window_attributes.clone(),
             gpu_resource_cache_limit,
+            window_config.renderer,
         );
 
         if let Some(window_handle_hook) = window_config.window_handle_hook.take() {
@@ -252,6 +259,9 @@ impl AppWindow {
         runner.provide_root_context(|| animation_clock.clone());
 
         runner.provide_root_context(AssetCacher::create);
+
+        runner.provide_root_context(|| CurrentWindowId(window.id()));
+
         let custom_scale_factor = clamp_custom_scale_factor(window_config.custom_scale_factor);
         let scale_factor = window.scale_factor() * custom_scale_factor;
 
@@ -440,6 +450,8 @@ impl AppWindow {
             on_close,
 
             window_attributes,
+
+            renderer: window_config.renderer,
 
             #[cfg(feature = "hotreload")]
             hot_reload_pending,

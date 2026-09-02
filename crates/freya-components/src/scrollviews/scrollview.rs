@@ -17,6 +17,7 @@ use torin::{
 
 use crate::scrollviews::{
     ScrollBar,
+    ScrollBarThemePartial,
     ScrollConfig,
     ScrollController,
     ScrollThumb,
@@ -79,6 +80,7 @@ pub struct ScrollView {
     invert_scroll_wheel: bool,
     drag_scrolling: bool,
     on_sized: Option<EventHandler<Event<SizedEventData>>>,
+    scrollbar_theme: Option<ScrollBarThemePartial>,
     key: DiffKey,
 }
 
@@ -110,6 +112,7 @@ impl Default for ScrollView {
             invert_scroll_wheel: false,
             drag_scrolling: true,
             on_sized: None,
+            scrollbar_theme: None,
             key: DiffKey::None,
         }
     }
@@ -162,6 +165,12 @@ impl ScrollView {
     /// Toggles scrolling by dragging the content, useful mainly for touch input.
     pub fn drag_scrolling(mut self, drag_scrolling: bool) -> Self {
         self.drag_scrolling = drag_scrolling;
+        self
+    }
+
+    /// Sets the theme used by the scrollbar.
+    pub fn scrollbar_theme(mut self, scrollbar_theme: ScrollBarThemePartial) -> Self {
+        self.scrollbar_theme = Some(scrollbar_theme);
         self
     }
 
@@ -516,13 +525,13 @@ impl Component for ScrollView {
                     )
                     .maybe_child(vertical_scrollbar_is_visible.then_some({
                         rect().child(ScrollBar {
-                            theme: None,
+                            theme: self.scrollbar_theme.clone(),
                             clicking_scrollbar,
                             axis: Axis::Y,
                             offset: scrollbar_y,
                             size: Size::px(size.read().area.height()),
                             thumb: ScrollThumb {
-                                theme: None,
+                                theme: self.scrollbar_theme.clone(),
                                 clicking_scrollbar,
                                 axis: Axis::Y,
                                 size: scrollbar_height,
@@ -532,13 +541,13 @@ impl Component for ScrollView {
             )
             .maybe_child(horizontal_scrollbar_is_visible.then_some({
                 rect().child(ScrollBar {
-                    theme: None,
+                    theme: self.scrollbar_theme.clone(),
                     clicking_scrollbar,
                     axis: Axis::X,
                     offset: scrollbar_x,
                     size: Size::px(size.read().area.width()),
                     thumb: ScrollThumb {
-                        theme: None,
+                        theme: self.scrollbar_theme.clone(),
                         clicking_scrollbar,
                         axis: Axis::X,
                         size: scrollbar_width,

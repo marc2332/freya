@@ -117,6 +117,7 @@ pub mod prelude {
         config::{
             CloseDecision,
             LaunchConfig,
+            RendererPreference,
             WindowConfig,
         },
         renderer::{
