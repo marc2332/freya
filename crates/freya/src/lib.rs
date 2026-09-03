@@ -41,7 +41,8 @@
 //! - [Async](self::_docs::_async)
 //! - [Layers](self::_docs::layers)
 //! - [Platforms](self::_docs::platforms)
-//! - [Web](self::_docs::web)
+//! - [Android](https://github.com/marc2332/freya/tree/main/examples/android)
+//! - [Web](https://github.com/marc2332/freya/tree/main/examples/web)
 //! - [Development Setup](self::_docs::development_setup)
 //! - [Extending Components](self::_docs::extending_components)
 //!
