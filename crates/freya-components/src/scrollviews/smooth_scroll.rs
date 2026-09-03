@@ -15,10 +15,10 @@ use crate::scrollviews::{
 /// Distance under which the animation is close enough to snap, in pixels.
 const SETTLE_DISTANCE: f32 = 0.5;
 /// Speed under which the animation is slow enough to stop, in pixels per second.
-const SETTLE_SPEED: f32 = 5.0;
+const SETTLE_SPEED: f32 = 20.0;
 
 /// Seconds wheel and keyboard scrolls take to reach their destination.
-const SMOOTHING_TIME: f32 = 0.1;
+const SMOOTHING_TIME: f32 = 0.06;
 /// Seconds a fling takes to stop, which also scales how far it travels.
 const FLING_TIME: f32 = 0.5;
 /// Slowest drag release speed that still starts a fling, in pixels per second.
