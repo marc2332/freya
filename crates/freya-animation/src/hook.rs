@@ -305,7 +305,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
                     };
 
                     if !delay.is_zero() {
-                        sleep(delay).await;
+                        timer(delay).await;
                     }
 
                     index = 0;

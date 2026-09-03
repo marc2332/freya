@@ -2972,6 +2972,8 @@ version = "0.5.0-rc.4"
 dependencies = [
  "anyhow",
  "async-channel",
+ "async-io",
+ "blocking",
  "ffmpeg-sidecar",
  "freya",
  "freya-components",

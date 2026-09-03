@@ -22,6 +22,7 @@ use crate::{
 const SETUP_SCRIPT: &str = r#"(function() {
     if (window.__freyaIme) return;
 
+    var canvas = document.querySelector('#canvas');
     var input = document.createElement('input');
     input.id = 'freya-ime-input';
     input.autocomplete = 'off';
@@ -37,27 +38,38 @@ const SETUP_SCRIPT: &str = r#"(function() {
     document.body.appendChild(input);
 
     var queue = [];
+    var wanted = false;
+    var composing = false;
 
-    function take(tag, text) {
-        if (text) queue.push(tag + text);
+    function commit() {
+        if (input.value) queue.push('C' + input.value);
+        input.value = '';
     }
 
+    input.addEventListener('compositionstart', function() {
+        composing = true;
+    });
     input.addEventListener('compositionupdate', function(e) {
-        take('P', e.data || '');
+        queue.push('P' + (e.data || ''));
     });
     input.addEventListener('compositionend', function() {
-        take('C', input.value);
-        input.value = '';
+        composing = false;
+        queue.push('P');
+        commit();
     });
-    input.addEventListener('input', function(e) {
-        if (e.isComposing) return;
-        take('C', input.value);
-        input.value = '';
+    input.addEventListener('input', function() {
+        if (!composing) commit();
     });
     input.addEventListener('paste', function(e) {
         var text = e.clipboardData && e.clipboardData.getData('text/plain');
         if (text) window.__freyaClipboardPaste = text;
         e.preventDefault();
+    });
+    canvas.addEventListener('mousedown', function(e) {
+        if (wanted) {
+            e.preventDefault();
+            input.focus();
+        }
     });
 
     window.__freyaIme = {
@@ -65,20 +77,27 @@ const SETUP_SCRIPT: &str = r#"(function() {
             return queue.shift() || '';
         },
         focus: function(focused) {
+            wanted = focused;
             if (focused) input.focus(); else input.blur();
         },
         area: function(left, top, width, height) {
-            input.style.left = left + 'px';
-            input.style.top = top + 'px';
+            var rect = canvas.getBoundingClientRect();
+            input.style.left = rect.left + left + 'px';
+            input.style.top = rect.top + top + 'px';
             input.style.width = width + 'px';
             input.style.height = height + 'px';
         },
         copy: function(text) {
+            var active = document.activeElement;
             input.value = text;
             input.focus();
             input.select();
             try { document.execCommand('copy'); } catch (e) {}
             input.value = '';
+            if (active !== input) {
+                input.blur();
+                if (active && active.focus) active.focus();
+            }
         },
     };
 })();"#;

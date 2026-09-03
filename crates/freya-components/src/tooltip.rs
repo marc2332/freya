@@ -243,7 +243,7 @@ impl Component for TooltipContainer {
                 handle.cancel();
             }
             let task = spawn(async move {
-                sleep(delay).await;
+                timer(delay).await;
                 is_hovering.set_if_modified(true);
             });
             delay_task.set(Some(task));
