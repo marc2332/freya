@@ -95,8 +95,8 @@ pub fn listen() {
         emscripten_set_mouseup_callback_on_thread(TARGET_WINDOW, on_mouse),
         emscripten_set_mousemove_callback_on_thread(TARGET_CANVAS, on_mouse),
         emscripten_set_wheel_callback_on_thread(TARGET_CANVAS, on_wheel),
-        emscripten_set_keydown_callback_on_thread(TARGET_WINDOW, on_key),
-        emscripten_set_keyup_callback_on_thread(TARGET_WINDOW, on_key),
+        emscripten_set_keydown_callback_on_thread(TARGET_CANVAS, on_key),
+        emscripten_set_keyup_callback_on_thread(TARGET_CANVAS, on_key),
         emscripten_set_touchstart_callback_on_thread(TARGET_CANVAS, on_touch),
         emscripten_set_touchmove_callback_on_thread(TARGET_CANVAS, on_touch),
         emscripten_set_touchend_callback_on_thread(TARGET_CANVAS, on_touch),
@@ -204,6 +204,9 @@ extern "C" fn on_key(
     modifiers.set(Modifiers::ALT, event.alt_key);
     modifiers.set(Modifiers::META, event.meta_key);
 
+    let select_all = modifiers.intersects(Modifiers::CONTROL | Modifiers::META)
+        && matches!(&key, Key::Character(character) if character.eq_ignore_ascii_case("a"));
+
     push(PlatformEvent::Keyboard {
         name,
         key,
@@ -211,7 +214,7 @@ extern "C" fn on_key(
         modifiers,
     });
 
-    code == Code::Tab
+    code == Code::Tab || select_all
 }
 
 extern "C" fn on_touch(
