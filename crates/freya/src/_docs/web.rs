@@ -68,6 +68,8 @@
 //! <script src="./my_app.js"></script>
 //! ```
 //!
+//! ## Tips
+//!
 //! Use `image-rendering: pixelated` on the canvas to keep it sharp.
 //!
 //! See the [`web`](https://github.com/marc2332/freya/tree/main/examples/web) example, which is what
