@@ -23,17 +23,17 @@ const FLING_MIN_SPEED: f32 = 50.0;
 /// Scrolling feel of a [`TargetPlatform`].
 pub(crate) trait ScrollFeel {
     /// Seconds wheel and keyboard scrolls take to reach their destination.
-    fn smoothing_time(&self) -> f32;
+    fn scroll_smoothing_time(&self) -> f32;
     /// Seconds a fling takes to stop, which also scales how far it travels.
-    fn fling_time(&self) -> f32;
+    fn scroll_fling_time(&self) -> f32;
 }
 
 impl ScrollFeel for TargetPlatform {
-    fn smoothing_time(&self) -> f32 {
+    fn scroll_smoothing_time(&self) -> f32 {
         if self.is_mobile() { 0.1 } else { 0.06 }
     }
 
-    fn fling_time(&self) -> f32 {
+    fn scroll_fling_time(&self) -> f32 {
         if self.is_mobile() { 0.35 } else { 0.5 }
     }
 }
@@ -103,7 +103,7 @@ impl SmoothScroll {
             damp: State::create(SmoothDamp {
                 position: Point2D::zero(),
                 velocity: Vector2D::zero(),
-                smooth_time: TargetPlatform::Unknown.smoothing_time(),
+                smooth_time: TargetPlatform::Unknown.scroll_smoothing_time(),
             }),
             drag: State::create(Drag {
                 velocity: Vector2D::zero(),
@@ -124,12 +124,16 @@ impl SmoothScroll {
 
     /// Chases the controller position from `current`, keeping the current velocity.
     pub fn animate_from(&mut self, current: Point2D) {
-        self.start(current, None, TargetPlatform::get().smoothing_time());
+        self.start(current, None, TargetPlatform::get().scroll_smoothing_time());
     }
 
     /// Like [`Self::animate_from`] but launched at `velocity` and slower to stop.
     fn fling_from(&mut self, current: Point2D, velocity: Vector2D) {
-        self.start(current, Some(velocity), TargetPlatform::get().fling_time());
+        self.start(
+            current,
+            Some(velocity),
+            TargetPlatform::get().scroll_fling_time(),
+        );
     }
 
     fn start(&mut self, current: Point2D, velocity: Option<Vector2D>, smooth_time: f32) {
@@ -197,7 +201,7 @@ impl SmoothScroll {
             return;
         }
 
-        let projected = from + velocity * TargetPlatform::get().fling_time();
+        let projected = from + velocity * TargetPlatform::get().scroll_fling_time();
         let target_x = get_corrected_scroll_position(content.width, viewport.width, projected.x);
         let target_y = get_corrected_scroll_position(content.height, viewport.height, projected.y);
 
