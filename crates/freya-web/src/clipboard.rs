@@ -8,7 +8,7 @@ use crate::emscripten::{
     run_script_string,
 };
 
-/// Clipboard backed by the hidden input HTML input.
+/// Clipboard backed by the hidden IME input.
 pub struct WebClipboard;
 
 impl ClipboardProvider for WebClipboard {

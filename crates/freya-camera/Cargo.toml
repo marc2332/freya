@@ -16,9 +16,9 @@ workspace = true
 
 [dependencies]
 freya-core = { workspace = true }
-blocking = { workspace = true }
 freya-engine = { workspace = true }
 nokhwa = { version = "0.10", features = ["input-native"] }
+blocking = { workspace = true }
 bytes = { workspace = true }
 tracing = { workspace = true }
 
