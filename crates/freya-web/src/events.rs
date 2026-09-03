@@ -216,7 +216,8 @@ extern "C" fn on_key(
     modifiers.set(Modifiers::ALT, event.alt_key);
     modifiers.set(Modifiers::META, event.meta_key);
 
-    let is_shortcut = modifiers.intersects(Modifiers::CONTROL | Modifiers::META);
+    let alt_graph = modifiers.contains(Modifiers::CONTROL | Modifiers::ALT);
+    let is_shortcut = modifiers.intersects(Modifiers::CONTROL | Modifiers::META) && !alt_graph;
     let emitted_by_ime = ime_focused()
         && name == KeyboardEventName::KeyDown
         && matches!(key, Key::Character(_))
