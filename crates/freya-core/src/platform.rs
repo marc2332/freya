@@ -47,8 +47,7 @@ pub enum TargetPlatform {
 }
 
 impl TargetPlatform {
-    /// Get the current [`TargetPlatform`], falling back to [`TargetPlatform::detect`]
-    /// when running outside of a Freya runtime.
+    /// Get the current [`TargetPlatform`] otherwise falls back to [`TargetPlatform::detect`].
     pub fn get() -> Self {
         CurrentContext::try_with(|_| try_consume_root_context())
             .flatten()
