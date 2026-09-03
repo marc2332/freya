@@ -37,6 +37,10 @@ use ffmpeg_sidecar::{
 };
 use freya_core::{
     elements::image::ImageHandle,
+    io::{
+        thread::thread,
+        timer::timer,
+    },
     notify::ArcNotify,
     prelude::{
         Bytes,
@@ -45,8 +49,6 @@ use freya_core::{
         spawn,
         try_consume_root_context,
     },
-    sleep::sleep,
-    unblock::unblock,
 };
 use freya_engine::prelude::AlphaType;
 use rodio::cpal::traits::{
@@ -209,7 +211,7 @@ impl VideoClient {
         }
 
         let (sender, receiver) = async_channel::bounded::<DecoderEvent>(FRAME_BUFFER);
-        let decoder = unblock(move || Self::run_decoder(child, sender));
+        let decoder = thread(move || Self::run_decoder(child, sender));
 
         let mut wall_start: Option<Instant> = None;
         let mut paused_for = Duration::ZERO;
@@ -238,7 +240,7 @@ impl VideoClient {
             let frame_offset = Duration::from_secs_f32(frame.timestamp.max(0.0));
             let elapsed = wall_start.elapsed().saturating_sub(paused_for);
             if elapsed < frame_offset {
-                sleep(frame_offset - elapsed).await;
+                timer(frame_offset - elapsed).await;
             }
 
             let Some(frame) = Self::decode_frame(frame) else {

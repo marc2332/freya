@@ -314,15 +314,15 @@ impl Component for SvgViewer {
                         #[cfg(feature = "remote-asset")]
                         let bytes = {
                             let client = Http::get();
-                            unblock(move || source.fetch(&client)).await
+                            thread(move || source.fetch(&client)).await
                         };
                         #[cfg(not(feature = "remote-asset"))]
-                        let bytes = unblock(move || source.fetch()).await;
+                        let bytes = thread(move || source.fetch()).await;
 
                         let result = match bytes {
                             Ok(bytes) => {
                                 let _permit = RASTER_LIMIT.acquire().await;
-                                unblock(move || rasterize_bytes(&bytes, target, style)).await
+                                thread(move || rasterize_bytes(&bytes, target, style)).await
                             }
                             Err(err) => Err(err),
                         };
