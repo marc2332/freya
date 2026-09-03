@@ -2,13 +2,13 @@ use std::time::Duration;
 
 /// Waits for the given duration.
 #[cfg(not(target_os = "emscripten"))]
-pub async fn sleep(duration: Duration) {
+pub async fn timer(duration: Duration) {
     async_io::Timer::after(duration).await;
 }
 
 /// Waits for the given duration, on a browser timer.
 #[cfg(target_os = "emscripten")]
-pub async fn sleep(duration: Duration) {
+pub async fn timer(duration: Duration) {
     use std::ffi::c_void;
 
     use futures_channel::oneshot::{

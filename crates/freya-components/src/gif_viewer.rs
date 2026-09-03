@@ -164,7 +164,7 @@ impl GifSource {
         let source = self.clone();
         #[cfg(feature = "remote-asset")]
         let client = Http::get();
-        unblock(move || {
+        thread(move || {
             let bytes = match source {
                 #[cfg(feature = "remote-asset")]
                 Self::Uri(uri) => client.get(uri).send()?.error_for_status()?.bytes()?,
@@ -280,7 +280,7 @@ impl Component for GifViewer {
 
         let mut stream_gif = async move |bytes: Bytes| -> anyhow::Result<()> {
             // Decode and pre-composite all frames upfront
-            let frames_data = unblock(move || -> anyhow::Result<Vec<CachedFrame>> {
+            let frames_data = thread(move || -> anyhow::Result<Vec<CachedFrame>> {
                 let mut decoder_options = gif::DecodeOptions::new();
                 decoder_options.set_color_output(gif::ColorOutput::RGBA);
                 let cursor = std::io::Cursor::new(&bytes);
@@ -357,7 +357,7 @@ impl Component for GifViewer {
             loop {
                 for (i, frame) in frames.frames.iter().enumerate() {
                     *status.write() = Status::Playing(i);
-                    sleep(frame.delay).await;
+                    timer(frame.delay).await;
                 }
             }
         };

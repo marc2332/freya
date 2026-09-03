@@ -154,7 +154,7 @@ impl VideoPlayer {
         let source = self.source.peek().clone();
         let player = *self;
         let handle = spawn(async move {
-            sleep(debounce).await;
+            timer(debounce).await;
             player.run(source, position, start_paused).await;
         })
         .owned();

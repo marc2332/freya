@@ -240,7 +240,7 @@ impl<Q: MutationCapability> MutationsStorage<Q> {
         if mutation_data.reactive_contexts.borrow().len() == 1 {
             *mutation_data.clean_task.borrow_mut() = Some(spawn_forever(async move {
                 // Wait as long as the stale time is configured
-                sleep(mutation.clean_time).await;
+                timer(mutation.clean_time).await;
 
                 // Finally clear the mutation
                 let mut storage = storage_clone.write_unchecked();
