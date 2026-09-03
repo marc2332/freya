@@ -19,7 +19,7 @@ impl Timeout {
 
         spawn(async move {
             loop {
-                sleep(duration).await;
+                timer(duration).await;
                 if instant.read().elapsed() >= duration && !elapsed() {
                     elapsed.set(true);
                 }

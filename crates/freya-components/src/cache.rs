@@ -184,7 +184,7 @@ impl AssetCacher {
                 let clear_task = spawn_forever({
                     let asset_config = asset_config.clone();
                     async move {
-                        sleep(duration).await;
+                        timer(duration).await;
                         registry.write().remove(&asset_config);
                     }
                 });

@@ -27,6 +27,7 @@ use std::{
     },
 };
 
+use async_io::Timer;
 use ffmpeg_sidecar::{
     child::FfmpegChild,
     command::FfmpegCommand,
@@ -45,8 +46,6 @@ use freya_core::{
         spawn,
         try_consume_root_context,
     },
-    sleep::sleep,
-    unblock::unblock,
 };
 use freya_engine::prelude::AlphaType;
 use rodio::cpal::traits::{
@@ -209,7 +208,7 @@ impl VideoClient {
         }
 
         let (sender, receiver) = async_channel::bounded::<DecoderEvent>(FRAME_BUFFER);
-        let decoder = unblock(move || Self::run_decoder(child, sender));
+        let decoder = blocking::unblock(move || Self::run_decoder(child, sender));
 
         let mut wall_start: Option<Instant> = None;
         let mut paused_for = Duration::ZERO;
@@ -238,7 +237,7 @@ impl VideoClient {
             let frame_offset = Duration::from_secs_f32(frame.timestamp.max(0.0));
             let elapsed = wall_start.elapsed().saturating_sub(paused_for);
             if elapsed < frame_offset {
-                sleep(frame_offset - elapsed).await;
+                Timer::after(frame_offset - elapsed).await;
             }
 
             let Some(frame) = Self::decode_frame(frame) else {
