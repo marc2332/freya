@@ -2260,7 +2260,6 @@ dependencies = [
  "hotpath",
  "itertools 0.14.0",
  "open",
- "portable-pty",
  "rand 0.10.2",
  "rfd",
  "ropey",
@@ -2939,10 +2938,10 @@ name = "freya-terminal"
 version = "0.5.0-rc.4"
 dependencies = [
  "async-io",
- "blocking",
  "freya",
  "freya-core",
  "freya-engine",
+ "futures-channel",
  "futures-lite",
  "keyboard-types 0.8.3",
  "linkify",

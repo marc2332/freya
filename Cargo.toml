@@ -88,7 +88,7 @@ freya-material-design = { path = "./crates/freya-material-design", version = "0.
 freya-plotters-backend = { path = "./crates/freya-plotters-backend", version = "0.5.0-rc.4" }
 freya-query = { path = "./crates/freya-query", version = "0.5.0-rc.4" }
 freya-webview = { path = "./crates/freya-webview", version = "0.5.0-rc.4" }
-freya-terminal = { path = "./crates/freya-terminal", version = "0.5.0-rc.4" }
+freya-terminal = { path = "./crates/freya-terminal", version = "0.5.0-rc.4", default-features = false }
 freya-code-editor = { path = "./crates/freya-code-editor", version = "0.5.0-rc.4" }
 freya-camera = { path = "./crates/freya-camera", version = "0.5.0-rc.4" }
 freya-android = { path = "./crates/freya-android", version = "0.5.0-rc.4" }
@@ -228,7 +228,6 @@ open = { workspace = true }
 ureq = { workspace = true }
 blocking = { workspace = true }
 
-portable-pty = "0.9"
 futures-util = { workspace = true }
 
 [workspace.lints.clippy]

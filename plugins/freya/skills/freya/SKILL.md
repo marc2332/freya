@@ -899,13 +899,13 @@ WebView::new("https://example.com").expanded()
 
 ## Terminal
 
-Enable with `features = ["terminal"]`. Spawns a PTY process and renders it as a terminal:
+Enable with `features = ["terminal-pty"]`. Spawns a PTY process and renders it as a terminal:
 
 ```rust
 use freya::terminal::*;
 let mut cmd = CommandBuilder::new("bash");
 cmd.env("TERM", "xterm-256color");
-let handle = TerminalHandle::new(TerminalId::new(), cmd, None).ok();
+let handle = TerminalHandle::new(TerminalId::new(), PtyBackend::new(cmd), None).ok();
 // Render with Terminal::new(handle) and forward keyboard events via handle.write_key()
 ```
 
@@ -968,6 +968,7 @@ freya = { version = "...", features = ["router", "radio"] }
 | `material-design` | Material Design theme (`freya-material-design`) |
 | `webview` | Embed a WebView (`freya-webview`) |
 | `terminal` | Terminal emulator (`freya-terminal`) |
+| `terminal-pty` | Built-in PTY backend for the terminal, implies `terminal` |
 | `code-editor` | Code editing APIs (`freya-code-editor`) |
 | `camera` | Webcam capture (`freya-camera`) |
 | `tray` | System tray support |
