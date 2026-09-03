@@ -88,7 +88,6 @@ harness = false
 name = "core_perf"
 harness = false
 
-# Emscripten is single threaded, see `sleep.rs` and `unblock.rs`.
 [target.'cfg(not(target_os = "emscripten"))'.dependencies]
 async-io = { workspace = true }
 blocking = { workspace = true }

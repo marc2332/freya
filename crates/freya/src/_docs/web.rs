@@ -62,7 +62,7 @@
 //! element with the `canvas` id.
 //!
 //! ```html
-//! <canvas id="canvas" style="image-rendering: pixelated;"></canvas>
+//! <canvas id="canvas" tabindex="0" style="image-rendering: pixelated;"></canvas>
 //! <script>
 //!     var Module = { canvas: document.getElementById("canvas") };
 //! </script>

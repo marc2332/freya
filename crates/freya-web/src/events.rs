@@ -218,6 +218,8 @@ extern "C" fn on_key(
 
     let alt_graph = modifiers.contains(Modifiers::CONTROL | Modifiers::ALT);
     let is_shortcut = modifiers.intersects(Modifiers::CONTROL | Modifiers::META) && !alt_graph;
+    let select_all = is_shortcut
+        && matches!(&key, Key::Character(character) if character.eq_ignore_ascii_case("a"));
     let emitted_by_ime = ime_focused()
         && name == KeyboardEventName::KeyDown
         && matches!(key, Key::Character(_))
@@ -232,7 +234,7 @@ extern "C" fn on_key(
         });
     }
 
-    code == Code::Tab
+    code == Code::Tab || select_all
 }
 
 extern "C" fn on_touch(
