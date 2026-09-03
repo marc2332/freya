@@ -15,20 +15,24 @@ use crate::scrollviews::{
 /// Distance under which the animation is close enough to snap, in pixels.
 const SETTLE_DISTANCE: f32 = 0.5;
 /// Speed under which the animation is slow enough to stop, in pixels per second.
-const SETTLE_SPEED: f32 = 5.0;
+const SETTLE_SPEED: f32 = 20.0;
 
-/// Seconds wheel and keyboard scrolls take to reach their destination.
-const SMOOTHING_TIME: f32 = 0.1;
 /// Slowest drag release speed that still starts a fling, in pixels per second.
 const FLING_MIN_SPEED: f32 = 50.0;
 
 /// Scrolling feel of a [`TargetPlatform`].
 pub(crate) trait ScrollFeel {
+    /// Seconds wheel and keyboard scrolls take to reach their destination.
+    fn smoothing_time(&self) -> f32;
     /// Seconds a fling takes to stop, which also scales how far it travels.
     fn fling_time(&self) -> f32;
 }
 
 impl ScrollFeel for TargetPlatform {
+    fn smoothing_time(&self) -> f32 {
+        if self.is_mobile() { 0.1 } else { 0.06 }
+    }
+
     fn fling_time(&self) -> f32 {
         if self.is_mobile() { 0.35 } else { 0.5 }
     }
@@ -99,7 +103,7 @@ impl SmoothScroll {
             damp: State::create(SmoothDamp {
                 position: Point2D::zero(),
                 velocity: Vector2D::zero(),
-                smooth_time: SMOOTHING_TIME,
+                smooth_time: TargetPlatform::Unknown.smoothing_time(),
             }),
             drag: State::create(Drag {
                 velocity: Vector2D::zero(),
@@ -120,7 +124,7 @@ impl SmoothScroll {
 
     /// Chases the controller position from `current`, keeping the current velocity.
     pub fn animate_from(&mut self, current: Point2D) {
-        self.start(current, None, SMOOTHING_TIME);
+        self.start(current, None, TargetPlatform::get().smoothing_time());
     }
 
     /// Like [`Self::animate_from`] but launched at `velocity` and slower to stop.
