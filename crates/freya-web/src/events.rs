@@ -58,13 +58,19 @@ impl BrowserState {
     pub fn sync_canvas_size() -> (Size2D, f64) {
         let mut css_size = euclid::Size2D::<f64, ()>::zero();
         let pixel_ratio = unsafe {
-            emscripten_get_element_css_size(TARGET_CANVAS, &mut css_size.width, &mut css_size.height);
+            emscripten_get_element_css_size(
+                TARGET_CANVAS,
+                &mut css_size.width,
+                &mut css_size.height,
+            );
             emscripten_get_device_pixel_ratio()
         };
         let size = (css_size * pixel_ratio).to_f32();
 
         let fixed_size = size.to_i32();
-        unsafe { emscripten_set_canvas_element_size(TARGET_CANVAS, fixed_size.width, fixed_size.height) };
+        unsafe {
+            emscripten_set_canvas_element_size(TARGET_CANVAS, fixed_size.width, fixed_size.height)
+        };
 
         PIXEL_RATIO.set(pixel_ratio);
         BROWSER.with_borrow_mut(|browser| browser.resized = Some((size, pixel_ratio)));
@@ -220,8 +226,8 @@ impl BrowserState {
             _ => (TouchEventName::TouchMove, TouchPhase::Moved),
         };
 
-        let touches = event.num_touches.clamp(0, event.touches.len() as i32) as usize;
-        for touch in event.touches.iter().take(touches).filter(|t| t.is_changed) {
+        let touches = event.touches.iter().take(event.num_touches.max(0) as usize);
+        for touch in touches.filter(|touch| touch.is_changed) {
             Self::push(PlatformEvent::Touch {
                 name,
                 location: touch.position(),
@@ -243,7 +249,11 @@ impl BrowserState {
         false
     }
 
-    extern "C" fn on_focus(event_type: c_int, _event: *const c_void, _user_data: *mut c_void) -> bool {
+    extern "C" fn on_focus(
+        event_type: c_int,
+        _event: *const c_void,
+        _user_data: *mut c_void,
+    ) -> bool {
         BROWSER.with_borrow_mut(|browser| {
             browser.focused = Some(event_type == EMSCRIPTEN_EVENT_FOCUS);
         });

@@ -68,7 +68,8 @@ impl WebSurface {
             return;
         }
 
-        if let Some(surface) = Self::create_surface(&mut self.context, self.framebuffer_info, size) {
+        if let Some(surface) = Self::create_surface(&mut self.context, self.framebuffer_info, size)
+        {
             self.surface = surface;
             self.size = size;
         }
