@@ -106,7 +106,7 @@ impl SoftwareDriver {
         let refresh_rate = window
             .current_monitor()
             .and_then(|monitor| monitor.refresh_rate_millihertz())
-            .filter(|refresh_rate| *refresh_rate > 0)
+            .filter(|refresh_rate| *refresh_rate > 1_000)
             .unwrap_or(60_000);
         let frame_interval = Duration::from_secs_f64(1000.0 / refresh_rate as f64);
 
