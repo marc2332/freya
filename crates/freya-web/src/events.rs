@@ -5,7 +5,6 @@ use std::{
     },
     ffi::{
         CStr,
-        c_char,
         c_int,
         c_void,
     },
@@ -113,10 +112,6 @@ fn point(x: c_int, y: c_int) -> CursorPoint {
     CursorPoint::new(x as f64 * pixel_ratio, y as f64 * pixel_ratio)
 }
 
-fn read_string(bytes: &[c_char]) -> std::borrow::Cow<'_, str> {
-    unsafe { CStr::from_ptr(bytes.as_ptr()) }.to_string_lossy()
-}
-
 fn mouse_button(button: u16) -> MouseButton {
     match button {
         0 => MouseButton::Left,
@@ -194,9 +189,10 @@ extern "C" fn on_key(
         KeyboardEventName::KeyDown
     };
 
-    let key = read_string(&event.key);
+    let key = unsafe { CStr::from_ptr(event.key.as_ptr()) }.to_string_lossy();
     let key = Key::from_str(&key).unwrap_or_else(|_| Key::Character(key.into_owned()));
-    let code = Code::from_str(&read_string(&event.code)).unwrap_or(Code::Unidentified);
+    let code = unsafe { CStr::from_ptr(event.code.as_ptr()) }.to_string_lossy();
+    let code = Code::from_str(&code).unwrap_or(Code::Unidentified);
 
     let mut modifiers = Modifiers::empty();
     modifiers.set(Modifiers::CONTROL, event.ctrl_key);
