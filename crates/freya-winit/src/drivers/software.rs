@@ -1,4 +1,9 @@
 use std::num::NonZeroU32;
+#[cfg(target_os = "windows")]
+use std::time::{
+    Duration,
+    Instant,
+};
 
 use freya_engine::prelude::{
     AlphaType,
@@ -16,6 +21,8 @@ use raw_window_handle::{
     RawWindowHandle,
     WindowHandle,
 };
+#[cfg(target_os = "windows")]
+use windows_sys::Win32::Graphics::Dwm::DwmFlush;
 use winit::{
     dpi::PhysicalSize,
     event_loop::ActiveEventLoop,
@@ -47,6 +54,8 @@ impl HasWindowHandle for WindowHandleWrapper {
 pub struct SoftwareDriver {
     _context: softbuffer::Context<DisplayHandleWrapper>,
     surface: softbuffer::Surface<DisplayHandleWrapper, WindowHandleWrapper>,
+    #[cfg(target_os = "windows")]
+    last_present: Option<Instant>,
 }
 
 impl SoftwareDriver {
@@ -81,7 +90,33 @@ impl SoftwareDriver {
         Ok(Self {
             _context: context,
             surface,
+            #[cfg(target_os = "windows")]
+            last_present: None,
         })
+    }
+
+    /// Block until the display takes the frame, since softbuffer's GDI blit never waits for it.
+    #[cfg(target_os = "windows")]
+    fn wait_for_display(&mut self, window: &Window) {
+        // SAFETY: `DwmFlush` takes no arguments and only blocks until the next composition.
+        if unsafe { DwmFlush() } >= 0 {
+            return;
+        }
+
+        let refresh_rate = window
+            .current_monitor()
+            .and_then(|monitor| monitor.refresh_rate_millihertz())
+            .filter(|refresh_rate| *refresh_rate > 0)
+            .unwrap_or(60_000);
+        let frame_interval = Duration::from_secs_f64(1000.0 / refresh_rate as f64);
+
+        if let Some(last_present) = self.last_present
+            && let Some(remaining) = frame_interval.checked_sub(last_present.elapsed())
+        {
+            std::thread::sleep(remaining);
+        }
+
+        self.last_present = Some(Instant::now());
     }
 
     pub fn present(
@@ -129,6 +164,9 @@ impl SoftwareDriver {
         if let Err(err) = buffer.present() {
             tracing::error!("Failed to present software buffer: {err:?}");
         }
+
+        #[cfg(target_os = "windows")]
+        self.wait_for_display(window);
     }
 
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
