@@ -125,6 +125,19 @@ impl SoftwareDriver {
         window: &Window,
         render: impl FnOnce(&mut SkiaSurface),
     ) {
+        self.present_frame(size, window, render);
+
+        #[cfg(target_os = "windows")]
+        self.wait_for_display(window);
+    }
+
+    /// Draw the frame and blit it, skipped whenever there is no surface to draw into.
+    fn present_frame(
+        &mut self,
+        size: PhysicalSize<u32>,
+        window: &Window,
+        render: impl FnOnce(&mut SkiaSurface),
+    ) {
         let (Some(width), Some(height)) =
             (NonZeroU32::new(size.width), NonZeroU32::new(size.height))
         else {
@@ -164,9 +177,6 @@ impl SoftwareDriver {
         if let Err(err) = buffer.present() {
             tracing::error!("Failed to present software buffer: {err:?}");
         }
-
-        #[cfg(target_os = "windows")]
-        self.wait_for_display(window);
     }
 
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
