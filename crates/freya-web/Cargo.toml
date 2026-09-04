@@ -25,3 +25,4 @@ accesskit = { workspace = true }
 futures-channel = { workspace = true }
 tracing = { workspace = true }
 gl = { workspace = true }
+euclid = { workspace = true }

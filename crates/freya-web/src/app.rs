@@ -28,11 +28,7 @@ use torin::prelude::Size2D;
 use crate::{
     config::WebConfig,
     emscripten::emscripten_run_script,
-    events::{
-        BrowserState,
-        listen,
-        sync_canvas_size,
-    },
+    events::BrowserState,
     fonts::Fonts,
     surface::WebSurface,
 };
@@ -78,10 +74,9 @@ pub struct WebApp {
 
 impl WebApp {
     pub fn new(config: WebConfig) -> Option<Self> {
-        let (width, height, pixel_ratio) = sync_canvas_size();
-        let size = Size2D::new(width as f32, height as f32);
+        let (size, pixel_ratio) = BrowserState::sync_canvas_size();
 
-        let surface = WebSurface::new(width, height)?;
+        let surface = WebSurface::new(size.to_i32())?;
 
         let mut fonts = Fonts::new(&config.fonts, config.default_fonts);
 
@@ -159,7 +154,7 @@ impl WebApp {
             &fonts.default_families,
         );
 
-        listen();
+        BrowserState::listen();
 
         Some(Self {
             runner,
@@ -186,9 +181,9 @@ impl WebApp {
     pub fn frame(&mut self) {
         let mut browser = BrowserState::take();
 
-        if let Some((width, height, pixel_ratio)) = browser.resized {
-            self.surface.resize(width, height);
-            self.size = Size2D::new(width as f32, height as f32);
+        if let Some((size, pixel_ratio)) = browser.resized {
+            self.surface.resize(size.to_i32());
+            self.size = size;
             self.platform.root_size.set_if_modified(self.size);
             self.needs_render = true;
 
