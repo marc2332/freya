@@ -149,7 +149,7 @@ impl WebApp {
 
     /// Advances the app by one browser frame.
     pub fn frame(&mut self) {
-        let mut browser = BrowserState::take();
+        let browser = BrowserState::take();
 
         if let Some((size, pixel_ratio)) = browser.resized {
             self.surface.resize(size.to_i32());
@@ -224,8 +224,8 @@ impl WebApp {
         }
 
         let mutations = self.runner.sync_and_update();
-        let tree = &mut self.tree;
         let scale_factor = self.scale_factor() as f32;
+        let tree = &mut self.tree;
         let result = self
             .runner
             .run_in(|| tree.apply_mutations(mutations, scale_factor));
@@ -299,12 +299,13 @@ impl WebApp {
     }
 
     fn render(&mut self) {
+        let scale_factor = self.scale_factor();
         let render_pipeline = RenderPipeline {
             font_collection: &mut self.fonts.collection,
             font_manager: &self.fonts.manager,
             tree: &self.tree,
             canvas: self.surface.canvas(),
-            scale_factor: self.scale_factor(),
+            scale_factor,
             background: self.background,
         };
         render_pipeline.render();
