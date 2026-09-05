@@ -1,0 +1,20 @@
+[package]
+name = "web"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+freya = { path = "../../crates/freya", default-features = false, features = [
+  "web",
+  "router",
+  "material-design",
+  "icons-lucide",
+  "markdown",
+  "i18n",
+  "remote-asset",
+] }
+
+[[bin]]
+name = "web_example"
+path = "src/main.rs"
