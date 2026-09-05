@@ -1890,7 +1890,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users 0.5.2",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2188,7 +2188,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2573,6 +2573,7 @@ dependencies = [
  "freya-terminal",
  "freya-testing",
  "freya-video",
+ "freya-web",
  "freya-webview",
  "freya-winit",
  "plotters",
@@ -2597,7 +2598,6 @@ dependencies = [
 name = "freya-animation"
 version = "0.5.0-rc.4"
 dependencies = [
- "async-io",
  "easer",
  "freya",
  "freya-core",
@@ -2609,7 +2609,6 @@ name = "freya-borderless-plugin"
 version = "0.5.0-rc.4"
 dependencies = [
  "freya-core",
- "freya-engine",
  "freya-winit",
  "torin",
 ]
@@ -2658,9 +2657,7 @@ version = "0.5.0-rc.4"
 dependencies = [
  "accesskit",
  "anyhow",
- "async-io",
  "async-lock",
- "blocking",
  "bytes",
  "cfg-if 1.0.4",
  "chrono",
@@ -2674,13 +2671,14 @@ dependencies = [
  "freya-router",
  "freya-sdk",
  "freya-testing",
+ "futures-channel",
  "gif 0.13.3",
- "open",
  "paste",
  "reqwest 0.12.28",
  "thiserror 2.0.19",
  "torin",
  "tracing",
+ "url",
 ]
 
 [[package]]
@@ -2688,7 +2686,9 @@ name = "freya-core"
 version = "0.5.0-rc.4"
 dependencies = [
  "accesskit",
+ "async-io",
  "bitflags 2.13.1",
+ "blocking",
  "bytes",
  "cursor-icon",
  "dioxus-devtools",
@@ -2842,7 +2842,6 @@ dependencies = [
 name = "freya-query"
 version = "0.5.0-rc.4"
 dependencies = [
- "async-io",
  "freya",
  "freya-core",
  "freya-testing",
@@ -2888,16 +2887,15 @@ dependencies = [
 name = "freya-sdk"
 version = "0.5.0-rc.4"
 dependencies = [
- "async-io",
  "freya-core",
  "tokio",
 ]
 
 [[package]]
 name = "freya-skia-bindings"
-version = "0.99.1"
+version = "0.100.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e65f9ff56a7d08451c839386a86842f065552c561041d0cdcc213390a2361a2"
+checksum = "2a59be930a7bfe544a7f16fcc6d7326dfabff3ffe65c3321932f4e61234f4941"
 dependencies = [
  "bindgen 0.72.1",
  "cc",
@@ -2912,9 +2910,9 @@ dependencies = [
 
 [[package]]
 name = "freya-skia-safe"
-version = "0.99.1"
+version = "0.100.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "567c808eff01a4ad7d9d3dc42ce0fb4335dce76a2398d0cd18f1357bf2450c81"
+checksum = "7975576c62caa0b8bccb6f4cfd16c61f57b27fffa15540f37deba9bd246bf009"
 dependencies = [
  "base64 0.23.1",
  "bitflags 2.13.1",
@@ -2989,6 +2987,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "freya-web"
+version = "0.5.0-rc.4"
+dependencies = [
+ "accesskit",
+ "euclid",
+ "freya-clipboard",
+ "freya-components",
+ "freya-core",
+ "freya-engine",
+ "futures-channel",
+ "gl",
+ "ragnarok",
+ "torin",
+ "tracing",
+]
+
+[[package]]
 name = "freya-webview"
 version = "0.5.0-rc.4"
 dependencies = [
@@ -3032,6 +3047,7 @@ dependencies = [
  "objc2-core-foundation",
  "objc2-metal 0.3.2",
  "objc2-quartz-core 0.3.2",
+ "open",
  "ragnarok",
  "raw-window-handle",
  "rfd",
@@ -4090,7 +4106,7 @@ checksum = "3640c1c38b8e4e43584d8df18be5fc6b0aa314ce6ebf51b53313d4306cca8e46"
 dependencies = [
  "hermit-abi",
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4994,7 +5010,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6189,7 +6205,7 @@ dependencies = [
  "once_cell",
  "socket2",
  "tracing",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6797,7 +6813,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.4.15",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -6810,7 +6826,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.12.1",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6869,7 +6885,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7689,10 +7705,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "once_cell",
  "rustix 1.1.4",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -8770,6 +8786,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "web"
+version = "0.1.0"
+dependencies = [
+ "freya",
+]
+
+[[package]]
 name = "web-sys"
 version = "0.3.103"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8939,7 +8962,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

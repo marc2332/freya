@@ -41,6 +41,16 @@
 //!
 //! No setup required. But feel free to add more if we miss something.
 //!
+//! ### Android
+//!
+//! Requires the Android SDK, the NDK and `cargo-ndk`. See the
+//! [`android`](https://github.com/marc2332/freya/blob/main/examples/android/README.md) example README.
+//!
+//! ### Web
+//!
+//! Requires the `wasm32-unknown-emscripten` target and Emscripten. See the
+//! [`web`](https://github.com/marc2332/freya/blob/main/examples/web/README.md) example README.
+//!
 //! ## Custom Linkers
 //!
 //! The following custom linkers are not supported at the moment:

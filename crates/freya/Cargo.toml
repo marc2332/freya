@@ -1,7 +1,7 @@
 [package]
 name = "freya"
 version = "0.5.0-rc.4"
-description = "Cross-platform and non-web GUI Library powered by Skia."
+description = "Cross-platform and native GUI Library powered by Skia."
 edition = "2024"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
@@ -58,6 +58,7 @@ all-debug = [
   "dep:freya-testing",
   "dep:freya-plotters-backend",
   "performance",
+  "web",
 ]
 all-tests = [
   "winit",
@@ -79,7 +80,7 @@ all-tests = [
 ]
 docs = ["all-debug"]
 # Features
-winit = ["dep:freya-winit"]
+winit = ["dep:freya-winit", "dep:freya-performance-plugin"]
 router = [
   "dep:freya-router",
   "freya-components/router",
@@ -89,7 +90,7 @@ remote-asset = ["freya-components/remote-asset", "freya-markdown?/remote-asset"]
 i18n = ["dep:freya-i18n"]
 engine = []
 devtools = ["dep:freya-devtools", "freya-core/devtools"]
-performance = []
+performance = ["winit"]
 plot = ["dep:plotters", "dep:freya-plotters-backend"]
 hotreload = ["winit", "freya-core/hotreload", "freya-winit/hotreload"]
 gif = ["freya-components/gif"]
@@ -112,6 +113,7 @@ borderless = ["winit", "dep:freya-borderless-plugin"]
 terminal = ["dep:freya-terminal"]
 code-editor = ["dep:freya-code-editor"]
 camera = ["dep:freya-camera"]
+web = ["dep:freya-web"]
 zoom-shortcuts = ["freya-components/zoom-shortcuts"]
 
 [dependencies]
@@ -137,9 +139,10 @@ freya-code-editor = { workspace = true, optional = true }
 freya-video = { workspace = true, optional = true }
 freya-camera = { workspace = true, optional = true }
 freya-borderless-plugin = { workspace = true, optional = true }
+freya-web = { workspace = true, optional = true }
 
 # Performance
-freya-performance-plugin = { workspace = true }
+freya-performance-plugin = { workspace = true, optional = true }
 freya-material-design = { workspace = true, optional = true }
 freya-testing = { workspace = true, optional = true }
 

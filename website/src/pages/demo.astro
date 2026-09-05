@@ -1,0 +1,55 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout
+    title="Demo - Freya, Rust GUI library"
+    description="A Freya app running in your browser, compiled to WebAssembly."
+    url="/demo"
+>
+    <h1 class="text-3xl sm:text-4xl font-bold">Demo</h1>
+    <p class="mt-2 text-stone-300">
+        Freya on WebAssembly.
+    </p>
+
+    <div
+        id="demo-frame"
+        class="relative mt-8 mb-16 w-full rounded-xl overflow-hidden border border-stone-700 bg-white"
+    >
+        <canvas id="canvas" draggable="false"></canvas>
+        <div
+            id="demo-loading"
+            class="absolute inset-0 flex items-center justify-center bg-custom-dark-black text-stone-300"
+        >
+            Loading the demo...
+        </div>
+    </div>
+</Layout>
+
+<style>
+    #demo-frame {
+        height: min(75vh, 700px);
+    }
+
+    #canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        image-rendering: pixelated;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-user-drag: none;
+        -webkit-touch-callout: none;
+        touch-action: none;
+    }
+</style>
+
+<script is:inline>
+    var Module = {
+        canvas: document.getElementById("canvas"),
+        onRuntimeInitialized() {
+            document.getElementById("demo-loading").remove();
+        },
+    };
+</script>
+<script is:inline src="/demo/web_example.js"></script>
