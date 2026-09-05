@@ -119,8 +119,13 @@ impl Component for BorderlessRoot {
                     .expanded()
                     .overflow(Overflow::Clip)
                     .maybe(!maximized(), |el| {
-                        el.corner_radius(self.corner_radius)
-                            .shadow((0., 0., inset, 0., Color::BLACK.with_a(90)))
+                        el.corner_radius(self.corner_radius).shadow((
+                            0.,
+                            0.,
+                            inset,
+                            0.,
+                            Color::BLACK.with_a(90),
+                        ))
                     })
                     .child(self.inner.clone()),
             )
