@@ -25,10 +25,7 @@ use torin::prelude::Size2D;
 use crate::{
     clipboard::WebClipboard,
     config::WebConfig,
-    emscripten::{
-        js_string_literal,
-        run_script,
-    },
+    emscripten::run_script,
     events::{
         BrowserState,
         ime_focused,
@@ -259,10 +256,7 @@ impl WebApp {
                     self.tree.accessibility_diff.request_focus(strategy);
                 }
                 UserEvent::OpenUrl(url) => {
-                    run_script(&format!(
-                        "window.open({}, '_blank');",
-                        js_string_literal(&url)
-                    ));
+                    run_script(&format!("window.open({url:?}, '_blank');"));
                 }
                 UserEvent::RequestRedraw => self.needs_render = true,
                 UserEvent::LoadFont {
