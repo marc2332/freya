@@ -47,9 +47,12 @@ use std::{
     },
 };
 
-use freya_clipboard::copypasta::{
-    ClipboardContext,
-    ClipboardProvider,
+use freya_clipboard::{
+    copypasta::{
+        ClipboardContext,
+        ClipboardProvider,
+    },
+    prelude::GlobalClipboard,
 };
 use freya_components::{
     cache::AssetCacher,
@@ -186,7 +189,15 @@ impl TestingRunner {
         let app = app.into();
         let mut runner = Runner::new(move || integration(app.clone()).into_element());
 
-        runner.provide_root_context(GlobalContexts::default);
+        runner.provide_root_context(|| {
+            let global_contexts = GlobalContexts::default();
+            global_contexts.insert_context(GlobalClipboard::new(
+                ClipboardContext::new()
+                    .ok()
+                    .map(|clipboard| Box::new(clipboard) as Box<dyn ClipboardProvider>),
+            ));
+            global_contexts
+        });
 
         runner.provide_root_context(ScreenReader::new);
 
@@ -247,14 +258,6 @@ impl TestingRunner {
                     }
                 }),
             }
-        });
-
-        runner.provide_root_context(|| {
-            let clipboard: Option<Box<dyn ClipboardProvider>> = ClipboardContext::new()
-                .ok()
-                .map(|c| Box::new(c) as Box<dyn ClipboardProvider>);
-
-            State::create(clipboard)
         });
 
         runner.provide_root_context(|| tree.borrow().accessibility_generator.clone());
