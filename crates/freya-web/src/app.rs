@@ -1,6 +1,5 @@
 use std::{
     cell::RefCell,
-    ffi::CString,
     rc::Rc,
 };
 
@@ -24,10 +23,15 @@ use ragnarok::{
 use torin::prelude::Size2D;
 
 use crate::{
+    clipboard::WebClipboard,
     config::WebConfig,
-    emscripten::emscripten_run_script,
-    events::BrowserState,
+    emscripten::run_script,
+    events::{
+        BrowserState,
+        ime_focused,
+    },
     fonts::Fonts,
+    ime::WebIme,
     surface::WebSurface,
 };
 
@@ -52,6 +56,7 @@ pub struct WebApp {
     background: Color,
     cursor: CursorIcon,
     needs_render: bool,
+    ime: WebIme,
 }
 
 impl WebApp {
@@ -95,7 +100,7 @@ impl WebApp {
             }
         });
 
-        let clipboard: Option<Box<dyn ClipboardProvider>> = None;
+        let clipboard: Option<Box<dyn ClipboardProvider>> = Some(Box::new(WebClipboard));
         runner.provide_root_context(|| State::create(clipboard));
 
         let mut tree = Tree::default();
@@ -136,6 +141,7 @@ impl WebApp {
             background: config.background,
             cursor: CursorIcon::Default,
             needs_render: true,
+            ime: WebIme::new(),
         })
     }
 
@@ -149,7 +155,13 @@ impl WebApp {
 
     /// Advances the app by one browser frame.
     pub fn frame(&mut self) {
-        let browser = BrowserState::take();
+        let mut browser = BrowserState::take();
+
+        if ime_focused() {
+            while let Some(event) = self.ime.poll() {
+                browser.events.push(event);
+            }
+        }
 
         if let Some((size, pixel_ratio)) = browser.resized {
             self.surface.resize(size.to_i32());
@@ -243,8 +255,7 @@ impl WebApp {
                     self.tree.accessibility_diff.request_focus(strategy);
                 }
                 UserEvent::OpenUrl(url) => {
-                    let url = url.replace('\\', "\\\\").replace('\'', "\\'");
-                    Self::run_script(&format!("window.open('{url}', '_blank');"));
+                    run_script(&format!("window.open({url:?}, '_blank');"));
                 }
                 UserEvent::RequestRedraw => self.needs_render = true,
                 UserEvent::LoadFont {
@@ -282,6 +293,13 @@ impl WebApp {
             && let Some(layout_node) = self.tree.layout.get(&node_id)
         {
             let focused_node = AccessibilityTree::create_node(node_id, layout_node, &self.tree, "");
+
+            self.ime.sync(
+                focused_node.role(),
+                layout_node.visible_area(),
+                scale_factor,
+            );
+
             self.platform
                 .focused_accessibility_node
                 .set_if_modified(focused_node);
@@ -290,7 +308,7 @@ impl WebApp {
         let cursor = self.tree.cursor_icon(&self.nodes_state);
         if cursor != self.cursor {
             self.cursor = cursor;
-            Self::run_script(&format!(
+            run_script(&format!(
                 "document.querySelector('#canvas').style.cursor = '{}';",
                 cursor.name()
             ));
@@ -310,11 +328,5 @@ impl WebApp {
         render_pipeline.render();
 
         self.surface.present();
-    }
-
-    fn run_script(script: &str) {
-        if let Ok(script) = CString::new(script) {
-            unsafe { emscripten_run_script(script.as_ptr()) };
-        }
     }
 }

@@ -43,6 +43,18 @@ thread_local! {
 
     /// Last cursor position, in physical pixels.
     static LAST_CURSOR: Cell<CursorPoint> = const { Cell::new(CursorPoint::new(0., 0.)) };
+
+    /// Whether the hidden IME input holds the browser focus.
+    static IME_FOCUSED: Cell<bool> = const { Cell::new(false) };
+}
+
+/// Whether typing is currently routed through the hidden IME input.
+pub fn ime_focused() -> bool {
+    IME_FOCUSED.get()
+}
+
+pub fn set_ime_focused(focused: bool) {
+    IME_FOCUSED.set(focused);
 }
 
 impl BrowserState {
@@ -88,8 +100,8 @@ impl BrowserState {
             emscripten_set_mouseup_callback_on_thread(TARGET_WINDOW, null, false, Self::on_mouse, thread);
             emscripten_set_mousemove_callback_on_thread(TARGET_CANVAS, null, false, Self::on_mouse, thread);
             emscripten_set_wheel_callback_on_thread(TARGET_CANVAS, null, false, Self::on_wheel, thread);
-            emscripten_set_keydown_callback_on_thread(TARGET_CANVAS, null, false, Self::on_key, thread);
-            emscripten_set_keyup_callback_on_thread(TARGET_CANVAS, null, false, Self::on_key, thread);
+            emscripten_set_keydown_callback_on_thread(TARGET_WINDOW, null, false, Self::on_key, thread);
+            emscripten_set_keyup_callback_on_thread(TARGET_WINDOW, null, false, Self::on_key, thread);
             emscripten_set_touchstart_callback_on_thread(TARGET_CANVAS, null, false, Self::on_touch, thread);
             emscripten_set_touchmove_callback_on_thread(TARGET_CANVAS, null, false, Self::on_touch, thread);
             emscripten_set_touchend_callback_on_thread(TARGET_CANVAS, null, false, Self::on_touch, thread);
@@ -186,15 +198,23 @@ impl BrowserState {
         modifiers.set(Modifiers::ALT, event.alt_key);
         modifiers.set(Modifiers::META, event.meta_key);
 
-        let select_all = modifiers.intersects(Modifiers::CONTROL | Modifiers::META)
+        let alt_graph = modifiers.contains(Modifiers::CONTROL | Modifiers::ALT);
+        let is_shortcut = modifiers.intersects(Modifiers::CONTROL | Modifiers::META) && !alt_graph;
+        let select_all = is_shortcut
             && matches!(&key, Key::Character(character) if character.eq_ignore_ascii_case("a"));
+        let emitted_by_ime = ime_focused()
+            && name == KeyboardEventName::KeyDown
+            && matches!(key, Key::Character(_))
+            && !is_shortcut;
 
-        Self::push(PlatformEvent::Keyboard {
-            name,
-            key,
-            code,
-            modifiers,
-        });
+        if !emitted_by_ime {
+            Self::push(PlatformEvent::Keyboard {
+                name,
+                key,
+                code,
+                modifiers,
+            });
+        }
 
         code == Code::Tab || select_all
     }
