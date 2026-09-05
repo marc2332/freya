@@ -94,19 +94,21 @@ impl Component for AppShell {
             })
             .child(
                 rect()
-                    .width(Size::percent(85.))
-                    .height(Size::percent(85.))
+                    .width(Size::percent(if compact { 100. } else { 85. }))
+                    .height(Size::percent(if compact { 100. } else { 85. }))
                     .horizontal()
                     .background(surface)
-                    .corner_radius(20.)
-                    .shadow((0., 10., 30., 0., (0, 0, 0, 40)))
                     .overflow(Overflow::Clip)
+                    .maybe(!compact, |el| {
+                        el.corner_radius(20.)
+                            .shadow((0., 10., 30., 0., (0, 0, 0, 40)))
+                    })
                     .maybe_child((!compact).then(sidebar))
                     .child(
                         rect()
                             .key("content")
                             .expanded()
-                            .padding(24.)
+                            .padding(if compact { 12. } else { 24. })
                             .maybe(compact, |el| {
                                 el.spacing(16.).child(
                                     Button::new()
@@ -128,7 +130,8 @@ impl Component for AppShell {
                         el.child(
                             rect()
                                 .position(Position::new_absolute().left(0.).top(0.))
-                                .expanded()
+                                .width(Size::percent(100.))
+                                .height(Size::percent(100.))
                                 .background((0, 0, 0, (progress * 100.) as u8))
                                 .layer(Layer::Relative(90))
                                 .on_press(move |_| close_sidebar()),
