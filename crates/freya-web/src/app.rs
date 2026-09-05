@@ -199,7 +199,6 @@ impl WebApp {
             events_executor_adapter.run(&mut self.nodes_state, processed_events);
         }
 
-        self.runner.handle_events_immediately();
         self.sync();
 
         self.finish();

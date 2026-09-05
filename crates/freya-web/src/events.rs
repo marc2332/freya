@@ -91,38 +91,25 @@ impl BrowserState {
     }
 
     /// Registers every browser callback on the calling thread.
+    #[rustfmt::skip]
     pub fn listen() {
-        macro_rules! listen {
-            ($($register:ident($target:expr, $callback:path)),* $(,)?) => {
-                unsafe {
-                    $(
-                        $register(
-                            $target,
-                            ptr::null_mut(),
-                            false,
-                            $callback,
-                            EM_CALLBACK_THREAD_CONTEXT_CALLING_THREAD,
-                        );
-                    )*
-                }
-            };
+        let null = ptr::null_mut();
+        let thread = EM_CALLBACK_THREAD_CONTEXT_CALLING_THREAD;
+        unsafe {
+            emscripten_set_mousedown_callback_on_thread(TARGET_CANVAS, null, false, Self::on_mouse, thread);
+            emscripten_set_mouseup_callback_on_thread(TARGET_WINDOW, null, false, Self::on_mouse, thread);
+            emscripten_set_mousemove_callback_on_thread(TARGET_CANVAS, null, false, Self::on_mouse, thread);
+            emscripten_set_wheel_callback_on_thread(TARGET_CANVAS, null, false, Self::on_wheel, thread);
+            emscripten_set_keydown_callback_on_thread(TARGET_WINDOW, null, false, Self::on_key, thread);
+            emscripten_set_keyup_callback_on_thread(TARGET_WINDOW, null, false, Self::on_key, thread);
+            emscripten_set_touchstart_callback_on_thread(TARGET_CANVAS, null, false, Self::on_touch, thread);
+            emscripten_set_touchmove_callback_on_thread(TARGET_CANVAS, null, false, Self::on_touch, thread);
+            emscripten_set_touchend_callback_on_thread(TARGET_CANVAS, null, false, Self::on_touch, thread);
+            emscripten_set_touchcancel_callback_on_thread(TARGET_CANVAS, null, false, Self::on_touch, thread);
+            emscripten_set_resize_callback_on_thread(TARGET_WINDOW, null, false, Self::on_resize, thread);
+            emscripten_set_focus_callback_on_thread(TARGET_WINDOW, null, false, Self::on_focus, thread);
+            emscripten_set_blur_callback_on_thread(TARGET_WINDOW, null, false, Self::on_focus, thread);
         }
-
-        listen!(
-            emscripten_set_mousedown_callback_on_thread(TARGET_CANVAS, Self::on_mouse),
-            emscripten_set_mouseup_callback_on_thread(TARGET_WINDOW, Self::on_mouse),
-            emscripten_set_mousemove_callback_on_thread(TARGET_CANVAS, Self::on_mouse),
-            emscripten_set_wheel_callback_on_thread(TARGET_CANVAS, Self::on_wheel),
-            emscripten_set_keydown_callback_on_thread(TARGET_WINDOW, Self::on_key),
-            emscripten_set_keyup_callback_on_thread(TARGET_WINDOW, Self::on_key),
-            emscripten_set_touchstart_callback_on_thread(TARGET_CANVAS, Self::on_touch),
-            emscripten_set_touchmove_callback_on_thread(TARGET_CANVAS, Self::on_touch),
-            emscripten_set_touchend_callback_on_thread(TARGET_CANVAS, Self::on_touch),
-            emscripten_set_touchcancel_callback_on_thread(TARGET_CANVAS, Self::on_touch),
-            emscripten_set_resize_callback_on_thread(TARGET_WINDOW, Self::on_resize),
-            emscripten_set_focus_callback_on_thread(TARGET_WINDOW, Self::on_focus),
-            emscripten_set_blur_callback_on_thread(TARGET_WINDOW, Self::on_focus),
-        );
     }
 
     extern "C" fn on_mouse(
@@ -158,7 +145,7 @@ impl BrowserState {
         Self::push(PlatformEvent::Mouse {
             name,
             cursor,
-            button: Some(button),
+            button: (name != MouseEventName::MouseMove).then_some(button),
         });
 
         false
@@ -172,9 +159,9 @@ impl BrowserState {
         let event = unsafe { &*event };
 
         let scale = match event.delta_mode {
-            DOM_DELTA_LINE => 20.,
+            DOM_DELTA_LINE => 53.,
             DOM_DELTA_PAGE => 400.,
-            _ => 1.,
+            _ => 2.,
         };
 
         Self::push(PlatformEvent::Wheel {
