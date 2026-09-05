@@ -101,6 +101,9 @@ impl FreyaPlugin for BorderlessPlugin {
             PluginEvent::BeforeRender { canvas, window, .. } => {
                 canvas.clear(Color::TRANSPARENT);
                 canvas.save();
+                if window.fullscreen().is_some() || window.is_maximized() {
+                    return;
+                }
                 let size = window.inner_size();
                 let radius = self.corner_radius * window.scale_factor() as f32;
                 let rounded_window = RRect::new_rect_xy(
