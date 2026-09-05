@@ -54,6 +54,6 @@ fn app() -> impl IntoElement {
             rect()
                 .expanded()
                 .center()
-                .child("Drag the edges to resize, the corners are rounded by the plugin."),
+                .child("Drag the edges to resize, the corners and shadow come from the plugin."),
         )
 }
