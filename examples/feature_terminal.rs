@@ -31,7 +31,7 @@ fn app() -> impl IntoElement {
                 }
                 _ = terminal_handle.title_changed().fuse() => {
                     if let Some(new_title) = terminal_handle.title() {
-                        Platform::get().with_window(None, move |window| {
+                        Platform::get().with_window(Platform::window_id(), move |window| {
                             window.set_title(&new_title);
                         });
                     }

@@ -355,8 +355,12 @@ impl<Q: MutationCapability> UseMutation<Q> {
     /// If you want a **subscribing** method have a look at [UseMutation::peek].
     pub fn read(&self) -> MutationReader<Q> {
         let storage = GlobalContexts::get().get_context::<MutationsStorage<Q>>();
-        let map = storage.storage.peek();
-        let mutation_data = map.get(&self.mutation.read()).cloned().unwrap();
+        let mutation_data = storage
+            .storage
+            .peek()
+            .get(&self.mutation.read())
+            .cloned()
+            .unwrap();
 
         // Subscribe if possible
         if let Some(mut reactive_context) = ReactiveContext::try_current() {
@@ -374,8 +378,12 @@ impl<Q: MutationCapability> UseMutation<Q> {
     /// If you want a **subscribing** method have a look at [UseMutation::read].
     pub fn peek(&self) -> MutationReader<Q> {
         let storage = GlobalContexts::get().get_context::<MutationsStorage<Q>>();
-        let map = storage.storage.peek();
-        let mutation_data = map.get(&self.mutation.peek()).cloned().unwrap();
+        let mutation_data = storage
+            .storage
+            .peek()
+            .get(&self.mutation.peek())
+            .cloned()
+            .unwrap();
 
         MutationReader {
             state: mutation_data.state,
@@ -388,9 +396,8 @@ impl<Q: MutationCapability> UseMutation<Q> {
     pub async fn mutate_async(&self, keys: Q::Keys) -> MutationReader<Q> {
         let storage = GlobalContexts::get().get_context::<MutationsStorage<Q>>();
 
-        let mutation = self.mutation.peek();
-        let map = storage.storage.peek();
-        let mutation_data = map.get(&mutation).cloned().unwrap();
+        let mutation = self.mutation.peek().clone();
+        let mutation_data = storage.storage.peek().get(&mutation).cloned().unwrap();
 
         // Run the mutation
         MutationsStorage::run(&mutation, &mutation_data, keys).await;
@@ -406,9 +413,8 @@ impl<Q: MutationCapability> UseMutation<Q> {
     pub fn mutate(&self, keys: Q::Keys) {
         let storage = GlobalContexts::get().get_context::<MutationsStorage<Q>>();
 
-        let mutation = self.mutation.peek();
-        let map = storage.storage.peek();
-        let mutation_data = map.get(&mutation).cloned().unwrap();
+        let mutation = self.mutation.peek().clone();
+        let mutation_data = storage.storage.peek().get(&mutation).cloned().unwrap();
 
         // Run the mutation
         spawn_forever(async move { MutationsStorage::run(&mutation, &mutation_data, keys).await });

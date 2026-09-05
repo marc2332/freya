@@ -136,7 +136,7 @@ pub fn use_maximized() -> State<bool> {
 
     use_side_effect(move || {
         let _ = Platform::get().root_size.read();
-        Platform::get().with_window(None, move |window| {
+        Platform::get().with_window(Platform::window_id(), move |window| {
             if let Some(mut maximized) = maximized.try_write() {
                 *maximized = window.fullscreen().is_some() || window.is_maximized();
             }
@@ -230,7 +230,7 @@ impl ResizeBands {
             .height(Size::px(area.height()))
             .cursor(cursor(direction))
             .on_pointer_down(move |_| {
-                Platform::get().with_window(None, move |window| {
+                Platform::get().with_window(Platform::window_id(), move |window| {
                     let _ = window.drag_resize_window(direction);
                 });
             })

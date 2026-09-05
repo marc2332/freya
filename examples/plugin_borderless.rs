@@ -23,10 +23,7 @@ fn main() {
 
 fn app() -> impl IntoElement {
     let close = move |_| {
-        let platform = Platform::get();
-        Platform::get().with_window(None, move |window| {
-            platform.close_window(window.id());
-        });
+        Platform::get().close_window(Platform::window_id());
     };
 
     rect()
