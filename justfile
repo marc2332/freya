@@ -80,6 +80,16 @@ pc-ci:
 ba:
     cargo build --all-targets --workspace -F freya/all-debug
 
+bd:
+    cargo build --package freya
+
+deps:
+    cargo tree --package freya --depth 0 --format "{p} [{f}]"
+    cargo tree --package freya
+
+deps-count:
+    @cargo tree --package freya --prefix none | sed -E 's/ \(\*\)$//; s/ \(proc-macro\)//' | sort -u | wc -l | tr -d ' '
+
 dev-app:
     cargo run --package freya-devtools-app
 
