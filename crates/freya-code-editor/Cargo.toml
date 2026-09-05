@@ -28,3 +28,4 @@ rustc-hash = { workspace = true }
 
 [dev-dependencies]
 tree-sitter-rust = "0.24"
+freya-testing = { workspace = true }

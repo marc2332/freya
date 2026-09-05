@@ -64,7 +64,7 @@ impl Component for CodeBlockEditor {
                 let language = language
                     .zip(resolver)
                     .and_then(|(language, resolve)| resolve.call(language));
-                let mut editor = CodeEditorData::new(Rope::from_str(&code), language);
+                let mut editor = CodeEditorData::create(Rope::from_str(&code), language);
                 editor.parse();
                 editor.measure(font_size, &font_family);
                 editor

@@ -28,6 +28,7 @@ pub struct EditorLineUI {
     pub(crate) gutter: bool,
     pub(crate) show_whitespace: bool,
     pub(crate) font_family: Cow<'static, str>,
+    pub(crate) cursor_mode: CursorMode,
     pub(crate) theme: EditorTheme,
     pub(crate) a11y_id: AccessibilityId,
 }
@@ -46,6 +47,7 @@ impl Component for EditorLineUI {
             gutter,
             show_whitespace,
             font_family,
+            cursor_mode,
             theme,
             a11y_id,
         } = self.clone();
@@ -67,6 +69,7 @@ impl Component for EditorLineUI {
                 let processed = editor.write_if(|mut editor_editor| {
                     editor_editor.process(
                         font_size,
+                        line_height,
                         &font_family,
                         EditableEvent::Down {
                             location: e.element_location(),
@@ -87,6 +90,7 @@ impl Component for EditorLineUI {
                 editor.write_if(|mut editor_editor| {
                     editor_editor.process(
                         font_size,
+                        line_height,
                         &font_family,
                         EditableEvent::Move {
                             location: e.element_location(),
@@ -146,7 +150,7 @@ impl Component for EditorLineUI {
                     .cursor_color(theme.cursor)
                     .cursor_style(CursorStyle::Block)
                     .cursor_index(cursor_index)
-                    .cursor_mode(CursorMode::Expanded)
+                    .cursor_mode(cursor_mode)
                     .vertical_align(VerticalAlign::Center)
                     .highlights(highlights.map(|h| vec![h]))
                     .highlight_color(theme.highlight)

@@ -8,12 +8,14 @@ use std::{
     time::Duration,
 };
 
+use freya_components::scrollviews::ScrollController;
 use freya_core::{
     elements::paragraph::ParagraphHolderInner,
     prelude::*,
 };
 use freya_edit::*;
 use ropey::Rope;
+use torin::geometry::Size2D;
 use tree_sitter::InputEdit;
 
 use crate::{
@@ -30,14 +32,16 @@ pub struct CodeEditorData {
     pub(crate) last_saved_history_change: usize,
     pub(crate) metrics: EditorMetrics,
     pub(crate) dragging: TextDragging,
-    pub(crate) scrolls: (i32, i32),
     pub(crate) pending_edit: Option<InputEdit>,
     pub language: Option<EditorLanguage>,
+    pub scroll_controller: ScrollController,
+    viewport: Size2D,
     theme: EditorSyntaxTheme,
 }
 
 impl CodeEditorData {
-    pub fn new(rope: Rope, language: impl Into<Option<EditorLanguage>>) -> Self {
+    /// Creates the editor data for the given [`Rope`] and with the given language.
+    pub fn create(rope: Rope, language: impl Into<Option<EditorLanguage>>) -> Self {
         let mut data = Self {
             rope,
             selection: TextSelection::new_cursor(0),
@@ -45,13 +49,48 @@ impl CodeEditorData {
             last_saved_history_change: 0,
             metrics: EditorMetrics::new(),
             dragging: TextDragging::default(),
-            scrolls: (0, 0),
             pending_edit: None,
             language: language.into(),
+            scroll_controller: ScrollController::new(0, 0, Vec::new()),
+            viewport: Size2D::default(),
             theme: EditorSyntaxTheme::default(),
         };
         data.configure_highlighter();
         data
+    }
+
+    /// Size of the visible area, kept up to date by [`CodeEditor`](crate::editor_ui::CodeEditor).
+    pub fn viewport(&self) -> Size2D {
+        self.viewport
+    }
+
+    /// Mutable access to the size of the visible area.
+    pub fn viewport_mut(&mut self) -> &mut Size2D {
+        &mut self.viewport
+    }
+
+    /// Scrolls the viewport vertically just enough to make the cursor line visible.
+    ///
+    /// Returns whether the scroll position changed.
+    pub fn scroll_to_cursor(&mut self, line_height: f32) -> bool {
+        if self.viewport.height <= 0. || line_height <= 0. {
+            return false;
+        }
+
+        let (_, scroll_y) = self.scroll_controller.into();
+        let scrolled = -scroll_y as f32;
+        let cursor_top = self.cursor_row() as f32 * line_height;
+        let cursor_bottom = cursor_top + line_height;
+
+        let scrolled = if cursor_top < scrolled {
+            cursor_top
+        } else if cursor_bottom > scrolled + self.viewport.height {
+            cursor_bottom - self.viewport.height
+        } else {
+            return false;
+        };
+
+        self.scroll_controller.scroll_to_y(-scrolled as i32)
     }
 
     /// Reconfigures the highlighter with the current language and theme.
@@ -93,6 +132,7 @@ impl CodeEditorData {
     pub fn process(
         &mut self,
         font_size: f32,
+        line_height: f32,
         font_family: &str,
         edit_event: EditableEvent,
     ) -> bool {
@@ -218,6 +258,7 @@ impl CodeEditorData {
                             self.dragging = TextDragging::default();
                         }
                         if !event.is_empty() {
+                            self.scroll_to_cursor(line_height);
                             processed = true;
                         }
                     }
