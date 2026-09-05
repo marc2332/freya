@@ -301,8 +301,11 @@ impl WebApp {
         {
             let focused_node = AccessibilityTree::create_node(node_id, layout_node, &self.tree, "");
 
-            self.ime
-                .sync(focused_node.role(), layout_node.visible_area(), scale_factor);
+            self.ime.sync(
+                focused_node.role(),
+                layout_node.visible_area(),
+                scale_factor,
+            );
 
             self.platform
                 .focused_accessibility_node
