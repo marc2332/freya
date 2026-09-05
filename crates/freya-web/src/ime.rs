@@ -144,20 +144,19 @@ impl WebIme {
         let text = run_script_string("window.__freyaIme.take();")?;
 
         if let Some(text) = text.strip_prefix("commit:") {
-            Some(PlatformEvent::Keyboard {
+            return Some(PlatformEvent::Keyboard {
                 name: KeyboardEventName::KeyDown,
                 key: Key::Character(text.to_string()),
                 code: Code::Unidentified,
                 modifiers: Modifiers::empty(),
-            })
-        } else if let Some(text) = text.strip_prefix("preedit:") {
-            Some(PlatformEvent::ImePreedit {
+            });
+        }
+
+        text.strip_prefix("preedit:")
+            .map(|text| PlatformEvent::ImePreedit {
                 name: ImeEventName::Preedit,
                 text: text.to_string(),
                 cursor: None,
             })
-        } else {
-            None
-        }
     }
 }
