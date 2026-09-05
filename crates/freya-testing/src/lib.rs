@@ -591,7 +591,7 @@ impl TestingRunner {
             name: WheelEventName::Wheel,
             scroll,
             cursor,
-            source: WheelSource::Device,
+            source: WheelSource::Pixel,
         });
         self.sync_and_update();
         // Refresh hover states after the scroll

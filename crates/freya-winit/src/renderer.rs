@@ -1037,24 +1037,24 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     const TOUCHPAD_SPEED_MODIFIER: f64 = 2.0;
 
                     if TouchPhase::Moved == phase {
-                        let scroll_data = {
-                            match delta {
-                                MouseScrollDelta::LineDelta(x, y) => (
-                                    (x as f64 * WHEEL_SPEED_MODIFIER),
-                                    (y as f64 * WHEEL_SPEED_MODIFIER),
-                                ),
-                                MouseScrollDelta::PixelDelta(pos) => (
-                                    (pos.x * TOUCHPAD_SPEED_MODIFIER),
-                                    (pos.y * TOUCHPAD_SPEED_MODIFIER),
-                                ),
-                            }
+                        let (delta_x, delta_y, source) = match delta {
+                            MouseScrollDelta::LineDelta(x, y) => (
+                                x as f64 * WHEEL_SPEED_MODIFIER,
+                                y as f64 * WHEEL_SPEED_MODIFIER,
+                                WheelSource::Line,
+                            ),
+                            MouseScrollDelta::PixelDelta(position) => (
+                                position.x * TOUCHPAD_SPEED_MODIFIER,
+                                position.y * TOUCHPAD_SPEED_MODIFIER,
+                                WheelSource::Pixel,
+                            ),
                         };
 
                         app.process_platform_events(vec![PlatformEvent::Wheel {
                             name: WheelEventName::Wheel,
-                            scroll: scroll_data.into(),
+                            scroll: (delta_x, delta_y).into(),
                             cursor: app.position,
-                            source: WheelSource::Device,
+                            source,
                         }]);
                     }
                 }

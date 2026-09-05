@@ -158,17 +158,26 @@ impl BrowserState {
     ) -> bool {
         let event = unsafe { &*event };
 
-        let scale = match event.delta_mode {
-            DOM_DELTA_LINE => 53.,
-            DOM_DELTA_PAGE => 400.,
-            _ => 2.,
+        let (scale, source) = match event.delta_mode {
+            DOM_DELTA_LINE => (53., WheelSource::Line),
+            DOM_DELTA_PAGE => (400., WheelSource::Line),
+            _ => {
+                // Not every browser reports wheels in line mode, a notch lands as one large pixel delta.
+                let dominant_delta = event.delta_x.abs().max(event.delta_y.abs());
+                let source = if dominant_delta >= 40. {
+                    WheelSource::Line
+                } else {
+                    WheelSource::Pixel
+                };
+                (2., source)
+            }
         };
 
         Self::push(PlatformEvent::Wheel {
             name: WheelEventName::Wheel,
             scroll: CursorPoint::new(-event.delta_x * scale, -event.delta_y * scale),
             cursor: event.mouse.position(),
-            source: WheelSource::Device,
+            source,
         });
 
         true
