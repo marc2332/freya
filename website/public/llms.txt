@@ -1,6 +1,6 @@
 # Freya
 
-> Freya is a cross-platform and non-web GUI library for Rust powered by Skia.
+> Freya is a cross-platform and native GUI library for Rust powered by Skia.
 
 Important notes:
 - Freya 0.4+ uses its own reactive core, no longer based on Dioxus

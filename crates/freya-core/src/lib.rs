@@ -13,6 +13,7 @@ pub mod extended_hashmap;
 pub mod fifo_cache;
 pub mod helpers;
 pub mod hooks;
+pub mod io;
 pub mod layers;
 pub mod lifecycle;
 pub mod lru_cache;
@@ -111,6 +112,10 @@ pub mod prelude {
         hooks::{
             previous_and_current::*,
             use_id::*,
+        },
+        io::{
+            thread::thread,
+            timer::timer,
         },
         layers::Layer,
         lifecycle::{

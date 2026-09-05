@@ -603,6 +603,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 app.accessibility_tasks_for_next_render |= task;
                                 app.window.request_redraw();
                             }
+                            UserEvent::OpenUrl(url) => {
+                                let _ = open::that(url);
+                            }
                             UserEvent::SetCustomScaleFactor(custom_scale_factor) => {
                                 app.set_custom_scale_factor(custom_scale_factor);
                             }

@@ -240,6 +240,7 @@ impl TestingRunner {
                             pending_fonts.borrow_mut().push((font_name, font_data));
                         }
                         UserEvent::RequestRedraw
+                        | UserEvent::OpenUrl(_)
                         | UserEvent::SetCustomScaleFactor(_)
                         | UserEvent::Erased(_) => {
                             // Nothing
