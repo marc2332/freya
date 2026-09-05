@@ -46,12 +46,10 @@ use freya_engine::prelude::{
     raster_n32_premul,
 };
 use gif::DisposalMethod;
-#[cfg(feature = "remote-asset")]
-use reqwest::Url;
 use torin::prelude::Size2D;
-
 #[cfg(feature = "remote-asset")]
-use crate::http::Http;
+use url::Url;
+
 use crate::{
     cache::*,
     loader::CircularLoader,
@@ -161,19 +159,12 @@ impl Hash for GifSource {
 
 impl GifSource {
     pub async fn bytes(&self) -> anyhow::Result<Bytes> {
-        let source = self.clone();
-        #[cfg(feature = "remote-asset")]
-        let client = Http::get();
-        thread(move || {
-            let bytes = match source {
-                #[cfg(feature = "remote-asset")]
-                Self::Uri(uri) => client.get(uri).send()?.error_for_status()?.bytes()?,
-                Self::Path(path) => fs::read(path).map(Bytes::from)?,
-                Self::Bytes(_, bytes) => bytes,
-            };
-            Ok(bytes)
-        })
-        .await
+        match self.clone() {
+            #[cfg(feature = "remote-asset")]
+            Self::Uri(uri) => crate::http::fetch(uri).await,
+            Self::Path(path) => thread(move || anyhow::Ok(Bytes::from(fs::read(path)?))).await,
+            Self::Bytes(_, bytes) => Ok(bytes),
+        }
     }
 }
 

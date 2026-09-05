@@ -2,14 +2,17 @@ use std::borrow::Cow;
 
 use freya_core::{
     integration::AppComponent,
-    prelude::Color,
+    prelude::{
+        Bytes,
+        Color,
+    },
 };
 
 /// Configuration for a Freya app in the browser.
 pub struct WebConfig {
     pub(crate) app: AppComponent,
     pub(crate) background: Color,
-    pub(crate) fonts: Vec<(String, Vec<u8>)>,
+    pub(crate) fonts: Vec<(Cow<'static, str>, Bytes)>,
     pub(crate) default_fonts: Vec<Cow<'static, str>>,
 }
 
@@ -29,7 +32,7 @@ impl WebConfig {
     }
 
     /// Register a font, the first registered font is used as the default one.
-    pub fn with_font(mut self, name: impl Into<String>, data: impl Into<Vec<u8>>) -> Self {
+    pub fn with_font(mut self, name: impl Into<Cow<'static, str>>, data: impl Into<Bytes>) -> Self {
         self.fonts.push((name.into(), data.into()));
         self
     }

@@ -42,7 +42,7 @@ const SETUP_SCRIPT: &str = r#"(function() {
     var composing = false;
 
     function commit() {
-        if (input.value) queue.push('C' + input.value);
+        if (input.value) queue.push('commit:' + input.value);
         input.value = '';
     }
 
@@ -50,11 +50,11 @@ const SETUP_SCRIPT: &str = r#"(function() {
         composing = true;
     });
     input.addEventListener('compositionupdate', function(e) {
-        queue.push('P' + (e.data || ''));
+        queue.push('preedit:' + (e.data || ''));
     });
     input.addEventListener('compositionend', function() {
         composing = false;
-        queue.push('P');
+        queue.push('preedit:');
         commit();
     });
     input.addEventListener('input', function() {
@@ -142,21 +142,21 @@ impl WebIme {
     /// Pops the oldest queued text event, if any. Call in a loop to drain the queue.
     pub fn poll(&self) -> Option<PlatformEvent> {
         let text = run_script_string("window.__freyaIme.take();")?;
-        let (tag, body) = text.split_at_checked(1)?;
 
-        match tag {
-            "C" => Some(PlatformEvent::Keyboard {
+        if let Some(text) = text.strip_prefix("commit:") {
+            return Some(PlatformEvent::Keyboard {
                 name: KeyboardEventName::KeyDown,
-                key: Key::Character(body.to_string()),
+                key: Key::Character(text.to_string()),
                 code: Code::Unidentified,
                 modifiers: Modifiers::empty(),
-            }),
-            "P" => Some(PlatformEvent::ImePreedit {
-                name: ImeEventName::Preedit,
-                text: body.to_string(),
-                cursor: None,
-            }),
-            _ => None,
+            });
         }
+
+        text.strip_prefix("preedit:")
+            .map(|text| PlatformEvent::ImePreedit {
+                name: ImeEventName::Preedit,
+                text: text.to_string(),
+                cursor: None,
+            })
     }
 }

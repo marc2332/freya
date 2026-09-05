@@ -156,6 +156,7 @@ pub mod prelude {
             Area,
             CursorPoint,
             Size2D,
+            Size2DFixed,
         },
         position::Position,
         size::Size,
