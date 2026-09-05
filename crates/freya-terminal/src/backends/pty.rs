@@ -45,7 +45,8 @@ impl TerminalBackend for PtyBackend {
             .master
             .take_writer()
             .map_err(|e| TerminalError::StartError(e.to_string()))?;
-        pair.slave
+        let mut child = pair
+            .slave
             .spawn_command(self.command.clone())
             .map_err(|e| TerminalError::StartError(e.to_string()))?;
         let mut reader = pair
@@ -67,6 +68,7 @@ impl TerminalBackend for PtyBackend {
                     }
                 }
             }
+            let _ = child.wait();
         });
 
         Ok(())
