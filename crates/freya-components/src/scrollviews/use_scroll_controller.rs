@@ -1,5 +1,8 @@
 use freya_core::prelude::*;
-use torin::prelude::Direction;
+use torin::{
+    geometry::Point2D,
+    prelude::Direction,
+};
 
 /// Where along an axis a scroll should land, the beginning or the end.
 #[derive(Default, PartialEq, Eq)]
@@ -232,6 +235,11 @@ impl ScrollController {
                 }
             }
         }
+    }
+
+    pub(crate) fn position(self) -> Point2D {
+        let (x, y): (i32, i32) = self.into();
+        Point2D::new(x as f32, y as f32)
     }
 
     /// Scrolls the horizontal axis to `to` pixels. Returns whether the position actually changed.

@@ -319,6 +319,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     active_event_loop,
                     app_window.window_attributes.clone(),
                     self.gpu_resource_cache_limit,
+                    app_window.renderer,
                 );
 
                 let new_id = new_window.id();
@@ -601,6 +602,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 app.tree.accessibility_diff.request_focus(strategy);
                                 app.accessibility_tasks_for_next_render |= task;
                                 app.window.request_redraw();
+                            }
+                            UserEvent::OpenUrl(url) => {
+                                let _ = open::that(url);
                             }
                             UserEvent::SetCustomScaleFactor(custom_scale_factor) => {
                                 app.set_custom_scale_factor(custom_scale_factor);
@@ -1038,24 +1042,24 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     const TOUCHPAD_SPEED_MODIFIER: f64 = 2.0;
 
                     if TouchPhase::Moved == phase {
-                        let scroll_data = {
-                            match delta {
-                                MouseScrollDelta::LineDelta(x, y) => (
-                                    (x as f64 * WHEEL_SPEED_MODIFIER),
-                                    (y as f64 * WHEEL_SPEED_MODIFIER),
-                                ),
-                                MouseScrollDelta::PixelDelta(pos) => (
-                                    (pos.x * TOUCHPAD_SPEED_MODIFIER),
-                                    (pos.y * TOUCHPAD_SPEED_MODIFIER),
-                                ),
-                            }
+                        let (delta_x, delta_y, source) = match delta {
+                            MouseScrollDelta::LineDelta(x, y) => (
+                                x as f64 * WHEEL_SPEED_MODIFIER,
+                                y as f64 * WHEEL_SPEED_MODIFIER,
+                                WheelSource::Line,
+                            ),
+                            MouseScrollDelta::PixelDelta(position) => (
+                                position.x * TOUCHPAD_SPEED_MODIFIER,
+                                position.y * TOUCHPAD_SPEED_MODIFIER,
+                                WheelSource::Pixel,
+                            ),
                         };
 
                         app.process_platform_events(vec![PlatformEvent::Wheel {
                             name: WheelEventName::Wheel,
-                            scroll: scroll_data.into(),
+                            scroll: (delta_x, delta_y).into(),
                             cursor: app.position,
-                            source: WheelSource::Device,
+                            source,
                         }]);
                     }
                 }

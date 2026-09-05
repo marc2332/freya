@@ -1,0 +1,18 @@
+[build]
+target = "wasm32-unknown-emscripten"
+
+[profile.dev.package.freya-skia-bindings]
+opt-level = 3
+
+[env]
+EMCC_CFLAGS = "-fwasm-exceptions"
+
+[target.wasm32-unknown-emscripten]
+runner = ["python3", "serve.py"]
+rustflags = [
+  "-Clink-arg=-sMAX_WEBGL_VERSION=2",
+  "-Clink-arg=-sALLOW_MEMORY_GROWTH=1",
+  "-Clink-arg=-sSTACK_SIZE=16MB",
+  "-Clink-arg=-sINITIAL_MEMORY=256MB",
+  "-Clink-arg=-sEXPORTED_FUNCTIONS=['_main','_free']",
+]

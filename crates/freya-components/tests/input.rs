@@ -302,7 +302,7 @@ pub fn input_shift_wheel_scroll_test() {
         name: WheelEventName::Wheel,
         scroll: (0.0, -50.0).into(),
         cursor: (75.0, 15.0).into(),
-        source: WheelSource::Device,
+        source: WheelSource::Pixel,
     });
     test.sync_and_update();
 

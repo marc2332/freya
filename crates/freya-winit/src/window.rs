@@ -69,6 +69,7 @@ use crate::{
     accessibility::AccessibilityTask,
     config::{
         OnCloseHook,
+        RendererPreference,
         WindowConfig,
     },
     drivers::GraphicsDriver,
@@ -86,6 +87,9 @@ use crate::{
 };
 
 pub type RenderCallback = Box<dyn FnOnce(&mut SkiaSurface)>;
+
+#[derive(Clone, Copy)]
+pub struct CurrentWindowId(pub WindowId);
 
 pub struct AppWindow {
     pub(crate) runner: Runner,
@@ -128,6 +132,8 @@ pub struct AppWindow {
     pub(crate) on_close: Option<OnCloseHook>,
 
     pub(crate) window_attributes: WindowAttributes,
+
+    pub(crate) renderer: RendererPreference,
 
     #[cfg(feature = "hotreload")]
     pub(crate) hot_reload_pending: Arc<std::sync::atomic::AtomicBool>,
@@ -226,6 +232,7 @@ impl AppWindow {
             active_event_loop,
             window_attributes.clone(),
             gpu_resource_cache_limit,
+            window_config.renderer,
         );
 
         if let Some(window_handle_hook) = window_config.window_handle_hook.take() {
@@ -257,6 +264,9 @@ impl AppWindow {
         runner.provide_root_context(|| animation_clock.clone());
 
         runner.provide_root_context(AssetCacher::create);
+
+        runner.provide_root_context(|| CurrentWindowId(window.id()));
+
         let custom_scale_factor = clamp_custom_scale_factor(window_config.custom_scale_factor);
         let scale_factor = window.scale_factor() * custom_scale_factor;
 
@@ -264,6 +274,7 @@ impl AppWindow {
 
         let window_size = window.inner_size();
         let accent_color_preference = accent_color_preference();
+        runner.provide_root_context(TargetPlatform::detect);
         let platform = runner.provide_root_context({
             let event_loop_proxy = event_loop_proxy.clone();
             let window_id = window.id();
@@ -446,6 +457,8 @@ impl AppWindow {
             on_close,
 
             window_attributes,
+
+            renderer: window_config.renderer,
 
             #[cfg(feature = "hotreload")]
             hot_reload_pending,

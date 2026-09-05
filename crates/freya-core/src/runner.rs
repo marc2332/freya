@@ -637,6 +637,9 @@ impl Runner {
 
     /// Like [Self::handle_events_immediately], notifying the observer around every tasks polling
     /// batch.
+    ///
+    /// Tasks are polled even when there are dirty scopes, otherwise a constant flow of events
+    /// would starve them.
     pub fn handle_events_immediately_with(&mut self, observer: &mut dyn FnMut(TasksPollStage)) {
         while let Ok(msg) = self.receiver.try_recv() {
             match msg {
