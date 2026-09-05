@@ -27,8 +27,8 @@ pub enum Route {
         Components,
         #[route("/animation", AnimationShowcase)]
         Animation,
-        #[route("/graphics", GraphicsShowcase)]
-        Graphics,
+        #[route("/effects", EffectsShowcase)]
+        Effects,
         #[route("/material", MaterialShowcase)]
         Material,
         #[route("/markdown", MarkdownShowcase)]
@@ -156,17 +156,18 @@ fn sidebar() -> Rect {
         .padding(12.)
         .spacing(4.)
         .child(
-            label()
-                .text("Freya on the web")
-                .padding((8., 8., 16., 8.))
-                .font_size(20.)
-                .font_weight(FontWeight::BOLD),
+            rect().padding((8., 0.)).child(
+                label()
+                    .text("Freya")
+                    .font_size(20.)
+                    .font_weight(FontWeight::BOLD),
+            ),
         )
         .children(
             [
                 (Route::Components, "Components"),
                 (Route::Animation, "Animation"),
-                (Route::Graphics, "Graphics"),
+                (Route::Effects, "Effects"),
                 (Route::Material, "Material Design"),
                 (Route::Markdown, "Markdown"),
                 (Route::Scroll, "Virtual Scroll"),
@@ -180,5 +181,9 @@ fn sidebar() -> Rect {
                 )
                 .exact(true)
             }),
+        )
+        .child(
+            Link::new("https://github.com/marc2332/freya")
+                .child(SideBarItem::new().child("And more!")),
         )
 }

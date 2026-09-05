@@ -6,9 +6,9 @@ use freya::{
 use crate::showcases::heading;
 
 #[derive(PartialEq)]
-pub struct GraphicsShowcase;
+pub struct EffectsShowcase;
 
-impl Component for GraphicsShowcase {
+impl Component for EffectsShowcase {
     fn render(&self) -> impl IntoElement {
         let spin = use_animation(|conf| {
             conf.on_creation(OnCreation::Run);
@@ -18,7 +18,7 @@ impl Component for GraphicsShowcase {
 
         rect()
             .spacing(20.)
-            .child(heading("Graphics", "Shapes, colors and rotation"))
+            .child(heading("Effects", "Shapes, colors and rotation"))
             .child(
                 rect()
                     .horizontal()

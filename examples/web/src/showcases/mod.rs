@@ -1,6 +1,6 @@
 mod animation;
 mod components;
-mod graphics;
+mod effects;
 mod i18n;
 mod kanban;
 mod markdown;
@@ -12,7 +12,7 @@ use freya::prelude::*;
 pub use crate::showcases::{
     animation::AnimationShowcase,
     components::ComponentsShowcase,
-    graphics::GraphicsShowcase,
+    effects::EffectsShowcase,
     i18n::I18nShowcase,
     kanban::KanbanShowcase,
     markdown::MarkdownShowcase,

@@ -64,6 +64,10 @@ impl Component for ComponentsShowcase {
                         .child(format!("{} clicks", clicks())),
                 )
                 .child(
+                    Link::new("https://github.com/marc2332/freya")
+                        .child("github.com/marc2332/freya"),
+                )
+                .child(
                     rect()
                         .horizontal()
                         .spacing(14.)
