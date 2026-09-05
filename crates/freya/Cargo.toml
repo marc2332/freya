@@ -42,6 +42,7 @@ all-crossplatform = [
   "titlebar",
   "borderless",
   "terminal",
+  "terminal-pty",
   "query",
   "code-editor",
   "zoom-shortcuts",
@@ -111,6 +112,7 @@ webview = ["dep:freya-webview"]
 titlebar = ["freya-components/titlebar"]
 borderless = ["winit", "dep:freya-borderless-plugin"]
 terminal = ["dep:freya-terminal"]
+terminal-pty = ["terminal", "freya-terminal/pty"]
 code-editor = ["dep:freya-code-editor"]
 camera = ["dep:freya-camera"]
 web = ["dep:freya-web"]
