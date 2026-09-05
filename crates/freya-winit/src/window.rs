@@ -269,6 +269,7 @@ impl AppWindow {
 
         let window_size = window.inner_size();
         let accent_color_preference = accent_color_preference();
+        runner.provide_root_context(TargetPlatform::detect);
         let platform = runner.provide_root_context({
             let event_loop_proxy = event_loop_proxy.clone();
             let window_id = window.id();

@@ -213,6 +213,7 @@ impl TestingRunner {
 
         let pending_fonts = Rc::new(RefCell::new(Vec::new()));
 
+        runner.provide_root_context(TargetPlatform::detect);
         let platform = runner.provide_root_context({
             let requested_focus_strategy = requested_focus_strategy.clone();
             let pending_fonts = pending_fonts.clone();
@@ -240,6 +241,7 @@ impl TestingRunner {
                             pending_fonts.borrow_mut().push((font_name, font_data));
                         }
                         UserEvent::RequestRedraw
+                        | UserEvent::OpenUrl(_)
                         | UserEvent::SetCustomScaleFactor(_)
                         | UserEvent::Erased(_) => {
                             // Nothing
@@ -489,7 +491,8 @@ impl TestingRunner {
             name: MouseEventName::MouseMove,
             cursor: cursor.into(),
             button: Some(MouseButton::Left),
-        })
+        });
+        self.sync_and_update();
     }
 
     pub fn write_text(&mut self, text: impl ToString) {
@@ -589,7 +592,7 @@ impl TestingRunner {
             name: WheelEventName::Wheel,
             scroll,
             cursor,
-            source: WheelSource::Device,
+            source: WheelSource::Pixel,
         });
         self.sync_and_update();
         // Refresh hover states after the scroll
