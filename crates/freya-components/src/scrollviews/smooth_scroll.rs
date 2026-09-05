@@ -137,15 +137,20 @@ impl SmoothScroll {
     }
 
     fn start(&mut self, current: Point2D, velocity: Option<Vector2D>, smooth_time: f32) {
-        self.damp.write().smooth_time = smooth_time;
-        if let Some(velocity) = velocity {
-            self.damp.write().velocity = velocity;
+        let is_animating = self.task.read().is_some();
+        {
+            let mut damp = self.damp.write();
+            damp.smooth_time = smooth_time;
+            if let Some(velocity) = velocity {
+                damp.velocity = velocity;
+            }
+            if !is_animating {
+                damp.position = current;
+            }
         }
-
-        if self.task.read().is_some() {
+        if is_animating {
             return;
         }
-        self.damp.write().position = current;
 
         let ticker = RenderingTicker::get();
         let platform = Platform::get();

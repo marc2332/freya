@@ -1,5 +1,3 @@
-#![cfg(target_os = "emscripten")]
-
 use std::cell::RefCell;
 
 mod app;

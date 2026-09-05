@@ -1,5 +1,4 @@
 use std::{
-    borrow::Cow,
     cell::RefCell,
     rc::Rc,
 };
@@ -12,7 +11,6 @@ use freya_components::{
 use freya_core::{
     integration::*,
     prelude::{
-        Bytes,
         Color,
         CursorIcon,
     },
@@ -27,29 +25,15 @@ use torin::prelude::Size2D;
 use crate::{
     clipboard::WebClipboard,
     config::WebConfig,
-    emscripten::{
-        js_string_literal,
-        run_script,
-    },
+    emscripten::run_script,
     events::{
         BrowserState,
         ime_focused,
-        listen,
-        sync_canvas_size,
     },
     fonts::Fonts,
     ime::WebIme,
     surface::WebSurface,
 };
-
-/// Requests made by the app that the browser has to fulfill.
-#[derive(Default)]
-struct Requests {
-    focus_strategy: Option<AccessibilityFocusStrategy>,
-    url: Option<String>,
-    fonts: Vec<(Cow<'static, str>, Bytes)>,
-    redraw: bool,
-}
 
 pub struct WebApp {
     runner: Runner,
@@ -62,7 +46,7 @@ pub struct WebApp {
     events_receiver: futures_channel::mpsc::UnboundedReceiver<EventsChunk>,
     events_sender: futures_channel::mpsc::UnboundedSender<EventsChunk>,
 
-    requests: Rc<RefCell<Requests>>,
+    user_events: Rc<RefCell<Vec<UserEvent>>>,
 
     fonts: Fonts,
 
@@ -73,23 +57,15 @@ pub struct WebApp {
     cursor: CursorIcon,
     needs_render: bool,
     ime: WebIme,
-
-    /// Scratch buffer for the events measured this frame.
-    pending_events: Vec<PlatformEvent>,
-
-    /// Cached copies of the matching `Platform` states.
-    size: Size2D,
-    scale_factor: f64,
 }
 
 impl WebApp {
     pub fn new(config: WebConfig) -> Option<Self> {
-        let (width, height, pixel_ratio) = sync_canvas_size();
-        let size = Size2D::new(width as f32, height as f32);
+        let (size, pixel_ratio) = BrowserState::sync_canvas_size();
 
-        let surface = WebSurface::new(width, height)?;
+        let surface = WebSurface::new(size.to_i32())?;
 
-        let mut fonts = Fonts::new(&config.fonts, config.default_fonts);
+        let mut fonts = Fonts::new(config.fonts, config.default_fonts);
 
         let (events_sender, events_receiver) = futures_channel::mpsc::unbounded();
 
@@ -105,10 +81,10 @@ impl WebApp {
         runner.provide_root_context(AssetCacher::create);
         runner.provide_root_context(TargetPlatform::detect);
 
-        let requests = Rc::new(RefCell::new(Requests::default()));
+        let user_events = Rc::new(RefCell::new(Vec::new()));
 
         let platform = runner.provide_root_context({
-            let requests = requests.clone();
+            let user_events = user_events.clone();
             move || Platform {
                 focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
                 focused_accessibility_node: State::create(accesskit::Node::new(
@@ -121,24 +97,7 @@ impl WebApp {
                 preferred_theme: State::create(PreferredTheme::Light),
                 is_app_focused: State::create(true),
                 accent_color: State::create(AccentColor::default()),
-                sender: Rc::new(move |user_event| match user_event {
-                    UserEvent::FocusAccessibilityNode(strategy) => {
-                        requests.borrow_mut().focus_strategy = Some(strategy);
-                    }
-                    UserEvent::OpenUrl(url) => {
-                        requests.borrow_mut().url = Some(url);
-                    }
-                    UserEvent::RequestRedraw => {
-                        requests.borrow_mut().redraw = true;
-                    }
-                    UserEvent::LoadFont {
-                        font_name,
-                        font_data,
-                    } => {
-                        requests.borrow_mut().fonts.push((font_name, font_data));
-                    }
-                    UserEvent::SetCustomScaleFactor(_) | UserEvent::Erased(_) => {}
-                }),
+                sender: Rc::new(move |user_event| user_events.borrow_mut().push(user_event)),
             }
         });
 
@@ -166,7 +125,7 @@ impl WebApp {
             &fonts.default_families,
         );
 
-        listen();
+        BrowserState::listen();
 
         Some(Self {
             runner,
@@ -176,7 +135,7 @@ impl WebApp {
             accessibility: AccessibilityTree::default(),
             events_receiver,
             events_sender,
-            requests,
+            user_events,
             fonts,
             platform,
             ticker_sender,
@@ -184,10 +143,15 @@ impl WebApp {
             cursor: CursorIcon::Default,
             needs_render: true,
             ime: WebIme::new(),
-            pending_events: Vec::new(),
-            size,
-            scale_factor: pixel_ratio,
         })
+    }
+
+    fn size(&self) -> Size2D {
+        *self.platform.root_size.peek()
+    }
+
+    fn scale_factor(&self) -> f64 {
+        *self.platform.scale_factor.peek()
     }
 
     /// Advances the app by one browser frame.
@@ -200,14 +164,12 @@ impl WebApp {
             }
         }
 
-        if let Some((width, height, pixel_ratio)) = browser.resized {
-            self.surface.resize(width, height);
-            self.size = Size2D::new(width as f32, height as f32);
-            self.platform.root_size.set_if_modified(self.size);
+        if let Some((size, pixel_ratio)) = browser.resized {
+            self.surface.resize(size.to_i32());
+            self.platform.root_size.set_if_modified(size);
             self.needs_render = true;
 
-            if (pixel_ratio - self.scale_factor).abs() > f64::EPSILON {
-                self.scale_factor = pixel_ratio;
+            if (pixel_ratio - self.scale_factor()).abs() > f64::EPSILON {
                 self.platform.scale_factor.set_if_modified(pixel_ratio);
                 self.tree.layout.reset();
                 self.tree.text_cache.reset();
@@ -221,14 +183,14 @@ impl WebApp {
             self.platform.is_app_focused.set_if_modified(focused);
         }
 
-        for event in browser.events.drain(..) {
-            self.pending_events.push(event);
+        let scale_factor = self.scale_factor();
+        for event in browser.events {
             let mut events_measurer_adapter = EventsMeasurerAdapter {
                 tree: &mut self.tree,
-                scale_factor: self.scale_factor,
+                scale_factor,
             };
             let processed_events = events_measurer_adapter.run(
-                &mut self.pending_events,
+                &mut vec![event],
                 &mut self.nodes_state,
                 self.accessibility.focused_node_id(),
             );
@@ -238,7 +200,6 @@ impl WebApp {
             events_executor_adapter.run(&mut self.nodes_state, processed_events);
         }
 
-        self.runner.handle_events_immediately();
         self.sync();
 
         self.finish();
@@ -253,10 +214,6 @@ impl WebApp {
 
     /// Runs the pending events and applies the resulting mutations to the tree.
     fn sync(&mut self) {
-        if let Some(strategy) = self.requests.borrow_mut().focus_strategy.take() {
-            self.tree.accessibility_diff.request_focus(strategy);
-        }
-
         while let Ok(events_chunk) = self.events_receiver.try_recv() {
             match events_chunk {
                 EventsChunk::Processed(processed_events) => {
@@ -279,8 +236,8 @@ impl WebApp {
         }
 
         let mutations = self.runner.sync_and_update();
+        let scale_factor = self.scale_factor() as f32;
         let tree = &mut self.tree;
-        let scale_factor = self.scale_factor as f32;
         let result = self
             .runner
             .run_in(|| tree.apply_mutations(mutations, scale_factor));
@@ -291,17 +248,39 @@ impl WebApp {
         self.needs_render |= result.needs_render;
     }
 
-    /// Measures the layout and fulfills the requests made by the app.
+    /// Fulfills the requests made by the app and measures the layout.
     fn finish(&mut self) {
-        self.load_pending_fonts();
+        for user_event in self.user_events.borrow_mut().drain(..) {
+            match user_event {
+                UserEvent::FocusAccessibilityNode(strategy) => {
+                    self.tree.accessibility_diff.request_focus(strategy);
+                }
+                UserEvent::OpenUrl(url) => {
+                    run_script(&format!("window.open({url:?}, '_blank');"));
+                }
+                UserEvent::RequestRedraw => self.needs_render = true,
+                UserEvent::LoadFont {
+                    font_name,
+                    font_data,
+                } => {
+                    self.fonts.load(&font_name, &font_data);
+                    self.tree.layout.reset();
+                    self.tree.text_cache.reset();
+                    self.needs_render = true;
+                }
+                UserEvent::SetCustomScaleFactor(_) | UserEvent::Erased(_) => {}
+            }
+        }
 
+        let size = self.size();
+        let scale_factor = self.scale_factor();
         self.tree.measure_layout(
-            self.size,
+            size,
             &mut self.fonts.collection,
             &self.fonts.manager,
             &self.events_sender,
             &mut self.nodes_state,
-            self.scale_factor,
+            scale_factor,
             &self.fonts.default_families,
         );
 
@@ -319,16 +298,13 @@ impl WebApp {
             self.ime.sync(
                 focused_node.role(),
                 layout_node.visible_area(),
-                self.scale_factor,
+                scale_factor,
             );
 
             self.platform
                 .focused_accessibility_node
                 .set_if_modified(focused_node);
         }
-
-        let requests = &mut *self.requests.borrow_mut();
-        self.needs_render |= std::mem::take(&mut requests.redraw);
 
         let cursor = self.tree.cursor_icon(&self.nodes_state);
         if cursor != self.cursor {
@@ -338,37 +314,16 @@ impl WebApp {
                 cursor.name()
             ));
         }
-
-        if let Some(url) = requests.url.take() {
-            run_script(&format!(
-                "window.open({}, '_blank');",
-                js_string_literal(&url)
-            ));
-        }
-    }
-
-    fn load_pending_fonts(&mut self) {
-        let fonts = std::mem::take(&mut self.requests.borrow_mut().fonts);
-        if fonts.is_empty() {
-            return;
-        }
-
-        for (font_name, font_data) in fonts {
-            self.fonts.load(&font_name, &font_data);
-        }
-
-        self.tree.layout.reset();
-        self.tree.text_cache.reset();
-        self.needs_render = true;
     }
 
     fn render(&mut self) {
+        let scale_factor = self.scale_factor();
         let render_pipeline = RenderPipeline {
             font_collection: &mut self.fonts.collection,
             font_manager: &self.fonts.manager,
             tree: &self.tree,
             canvas: self.surface.canvas(),
-            scale_factor: self.scale_factor,
+            scale_factor,
             background: self.background,
         };
         render_pipeline.render();

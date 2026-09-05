@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 
+use freya_core::prelude::Bytes;
 use freya_engine::prelude::{
     FontCollection,
     FontMgr,
@@ -16,7 +17,10 @@ pub struct Fonts {
 }
 
 impl Fonts {
-    pub fn new(embedded: &[(String, Vec<u8>)], default_families: Vec<Cow<'static, str>>) -> Self {
+    pub fn new(
+        embedded: Vec<(Cow<'static, str>, Bytes)>,
+        default_families: Vec<Cow<'static, str>>,
+    ) -> Self {
         let provider = TypefaceFontProvider::new();
         let manager: FontMgr = provider.clone().into();
 
@@ -34,8 +38,8 @@ impl Fonts {
 
         let mut embedded_families = Vec::new();
         for (name, data) in embedded {
-            if fonts.register(name, data) {
-                embedded_families.push(Cow::Owned(name.clone()));
+            if fonts.register(&name, &data) {
+                embedded_families.push(name);
             }
         }
 

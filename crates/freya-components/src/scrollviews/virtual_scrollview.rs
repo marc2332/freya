@@ -500,14 +500,16 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
             scrolled_y as f32,
         );
 
-        let (displayed_x, displayed_y) = smooth_scroll
-            .position(Point2D::new(corrected_scrolled_x, corrected_scrolled_y))
-            .to_tuple();
-        let displayed_x =
-            get_corrected_scroll_position(inner_width, size.read().area.width(), displayed_x);
-        let displayed_y =
-            get_corrected_scroll_position(inner_height, size.read().area.height(), displayed_y);
-        let displayed = Point2D::new(displayed_x, displayed_y);
+        let smooth_position =
+            smooth_scroll.position(Point2D::new(corrected_scrolled_x, corrected_scrolled_y));
+        let rendered_position = Point2D::new(
+            get_corrected_scroll_position(inner_width, size.read().area.width(), smooth_position.x),
+            get_corrected_scroll_position(
+                inner_height,
+                size.read().area.height(),
+                smooth_position.y,
+            ),
+        );
 
         let horizontal_scrollbar_is_visible = !timeout.elapsed()
             && is_scrollbar_visible(self.show_scrollbar, inner_width, size.read().area.width());
@@ -515,9 +517,12 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
             && is_scrollbar_visible(self.show_scrollbar, inner_height, size.read().area.height());
 
         let (scrollbar_x, scrollbar_width) =
-            get_scrollbar_pos_and_size(inner_width, size.read().area.width(), displayed_x);
-        let (scrollbar_y, scrollbar_height) =
-            get_scrollbar_pos_and_size(inner_height, size.read().area.height(), displayed_y);
+            get_scrollbar_pos_and_size(inner_width, size.read().area.width(), rendered_position.x);
+        let (scrollbar_y, scrollbar_height) = get_scrollbar_pos_and_size(
+            inner_height,
+            size.read().area.height(),
+            rendered_position.y,
+        );
 
         let (container_width, content_width) = get_container_sizes(self.layout.width.clone());
         let (container_height, content_height) = get_container_sizes(self.layout.height.clone());
@@ -534,7 +539,7 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
             if drag_scrolling && (dragging_content().is_some() || drag_origin().is_some()) {
                 if dragging_content().is_some() {
                     let content = Size2D::new(inner_width, inner_height);
-                    smooth_scroll.release_drag(displayed, content, size.read().area.size);
+                    smooth_scroll.release_drag(rendered_position, content, size.read().area.size);
                 }
                 dragging_content.set(None);
                 drag_origin.set(None);
@@ -555,14 +560,14 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
 
             let animate = e.source == WheelSource::Line;
             if animate {
-                smooth_scroll.animate_from(displayed);
+                smooth_scroll.animate_from(rendered_position);
             } else {
                 smooth_scroll.stop();
             }
             let (base_x, base_y) = if animate {
                 (corrected_scrolled_x, corrected_scrolled_y)
             } else {
-                (displayed_x, displayed_y)
+                (rendered_position.x, rendered_position.y)
             };
 
             // Vertical scroll
@@ -600,8 +605,8 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                     let delta = prev - coords;
 
                     smooth_scroll.drag(delta.to_f32());
-                    scroll_controller.scroll_to_y((displayed_y - delta.y as f32) as i32);
-                    scroll_controller.scroll_to_x((displayed_x - delta.x as f32) as i32);
+                    scroll_controller.scroll_to_y((rendered_position.y - delta.y as f32) as i32);
+                    scroll_controller.scroll_to_x((rendered_position.x - delta.x as f32) as i32);
 
                     dragging_content.set(Some(coords));
                     e.prevent_default();
@@ -620,8 +625,10 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                         let delta = origin - coords;
 
                         smooth_scroll.drag(delta.to_f32());
-                        scroll_controller.scroll_to_y((displayed_y - delta.y as f32) as i32);
-                        scroll_controller.scroll_to_x((displayed_x - delta.x as f32) as i32);
+                        scroll_controller
+                            .scroll_to_y((rendered_position.y - delta.y as f32) as i32);
+                        scroll_controller
+                            .scroll_to_x((rendered_position.x - delta.x as f32) as i32);
 
                         dragging_content.set(Some(coords));
                         e.prevent_default();
@@ -693,7 +700,7 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                 viewport_width,
                 direction,
             ) {
-                smooth_scroll.animate_from(displayed);
+                smooth_scroll.animate_from(rendered_position);
                 scroll_controller.scroll_to_x(x as i32);
                 scroll_controller.scroll_to_y(y as i32);
                 e.stop_propagation();
@@ -716,9 +723,9 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
         };
 
         let (viewport_size, scroll_position) = if direction == Direction::vertical() {
-            (viewport_height, displayed_y)
+            (viewport_height, rendered_position.y)
         } else {
-            (viewport_width, displayed_x)
+            (viewport_width, rendered_position.x)
         };
 
         let (render_range, item_offset) =
@@ -736,8 +743,8 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
             .collect::<Vec<Element>>();
 
         let (offset_x, offset_y) = match direction {
-            Direction::Vertical => (displayed_x, item_offset),
-            Direction::Horizontal => (item_offset, displayed_y),
+            Direction::Vertical => (rendered_position.x, item_offset),
+            Direction::Horizontal => (item_offset, rendered_position.y),
         };
 
         let on_pointer_down = move |e: Event<PointerEventData>| {
@@ -758,8 +765,8 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
             .a11y_focusable(false)
             .a11y_role(AccessibilityRole::ScrollView)
             .a11y_builder(move |node| {
-                node.set_scroll_x(displayed_x as f64);
-                node.set_scroll_y(displayed_y as f64)
+                node.set_scroll_x(rendered_position.x as f64);
+                node.set_scroll_y(rendered_position.y as f64)
             })
             .scrollable(true)
             .on_wheel(on_wheel)

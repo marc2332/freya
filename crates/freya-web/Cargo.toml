@@ -14,7 +14,7 @@ categories = ["gui", "wasm"]
 [lints]
 workspace = true
 
-[target.'cfg(target_os = "emscripten")'.dependencies]
+[dependencies]
 freya-core = { workspace = true }
 freya-components = { workspace = true }
 freya-clipboard = { workspace = true }
@@ -25,3 +25,4 @@ accesskit = { workspace = true }
 futures-channel = { workspace = true }
 tracing = { workspace = true }
 gl = { workspace = true }
+euclid = { workspace = true }

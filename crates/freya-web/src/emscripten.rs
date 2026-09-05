@@ -28,28 +28,6 @@ pub fn run_script_string(script: &str) -> Option<String> {
     Some(result.to_string_lossy().into_owned())
 }
 
-/// Encodes a string as a single-quoted JavaScript string literal.
-pub fn js_string_literal(value: &str) -> String {
-    let mut literal = String::with_capacity(value.len() + 2);
-    literal.push('\'');
-
-    for character in value.chars() {
-        match character {
-            '\'' | '\\' => {
-                literal.push('\\');
-                literal.push(character);
-            }
-            '\0'..='\u{1f}' | '\u{2028}' | '\u{2029}' => {
-                literal.push_str(&format!("\\u{:04x}", character as u32));
-            }
-            other => literal.push(other),
-        }
-    }
-
-    literal.push('\'');
-    literal
-}
-
 pub const EMSCRIPTEN_EVENT_MOUSEDOWN: c_int = 5;
 pub const EMSCRIPTEN_EVENT_MOUSEUP: c_int = 6;
 pub const EMSCRIPTEN_EVENT_KEYUP: c_int = 3;

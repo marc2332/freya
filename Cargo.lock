@@ -2598,7 +2598,6 @@ dependencies = [
 name = "freya-animation"
 version = "0.5.0-rc.4"
 dependencies = [
- "async-io",
  "easer",
  "freya",
  "freya-core",
@@ -2673,12 +2672,14 @@ dependencies = [
  "freya-router",
  "freya-sdk",
  "freya-testing",
+ "futures-channel",
  "gif 0.13.3",
  "paste",
  "reqwest 0.12.28",
  "thiserror 2.0.19",
  "torin",
  "tracing",
+ "url",
 ]
 
 [[package]]
@@ -2991,6 +2992,7 @@ name = "freya-web"
 version = "0.5.0-rc.4"
 dependencies = [
  "accesskit",
+ "euclid",
  "freya-clipboard",
  "freya-components",
  "freya-core",
