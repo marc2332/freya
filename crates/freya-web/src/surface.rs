@@ -13,6 +13,7 @@ use freya_engine::prelude::{
     direct_contexts,
     wrap_backend_render_target,
 };
+use torin::geometry::Size2DFixed;
 
 use crate::emscripten::*;
 
@@ -21,12 +22,11 @@ pub struct WebSurface {
     context: DirectContext,
     framebuffer_info: FramebufferInfo,
     surface: Surface,
-    width: i32,
-    height: i32,
+    size: Size2DFixed,
 }
 
 impl WebSurface {
-    pub fn new(width: i32, height: i32) -> Option<Self> {
+    pub fn new(size: Size2DFixed) -> Option<Self> {
         if !Self::create_webgl_context() {
             tracing::error!("Failed to create the WebGL context of the #canvas element.");
             return None;
@@ -53,28 +53,25 @@ impl WebSurface {
             ..Default::default()
         };
 
-        let surface = Self::create_surface(&mut context, framebuffer_info, width, height)?;
+        let surface = Self::create_surface(&mut context, framebuffer_info, size)?;
 
         Some(Self {
             context,
             framebuffer_info,
             surface,
-            width,
-            height,
+            size,
         })
     }
 
-    pub fn resize(&mut self, width: i32, height: i32) {
-        if self.width == width && self.height == height {
+    pub fn resize(&mut self, size: Size2DFixed) {
+        if self.size == size {
             return;
         }
 
-        if let Some(surface) =
-            Self::create_surface(&mut self.context, self.framebuffer_info, width, height)
+        if let Some(surface) = Self::create_surface(&mut self.context, self.framebuffer_info, size)
         {
             self.surface = surface;
-            self.width = width;
-            self.height = height;
+            self.size = size;
         }
     }
 
@@ -108,11 +105,14 @@ impl WebSurface {
     fn create_surface(
         context: &mut DirectContext,
         framebuffer_info: FramebufferInfo,
-        width: i32,
-        height: i32,
+        size: Size2DFixed,
     ) -> Option<Surface> {
-        let backend_render_target =
-            backend_render_targets::make_gl((width.max(1), height.max(1)), 1, 8, framebuffer_info);
+        let backend_render_target = backend_render_targets::make_gl(
+            (size.width.max(1), size.height.max(1)),
+            1,
+            8,
+            framebuffer_info,
+        );
 
         wrap_backend_render_target(
             context,

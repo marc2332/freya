@@ -41,8 +41,8 @@ e example:
     cargo run --example {{example}}
 
 t:
-    cargo test --doc --workspace
-    cargo nextest run --workspace --exclude examples --features all-tests
+    cargo test --doc --workspace --exclude web --exclude freya-web
+    cargo nextest run --workspace --exclude examples --exclude web --exclude freya-web --features all-tests
 
 t-layout:
     cargo nextest run --package torin
@@ -51,7 +51,7 @@ d:
     RUSTDOCFLAGS="--cfg docsrs" RUSTUP_TOOLCHAIN={{nightly_toolchain}} cargo doc --no-deps --workspace --features "all, docs" --open
 
 tc:
-    cargo nextest run --workspace --exclude examples --features all-tests
+    cargo nextest run --workspace --exclude examples --exclude web --exclude freya-web --features all-tests
 
 t-components:
     cargo nextest run --package freya-components --features freya/gif,freya/markdown
