@@ -2609,7 +2609,6 @@ name = "freya-borderless-plugin"
 version = "0.5.0-rc.4"
 dependencies = [
  "freya-core",
- "freya-engine",
  "freya-winit",
  "torin",
 ]

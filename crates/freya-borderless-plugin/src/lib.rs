@@ -1,10 +1,4 @@
 use freya_core::prelude::*;
-use freya_engine::prelude::{
-    ClipOp,
-    Color,
-    RRect,
-    SkRect,
-};
 use freya_winit::{
     extensions::WinitPlatformExt,
     plugins::{
@@ -42,7 +36,7 @@ const DIRECTIONS: [ResizeDirection; 8] = [
 /// - **Linux** and **Windows**: overlays [ResizeBands] on top of the app, so dragging
 ///   the window borders resizes it and hovering them shows the resize cursors.
 /// - **macOS**: no bands, resizing is left to the system.
-/// - **All**: an optional corner radius clips the whole canvas, overlay layers included.
+/// - **All**: an optional corner radius rounds the app and a drop shadow is painted around it.
 ///
 /// # Example
 ///
@@ -93,39 +87,12 @@ impl FreyaPlugin for BorderlessPlugin {
         "borderless"
     }
 
-    fn on_event(&mut self, event: &mut PluginEvent, _handle: PluginHandle) {
-        if self.corner_radius <= 0. {
-            return;
-        }
-        match event {
-            PluginEvent::BeforeRender { canvas, window, .. } => {
-                canvas.clear(Color::TRANSPARENT);
-                canvas.save();
-                if window.fullscreen().is_some() || window.is_maximized() {
-                    return;
-                }
-                let size = window.inner_size();
-                let radius = self.corner_radius * window.scale_factor() as f32;
-                let rounded_window = RRect::new_rect_xy(
-                    SkRect::from_wh(size.width as f32, size.height as f32),
-                    radius,
-                    radius,
-                );
-                canvas.clip_rrect(rounded_window, ClipOp::Intersect, true);
-            }
-            PluginEvent::AfterRender { canvas, .. } => {
-                canvas.restore();
-            }
-            _ => {}
-        }
-    }
+    fn on_event(&mut self, _event: &mut PluginEvent, _handle: PluginHandle) {}
 
     fn root_component(&self, root: Element) -> Element {
-        if cfg!(target_os = "macos") {
-            return root;
-        }
         BorderlessRoot {
             thickness: self.thickness,
+            corner_radius: self.corner_radius,
             inner: root,
         }
         .into_element()
@@ -135,15 +102,36 @@ impl FreyaPlugin for BorderlessPlugin {
 #[derive(Clone, PartialEq)]
 struct BorderlessRoot {
     thickness: f32,
+    corner_radius: f32,
     inner: Element,
 }
 
 impl Component for BorderlessRoot {
     fn render(&self) -> impl IntoElement {
+        let maximized = use_maximized();
+        let inset = if maximized() { 0. } else { 12. };
+
         rect()
             .expanded()
-            .child(self.inner.clone())
-            .child(ResizeBands::new(self.thickness))
+            .padding(inset)
+            .child(
+                rect()
+                    .expanded()
+                    .overflow(Overflow::Clip)
+                    .maybe(!maximized(), |el| {
+                        el.corner_radius(self.corner_radius).shadow((
+                            0.,
+                            0.,
+                            inset,
+                            0.,
+                            Color::BLACK.with_a(90),
+                        ))
+                    })
+                    .child(self.inner.clone()),
+            )
+            .maybe(!cfg!(target_os = "macos"), |el| {
+                el.child(ResizeBands::new(self.thickness).with_inset(inset))
+            })
     }
 }
 
@@ -167,6 +155,7 @@ pub fn use_maximized() -> State<bool> {
 #[derive(PartialEq)]
 pub struct ResizeBands {
     thickness: f32,
+    inset: f32,
     key: DiffKey,
 }
 
@@ -181,8 +170,16 @@ impl ResizeBands {
     pub fn new(thickness: f32) -> Self {
         Self {
             thickness,
+            inset: 0.,
             key: DiffKey::None,
         }
+    }
+
+    /// Grow the bands inwards by `inset`, so they still reach the app's edges
+    /// when it does not span the whole window.
+    pub fn with_inset(mut self, inset: f32) -> Self {
+        self.inset = inset;
+        self
     }
 }
 
@@ -190,7 +187,6 @@ impl Component for ResizeBands {
     fn render(&self) -> impl IntoElement {
         let maximized = use_maximized();
         let size = *Platform::get().root_size.read();
-        let thickness = self.thickness;
 
         rect()
             .layer(Layer::Overlay)
@@ -200,46 +196,51 @@ impl Component for ResizeBands {
                 el.children(
                     DIRECTIONS
                         .iter()
-                        .map(|direction| band(*direction, size, thickness)),
+                        .map(|direction| self.band(*direction, size)),
                 )
             })
     }
 }
 
-fn band(direction: ResizeDirection, size: Size2D, thickness: f32) -> Element {
-    let corner = thickness * 2.;
-    let span_x = (size.width - corner).max(0.);
-    let span_y = (size.height - corner).max(0.);
-    let far_x = (size.width - thickness).max(0.);
-    let far_y = (size.height - thickness).max(0.);
+impl ResizeBands {
+    fn band(&self, direction: ResizeDirection, size: Size2D) -> Element {
+        let band = self.inset + self.thickness;
+        let corner = band + self.thickness;
+        let span_x = (size.width - corner * 2.).max(0.);
+        let span_y = (size.height - corner * 2.).max(0.);
+        let far_x = (size.width - band).max(0.);
+        let far_y = (size.height - band).max(0.);
+        let corner_far_x = (size.width - corner).max(0.);
+        let corner_far_y = (size.height - corner).max(0.);
 
-    let (left, top, width, height) = match direction {
-        ResizeDirection::North => (thickness, 0., span_x, thickness),
-        ResizeDirection::South => (thickness, far_y, span_x, thickness),
-        ResizeDirection::West => (0., thickness, thickness, span_y),
-        ResizeDirection::East => (far_x, thickness, thickness, span_y),
-        ResizeDirection::NorthWest => (0., 0., corner, corner),
-        ResizeDirection::NorthEast => (span_x, 0., corner, corner),
-        ResizeDirection::SouthWest => (0., span_y, corner, corner),
-        ResizeDirection::SouthEast => (span_x, span_y, corner, corner),
-    };
-    let area = Area::new(Point2D::new(left, top), Size2D::new(width, height));
+        let (left, top, width, height) = match direction {
+            ResizeDirection::North => (corner, 0., span_x, band),
+            ResizeDirection::South => (corner, far_y, span_x, band),
+            ResizeDirection::West => (0., corner, band, span_y),
+            ResizeDirection::East => (far_x, corner, band, span_y),
+            ResizeDirection::NorthWest => (0., 0., corner, corner),
+            ResizeDirection::NorthEast => (corner_far_x, 0., corner, corner),
+            ResizeDirection::SouthWest => (0., corner_far_y, corner, corner),
+            ResizeDirection::SouthEast => (corner_far_x, corner_far_y, corner, corner),
+        };
+        let area = Area::new(Point2D::new(left, top), Size2D::new(width, height));
 
-    rect()
-        .position(
-            Position::new_global()
-                .top(area.origin.y)
-                .left(area.origin.x),
-        )
-        .width(Size::px(area.width()))
-        .height(Size::px(area.height()))
-        .cursor(cursor(direction))
-        .on_pointer_down(move |_| {
-            Platform::get().with_window(Platform::window_id(), move |window| {
-                let _ = window.drag_resize_window(direction);
-            });
-        })
-        .into_element()
+        rect()
+            .position(
+                Position::new_global()
+                    .top(area.origin.y)
+                    .left(area.origin.x),
+            )
+            .width(Size::px(area.width()))
+            .height(Size::px(area.height()))
+            .cursor(cursor(direction))
+            .on_pointer_down(move |_| {
+                Platform::get().with_window(Platform::window_id(), move |window| {
+                    let _ = window.drag_resize_window(direction);
+                });
+            })
+            .into_element()
+    }
 }
 
 fn cursor(direction: ResizeDirection) -> CursorIcon {
