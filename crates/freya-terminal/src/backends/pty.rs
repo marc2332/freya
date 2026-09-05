@@ -19,8 +19,7 @@ use crate::{
 };
 
 /// Runs a command in a pseudo-terminal. Nothing is spawned until the backend is handed to
-/// [`TerminalHandle::new`](crate::handle::TerminalHandle::new), and dropping it closes the
-/// pseudo-terminal, which ends the child process.
+/// [`TerminalHandle::new`](crate::handle::TerminalHandle::new).
 pub struct PtyBackend {
     command: CommandBuilder,
     master: Option<Box<dyn MasterPty + Send>>,
