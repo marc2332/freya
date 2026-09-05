@@ -6,6 +6,8 @@ use freya::{
 use crate::showcases::heading;
 
 const RUST_LOGO: &[u8] = include_bytes!("../rust_logo.png");
+const PREVIEW_URL: &str =
+    "https://raw.githubusercontent.com/marc2332/freya/main/website/public/preview.png";
 
 #[derive(Clone, Copy, PartialEq)]
 enum Density {
@@ -190,10 +192,21 @@ impl Component for ComponentsShowcase {
                         ),
                 )
                 .child(
-                    rect().spacing(8.).child("Image").child(
-                        ImageViewer::new(("rust-logo", RUST_LOGO))
-                            .width(Size::px(120.))
-                            .height(Size::px(120.)),
+                    rect().spacing(8.).child("Images").child(
+                        rect()
+                            .horizontal()
+                            .spacing(12.)
+                            .child(
+                                ImageViewer::new(("rust-logo", RUST_LOGO))
+                                    .width(Size::px(120.))
+                                    .height(Size::px(120.)),
+                            )
+                            .child(
+                                ImageViewer::new(PREVIEW_URL)
+                                    .aspect_ratio(AspectRatio::Fit)
+                                    .width(Size::px(240.))
+                                    .height(Size::px(120.)),
+                            ),
                     ),
                 ),
         )
