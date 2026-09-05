@@ -79,6 +79,7 @@ impl WebApp {
         runner.provide_root_context(|| ticker);
         runner.provide_root_context(AnimationClock::new);
         runner.provide_root_context(AssetCacher::create);
+        runner.provide_root_context(TargetPlatform::detect);
 
         let user_events = Rc::new(RefCell::new(Vec::new()));
 
