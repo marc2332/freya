@@ -19,14 +19,14 @@ pub trait TerminalBackend {
     fn resize(&mut self, rows: u16, cols: u16);
 }
 
-/// Sends program output to the terminal grid. Cloneable and usable from any thread.
+/// Sends program output to the terminal grid.
 #[derive(Clone)]
 pub struct TerminalOutput {
     pub(crate) sender: UnboundedSender<Vec<u8>>,
 }
 
 impl TerminalOutput {
-    /// Feed bytes to the terminal parser. Fails once the terminal has closed.
+    /// Feed bytes to the terminal parser.
     pub fn write(&self, data: impl Into<Vec<u8>>) -> Result<(), TerminalError> {
         self.sender
             .unbounded_send(data.into())

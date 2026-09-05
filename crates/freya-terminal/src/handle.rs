@@ -153,7 +153,7 @@ pub(crate) struct TerminalCleaner {
     closer_notifier: ArcNotify,
 }
 
-/// Handle-local input tracking grouped into a single `RefCell`.
+/// Handle-local input tracking.
 pub(crate) struct TerminalInner {
     pub(crate) last_write_time: Instant,
     pub(crate) pressed_button: Option<TerminalMouseButton>,
