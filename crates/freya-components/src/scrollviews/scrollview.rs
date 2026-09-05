@@ -237,20 +237,20 @@ impl Component for ScrollView {
             scrolled_y as f32,
         );
 
-        let (displayed_x, displayed_y) = smooth_scroll
-            .position(Point2D::new(corrected_scrolled_x, corrected_scrolled_y))
-            .to_tuple();
-        let displayed_x = get_corrected_scroll_position(
-            size.read().inner_sizes.width,
-            size.read().area.width(),
-            displayed_x,
+        let smooth_position =
+            smooth_scroll.position(Point2D::new(corrected_scrolled_x, corrected_scrolled_y));
+        let rendered_position = Point2D::new(
+            get_corrected_scroll_position(
+                size.read().inner_sizes.width,
+                size.read().area.width(),
+                smooth_position.x,
+            ),
+            get_corrected_scroll_position(
+                size.read().inner_sizes.height,
+                size.read().area.height(),
+                smooth_position.y,
+            ),
         );
-        let displayed_y = get_corrected_scroll_position(
-            size.read().inner_sizes.height,
-            size.read().area.height(),
-            displayed_y,
-        );
-        let displayed = Point2D::new(displayed_x, displayed_y);
 
         let horizontal_scrollbar_is_visible = !timeout.elapsed()
             && is_scrollbar_visible(
@@ -268,12 +268,12 @@ impl Component for ScrollView {
         let (scrollbar_x, scrollbar_width) = get_scrollbar_pos_and_size(
             size.read().inner_sizes.width,
             size.read().area.width(),
-            displayed_x,
+            rendered_position.x,
         );
         let (scrollbar_y, scrollbar_height) = get_scrollbar_pos_and_size(
             size.read().inner_sizes.height,
             size.read().area.height(),
-            displayed_y,
+            rendered_position.y,
         );
 
         let (container_width, content_width) = get_container_sizes(layout.width.clone());
@@ -292,7 +292,7 @@ impl Component for ScrollView {
                 if dragging_content().is_some() {
                     let content = size.read().inner_sizes;
                     let viewport = size.read().area.size;
-                    smooth_scroll.release_drag(displayed, content, viewport);
+                    smooth_scroll.release_drag(rendered_position, content, viewport);
                 }
                 dragging_content.set(None);
                 drag_origin.set(None);
@@ -313,14 +313,14 @@ impl Component for ScrollView {
 
             let animate = e.source == WheelSource::Line;
             if animate {
-                smooth_scroll.animate_from(displayed);
+                smooth_scroll.animate_from(rendered_position);
             } else {
                 smooth_scroll.stop();
             }
             let (base_x, base_y) = if animate {
                 (corrected_scrolled_x, corrected_scrolled_y)
             } else {
-                (displayed_x, displayed_y)
+                (rendered_position.x, rendered_position.y)
             };
 
             // Vertical scroll
@@ -358,8 +358,8 @@ impl Component for ScrollView {
                     let delta = prev - coords;
 
                     smooth_scroll.drag(delta.to_f32());
-                    scroll_controller.scroll_to_y((displayed_y - delta.y as f32) as i32);
-                    scroll_controller.scroll_to_x((displayed_x - delta.x as f32) as i32);
+                    scroll_controller.scroll_to_y((rendered_position.y - delta.y as f32) as i32);
+                    scroll_controller.scroll_to_x((rendered_position.x - delta.x as f32) as i32);
 
                     dragging_content.set(Some(coords));
                     e.prevent_default();
@@ -378,8 +378,10 @@ impl Component for ScrollView {
                         let delta = origin - coords;
 
                         smooth_scroll.drag(delta.to_f32());
-                        scroll_controller.scroll_to_y((displayed_y - delta.y as f32) as i32);
-                        scroll_controller.scroll_to_x((displayed_x - delta.x as f32) as i32);
+                        scroll_controller
+                            .scroll_to_y((rendered_position.y - delta.y as f32) as i32);
+                        scroll_controller
+                            .scroll_to_x((rendered_position.x - delta.x as f32) as i32);
 
                         dragging_content.set(Some(coords));
                         e.prevent_default();
@@ -451,7 +453,7 @@ impl Component for ScrollView {
                 viewport_width,
                 direction,
             ) {
-                smooth_scroll.animate_from(displayed);
+                smooth_scroll.animate_from(rendered_position);
                 scroll_controller.scroll_to_x(x as i32);
                 scroll_controller.scroll_to_y(y as i32);
                 e.stop_propagation();
@@ -489,8 +491,8 @@ impl Component for ScrollView {
             .a11y_focusable(false)
             .a11y_role(AccessibilityRole::ScrollView)
             .a11y_builder(move |node| {
-                node.set_scroll_x(displayed_x as f64);
-                node.set_scroll_y(displayed_y as f64)
+                node.set_scroll_x(rendered_position.x as f64);
+                node.set_scroll_y(rendered_position.y as f64)
             })
             .scrollable(true)
             .map(self.on_sized.clone(), |el, on_sized| el.on_sized(on_sized))
@@ -514,8 +516,8 @@ impl Component for ScrollView {
                             .height(content_height)
                             .max_width(layout.maximum_width.clone())
                             .max_height(layout.maximum_height.clone())
-                            .offset_x(displayed_x)
-                            .offset_y(displayed_y)
+                            .offset_x(rendered_position.x)
+                            .offset_y(rendered_position.y)
                             .spacing(layout.spacing.get())
                             .overflow(Overflow::Clip)
                             .on_sized(move |e: Event<SizedEventData>| {
