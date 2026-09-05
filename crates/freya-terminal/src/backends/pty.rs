@@ -67,7 +67,6 @@ impl TerminalBackend for PtyBackend {
                     }
                 }
             }
-            output.close();
         });
 
         Ok(())

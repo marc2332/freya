@@ -28,9 +28,7 @@ impl CustomBackend {
             "help" => self.print("Commands: help, clear, exit. Anything else is echoed back.\r\n"),
             "clear" => self.print("\x1b[2J\x1b[H"),
             "exit" => {
-                if let Some(output) = self.output.take() {
-                    output.close();
-                }
+                self.output = None;
                 return;
             }
             other => self.print(format!("{other}\r\n")),

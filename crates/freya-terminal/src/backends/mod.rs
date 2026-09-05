@@ -12,14 +12,13 @@ pub trait TerminalBackend {
     /// Called once when the handle is created.
     fn start(&mut self, output: TerminalOutput) -> Result<(), TerminalError>;
 
-    /// Write to the backend.
     fn write(&mut self, data: &[u8]) -> Result<(), TerminalError>;
 
-    /// Resize the backend's by `rows` and `cols`.
+    /// Resize the backend to `rows` and `cols`.
     fn resize(&mut self, rows: u16, cols: u16);
 }
 
-/// Sends program output to the terminal grid.
+/// Sends program output to the terminal grid. The terminal closes once every clone is dropped.
 #[derive(Clone)]
 pub struct TerminalOutput {
     pub(crate) sender: UnboundedSender<Vec<u8>>,
@@ -31,10 +30,5 @@ impl TerminalOutput {
         self.sender
             .unbounded_send(data.into())
             .map_err(|_| TerminalError::Closed)
-    }
-
-    /// Signal that no more output will come, which closes the terminal.
-    pub fn close(&self) {
-        self.sender.close_channel();
     }
 }
