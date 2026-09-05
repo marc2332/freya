@@ -78,6 +78,7 @@ freya-engine = { workspace = true, features = [
 
 [target.'cfg(target_os = "windows")'.dependencies]
 freya-engine = { workspace = true, features = ["gl", "vulkan"] }
+windows-sys = { version = "0.60", features = ["Win32_Graphics_Dwm"] }
 
 # Rendering OpenGL + Vulkan (Linux/Windows)
 [target.'cfg(any(target_os = "linux", target_os = "windows"))'.dependencies]
