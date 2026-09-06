@@ -129,7 +129,9 @@ impl Component for BorderlessRoot {
         rect()
             .expanded()
             .overflow(Overflow::Clip)
-            .maybe(!info.edge_to_edge, |el| el.corner_radius(self.corner_radius))
+            .maybe(!info.edge_to_edge, |el| {
+                el.corner_radius(self.corner_radius)
+            })
             .maybe(inset > 0., |el| {
                 el.shadow((0., 0., inset, 0., Color::BLACK.with_a(90)))
             })
