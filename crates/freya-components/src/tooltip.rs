@@ -3,7 +3,6 @@ use std::{
     time::Duration,
 };
 
-use async_io::Timer;
 use freya_animation::{
     easing::Function,
     hook::{
@@ -244,7 +243,7 @@ impl Component for TooltipContainer {
                 handle.cancel();
             }
             let task = spawn(async move {
-                Timer::after(delay).await;
+                timer(delay).await;
                 is_hovering.set_if_modified(true);
             });
             delay_task.set(Some(task));

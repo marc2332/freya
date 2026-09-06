@@ -6,7 +6,6 @@ use std::{
     },
 };
 
-use async_io::Timer;
 use freya_core::prelude::*;
 
 #[derive(Default, PartialEq, Clone, Debug)]
@@ -306,7 +305,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
                     };
 
                     if !delay.is_zero() {
-                        Timer::after(delay).await;
+                        timer(delay).await;
                     }
 
                     index = 0;

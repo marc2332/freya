@@ -203,8 +203,8 @@ impl ElementExt for LabelElement {
         let cached_paragraph = CachedParagraph {
             text_style_state: context.text_style_state,
             spans: &[Span::new(&*self.text)],
-            max_lines: None,
-            line_height: None,
+            max_lines: self.max_lines,
+            line_height: self.line_height,
             width: context.area_size.width,
         };
         let paragraph = context
@@ -218,18 +218,20 @@ impl ElementExt for LabelElement {
                         paragraph_style.set_ellipsis(ellipsis);
                     }
 
-                    paragraph_style.set_text_style(&context.text_style_state.to_text_style(
+                    let text_style = context.text_style_state.to_text_style(
                         context.fallback_fonts,
                         context.scale_factor,
                         self.line_height,
                         fill_area,
-                    ));
+                    );
+                    paragraph_style.set_text_style(&text_style);
                     paragraph_style.set_max_lines(self.max_lines);
                     paragraph_style.set_text_align(context.text_style_state.text_align.into());
 
                     let mut paragraph_builder =
                         ParagraphBuilder::new(&paragraph_style, &*context.font_collection);
 
+                    paragraph_builder.push_style(&text_style);
                     paragraph_builder.add_text(&self.text);
 
                     let mut paragraph = paragraph_builder.build();

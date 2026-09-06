@@ -44,6 +44,7 @@ use crate::{
         font_slant::FontSlant,
         font_weight::FontWeight,
         font_width::FontWidth,
+        letter_spacing::LetterSpacing,
         scale::Scale,
         shadow::Shadow,
         text_align::TextAlign,
@@ -133,6 +134,7 @@ pub struct TextStyleState {
     pub font_slant: FontSlant,
     pub font_weight: FontWeight,
     pub font_width: FontWidth,
+    pub letter_spacing: LetterSpacing,
 }
 
 impl Default for TextStyleState {
@@ -149,6 +151,7 @@ impl Default for TextStyleState {
             font_slant: FontSlant::default(),
             font_weight: FontWeight::default(),
             font_width: FontWidth::default(),
+            letter_spacing: LetterSpacing::default(),
         }
     }
 }
@@ -168,6 +171,7 @@ impl TextStyleState {
         let font_slant = data.font_slant.unwrap_or(parent.font_slant);
         let font_weight = data.font_weight.unwrap_or(parent.font_weight);
         let font_width = data.font_width.unwrap_or(parent.font_width);
+        let letter_spacing = data.letter_spacing.unwrap_or(parent.letter_spacing);
         let mut font_families = data.font_families.clone();
         font_families.extend_from_slice(&parent.font_families);
 
@@ -182,6 +186,7 @@ impl TextStyleState {
             font_slant,
             font_weight,
             font_width,
+            letter_spacing,
             font_families,
         }
     }
@@ -222,6 +227,7 @@ pub struct TextStyleData {
     pub font_slant: Option<FontSlant>,
     pub font_weight: Option<FontWeight>,
     pub font_width: Option<FontWidth>,
+    pub letter_spacing: Option<LetterSpacing>,
 }
 
 #[derive(Debug, Default)]

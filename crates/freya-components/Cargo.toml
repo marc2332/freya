@@ -18,8 +18,8 @@ workspace = true
 features = ["docs"]
 
 [features]
-router = ["dep:open", "dep:freya-router"]
-remote-asset = ["dep:reqwest"]
+router = ["dep:freya-router"]
+remote-asset = ["dep:reqwest", "dep:url"]
 docs = ["dep:embed-doc-image"]
 gif = ["dep:gif"]
 calendar = ["dep:chrono"]
@@ -42,17 +42,12 @@ paste = "1.0.15"
 chrono = { version = "0.4", optional = true }
 
 # Router
-open = { workspace = true, optional = true }
 freya-router = { workspace = true, optional = true }
 
-# Cache
-async-io = { workspace = true }
-
 # Remote Image
-reqwest = { workspace = true, optional = true }
+url = { workspace = true, optional = true }
 
 # Image viewer
-blocking = { workspace = true }
 bytes = { version = "1.10.1" }
 euclid = { workspace = true }
 async-lock = "3"
@@ -81,3 +76,9 @@ freya = { path = "../freya", features = [
   "calendar",
 ] }
 freya-testing = { path = "../freya-testing" }
+
+[target.'cfg(not(target_os = "emscripten"))'.dependencies]
+reqwest = { workspace = true, optional = true }
+
+[target.'cfg(target_os = "emscripten")'.dependencies]
+futures-channel = { workspace = true }

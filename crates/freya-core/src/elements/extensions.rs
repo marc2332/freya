@@ -62,6 +62,7 @@ use crate::{
         font_slant::FontSlant,
         font_weight::FontWeight,
         font_width::FontWidth,
+        letter_spacing::LetterSpacing,
         scale::Scale,
         text_height::TextHeightBehavior,
         text_overflow::TextOverflow,
@@ -798,6 +799,12 @@ where
     /// Set the text size in pixels. See [`FontSize`].
     fn font_size(mut self, font_size: impl Into<FontSize>) -> Self {
         self.get_text_style_data().font_size = Some(font_size.into());
+        self
+    }
+
+    /// Set the space between letters, in pixels. See [`LetterSpacing`].
+    fn letter_spacing(mut self, letter_spacing: impl Into<LetterSpacing>) -> Self {
+        self.get_text_style_data().letter_spacing = Some(letter_spacing.into());
         self
     }
 
