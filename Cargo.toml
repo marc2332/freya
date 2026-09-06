@@ -49,9 +49,11 @@ members = [
   "./crates/freya-code-editor",
   "./crates/freya-camera",
   "./crates/freya-android",
+  "./crates/freya-web",
   "./examples/ai-chat",
   "./examples/state_query_sqlite",
   "./examples/android",
+  "./examples/web",
   "./examples/component_video",
   "./examples/feature_camera",
   "./examples/feature_tray",
@@ -92,6 +94,7 @@ freya-terminal = { path = "./crates/freya-terminal", version = "0.5.0-rc.4" }
 freya-code-editor = { path = "./crates/freya-code-editor", version = "0.5.0-rc.4" }
 freya-camera = { path = "./crates/freya-camera", version = "0.5.0-rc.4" }
 freya-android = { path = "./crates/freya-android", version = "0.5.0-rc.4" }
+freya-web = { path = "./crates/freya-web", version = "0.5.0-rc.4" }
 mundy = { version = "0.2.3", default-features = false, features = [
   "async-io",
   "callback",
@@ -138,7 +141,7 @@ euclid = "0.22.9"
 itertools = "0.14.0"
 
 # Rendering
-freya-skia-safe = { version = "0.99.1", features = [
+freya-skia-safe = { version = "0.100.0", features = [
   "textlayout",
   "svg",
   "webp",

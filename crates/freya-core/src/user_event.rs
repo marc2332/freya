@@ -15,6 +15,9 @@ pub enum UserEvent {
     /// Focus with the given strategy
     FocusAccessibilityNode(AccessibilityFocusStrategy),
 
+    /// Open an url with whatever the platform uses to browse the web.
+    OpenUrl(String),
+
     /// Set a custom scale factor.
     SetCustomScaleFactor(f64),
 

@@ -169,8 +169,18 @@ pub struct StyledEventData {
 
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub enum WheelSource {
-    Device,
+    /// Discrete line-based steps, usually from a mouse wheel.
+    Line,
+    /// Continuous pixel deltas, usually from a touchpad.
+    Pixel,
     Custom,
+}
+
+impl WheelSource {
+    /// Whether the event came from a physical device rather than being synthesized from code.
+    pub fn is_device(&self) -> bool {
+        matches!(self, Self::Line | Self::Pixel)
+    }
 }
 
 /// Data of a Wheel event.

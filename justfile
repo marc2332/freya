@@ -18,6 +18,12 @@ f-check:
 f-nix:
     alejandra flake.nix
 
+web-demo:
+    cd examples/web && cargo build --release
+    mkdir -p website/public/demo
+    cp "${CARGO_TARGET_DIR:-target}"/wasm32-unknown-emscripten/release/web_example.js website/public/demo/
+    cp "${CARGO_TARGET_DIR:-target}"/wasm32-unknown-emscripten/release/web_example.wasm website/public/demo/
+
 sa:
     cargo audit
 
@@ -35,8 +41,8 @@ e example:
     cargo run --example {{example}}
 
 t:
-    cargo test --doc --workspace
-    cargo nextest run --workspace --exclude examples --features all-tests
+    cargo test --doc --workspace --exclude web --exclude freya-web
+    cargo nextest run --workspace --exclude examples --exclude web --exclude freya-web --features all-tests
 
 t-layout:
     cargo nextest run --package torin
@@ -45,7 +51,7 @@ d:
     RUSTDOCFLAGS="--cfg docsrs" RUSTUP_TOOLCHAIN={{nightly_toolchain}} cargo doc --no-deps --workspace --features "all, docs" --open
 
 tc:
-    cargo nextest run --workspace --exclude examples --features all-tests
+    cargo nextest run --workspace --exclude examples --exclude web --exclude freya-web --features all-tests
 
 t-components:
     cargo nextest run --package freya-components --features freya/gif,freya/markdown
@@ -79,6 +85,16 @@ pc-ci:
 
 ba:
     cargo build --all-targets --workspace -F freya/all-debug
+
+bd:
+    cargo build --package freya
+
+deps:
+    cargo tree --package freya --depth 0 --format "{p} [{f}]"
+    cargo tree --package freya
+
+deps-count:
+    @cargo tree --package freya --prefix none | sed -E 's/ \(\*\)$//; s/ \(proc-macro\)//' | sort -u | wc -l | tr -d ' '
 
 dev-app:
     cargo run --package freya-devtools-app

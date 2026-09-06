@@ -15,7 +15,6 @@ use std::{
     },
 };
 
-use async_io::Timer;
 use freya_core::{
     integration::FxHashSet,
     prelude::*,
@@ -270,7 +269,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
             let task = spawn_forever(async move {
                 loop {
                     // Wait as long as the stale time is configured
-                    Timer::after(interval).await;
+                    timer(interval).await;
 
                     // Run the query
                     QueriesStorage::<Q>::run_queries(&[(&query_clone, &query_data_clone)]).await;
@@ -288,7 +287,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
         }
         *query_data.clean_task.borrow_mut() = Some(spawn_forever(async move {
             // Wait as long as the clean time is configured
-            Timer::after(query.clean_time).await;
+            timer(query.clean_time).await;
 
             // Finally clear the query unless it got subscribers again
             let mut storage = self.storage.write_unchecked();

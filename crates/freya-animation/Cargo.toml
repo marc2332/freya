@@ -17,7 +17,6 @@ workspace = true
 [dependencies]
 freya-core = { workspace = true }
 easer = { workspace = true }
-async-io = { workspace = true }
 
 [dev-dependencies]
 freya = { path = "../freya" }

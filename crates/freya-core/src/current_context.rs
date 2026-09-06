@@ -52,6 +52,29 @@ impl CurrentContext {
         res
     }
 
+    /// Run a closure using `scope_id` as the current scope, restoring the previous one afterwards.
+    ///
+    /// The closure still runs when there is no current context, just without any scope change.
+    pub(crate) fn run_in_scope<T>(scope_id: ScopeId, run: impl FnOnce() -> T) -> T {
+        let previous_scope_id = CURRENT_CONTEXT.with_borrow_mut(|context| {
+            context
+                .as_mut()
+                .map(|context| std::mem::replace(&mut context.scope_id, scope_id))
+        });
+
+        let res = run();
+
+        CURRENT_CONTEXT.with_borrow_mut(|context| {
+            if let Some(context) = context.as_mut()
+                && let Some(previous_scope_id) = previous_scope_id
+            {
+                context.scope_id = previous_scope_id;
+            }
+        });
+
+        res
+    }
+
     pub fn with<T>(with: impl FnOnce(&CurrentContext) -> T) -> T {
         CURRENT_CONTEXT.with(|context| with(context.borrow().as_ref().expect("Your trying to access Freya's current context outside of it, you might be in a separate thread or async task that is not integrated with Freya.")))
     }

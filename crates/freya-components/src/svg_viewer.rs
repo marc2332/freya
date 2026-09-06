@@ -22,8 +22,6 @@ use torin::prelude::{
     Size2D,
 };
 
-#[cfg(feature = "remote-asset")]
-use crate::http::Http;
 use crate::{
     cache::*,
     image_viewer::{
@@ -174,7 +172,8 @@ impl SvgViewer {
         self
     }
 
-    /// Whether to fetch and rasterize the SVG in a background thread. Defaults to `false`.
+    /// Whether to fetch and rasterize the SVG in a background thread. Defaults to `false`,
+    /// remote sources always do.
     pub fn parallel(mut self, parallel: bool) -> Self {
         self.parallel = parallel;
         self
@@ -307,35 +306,25 @@ impl Component for SvgViewer {
             {
                 asset_cacher.update_asset(asset_config.clone(), Asset::Loading);
 
-                if self.parallel {
+                if self.parallel || self.source.is_remote() {
                     let source = self.source.clone();
                     let asset_config = asset_config.clone();
                     spawn_forever(async move {
-                        #[cfg(feature = "remote-asset")]
-                        let bytes = {
-                            let client = Http::get();
-                            blocking::unblock(move || source.fetch(&client)).await
-                        };
-                        #[cfg(not(feature = "remote-asset"))]
-                        let bytes = blocking::unblock(move || source.fetch()).await;
-
-                        let result = match bytes {
+                        let result = match source.bytes().await {
                             Ok(bytes) => {
                                 let _permit = RASTER_LIMIT.acquire().await;
-                                blocking::unblock(move || rasterize_bytes(&bytes, target, style))
-                                    .await
+                                thread(move || rasterize_bytes(&bytes, target, style)).await
                             }
                             Err(err) => Err(err),
                         };
                         store_raster(asset_cacher, asset_config.clone(), result);
                     });
                 } else {
-                    #[cfg(feature = "remote-asset")]
-                    let bytes = self.source.clone().fetch(&Http::get());
-                    #[cfg(not(feature = "remote-asset"))]
-                    let bytes = self.source.clone().fetch();
-
-                    let result = bytes.and_then(|bytes| rasterize_bytes(&bytes, target, style));
+                    let result = self
+                        .source
+                        .clone()
+                        .fetch()
+                        .and_then(|bytes| rasterize_bytes(&bytes, target, style));
                     store_raster(asset_cacher, asset_config.clone(), result);
                 }
             }
