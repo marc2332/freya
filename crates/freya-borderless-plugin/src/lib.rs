@@ -91,7 +91,18 @@ impl FreyaPlugin for BorderlessPlugin {
         "borderless"
     }
 
-    fn on_event(&mut self, _event: &mut PluginEvent, _handle: PluginHandle) {}
+    fn on_event(&mut self, event: &mut PluginEvent, _handle: PluginHandle) {
+        if let PluginEvent::StartedMeasuringLayout {
+            window,
+            root_area,
+            scale_factor,
+            ..
+        } = event
+        {
+            let inset = WindowInfo::read(window).inset() * *scale_factor as f32;
+            **root_area = root_area.inflate(-inset, -inset);
+        }
+    }
 
     fn root_component(&self, root: Element) -> Element {
         BorderlessRoot {
@@ -113,24 +124,16 @@ struct BorderlessRoot {
 impl Component for BorderlessRoot {
     fn render(&self) -> impl IntoElement {
         let info = use_window_info();
-        let shadow = info.wayland && !info.edge_to_edge;
-        let inset = if shadow { 12. } else { 0. };
+        let inset = info.inset();
 
         rect()
             .expanded()
-            .padding(inset)
-            .child(
-                rect()
-                    .expanded()
-                    .overflow(Overflow::Clip)
-                    .maybe(!info.edge_to_edge, |el| {
-                        el.corner_radius(self.corner_radius)
-                    })
-                    .maybe(shadow, |el| {
-                        el.shadow((0., 0., inset, 0., Color::BLACK.with_a(90)))
-                    })
-                    .child(self.inner.clone()),
-            )
+            .overflow(Overflow::Clip)
+            .maybe(!info.edge_to_edge, |el| el.corner_radius(self.corner_radius))
+            .maybe(inset > 0., |el| {
+                el.shadow((0., 0., inset, 0., Color::BLACK.with_a(90)))
+            })
+            .child(self.inner.clone())
             .maybe(!cfg!(target_os = "macos"), |el| {
                 el.child(ResizeBands::new(self.thickness).with_inset(inset))
             })
@@ -145,6 +148,15 @@ pub struct WindowInfo {
 }
 
 impl WindowInfo {
+    /// Margin around the app reserved for the shadow, in logical pixels.
+    pub fn inset(&self) -> f32 {
+        if self.wayland && !self.edge_to_edge {
+            12.
+        } else {
+            0.
+        }
+    }
+
     fn read(window: &Window) -> Self {
         let tiled = wayland_tiled(window);
         Self {
@@ -246,8 +258,8 @@ impl ResizeBands {
         }
     }
 
-    /// Grow the bands inwards by `inset`, so they still reach the app's edges
-    /// when it does not span the whole window.
+    /// Push the bands outwards by `inset`, so they still reach the window's edges
+    /// when the root area does not span the whole window.
     pub fn with_inset(mut self, inset: f32) -> Self {
         self.inset = inset;
         self
@@ -299,8 +311,8 @@ impl ResizeBands {
         rect()
             .position(
                 Position::new_global()
-                    .top(area.origin.y)
-                    .left(area.origin.x),
+                    .top(area.origin.y - self.inset)
+                    .left(area.origin.x - self.inset),
             )
             .width(Size::px(area.width()))
             .height(Size::px(area.height()))

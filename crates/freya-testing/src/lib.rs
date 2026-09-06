@@ -74,6 +74,7 @@ use ragnarok::{
     NodesState,
 };
 use torin::prelude::{
+    Area,
     LayoutNode,
     Size2D,
 };
@@ -329,7 +330,7 @@ impl TestingRunner {
         self.default_fonts.extend_from_slice(fonts);
         self.invalidate_text_layout();
         self.tree.borrow_mut().measure_layout(
-            self.size,
+            Area::from_size(self.size),
             &mut self.font_collection,
             &self.font_manager,
             &self.events_sender,
@@ -404,7 +405,7 @@ impl TestingRunner {
             self.invalidate_text_layout();
         }
         self.tree.borrow_mut().measure_layout(
-            self.size,
+            Area::from_size(self.size),
             &mut self.font_collection,
             &self.font_manager,
             &self.events_sender,

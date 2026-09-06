@@ -20,7 +20,10 @@ use ragnarok::{
     EventsMeasurerRunner,
     NodesState,
 };
-use torin::prelude::Size2D;
+use torin::prelude::{
+    Area,
+    Size2D,
+};
 
 use crate::{
     clipboard::WebClipboard,
@@ -116,7 +119,7 @@ impl WebApp {
             tree.accessibility_diff.request_focus(strategy);
         }
         tree.measure_layout(
-            size,
+            Area::from_size(size),
             &mut fonts.collection,
             &fonts.manager,
             &events_sender,
@@ -275,7 +278,7 @@ impl WebApp {
         let size = self.size();
         let scale_factor = self.scale_factor();
         self.tree.measure_layout(
-            size,
+            Area::from_size(size),
             &mut self.fonts.collection,
             &self.fonts.manager,
             &self.events_sender,
