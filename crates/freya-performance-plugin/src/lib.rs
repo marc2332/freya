@@ -11,7 +11,9 @@ use freya_core::prelude::{
     UserEvent,
 };
 use freya_engine::prelude::{
+    Canvas,
     Color,
+    FontCollection,
     FontStyle,
     Paint,
     PaintStyle,
@@ -19,7 +21,7 @@ use freya_engine::prelude::{
     ParagraphStyle,
     Rect,
     Slant,
-    TextShadow,
+    TextAlign,
     TextStyle,
     Weight,
     Width,
@@ -39,6 +41,8 @@ use freya_winit::{
         NativeWindowEventAction,
     },
 };
+
+const FRAME_TIME_SAMPLES: usize = 100;
 
 /// Performance overlay plugin that displays FPS, timing metrics, and other
 /// diagnostics on top of the rendered frame. Hidden by default, toggle with
@@ -68,8 +72,11 @@ struct WindowMetrics {
     gpu_name: Option<String>,
 
     frames: Vec<Instant>,
-    fps_historic: Vec<usize>,
-    max_fps: usize,
+
+    started_redraw: Option<Instant>,
+    frame_times: Vec<f32>,
+    graph_scale_max: f32,
+    graph_scale_checked_at: Option<Instant>,
 
     started_render: Option<Instant>,
 
@@ -87,6 +94,40 @@ struct WindowMetrics {
 
     started_presenting: Option<Instant>,
     finished_presenting: Option<Duration>,
+
+    overlay_time: Duration,
+}
+
+impl WindowMetrics {
+    fn record_frame_time(&mut self) {
+        let Some(started_redraw) = self.started_redraw.take() else {
+            return;
+        };
+        let frame_time = started_redraw.elapsed().as_secs_f32() * 1000.0;
+        self.frame_times.push(frame_time);
+        if self.frame_times.len() > FRAME_TIME_SAMPLES {
+            self.frame_times.remove(0);
+        }
+    }
+
+    /// Grows immediately so spikes never clip, but only reconsiders shrinking
+    /// once a second, so ordinary per-frame jitter doesn't flicker the scale.
+    fn graph_scale_max(&mut self) -> f32 {
+        let max_frame_time = self.frame_times.iter().copied().fold(0.0, f32::max);
+        let required = nice_scale_max(max_frame_time);
+
+        let due_for_recheck = match self.graph_scale_checked_at {
+            Some(checked_at) => checked_at.elapsed() >= Duration::from_secs(1),
+            None => true,
+        };
+
+        if max_frame_time > self.graph_scale_max || due_for_recheck {
+            self.graph_scale_max = required;
+            self.graph_scale_checked_at = Some(Instant::now());
+        }
+
+        self.graph_scale_max
+    }
 }
 
 impl PerformanceOverlayPlugin {
@@ -153,6 +194,8 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 let metrics = self.get_metrics(window.id());
                 let now = Instant::now();
 
+                metrics.record_frame_time();
+
                 metrics
                     .frames
                     .retain(|frame| now.duration_since(*frame).as_millis() < 1000);
@@ -170,7 +213,9 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 metrics.finished_presenting = Some(metrics.started_presenting.unwrap().elapsed())
             }
             PluginEvent::StartedMeasuringLayout { window, .. } => {
-                self.get_metrics(window.id()).started_layout = Some(Instant::now())
+                let metrics = self.get_metrics(window.id());
+                metrics.started_redraw.get_or_insert(Instant::now());
+                metrics.started_layout = Some(Instant::now());
             }
             PluginEvent::FinishedMeasuringLayout { window, .. } => {
                 let metrics = self.get_metrics(window.id());
@@ -208,7 +253,9 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                     Some(metrics.started_accessibility_updates.unwrap().elapsed())
             }
             PluginEvent::BeforeRender { window, .. } => {
-                self.get_metrics(window.id()).started_render = Some(Instant::now())
+                let metrics = self.get_metrics(window.id());
+                metrics.started_redraw.get_or_insert(Instant::now());
+                metrics.started_render = Some(Instant::now());
             }
             PluginEvent::AfterRender {
                 window,
@@ -234,161 +281,202 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 let tasks_poll_time = metrics.tasks_poll_time;
                 let finished_accessibility_updates =
                     metrics.finished_accessibility_updates.unwrap_or_default();
+                // Drawing this overlay itself takes time, measured from the previous
+                // frame since this frame's cost isn't known until after it's drawn.
+                let overlay_time = metrics.overlay_time;
+                let overlay_started = Instant::now();
 
-                // Render the texts
-                let mut paragraph_builder =
+                // FPS headline
+                let mut fps_paragraph_builder =
                     ParagraphBuilder::new(&ParagraphStyle::default(), *font_collection);
-                let mut text_style = TextStyle::default();
-                text_style.set_color(Color::from_rgb(63, 255, 0));
-                text_style.add_shadow(TextShadow::new(
-                    Color::from_rgb(60, 60, 60),
-                    (0.0, 1.0),
-                    1.0,
-                ));
-                paragraph_builder.push_style(&text_style);
-
-                // FPS
                 add_text(
-                    &mut paragraph_builder,
-                    format!("{} FPS\n", metrics.frames.len()),
-                    30.0,
+                    &mut fps_paragraph_builder,
+                    format!("{} FPS", metrics.frames.len()),
+                    24.0,
                 );
+                let mut fps_paragraph = fps_paragraph_builder.build();
+                fps_paragraph.layout(235.0);
 
-                metrics.fps_historic.push(metrics.frames.len());
-                if metrics.fps_historic.len() > 70 {
-                    metrics.fps_historic.remove(0);
+                let rows = [
+                    (
+                        "Rendering",
+                        format!("{:.3}ms", finished_render.as_secs_f64() * 1000.0),
+                    ),
+                    (
+                        "Presenting",
+                        format!("{:.3}ms", finished_presenting.as_secs_f64() * 1000.0),
+                    ),
+                    (
+                        "Layout",
+                        format!("{:.3}ms", finished_layout.as_secs_f64() * 1000.0),
+                    ),
+                    (
+                        "Tree Updates",
+                        format!("{:.3}ms", finished_tree_updates.as_secs_f64() * 1000.0),
+                    ),
+                    (
+                        "a11y Updates",
+                        format!(
+                            "{:.3}ms",
+                            finished_accessibility_updates.as_secs_f64() * 1000.0
+                        ),
+                    ),
+                    (
+                        "Tasks",
+                        format!("{:.3}ms", tasks_poll_time.as_secs_f64() * 1000.0),
+                    ),
+                    (
+                        "Overlay",
+                        format!("{:.3}ms", overlay_time.as_secs_f64() * 1000.0),
+                    ),
+                    (
+                        "Frame",
+                        format!(
+                            "{:.3}ms",
+                            (finished_render
+                                + finished_presenting
+                                + finished_layout
+                                + finished_tree_updates
+                                + tasks_poll_time
+                                + finished_accessibility_updates
+                                + overlay_time)
+                                .as_secs_f64()
+                                * 1000.0
+                        ),
+                    ),
+                    ("Tree Nodes", tree.size().to_string()),
+                    ("Layout Nodes", tree.layout.size().to_string()),
+                    ("Scale Factor", format!("{}x", window.scale_factor())),
+                    // TODO: Also track events measurement
+                    (
+                        "Animation clock speed",
+                        format!("{}x", animation_clock.speed()),
+                    ),
+                    ("Graphics", metrics.graphics_driver.to_string()),
+                    ("Freya", env!("CARGO_PKG_VERSION").to_string()),
+                    (
+                        "Build",
+                        (if cfg!(debug_assertions) {
+                            "Debug"
+                        } else {
+                            "Release"
+                        })
+                        .to_string(),
+                    ),
+                ];
+
+                let mut keys_paragraph_builder =
+                    ParagraphBuilder::new(&ParagraphStyle::default(), *font_collection);
+                let mut values_style = ParagraphStyle::default();
+                values_style.set_text_align(TextAlign::Right);
+                let mut values_paragraph_builder =
+                    ParagraphBuilder::new(&values_style, *font_collection);
+                for (key, value) in &rows {
+                    add_text(&mut keys_paragraph_builder, format!("{key}\n"), 14.0);
+                    add_text(&mut values_paragraph_builder, format!("{value}\n"), 14.0);
                 }
+                let mut keys_paragraph = keys_paragraph_builder.build();
+                keys_paragraph.layout(235.0);
+                let mut values_paragraph = values_paragraph_builder.build();
+                values_paragraph.layout(235.0);
 
-                // Rendering time
-                add_text(
-                    &mut paragraph_builder,
-                    format!(
-                        "Rendering: {:.3}ms \n",
-                        finished_render.as_secs_f64() * 1000.0
-                    ),
-                    18.0,
-                );
+                let gpu_paragraph = metrics.gpu_name.as_ref().map(|gpu_name| {
+                    let mut builder =
+                        ParagraphBuilder::new(&ParagraphStyle::default(), *font_collection);
+                    add_text(&mut builder, format!("GPU: {gpu_name}"), 14.0);
+                    let mut paragraph = builder.build();
+                    paragraph.layout(235.0);
+                    paragraph
+                });
 
-                // Presenting time
-                add_text(
-                    &mut paragraph_builder,
-                    format!(
-                        "Presenting: {:.3}ms \n",
-                        finished_presenting.as_secs_f64() * 1000.0
-                    ),
-                    18.0,
-                );
+                let graph_left = 40.0;
+                let graph_top = fps_paragraph.height() + 10.0;
+                let graph_bottom = graph_top + 60.0;
 
-                // Layout time
-                add_text(
-                    &mut paragraph_builder,
-                    format!("Layout: {:.3}ms \n", finished_layout.as_secs_f64() * 1000.0),
-                    18.0,
-                );
-
-                // Tree updates time
-                add_text(
-                    &mut paragraph_builder,
-                    format!(
-                        "Tree Updates: {:.3}ms \n",
-                        finished_tree_updates.as_secs_f64() * 1000.0
-                    ),
-                    18.0,
-                );
-
-                // a11y updates time
-                add_text(
-                    &mut paragraph_builder,
-                    format!(
-                        "a11y Updates: {:.3}ms \n",
-                        finished_accessibility_updates.as_secs_f64() * 1000.0
-                    ),
-                    18.0,
-                );
-
-                // Async tasks polling time
-                add_text(
-                    &mut paragraph_builder,
-                    format!("Tasks: {:.3}ms \n", tasks_poll_time.as_secs_f64() * 1000.0),
-                    18.0,
-                );
-
-                // Tree size
-                add_text(
-                    &mut paragraph_builder,
-                    format!("{} Tree Nodes \n", tree.size()),
-                    14.0,
-                );
-
-                // Layout size
-                add_text(
-                    &mut paragraph_builder,
-                    format!("{} Layout Nodes \n", tree.layout.size()),
-                    14.0,
-                );
-
-                // Scale Factor
-                add_text(
-                    &mut paragraph_builder,
-                    format!("Scale Factor: {}x\n", window.scale_factor()),
-                    14.0,
-                );
-
-                // TODO: Also track events measurement
-
-                // Animation clock speed
-                add_text(
-                    &mut paragraph_builder,
-                    format!("Animation clock speed: {}x \n", animation_clock.speed()),
-                    14.0,
-                );
-
-                // Graphics driver
-                add_text(
-                    &mut paragraph_builder,
-                    format!("Graphics: {} \n", metrics.graphics_driver),
-                    14.0,
-                );
-
-                // Picked GPU
-                if let Some(gpu_name) = &metrics.gpu_name {
-                    add_text(&mut paragraph_builder, format!("GPU: {gpu_name} \n"), 14.0);
-                }
-
-                let mut paragraph = paragraph_builder.build();
-                paragraph.layout(235.0);
-
-                metrics.max_fps = metrics.max_fps.max(
-                    metrics
-                        .fps_historic
-                        .iter()
-                        .max()
-                        .copied()
-                        .unwrap_or_default(),
-                );
-
-                let start_x = 5.0;
-                let start_y = paragraph.height() + 20.0 + metrics.max_fps.max(60) as f32;
+                let rows_top = graph_bottom + 22.0;
+                let gpu_top = rows_top + keys_paragraph.height() + 4.0;
+                let content_bottom = gpu_paragraph
+                    .as_ref()
+                    .map(|paragraph| gpu_top + paragraph.height())
+                    .unwrap_or(rows_top + keys_paragraph.height());
 
                 let mut paint = Paint::default();
                 paint.set_anti_alias(true);
                 paint.set_style(PaintStyle::Fill);
-                paint.set_color(Color::from_argb(225, 225, 225, 225));
-                canvas.draw_rect(Rect::new(5., 5., 245.0, start_y + 15.0), &paint);
+                paint.set_color(Color::from_argb(235, 24, 24, 24));
+                canvas.draw_rect(Rect::new(5., 5., 245.0, content_bottom + 10.0), &paint);
 
-                paragraph.paint(canvas, (5.0, 0.0));
-
-                for (i, fps) in metrics.fps_historic.iter().enumerate() {
-                    let mut paint = Paint::default();
-                    paint.set_anti_alias(true);
-                    paint.set_style(PaintStyle::Fill);
-                    paint.set_color(Color::from_rgb(63, 255, 0));
-                    paint.set_stroke_width(3.0);
-
-                    let x = start_x + (i * 2) as f32;
-                    let y = start_y - *fps as f32 + 2.0;
-                    canvas.draw_circle((x, y), 2.0, &paint);
+                fps_paragraph.paint(canvas, (5.0, 0.0));
+                keys_paragraph.paint(canvas, (5.0, rows_top));
+                values_paragraph.paint(canvas, (5.0, rows_top));
+                if let Some(paragraph) = &gpu_paragraph {
+                    paragraph.paint(canvas, (5.0, gpu_top));
                 }
+
+                let scale_max = metrics.graph_scale_max();
+
+                let mut axis_paint = Paint::default();
+                axis_paint.set_anti_alias(true);
+                axis_paint.set_style(PaintStyle::Stroke);
+                axis_paint.set_stroke_width(1.0);
+                axis_paint.set_color(Color::from_rgb(130, 130, 130));
+
+                canvas.draw_line(
+                    (graph_left, graph_top),
+                    (graph_left, graph_bottom),
+                    &axis_paint,
+                );
+                canvas.draw_line(
+                    (graph_left, graph_bottom),
+                    (graph_left + 195.0, graph_bottom),
+                    &axis_paint,
+                );
+
+                let decimals = if scale_max < 10.0 { 1 } else { 0 };
+                for (value, y) in [
+                    (scale_max, graph_top),
+                    (scale_max / 2.0, graph_top + 30.0),
+                    (0.0, graph_bottom),
+                ] {
+                    canvas.draw_line((graph_left - 3.0, y), (graph_left, y), &axis_paint);
+                    draw_axis_label(
+                        canvas,
+                        font_collection,
+                        &format!("{value:.decimals$}ms"),
+                        7.0,
+                        y - 6.0,
+                    );
+                }
+
+                draw_axis_label(
+                    canvas,
+                    font_collection,
+                    &format!("last {} frames", metrics.frame_times.len()),
+                    graph_left + 62.5,
+                    graph_bottom + 4.0,
+                );
+
+                let mut line_paint = Paint::default();
+                line_paint.set_anti_alias(true);
+                line_paint.set_style(PaintStyle::Stroke);
+                line_paint.set_stroke_width(1.5);
+                line_paint.set_color(Color::from_rgb(255, 204, 92));
+
+                let step = 195.0 / (FRAME_TIME_SAMPLES - 1) as f32;
+                let point = |index: usize, frame_time: f32| {
+                    let x = graph_left + index as f32 * step;
+                    let y = graph_bottom - (frame_time / scale_max).min(1.0) * 60.0;
+                    (x, y)
+                };
+                for (index, window) in metrics.frame_times.windows(2).enumerate() {
+                    canvas.draw_line(
+                        point(index, window[0]),
+                        point(index + 1, window[1]),
+                        &line_paint,
+                    );
+                }
+
+                metrics.overlay_time = overlay_started.elapsed();
 
                 canvas.restore();
             }
@@ -397,16 +485,43 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
     }
 }
 
+/// Rounds up to a human-friendly axis ceiling (1/2/5 times a power of ten),
+/// so a graph of sub-millisecond frame times doesn't get stuck at a flat 20ms scale.
+fn nice_scale_max(value: f32) -> f32 {
+    if value <= 0.0 {
+        return 1.0;
+    }
+    let magnitude = 10f32.powf(value.log10().floor());
+    let fraction = value / magnitude;
+    let nice_fraction = if fraction <= 1.0 {
+        1.0
+    } else if fraction <= 2.0 {
+        2.0
+    } else if fraction <= 5.0 {
+        5.0
+    } else {
+        10.0
+    };
+    nice_fraction * magnitude
+}
+
+fn draw_axis_label(canvas: &Canvas, font_collection: &FontCollection, text: &str, x: f32, y: f32) {
+    let mut paragraph_builder = ParagraphBuilder::new(&ParagraphStyle::default(), font_collection);
+    let mut text_style = TextStyle::default();
+    text_style.set_color(Color::from_rgb(170, 170, 170));
+    text_style.set_font_size(10.0);
+    paragraph_builder.push_style(&text_style);
+    paragraph_builder.add_text(text);
+    let mut paragraph = paragraph_builder.build();
+    paragraph.layout(90.0);
+    paragraph.paint(canvas, (x, y));
+}
+
 fn add_text(paragraph_builder: &mut ParagraphBuilder, text: String, font_size: f32) {
     let mut text_style = TextStyle::default();
-    text_style.set_color(Color::from_rgb(25, 225, 35));
-    let font_style = FontStyle::new(Weight::BOLD, Width::EXPANDED, Slant::Upright);
+    text_style.set_color(Color::from_rgb(255, 204, 92));
+    let font_style = FontStyle::new(Weight::BOLD, Width::NORMAL, Slant::Upright);
     text_style.set_font_style(font_style);
-    text_style.add_shadow(TextShadow::new(
-        Color::from_rgb(65, 65, 65),
-        (0.0, 1.0),
-        1.0,
-    ));
     text_style.set_font_size(font_size);
     paragraph_builder.push_style(&text_style);
     paragraph_builder.add_text(text);
