@@ -310,7 +310,6 @@ impl From<bool> for Interactive {
 pub struct EffectState {
     pub overflow: Overflow,
     pub clips: Rc<[NodeId]>,
-    /// Clip of the root's direct child, the only one overlays honor.
     pub root_clip: Option<NodeId>,
 
     pub rotations: Rc<[NodeId]>,
