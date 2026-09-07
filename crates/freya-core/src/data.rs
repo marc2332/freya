@@ -422,6 +422,7 @@ pub struct AccessibilityState {
     pub a11y_id: AccessibilityId,
     pub a11y_focusable: Focusable,
     pub a11y_member_of: Option<AccessibilityId>,
+    a11y_intrinsic_id: AccessibilityId,
 }
 
 impl AccessibilityState {
@@ -434,12 +435,15 @@ impl AccessibilityState {
     ) -> Self {
         let data = element.accessibility();
 
-        let a11y_id = if node_id == NodeId::ROOT {
+        let a11y_intrinsic_id = if node_id == NodeId::ROOT {
             ACCESSIBILITY_ROOT_ID
         } else {
-            data.a11y_id
-                .unwrap_or_else(|| AccessibilityId(accessibility_generator.new_id()))
+            AccessibilityId(accessibility_generator.new_id())
         };
+        let a11y_id = data
+            .a11y_id
+            .filter(|_| node_id != NodeId::ROOT)
+            .unwrap_or(a11y_intrinsic_id);
 
         accessibility_diff.add_or_update(node_id);
 
@@ -459,6 +463,7 @@ impl AccessibilityState {
             a11y_id,
             a11y_focusable: data.a11y_focusable.clone(),
             a11y_member_of: data.builder.member_of(),
+            a11y_intrinsic_id,
         }
     }
 
@@ -493,9 +498,8 @@ impl AccessibilityState {
             group.retain(|id| *id != self.a11y_id);
         }
 
-        if let Some(a11y_id) = data.a11y_id
-            && self.a11y_id != a11y_id
-        {
+        let a11y_id = data.a11y_id.unwrap_or(self.a11y_intrinsic_id);
+        if self.a11y_id != a11y_id {
             accessibility_diff.add_or_update(node_id);
             self.a11y_id = a11y_id;
         }
