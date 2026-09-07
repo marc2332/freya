@@ -89,9 +89,7 @@ impl OpenGLDriver {
         gpu_resource_cache_limit: usize,
     ) -> Result<(Self, Window), Box<dyn std::error::Error>> {
         let transparent = window_attributes.transparent;
-        let template = ConfigTemplateBuilder::new()
-            .with_alpha_size(8)
-            .with_transparency(transparent);
+        let template = Self::config_template(transparent);
 
         let build_with_preference =
             |preference| -> Result<(Self, Window), Box<dyn std::error::Error>> {
@@ -124,9 +122,7 @@ impl OpenGLDriver {
         gpu_resource_cache_limit: usize,
         transparent: bool,
     ) -> Result<Self, Box<dyn std::error::Error>> {
-        let template = ConfigTemplateBuilder::new()
-            .with_alpha_size(8)
-            .with_transparency(transparent)
+        let template = Self::config_template(transparent)
             .compatible_with_native_window(window.window_handle()?.as_raw());
 
         let build_with_preference = |preference| -> Result<Self, Box<dyn std::error::Error>> {
@@ -310,19 +306,24 @@ impl OpenGLDriver {
         self.surface = surface;
     }
 
-    /// Pick the OpenGL config, preferring transparency then fewer samples.
+    fn config_template(transparent: bool) -> ConfigTemplateBuilder {
+        ConfigTemplateBuilder::new()
+            .with_alpha_size(if transparent { 8 } else { 0 })
+            .with_transparency(transparent)
+    }
+
+    /// Pick the OpenGL config.
     fn pick_config(configs: Box<dyn Iterator<Item = Config> + '_>, transparent: bool) -> Config {
         configs
-            .reduce(|accum, config| {
-                let transparency_check = transparent
-                    && config.supports_transparency().unwrap_or(false)
-                    && !accum.supports_transparency().unwrap_or(false);
+            .max_by_key(|config| {
+                let supports_transparency =
+                    transparent && config.supports_transparency().unwrap_or(false);
 
-                if transparency_check || config.num_samples() < accum.num_samples() {
-                    config
-                } else {
-                    accum
-                }
+                (
+                    config.hardware_accelerated(),
+                    supports_transparency,
+                    -(config.num_samples() as i32),
+                )
             })
             .expect("at least one OpenGL config")
     }
