@@ -12,18 +12,23 @@ categories = ["gui"]
 [lints]
 workspace = true
 
+[features]
+default = ["pty"]
+pty = ["dep:portable-pty"]
+
 [dependencies]
 freya-core = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
 rustc-hash = { workspace = true }
 thiserror = { workspace = true }
-blocking = { workspace = true }
 keyboard-types = { workspace = true }
 
-# PTY and terminal emulator
-portable-pty = "0.9"
+# Terminal emulator
 rio-vt = "=0.5.26"
+
+# Built-in PTY backend
+portable-pty = { version = "0.9", optional = true }
 
 # URL detection in terminal output
 linkify = { workspace = true }
@@ -31,6 +36,7 @@ linkify = { workspace = true }
 # Async
 async-io = { workspace = true }
 futures-lite = { workspace = true }
+futures-channel = { workspace = true }
 
 [dev-dependencies]
 freya = { path = "../freya" }

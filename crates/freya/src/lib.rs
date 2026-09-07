@@ -91,6 +91,7 @@
 //! - `titlebar`: Enables the [TitlebarButton](components::TitlebarButton) component.
 //! - `borderless`: Reexport [freya_borderless_plugin] under [borderless]. See [Borderless Windows](self::_docs::borderless).
 //! - `terminal`: Reexport [freya_terminal] under [terminal].
+//! - `terminal-pty`: Enables the PTY backend from [freya_terminal]. Implies `terminal`.
 //! - `code-editor`: Reexport [freya_code_editor] under [code_editor].
 //! - `camera`: Reexport [freya_camera] under [camera].
 //! - `web`: Reexport [freya_web] under [web].
