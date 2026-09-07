@@ -89,6 +89,9 @@ struct WindowMetrics {
     started_tasks_poll: Option<Instant>,
     tasks_poll_time: Duration,
 
+    started_events: Option<Instant>,
+    events_time: Duration,
+
     started_accessibility_updates: Option<Instant>,
     finished_accessibility_updates: Option<Duration>,
 
@@ -202,8 +205,11 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
 
                 metrics.frames.push(now);
 
-                // Accumulated across the frame, so it needs a reset
+                // Accumulated across the frame, so they need a reset
                 metrics.tasks_poll_time = Duration::ZERO;
+                metrics.events_time = Duration::ZERO;
+
+                metrics.finished_layout = None;
             }
             PluginEvent::BeforePresenting { window, .. } => {
                 self.get_metrics(window.id()).started_presenting = Some(Instant::now())
@@ -244,6 +250,21 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                     }));
                 }
             }
+            PluginEvent::StartedMeasuringEvents { window, .. } => {
+                self.get_metrics(window.id()).started_events = Some(Instant::now())
+            }
+            PluginEvent::FinishedMeasuringEvents { window, .. } => {
+                let metrics = self.get_metrics(window.id());
+                if let Some(started) = metrics.started_events.take() {
+                    metrics.events_time += started.elapsed();
+                }
+                if self.enabled {
+                    handle.send_event_loop_event(NativeEvent::Window(NativeWindowEvent {
+                        window_id: window.id(),
+                        action: NativeWindowEventAction::User(UserEvent::RequestRedraw),
+                    }));
+                }
+            }
             PluginEvent::BeforeAccessibility { window, .. } => {
                 self.get_metrics(window.id()).started_accessibility_updates = Some(Instant::now())
             }
@@ -276,17 +297,15 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
 
                 let finished_render = started_render.elapsed();
                 let finished_presenting = metrics.finished_presenting.unwrap_or_default();
-                let finished_layout = metrics.finished_layout.unwrap();
+                let finished_layout = metrics.finished_layout.unwrap_or_default();
                 let finished_tree_updates = metrics.finished_tree_updates.unwrap_or_default();
                 let tasks_poll_time = metrics.tasks_poll_time;
+                let events_time = metrics.events_time;
                 let finished_accessibility_updates =
                     metrics.finished_accessibility_updates.unwrap_or_default();
-                // Drawing this overlay itself takes time, measured from the previous
-                // frame since this frame's cost isn't known until after it's drawn.
                 let overlay_time = metrics.overlay_time;
                 let overlay_started = Instant::now();
 
-                // FPS headline
                 let mut fps_paragraph_builder =
                     ParagraphBuilder::new(&ParagraphStyle::default(), *font_collection);
                 add_text(
@@ -326,6 +345,10 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                         format!("{:.3}ms", tasks_poll_time.as_secs_f64() * 1000.0),
                     ),
                     (
+                        "Events",
+                        format!("{:.3}ms", events_time.as_secs_f64() * 1000.0),
+                    ),
+                    (
                         "Overlay",
                         format!("{:.3}ms", overlay_time.as_secs_f64() * 1000.0),
                     ),
@@ -338,6 +361,7 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                                 + finished_layout
                                 + finished_tree_updates
                                 + tasks_poll_time
+                                + events_time
                                 + finished_accessibility_updates
                                 + overlay_time)
                                 .as_secs_f64()
@@ -347,12 +371,11 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                     ("Tree Nodes", tree.size().to_string()),
                     ("Layout Nodes", tree.layout.size().to_string()),
                     ("Scale Factor", format!("{}x", window.scale_factor())),
-                    // TODO: Also track events measurement
                     (
                         "Animation clock speed",
                         format!("{}x", animation_clock.speed()),
                     ),
-                    ("Graphics", metrics.graphics_driver.to_string()),
+                    ("Renderer", metrics.graphics_driver.to_string()),
                     ("Freya", env!("CARGO_PKG_VERSION").to_string()),
                     (
                         "Build",
@@ -485,8 +508,7 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
     }
 }
 
-/// Rounds up to a human-friendly axis ceiling (1/2/5 times a power of ten),
-/// so a graph of sub-millisecond frame times doesn't get stuck at a flat 20ms scale.
+/// Rounds up to a human-friendly axis ceiling (1/2/5 times a power of ten).
 fn nice_scale_max(value: f32) -> f32 {
     if value <= 0.0 {
         return 1.0;

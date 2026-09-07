@@ -499,7 +499,20 @@ impl AppWindow {
 
     /// Measures the given platform events and emits the results.
     /// Wheel events schedule a mouse move to refresh hover states.
-    pub(crate) fn process_platform_events(&mut self, mut platform_events: Vec<PlatformEvent>) {
+    pub(crate) fn process_platform_events(
+        &mut self,
+        mut platform_events: Vec<PlatformEvent>,
+        plugins: &mut PluginsManager,
+        handle: PluginHandle,
+    ) {
+        plugins.send(
+            PluginEvent::StartedMeasuringEvents {
+                window: &self.window,
+                tree: &self.tree,
+            },
+            handle.clone(),
+        );
+
         if platform_events
             .iter()
             .any(|platform_event| matches!(platform_event, PlatformEvent::Wheel { .. }))
@@ -519,6 +532,14 @@ impl AppWindow {
         self.events_sender
             .unbounded_send(EventsChunk::Processed(processed_events))
             .unwrap();
+
+        plugins.send(
+            PluginEvent::FinishedMeasuringEvents {
+                window: &self.window,
+                tree: &self.tree,
+            },
+            handle,
+        );
     }
 
     /// Sets the custom scale factor, clamped to a reasonable range.
