@@ -18,6 +18,3 @@ workspace = true
 freya-core = { workspace = true }
 freya-winit = { workspace = true }
 torin = { workspace = true }
-
-[target.'cfg(target_os = "linux")'.dependencies]
-smithay-client-toolkit = { workspace = true }

@@ -152,7 +152,6 @@ rfd = "0.17"
 # Desktop renderer
 raw-window-handle = "0.6.0"
 winit = "0.30.13"
-smithay-client-toolkit = { version = "0.19.2", default-features = false }
 
 # Tray
 tray-icon = "0.21"

@@ -6,10 +6,7 @@ use freya_winit::{
         PluginEvent,
         PluginHandle,
     },
-    winit::window::{
-        ResizeDirection,
-        Window,
-    },
+    winit::window::ResizeDirection,
 };
 use torin::{
     position::Position,
@@ -40,7 +37,6 @@ const DIRECTIONS: [ResizeDirection; 8] = [
 ///   the window borders resizes it and hovering them shows the resize cursors.
 /// - **macOS**: no bands, resizing is left to the system.
 /// - **All**: an optional corner radius rounds the app.
-/// - **Linux Wayland**: a drop shadow is painted around the app.
 ///
 /// # Example
 ///
@@ -112,121 +108,39 @@ struct BorderlessRoot {
 
 impl Component for BorderlessRoot {
     fn render(&self) -> impl IntoElement {
-        let info = use_window_info();
-        let shadow = info.wayland && !info.edge_to_edge;
-        let inset = if shadow { 12. } else { 0. };
+        let maximized = use_maximized();
 
         rect()
             .expanded()
-            .padding(inset)
-            .child(
-                rect()
-                    .expanded()
-                    .overflow(Overflow::Clip)
-                    .maybe(!info.edge_to_edge, |el| {
-                        el.corner_radius(self.corner_radius)
-                    })
-                    .maybe(shadow, |el| {
-                        el.shadow((0., 0., inset, 0., Color::BLACK.with_a(90)))
-                    })
-                    .child(self.inner.clone()),
-            )
+            .overflow(Overflow::Clip)
+            .maybe(!maximized(), |el| el.corner_radius(self.corner_radius))
+            .child(self.inner.clone())
             .maybe(!cfg!(target_os = "macos"), |el| {
-                el.child(ResizeBands::new(self.thickness).with_inset(inset))
+                el.child(ResizeBands::new(self.thickness))
             })
     }
 }
 
-#[derive(Clone, Copy, Default, PartialEq)]
-pub struct WindowInfo {
-    /// The window is fullscreen, maximized or snapped to a side of the monitor.
-    pub edge_to_edge: bool,
-    pub wayland: bool,
-}
-
-impl WindowInfo {
-    fn read(window: &Window) -> Self {
-        let tiled = wayland_tiled(window);
-        Self {
-            edge_to_edge: window.fullscreen().is_some()
-                || window.is_maximized()
-                || tiled == Some(true),
-            wayland: tiled.is_some(),
-        }
-    }
-}
-
-pub fn use_window_info() -> WindowInfo {
-    let mut info = use_state(WindowInfo::default);
+/// Whether the window is fullscreen or maximized.
+pub fn use_maximized() -> State<bool> {
+    let mut maximized = use_state(|| false);
 
     use_side_effect(move || {
         let _ = Platform::get().root_size.read();
         Platform::get().with_window(Platform::window_id(), move |window| {
-            if let Some(mut info) = info.try_write() {
-                *info = WindowInfo::read(window);
+            if let Some(mut maximized) = maximized.try_write() {
+                *maximized = window.fullscreen().is_some() || window.is_maximized();
             }
         });
     });
 
-    info()
-}
-
-/// Whether a Wayland window is tiled, `None` on any other backend.
-#[cfg(target_os = "linux")]
-fn wayland_tiled(window: &Window) -> Option<bool> {
-    use freya_winit::winit::{
-        platform::wayland::WindowExtWayland,
-        raw_window_handle::{
-            HasDisplayHandle,
-            RawDisplayHandle,
-        },
-    };
-    use smithay_client_toolkit::{
-        reexports::{
-            client::{
-                Connection,
-                Proxy,
-                backend::{
-                    Backend,
-                    ObjectId,
-                },
-            },
-            protocols::xdg::shell::client::xdg_toplevel::XdgToplevel,
-        },
-        shell::xdg::window::Window as XdgWindow,
-    };
-
-    let toplevel = window.xdg_toplevel()?;
-    let Ok(display) = window.display_handle() else {
-        return Some(false);
-    };
-    let RawDisplayHandle::Wayland(display) = display.as_raw() else {
-        return Some(false);
-    };
-
-    // Both pointers belong to the live winit window and outlive this call.
-    let backend = unsafe { Backend::from_foreign_display(display.display.as_ptr().cast()) };
-    let connection = Connection::from_backend(backend);
-    let id = unsafe { ObjectId::from_ptr(XdgToplevel::interface(), toplevel.as_ptr().cast()) };
-
-    let tiled = id
-        .ok()
-        .and_then(|id| XdgToplevel::from_id(&connection, id).ok())
-        .and_then(|toplevel| XdgWindow::from_xdg_toplevel(&toplevel))
-        .is_some_and(|xdg_window| format!("{xdg_window:?}").contains("TILED"));
-    Some(tiled)
-}
-
-#[cfg(not(target_os = "linux"))]
-fn wayland_tiled(_window: &Window) -> Option<bool> {
-    None
+    maximized
 }
 
 /// Invisible bands along the window borders that drive a native resize.
 #[derive(PartialEq)]
 pub struct ResizeBands {
     thickness: f32,
-    inset: f32,
     key: DiffKey,
 }
 
@@ -241,29 +155,21 @@ impl ResizeBands {
     pub fn new(thickness: f32) -> Self {
         Self {
             thickness,
-            inset: 0.,
             key: DiffKey::None,
         }
-    }
-
-    /// Grow the bands inwards by `inset`, so they still reach the app's edges
-    /// when it does not span the whole window.
-    pub fn with_inset(mut self, inset: f32) -> Self {
-        self.inset = inset;
-        self
     }
 }
 
 impl Component for ResizeBands {
     fn render(&self) -> impl IntoElement {
-        let info = use_window_info();
+        let maximized = use_maximized();
         let size = *Platform::get().root_size.read();
 
         rect()
             .layer(Layer::Overlay)
             .width(Size::px(0.))
             .height(Size::px(0.))
-            .maybe(!info.edge_to_edge, |el| {
+            .maybe(!maximized(), |el| {
                 el.children(
                     DIRECTIONS
                         .iter()
@@ -275,8 +181,8 @@ impl Component for ResizeBands {
 
 impl ResizeBands {
     fn band(&self, direction: ResizeDirection, size: Size2D) -> Element {
-        let band = self.inset + self.thickness;
-        let corner = band + self.thickness;
+        let band = self.thickness;
+        let corner = band * 2.;
         let span_x = (size.width - corner * 2.).max(0.);
         let span_y = (size.height - corner * 2.).max(0.);
         let far_x = (size.width - band).max(0.);
