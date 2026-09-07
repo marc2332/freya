@@ -62,6 +62,9 @@ members = [
   "./examples/feature_webviews_resizable",
 ]
 
+[workspace.metadata.release]
+rate-limit.existing-packages = 40
+
 [workspace.dependencies]
 freya = { path = "./crates/freya", version = "0.5.0-rc.5" }
 freya-core = { path = "./crates/freya-core", version = "0.5.0-rc.5" }
