@@ -3055,6 +3055,7 @@ dependencies = [
  "torin",
  "tracing",
  "tray-icon",
+ "windows-sys 0.60.2",
  "winit",
 ]
 
