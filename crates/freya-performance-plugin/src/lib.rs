@@ -113,8 +113,6 @@ impl WindowMetrics {
         }
     }
 
-    /// Grows immediately so spikes never clip, but only reconsiders shrinking
-    /// once a second, so ordinary per-frame jitter doesn't flicker the scale.
     fn graph_scale_max(&mut self) -> f32 {
         let max_frame_time = self.frame_times.iter().copied().fold(0.0, f32::max);
         let required = nice_scale_max(max_frame_time);
@@ -208,7 +206,6 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 // Accumulated across the frame, so they need a reset
                 metrics.tasks_poll_time = Duration::ZERO;
                 metrics.events_time = Duration::ZERO;
-
                 metrics.finished_layout = None;
             }
             PluginEvent::BeforePresenting { window, .. } => {
