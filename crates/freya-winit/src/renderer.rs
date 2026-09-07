@@ -22,7 +22,6 @@ use futures_util::{
 use ragnarok::EventsExecutorRunner;
 use rustc_hash::FxHashMap;
 use torin::prelude::{
-    Area,
     CursorPoint,
     Size2D,
 };
@@ -788,24 +787,21 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     let scale_factor = app.effective_scale_factor();
                     hotpath::measure_block!("RedrawRequested", {
                         if app.process_layout_on_next_render {
+                            self.plugins.send(
+                                PluginEvent::StartedMeasuringLayout {
+                                    window: &app.window,
+                                    tree: &app.tree,
+                                },
+                                PluginHandle::new(&self.proxy),
+                            );
                             let size: Size2D = (
                                 app.window.inner_size().width as f32,
                                 app.window.inner_size().height as f32,
                             )
                                 .into();
-                            let mut root_area = Area::from_size(size);
-                            self.plugins.send(
-                                PluginEvent::StartedMeasuringLayout {
-                                    window: &app.window,
-                                    tree: &app.tree,
-                                    root_area: &mut root_area,
-                                    scale_factor,
-                                },
-                                PluginHandle::new(&self.proxy),
-                            );
 
                             app.tree.measure_layout(
-                                root_area,
+                                size,
                                 &mut self.font_collection,
                                 &self.font_manager,
                                 &app.events_sender,

@@ -170,18 +170,18 @@ impl Position {
                     left,
                 } = &**global_position;
                 let y = {
-                    let mut y = root_area.min_y();
+                    let mut y = 0.;
                     if let Some(top) = top {
-                        y += top;
+                        y = *top;
                     } else if let Some(bottom) = bottom {
                         y = root_area.max_y() - bottom - area_size.height;
                     }
                     y
                 };
                 let x = {
-                    let mut x = root_area.min_x();
+                    let mut x = 0.;
                     if let Some(left) = left {
-                        x += left;
+                        x = *left;
                     } else if let Some(right) = right {
                         x = root_area.max_x() - right - area_size.width;
                     }

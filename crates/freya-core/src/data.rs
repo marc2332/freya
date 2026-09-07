@@ -310,7 +310,6 @@ impl From<bool> for Interactive {
 pub struct EffectState {
     pub overflow: Overflow,
     pub clips: Rc<[NodeId]>,
-    pub root_clip: Option<NodeId>,
 
     pub rotations: Rc<[NodeId]>,
     pub rotation: Option<f32>,
@@ -349,10 +348,7 @@ impl EffectState {
 
         match layer {
             Layer::Overlay | Layer::OverlayLevel(_) => {
-                self.clips = match parent_effect_state.root_clip {
-                    Some(root_clip) => Rc::from([root_clip].as_slice()),
-                    None => Rc::default(),
-                };
+                self.clips = Rc::default();
             }
             Layer::Relative(_) if parent_effect_state.overflow == Overflow::Clip => {
                 let mut clips = parent_effect_state.clips.to_vec();
@@ -368,10 +364,6 @@ impl EffectState {
             self.overflow = effect_data.overflow;
             self.blur = effect_data.blur;
             self.transform_origin = effect_data.transform_origin;
-
-            if parent_node_id == NodeId::ROOT && self.overflow == Overflow::Clip {
-                self.root_clip = Some(node_id);
-            }
 
             if let Some(rotation) = effect_data.rotation {
                 let mut rotations = parent_effect_state.rotations.to_vec();

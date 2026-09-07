@@ -2610,7 +2610,6 @@ version = "0.5.0-rc.4"
 dependencies = [
  "freya-core",
  "freya-winit",
- "smithay-client-toolkit 0.19.2",
  "torin",
 ]
 

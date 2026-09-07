@@ -675,7 +675,7 @@ impl Tree {
     #[allow(clippy::too_many_arguments)]
     pub fn measure_layout(
         &mut self,
-        root_area: Area,
+        size: Size2D,
         font_collection: &mut FontCollection,
         font_manager: &FontMgr,
         events_sender: &UnboundedSender<EventsChunk>,
@@ -704,7 +704,7 @@ impl Tree {
         self.layout.find_best_root(&tree_adapter);
         self.layout.measure(
             NodeId::ROOT,
-            root_area,
+            Area::from_size(size),
             &mut Some(layout_adapter),
             &tree_adapter,
         );

@@ -14,7 +14,6 @@ pub use keyboard_types::{
     Key,
     Modifiers,
 };
-use torin::prelude::Area;
 use winit::{
     event_loop::EventLoopProxy,
     window::{
@@ -170,12 +169,10 @@ pub enum PluginEvent<'a> {
         animation_clock: &'a AnimationClock,
     },
 
-    /// Before starting to measure the layout, plugins may shrink the root area.
+    /// Before starting to measure the layout.
     StartedMeasuringLayout {
         window: &'a Window,
         tree: &'a Tree,
-        root_area: &'a mut Area,
-        scale_factor: f64,
     },
 
     /// After measuringg the layout.

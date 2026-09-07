@@ -22,7 +22,6 @@ use futures_channel::mpsc::{
     unbounded,
 };
 use torin::prelude::{
-    Area,
     Size,
     Size2D,
 };
@@ -113,7 +112,7 @@ impl EmbeddedFreya {
         self.runner
             .run_in(|| self.tree.apply_mutations(mutations, scale_factor));
         self.tree.measure_layout(
-            Area::from_size(self.size),
+            self.size,
             &mut self.font_collection,
             &self.font_manager,
             &self.events_sender,

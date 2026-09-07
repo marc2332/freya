@@ -11,10 +11,7 @@ use freya_engine::prelude::{
     TypefaceFontProvider,
 };
 use torin::{
-    prelude::{
-        Area,
-        Size2D,
-    },
+    prelude::Size2D,
     size::Size,
 };
 
@@ -179,7 +176,7 @@ fn accessibility() {
     font_collection.set_dynamic_font_manager(font_manager.clone());
     let mut nodes_state = NodesState::default();
     tree.measure_layout(
-        Area::from_size(Size2D::new(1000.0, 1000.0)),
+        Size2D::new(1000.0, 1000.0),
         &mut font_collection,
         &font_manager,
         &events_sender,

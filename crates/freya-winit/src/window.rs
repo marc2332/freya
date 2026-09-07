@@ -42,7 +42,6 @@ use raw_window_handle::HasDisplayHandle;
 #[cfg(target_os = "linux")]
 use raw_window_handle::RawDisplayHandle;
 use torin::prelude::{
-    Area,
     CursorPoint,
     Size2D,
 };
@@ -351,22 +350,12 @@ impl AppWindow {
         if let Some(strategy) = result.auto_focus {
             tree.accessibility_diff.request_focus(strategy);
         }
-
-        let mut root_area = Area::from_size(Size2D::new(
-            window.inner_size().width as f32,
-            window.inner_size().height as f32,
-        ));
-        plugins.send(
-            PluginEvent::StartedMeasuringLayout {
-                window: &window,
-                tree: &tree,
-                root_area: &mut root_area,
-                scale_factor,
-            },
-            PluginHandle::new(event_loop_proxy),
-        );
         tree.measure_layout(
-            root_area,
+            (
+                window.inner_size().width as f32,
+                window.inner_size().height as f32,
+            )
+                .into(),
             font_collection,
             font_manager,
             &events_sender,
