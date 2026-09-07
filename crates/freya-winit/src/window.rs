@@ -230,6 +230,17 @@ impl AppWindow {
             window_config.renderer,
         );
 
+        tracing::info!(
+            "Using the {} graphics driver on {}, transparency is {}",
+            driver.name(),
+            driver.gpu_name().unwrap_or("an unknown GPU"),
+            if window_attributes.transparent {
+                "enabled"
+            } else {
+                "disabled"
+            }
+        );
+
         if let Some(window_handle_hook) = window_config.window_handle_hook.take() {
             window_handle_hook(&mut window);
         }
