@@ -47,6 +47,7 @@ use std::{
     },
 };
 
+use accesskit::TreeUpdate;
 use freya_clipboard::copypasta::{
     ClipboardContext,
     ClipboardProvider,
@@ -414,7 +415,7 @@ impl TestingRunner {
         );
     }
 
-    pub fn commit_accessibility(&mut self) {
+    pub fn commit_accessibility(&mut self) -> TreeUpdate {
         let accessibility_update = self.accessibility.process_updates(
             &mut self.tree.borrow_mut(),
             &self.events_sender,
@@ -435,12 +436,14 @@ impl TestingRunner {
                 &tree,
                 "",
             ));
+
+        accessibility_update
     }
 
-    pub fn sync_and_update(&mut self) {
+    pub fn sync_and_update(&mut self) -> TreeUpdate {
         self.process_focus_strategy();
         self.process_events_and_layout();
-        self.commit_accessibility();
+        self.commit_accessibility()
     }
 
     /// Poll async tasks and events every `step` time for a total time of `duration`.

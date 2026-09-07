@@ -122,7 +122,19 @@ impl GraphicsDriver {
                 window_attributes.clone(),
                 gpu_resource_cache_limit,
             ) {
-                Ok((driver, window)) => return (Self::OpenGl(driver), window),
+                Ok((driver, window)) => {
+                    let gpu_name = driver.gpu_name.clone().unwrap_or_default();
+
+                    if renderer == Some("opengl")
+                        || !gpu_name.contains("Microsoft Basic Render Driver")
+                    {
+                        return (Self::OpenGl(driver), window);
+                    }
+
+                    tracing::warn!(
+                        "OpenGL is running on {gpu_name}, using the software renderer instead"
+                    );
+                }
                 Err(err) => {
                     tracing::warn!("OpenGL initialization failed, falling back to software: {err}");
                 }
