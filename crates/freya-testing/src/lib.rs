@@ -47,6 +47,7 @@ use std::{
     },
 };
 
+use accesskit::TreeUpdate;
 use freya_clipboard::{
     copypasta::{
         ClipboardContext,
@@ -224,6 +225,7 @@ impl TestingRunner {
 
         let pending_fonts = Rc::new(RefCell::new(Vec::new()));
 
+        runner.provide_root_context(TargetPlatform::detect);
         let platform = runner.provide_root_context({
             let requested_focus_strategy = requested_focus_strategy.clone();
             let pending_fonts = pending_fonts.clone();
@@ -251,6 +253,7 @@ impl TestingRunner {
                             pending_fonts.borrow_mut().push((font_name, font_data));
                         }
                         UserEvent::RequestRedraw
+                        | UserEvent::OpenUrl(_)
                         | UserEvent::SetCustomScaleFactor(_)
                         | UserEvent::Erased(_) => {
                             // Nothing
@@ -415,7 +418,7 @@ impl TestingRunner {
         );
     }
 
-    pub fn commit_accessibility(&mut self) {
+    pub fn commit_accessibility(&mut self) -> TreeUpdate {
         let accessibility_update = self.accessibility.process_updates(
             &mut self.tree.borrow_mut(),
             &self.events_sender,
@@ -436,12 +439,14 @@ impl TestingRunner {
                 &tree,
                 "",
             ));
+
+        accessibility_update
     }
 
-    pub fn sync_and_update(&mut self) {
+    pub fn sync_and_update(&mut self) -> TreeUpdate {
         self.process_focus_strategy();
         self.process_events_and_layout();
-        self.commit_accessibility();
+        self.commit_accessibility()
     }
 
     /// Poll async tasks and events every `step` time for a total time of `duration`.
@@ -492,7 +497,8 @@ impl TestingRunner {
             name: MouseEventName::MouseMove,
             cursor: cursor.into(),
             button: Some(MouseButton::Left),
-        })
+        });
+        self.sync_and_update();
     }
 
     pub fn write_text(&mut self, text: impl ToString) {
@@ -592,7 +598,7 @@ impl TestingRunner {
             name: WheelEventName::Wheel,
             scroll,
             cursor,
-            source: WheelSource::Device,
+            source: WheelSource::Pixel,
         });
         self.sync_and_update();
         // Refresh hover states after the scroll

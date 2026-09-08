@@ -53,7 +53,7 @@ pub mod tooltip;
 pub mod typography;
 
 #[cfg(feature = "remote-asset")]
-pub use reqwest::Url;
+pub use url::Url;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "router")] {

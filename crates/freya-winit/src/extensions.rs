@@ -12,6 +12,7 @@ use freya_core::{
     },
     user_event::SingleThreadErasedEvent,
 };
+use freya_engine::prelude::Surface as SkiaSurface;
 use winit::window::{
     Window,
     WindowId,
@@ -136,6 +137,24 @@ pub trait WinitPlatformExt {
     fn post_callback<F, T: 'static>(&self, f: F) -> futures_channel::oneshot::Receiver<T>
     where
         F: FnOnce(WindowId, &mut RendererContext) -> T + 'static;
+
+    /// Queue a callback to be run on the next render pass with access to the Skia
+    /// [`Surface`](SkiaSurface) of the window, after rendering and before presenting.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use freya::prelude::*;
+    ///
+    /// async fn take_screenshot() {
+    ///     let image = Platform::get()
+    ///         .post_render_callback(|surface| surface.image_snapshot())
+    ///         .await;
+    /// }
+    /// ```
+    fn post_render_callback<F, T: 'static>(&self, f: F) -> futures_channel::oneshot::Receiver<T>
+    where
+        F: FnOnce(&mut SkiaSurface) -> T + 'static;
 }
 
 pub trait WindowDragExt {
@@ -224,6 +243,24 @@ impl WinitPlatformExt for Platform {
         });
         self.send(UserEvent::Erased(SingleThreadErasedEvent(Box::new(
             NativeWindowErasedEventAction::RendererCallback(cb),
+        ))));
+        rx
+    }
+
+    fn post_render_callback<F, T: 'static>(&self, f: F) -> futures_channel::oneshot::Receiver<T>
+    where
+        F: FnOnce(&mut SkiaSurface) -> T + 'static,
+    {
+        let (tx, rx) = futures_channel::oneshot::channel::<T>();
+        self.send(UserEvent::Erased(SingleThreadErasedEvent(Box::new(
+            NativeWindowErasedEventAction::RendererCallback(Box::new(move |id, context| {
+                if let Some(app) = context.windows.get_mut(&id) {
+                    app.render_callbacks.push(Box::new(move |surface| {
+                        let _ = tx.send(f(surface));
+                    }));
+                    app.window.request_redraw();
+                }
+            })),
         ))));
         rx
     }

@@ -21,6 +21,7 @@ use freya_core::{
 use freya_engine::prelude::{
     FontCollection,
     FontMgr,
+    Surface as SkiaSurface,
 };
 use futures_util::task::{
     ArcWake,
@@ -78,6 +79,8 @@ use crate::{
     },
 };
 
+pub type RenderCallback = Box<dyn FnOnce(&mut SkiaSurface)>;
+
 #[derive(Clone, Copy)]
 pub struct CurrentWindowId(pub WindowId);
 
@@ -104,6 +107,8 @@ pub struct AppWindow {
 
     pub(crate) process_layout_on_next_render: bool,
     pub(crate) send_mouse_move_on_next_layout: bool,
+
+    pub(crate) render_callbacks: Vec<RenderCallback>,
 
     pub(crate) waker: Waker,
 
@@ -223,6 +228,17 @@ impl AppWindow {
             window_config.renderer,
         );
 
+        tracing::info!(
+            "Using the {} graphics driver on {}, transparency is {}",
+            driver.name(),
+            driver.gpu_name().unwrap_or("an unknown GPU"),
+            if window_attributes.transparent {
+                "enabled"
+            } else {
+                "disabled"
+            }
+        );
+
         if let Some(window_handle_hook) = window_config.window_handle_hook.take() {
             window_handle_hook(&mut window);
         }
@@ -262,6 +278,7 @@ impl AppWindow {
 
         let window_size = window.inner_size();
         let accent_color_preference = accent_color_preference();
+        runner.provide_root_context(TargetPlatform::detect);
         let platform = runner.provide_root_context({
             let event_loop_proxy = event_loop_proxy.clone();
             let window_id = window.id();
@@ -399,6 +416,8 @@ impl AppWindow {
             process_layout_on_next_render: true,
             send_mouse_move_on_next_layout: false,
 
+            render_callbacks: Vec::new(),
+
             waker,
 
             ticker_sender,
@@ -463,7 +482,20 @@ impl AppWindow {
 
     /// Measures the given platform events and emits the results.
     /// Wheel events schedule a mouse move to refresh hover states.
-    pub(crate) fn process_platform_events(&mut self, mut platform_events: Vec<PlatformEvent>) {
+    pub(crate) fn process_platform_events(
+        &mut self,
+        mut platform_events: Vec<PlatformEvent>,
+        plugins: &mut PluginsManager,
+        handle: PluginHandle,
+    ) {
+        plugins.send(
+            PluginEvent::StartedMeasuringEvents {
+                window: &self.window,
+                tree: &self.tree,
+            },
+            handle.clone(),
+        );
+
         if platform_events
             .iter()
             .any(|platform_event| matches!(platform_event, PlatformEvent::Wheel { .. }))
@@ -483,6 +515,14 @@ impl AppWindow {
         self.events_sender
             .unbounded_send(EventsChunk::Processed(processed_events))
             .unwrap();
+
+        plugins.send(
+            PluginEvent::FinishedMeasuringEvents {
+                window: &self.window,
+                tree: &self.tree,
+            },
+            handle,
+        );
     }
 
     /// Sets the custom scale factor, clamped to a reasonable range.

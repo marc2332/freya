@@ -1,6 +1,6 @@
 [package]
 name = "freya-sdk"
-version = "0.5.0-rc.4"
+version = "0.5.0-rc.5"
 edition = "2024"
 description = "Generic utils for Freya apps."
 license = "MIT"
@@ -20,7 +20,6 @@ all = ["tokio"]
 
 [dependencies]
 freya-core = { workspace = true }
-async-io = { workspace = true }
 
 # Tokio
 tokio = { workspace = true, features = ["sync"], optional = true }

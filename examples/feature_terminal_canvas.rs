@@ -10,7 +10,6 @@ use freya::{
     radio::*,
     terminal::*,
 };
-use portable_pty::CommandBuilder;
 
 #[derive(Default, Clone)]
 struct AppState {
@@ -101,7 +100,7 @@ impl Component for TerminalPanel {
             cmd.env("TERM", "xterm-256color");
             cmd.env("COLORTERM", "truecolor");
             cmd.env("LANG", "en_GB.UTF-8");
-            TerminalHandle::new(TerminalId::new(), cmd, None).ok()
+            TerminalHandle::new(TerminalId::new(), PtyBackend::new(cmd), None).ok()
         });
 
         use_future(move || async move {
