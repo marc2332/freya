@@ -35,7 +35,8 @@ pub struct CodeEditorData {
     pub(crate) pending_edit: Option<InputEdit>,
     pub language: Option<EditorLanguage>,
     pub scroll_controller: ScrollController,
-    viewport: Size2D,
+    /// Size of the visible area, kept up to date by [`CodeEditor`](crate::editor_ui::CodeEditor).
+    pub viewport: Size2D,
     theme: EditorSyntaxTheme,
 }
 
@@ -59,16 +60,6 @@ impl CodeEditorData {
         data
     }
 
-    /// Size of the visible area, kept up to date by [`CodeEditor`](crate::editor_ui::CodeEditor).
-    pub fn viewport(&self) -> Size2D {
-        self.viewport
-    }
-
-    /// Mutable access to the size of the visible area.
-    pub fn viewport_mut(&mut self) -> &mut Size2D {
-        &mut self.viewport
-    }
-
     /// Scrolls the viewport vertically just enough to make the cursor line visible.
     ///
     /// Returns whether the scroll position changed.
@@ -82,7 +73,7 @@ impl CodeEditorData {
         let cursor_top = self.cursor_row() as f32 * line_height;
         let cursor_bottom = cursor_top + line_height;
 
-        let scrolled = if cursor_top < scrolled {
+        let target = if cursor_top < scrolled {
             cursor_top
         } else if cursor_bottom > scrolled + self.viewport.height {
             cursor_bottom - self.viewport.height
@@ -90,7 +81,7 @@ impl CodeEditorData {
             return false;
         };
 
-        self.scroll_controller.scroll_to_y(-scrolled as i32)
+        self.scroll_controller.scroll_to_y(-target as i32)
     }
 
     /// Reconfigures the highlighter with the current language and theme.

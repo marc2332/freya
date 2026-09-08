@@ -177,7 +177,7 @@ impl Component for CodeEditor {
                 editor.write_if(|mut editor| {
                     let lines_jump = (line_height * LINES_JUMP_ALT as f32).ceil() as i32;
                     let content_height = lines_len as f32 * line_height;
-                    let viewport_height = editor.viewport().height;
+                    let viewport_height = editor.viewport.height;
                     let min_height = -(content_height - viewport_height).max(0.) as i32;
                     let max_height = 0;
                     let (_, current_scroll) = editor.scroll_controller.into();
@@ -257,8 +257,8 @@ impl Component for CodeEditor {
             let mut editor = editor.clone();
             move |e: Event<SizedEventData>| {
                 editor.write_if(|mut editor| {
-                    let changed = editor.viewport() != e.area.size;
-                    *editor.viewport_mut() = e.area.size;
+                    let changed = editor.viewport != e.area.size;
+                    editor.viewport = e.area.size;
                     changed
                 });
             }
@@ -275,7 +275,6 @@ impl Component for CodeEditor {
                 el.on_key_down(on_key_down).on_key_up(on_key_up)
             })
             .on_global_pointer_press(on_global_pointer_press)
-            .on_sized(on_sized)
             .child(
                 VirtualScrollView::new(move |item, _| {
                     EditorLineUI {
@@ -294,6 +293,7 @@ impl Component for CodeEditor {
                     .into()
                 })
                 .scroll_controller(scroll_controller)
+                .on_sized(on_sized)
                 .length(lines_len)
                 .item_size(line_height),
             )
