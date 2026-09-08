@@ -860,7 +860,7 @@ let editor = use_state(|| {
         tree_sitter_rust::LANGUAGE,
         tree_sitter_rust::HIGHLIGHTS_QUERY,
     );
-    let mut e = CodeEditorData::new(Rope::from_str(src), language);
+    let mut e = CodeEditorData::create(Rope::from_str(src), language);
     e.parse();
     e.measure(14., "Jetbrains Mono");
     e
