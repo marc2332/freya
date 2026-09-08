@@ -123,6 +123,11 @@ impl TaskHandle {
         CurrentContext::try_with(|context| context.tasks.borrow_mut().remove(&self.0));
     }
 
+    /// Check whether the task is no longer scheduled.
+    pub fn is_finished(&self) -> bool {
+        CurrentContext::with(|context| !context.tasks.borrow().contains_key(&self.0))
+    }
+
     /// Upgrade to an [`OwnedTaskHandle`] that cancels the task when its last
     /// clone is dropped.
     ///
@@ -184,6 +189,11 @@ impl OwnedTaskHandle {
     /// may run after Freya's context has been removed.
     pub fn try_cancel(&self) {
         self.0.0.try_cancel();
+    }
+
+    /// Check whether the task is no longer scheduled.
+    pub fn is_finished(&self) -> bool {
+        self.0.0.is_finished()
     }
 
     /// Get a non-owning [`TaskHandle`] for the same task.

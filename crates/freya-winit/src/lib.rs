@@ -124,9 +124,14 @@ fn launch_inner(mut launch_config: LaunchConfig) {
     #[cfg(feature = "hotreload")]
     freya_core::hotreload::connect_subsecond();
 
+    let global_contexts = GlobalContexts::default();
+    for insert_global in launch_config.globals {
+        insert_global(&global_contexts);
+    }
+
     let mut renderer = WinitRenderer {
         windows: HashMap::default(),
-        global_contexts: GlobalContexts::default(),
+        global_contexts,
         #[cfg(feature = "tray")]
         tray: launch_config.tray,
         #[cfg(all(feature = "tray", not(target_os = "linux")))]

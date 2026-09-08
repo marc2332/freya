@@ -1,6 +1,6 @@
 [package]
 name = "freya-animation"
-version = "0.5.0-rc.4"
+version = "0.5.0-rc.5"
 description = "Animation APIs for Freya"
 edition = "2024"
 readme = "../../README.md"
@@ -17,7 +17,6 @@ workspace = true
 [dependencies]
 freya-core = { workspace = true }
 easer = { workspace = true }
-async-io = { workspace = true }
 
 [dev-dependencies]
 freya = { path = "../freya" }

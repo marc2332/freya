@@ -1,6 +1,6 @@
 [package]
 name = "freya-winit"
-version = "0.5.0-rc.4"
+version = "0.5.0-rc.5"
 description = "Winit renderer for Freya"
 edition = "2024"
 license = "MIT"
@@ -60,6 +60,9 @@ tray-icon = { workspace = true, optional = true }
 # Clipboard
 freya-clipboard = { workspace = true }
 
+# Opening urls
+open = { workspace = true }
+
 [target.'cfg(not(target_os = "android"))'.dependencies]
 # Crash handler
 rfd = { workspace = true }
@@ -75,6 +78,7 @@ freya-engine = { workspace = true, features = [
 
 [target.'cfg(target_os = "windows")'.dependencies]
 freya-engine = { workspace = true, features = ["gl", "vulkan"] }
+windows-sys = { version = "0.60", features = ["Win32_Graphics_Dwm"] }
 
 # Rendering OpenGL + Vulkan (Linux/Windows)
 [target.'cfg(any(target_os = "linux", target_os = "windows"))'.dependencies]

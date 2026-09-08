@@ -15,7 +15,6 @@ use std::{
     },
 };
 
-use async_io::Timer;
 use freya_core::{
     integration::FxHashSet,
     prelude::*,
@@ -270,7 +269,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
             let task = spawn_forever(async move {
                 loop {
                     // Wait as long as the stale time is configured
-                    Timer::after(interval).await;
+                    timer(interval).await;
 
                     // Run the query
                     QueriesStorage::<Q>::run_queries(&[(&query_clone, &query_data_clone)]).await;
@@ -288,7 +287,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
         }
         *query_data.clean_task.borrow_mut() = Some(spawn_forever(async move {
             // Wait as long as the clean time is configured
-            Timer::after(query.clean_time).await;
+            timer(query.clean_time).await;
 
             // Finally clear the query unless it got subscribers again
             let mut storage = self.storage.write_unchecked();
@@ -324,8 +323,9 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
         let mut storage =
             GlobalContexts::get().get_context_or_insert(QueriesStorage::<Q>::create_global);
 
-        let mut map = storage.storage.write();
-        let query_data = map
+        let query_data = storage
+            .storage
+            .write()
             .entry(query.clone())
             .or_insert_with(|| QueryData {
                 state: Rc::new(RefCell::new(QueryStateData::Pending)),
@@ -384,11 +384,17 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
     }
 
     async fn inner_invalidate_all(self) {
-        let mut all_queries = Vec::new();
-        let storage = self.storage.read();
-        for (query, data) in storage.iter() {
-            all_queries.push((query, data));
-        }
+        let all_queries = self
+            .storage
+            .read()
+            .iter()
+            .map(|(query, query_data)| (query.clone(), query_data.clone()))
+            .collect::<Vec<_>>();
+
+        let all_queries = all_queries
+            .iter()
+            .map(|(query, query_data)| (query, query_data))
+            .collect::<Vec<_>>();
 
         // Invalidate the queries
         Self::run_queries(&all_queries).await
@@ -407,13 +413,18 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
 
     async fn inner_invalidate_matching(self, matching_keys: Q::Keys) {
         // Get those queries that match
-        let mut matching_queries = Vec::new();
-        let storage = self.storage.read();
-        for (query, data) in storage.iter() {
-            if query.query.matches(&matching_keys) {
-                matching_queries.push((query, data));
-            }
-        }
+        let matching_queries = self
+            .storage
+            .read()
+            .iter()
+            .filter(|(query, _)| query.query.matches(&matching_keys))
+            .map(|(query, query_data)| (query.clone(), query_data.clone()))
+            .collect::<Vec<_>>();
+
+        let matching_queries = matching_queries
+            .iter()
+            .map(|(query, query_data)| (query, query_data))
+            .collect::<Vec<_>>();
 
         // Invalidate the queries
         Self::run_queries(&matching_queries).await
@@ -634,8 +645,12 @@ impl<Q: QueryCapability> UseQuery<Q> {
     /// If you want a **non-subscribing** method have a look at [UseQuery::peek].
     pub fn read(&self) -> QueryReader<Q> {
         let storage = GlobalContexts::get().get_context::<QueriesStorage<Q>>();
-        let map = storage.storage.peek();
-        let query_data = map.get(&self.query.read()).cloned().unwrap();
+        let query_data = storage
+            .storage
+            .peek()
+            .get(&self.query.read())
+            .cloned()
+            .unwrap();
 
         // Subscribe if possible
         if let Some(mut reactive_context) = ReactiveContext::try_current() {
@@ -653,8 +668,12 @@ impl<Q: QueryCapability> UseQuery<Q> {
     /// If you want a **subscribing** method have a look at [UseQuery::read].
     pub fn peek(&self) -> QueryReader<Q> {
         let storage = GlobalContexts::get().get_context::<QueriesStorage<Q>>();
-        let map = storage.storage.peek();
-        let query_data = map.get(&self.query.peek()).cloned().unwrap();
+        let query_data = storage
+            .storage
+            .peek()
+            .get(&self.query.peek())
+            .cloned()
+            .unwrap();
 
         QueryReader {
             state: query_data.state,
@@ -668,8 +687,7 @@ impl<Q: QueryCapability> UseQuery<Q> {
         let storage = GlobalContexts::get().get_context::<QueriesStorage<Q>>();
 
         let query = self.query.peek().clone();
-        let map = storage.storage.peek();
-        let query_data = map.get(&query).cloned().unwrap();
+        let query_data = storage.storage.peek().get(&query).cloned().unwrap();
 
         // Run the query
         QueriesStorage::run_queries(&[(&query, &query_data)]).await;
@@ -686,8 +704,7 @@ impl<Q: QueryCapability> UseQuery<Q> {
         let storage = GlobalContexts::get().get_context::<QueriesStorage<Q>>();
 
         let query = self.query.peek().clone();
-        let map = storage.storage.peek();
-        let query_data = map.get(&query).cloned().unwrap();
+        let query_data = storage.storage.peek().get(&query).cloned().unwrap();
 
         // Run the query
         spawn_forever(async move { QueriesStorage::run_queries(&[(&query, &query_data)]).await });

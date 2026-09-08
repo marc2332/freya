@@ -15,7 +15,7 @@ fn app() -> impl IntoElement {
         cmd.env("TERM", "xterm-256color");
         cmd.env("COLORTERM", "truecolor");
         cmd.env("LANG", "en_GB.UTF-8");
-        TerminalHandle::new(TerminalId::new(), cmd, None).ok()
+        TerminalHandle::new(TerminalId::new(), PtyBackend::new(cmd), None).ok()
     });
 
     use_future(move || async move {
@@ -31,7 +31,7 @@ fn app() -> impl IntoElement {
                 }
                 _ = terminal_handle.title_changed().fuse() => {
                     if let Some(new_title) = terminal_handle.title() {
-                        Platform::get().with_window(None, move |window| {
+                        Platform::get().with_window(Platform::window_id(), move |window| {
                             window.set_title(&new_title);
                         });
                     }

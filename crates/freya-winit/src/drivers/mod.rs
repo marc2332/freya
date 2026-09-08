@@ -16,6 +16,8 @@ use winit::{
     },
 };
 
+use crate::config::RendererPreference;
+
 /// Unrecoverable graphics error requiring a driver rebuild.
 #[derive(Debug)]
 // Only the Vulkan driver reports these.
@@ -42,11 +44,12 @@ impl GraphicsDriver {
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
         gpu_resource_cache_limit: usize,
+        preference: RendererPreference,
     ) -> (Self, Window) {
-        let renderer = std::env::var("FREYA_RENDERER")
+        let from_env = std::env::var("FREYA_RENDERER")
             .ok()
-            .map(|v| v.to_ascii_lowercase());
-        let renderer = renderer.as_deref();
+            .map(|value| value.to_ascii_lowercase());
+        let renderer = preference.as_name().or(from_env.as_deref());
 
         // Opt-in via FREYA_RENDERER=software, available on every platform.
         if renderer == Some("software") {
@@ -119,7 +122,19 @@ impl GraphicsDriver {
                 window_attributes.clone(),
                 gpu_resource_cache_limit,
             ) {
-                Ok((driver, window)) => return (Self::OpenGl(driver), window),
+                Ok((driver, window)) => {
+                    let gpu_name = driver.gpu_name.clone().unwrap_or_default();
+
+                    if renderer == Some("opengl")
+                        || !gpu_name.contains("Microsoft Basic Render Driver")
+                    {
+                        return (Self::OpenGl(driver), window);
+                    }
+
+                    tracing::warn!(
+                        "OpenGL is running on {gpu_name}, using the software renderer instead"
+                    );
+                }
                 Err(err) => {
                     tracing::warn!("OpenGL initialization failed, falling back to software: {err}");
                 }

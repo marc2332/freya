@@ -25,6 +25,7 @@ use freya_core::{
 use freya_engine::prelude::{
     FontCollection,
     FontMgr,
+    Surface as SkiaSurface,
 };
 use futures_util::task::{
     ArcWake,
@@ -68,6 +69,7 @@ use crate::{
     accessibility::AccessibilityTask,
     config::{
         OnCloseHook,
+        RendererPreference,
         WindowConfig,
     },
     drivers::GraphicsDriver,
@@ -83,6 +85,11 @@ use crate::{
         NativeWindowEventAction,
     },
 };
+
+pub type RenderCallback = Box<dyn FnOnce(&mut SkiaSurface)>;
+
+#[derive(Clone, Copy)]
+pub struct CurrentWindowId(pub WindowId);
 
 pub struct AppWindow {
     pub(crate) runner: Runner,
@@ -108,6 +115,8 @@ pub struct AppWindow {
     pub(crate) process_layout_on_next_render: bool,
     pub(crate) send_mouse_move_on_next_layout: bool,
 
+    pub(crate) render_callbacks: Vec<RenderCallback>,
+
     pub(crate) waker: Waker,
 
     pub(crate) ticker_sender: RenderingTickerSender,
@@ -123,6 +132,8 @@ pub struct AppWindow {
     pub(crate) on_close: Option<OnCloseHook>,
 
     pub(crate) window_attributes: WindowAttributes,
+
+    pub(crate) renderer: RendererPreference,
 
     #[cfg(feature = "hotreload")]
     pub(crate) hot_reload_pending: Arc<std::sync::atomic::AtomicBool>,
@@ -221,6 +232,18 @@ impl AppWindow {
             active_event_loop,
             window_attributes.clone(),
             gpu_resource_cache_limit,
+            window_config.renderer,
+        );
+
+        tracing::info!(
+            "Using the {} graphics driver on {}, transparency is {}",
+            driver.name(),
+            driver.gpu_name().unwrap_or("an unknown GPU"),
+            if window_attributes.transparent {
+                "enabled"
+            } else {
+                "disabled"
+            }
         );
 
         if let Some(window_handle_hook) = window_config.window_handle_hook.take() {
@@ -252,6 +275,9 @@ impl AppWindow {
         runner.provide_root_context(|| animation_clock.clone());
 
         runner.provide_root_context(AssetCacher::create);
+
+        runner.provide_root_context(|| CurrentWindowId(window.id()));
+
         let custom_scale_factor = clamp_custom_scale_factor(window_config.custom_scale_factor);
         let scale_factor = window.scale_factor() * custom_scale_factor;
 
@@ -259,6 +285,7 @@ impl AppWindow {
 
         let window_size = window.inner_size();
         let accent_color_preference = accent_color_preference();
+        runner.provide_root_context(TargetPlatform::detect);
         let platform = runner.provide_root_context({
             let event_loop_proxy = event_loop_proxy.clone();
             let window_id = window.id();
@@ -424,6 +451,8 @@ impl AppWindow {
             process_layout_on_next_render: true,
             send_mouse_move_on_next_layout: false,
 
+            render_callbacks: Vec::new(),
+
             waker,
 
             ticker_sender,
@@ -439,6 +468,8 @@ impl AppWindow {
             on_close,
 
             window_attributes,
+
+            renderer: window_config.renderer,
 
             #[cfg(feature = "hotreload")]
             hot_reload_pending,
@@ -486,7 +517,20 @@ impl AppWindow {
 
     /// Measures the given platform events and emits the results.
     /// Wheel events schedule a mouse move to refresh hover states.
-    pub(crate) fn process_platform_events(&mut self, mut platform_events: Vec<PlatformEvent>) {
+    pub(crate) fn process_platform_events(
+        &mut self,
+        mut platform_events: Vec<PlatformEvent>,
+        plugins: &mut PluginsManager,
+        handle: PluginHandle,
+    ) {
+        plugins.send(
+            PluginEvent::StartedMeasuringEvents {
+                window: &self.window,
+                tree: &self.tree,
+            },
+            handle.clone(),
+        );
+
         if platform_events
             .iter()
             .any(|platform_event| matches!(platform_event, PlatformEvent::Wheel { .. }))
@@ -506,6 +550,14 @@ impl AppWindow {
         self.events_sender
             .unbounded_send(EventsChunk::Processed(processed_events))
             .unwrap();
+
+        plugins.send(
+            PluginEvent::FinishedMeasuringEvents {
+                window: &self.window,
+                tree: &self.tree,
+            },
+            handle,
+        );
     }
 
     /// Sets the custom scale factor, clamped to a reasonable range.

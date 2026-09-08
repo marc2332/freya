@@ -104,7 +104,7 @@ impl Component for Link {
                 // Open the url if there is any
                 // otherwise change the freya router route
                 if let Some(url) = &url {
-                    let _ = open::that(url);
+                    Platform::get().send(UserEvent::OpenUrl(url.clone()));
                 } else {
                     let _ = RouterContext::get().push(to.clone());
                 }

@@ -47,6 +47,7 @@ use std::{
     },
 };
 
+use accesskit::TreeUpdate;
 use freya_clipboard::copypasta::{
     ClipboardContext,
     ClipboardProvider,
@@ -213,6 +214,7 @@ impl TestingRunner {
 
         let pending_fonts = Rc::new(RefCell::new(Vec::new()));
 
+        runner.provide_root_context(TargetPlatform::detect);
         let platform = runner.provide_root_context({
             let requested_focus_strategy = requested_focus_strategy.clone();
             let pending_fonts = pending_fonts.clone();
@@ -240,6 +242,7 @@ impl TestingRunner {
                             pending_fonts.borrow_mut().push((font_name, font_data));
                         }
                         UserEvent::RequestRedraw
+                        | UserEvent::OpenUrl(_)
                         | UserEvent::SetCustomScaleFactor(_)
                         | UserEvent::Erased(_) => {
                             // Nothing
@@ -354,14 +357,16 @@ impl TestingRunner {
         self.runner.handle_events_immediately()
     }
 
-    pub fn sync_and_update(&mut self) {
+    pub fn process_focus_strategy(&mut self) {
         if let Some(strategy) = self.requested_focus_strategy.borrow_mut().take() {
             self.tree
                 .borrow_mut()
                 .accessibility_diff
                 .request_focus(strategy);
         }
+    }
 
+    pub fn process_events_and_layout(&mut self) {
         while let Ok(events_chunk) = self.events_receiver.try_recv() {
             match events_chunk {
                 EventsChunk::Processed(processed_events) => {
@@ -408,7 +413,9 @@ impl TestingRunner {
             self.scale_factor,
             &self.default_fonts,
         );
+    }
 
+    pub fn commit_accessibility(&mut self) -> TreeUpdate {
         let accessibility_update = self.accessibility.process_updates(
             &mut self.tree.borrow_mut(),
             &self.events_sender,
@@ -429,6 +436,14 @@ impl TestingRunner {
                 &tree,
                 "",
             ));
+
+        accessibility_update
+    }
+
+    pub fn sync_and_update(&mut self) -> TreeUpdate {
+        self.process_focus_strategy();
+        self.process_events_and_layout();
+        self.commit_accessibility()
     }
 
     /// Poll async tasks and events every `step` time for a total time of `duration`.
@@ -479,7 +494,8 @@ impl TestingRunner {
             name: MouseEventName::MouseMove,
             cursor: cursor.into(),
             button: Some(MouseButton::Left),
-        })
+        });
+        self.sync_and_update();
     }
 
     pub fn write_text(&mut self, text: impl ToString) {
@@ -579,7 +595,7 @@ impl TestingRunner {
             name: WheelEventName::Wheel,
             scroll,
             cursor,
-            source: WheelSource::Device,
+            source: WheelSource::Pixel,
         });
         self.sync_and_update();
         // Refresh hover states after the scroll
