@@ -192,7 +192,7 @@ impl TestingRunner {
 
         runner.provide_root_context(|| {
             let global_contexts = GlobalContexts::default();
-            global_contexts.insert_context(GlobalClipboard::new(
+            global_contexts.insert_context(GlobalClipboard::create(
                 ClipboardContext::new()
                     .ok()
                     .map(|clipboard| Box::new(clipboard) as Box<dyn ClipboardProvider>),

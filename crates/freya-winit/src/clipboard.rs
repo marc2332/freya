@@ -31,7 +31,7 @@ pub(crate) fn create_clipboard(display_handle: OwnedDisplayHandle) -> GlobalClip
                 .map(|clipboard| Box::new(clipboard) as Box<dyn ClipboardProvider>),
         }
     });
-    GlobalClipboard::new(provider)
+    GlobalClipboard::create(provider)
 }
 
 /// Keeps the Wayland display alive for as long as the clipboard uses it.

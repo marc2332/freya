@@ -1,10 +1,5 @@
 //! Provides a clipboard abstraction to access the target system's clipboard.
 
-use std::{
-    cell::RefCell,
-    rc::Rc,
-};
-
 use copypasta::ClipboardProvider;
 use freya_core::prelude::*;
 
@@ -16,19 +11,25 @@ pub enum ClipboardError {
 }
 
 /// Clipboard shared by all windows through [GlobalContexts].
-#[derive(Clone)]
-pub struct GlobalClipboard(Rc<RefCell<Option<Box<dyn ClipboardProvider>>>>);
+#[derive(Clone, Copy)]
+pub struct GlobalClipboard(State<Option<Box<dyn ClipboardProvider>>>);
 
 impl GlobalClipboard {
-    pub fn new(provider: Option<Box<dyn ClipboardProvider>>) -> Self {
-        Self(Rc::new(RefCell::new(provider)))
+    pub fn create(provider: Option<Box<dyn ClipboardProvider>>) -> Self {
+        Self(State::create_global(provider))
+    }
+
+    /// Get the [GlobalClipboard] of the app.
+    #[track_caller]
+    pub fn get() -> Self {
+        GlobalContexts::get().get_context::<GlobalClipboard>()
     }
 
     fn with_provider<T>(
-        &self,
+        &mut self,
         run: impl FnOnce(&mut dyn ClipboardProvider) -> T,
     ) -> Result<T, ClipboardError> {
-        let mut provider = self.0.borrow_mut();
+        let mut provider = self.0.write();
         let provider = provider.as_mut().ok_or(ClipboardError::NotAvailable)?;
         Ok(run(provider.as_mut()))
     }
@@ -56,8 +57,7 @@ impl Clipboard {
     // Read from the clipboard
     #[track_caller]
     pub fn get() -> Result<String, ClipboardError> {
-        GlobalContexts::get()
-            .get_context::<GlobalClipboard>()
+        GlobalClipboard::get()
             .with_provider(|provider| provider.get_contents())?
             .map_err(|_| ClipboardError::FailedToRead)
     }
@@ -65,8 +65,7 @@ impl Clipboard {
     // Write to the clipboard
     #[track_caller]
     pub fn set(contents: String) -> Result<(), ClipboardError> {
-        GlobalContexts::get()
-            .get_context::<GlobalClipboard>()
+        GlobalClipboard::get()
             .with_provider(|provider| provider.set_contents(contents))?
             .map_err(|_| ClipboardError::FailedToSet)
     }
