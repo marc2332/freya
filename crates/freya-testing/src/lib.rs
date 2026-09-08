@@ -53,7 +53,7 @@ use freya_clipboard::{
         ClipboardContext,
         ClipboardProvider,
     },
-    prelude::GlobalClipboard,
+    prelude::Clipboard,
 };
 use freya_components::{
     cache::AssetCacher,
@@ -192,7 +192,7 @@ impl TestingRunner {
 
         runner.provide_root_context(|| {
             let global_contexts = GlobalContexts::default();
-            global_contexts.insert_context(GlobalClipboard::create(
+            global_contexts.insert_context(Clipboard::create(
                 ClipboardContext::new()
                     .ok()
                     .map(|clipboard| Box::new(clipboard) as Box<dyn ClipboardProvider>),

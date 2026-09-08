@@ -3,14 +3,14 @@ use freya_clipboard::{
         ClipboardContext,
         ClipboardProvider,
     },
-    prelude::GlobalClipboard,
+    prelude::Clipboard,
 };
 use raw_window_handle::HasDisplayHandle;
 #[cfg(target_os = "linux")]
 use raw_window_handle::RawDisplayHandle;
 use winit::event_loop::OwnedDisplayHandle;
 
-pub(crate) fn create_clipboard(display_handle: OwnedDisplayHandle) -> GlobalClipboard {
+pub(crate) fn create_clipboard(display_handle: OwnedDisplayHandle) -> Clipboard {
     let provider = display_handle.display_handle().ok().and_then(|handle| {
         #[allow(clippy::match_single_binding)]
         match handle.as_raw() {
@@ -31,7 +31,7 @@ pub(crate) fn create_clipboard(display_handle: OwnedDisplayHandle) -> GlobalClip
                 .map(|clipboard| Box::new(clipboard) as Box<dyn ClipboardProvider>),
         }
     });
-    GlobalClipboard::create(provider)
+    Clipboard::create(provider)
 }
 
 /// Keeps the Wayland display alive for as long as the clipboard uses it.
