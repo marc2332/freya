@@ -8,6 +8,7 @@ use std::{
     rc::Rc,
 };
 
+use cursor_icon::CursorIcon;
 use torin::{
     prelude::Area,
     torin::Torin,
@@ -43,6 +44,7 @@ use crate::{
         font_slant::FontSlant,
         font_weight::FontWeight,
         font_width::FontWidth,
+        letter_spacing::LetterSpacing,
         scale::Scale,
         shadow::Shadow,
         text_align::TextAlign,
@@ -98,6 +100,7 @@ pub struct StyleState {
     pub corner_radius: CornerRadius,
     pub borders: Vec<Border>,
     pub shadows: Vec<Shadow>,
+    pub cursor: Option<CursorIcon>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -131,6 +134,7 @@ pub struct TextStyleState {
     pub font_slant: FontSlant,
     pub font_weight: FontWeight,
     pub font_width: FontWidth,
+    pub letter_spacing: LetterSpacing,
 }
 
 impl Default for TextStyleState {
@@ -147,6 +151,7 @@ impl Default for TextStyleState {
             font_slant: FontSlant::default(),
             font_weight: FontWeight::default(),
             font_width: FontWidth::default(),
+            letter_spacing: LetterSpacing::default(),
         }
     }
 }
@@ -166,6 +171,7 @@ impl TextStyleState {
         let font_slant = data.font_slant.unwrap_or(parent.font_slant);
         let font_weight = data.font_weight.unwrap_or(parent.font_weight);
         let font_width = data.font_width.unwrap_or(parent.font_width);
+        let letter_spacing = data.letter_spacing.unwrap_or(parent.letter_spacing);
         let mut font_families = data.font_families.clone();
         font_families.extend_from_slice(&parent.font_families);
 
@@ -180,6 +186,7 @@ impl TextStyleState {
             font_slant,
             font_weight,
             font_width,
+            letter_spacing,
             font_families,
         }
     }
@@ -220,6 +227,7 @@ pub struct TextStyleData {
     pub font_slant: Option<FontSlant>,
     pub font_weight: Option<FontWeight>,
     pub font_width: Option<FontWidth>,
+    pub letter_spacing: Option<LetterSpacing>,
 }
 
 #[derive(Debug, Default)]
@@ -339,7 +347,7 @@ impl EffectState {
         };
 
         match layer {
-            Layer::Overlay => {
+            Layer::Overlay | Layer::OverlayLevel(_) => {
                 self.clips = Rc::default();
             }
             Layer::Relative(_) if parent_effect_state.overflow == Overflow::Clip => {
@@ -414,6 +422,7 @@ pub struct AccessibilityState {
     pub a11y_id: AccessibilityId,
     pub a11y_focusable: Focusable,
     pub a11y_member_of: Option<AccessibilityId>,
+    a11y_intrinsic_id: AccessibilityId,
 }
 
 impl AccessibilityState {
@@ -426,12 +435,15 @@ impl AccessibilityState {
     ) -> Self {
         let data = element.accessibility();
 
-        let a11y_id = if node_id == NodeId::ROOT {
+        let a11y_intrinsic_id = if node_id == NodeId::ROOT {
             ACCESSIBILITY_ROOT_ID
         } else {
-            data.a11y_id
-                .unwrap_or_else(|| AccessibilityId(accessibility_generator.new_id()))
+            AccessibilityId(accessibility_generator.new_id())
         };
+        let a11y_id = data
+            .a11y_id
+            .filter(|_| node_id != NodeId::ROOT)
+            .unwrap_or(a11y_intrinsic_id);
 
         accessibility_diff.add_or_update(node_id);
 
@@ -451,6 +463,7 @@ impl AccessibilityState {
             a11y_id,
             a11y_focusable: data.a11y_focusable.clone(),
             a11y_member_of: data.builder.member_of(),
+            a11y_intrinsic_id,
         }
     }
 
@@ -485,9 +498,8 @@ impl AccessibilityState {
             group.retain(|id| *id != self.a11y_id);
         }
 
-        if let Some(a11y_id) = data.a11y_id
-            && self.a11y_id != a11y_id
-        {
+        let a11y_id = data.a11y_id.unwrap_or(self.a11y_intrinsic_id);
+        if self.a11y_id != a11y_id {
             accessibility_diff.add_or_update(node_id);
             self.a11y_id = a11y_id;
         }

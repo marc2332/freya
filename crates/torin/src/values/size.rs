@@ -324,16 +324,16 @@ impl Size {
 
         let mut final_value = value;
 
-        if let Some(minimum_value) = minimum_value
-            && minimum_value > final_value
-        {
-            final_value = minimum_value;
-        }
-
         if let Some(maximum_value) = maximum_value
             && final_value > maximum_value
         {
             final_value = maximum_value;
+        }
+
+        if let Some(minimum_value) = minimum_value
+            && minimum_value > final_value
+        {
+            final_value = minimum_value;
         }
 
         final_value

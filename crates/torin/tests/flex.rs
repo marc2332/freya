@@ -69,7 +69,7 @@ pub fn flex_generic() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -135,7 +135,7 @@ pub fn flex_under_1_flex_grow() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -213,7 +213,7 @@ pub fn flex_grow_balance() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -299,7 +299,7 @@ pub fn flex_large_grow_balance() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -376,7 +376,7 @@ pub fn flex_with_inner_percentage() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -448,7 +448,7 @@ pub fn flex_root_candidate_resolution() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -479,7 +479,7 @@ pub fn flex_root_candidate_resolution() {
     );
     layout.invalidate(2);
 
-    layout.find_best_root(&mut mocked_tree);
+    layout.find_best_root(&mocked_tree);
 
     // It is Node 1 because it has a `flex` content
     assert_eq!(layout.get_root_candidate(), RootNodeCandidate::Valid(1));
@@ -488,7 +488,7 @@ pub fn flex_root_candidate_resolution() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -533,7 +533,7 @@ pub fn flex_new_child_redistributes_existing_siblings() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -565,13 +565,13 @@ pub fn flex_new_child_redistributes_existing_siblings() {
 
     layout.invalidate(2);
 
-    layout.find_best_root(&mut mocked_tree);
+    layout.find_best_root(&mocked_tree);
 
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -689,7 +689,7 @@ pub fn flex_with_cross_align_center_and_text() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     let node_2_area = layout.get(&2).unwrap().area;

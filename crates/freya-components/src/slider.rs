@@ -51,6 +51,7 @@ pub struct Slider {
     enabled: bool,
     scroll_enabled: bool,
     cursor_icon: CursorIcon,
+    step: Option<f64>,
     key: DiffKey,
 }
 
@@ -71,6 +72,7 @@ impl Slider {
             enabled: true,
             scroll_enabled: true,
             cursor_icon: CursorIcon::default(),
+            step: None,
             key: DiffKey::None,
         }
     }
@@ -113,6 +115,12 @@ impl Slider {
         self.cursor_icon = cursor_icon.into();
         self
     }
+
+    /// Snap the values emitted by `on_moved` to multiples of the given step.
+    pub fn step(mut self, step: f64) -> Self {
+        self.step = Some(step);
+        self
+    }
 }
 
 impl Component for Slider {
@@ -120,57 +128,44 @@ impl Component for Slider {
         let theme = get_theme!(&self.theme, SliderThemePreference, "slider");
         let a11y_id = use_a11y();
         let focus = use_focus(a11y_id);
-        let mut hovering = use_state(|| false);
         let mut clicking = use_state(|| false);
         let mut size = use_state(Area::default);
-
-        let enabled = use_reactive(&self.enabled);
-        let cursor_icon = self.cursor_icon;
-        use_drop(move || {
-            if hovering() {
-                Cursor::set(CursorIcon::default());
-            }
-        });
 
         let direction_is_vertical = self.direction == Direction::Vertical;
         let value = self.value;
         let on_moved = self.on_moved.clone();
+
+        let step = self.step.filter(|step| *step > 0.0);
+        let snap = move |value: f64| -> f64 {
+            let value = value.clamp(0.0, 100.0);
+            match step {
+                Some(step) => ((value / step).round() * step).min(100.0),
+                None => value,
+            }
+        };
+        let keyboard_step = step.unwrap_or(4.0);
 
         let on_key_down = {
             let on_moved = self.on_moved.clone();
             move |e: Event<KeyboardEventData>| match e.key {
                 Key::Named(NamedKey::ArrowLeft) if !direction_is_vertical => {
                     e.stop_propagation();
-                    on_moved.call((value - 4.0).clamp(0.0, 100.0));
+                    on_moved.call(snap(value - keyboard_step));
                 }
                 Key::Named(NamedKey::ArrowRight) if !direction_is_vertical => {
                     e.stop_propagation();
-                    on_moved.call((value + 4.0).clamp(0.0, 100.0));
+                    on_moved.call(snap(value + keyboard_step));
                 }
                 Key::Named(NamedKey::ArrowUp) if direction_is_vertical => {
                     e.stop_propagation();
-                    on_moved.call((value + 4.0).clamp(0.0, 100.0));
+                    on_moved.call(snap(value + keyboard_step));
                 }
                 Key::Named(NamedKey::ArrowDown) if direction_is_vertical => {
                     e.stop_propagation();
-                    on_moved.call((value - 4.0).clamp(0.0, 100.0));
+                    on_moved.call(snap(value - keyboard_step));
                 }
                 _ => {}
             }
-        };
-
-        let on_pointer_enter = move |_| {
-            hovering.set(true);
-            if enabled() {
-                Cursor::set(cursor_icon);
-            } else {
-                Cursor::set(CursorIcon::NotAllowed);
-            }
-        };
-
-        let on_pointer_leave = move |_| {
-            Cursor::set(CursorIcon::default());
-            hovering.set(false);
         };
 
         let calc_percentage = move |x: f64, y: f64| -> f64 {
@@ -181,7 +176,7 @@ impl Component for Slider {
                 let x = x - 8.0;
                 x / (size.read().width() as f64 - 15.) * 100.0
             };
-            pct.clamp(0.0, 100.0)
+            snap(pct)
         };
 
         let on_pointer_down = {
@@ -202,9 +197,9 @@ impl Component for Slider {
             clicking.set(false);
         };
 
-        let on_global_pointer_move = move |e: Event<PointerEventData>| {
-            e.stop_propagation();
+        let on_capture_global_pointer_move = move |e: Event<PointerEventData>| {
             if *clicking.peek() {
+                e.prevent_default();
                 let coordinates = e.global_location();
                 on_moved.call(calc_percentage(
                     coordinates.x - size.read().min_x() as f64,
@@ -220,7 +215,11 @@ impl Component for Slider {
                     return;
                 }
                 e.stop_propagation();
-                on_moved.call((value + e.delta_y * 0.1).clamp(0.0, 100.0));
+                let delta = match step {
+                    Some(step) => step * e.delta_y.signum(),
+                    None => e.delta_y * 0.1,
+                };
+                on_moved.call(snap(value + delta));
             }
         };
 
@@ -310,12 +309,15 @@ impl Component for Slider {
             .maybe(self.enabled, |rect| {
                 rect.on_key_down(on_key_down)
                     .on_pointer_down(on_pointer_down)
-                    .on_global_pointer_move(on_global_pointer_move)
+                    .on_capture_global_pointer_move(on_capture_global_pointer_move)
                     .on_global_pointer_press(on_global_pointer_press)
                     .maybe(self.scroll_enabled, |el| el.on_wheel(on_wheel))
             })
-            .on_pointer_enter(on_pointer_enter)
-            .on_pointer_leave(on_pointer_leave)
+            .cursor(if self.enabled {
+                self.cursor_icon
+            } else {
+                CursorIcon::NotAllowed
+            })
             .border(border)
             .corner_radius(50.)
             .padding(padding)

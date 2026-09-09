@@ -33,13 +33,6 @@ impl TestingTree {
 }
 
 impl TreeAdapter<usize> for TestingTree {
-    fn children_of(&mut self, node_id: &usize) -> Vec<usize> {
-        self.mapper
-            .get(node_id)
-            .map(|c| c.1.clone())
-            .unwrap_or_default()
-    }
-
     fn parent_of(&self, node_id: &usize) -> Option<usize> {
         self.mapper.get(node_id).and_then(|c| c.0)
     }
@@ -48,8 +41,12 @@ impl TreeAdapter<usize> for TestingTree {
         self.mapper.get(node_id).map(|c| c.2)
     }
 
-    fn get_node(&self, node_id: &usize) -> Option<Node> {
-        self.mapper.get(node_id).map(|c| c.3.clone())
+    fn read_node<R>(
+        &self,
+        node_id: &usize,
+        reader: impl FnOnce(&Node, &[usize]) -> R,
+    ) -> Option<R> {
+        self.mapper.get(node_id).map(|c| reader(&c.3, &c.1))
     }
 
     fn root_id(&self) -> usize {

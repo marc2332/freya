@@ -73,8 +73,9 @@ fn app() -> impl IntoElement {
     let mut grid = use_state(|| Grid::new(SIZE));
 
     // Just some values to generate a different size and color based on the grid size
-    let size = 600. / grid.read().size as f32;
-    let color_ratio = 255. / (grid.read().size as f32 * grid.read().size as f32);
+    let grid_size = grid.read().size;
+    let size = 600. / grid_size as f32;
+    let color_ratio = 255. / (grid_size * grid_size) as f32;
 
     rect()
         .spacing(12.)
@@ -116,32 +117,35 @@ fn app() -> impl IntoElement {
         .child(
             rect()
                 .spacing(6.)
-                .children(grid.read().cells.chunks(grid.read().size).map(|row| {
-                    rect()
-                        .spacing(6.)
-                        .horizontal()
-                        .children(row.iter().map(|cell| {
-                            Portal::new(cell.id)
-                                .key(cell.id)
-                                .width(Size::px(size))
-                                .height(Size::px(size))
-                                .function(Function::Expo)
-                                .duration(Duration::from_millis(1000))
-                                .child(
-                                    rect()
-                                        .width(Size::px(size))
-                                        .height(Size::px(size))
-                                        .corner_radius(32.)
-                                        .color(Color::WHITE)
-                                        .background((
-                                            cell.id as u8,
-                                            (cell.id as f32 * color_ratio) as u8,
-                                            cell.id as u8,
-                                        ))
-                                        .center()
-                                        .child(cell.id.to_string()),
-                                )
-                        }))
-                })),
+                .children(grid.read().cells.chunks(grid_size).enumerate().map(
+                    |(row_index, row)| {
+                        rect()
+                            .spacing(6.)
+                            .horizontal()
+                            .children(row.iter().enumerate().map(|(col_index, cell)| {
+                                Portal::new(cell.id)
+                                    .key(cell.id)
+                                    .width(Size::px(size))
+                                    .height(Size::px(size))
+                                    .function(Function::Expo)
+                                    .duration(Duration::from_millis(1000))
+                                    .animation_dependency((row_index, col_index, grid_size))
+                                    .child(
+                                        rect()
+                                            .width(Size::px(size))
+                                            .height(Size::px(size))
+                                            .corner_radius(32.)
+                                            .color(Color::WHITE)
+                                            .background((
+                                                cell.id as u8,
+                                                (cell.id as f32 * color_ratio) as u8,
+                                                cell.id as u8,
+                                            ))
+                                            .center()
+                                            .child(cell.id.to_string()),
+                                    )
+                            }))
+                    },
+                )),
         )
 }

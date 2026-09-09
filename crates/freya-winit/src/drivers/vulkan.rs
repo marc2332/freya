@@ -774,22 +774,24 @@ fn create_gr_context(
         .filter_map(|extension| extension.to_str().ok())
         .collect::<Vec<_>>();
 
-    let mut backend_context = unsafe {
-        vk::BackendContext::new_with_extensions(
+    let max_api_version = vk::Version::new(
+        api_version_major(api_version) as usize,
+        api_version_minor(api_version) as usize,
+        api_version_patch(api_version) as usize,
+    );
+
+    let backend_context = unsafe {
+        vk::BackendContext::new_builder(
             instance.handle().as_raw() as _,
             physical_device.as_raw() as _,
             device.handle().as_raw() as _,
             (queue.as_raw() as _, queue_family_index as usize),
             &get_proc,
-            &instance_extensions,
-            &device_extensions,
+            Some(max_api_version),
         )
+        .with_extensions(&instance_extensions, &device_extensions)
+        .build()
     };
-    backend_context.set_max_api_version(vk::Version::new(
-        api_version_major(api_version) as usize,
-        api_version_minor(api_version) as usize,
-        api_version_patch(api_version) as usize,
-    ));
 
     let context_options = ContextOptions::default();
 

@@ -75,6 +75,8 @@ impl Component for ShaderEditor {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -197,7 +199,7 @@ impl Component for ShaderView {
         let editable = self.0;
 
         use_hook(|| {
-            let mut ticker = consume_root_context::<RenderingTicker>();
+            let ticker = RenderingTicker::get();
             let platform = Platform::get();
 
             spawn(async move {

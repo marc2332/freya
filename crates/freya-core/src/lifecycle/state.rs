@@ -304,15 +304,31 @@ impl<T> State<T> {
     /// ```
     #[track_caller]
     pub fn read(&self) -> ReadRef<'static, T> {
+        let Some(value) = self.try_read() else {
+            panic!("Reading the State failed because it is already borrowed or it was dropped.")
+        };
+        value
+    }
+
+    /// Read the current value and subscribe the current component to changes, or [None] if
+    /// the state is already borrowed or the scope owning it was dropped.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// # use freya::prelude::*;
+    /// let count = use_state(|| 0);
+    ///
+    /// if let Some(count) = count.try_read() {
+    ///     println!("{count}");
+    /// }
+    /// ```
+    pub fn try_read(&self) -> Option<ReadRef<'static, T>> {
         if let Some(mut rc) = ReactiveContext::try_current() {
-            rc.subscribe(&self.subscribers.read());
+            let subscribers = self.subscribers.try_read().ok()?;
+            rc.subscribe(&subscribers);
         }
-        match self.key.try_read() {
-            Ok(val) => val,
-            Err(e) => {
-                panic!("Reading the State failed because it is already borrowed.\n{e}")
-            }
-        }
+        self.key.try_read().ok()
     }
 
     /// Read the current value without subscribing to changes.
@@ -348,12 +364,27 @@ impl<T> State<T> {
     /// Prefer `read()` over `peek()` unless you specifically need non-reactive access.
     #[track_caller]
     pub fn peek(&self) -> ReadRef<'static, T> {
-        match self.key.try_read() {
-            Ok(val) => val,
-            Err(e) => {
-                panic!("Peeking the State failed because it is already borrowed.\n{e}")
-            }
-        }
+        let Some(value) = self.try_peek() else {
+            panic!("Peeking the State failed because it is already borrowed or it was dropped.")
+        };
+        value
+    }
+
+    /// Read the current value without subscribing to changes, or [None] if the state is
+    /// already borrowed or the scope owning it was dropped.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// # use freya::prelude::*;
+    /// let count = use_state(|| 0);
+    ///
+    /// if let Some(count) = count.try_peek() {
+    ///     println!("{count}");
+    /// }
+    /// ```
+    pub fn try_peek(&self) -> Option<ReadRef<'static, T>> {
+        self.key.try_read().ok()
     }
 
     /// Get a mutable reference to the state value and notify subscribers.
@@ -384,36 +415,52 @@ impl<T> State<T> {
     /// - `set()` for replacing the entire value
     #[track_caller]
     pub fn write(&mut self) -> WriteRef<'static, T> {
-        self.subscribers.write().borrow_mut().retain(|s| s.notify());
-        match self.key.try_write() {
-            Ok(val) => val,
-            Err(e) => {
-                panic!("Writing to the State failed because it is already borrowed.\n{e}")
-            }
-        }
+        let Some(value) = self.try_write() else {
+            panic!("Writing to the State failed because it is already borrowed or it was dropped.")
+        };
+        value
     }
 
-    /// Get a mutable reference without requiring a mutable borrow of the State.
+    /// Get a mutable reference to the state value and notify subscribers, or [None] if the
+    /// state is already borrowed or the scope owning it was dropped.
     ///
-    /// This is an advanced method that allows writing to the state without having
-    /// mutable access to the `State` itself. Use with caution as it bypasses Rust's
-    /// borrow checker guarantees.
+    /// Useful in callbacks that can outlive the component they were created in.
     ///
-    /// # Safety Considerations
+    /// # Example
     ///
-    /// This method should only be used when you cannot obtain a mutable reference
-    /// to the `State` but still need to modify it. Prefer `write()` when possible.
+    /// ```rust,no_run
+    /// # use freya::prelude::*;
+    /// let mut count = use_state(|| 0);
+    ///
+    /// if let Some(mut count) = count.try_write() {
+    ///     *count += 1;
+    /// }
+    /// ```
+    pub fn try_write(&mut self) -> Option<WriteRef<'static, T>> {
+        self.try_write_unchecked()
+    }
+
+    /// Same as [State::try_write] but without requiring a mutable borrow of the State.
+    ///
+    /// Prefer [State::try_write], here conflicting borrows are only detected at runtime.
+    pub fn try_write_unchecked(&self) -> Option<WriteRef<'static, T>> {
+        let subscribers = self.subscribers.try_write().ok()?;
+        subscribers.borrow_mut().retain(|s| s.notify());
+        self.key.try_write().ok()
+    }
+
+    /// Same as [State::write] but without requiring a mutable borrow of the State.
+    ///
+    /// Reach for it only when you cannot get a mutable reference to the `State` itself,
+    /// here conflicting borrows are only detected at runtime.
     #[track_caller]
     pub fn write_unchecked(&self) -> WriteRef<'static, T> {
-        self.subscribers.write().borrow_mut().retain(|s| s.notify());
-        match self.key.try_write() {
-            Ok(val) => val,
-            Err(e) => {
-                panic!(
-                    "Writing (unchecked) to the State failed because it is already borrowed.\n{e}"
-                )
-            }
-        }
+        let Some(value) = self.try_write_unchecked() else {
+            panic!(
+                "Writing (unchecked) to the State failed because it is already borrowed or it was dropped."
+            )
+        };
+        value
     }
 
     /// Get a mutable reference without notifying subscribers.
@@ -425,12 +472,12 @@ impl<T> State<T> {
     /// notifications based on whether the value actually changed.
     #[track_caller]
     pub(crate) fn write_silently(&self) -> WriteRef<'static, T> {
-        match self.key.try_write() {
-            Ok(val) => val,
-            Err(e) => {
-                panic!("Silently writing to the State failed because it is already borrowed.\n{e}")
-            }
-        }
+        let Some(value) = self.key.try_write().ok() else {
+            panic!(
+                "Silently writing to the State failed because it is already borrowed or it was dropped."
+            )
+        };
+        value
     }
 
     /// Create a new State attached to the current component's scope.

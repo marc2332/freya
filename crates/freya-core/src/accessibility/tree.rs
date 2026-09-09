@@ -76,7 +76,7 @@ impl AccessibilityTree {
     }
 
     /// Initialize the Accessibility Tree
-    pub fn init(&mut self, tree: &mut Tree) -> TreeUpdate {
+    pub fn init(&mut self, tree: &mut Tree, title: &str) -> TreeUpdate {
         tree.accessibility_diff.clear();
 
         let mut nodes = vec![];
@@ -84,7 +84,7 @@ impl AccessibilityTree {
         tree.traverse_depth(|node_id| {
             let accessibility_state = tree.accessibility_state.get(&node_id).unwrap();
             let layout_node = tree.layout.get(&node_id).unwrap();
-            let accessibility_node = Self::create_node(node_id, layout_node, tree);
+            let accessibility_node = Self::create_node(node_id, layout_node, tree, title);
             nodes.push((accessibility_state.a11y_id, accessibility_node));
             self.map.insert(accessibility_state.a11y_id, node_id);
         });
@@ -113,6 +113,7 @@ impl AccessibilityTree {
         &mut self,
         tree: &mut Tree,
         events_sender: &futures_channel::mpsc::UnboundedSender<EventsChunk>,
+        title: &str,
     ) -> TreeUpdate {
         let requested_focus = tree.accessibility_diff.requested_focus.take();
         let removed_ids = tree
@@ -162,7 +163,7 @@ impl AccessibilityTree {
         for node_id in added_or_updated_ids {
             let accessibility_state = tree.accessibility_state.get(&node_id).unwrap();
             let layout_node = tree.layout.get(&node_id).unwrap();
-            let accessibility_node = Self::create_node(node_id, layout_node, tree);
+            let accessibility_node = Self::create_node(node_id, layout_node, tree, title);
             nodes.push((accessibility_state.a11y_id, accessibility_node));
         }
 
@@ -356,12 +357,19 @@ impl AccessibilityTree {
     }
 
     /// Create an accessibility node
-    pub fn create_node(node_id: NodeId, layout_node: &LayoutNode, tree: &Tree) -> Node {
+    pub fn create_node(
+        node_id: NodeId,
+        layout_node: &LayoutNode,
+        tree: &Tree,
+        title: &str,
+    ) -> Node {
         let element = tree.elements.get(&node_id).unwrap();
         let mut accessibility_data = element.accessibility().into_owned();
+        element.finish_accessibility(&mut accessibility_data.builder);
 
         if node_id == NodeId::ROOT {
             accessibility_data.builder.set_role(Role::Window);
+            accessibility_data.builder.set_label(title);
         }
 
         // Set children
@@ -385,20 +393,27 @@ impl AccessibilityTree {
         });
 
         // Set inner text
-        if let Some(children) = tree.children.get(&node_id) {
-            for child in children {
-                let child_element = tree.elements.get(child).unwrap().as_ref() as &dyn Any;
-                if let Some(label) = child_element.downcast_ref::<LabelElement>() {
-                    accessibility_data.builder.set_label(label.text.as_ref());
-                } else if let Some(paragraph) = child_element.downcast_ref::<ParagraphElement>() {
-                    accessibility_data.builder.set_label(
-                        paragraph
-                            .spans
-                            .iter()
-                            .map(|span| span.text.as_ref())
-                            .collect::<String>(),
-                    );
-                }
+        let inner_text = accessibility_data
+            .builder
+            .value()
+            .map(String::from)
+            .or_else(|| {
+                tree.children.get(&node_id).and_then(|children| {
+                    children.iter().find_map(|child| {
+                        let child_element = tree.elements.get(child).unwrap();
+                        let mut child_builder = child_element.accessibility().builder.clone();
+                        child_element.finish_accessibility(&mut child_builder);
+                        child_builder.value().map(String::from)
+                    })
+                })
+            });
+
+        if let Some(inner_text) = inner_text {
+            // Accesskit derives the name of Role::Label nodes from the value, not the label
+            if accessibility_data.builder.role() == Role::Label {
+                accessibility_data.builder.set_value(inner_text);
+            } else {
+                accessibility_data.builder.set_label(inner_text);
             }
         }
 

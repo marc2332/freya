@@ -103,7 +103,6 @@ impl Component for Accordion {
     fn render(self: &Accordion) -> impl IntoElement {
         let header_a11y_id = use_a11y();
         let accordion_theme = get_theme!(&self.theme, AccordionThemePreference, "accordion");
-        let cursor_icon = self.cursor_icon;
         let mut open = use_state(|| false);
         let mut animation = use_animation(move |_conf| {
             AnimNum::new(0., 100.)
@@ -128,12 +127,7 @@ impl Component for Accordion {
                     .width(1.)
                     .alignment(BorderAlignment::Inner),
             )
-            .on_pointer_enter(move |_| {
-                Cursor::set(cursor_icon);
-            })
-            .on_pointer_leave(move |_| {
-                Cursor::set(CursorIcon::default());
-            })
+            .cursor(self.cursor_icon)
             .on_press(move |_| {
                 if open.toggled() {
                     animation.start();

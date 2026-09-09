@@ -14,7 +14,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app).with_size(900., 600.)))
 }
 
-#[derive(PartialEq, Clone, Copy, Debug)]
+#[derive(PartialEq, Clone, Copy, Debug, Hash)]
 pub enum TaskStatus {
     Todo,
     InProgress,
@@ -62,7 +62,7 @@ impl Component for Card {
             .height(Size::px(60.))
             .scale(scale)
             .shadow((0., 2., 4., 0., (0, 0, 0, 25)))
-            .child(label().text(self.0.title.clone()))
+            .child(self.0.title.clone())
     }
 }
 
@@ -80,7 +80,7 @@ fn app() -> impl IntoElement {
 
     rect().expanded().center().child(
         rect()
-            .direction(Direction::Horizontal)
+            .horizontal()
             .width(Size::px(800.))
             .height(Size::fill())
             .content(Content::Flex)
@@ -97,69 +97,14 @@ fn app() -> impl IntoElement {
 }
 
 fn column(mut tasks: State<Vec<Task>>, status: TaskStatus, title: String) -> impl IntoElement {
+    let dragging = use_drag::<usize>().read().is_some();
+
     rect()
-        .direction(Direction::Vertical)
+        .vertical()
         .width(Size::flex(1.))
         .height(Size::fill())
-        .child(DropZone::<usize>::new(
-            rect()
-                .direction(Direction::Vertical)
-                .expanded()
-                .padding(16.0)
-                .spacing(8.0)
-                .background((240, 240, 240))
-                .corner_radius(8.0)
-                .child(
-                    label()
-                        .text(title)
-                        .font_size(18.0)
-                        .font_weight(FontWeight::BOLD),
-                )
-                .children(
-                    tasks
-                        .read()
-                        .iter()
-                        .filter(|t| t.status == status)
-                        .map(|task| {
-                            DragZone::<usize>::new(
-                                task.id,
-                                Portal::new(task.id)
-                                    .height(Size::px(60.))
-                                    .width(Size::fill())
-                                    .function(Function::Expo)
-                                    .duration(Duration::from_millis(500))
-                                    .child(Card(task.clone())),
-                            )
-                            .drag_element(
-                                Portal::new(task.id)
-                                    .height(Size::px(60.))
-                                    .width(Size::fill())
-                                    .function(Function::Expo)
-                                    .duration(Duration::from_millis(500))
-                                    .child(
-                                        rect()
-                                            .interactive(false)
-                                            .background((255, 255, 255))
-                                            .layer(999)
-                                            .border(
-                                                Border::new()
-                                                    .fill((200, 200, 200))
-                                                    .width(1.0)
-                                                    .alignment(BorderAlignment::Inner),
-                                            )
-                                            .corner_radius(4.0)
-                                            .padding(12.0)
-                                            .width(Size::px(200.))
-                                            .height(Size::px(60.))
-                                            .shadow((0., 2., 4., 0., (0, 0, 0, 25)))
-                                            .child(label().text(task.title.clone())),
-                                    ),
-                            )
-                            .show_while_dragging(false)
-                            .key(task.id)
-                        }),
-                ),
-            move |task_id: usize| {
+        .child(
+            DropZone::new(move |task_id: usize| {
                 let mut task = tasks
                     .read()
                     .iter()
@@ -171,6 +116,67 @@ fn column(mut tasks: State<Vec<Task>>, status: TaskStatus, title: String) -> imp
                     task.status = status;
                     tasks.write().push(task);
                 }
-            },
-        ))
+            })
+            .child(
+                rect()
+                    .vertical()
+                    .expanded()
+                    .padding(16.0)
+                    .spacing(8.0)
+                    .background((240, 240, 240))
+                    .corner_radius(8.0)
+                    .child(
+                        label()
+                            .text(title)
+                            .font_size(18.0)
+                            .font_weight(FontWeight::BOLD),
+                    )
+                    .children(
+                        tasks
+                            .read()
+                            .iter()
+                            .filter(|t| t.status == status)
+                            .enumerate()
+                            .map(|(index, task)| {
+                                DragZone::new(task.id)
+                                    .drag_element(
+                                        Portal::new(task.id)
+                                            .height(Size::px(60.))
+                                            .width(Size::fill())
+                                            .function(Function::Expo)
+                                            .duration(Duration::from_millis(500))
+                                            .child(
+                                                rect()
+                                                    .interactive(false)
+                                                    .background((255, 255, 255))
+                                                    .layer(999)
+                                                    .border(
+                                                        Border::new()
+                                                            .fill((200, 200, 200))
+                                                            .width(1.0)
+                                                            .alignment(BorderAlignment::Inner),
+                                                    )
+                                                    .corner_radius(4.0)
+                                                    .padding(12.0)
+                                                    .width(Size::px(200.))
+                                                    .height(Size::px(60.))
+                                                    .shadow((0., 2., 4., 0., (0, 0, 0, 25)))
+                                                    .child(task.title.clone()),
+                                            ),
+                                    )
+                                    .show_while_dragging(false)
+                                    .child(
+                                        Portal::new(task.id)
+                                            .height(Size::px(60.))
+                                            .width(Size::fill())
+                                            .function(Function::Expo)
+                                            .duration(Duration::from_millis(500))
+                                            .animation_dependency((status, index, dragging))
+                                            .child(Card(task.clone())),
+                                    )
+                                    .key(task.id)
+                            }),
+                    ),
+            ),
+        )
 }

@@ -28,6 +28,7 @@ impl AnimationClock {
     pub const MAX_SPEED: f32 = 5.0;
     pub const DISABLED_SPEED: f32 = 999_999_999.0;
 
+    #[track_caller]
     pub fn get() -> Self {
         consume_root_context()
     }

@@ -1,5 +1,9 @@
-use std::rc::Rc;
+use std::{
+    borrow::Cow,
+    rc::Rc,
+};
 
+use bytes::Bytes;
 pub use mundy::{
     AccentColor,
     Srgba,
@@ -8,9 +12,11 @@ use torin::prelude::Size2D;
 
 use crate::{
     accessibility::id::AccessibilityId,
+    current_context::CurrentContext,
     prelude::{
         State,
         consume_root_context,
+        try_consume_root_context,
     },
     user_event::UserEvent,
 };
@@ -27,6 +33,51 @@ pub enum PreferredTheme {
     #[default]
     Light,
     Dark,
+}
+
+/// Platform an app runs on.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TargetPlatform {
+    Windows,
+    MacOs,
+    Linux,
+    Android,
+    Ios,
+    Unknown,
+}
+
+impl TargetPlatform {
+    /// Get the current [`TargetPlatform`] otherwise falls back to [`TargetPlatform::detect`].
+    pub fn get() -> Self {
+        CurrentContext::try_with(|_| try_consume_root_context())
+            .flatten()
+            .unwrap_or_else(Self::detect)
+    }
+
+    /// Platform of the current compile target.
+    pub fn detect() -> Self {
+        if cfg!(target_os = "windows") {
+            Self::Windows
+        } else if cfg!(target_os = "macos") {
+            Self::MacOs
+        } else if cfg!(target_os = "linux") {
+            Self::Linux
+        } else if cfg!(target_os = "android") {
+            Self::Android
+        } else if cfg!(target_os = "ios") {
+            Self::Ios
+        } else {
+            Self::Unknown
+        }
+    }
+
+    pub fn is_desktop(&self) -> bool {
+        matches!(self, Self::Windows | Self::MacOs | Self::Linux)
+    }
+
+    pub fn is_mobile(&self) -> bool {
+        matches!(self, Self::Android | Self::Ios)
+    }
 }
 
 /// Access point to different Freya-managed states such as the focused node,
@@ -59,6 +110,7 @@ pub struct Platform {
 
 impl Platform {
     /// Retrieve the [`Platform`] from the root context.
+    #[track_caller]
     pub fn get() -> Self {
         consume_root_context()
     }
@@ -72,5 +124,24 @@ impl Platform {
     /// OS scale factor. The value might get clamped to a reasonable range.
     pub fn set_custom_scale_factor(&self, custom_scale_factor: f64) {
         self.send(UserEvent::SetCustomScaleFactor(custom_scale_factor));
+    }
+
+    /// Load a font at runtime, making it available under the given name in all windows.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use freya_core::prelude::*;
+    ///
+    /// fn load_rubik() {
+    ///     let font = std::fs::read("./Rubik.ttf").expect("Failed to read the font file.");
+    ///     Platform::get().load_font("Rubik", font);
+    /// }
+    /// ```
+    pub fn load_font(&self, font_name: impl Into<Cow<'static, str>>, font_data: impl Into<Bytes>) {
+        self.send(UserEvent::LoadFont {
+            font_name: font_name.into(),
+            font_data: font_data.into(),
+        });
     }
 }

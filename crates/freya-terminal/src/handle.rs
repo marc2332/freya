@@ -1,6 +1,5 @@
 use std::{
     cell::RefCell,
-    io::Write,
     path::PathBuf,
     rc::Rc,
     time::{
@@ -9,26 +8,7 @@ use std::{
     },
 };
 
-use alacritty_terminal::{
-    grid::{
-        Dimensions,
-        Scroll,
-    },
-    index::{
-        Column,
-        Line,
-        Point,
-        Side,
-    },
-    selection::{
-        Selection,
-        SelectionType,
-    },
-    term::{
-        Term,
-        TermMode,
-    },
-};
+use async_io::Timer;
 use freya_core::{
     notify::ArcNotify,
     prelude::{
@@ -36,30 +16,56 @@ use freya_core::{
         TaskHandle,
         UseId,
         UserEvent,
+        spawn_forever,
     },
+};
+use futures_lite::{
+    StreamExt,
+    future,
 };
 use keyboard_types::{
     Key,
     Modifiers,
     NamedKey,
 };
-use portable_pty::{
-    MasterPty,
-    PtySize,
+use rio_vt::{
+    ansi::CursorShape,
+    crosswords::{
+        Crosswords,
+        CrosswordsSize,
+        Mode,
+        grid::Scroll,
+        pos::{
+            Column,
+            Line,
+            Pos,
+            Side,
+        },
+    },
+    event::{
+        EventListener,
+        RioEvent,
+        WindowId,
+    },
+    performer::handler::Processor,
+    selection::{
+        Selection,
+        SelectionType,
+    },
 };
 
 use crate::{
+    backends::{
+        TerminalBackend,
+        TerminalOutput,
+    },
+    cell::snapshot_row,
     parser::{
         TerminalMouseButton,
         encode_mouse_move,
         encode_mouse_press,
         encode_mouse_release,
         encode_wheel_event,
-    },
-    pty::{
-        EventProxy,
-        TermSize,
-        spawn_pty,
     },
     url::url_at,
 };
@@ -86,8 +92,11 @@ pub enum TerminalError {
     #[error("Write error: {0}")]
     WriteError(String),
 
-    #[error("Terminal not initialized")]
-    NotInitialized,
+    #[error("Failed to start terminal backend: {0}")]
+    StartError(String),
+
+    #[error("Terminal closed")]
+    Closed,
 }
 
 impl From<std::io::Error> for TerminalError {
@@ -96,19 +105,56 @@ impl From<std::io::Error> for TerminalError {
     }
 }
 
-/// Cleans up the PTY and the reader task when the last handle is dropped.
-pub(crate) struct TerminalCleaner {
-    /// Writer handle for the PTY.
-    pub(crate) writer: Rc<RefCell<Option<Box<dyn Write + Send>>>>,
-    /// PTY reader/parser task.
-    pub(crate) pty_task: TaskHandle,
-    /// Notifier that signals when the terminal should close.
-    pub(crate) closer_notifier: ArcNotify,
+type SharedBackend = Rc<RefCell<Option<Box<dyn TerminalBackend>>>>;
+
+/// Listener proxy passed into rio-vt's `Crosswords`. Routes its side-effects
+/// (PtyWrite, Title, ClipboardStore) into the freya-side state.
+#[derive(Clone)]
+pub struct EventProxy {
+    backend: SharedBackend,
+    title: Rc<RefCell<Option<String>>>,
+    title_notifier: ArcNotify,
+    clipboard_content: Rc<RefCell<Option<String>>>,
+    clipboard_notifier: ArcNotify,
 }
 
-/// Handle-local state grouped into a single `RefCell`.
+impl EventListener for EventProxy {
+    fn send_event(&self, event: RioEvent, _window_id: WindowId) {
+        match event {
+            RioEvent::PtyWrite(_route, text) => {
+                if let Some(backend) = &mut *self.backend.borrow_mut() {
+                    let _ = backend.write(text.as_bytes());
+                }
+            }
+            RioEvent::Title(t) => {
+                *self.title.borrow_mut() = Some(t);
+                self.title_notifier.notify();
+            }
+            RioEvent::ResetTitle => {
+                *self.title.borrow_mut() = None;
+                self.title_notifier.notify();
+            }
+            RioEvent::ClipboardStore(_, text) => {
+                *self.clipboard_content.borrow_mut() = Some(text);
+                self.clipboard_notifier.notify();
+            }
+            // Bell, Wakeup, ColorRequest, etc.
+            _ => {}
+        }
+    }
+}
+
+/// Drops the backend and the parser task when the last handle is dropped.
+pub(crate) struct TerminalCleaner {
+    backend: SharedBackend,
+    /// Output reader/parser task.
+    task: TaskHandle,
+    /// Notifier that signals when the terminal should close.
+    closer_notifier: ArcNotify,
+}
+
+/// Handle-local input tracking.
 pub(crate) struct TerminalInner {
-    pub(crate) master: Box<dyn MasterPty + Send>,
     pub(crate) last_write_time: Instant,
     pub(crate) pressed_button: Option<TerminalMouseButton>,
     pub(crate) modifiers: Modifiers,
@@ -116,37 +162,33 @@ pub(crate) struct TerminalInner {
 
 impl Drop for TerminalCleaner {
     fn drop(&mut self) {
-        *self.writer.borrow_mut() = None;
-        self.pty_task.try_cancel();
+        *self.backend.borrow_mut() = None;
+        self.task.try_cancel();
         self.closer_notifier.notify();
     }
 }
 
-/// Handle to a running terminal instance.
-///
-/// Multiple `Terminal` components can share the same handle. The PTY is
-/// closed when the last handle is dropped.
+/// Handle to a running terminal instance. Multiple `Terminal` components can share
+/// the same handle, and the backend is dropped when the last handle is dropped.
 #[derive(Clone)]
 pub struct TerminalHandle {
     /// Unique identifier for this terminal instance, used for `PartialEq`.
     pub(crate) id: TerminalId,
-    /// alacritty's terminal model: grid, modes, scrollback. The renderer
+    /// rio-vt's terminal model: grid, modes, scrollback. The renderer
     /// borrows this directly during paint, so there is no parallel snapshot.
-    pub(crate) term: Rc<RefCell<Term<EventProxy>>>,
-    /// Writer for sending input to the PTY process.
-    pub(crate) writer: Rc<RefCell<Option<Box<dyn Write + Send>>>>,
-    /// Handle-local state (PTY master, input tracking).
+    pub(crate) term: Rc<RefCell<Crosswords<EventProxy>>>,
+    /// Program the terminal is attached to, `None` once it has closed.
+    pub(crate) backend: SharedBackend,
+    /// Handle-local state (input tracking).
     pub(crate) inner: Rc<RefCell<TerminalInner>>,
-    /// Current working directory reported by the shell via OSC 7.
-    pub(crate) cwd: Rc<RefCell<Option<PathBuf>>>,
     /// Window title reported by the shell via OSC 0 or OSC 2.
     pub(crate) title: Rc<RefCell<Option<String>>>,
-    /// Notifier that signals when the terminal/PTY closes.
+    /// Notifier that signals when the terminal closes.
     pub(crate) closer_notifier: ArcNotify,
     /// Kept alive purely so its `Drop` runs when the last handle dies.
     #[allow(dead_code)]
     pub(crate) cleaner: Rc<TerminalCleaner>,
-    /// Notifier that signals each time new output is received from the PTY.
+    /// Notifier that signals each time new output is received from the backend.
     pub(crate) output_notifier: ArcNotify,
     /// Notifier that signals when the window title changes via OSC 0 or OSC 2.
     pub(crate) title_notifier: ArcNotify,
@@ -163,29 +205,107 @@ impl PartialEq for TerminalHandle {
 }
 
 impl TerminalHandle {
-    /// Spawn a PTY for `command` and return a handle. Defaults to 1000 lines
+    /// Start `backend` and return a handle driving it. Defaults to 1000 lines
     /// of scrollback when `scrollback_length` is `None`.
-    ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// use freya_terminal::prelude::*;
-    /// use portable_pty::CommandBuilder;
-    ///
-    /// let mut cmd = CommandBuilder::new("bash");
-    /// cmd.env("TERM", "xterm-256color");
-    ///
-    /// let handle = TerminalHandle::new(TerminalId::new(), cmd, None).unwrap();
-    /// ```
     pub fn new(
         id: TerminalId,
-        command: portable_pty::CommandBuilder,
+        mut backend: impl TerminalBackend + 'static,
         scrollback_length: Option<usize>,
     ) -> Result<Self, TerminalError> {
-        spawn_pty(id, command, scrollback_length.unwrap_or(1000))
+        let (sender, mut receiver) = futures_channel::mpsc::unbounded();
+        backend.start(TerminalOutput { sender })?;
+        let backend: SharedBackend = Rc::new(RefCell::new(Some(Box::new(backend))));
+
+        let closer_notifier = ArcNotify::new();
+        let output_notifier = ArcNotify::new();
+        let title_notifier = ArcNotify::new();
+        let title: Rc<RefCell<Option<String>>> = Rc::new(RefCell::new(None));
+        let clipboard_content: Rc<RefCell<Option<String>>> = Rc::new(RefCell::new(None));
+        let clipboard_notifier = ArcNotify::new();
+
+        let event_proxy = EventProxy {
+            backend: backend.clone(),
+            title: title.clone(),
+            title_notifier: title_notifier.clone(),
+            clipboard_content: clipboard_content.clone(),
+            clipboard_notifier: clipboard_notifier.clone(),
+        };
+
+        let term = Rc::new(RefCell::new(Crosswords::new(
+            CrosswordsSize::new(80, 24),
+            CursorShape::Block,
+            event_proxy,
+            WindowId::from(0),
+            0,
+            scrollback_length.unwrap_or(1000),
+        )));
+
+        let inner = Rc::new(RefCell::new(TerminalInner {
+            last_write_time: Instant::now(),
+            pressed_button: None,
+            modifiers: Modifiers::empty(),
+        }));
+
+        let platform = Platform::get();
+        let task = spawn_forever({
+            let term = term.clone();
+            let backend = backend.clone();
+            let closer_notifier = closer_notifier.clone();
+            let output_notifier = output_notifier.clone();
+            async move {
+                let mut processor = Processor::default();
+                loop {
+                    let read = async { Some(receiver.next().await) };
+                    let result = if let Some(deadline) = processor.sync_timeout().sync_timeout() {
+                        let expiry = async {
+                            Timer::at(deadline).await;
+                            None
+                        };
+                        future::or(read, expiry).await
+                    } else {
+                        read.await
+                    };
+                    match result {
+                        None => {
+                            processor.stop_sync(&mut *term.borrow_mut());
+                            output_notifier.notify();
+                            platform.send(UserEvent::RequestRedraw);
+                        }
+                        Some(None) => break,
+                        Some(Some(bytes)) => {
+                            processor.advance(&mut *term.borrow_mut(), &bytes);
+                            output_notifier.notify();
+                            platform.send(UserEvent::RequestRedraw);
+                        }
+                    }
+                }
+                // Output ended, drop the backend and notify observers.
+                *backend.borrow_mut() = None;
+                closer_notifier.notify();
+                platform.send(UserEvent::RequestRedraw);
+            }
+        });
+
+        Ok(Self {
+            closer_notifier: closer_notifier.clone(),
+            cleaner: Rc::new(TerminalCleaner {
+                backend: backend.clone(),
+                task,
+                closer_notifier,
+            }),
+            id,
+            term,
+            backend,
+            inner,
+            title,
+            title_notifier,
+            clipboard_content,
+            clipboard_notifier,
+            output_notifier,
+        })
     }
 
-    /// Write data to the PTY. Drops any selection and snaps the viewport to the bottom.
+    /// Write data to the backend. Drops any selection and snaps the viewport to the bottom.
     pub fn write(&self, data: &[u8]) -> Result<(), TerminalError> {
         self.write_raw(data)?;
         let mut term = self.term.borrow_mut();
@@ -195,12 +315,12 @@ impl TerminalHandle {
         Ok(())
     }
 
-    /// Time since the user last wrote input to the PTY.
+    /// Time since the user last wrote input to the backend.
     pub fn last_write_elapsed(&self) -> Duration {
         self.inner.borrow().last_write_time.elapsed()
     }
 
-    /// Write a key event to the PTY as the matching escape sequence. Returns whether it was recognised.
+    /// Write a key event to the backend as the matching escape sequence. Returns whether it was recognised.
     pub fn write_key(&self, key: &Key, modifiers: Modifiers) -> Result<bool, TerminalError> {
         let shift = modifiers.contains(Modifiers::SHIFT);
         let ctrl = modifiers.contains(Modifiers::CONTROL);
@@ -246,7 +366,7 @@ impl TerminalHandle {
             }
             Key::Named(NamedKey::Home) => {
                 self.scroll(i32::MAX);
-                if self.term.borrow().grid().display_offset() != 0 {
+                if self.term.borrow().display_offset() != 0 {
                     return Ok(true);
                 }
                 if shift || ctrl {
@@ -256,7 +376,7 @@ impl TerminalHandle {
                 }
             }
             Key::Named(NamedKey::End) => {
-                if self.term.borrow().grid().display_offset() != 0 {
+                if self.term.borrow().display_offset() != 0 {
                     self.scroll_to_bottom();
                     return Ok(true);
                 }
@@ -278,14 +398,9 @@ impl TerminalHandle {
         Ok(true)
     }
 
-    /// Paste text into the PTY, wrapping in bracketed-paste markers if the app enabled them.
+    /// Paste text into the backend, wrapping in bracketed-paste markers if the app enabled them.
     pub fn paste(&self, text: &str) -> Result<(), TerminalError> {
-        let bracketed = self
-            .term
-            .borrow()
-            .mode()
-            .contains(TermMode::BRACKETED_PASTE);
-        if bracketed {
+        if self.mode().contains(Mode::BRACKETED_PASTE) {
             let filtered = text.replace(['\x1b', '\x03'], "");
             self.write_raw(b"\x1b[200~")?;
             self.write_raw(filtered.as_bytes())?;
@@ -299,34 +414,28 @@ impl TerminalHandle {
 
     /// Report a keyboard focus change to the program if it enabled focus reporting (mode 1004).
     pub fn focus_changed(&self, focused: bool) {
-        if self.mode().contains(TermMode::FOCUS_IN_OUT) {
+        if self.mode().contains(Mode::FOCUS_IN_OUT) {
             let _ = self.write_raw(if focused { b"\x1b[I" } else { b"\x1b[O" });
         }
     }
 
-    /// Write data to the PTY without resetting scroll or selection state.
+    /// Write data to the backend without resetting scroll or selection state.
     fn write_raw(&self, data: &[u8]) -> Result<(), TerminalError> {
-        let mut writer = self.writer.borrow_mut();
-        let writer = writer.as_mut().ok_or(TerminalError::NotInitialized)?;
-        writer.write_all(data)?;
-        writer.flush()?;
-        Ok(())
+        let mut backend = self.backend.borrow_mut();
+        let backend = backend.as_mut().ok_or(TerminalError::Closed)?;
+        backend.write(data)
     }
 
     /// Resize the terminal. Lossless: the grid reflows on width, preserves scrollback on height.
     pub fn resize(&self, rows: u16, cols: u16) {
-        // PTY first so SIGWINCH reaches the program before we update locally.
-        let _ = self.inner.borrow().master.resize(PtySize {
-            rows,
-            cols,
-            pixel_width: 0,
-            pixel_height: 0,
-        });
+        // Backend first so SIGWINCH reaches the program before we update locally.
+        if let Some(backend) = &mut *self.backend.borrow_mut() {
+            backend.resize(rows, cols);
+        }
 
-        self.term.borrow_mut().resize(TermSize {
-            screen_lines: rows as usize,
-            columns: cols as usize,
-        });
+        self.term
+            .borrow_mut()
+            .resize(CrosswordsSize::new(cols as usize, rows as usize));
     }
 
     /// Scroll by delta. Positive moves up into scrollback (vt100 convention).
@@ -341,7 +450,7 @@ impl TerminalHandle {
 
     fn scroll_to(&self, target: Scroll) {
         let mut term = self.term.borrow_mut();
-        if term.mode().contains(TermMode::ALT_SCREEN) {
+        if term.mode().contains(Mode::ALT_SCREEN) {
             return;
         }
         term.scroll_display(target);
@@ -350,7 +459,7 @@ impl TerminalHandle {
 
     /// Current working directory reported via OSC 7.
     pub fn cwd(&self) -> Option<PathBuf> {
-        self.cwd.borrow().clone()
+        self.term.borrow().current_directory.clone()
     }
 
     /// Window title reported via OSC 0 / 2.
@@ -364,8 +473,8 @@ impl TerminalHandle {
     }
 
     /// Snapshot of the active terminal mode bits.
-    fn mode(&self) -> TermMode {
-        *self.term.borrow().mode()
+    fn mode(&self) -> Mode {
+        self.term.borrow().mode()
     }
 
     fn pressed_button(&self) -> Option<TerminalMouseButton> {
@@ -391,18 +500,18 @@ impl TerminalHandle {
         }
 
         let mode = self.mode();
-        if mode.contains(TermMode::MOUSE_MOTION) {
+        if mode.contains(Mode::MOUSE_MOTION) {
             // Any-motion mode: report regardless of button state.
             let _ = self
                 .write_raw(encode_mouse_move(row as usize, col as usize, held, mode).as_bytes());
-        } else if mode.contains(TermMode::MOUSE_DRAG)
+        } else if mode.contains(Mode::MOUSE_DRAG)
             && let Some(button) = held
         {
             // Button-motion mode: only while a button is held.
             let _ = self.write_raw(
                 encode_mouse_move(row as usize, col as usize, Some(button), mode).as_bytes(),
             );
-        } else if !mode.intersects(TermMode::MOUSE_MODE) && held.is_some() {
+        } else if !mode.intersects(Mode::MOUSE_MODE) && held.is_some() {
             self.update_selection(row, col);
         }
     }
@@ -420,7 +529,7 @@ impl TerminalHandle {
         self.set_pressed_button(Some(button));
 
         let mode = self.mode();
-        if !self.is_shift_held() && mode.intersects(TermMode::MOUSE_MODE) {
+        if !self.is_shift_held() && mode.intersects(Mode::MOUSE_MODE) {
             let _ = self
                 .write_raw(encode_mouse_press(row as usize, col as usize, button, mode).as_bytes());
         } else {
@@ -433,7 +542,7 @@ impl TerminalHandle {
         self.set_pressed_button(None);
 
         let mode = self.mode();
-        if !self.is_shift_held() && mode.intersects(TermMode::MOUSE_MODE) {
+        if !self.is_shift_held() && mode.intersects(Mode::MOUSE_MODE) {
             let _ = self.write_raw(
                 encode_mouse_release(row as usize, col as usize, button, mode).as_bytes(),
             );
@@ -445,7 +554,7 @@ impl TerminalHandle {
         self.set_pressed_button(None);
     }
 
-    /// Route a wheel event to scrollback, PTY mouse, or arrow-key sequences
+    /// Route a wheel event to scrollback, backend mouse, or arrow-key sequences
     /// depending on the active mouse mode and alt-screen state (matches wezterm/kitty).
     pub fn wheel(&self, delta_y: f64, row: f32, col: f32) {
         // Lines per event from the OS delta, capped to keep flings sane.
@@ -453,16 +562,15 @@ impl TerminalHandle {
         let scroll_delta = if delta_y > 0.0 { lines } else { -lines };
 
         let mode = self.mode();
-        let scroll_offset = self.term.borrow().grid().display_offset();
 
-        if scroll_offset > 0 {
+        if self.term.borrow().display_offset() > 0 {
             self.scroll(scroll_delta);
-        } else if mode.intersects(TermMode::MOUSE_MODE) {
+        } else if mode.intersects(Mode::MOUSE_MODE) {
             let _ = self.write_raw(
                 encode_wheel_event(row as usize, col as usize, delta_y, mode).as_bytes(),
             );
-        } else if mode.contains(TermMode::ALT_SCREEN) {
-            let app_cursor = mode.contains(TermMode::APP_CURSOR);
+        } else if mode.contains(Mode::ALT_SCREEN) {
+            let app_cursor = mode.contains(Mode::APP_CURSOR);
             let key = match (delta_y > 0.0, app_cursor) {
                 (true, true) => "\x1bOA",
                 (true, false) => "\x1b[A",
@@ -477,12 +585,12 @@ impl TerminalHandle {
         }
     }
 
-    /// Borrow the underlying alacritty `Term` for direct read access.
-    pub fn term(&self) -> std::cell::Ref<'_, Term<EventProxy>> {
+    /// Borrow the underlying rio-vt `Crosswords` for direct read access.
+    pub fn term(&self) -> std::cell::Ref<'_, Crosswords<EventProxy>> {
         self.term.borrow()
     }
 
-    /// Future that completes each time new output is received from the PTY.
+    /// Future that completes each time new output is received from the backend.
     pub fn output_received(&self) -> impl std::future::Future<Output = ()> + '_ {
         self.output_notifier.notified()
     }
@@ -497,7 +605,7 @@ impl TerminalHandle {
         self.clipboard_notifier.notified()
     }
 
-    /// Future that completes when the PTY closes.
+    /// Future that completes when the terminal closes.
     pub fn closed(&self) -> impl std::future::Future<Output = ()> + '_ {
         self.closer_notifier.notified()
     }
@@ -542,27 +650,37 @@ impl TerminalHandle {
     /// sits inside a detected plain-text URL. See [`Self::mouse_move`] for the
     /// fractional coordinate convention.
     pub fn hyperlink_at(&self, row: f32, col: f32) -> Option<String> {
-        let (point, _) = self.point_and_side_at(row, col);
         let term = self.term.borrow();
-        let grid = term.grid();
-        if let Some(h) = grid[point].hyperlink() {
-            return Some(h.uri().to_owned());
+        let viewport_row = (row.max(0.0) as usize).min(term.screen_lines().saturating_sub(1));
+        let column = (col.max(0.0) as usize).min(term.columns().saturating_sub(1));
+        let square =
+            term.grid[Line(viewport_row as i32 - term.display_offset() as i32)][Column(column)];
+        if !square.is_bg_only()
+            && let Some(hyperlink) = square
+                .extras_id()
+                .and_then(|id| term.grid.extras_table.get(id))
+                .and_then(|extras| extras.hyperlink.as_ref())
+        {
+            return Some(hyperlink.uri().to_owned());
         }
-        url_at(&grid[point.line][..], point.column.0)
+
+        let mut cells = Vec::new();
+        snapshot_row(&term, viewport_row, &mut cells);
+        url_at(&cells, column)
     }
 
     /// Grid point and cell half (left vs right) for a pointer at fractional cell coordinates.
-    fn point_and_side_at(&self, row: f32, col: f32) -> (Point, Side) {
+    fn point_and_side_at(&self, row: f32, col: f32) -> (Pos, Side) {
         let term = self.term.borrow();
         let col = col.max(0.0);
         let row = (row.max(0.0) as usize).min(term.screen_lines().saturating_sub(1));
         let column = (col as usize).min(term.columns().saturating_sub(1));
-        let line = row as i32 - term.grid().display_offset() as i32;
+        let line = row as i32 - term.display_offset() as i32;
         let side = if col.fract() < 0.5 {
             Side::Left
         } else {
             Side::Right
         };
-        (Point::new(Line(line), Column(column)), side)
+        (Pos::new(Line(line), Column(column)), side)
     }
 }

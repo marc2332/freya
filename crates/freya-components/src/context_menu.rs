@@ -52,6 +52,7 @@ impl ContextMenu {
     /// # Panics
     ///
     /// Panics if no [`ContextMenuViewer`] is mounted in an ancestor scope.
+    #[track_caller]
     pub fn get() -> Self {
         try_consume_root_context()
             .expect("ContextMenu requires a `ContextMenuViewer` in an ancestor scope")
@@ -155,7 +156,11 @@ impl ComponentOwned for ContextMenuViewer {
                 let location = location.to_f32();
                 rect()
                     .layer(Layer::Overlay)
-                    .position(Position::new_global().left(location.x).top(location.y))
+                    .position(
+                        Position::new_global()
+                            .left(location.x.round())
+                            .top(location.y.round()),
+                    )
                     .child(
                         menu.on_close(move |_| {
                             if (context.close_phase)() == ClosePhase::CloseAllowed {

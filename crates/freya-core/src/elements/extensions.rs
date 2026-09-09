@@ -50,6 +50,7 @@ use crate::{
             MouseEventData,
             SizedEventData,
             StyledEventData,
+            VisibleEventData,
             WheelEventData,
         },
         name::EventName,
@@ -61,6 +62,7 @@ use crate::{
         font_slant::FontSlant,
         font_weight::FontWeight,
         font_width::FontWidth,
+        letter_spacing::LetterSpacing,
         scale::Scale,
         text_height::TextHeightBehavior,
         text_overflow::TextOverflow,
@@ -306,6 +308,24 @@ pub trait EventHandlersExt: Sized {
         self.get_event_handlers()
             .insert(EventName::Sized, EventHandlerType::Sized(on_sized.into()));
         self.get_layout().layout.has_layout_references = true;
+        self
+    }
+
+    /// Fires when the element becomes visible, even partially, inside the viewports of its clipping ancestors.
+    fn on_visible(mut self, on_visible: impl Into<EventHandler<Event<VisibleEventData>>>) -> Self {
+        self.get_event_handlers().insert(
+            EventName::Visible,
+            EventHandlerType::Visible(on_visible.into()),
+        );
+        self
+    }
+
+    /// Fires when the element stops being visible inside the viewports of its clipping ancestors.
+    fn on_hidden(mut self, on_hidden: impl Into<EventHandler<Event<VisibleEventData>>>) -> Self {
+        self.get_event_handlers().insert(
+            EventName::Hidden,
+            EventHandlerType::Visible(on_hidden.into()),
+        );
         self
     }
 
@@ -684,6 +704,12 @@ where
         self.get_image_data().image_cover = image_cover;
         self
     }
+
+    /// Snap the image to the pixels grid. Defaults to `false`, but `SvgViewer` enables it.
+    fn snap_to_grid(mut self, snap_to_grid: bool) -> Self {
+        self.get_image_data().snap_to_grid = snap_to_grid;
+        self
+    }
 }
 
 /// Methods for describing an element in the accessibility tree.
@@ -773,6 +799,12 @@ where
     /// Set the text size in pixels. See [`FontSize`].
     fn font_size(mut self, font_size: impl Into<FontSize>) -> Self {
         self.get_text_style_data().font_size = Some(font_size.into());
+        self
+    }
+
+    /// Set the space between letters, in pixels. See [`LetterSpacing`].
+    fn letter_spacing(mut self, letter_spacing: impl Into<LetterSpacing>) -> Self {
+        self.get_text_style_data().letter_spacing = Some(letter_spacing.into());
         self
     }
 
@@ -866,6 +898,15 @@ where
     /// Round the element's corners. See [`CornerRadius`].
     fn corner_radius(mut self, corner_radius: impl Into<CornerRadius>) -> Self {
         self.get_style().corner_radius = corner_radius.into();
+        self
+    }
+
+    /// Set the [`CursorIcon`] shown while the element is hovered.
+    ///
+    /// When multiple hovered elements define a cursor, the one painted on top wins.
+    /// While a mouse button is pressed the cursor stays still.
+    fn cursor(mut self, cursor: impl Into<Option<CursorIcon>>) -> Self {
+        self.get_style().cursor = cursor.into();
         self
     }
 }

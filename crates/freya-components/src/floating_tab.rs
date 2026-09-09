@@ -125,12 +125,10 @@ impl Component for FloatingTab {
         } = get_theme!(&self.theme, FloatingTabThemePreference, "floating_tab");
 
         let on_pointer_enter = move |_| {
-            Cursor::set(CursorIcon::Pointer);
             status.set(TabStatus::Hovering);
         };
 
         let on_pointer_leave = move |_| {
-            Cursor::set(CursorIcon::default());
             status.set(TabStatus::default());
         };
 
@@ -147,6 +145,7 @@ impl Component for FloatingTab {
             .a11y_role(AccessibilityRole::Tab)
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
+            .cursor(CursorIcon::Pointer)
             .map(self.on_press.clone(), |el, on_press| el.on_press(on_press))
             .width(width)
             .height(height)

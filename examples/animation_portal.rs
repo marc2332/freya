@@ -46,6 +46,7 @@ fn popup(mut show_popup: State<Option<i32>>) -> impl IntoElement {
                                     .height(Size::px(200.))
                                     .function(Function::Expo)
                                     .duration(Duration::from_millis(500))
+                                    .animation_dependency(i)
                                     .child(card(i)),
                             )
                             .child(LOREM_IPSUM),
@@ -93,6 +94,7 @@ fn app() -> impl IntoElement {
                         .height(Size::px(100.))
                         .function(Function::Expo)
                         .duration(Duration::from_millis(500))
+                        .animation_dependency(show_popup())
                         .child(card(i)),
                 )
                 .child(

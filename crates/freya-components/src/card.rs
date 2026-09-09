@@ -221,13 +221,6 @@ impl Component for Card {
         let focus = use_focus(a11y_id);
 
         let is_hoverable = self.hoverable;
-        let cursor_icon = self.cursor_icon;
-
-        use_drop(move || {
-            if hovering() && is_hoverable {
-                Cursor::set(CursorIcon::default());
-            }
-        });
 
         let theme_colors = match self.style_variant {
             CardStyleVariant::Filled => {
@@ -294,16 +287,13 @@ impl Component for Card {
                 })
             })
             .maybe(is_hoverable, |rect| {
-                rect.on_pointer_enter(move |_| {
-                    hovering.set(true);
-                    Cursor::set(cursor_icon);
-                })
-                .on_pointer_leave(move |_| {
-                    if hovering() {
-                        Cursor::set(CursorIcon::default());
-                        hovering.set(false);
-                    }
-                })
+                rect.cursor(self.cursor_icon)
+                    .on_pointer_enter(move |_| {
+                        hovering.set(true);
+                    })
+                    .on_pointer_leave(move |_| {
+                        hovering.set_if_modified(false);
+                    })
             })
             .children(self.elements.clone())
     }

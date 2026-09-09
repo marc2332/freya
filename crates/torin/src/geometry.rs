@@ -12,7 +12,9 @@ use crate::{
 pub type AreaOf<T> = euclid::Rect<f32, T>;
 
 pub type Size2D = euclid::Size2D<f32, ()>;
+pub type Size2DFixed = euclid::Size2D<i32, ()>;
 pub type Point2D = euclid::Point2D<f32, ()>;
+pub type Vector2D = euclid::Vector2D<f32, ()>;
 pub type CursorPoint = euclid::Point2D<f64, ()>;
 pub type Length = euclid::Length<f32, ()>;
 

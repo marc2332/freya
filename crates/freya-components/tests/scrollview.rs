@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use freya::prelude::*;
 use freya_testing::prelude::*;
 
@@ -39,6 +41,87 @@ pub fn scroll_view_wheel() {
 }
 
 #[test]
+pub fn scroll_view_smooth_scrolling() {
+    fn scroll_view_smooth_scrolling_app() -> impl IntoElement {
+        ScrollView::new()
+            .child(rect().height(Size::px(200.)).width(Size::px(200.)))
+            .child(rect().height(Size::px(200.)).width(Size::px(200.)))
+            .child(rect().height(Size::px(200.)).width(Size::px(200.)))
+            .child(rect().height(Size::px(200.)).width(Size::px(200.)))
+    }
+
+    let mut test = launch_test(scroll_view_smooth_scrolling_app);
+    let scrollview = test
+        .find(|node, element| {
+            Rect::try_downcast(element)
+                .filter(|rect| rect.accessibility.builder.role() == AccessibilityRole::ScrollView)
+                .map(move |_| node)
+        })
+        .unwrap();
+    let content = scrollview.children()[0].children()[0].children();
+
+    test.send_event(PlatformEvent::Wheel {
+        name: WheelEventName::Wheel,
+        scroll: (0., -300.).into(),
+        cursor: (5., 5.).into(),
+        source: WheelSource::Line,
+    });
+    test.sync_and_update();
+
+    // A line-based wheel scroll animates, so nothing has moved yet
+    assert!(content[0].is_visible());
+    assert!(!content[3].is_visible());
+
+    test.poll(Duration::from_millis(16), Duration::from_secs(1));
+
+    // The animation has settled on the destination
+    assert!(!content[0].is_visible());
+    assert!(content[3].is_visible());
+}
+
+#[test]
+pub fn scroll_view_hover_updates_on_scroll() {
+    fn scroll_view_hover_app() -> impl IntoElement {
+        let mut hovered = use_state(|| None::<usize>);
+
+        rect()
+            .child(
+                label()
+                    .height(Size::px(100.))
+                    .text(format!("hovered {:?}", hovered())),
+            )
+            .child(
+                ScrollView::new()
+                    .height(Size::px(400.))
+                    .children((0..4).map(|i| {
+                        rect()
+                            .key(i)
+                            .height(Size::px(200.))
+                            .width(Size::px(200.))
+                            .on_pointer_enter(move |_| hovered.set(Some(i)))
+                    })),
+            )
+    }
+
+    let mut test = launch_test(scroll_view_hover_app);
+
+    let hovered_label = |test: &TestingRunner| {
+        test.find(|_, element| Label::try_downcast(element).map(|label| label.text.to_string()))
+            .unwrap()
+    };
+
+    assert_eq!(hovered_label(&test), "hovered None");
+
+    test.move_cursor((100., 350.));
+    test.sync_and_update();
+    assert_eq!(hovered_label(&test), "hovered Some(1)");
+
+    // Scrolling moves the third item under the cursor
+    test.scroll((100., 350.), (0., -300.));
+    assert_eq!(hovered_label(&test), "hovered Some(2)");
+}
+
+#[test]
 pub fn scroll_view_scrollbar() {
     fn scroll_view_scrollbar_app() -> impl IntoElement {
         ScrollView::new()
@@ -49,6 +132,7 @@ pub fn scroll_view_scrollbar() {
     }
 
     let mut test = launch_test(scroll_view_scrollbar_app);
+    test.animation_clock().disable();
     let scrollview = test
         .find(|node, element| {
             Rect::try_downcast(element)
@@ -86,6 +170,7 @@ pub fn scroll_view_scrollbar() {
     for _ in 0..5 {
         test.press_key(Key::Named(NamedKey::ArrowUp));
     }
+    test.poll(Duration::from_millis(1), Duration::from_millis(20));
 
     assert!(content[0].is_visible());
     assert!(content[1].is_visible());
@@ -94,6 +179,7 @@ pub fn scroll_view_scrollbar() {
 
     // Scroll to the bottom with arrows
     test.press_key(Key::Named(NamedKey::End));
+    test.poll(Duration::from_millis(1), Duration::from_millis(20));
 
     assert!(!content[0].is_visible());
     assert!(content[1].is_visible());

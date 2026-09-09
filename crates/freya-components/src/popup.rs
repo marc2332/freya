@@ -22,6 +22,10 @@ define_theme! {
         color: Color,
         width: Size,
         height: Size,
+        min_width: Size,
+        min_height: Size,
+        max_width: Size,
+        max_height: Size,
         padding: Gaps,
         spacing: f32,
     }
@@ -204,13 +208,18 @@ impl Component for Popup {
             )
         });
 
-        let should_render = show || *background_animation.is_running().read();
+        let background_color = background_animation.get().value();
+        let should_render = show || background_color.a() > 0;
 
         let PopupTheme {
             background,
             color,
             width,
             height,
+            min_width,
+            min_height,
+            max_width,
+            max_height,
             padding,
             spacing,
         } = get_theme!(&self.theme, PopupThemePreference, "popup");
@@ -238,8 +247,6 @@ impl Component for Popup {
             .layer(Layer::Overlay)
             .position(Position::new_global())
             .maybe_child(should_render.then(|| {
-                let background_color = background_animation.get().value();
-
                 let (scale, opacity) = &*content_animation.read();
 
                 let (scale, opacity) = if show {
@@ -259,6 +266,10 @@ impl Component for Popup {
                         .shadow(Shadow::new().y(4.).blur(5.).color((0, 0, 0, 30)))
                         .width(width)
                         .height(height)
+                        .min_width(min_width)
+                        .min_height(min_height)
+                        .max_width(max_width)
+                        .max_height(max_height)
                         .spacing(spacing)
                         .padding(padding)
                         .on_global_key_down(on_global_key_down)

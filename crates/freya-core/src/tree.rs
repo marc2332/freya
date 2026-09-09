@@ -1,31 +1,32 @@
 use std::{
     any::Any,
     borrow::Cow,
-    collections::{
-        VecDeque,
-        hash_map::Entry,
-    },
+    collections::VecDeque,
     fmt::Debug,
     rc::Rc,
 };
 
 use bitflags::bitflags;
+use cursor_icon::CursorIcon;
 use freya_engine::prelude::{
     FontCollection,
     FontMgr,
 };
 use futures_channel::mpsc::UnboundedSender;
 use itertools::Itertools;
+use ragnarok::NodesState;
 use rustc_hash::{
     FxHashMap,
     FxHashSet,
 };
 use torin::{
+    node::Node,
     prelude::{
         Area,
         LayoutMeasurer,
         LayoutNode,
         PostMeasure,
+        Scaled,
         Size2D,
     },
     torin::{
@@ -53,6 +54,7 @@ use crate::{
             EventType,
             SizedEventData,
             StyledEventData,
+            VisibleEventData,
         },
         emittable::EmmitableEvent,
         name::EventName,
@@ -85,6 +87,9 @@ pub struct Tree {
 
     pub elements: FxHashMap<NodeId, Rc<dyn ElementExt>>,
 
+    /// Scaled layout nodes of `elements`.
+    layout_nodes: FxHashMap<NodeId, Node>,
+
     // Event listeners
     pub listeners: FxHashMap<EventName, Vec<NodeId>>,
 
@@ -108,12 +113,45 @@ pub struct Tree {
     pub accessibility_generator: AccessibilityGenerator,
 }
 
+impl Tree {
+    /// The scaled layout node of an element.
+    fn scaled_layout_node(element: &Rc<dyn ElementExt>, scale_factor: f32) -> Node {
+        let mut layout_node = element.layout().layout.clone();
+        layout_node.depends_on_inner = element.needs_post_measure();
+        layout_node.scale(scale_factor);
+        layout_node
+    }
+
+    /// Register an element and its scaled layout node.
+    fn insert_element(&mut self, node_id: NodeId, element: Rc<dyn ElementExt>, scale_factor: f32) {
+        self.layout_nodes
+            .insert(node_id, Self::scaled_layout_node(&element, scale_factor));
+        self.elements.insert(node_id, element);
+    }
+
+    /// Unregister an element and its scaled layout node.
+    fn remove_element(&mut self, node_id: NodeId) -> Option<Rc<dyn ElementExt>> {
+        self.layout_nodes.remove(&node_id);
+        self.elements.remove(&node_id)
+    }
+
+    /// Rescale every layout node.
+    pub fn set_scale_factor(&mut self, scale_factor: f32) {
+        self.layout_nodes.clear();
+        for (node_id, element) in &self.elements {
+            self.layout_nodes
+                .insert(*node_id, Self::scaled_layout_node(element, scale_factor));
+        }
+    }
+}
+
 impl Debug for Tree {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Tree")
             .field("children", &self.children.capacity())
             .field("parents", &self.parents.capacity())
             .field("elements", &self.elements.capacity())
+            .field("layout_nodes", &self.layout_nodes.capacity())
             .field("heights", &self.heights.capacity())
             .field("listeners", &self.listeners.capacity())
             .field("layer_state", &self.layer_state.capacity())
@@ -142,6 +180,23 @@ impl Tree {
         }
     }
 
+    /// Resolve the [CursorIcon] for the currently hovered nodes,
+    /// checking from the topmost node (by layer) downwards until one defines a cursor.
+    pub fn cursor_icon(&self, nodes_state: &ragnarok::NodesState<NodeId>) -> CursorIcon {
+        nodes_state
+            .hovered_nodes()
+            .sorted_by_key(|node_id| {
+                std::cmp::Reverse(
+                    self.layer_state
+                        .get(node_id)
+                        .map(|layer_state| layer_state.layer)
+                        .unwrap_or_default(),
+                )
+            })
+            .find_map(|node_id| self.elements.get(node_id).and_then(|el| el.style().cursor))
+            .unwrap_or_default()
+    }
+
     pub fn traverse_depth_cancel(&self, mut then: impl FnMut(NodeId) -> bool) {
         let mut buffer = vec![NodeId::ROOT];
         while let Some(node_id) = buffer.pop() {
@@ -155,7 +210,11 @@ impl Tree {
     }
 
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
-    pub fn apply_mutations(&mut self, mutations: Mutations) -> MutationsApplyResult {
+    pub fn apply_mutations(
+        &mut self,
+        mutations: Mutations,
+        scale_factor: f32,
+    ) -> MutationsApplyResult {
         let mut needs_render = !mutations.removed.is_empty();
         let mut needs_accessibility = !mutations.removed.is_empty();
         let mut dirty = Vec::<(NodeId, DiffModifies)>::default();
@@ -163,8 +222,8 @@ impl Tree {
         #[cfg(debug_assertions)]
         tracing::info!("{mutations:?}");
 
-        if let Entry::Vacant(e) = self.elements.entry(NodeId::ROOT) {
-            e.insert(Rc::new(RectElement::default()));
+        if !self.elements.contains_key(&NodeId::ROOT) {
+            self.insert_element(NodeId::ROOT, Rc::new(RectElement::default()), scale_factor);
             self.heights.insert(NodeId::ROOT, 0);
             dirty.push((NodeId::ROOT, DiffModifies::all()));
         }
@@ -186,7 +245,7 @@ impl Tree {
                     let parent_id = self.parents.remove(&node_id).unwrap();
 
                     // Remove element
-                    let old_element = self.elements.remove(&node_id).unwrap();
+                    let old_element = self.remove_element(node_id).unwrap();
 
                     if let Some(children) = self.children.get_mut(&parent_id) {
                         match remove {
@@ -275,7 +334,7 @@ impl Tree {
                     }
                 }
 
-                self.elements.insert(node_id, element);
+                self.insert_element(node_id, element, scale_factor);
                 dirty.push((node_id, DiffModifies::all()));
             }
 
@@ -303,7 +362,7 @@ impl Tree {
             {
                 dirty.push((node_id, flags));
 
-                let old_element = self.elements.remove(&node_id).unwrap();
+                let old_element = self.remove_element(node_id).unwrap();
 
                 if flags.contains(DiffModifies::EVENT_HANDLERS) {
                     // Remove old events
@@ -324,7 +383,7 @@ impl Tree {
                     }
                 }
 
-                self.elements.insert(node_id, element);
+                self.insert_element(node_id, element, scale_factor);
             }
         });
 
@@ -334,6 +393,7 @@ impl Tree {
         let mut text_style_cascades: Vec<NodeId> = Vec::new();
         let mut styled_nodes: FxHashSet<NodeId> = FxHashSet::default();
 
+        #[cfg(debug_assertions)]
         assert_eq!(dirty.len(), FxHashSet::from_iter(&dirty).len());
 
         hotpath::measure_block!("dirty run", {
@@ -612,21 +672,22 @@ impl Tree {
         Some(*current)
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn measure_layout(
         &mut self,
         size: Size2D,
         font_collection: &mut FontCollection,
         font_manager: &FontMgr,
         events_sender: &UnboundedSender<EventsChunk>,
+        nodes_state: &mut NodesState<NodeId>,
         scale_factor: f64,
         fallback_fonts: &[Cow<'static, str>],
     ) {
-        let mut tree_adapter = TreeAdapterFreya {
-            elements: &self.elements,
+        let tree_adapter = TreeAdapterFreya {
+            layout_nodes: &self.layout_nodes,
             parents: &self.parents,
             children: &self.children,
             heights: &self.heights,
-            scale_factor,
         };
 
         let layout_adapter = LayoutMeasurerAdapter {
@@ -640,16 +701,71 @@ impl Tree {
             text_cache: &mut self.text_cache,
         };
 
-        self.layout.find_best_root(&mut tree_adapter);
+        self.layout.find_best_root(&tree_adapter);
         self.layout.measure(
             NodeId::ROOT,
             Area::from_size(size),
             &mut Some(layout_adapter),
-            &mut tree_adapter,
+            &tree_adapter,
         );
+        self.measure_visibility_events(nodes_state, scale_factor);
         events_sender
             .unbounded_send(EventsChunk::Batch(self.events.drain(..).collect()))
             .unwrap();
+    }
+
+    /// Measure the Visible and Hidden listeners, emitting events for those whose visibility just changed.
+    fn measure_visibility_events(
+        &mut self,
+        nodes_state: &mut NodesState<NodeId>,
+        scale_factor: f64,
+    ) {
+        let visible_listeners = self.listeners.get(&EventName::Visible);
+        let hidden_listeners = self.listeners.get(&EventName::Hidden);
+        let listeners = visible_listeners
+            .into_iter()
+            .flatten()
+            .map(|node_id| (node_id, EventName::Visible))
+            .chain(
+                hidden_listeners
+                    .into_iter()
+                    .flatten()
+                    .map(|node_id| (node_id, EventName::Hidden)),
+            );
+
+        let mut visible_nodes = FxHashSet::default();
+        for (node_id, event_name) in listeners {
+            let Some(layout_node) = self.layout.get(node_id) else {
+                continue;
+            };
+            let is_visible = !layout_node.hidden
+                && self.effect_state.get(node_id).is_none_or(|effect_state| {
+                    effect_state.is_visible(&self.layout, &layout_node.area)
+                });
+            if is_visible {
+                visible_nodes.insert(*node_id);
+            }
+
+            let was_visible = nodes_state.is_visible(*node_id);
+            let just_changed = match event_name {
+                EventName::Visible => is_visible && !was_visible,
+                _ => !is_visible && was_visible,
+            };
+            if !just_changed {
+                continue;
+            }
+
+            let mut data = VisibleEventData::new(layout_node.area);
+            data.div(scale_factor as f32);
+            self.events.push(EmmitableEvent {
+                node_id: *node_id,
+                name: event_name,
+                data: EventType::Visible(data),
+                bubbles: false,
+                source_event: event_name,
+            });
+        }
+        nodes_state.set_visible_nodes(visible_nodes);
     }
 
     pub fn print_ascii(&self, node_id: NodeId, prefix: String, last: bool) {
@@ -696,7 +812,8 @@ impl Tree {
                 buffer.extend(children);
             }
         }
-        assert_eq!(size, visited.len())
+        assert_eq!(size, visited.len());
+        assert_eq!(size, self.layout_nodes.len());
     }
 }
 

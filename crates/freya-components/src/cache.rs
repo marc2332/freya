@@ -11,7 +11,6 @@ use std::{
     time::Duration,
 };
 
-use async_io::Timer;
 use freya_core::{
     integration::FxHashSet,
     prelude::*,
@@ -112,6 +111,7 @@ impl AssetCacher {
         try_consume_root_context()
     }
 
+    #[track_caller]
     pub fn get() -> Self {
         consume_root_context()
     }
@@ -184,7 +184,7 @@ impl AssetCacher {
                 let clear_task = spawn_forever({
                     let asset_config = asset_config.clone();
                     async move {
-                        Timer::after(duration).await;
+                        timer(duration).await;
                         registry.write().remove(&asset_config);
                     }
                 });

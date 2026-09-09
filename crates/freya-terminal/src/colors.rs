@@ -1,8 +1,8 @@
-use alacritty_terminal::vte::ansi::{
-    Color as AnsiColor,
+use freya_core::prelude::Color;
+use rio_vt::config::colors::{
+    AnsiColor,
     NamedColor,
 };
-use freya_core::prelude::Color;
 
 /// ANSI 16-color palette (matches WezTerm defaults)
 const ANSI_COLORS: [(u8, u8, u8); 16] = [
@@ -27,7 +27,7 @@ const ANSI_COLORS: [(u8, u8, u8); 16] = [
 /// 6x6x6 RGB cube levels for 256-color palette
 const RGB_LEVELS: [u8; 6] = [0u8, 95u8, 135u8, 175u8, 215u8, 255u8];
 
-/// Map an alacritty `Color` to a Freya `Color`. `default_fg` / `default_bg`
+/// Map a rio-vt `AnsiColor` to a Freya `Color`. `default_fg` / `default_bg`
 /// resolve `NamedColor::Foreground` / `Background` to the configured colors.
 pub fn map_ansi_color(c: AnsiColor, default_fg: Color, default_bg: Color) -> Color {
     match c {
@@ -39,14 +39,14 @@ pub fn map_ansi_color(c: AnsiColor, default_fg: Color, default_bg: Color) -> Col
 
 fn named_color(name: NamedColor, default_fg: Color, default_bg: Color) -> Color {
     match name {
-        NamedColor::Foreground | NamedColor::BrightForeground | NamedColor::DimForeground => {
+        NamedColor::Foreground | NamedColor::LightForeground | NamedColor::DimForeground => {
             default_fg
         }
         NamedColor::Background => default_bg,
         NamedColor::Cursor => default_fg,
         other => {
-            // NamedColor::Black..BrightWhite are 0..=15.
-            let idx = other as u8;
+            // NamedColor::Black..LightWhite are 0..=15.
+            let idx = other as u32;
             if idx < 16 {
                 let (r, g, b) = ANSI_COLORS[idx as usize];
                 Color::from_rgb(r, g, b)

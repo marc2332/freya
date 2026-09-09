@@ -167,12 +167,6 @@ impl Component for Chip {
         } = theme;
 
         let enabled = use_reactive(&self.enabled);
-        let cursor_icon = self.cursor_icon;
-        use_drop(move || {
-            if status() == ChipStatus::Hovering && enabled() {
-                Cursor::set(CursorIcon::default());
-            }
-        });
 
         let on_press = self.on_press.clone();
         let on_press = move |e: Event<PressEventData>| {
@@ -184,16 +178,10 @@ impl Component for Chip {
 
         let on_pointer_enter = move |_| {
             status.set(ChipStatus::Hovering);
-            if enabled() {
-                Cursor::set(cursor_icon);
-            } else {
-                Cursor::set(CursorIcon::NotAllowed);
-            }
         };
 
         let on_pointer_leave = move |_| {
             if status() == ChipStatus::Hovering {
-                Cursor::set(CursorIcon::default());
                 status.set(ChipStatus::Idle);
             }
         };
@@ -237,6 +225,11 @@ impl Component for Chip {
             .maybe(self.enabled, |rect| rect.on_press(on_press))
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
+            .cursor(if self.enabled {
+                self.cursor_icon
+            } else {
+                CursorIcon::NotAllowed
+            })
             .width(width)
             .height(height)
             .padding(padding)

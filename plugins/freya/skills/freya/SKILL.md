@@ -782,7 +782,7 @@ let mut i18n = I18n::get(); // retrieve from any descendant
 i18n.set_language(langid!("es-ES"));
 ```
 
-For multi-window apps, create with `I18n::create_global` in `main` and share with `use_share_i18n`.
+The instance lives in the root context shared by all windows, so calling `use_init_i18n` in each window reuses the same state.
 
 ## Animations
 
@@ -899,13 +899,13 @@ WebView::new("https://example.com").expanded()
 
 ## Terminal
 
-Enable with `features = ["terminal"]`. Spawns a PTY process and renders it as a terminal:
+Enable with `features = ["terminal-pty"]`. Spawns a PTY process and renders it as a terminal:
 
 ```rust
 use freya::terminal::*;
 let mut cmd = CommandBuilder::new("bash");
 cmd.env("TERM", "xterm-256color");
-let handle = TerminalHandle::new(TerminalId::new(), cmd, None).ok();
+let handle = TerminalHandle::new(TerminalId::new(), PtyBackend::new(cmd), None).ok();
 // Render with Terminal::new(handle) and forward keyboard events via handle.write_key()
 ```
 
@@ -920,6 +920,25 @@ CameraViewer::new(camera)
 ```
 
 On macOS, call `freya::camera::init()` from `main` to request authorization before launching.
+
+## Borderless Windows
+
+Enable with `features = ["borderless"]`. For windows using `.with_decorations(false)`, register `BorderlessPlugin` (crate `freya-borderless-plugin`). Combine with `TitlebarButton` (`titlebar` feature) and `rect().window_drag()` for a custom titlebar.
+
+```rust
+use freya::borderless::BorderlessPlugin;
+
+launch(
+    LaunchConfig::new()
+        .with_plugin(BorderlessPlugin::new().with_corner_radius(12.))
+        .with_window(
+            WindowConfig::new(app)
+                .with_decorations(false)
+                .with_transparency(true)
+                .with_background(Color::TRANSPARENT),
+        ),
+)
+```
 
 ## Developer Tools
 
@@ -949,10 +968,12 @@ freya = { version = "...", features = ["router", "radio"] }
 | `material-design` | Material Design theme (`freya-material-design`) |
 | `webview` | Embed a WebView (`freya-webview`) |
 | `terminal` | Terminal emulator (`freya-terminal`) |
+| `terminal-pty` | Built-in PTY backend for the terminal, implies `terminal` |
 | `code-editor` | Code editing APIs (`freya-code-editor`) |
 | `camera` | Webcam capture (`freya-camera`) |
 | `tray` | System tray support |
 | `titlebar` | Custom window titlebar component |
+| `borderless` | `BorderlessPlugin` helpers for undecorated windows (`freya-borderless-plugin`) |
 | `devtools` | Developer tools overlay |
 | `performance` | Performance monitoring plugin |
 | `hotpath` | Hot-path optimization |

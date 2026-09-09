@@ -117,3 +117,66 @@ pub fn same_key_different_from_fn_component() {
     });
     assert!(label.is_some());
 }
+
+#[derive(PartialEq)]
+struct IdCompA {
+    id: usize,
+}
+
+impl Component for IdCompA {
+    fn render(&self) -> impl IntoElement {
+        let count = use_state(|| 0usize);
+        format!("A{}", count.read())
+    }
+
+    fn render_key(&self) -> DiffKey {
+        DiffKey::from(&self.id)
+    }
+}
+
+#[derive(PartialEq)]
+struct IdCompB {
+    id: usize,
+}
+
+impl Component for IdCompB {
+    fn render(&self) -> impl IntoElement {
+        let text = use_state(|| "B");
+        *text.read()
+    }
+
+    fn render_key(&self) -> DiffKey {
+        DiffKey::from(&self.id)
+    }
+}
+
+#[test]
+pub fn colliding_value_key_different_component_type() {
+    fn app() -> impl IntoElement {
+        let mut toggle = use_state(|| false);
+        rect()
+            .width(Size::px(100.))
+            .height(Size::px(100.))
+            .on_mouse_up(move |_| toggle.toggle())
+            .child(if toggle() {
+                (IdCompB { id: 1 }).into_element()
+            } else {
+                (IdCompA { id: 1 }).into_element()
+            })
+    }
+
+    let mut test = launch_test(app);
+    test.sync_and_update();
+
+    let label = test.find(|_, element| {
+        Label::try_downcast(element).filter(|label| label.text.as_ref() == "A0")
+    });
+    assert!(label.is_some());
+
+    test.click_cursor((50., 50.));
+    test.sync_and_update();
+
+    let label = test
+        .find(|_, element| Label::try_downcast(element).filter(|label| label.text.as_ref() == "B"));
+    assert!(label.is_some());
+}

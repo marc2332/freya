@@ -499,6 +499,10 @@ fn register_base_component_themes(theme: &mut Theme) {
             color: Preference::Reference("text_primary"),
             width: Preference::Specific(Size::px(500.)),
             height: Preference::Specific(Size::auto()),
+            min_width: Preference::Specific(Size::px(100.)),
+            min_height: Preference::Specific(Size::auto()),
+            max_width: Preference::Specific(Size::window_percent(90.)),
+            max_height: Preference::Specific(Size::window_percent(90.)),
             padding: Preference::Specific(Gaps::new_all(8.)),
             spacing: Preference::Specific(4.),
         },
@@ -542,11 +546,12 @@ fn register_base_component_themes(theme: &mut Theme) {
         MenuItemThemePreference {
             background: Preference::Specific(Color::TRANSPARENT),
             hover_background: Preference::Reference("surface_secondary"),
-            select_background: Preference::Reference("surface_secondary"),
+            select_background: Preference::Reference("surface_primary"),
             border_fill: Preference::Specific(Color::TRANSPARENT),
-            select_border_fill: Preference::Reference("border_focus"),
-            corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
+            focus_border_fill: Preference::Reference("border_focus"),
+            corner_radius: Preference::Specific(CornerRadius::new_all(10.)),
             color: Preference::Reference("text_primary"),
+            select_color: Preference::Reference("text_primary"),
         },
     );
     theme.set(

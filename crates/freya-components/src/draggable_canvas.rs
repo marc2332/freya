@@ -350,7 +350,6 @@ impl Component for ResizableDraggable {
                 e.stop_propagation();
                 e.prevent_default();
                 resizing.set(None);
-                Cursor::set(CursorIcon::default());
             }
         };
 
@@ -374,14 +373,7 @@ impl Component for ResizableDraggable {
             .position(Position::new_absolute().right(-handle).top(0.))
             .background(Color::WHITE)
             .opacity(0.)
-            .on_pointer_enter(move |_: Event<PointerEventData>| {
-                Cursor::set(CursorIcon::ColResize);
-            })
-            .on_pointer_leave(move |_: Event<PointerEventData>| {
-                if resizing().is_none() {
-                    Cursor::set(CursorIcon::default());
-                }
-            })
+            .cursor(CursorIcon::ColResize)
             .on_pointer_down(move |e: Event<PointerEventData>| {
                 if !e.data().is_primary() {
                     return;
@@ -399,14 +391,7 @@ impl Component for ResizableDraggable {
             .position(Position::new_absolute().left(0.).bottom(-handle))
             .background(Color::WHITE)
             .opacity(0.)
-            .on_pointer_enter(move |_: Event<PointerEventData>| {
-                Cursor::set(CursorIcon::RowResize);
-            })
-            .on_pointer_leave(move |_: Event<PointerEventData>| {
-                if resizing().is_none() {
-                    Cursor::set(CursorIcon::default());
-                }
-            })
+            .cursor(CursorIcon::RowResize)
             .on_pointer_down(move |e: Event<PointerEventData>| {
                 if !e.data().is_primary() {
                     return;
@@ -424,14 +409,7 @@ impl Component for ResizableDraggable {
             .position(Position::new_absolute().right(-handle).bottom(-handle))
             .background(Color::WHITE)
             .opacity(0.)
-            .on_pointer_enter(move |_: Event<PointerEventData>| {
-                Cursor::set(CursorIcon::SeResize);
-            })
-            .on_pointer_leave(move |_: Event<PointerEventData>| {
-                if resizing().is_none() {
-                    Cursor::set(CursorIcon::default());
-                }
-            })
+            .cursor(CursorIcon::SeResize)
             .on_pointer_down(move |e: Event<PointerEventData>| {
                 if !e.data().is_primary() {
                     return;

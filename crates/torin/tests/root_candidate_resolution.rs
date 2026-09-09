@@ -100,7 +100,7 @@ pub fn same_height_different_parent() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     // 5 get 7 get invalidated, which will force Torin to find a root candidate that
@@ -115,7 +115,7 @@ pub fn same_height_different_parent() {
     layout.invalidate(5);
     layout.invalidate(7);
 
-    layout.find_best_root(&mut mocked_tree);
+    layout.find_best_root(&mocked_tree);
 
     assert_eq!(layout.get_root_candidate(), RootNodeCandidate::Valid(1));
 }
@@ -217,7 +217,7 @@ pub fn same_height_same_parent() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     // 6 and 7 get invalidated, which will force Torin to find a root candidate that
@@ -232,7 +232,7 @@ pub fn same_height_same_parent() {
     layout.invalidate(6);
     layout.invalidate(7);
 
-    layout.find_best_root(&mut mocked_tree);
+    layout.find_best_root(&mocked_tree);
 
     assert_eq!(layout.get_root_candidate(), RootNodeCandidate::Valid(3));
 }

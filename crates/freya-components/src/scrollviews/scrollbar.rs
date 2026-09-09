@@ -107,6 +107,10 @@ impl ComponentOwned for ScrollBar {
             .offset_x(offset_x)
             .offset_y(offset_y)
             .layer(999)
+            .cursor(CursorIcon::Default)
+            .on_pointer_down(|e: Event<PointerEventData>| {
+                e.stop_propagation();
+            })
             .child(
                 rect()
                     .width(Size::fill())

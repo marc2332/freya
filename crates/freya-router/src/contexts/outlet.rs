@@ -2,6 +2,7 @@ use freya_core::prelude::{
     Element,
     provide_context,
     try_consume_context,
+    try_consume_own_context,
     use_hook,
 };
 
@@ -41,6 +42,14 @@ impl<R> OutletContext<R> {
         }
     }
 
+    /// Creates the outlet context of the previous nesting level
+    pub fn previous(&self) -> Self {
+        Self {
+            current_level: self.current_level.saturating_sub(1),
+            _marker: std::marker::PhantomData,
+        }
+    }
+
     /// Returns the current nesting level of this outlet
     pub fn level(&self) -> usize {
         self.current_level
@@ -52,12 +61,17 @@ impl<R> OutletContext<R> {
     {
         let router = use_router_internal().expect("Outlet must be inside of a router");
         let outlet: OutletContext<R> = use_outlet_context();
-        let current_level = outlet.level();
-        provide_context(outlet.next());
-        router.current::<R>().render(current_level)
+        router.current::<R>().render(outlet.level())
     }
 }
 
 pub fn use_outlet_context<R: Clone + 'static>() -> OutletContext<R> {
-    use_hook(|| try_consume_context().unwrap_or_else(OutletContext::new))
+    use_hook(|| {
+        if let Some(next) = try_consume_own_context::<OutletContext<R>>() {
+            return next.previous();
+        }
+        let outlet: OutletContext<R> = try_consume_context().unwrap_or_else(OutletContext::new);
+        provide_context(outlet.next());
+        outlet
+    })
 }

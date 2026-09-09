@@ -31,11 +31,13 @@ pub type WebViewEvents = Arc<Mutex<Vec<WebViewLifecycleEvent>>>;
 pub struct WebViewManager;
 
 impl WebViewManager {
+    #[track_caller]
     fn get() -> WebViewEvents {
         try_consume_root_context()
             .expect("WebViewManager failed to initialize. You must load the WebViewPlugin.")
     }
 
+    #[track_caller]
     pub fn close(id: WebViewId) {
         Self::get()
             .lock()

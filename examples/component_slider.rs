@@ -10,6 +10,7 @@ fn main() {
 
 fn app() -> impl IntoElement {
     let mut value = use_state(|| 0.0f64);
+    let mut stepped_value = use_state(|| 0.0f64);
 
     rect()
         .center()
@@ -32,5 +33,12 @@ fn app() -> impl IntoElement {
                 .enabled(false)
                 .value(value())
                 .size(Size::px(150.)),
+        )
+        .child(format!("{}% in steps of 25%", stepped_value().floor()))
+        .child(
+            Slider::new(move |e| stepped_value.set(e))
+                .value(stepped_value())
+                .step(25.)
+                .size(Size::px(250.)),
         )
 }

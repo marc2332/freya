@@ -62,7 +62,7 @@ fn event_propagate() {
     assert!(!mutations.added.is_empty());
     assert!(mutations.modified.is_empty());
     assert!(mutations.removed.is_empty());
-    tree.apply_mutations(mutations);
+    tree.apply_mutations(mutations, 1.0);
     assert_eq!(
         tree.children,
         convert_ids(FxHashMap::from_iter([
@@ -78,7 +78,7 @@ fn event_propagate() {
     assert!(mutations.added.is_empty());
     assert!(mutations.modified.is_empty());
     assert!(mutations.removed.is_empty());
-    tree.apply_mutations(mutations);
+    tree.apply_mutations(mutations, 1.0);
     assert_eq!(
         tree.children,
         convert_ids(FxHashMap::from_iter([
@@ -100,7 +100,7 @@ fn event_propagate() {
     assert!(mutations.added.is_empty());
     assert!(!mutations.modified.is_empty());
     assert!(mutations.removed.is_empty());
-    tree.apply_mutations(mutations);
+    tree.apply_mutations(mutations, 1.0);
     assert_eq!(
         tree.children,
         convert_ids(FxHashMap::from_iter([
@@ -433,4 +433,49 @@ fn file_drop_with_multiple_files() {
         *state.peek(),
         vec![PathBuf::from("first.txt"), PathBuf::from("second.txt")]
     );
+}
+
+#[test]
+fn cursor_property() {
+    fn app() -> Element {
+        rect()
+            .expanded()
+            .children([
+                rect()
+                    .width(Size::px(100.))
+                    .height(Size::px(100.))
+                    .background((0, 0, 0))
+                    .cursor(CursorIcon::Text)
+                    .child(
+                        rect()
+                            .width(Size::px(50.))
+                            .height(Size::px(50.))
+                            .background((10, 10, 10))
+                            .cursor(CursorIcon::Grab),
+                    ),
+                rect()
+                    .width(Size::px(100.))
+                    .height(Size::px(100.))
+                    .background((20, 20, 20)),
+            ])
+            .into()
+    }
+
+    let (mut test, _) = TestingRunner::new(app, (500., 500.).into(), |_| {}, 1.);
+    test.sync_and_update();
+
+    // The inner child cursor wins over its parent's
+    test.move_cursor((25., 25.));
+    test.sync_and_update();
+    assert_eq!(test.cursor_icon(), CursorIcon::Grab);
+
+    // Outside the inner child the parent cursor applies
+    test.move_cursor((75., 75.));
+    test.sync_and_update();
+    assert_eq!(test.cursor_icon(), CursorIcon::Text);
+
+    // No hovered node defines a cursor
+    test.move_cursor((50., 150.));
+    test.sync_and_update();
+    assert_eq!(test.cursor_icon(), CursorIcon::default());
 }

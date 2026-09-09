@@ -14,7 +14,6 @@ pub mod checkbox;
 pub mod chip;
 pub mod color_picker;
 pub mod context_menu;
-pub mod cursor_area;
 pub mod cursor_blink;
 pub mod docking;
 pub mod drag_drop;
@@ -27,6 +26,7 @@ pub mod icons;
 pub mod image_viewer;
 pub mod input;
 pub mod integration;
+pub mod lazy;
 pub mod loader;
 pub mod menu;
 pub mod overflowed_content;
@@ -53,7 +53,7 @@ pub mod tooltip;
 pub mod typography;
 
 #[cfg(feature = "remote-asset")]
-pub use reqwest::Url;
+pub use url::Url;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "router")] {

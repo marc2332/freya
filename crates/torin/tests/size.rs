@@ -30,7 +30,7 @@ pub fn unsized_parent_with_child_with_margin() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -70,7 +70,7 @@ pub fn unsized_parent_with_margin_with_child() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -110,7 +110,7 @@ pub fn unsized_parent_with_padding() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -164,7 +164,7 @@ pub fn stacked() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -187,13 +187,13 @@ pub fn stacked() {
     );
     layout.invalidate(2);
 
-    layout.find_best_root(&mut mocked_tree);
+    layout.find_best_root(&mocked_tree);
 
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -243,12 +243,12 @@ pub fn two_cols_auto() {
         ),
     );
 
-    layout.find_best_root(&mut mocked_tree);
+    layout.find_best_root(&mocked_tree);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(400.0, 400.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -303,7 +303,7 @@ pub fn sibling_increments_area() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -353,12 +353,12 @@ pub fn root_100per_children_50per50per() {
         ),
     );
 
-    layout.find_best_root(&mut mocked_tree);
+    layout.find_best_root(&mocked_tree);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -413,12 +413,12 @@ pub fn root_200px_children_50per50per() {
         ),
     );
 
-    layout.find_best_root(&mut mocked_tree);
+    layout.find_best_root(&mocked_tree);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -477,7 +477,7 @@ pub fn direction() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -502,12 +502,12 @@ pub fn direction() {
     );
     layout.invalidate(0);
 
-    layout.find_best_root(&mut mocked_tree);
+    layout.find_best_root(&mocked_tree);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -561,7 +561,7 @@ pub fn fill_size() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -615,7 +615,7 @@ pub fn root_percentage() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -679,7 +679,7 @@ pub fn content_fit_fill_min() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -744,7 +744,7 @@ pub fn inner_percentage() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -796,7 +796,7 @@ pub fn inner_min_max_sizes() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -833,7 +833,7 @@ pub fn fixed_min_max_sizes() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -865,7 +865,7 @@ pub fn relative_min_max_sizes() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -878,7 +878,7 @@ pub fn relative_min_max_sizes() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 400.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -891,7 +891,7 @@ pub fn relative_min_max_sizes() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 200.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -930,7 +930,7 @@ pub fn size_fn() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(

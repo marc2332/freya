@@ -214,6 +214,8 @@ impl Component for CodeEditor {
                                 .map(|_| EditableEvent::KeyDown {
                                     key: &key,
                                     modifiers,
+                                    editor_line: None,
+                                    holder: None,
                                 })
                                 .collect::<Vec<EditableEvent>>()
                         }
@@ -224,6 +226,8 @@ impl Component for CodeEditor {
                                 .map(|_| EditableEvent::KeyDown {
                                     key: &key,
                                     modifiers,
+                                    editor_line: None,
+                                    holder: None,
                                 })
                                 .collect::<Vec<EditableEvent>>()
                         }
@@ -234,12 +238,16 @@ impl Component for CodeEditor {
                                 .map(|_| EditableEvent::KeyDown {
                                     key: &key,
                                     modifiers,
+                                    editor_line: None,
+                                    holder: None,
                                 })
                                 .collect::<Vec<EditableEvent>>()
                         }
                         _ => vec![EditableEvent::KeyDown {
                             key: &key,
                             modifiers,
+                            editor_line: None,
+                            holder: None,
                         }],
                     };
 

@@ -4,6 +4,28 @@ use freya::prelude::*;
 use freya_animation::prelude::Function;
 use freya_testing::prelude::*;
 
+fn test_portal(id: &'static str) -> Portal<&'static str> {
+    Portal::new(id)
+        .key(id)
+        .width(Size::px(100.))
+        .height(Size::px(100.))
+        .duration(Duration::from_secs(10))
+        .function(Function::Linear)
+        .child(label().expanded().text(id))
+}
+
+fn label_x(test: &TestingRunner, text: &str) -> f32 {
+    test.find(|node, element| {
+        Label::try_downcast(element)
+            .filter(|label| label.text == text)
+            .map(|_| node)
+    })
+    .unwrap()
+    .layout()
+    .area
+    .min_x()
+}
+
 #[test]
 pub fn portal_animates_position_change() {
     fn portal_app() -> impl IntoElement {
@@ -16,97 +38,73 @@ pub fn portal_animates_position_change() {
                     .child("Swap"),
             )
             .child(rect().horizontal().children(if !swap() {
-                vec![
-                    Portal::new("a")
-                        .key("a")
-                        .width(Size::px(100.))
-                        .height(Size::px(100.))
-                        .duration(Duration::from_millis(50))
-                        .function(Function::Linear)
-                        .child(label().expanded().text("A")),
-                    Portal::new("b")
-                        .key("b")
-                        .width(Size::px(100.))
-                        .height(Size::px(100.))
-                        .duration(Duration::from_millis(50))
-                        .function(Function::Linear)
-                        .child(label().expanded().text("B")),
-                ]
+                vec![test_portal("A"), test_portal("B")]
             } else {
-                vec![
-                    Portal::new("b")
-                        .key("b")
-                        .width(Size::px(100.))
-                        .height(Size::px(100.))
-                        .duration(Duration::from_millis(50))
-                        .function(Function::Linear)
-                        .child(label().expanded().text("B")),
-                    Portal::new("a")
-                        .key("a")
-                        .width(Size::px(100.))
-                        .height(Size::px(100.))
-                        .duration(Duration::from_millis(50))
-                        .function(Function::Linear)
-                        .child(label().expanded().text("A")),
-                ]
+                vec![test_portal("B"), test_portal("A")]
             }))
     }
 
     let mut test = launch_test(portal_app);
-    // Disable animations from the start
     test.animation_clock().disable();
     test.poll_n(Duration::from_millis(1), 15);
 
-    // Find labels and get initial positions
-    let labels = test.find_many(|node, element| Label::try_downcast(element).map(|_| node));
+    let initial_a_x = label_x(&test, "A");
+    let initial_b_x = label_x(&test, "B");
+    assert!(initial_a_x < initial_b_x);
 
-    let label_a = labels
-        .iter()
-        .find(|l| Label::try_downcast(&*l.element()).unwrap().text == "A")
-        .unwrap();
-    let label_b = labels
-        .iter()
-        .find(|l| Label::try_downcast(&*l.element()).unwrap().text == "B")
-        .unwrap();
-
-    let initial_a_x = label_a.layout().area.min_x();
-    let initial_b_x = label_b.layout().area.min_x();
-
-    // A should be to the left of B initially
-    assert!(
-        initial_a_x < initial_b_x,
-        "Initial: A={} should be < B={}",
-        initial_a_x,
-        initial_b_x
-    );
-
-    // Click the swap button
     test.click_cursor((15.0, 15.0));
-
     test.poll_n(Duration::from_millis(1), 15);
-    let labels = test.find_many(|node, element| Label::try_downcast(element).map(|_| node));
 
-    let label_a = labels
-        .iter()
-        .find(|l| Label::try_downcast(&*l.element()).unwrap().text == "A")
-        .unwrap();
-    let label_b = labels
-        .iter()
-        .find(|l| Label::try_downcast(&*l.element()).unwrap().text == "B")
-        .unwrap();
+    assert_eq!(label_x(&test, "A"), initial_b_x);
+    assert_eq!(label_x(&test, "B"), initial_a_x);
+}
 
-    let final_a_x = label_a.layout().area.min_x();
-    let final_b_x = label_b.layout().area.min_x();
+fn spaced_portal_app(dependency: fn(bool) -> u8) -> impl IntoElement {
+    let mut spaced = use_state(|| false);
 
-    // After swap, B should be to the left of A
-    assert!(
-        final_b_x < final_a_x,
-        "Final: B={} should be < A={}",
-        final_b_x,
-        final_a_x
-    );
+    rect()
+        .child(
+            Button::new()
+                .on_press(move |_| spaced.set(!spaced()))
+                .child("Toggle"),
+        )
+        .child(
+            rect()
+                .horizontal()
+                .child(
+                    rect()
+                        .width(Size::px(if spaced() { 100. } else { 0. }))
+                        .height(Size::px(100.)),
+                )
+                .child(test_portal("A").animation_dependency(dependency(spaced()))),
+        )
+}
 
-    // Final positions should match the swapped initial positions
-    assert_eq!(final_a_x, initial_b_x, "A should now be where B started");
-    assert_eq!(final_b_x, initial_a_x, "B should now be where A started");
+#[test]
+pub fn portal_with_dependency_snaps_on_unrelated_layout_change() {
+    let mut test = launch_test(|| spaced_portal_app(|_| 0));
+    test.poll_n(Duration::from_millis(1), 15);
+    let initial_x = label_x(&test, "A");
+
+    test.click_cursor((15.0, 15.0));
+    test.poll_n(Duration::from_millis(1), 15);
+
+    assert_eq!(label_x(&test, "A"), initial_x + 100.);
+}
+
+#[test]
+pub fn portal_with_dependency_animates_on_dependency_change() {
+    let mut test = launch_test(|| spaced_portal_app(|spaced| spaced as u8));
+    test.poll_n(Duration::from_millis(1), 15);
+    let initial_x = label_x(&test, "A");
+
+    test.click_cursor((15.0, 15.0));
+    test.poll_n(Duration::from_millis(1), 15);
+
+    assert!(label_x(&test, "A") < initial_x + 50.);
+
+    test.animation_clock().disable();
+    test.poll_n(Duration::from_millis(1), 15);
+
+    assert_eq!(label_x(&test, "A"), initial_x + 100.);
 }

@@ -41,6 +41,8 @@
 //! - [Async](self::_docs::_async)
 //! - [Layers](self::_docs::layers)
 //! - [Platforms](self::_docs::platforms)
+//! - [Android](https://github.com/marc2332/freya/tree/main/examples/android)
+//! - [Web](https://github.com/marc2332/freya/tree/main/examples/web)
 //! - [Development Setup](self::_docs::development_setup)
 //! - [Extending Components](self::_docs::extending_components)
 //!
@@ -61,6 +63,7 @@
 //! - [Video](freya_video)
 //! - [Freya Query](freya_query)
 //! - [Tokio Integration](self::_docs::tokio_integration)
+//! - [Borderless Windows](self::_docs::borderless)
 //! - [Devtools](self::_docs::devtools)
 //! - [Hot Reload](self::_docs::hot_reload)
 //!
@@ -86,9 +89,12 @@
 //! - `markdown`: Reexport [freya_markdown] under [markdown].
 //! - `webview`: Reexport [freya_webview] under [webview].
 //! - `titlebar`: Enables the [TitlebarButton](components::TitlebarButton) component.
+//! - `borderless`: Reexport [freya_borderless_plugin] under [borderless]. See [Borderless Windows](self::_docs::borderless).
 //! - `terminal`: Reexport [freya_terminal] under [terminal].
+//! - `terminal-pty`: Enables the PTY backend from [freya_terminal]. Implies `terminal`.
 //! - `code-editor`: Reexport [freya_code_editor] under [code_editor].
 //! - `camera`: Reexport [freya_camera] under [camera].
+//! - `web`: Reexport [freya_web] under [web].
 //!
 //! ## Misc features
 //! - `devtools`: Enables devtools support.
@@ -113,9 +119,11 @@ pub mod prelude {
         config::{
             CloseDecision,
             LaunchConfig,
+            RendererPreference,
             WindowConfig,
         },
         renderer::{
+            LaunchProxy,
             NativeEvent,
             RendererContext,
         },
@@ -149,6 +157,7 @@ pub mod prelude {
             Area,
             CursorPoint,
             Size2D,
+            Size2DFixed,
         },
         position::Position,
         size::Size,
@@ -195,7 +204,6 @@ pub mod components {
         chip::*,
         color_picker::*,
         context_menu::*,
-        cursor_area::*,
         define_theme,
         docking::*,
         drag_drop::*,
@@ -210,6 +218,7 @@ pub mod components {
         },
         image_viewer::*,
         input::*,
+        lazy::*,
         loader::*,
         menu::*,
         overflowed_content::*,
@@ -286,6 +295,13 @@ pub mod i18n {
 #[cfg(feature = "engine")]
 pub mod engine {
     pub use freya_engine::*;
+}
+
+/// Reexport `freya-web` when the `web` feature is enabled and the target is the browser.
+#[cfg_attr(feature = "docs", doc(cfg(feature = "web")))]
+#[cfg(all(feature = "web", any(doc, target_os = "emscripten")))]
+pub mod web {
+    pub use freya_web::*;
 }
 
 /// Reexport `winit` when the `winit` feature is enabled.
@@ -386,6 +402,13 @@ pub mod video {
 #[cfg_attr(feature = "docs", doc(cfg(feature = "performance")))]
 pub mod performance {
     pub use freya_performance_plugin::*;
+}
+
+/// Reexport `freya-borderless-plugin` when the `borderless` feature is enabled.
+#[cfg(feature = "borderless")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "borderless")))]
+pub mod borderless {
+    pub use freya_borderless_plugin::*;
 }
 
 /// Reexport `freya-markdown` when the `markdown` feature is enabled.

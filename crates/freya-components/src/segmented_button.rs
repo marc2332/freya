@@ -173,14 +173,6 @@ impl Component for ButtonSegment {
             selected_icon_fill,
         } = theme;
 
-        let enabled = use_reactive(&self.enabled);
-        let cursor_icon = self.cursor_icon;
-        use_drop(move || {
-            if status() == ButtonSegmentStatus::Hovering && enabled() {
-                Cursor::set(CursorIcon::default());
-            }
-        });
-
         let on_press = self.on_press.clone();
         let on_press = move |e: Event<PressEventData>| {
             a11y_id.request_focus();
@@ -191,16 +183,10 @@ impl Component for ButtonSegment {
 
         let on_pointer_enter = move |_| {
             status.set(ButtonSegmentStatus::Hovering);
-            if enabled() {
-                Cursor::set(cursor_icon);
-            } else {
-                Cursor::set(CursorIcon::NotAllowed);
-            }
         };
 
         let on_pointer_leave = move |_| {
             if status() == ButtonSegmentStatus::Hovering {
-                Cursor::set(CursorIcon::default());
                 status.set(ButtonSegmentStatus::Idle);
             }
         };
@@ -230,6 +216,11 @@ impl Component for ButtonSegment {
             .maybe(self.enabled, |rect| rect.on_press(on_press))
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
+            .cursor(if self.enabled {
+                self.cursor_icon
+            } else {
+                CursorIcon::NotAllowed
+            })
             .horizontal()
             .width(width)
             .height(height)
