@@ -1098,26 +1098,21 @@ impl Runner {
             FxHashMap::<Box<[u32]>, (NodeId, FxHashMap<u32, PathNode>)>::default();
         let mut parents_to_resync_scopes = FxHashSet::default();
 
-        // Store the moved nodes so that they can
-        // later be rearranged once the removals and additions have been done
-        for (parent, movements) in &diff.moved {
+        // Children of each reordered parent, by old index
+        for parent in diff.moved.keys() {
             parents_to_resync_scopes.insert(parent.clone());
             // `parent` is a new-tree path. If the parent itself was moved, its path in the
             // old nodes tree will differ, so resolve it before any lookup.
             let old_parent = resolve_old_path(parent, &diff.moved);
-            let paths = moved_nodes.entry(parent.clone()).or_insert_with(|| {
-                let parent_node_id = scope.borrow().nodes.get(&old_parent).unwrap().node_id;
-                (parent_node_id, FxHashMap::default())
-            });
-
-            for (from, _to) in movements.iter() {
-                let mut old_child_path = old_parent.clone();
-                old_child_path.push(*from);
-
-                let path_node = scope.borrow().nodes.get(&old_child_path).cloned().unwrap();
-
-                paths.1.insert(*from, path_node);
-            }
+            let parent_node_id = scope.borrow().nodes.get(&old_parent).unwrap().node_id;
+            let mut children = FxHashMap::default();
+            scope
+                .borrow()
+                .nodes
+                .traverse_1_level(&old_parent, |path, node| {
+                    children.insert(path[path.len() - 1], node.clone());
+                });
+            moved_nodes.insert(parent.clone(), (parent_node_id, children));
         }
 
         // Capture the identity of addition parents while their old tree paths are still valid
@@ -1344,6 +1339,12 @@ impl Runner {
             );
         }
 
+        let added = diff
+            .added
+            .iter()
+            .map(|path| path.as_ref())
+            .collect::<FxHashSet<_>>();
+
         for (parent, movements) in diff.moved.into_iter().sorted_by(|(a, _), (b, _)| {
             for (x, y) in a.iter().zip(b.iter()) {
                 match x.cmp(y) {
@@ -1353,33 +1354,58 @@ impl Runner {
             }
             a.len().cmp(&b.len())
         }) {
-            parents_to_resync_scopes.insert(parent.clone());
+            let (parent_node_id, old_children) = moved_nodes.remove(&parent).unwrap();
+            // New index to old index
+            let sources = movements
+                .into_iter()
+                .map(|(from, to)| (to, from))
+                .collect::<FxHashMap<_, _>>();
 
-            let (parent_node_id, paths) = moved_nodes.get_mut(&parent).unwrap();
+            // Child count of the new render
+            let mut child_count = 0;
+            path_element.with_element(&parent, |element| {
+                if let PathElement::Element { elements, .. } = element {
+                    child_count = elements.len() as u32;
+                }
+            });
 
-            for (from, to) in movements.into_iter().sorted_by_key(|e| e.1) {
-                let path_node = paths.remove(&from).unwrap();
-
-                let PathNode { node_id, scope_id } = path_node;
-
-                // Search for this moved node current position
-                let from_path = scope
-                    .borrow()
-                    .nodes
-                    .find_child_path(&parent, |v| v == Some(&path_node))
-                    .unwrap();
-
+            // Walk the final order, move only what is out of place
+            let mut added_before = 0;
+            for to in 0..child_count {
                 let mut to_path = parent.to_vec();
                 to_path.push(to);
 
-                if from_path == to_path {
+                let is_added = added.contains(to_path.as_slice());
+                let node_id = if is_added {
+                    added_before += 1;
+                    addition_parents.get(to_path.as_slice()).unwrap().0
+                } else {
+                    // Unmoved children keep their index
+                    let from = sources.get(&to).copied().unwrap_or(to);
+                    old_children.get(&from).unwrap().node_id
+                };
+
+                let current_path = scope
+                    .borrow()
+                    .nodes
+                    .find_child_path(&parent, |v| v.is_some_and(|v| v.node_id == node_id))
+                    .unwrap();
+
+                if current_path == to_path {
                     continue;
                 }
 
-                // Remove the node from the old position and add it to the new one
-                let path_entry = scope.borrow_mut().nodes.remove(&from_path).unwrap();
+                // Everything before `to` is already final
+                let path_entry = scope.borrow_mut().nodes.remove(&current_path).unwrap();
                 scope.borrow_mut().nodes.insert_entry(&to_path, path_entry);
 
+                // The tree applies moves before this frame's additions
+                if is_added {
+                    continue;
+                }
+                let to = to - added_before;
+
+                let scope_id = scope.borrow().nodes.get(&to_path).unwrap().scope_id;
                 if let Some(scope_id) = scope_id {
                     let scope_root_node_id = self.find_scope_root_node_id(scope_id);
                     let scope_rc = self.scopes.get(&scope_id).cloned().unwrap();
@@ -1398,7 +1424,7 @@ impl Runner {
                     // Mark the element as moved
                     mutations
                         .moved
-                        .entry(*parent_node_id)
+                        .entry(parent_node_id)
                         .or_default()
                         .push(MutationMove { index: to, node_id });
                 }
