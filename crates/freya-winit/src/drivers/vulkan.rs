@@ -76,6 +76,7 @@ use freya_engine::prelude::{
     SurfaceOrigin,
     backend_render_targets,
     direct_contexts,
+    gpu,
     gpu::ContextOptions,
     vk,
     wrap_backend_render_target,
@@ -371,6 +372,12 @@ impl VulkanDriver {
         )
         .ok_or(DriverError::DeviceLost)?;
 
+        // Skia must wait for the acquire before writing into the swapchain image.
+        let acquire_semaphore = unsafe {
+            gpu::backend_semaphores::make_vk(self.image_available_semaphore.as_raw() as _)
+        };
+        surface.wait(&[acquire_semaphore], false);
+
         render(&mut surface);
 
         window.pre_present_notify();
@@ -411,14 +418,9 @@ impl VulkanDriver {
                 .map_err(Self::vulkan_to_driver_error)?;
         };
 
-        let wait_semaphores = [self.image_available_semaphore];
-        let wait_stages = [PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT];
-
         let signal_semaphores = [self.render_finished_semaphore];
 
         let submit_infos = [SubmitInfo::default()
-            .wait_semaphores(&wait_semaphores)
-            .wait_dst_stage_mask(&wait_stages)
             .command_buffers(std::slice::from_ref(&self.cmd_buf))
             .signal_semaphores(&signal_semaphores)];
 
