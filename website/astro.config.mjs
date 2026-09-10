@@ -1,8 +1,19 @@
 import { defineConfig } from 'astro/config';
-import { rehypeAccessibleEmojis } from 'rehype-accessible-emojis';
-import rehypeAutoLinks from 'rehype-autolink-headings';
-import rehypeSlug from 'rehype-slug'
+import { satteri, satteriHeadingIdsPlugin } from '@astrojs/markdown-satteri';
 import tailwind from "@astrojs/tailwind";
+
+const headingAnchors = {
+  name: "heading-anchors",
+  element: {
+    filter: ["h1", "h2", "h3", "h4", "h5", "h6"],
+    visit(node, ctx) {
+      ctx.appendChild(node, {
+        type: "raw",
+        value: `<a href="#${node.properties.id}" aria-hidden="true" tabindex="-1"><span class="icon icon-link"></span></a>`,
+      });
+    },
+  },
+};
 
 // https://astro.build/config
 export default defineConfig({
@@ -12,8 +23,8 @@ export default defineConfig({
     allowedHosts: [".ngrok-free.app"],
   },
   markdown: {
-    rehypePlugins: [rehypeAccessibleEmojis, rehypeSlug, () => rehypeAutoLinks({
-      behavior: "append",
-    })]
-  }
+    processor: satteri({
+      hastPlugins: [satteriHeadingIdsPlugin(), headingAnchors],
+    }),
+  },
 });
