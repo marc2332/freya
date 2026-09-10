@@ -24,7 +24,6 @@ mod gallery;
 mod i18n;
 mod markdown;
 mod material;
-mod plotters;
 mod scroll;
 
 use freya::prelude::*;
@@ -37,7 +36,6 @@ pub use crate::showcases::{
     i18n::I18nShowcase,
     markdown::MarkdownShowcase,
     material::MaterialShowcase,
-    plotters::PlottersShowcase,
     scroll::ScrollShowcase,
 };
 

@@ -95,7 +95,7 @@ demos! {
         Tile::new()
             .on_select(move |_| selected.toggle())
             .leading(Checkbox::new().selected(selected()))
-            .child(label().text("Press anywhere").width(Size::px(160.)))
+            .child(label().text("Press the tile").width(Size::px(160.)))
     }
 
     SliderDemo => "Slider" {
@@ -136,7 +136,7 @@ demos! {
             .child(ProgressBar::new(value).width(Size::fill()))
             .child(
                 ProgressBar::new(value)
-                    .show_progress(true)
+                    .show_progress(false)
                     .width(Size::fill()),
             )
     }

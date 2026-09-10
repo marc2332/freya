@@ -18,7 +18,6 @@ freya = { path = "../../crates/freya", default-features = false, features = [
   "remote-asset",
   "calendar",
   "gif",
-  "plot",
 ] }
 
 [[bin]]

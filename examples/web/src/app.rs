@@ -35,8 +35,6 @@ pub enum Route {
         Markdown,
         #[route("/scroll", ScrollShowcase)]
         Scroll,
-        #[route("/plotters", PlottersShowcase)]
-        Plotters,
         #[route("/drag-drop", DragDropShowcase)]
         DragDrop,
         #[route("/i18n", I18nShowcase)]
@@ -168,7 +166,6 @@ fn sidebar() -> Rect {
                 (Route::Material, "Material Design"),
                 (Route::Markdown, "Markdown"),
                 (Route::Scroll, "Virtual Scroll"),
-                (Route::Plotters, "Plotters"),
                 (Route::DragDrop, "Drag and Drop"),
                 (Route::I18n, "i18n"),
             ]
