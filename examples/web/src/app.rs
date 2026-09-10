@@ -23,8 +23,8 @@ pub fn app() -> impl IntoElement {
 #[rustfmt::skip]
 pub enum Route {
     #[layout(AppShell)]
-        #[route("/", ComponentsShowcase)]
-        Components,
+        #[route("/", GalleryShowcase)]
+        Gallery,
         #[route("/animation", AnimationShowcase)]
         Animation,
         #[route("/effects", EffectsShowcase)]
@@ -35,8 +35,10 @@ pub enum Route {
         Markdown,
         #[route("/scroll", ScrollShowcase)]
         Scroll,
-        #[route("/kanban", KanbanShowcase)]
-        Kanban,
+        #[route("/plotters", PlottersShowcase)]
+        Plotters,
+        #[route("/drag-drop", DragDropShowcase)]
+        DragDrop,
         #[route("/i18n", I18nShowcase)]
         I18n,
 }
@@ -82,7 +84,6 @@ impl Component for AppShell {
         rect()
             .native_router()
             .expanded()
-            .center()
             .theme_color()
             .theme_background()
             .on_sized(move |event: Event<SizedEventData>| {
@@ -94,34 +95,30 @@ impl Component for AppShell {
             })
             .child(
                 rect()
-                    .width(Size::percent(if compact { 100. } else { 85. }))
-                    .height(Size::percent(if compact { 100. } else { 85. }))
+                    .expanded()
                     .horizontal()
                     .background(surface)
                     .overflow(Overflow::Clip)
-                    .maybe(!compact, |el| {
-                        el.corner_radius(20.)
-                            .shadow((0., 10., 30., 0., (0, 0, 0, 40)))
-                    })
                     .maybe_child((!compact).then(sidebar))
                     .child(
                         rect()
                             .key("content")
                             .expanded()
-                            .padding(if compact { 12. } else { 24. })
                             .maybe(compact, |el| {
-                                el.spacing(16.).child(
-                                    Button::new()
-                                        .flat()
-                                        .expanded()
-                                        .corner_radius(99.)
-                                        .on_press(open_sidebar)
-                                        .child(
-                                            SvgViewer::new(lucide::menu())
-                                                .stroke(icon_color)
-                                                .width(Size::px(20.))
-                                                .height(Size::px(20.)),
-                                        ),
+                                el.child(
+                                    rect().padding((12., 12., 0., 12.)).child(
+                                        Button::new()
+                                            .flat()
+                                            .expanded()
+                                            .corner_radius(99.)
+                                            .on_press(open_sidebar)
+                                            .child(
+                                                SvgViewer::new(lucide::menu())
+                                                    .stroke(icon_color)
+                                                    .width(Size::px(20.))
+                                                    .height(Size::px(20.)),
+                                            ),
+                                    ),
                                 )
                             })
                             .child(rect().key("page").expanded().child(Outlet::<Route>::new())),
@@ -165,13 +162,14 @@ fn sidebar() -> Rect {
         )
         .children(
             [
-                (Route::Components, "Components"),
+                (Route::Gallery, "Gallery"),
                 (Route::Animation, "Animation"),
                 (Route::Effects, "Effects"),
                 (Route::Material, "Material Design"),
                 (Route::Markdown, "Markdown"),
                 (Route::Scroll, "Virtual Scroll"),
-                (Route::Kanban, "Kanban"),
+                (Route::Plotters, "Plotters"),
+                (Route::DragDrop, "Drag and Drop"),
                 (Route::I18n, "i18n"),
             ]
             .map(|(route, title)| {

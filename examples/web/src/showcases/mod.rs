@@ -1,24 +1,49 @@
+/// Declares one component per demo and collects them all into a `DEMOS` slice.
+macro_rules! demos {
+    ($($name:ident => $title:literal $body:block)*) => {
+        $(
+            #[derive(PartialEq)]
+            struct $name;
+
+            impl Component for $name {
+                fn render(&self) -> impl IntoElement $body
+            }
+        )*
+
+        const DEMOS: &[crate::showcases::Demo] = &[$(crate::showcases::Demo {
+            title: $title,
+            render: || $name.into(),
+        }),*];
+    };
+}
+
 mod animation;
-mod components;
+mod drag_drop;
 mod effects;
+mod gallery;
 mod i18n;
-mod kanban;
 mod markdown;
 mod material;
+mod plotters;
 mod scroll;
 
 use freya::prelude::*;
 
 pub use crate::showcases::{
     animation::AnimationShowcase,
-    components::ComponentsShowcase,
+    drag_drop::DragDropShowcase,
     effects::EffectsShowcase,
+    gallery::GalleryShowcase,
     i18n::I18nShowcase,
-    kanban::KanbanShowcase,
     markdown::MarkdownShowcase,
     material::MaterialShowcase,
+    plotters::PlottersShowcase,
     scroll::ScrollShowcase,
 };
+
+const CARD_WIDTH: f32 = 300.;
+const CARD_HEIGHT: f32 = 350.;
+const GAP: f32 = 12.;
 
 pub fn heading(title: &str, subtitle: &str) -> impl IntoElement {
     rect()
@@ -30,4 +55,104 @@ pub fn heading(title: &str, subtitle: &str) -> impl IntoElement {
                 .child(title),
         )
         .child(rect().opacity(0.6).child(subtitle))
+}
+
+/// A menu laid out in place, [MenuContainer] floats over its parent instead.
+fn inline_menu() -> Rect {
+    let colors = use_theme().read().colors.clone();
+    let a11y_id = use_a11y();
+    use_provide_context(move || MenuGroup { group_id: a11y_id });
+
+    rect()
+        .width(Size::px(180.))
+        .padding(4.)
+        .corner_radius(8.)
+        .background(colors.background)
+        .border(Border::new().width(1.).fill(colors.border))
+}
+
+/// A single component demo, shown as one card of a [DemoGrid].
+pub struct Demo {
+    pub title: &'static str,
+    pub render: fn() -> Element,
+}
+
+impl PartialEq for Demo {
+    fn eq(&self, other: &Self) -> bool {
+        self.title == other.title
+    }
+}
+
+impl Demo {
+    fn card(&self) -> Card {
+        Card::new()
+            .padding(0.)
+            .width(Size::px(CARD_WIDTH))
+            .height(Size::px(CARD_HEIGHT))
+            .child(
+                rect()
+                    .expanded()
+                    .spacing(8.)
+                    .child(
+                        rect()
+                            .padding((12., 12., 0., 12.))
+                            .opacity(0.6)
+                            .child(label().text(self.title).font_size(13.)),
+                    )
+                    .child(rect().expanded().center().child((self.render)())),
+            )
+    }
+}
+
+/// A virtualized grid of fixed size cards, one per demo.
+#[derive(PartialEq)]
+pub struct DemoGrid {
+    pub title: &'static str,
+    pub subtitle: &'static str,
+    pub demos: &'static [Demo],
+}
+
+impl Component for DemoGrid {
+    fn render(&self) -> impl IntoElement {
+        let demos = self.demos;
+        let mut available_width = use_state(|| CARD_WIDTH);
+        let columns = (((available_width() + GAP) / (CARD_WIDTH + GAP)) as usize).max(1);
+
+        rect()
+            .expanded()
+            .spacing(20.)
+            .child(
+                rect()
+                    .padding((24., 24., 0., 24.))
+                    .child(heading(self.title, self.subtitle)),
+            )
+            .child(
+                rect()
+                    .expanded()
+                    .padding((0., 0., 0., 24.))
+                    .on_sized(move |event: Event<SizedEventData>| {
+                        available_width.set_if_modified(event.area.width())
+                    })
+                    .child(
+                        VirtualScrollView::new_with_data(
+                            (columns, demos),
+                            |item, (columns, demos)| {
+                                let start = item.index * columns;
+                                let end = (start + columns).min(demos.len());
+
+                                rect()
+                                    .key(item.index)
+                                    .height(Size::px(item.size))
+                                    .horizontal()
+                                    .spacing(GAP)
+                                    .children(demos[start..end].iter().map(Demo::card))
+                                    .into()
+                            },
+                        )
+                        .length(demos.len().div_ceil(columns))
+                        .item_size(CARD_HEIGHT + GAP)
+                        .expanded(),
+                    ),
+            )
+    }
 }

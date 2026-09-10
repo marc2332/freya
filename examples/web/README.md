@@ -86,6 +86,14 @@ It serves http://localhost:8771, set `FREYA_WEB_PORT` to use another port. Relea
 cargo run --release
 ```
 
+## Running on desktop
+
+The same app runs as a native window through the `desktop` feature, which pulls in the `winit` renderer. Pass the host target so it overrides the wasm target from `.cargo/config.toml`:
+
+```sh
+cargo run --features desktop --target $(rustc -vV | sed -n 's/^host: //p')
+```
+
 ## Building the website demo
 
 Run `just web-demo` at the root of the repository to build the copy the website serves from `website/public/demo`.
