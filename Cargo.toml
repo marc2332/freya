@@ -54,6 +54,7 @@ members = [
   "./examples/state_query_sqlite",
   "./examples/android",
   "./examples/web",
+  "./examples/web_html",
   "./examples/component_video",
   "./examples/feature_camera",
   "./examples/feature_tray",

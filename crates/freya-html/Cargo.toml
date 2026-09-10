@@ -13,6 +13,7 @@ categories = ["gui"]
 workspace = true
 
 [dependencies]
+freya-components = { workspace = true, features = ["remote-asset"] }
 freya-core = { workspace = true }
 freya-engine = { workspace = true }
 tracing = { workspace = true }
@@ -21,8 +22,6 @@ rustc-hash = { workspace = true }
 keyboard-types = "=0.7.0"
 smol_str = "0.3"
 
-reqwest = { workspace = true }
-blocking = { workspace = true }
 futures-channel = { workspace = true }
 futures-lite = { workspace = true }
 
@@ -36,6 +35,10 @@ anyrender = "0.13"
 kurbo = "0.13.1"
 peniko = "0.6"
 hashbrown = "0.17.0"
+url = { workspace = true }
+
+[target.'cfg(target_os = "emscripten")'.dependencies]
+parley = "0.11"
 
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
 oaty = "0.2"

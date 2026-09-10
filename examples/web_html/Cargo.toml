@@ -1,5 +1,5 @@
 [package]
-name = "web"
+name = "web_html"
 version = "0.1.0"
 edition = "2024"
 publish = false
@@ -8,14 +8,8 @@ publish = false
 freya = { path = "../../crates/freya", default-features = false, features = [
   "web",
   "html",
-  "router",
-  "material-design",
-  "icons-lucide",
-  "markdown",
-  "i18n",
-  "remote-asset",
 ] }
 
 [[bin]]
-name = "web_example"
+name = "web_html_example"
 path = "src/main.rs"

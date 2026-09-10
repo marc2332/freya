@@ -186,7 +186,9 @@ impl TestingRunner {
         let app = app.into();
         let mut runner = Runner::new(move || integration(app.clone()).into_element());
 
-        runner.provide_root_context(GlobalContexts::default);
+        runner
+            .provide_root_context(GlobalContexts::default)
+            .insert_context(EmbeddedFonts::default());
 
         runner.provide_root_context(ScreenReader::new);
 
@@ -315,6 +317,17 @@ impl TestingRunner {
             .unwrap_or_else(|| panic!("Failed to load font {font_name}."));
         self.font_provider
             .register_typeface(typeface, Some(font_name));
+        self.runner.run_in(|| {
+            let contexts = GlobalContexts::get();
+            let mut fonts = contexts
+                .try_get_context::<EmbeddedFonts>()
+                .unwrap_or_default();
+            fonts.0.push((
+                font_name.to_string().into(),
+                Bytes::copy_from_slice(font_data),
+            ));
+            contexts.insert_context(fonts);
+        });
     }
 
     fn invalidate_text_layout(&mut self) {

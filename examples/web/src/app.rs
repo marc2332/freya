@@ -33,6 +33,8 @@ pub enum Route {
         Material,
         #[route("/markdown", MarkdownShowcase)]
         Markdown,
+        #[route("/html", HtmlShowcase)]
+        Html,
         #[route("/scroll", ScrollShowcase)]
         Scroll,
         #[route("/kanban", KanbanShowcase)]
@@ -170,6 +172,7 @@ fn sidebar() -> Rect {
                 (Route::Effects, "Effects"),
                 (Route::Material, "Material Design"),
                 (Route::Markdown, "Markdown"),
+                (Route::Html, "HTML"),
                 (Route::Scroll, "Virtual Scroll"),
                 (Route::Kanban, "Kanban"),
                 (Route::I18n, "i18n"),

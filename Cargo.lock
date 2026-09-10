@@ -3019,8 +3019,8 @@ dependencies = [
  "blitz-html",
  "blitz-paint",
  "blitz-traits",
- "blocking",
  "freya",
+ "freya-components",
  "freya-core",
  "freya-engine",
  "futures-channel",
@@ -3029,11 +3029,12 @@ dependencies = [
  "keyboard-types 0.7.0",
  "kurbo",
  "oaty",
+ "parley",
  "peniko",
- "reqwest 0.12.28",
  "rustc-hash 2.1.3",
  "smol_str 0.3.6",
  "tracing",
+ "url",
 ]
 
 [[package]]
@@ -9447,6 +9448,13 @@ dependencies = [
  "phf_codegen",
  "string_cache",
  "string_cache_codegen",
+]
+
+[[package]]
+name = "web_html"
+version = "0.1.0"
+dependencies = [
+ "freya",
 ]
 
 [[package]]

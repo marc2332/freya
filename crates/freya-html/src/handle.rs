@@ -4,15 +4,8 @@ use std::{
 };
 
 use freya_core::prelude::*;
-use reqwest::blocking::Client;
 
-use crate::{
-    net::{
-        fetch_html,
-        http_client,
-    },
-    state::BlitzState,
-};
+use crate::state::BlitzState;
 
 /// A document for an [HtmlViewer](crate::HtmlViewer), either remote or inline.
 #[derive(Clone, PartialEq)]
@@ -38,9 +31,7 @@ struct HtmlHistory {
     index: usize,
 }
 
-/// Controls an [HtmlViewer](crate::HtmlViewer), lets you navigate programmatically
-/// and inspect the browsing history. Link clicks and form submissions inside
-/// the document are recorded into it as well.
+/// Controls an [HtmlViewer](crate::HtmlViewer), its navigation and its browsing history.
 ///
 /// ```rust, no_run
 /// # use freya::prelude::*;
@@ -171,17 +162,22 @@ impl HtmlHandle {
         };
         match source {
             HtmlSource::Url(url) => {
-                spawn(load_url(view, url.clone(), http_client()));
+                spawn(load_url(view, url.clone()));
             }
             HtmlSource::Html(html) => view.borrow_mut().load(html, None),
         }
     }
 }
 
-async fn load_url(view: Rc<RefCell<BlitzState>>, url: String, client: Client) {
-    let (fetched, url) = blocking::unblock(move || (fetch_html(&client, &url), url)).await;
+async fn load_url(view: Rc<RefCell<BlitzState>>, url: String) {
+    let fetched = match url::Url::parse(&url) {
+        Ok(parsed) => freya_components::http::fetch(parsed).await,
+        Err(err) => Err(err.into()),
+    };
     match fetched {
-        Ok(html) => view.borrow_mut().load(&html, Some(url)),
+        Ok(bytes) => view
+            .borrow_mut()
+            .load(&String::from_utf8_lossy(&bytes), Some(url)),
         Err(err) => tracing::error!("Failed to load {url}: {err}"),
     }
 }

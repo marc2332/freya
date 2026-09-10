@@ -9,13 +9,11 @@ use futures_lite::StreamExt;
 use crate::{
     element::Html,
     handle::HtmlHandle,
-    net::http_client,
+    net::FetchRequest,
     state::BlitzState,
 };
 
-/// Embeds an HTML + CSS document, rendered by [Blitz](https://github.com/DioxusLabs/blitz)
-/// straight into Freya's Skia canvas. Its content is driven by an [HtmlHandle],
-/// which also exposes history navigation and the current URL.
+/// Embeds an HTML + CSS document rendered by [Blitz](https://github.com/DioxusLabs/blitz), driven by an [HtmlHandle].
 ///
 /// ```rust, no_run
 /// # use freya::prelude::*;
@@ -24,7 +22,7 @@ use crate::{
 /// // Inline HTML
 /// let inline = use_html_handle(|| HtmlSource::html("<p>Hello <b>world</b></p>"));
 /// HtmlViewer::new(inline);
-/// // Or a remote document, sized explicitly instead of filling the parent
+/// // Or a remote document, sized explicitly
 /// let remote = use_html_handle(|| HtmlSource::url("https://example.com"));
 /// HtmlViewer::new(remote)
 ///     .width(Size::px(400.))
@@ -38,9 +36,7 @@ pub struct HtmlViewer {
 }
 
 impl HtmlViewer {
-    /// Render the document navigated by `handle`, created with [use_html_handle](crate::use_html_handle).
-    /// Fills its parent by default, use [width](ContainerSizeExt::width) and
-    /// [height](ContainerSizeExt::height) to size it explicitly.
+    /// Render the document navigated by `handle`, fills its parent unless sized explicitly.
     pub fn new(handle: HtmlHandle) -> Self {
         Self {
             handle,
@@ -67,16 +63,24 @@ impl Component for HtmlViewer {
             let platform = Platform::get();
             let (wake_tx, mut wake_rx) = futures_channel::mpsc::unbounded::<()>();
             let (nav_tx, mut nav_rx) = futures_channel::mpsc::unbounded::<String>();
-            let state = Rc::new(RefCell::new(BlitzState::new(
-                http_client(),
-                wake_tx,
-                nav_tx,
-            )));
+            let (fetch_tx, mut fetch_rx) = futures_channel::mpsc::unbounded::<FetchRequest>();
+            let state = Rc::new(RefCell::new(BlitzState::new(wake_tx, nav_tx, fetch_tx)));
             handle.attach(state.clone());
 
             spawn(async move {
                 while wake_rx.next().await.is_some() {
                     platform.send(UserEvent::RequestRedraw);
+                }
+            });
+
+            spawn(async move {
+                while let Some((url, handler)) = fetch_rx.next().await {
+                    spawn(async move {
+                        match freya_components::http::fetch(url.clone()).await {
+                            Ok(bytes) => handler.bytes(url.to_string(), bytes),
+                            Err(err) => tracing::warn!("Failed to fetch resource {url}: {err}"),
+                        }
+                    });
                 }
             });
 
