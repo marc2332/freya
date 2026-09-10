@@ -684,7 +684,11 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             }
                         },
                         NativeWindowEventAction::PlatformEvent(platform_event) => {
-                            app.process_platform_events(vec![platform_event]);
+                            app.process_platform_events(
+                                vec![platform_event],
+                                &mut self.plugins,
+                                PluginHandle::new(&self.proxy),
+                            );
                         }
                     }
                 }
@@ -780,7 +784,11 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 modifiers,
                             })
                             .collect();
-                        app.process_platform_events(platform_events);
+                        app.process_platform_events(
+                            platform_events,
+                            &mut self.plugins,
+                            PluginHandle::new(&self.proxy),
+                        );
                     }
                 }
                 WindowEvent::RedrawRequested => {
@@ -822,11 +830,15 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             if std::mem::take(&mut app.send_mouse_move_on_next_layout)
                                 && app.position != CursorPoint::from((-1., -1.))
                             {
-                                app.process_platform_events(vec![PlatformEvent::Mouse {
-                                    name: MouseEventName::MouseMove,
-                                    cursor: app.position,
-                                    button: None,
-                                }]);
+                                app.process_platform_events(
+                                    vec![PlatformEvent::Mouse {
+                                        name: MouseEventName::MouseMove,
+                                        cursor: app.position,
+                                        button: None,
+                                    }],
+                                    &mut self.plugins,
+                                    PluginHandle::new(&self.proxy),
+                                );
                             }
                         }
 
@@ -865,6 +877,11 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                     },
                                     PluginHandle::new(&self.proxy),
                                 );
+
+                                for render_callback in app.render_callbacks.drain(..) {
+                                    render_callback(&mut *surface);
+                                }
+
                                 self.plugins.send(
                                     PluginEvent::BeforePresenting {
                                         window: &app.window,
@@ -982,11 +999,15 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     } else {
                         MouseEventName::MouseUp
                     };
-                    app.process_platform_events(vec![PlatformEvent::Mouse {
-                        name,
-                        cursor: (app.position.x, app.position.y).into(),
-                        button: Some(map_winit_mouse_button(button)),
-                    }]);
+                    app.process_platform_events(
+                        vec![PlatformEvent::Mouse {
+                            name,
+                            cursor: (app.position.x, app.position.y).into(),
+                            button: Some(map_winit_mouse_button(button)),
+                        }],
+                        &mut self.plugins,
+                        PluginHandle::new(&self.proxy),
+                    );
                 }
 
                 WindowEvent::KeyboardInput {
@@ -1024,12 +1045,16 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         PluginHandle::new(&self.proxy),
                     );
 
-                    app.process_platform_events(vec![PlatformEvent::Keyboard {
-                        name,
-                        key,
-                        code,
-                        modifiers,
-                    }]);
+                    app.process_platform_events(
+                        vec![PlatformEvent::Keyboard {
+                            name,
+                            key,
+                            code,
+                            modifiers,
+                        }],
+                        &mut self.plugins,
+                        PluginHandle::new(&self.proxy),
+                    );
                 }
 
                 WindowEvent::MouseWheel { delta, phase, .. } => {
@@ -1050,12 +1075,16 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             ),
                         };
 
-                        app.process_platform_events(vec![PlatformEvent::Wheel {
-                            name: WheelEventName::Wheel,
-                            scroll: (delta_x, delta_y).into(),
-                            cursor: app.position,
-                            source,
-                        }]);
+                        app.process_platform_events(
+                            vec![PlatformEvent::Wheel {
+                                name: WheelEventName::Wheel,
+                                scroll: (delta_x, delta_y).into(),
+                                cursor: app.position,
+                                source,
+                            }],
+                            &mut self.plugins,
+                            PluginHandle::new(&self.proxy),
+                        );
                     }
                 }
 
@@ -1064,11 +1093,15 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         == ElementState::Released
                     {
                         app.position = CursorPoint::from((-1., -1.));
-                        app.process_platform_events(vec![PlatformEvent::Mouse {
-                            name: MouseEventName::MouseMove,
-                            cursor: app.position,
-                            button: None,
-                        }]);
+                        app.process_platform_events(
+                            vec![PlatformEvent::Mouse {
+                                name: MouseEventName::MouseMove,
+                                cursor: app.position,
+                                button: None,
+                            }],
+                            &mut self.plugins,
+                            PluginHandle::new(&self.proxy),
+                        );
                     }
                 }
                 WindowEvent::CursorMoved { position, .. } => {
@@ -1088,7 +1121,11 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         });
                     }
 
-                    app.process_platform_events(platform_events);
+                    app.process_platform_events(
+                        platform_events,
+                        &mut self.plugins,
+                        PluginHandle::new(&self.proxy),
+                    );
                 }
 
                 WindowEvent::Touch(Touch {
@@ -1107,45 +1144,65 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         TouchPhase::Started => TouchEventName::TouchStart,
                     };
 
-                    app.process_platform_events(vec![PlatformEvent::Touch {
-                        name,
-                        location: app.position,
-                        finger_id: id,
-                        phase: map_winit_touch_phase(phase),
-                        force: force.map(map_winit_touch_force),
-                    }]);
+                    app.process_platform_events(
+                        vec![PlatformEvent::Touch {
+                            name,
+                            location: app.position,
+                            finger_id: id,
+                            phase: map_winit_touch_phase(phase),
+                            force: force.map(map_winit_touch_force),
+                        }],
+                        &mut self.plugins,
+                        PluginHandle::new(&self.proxy),
+                    );
                 }
                 WindowEvent::Ime(Ime::Commit(text)) => {
-                    app.process_platform_events(vec![PlatformEvent::Keyboard {
-                        name: KeyboardEventName::KeyDown,
-                        key: keyboard_types::Key::Character(text),
-                        code: keyboard_types::Code::Unidentified,
-                        modifiers: winit_mappings::map_winit_modifiers(app.modifiers_state),
-                    }]);
+                    app.process_platform_events(
+                        vec![PlatformEvent::Keyboard {
+                            name: KeyboardEventName::KeyDown,
+                            key: keyboard_types::Key::Character(text),
+                            code: keyboard_types::Code::Unidentified,
+                            modifiers: winit_mappings::map_winit_modifiers(app.modifiers_state),
+                        }],
+                        &mut self.plugins,
+                        PluginHandle::new(&self.proxy),
+                    );
                 }
                 WindowEvent::Ime(Ime::Preedit(text, pos)) => {
-                    app.process_platform_events(vec![PlatformEvent::ImePreedit {
-                        name: ImeEventName::Preedit,
-                        text,
-                        cursor: pos,
-                    }]);
+                    app.process_platform_events(
+                        vec![PlatformEvent::ImePreedit {
+                            name: ImeEventName::Preedit,
+                            text,
+                            cursor: pos,
+                        }],
+                        &mut self.plugins,
+                        PluginHandle::new(&self.proxy),
+                    );
                 }
                 WindowEvent::DroppedFile(file_path) => {
                     app.dropped_file_paths.push(file_path);
                 }
                 WindowEvent::HoveredFile(file_path) => {
-                    app.process_platform_events(vec![PlatformEvent::File {
-                        name: FileEventName::FileHover,
-                        file_paths: vec![file_path],
-                        cursor: app.position,
-                    }]);
+                    app.process_platform_events(
+                        vec![PlatformEvent::File {
+                            name: FileEventName::FileHover,
+                            file_paths: vec![file_path],
+                            cursor: app.position,
+                        }],
+                        &mut self.plugins,
+                        PluginHandle::new(&self.proxy),
+                    );
                 }
                 WindowEvent::HoveredFileCancelled => {
-                    app.process_platform_events(vec![PlatformEvent::File {
-                        name: FileEventName::FileHoverCancelled,
-                        file_paths: Vec::new(),
-                        cursor: app.position,
-                    }]);
+                    app.process_platform_events(
+                        vec![PlatformEvent::File {
+                            name: FileEventName::FileHoverCancelled,
+                            file_paths: Vec::new(),
+                            cursor: app.position,
+                        }],
+                        &mut self.plugins,
+                        PluginHandle::new(&self.proxy),
+                    );
                 }
                 _ => {}
             }

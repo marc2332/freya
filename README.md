@@ -20,7 +20,7 @@ freya = "0.4"
 Next release:
 
 ```toml
-freya = "0.5.0-rc.4"
+freya = "0.5.0-rc.5"
 ```
 
 `main` branch:
@@ -701,7 +701,7 @@ fn app() -> impl IntoElement {
 ### Terminal Emulation
 
 Freya includes terminal emulation capabilities with full PTY (pseudo-terminal) support. Create integrated terminal applications, SSH clients, or development tools.
-Enable with the `terminal` feature.
+Enable with the `terminal-pty` feature.
 
 <details>
 <summary>Code</summary>
@@ -715,7 +715,7 @@ fn app() -> impl IntoElement {
         let mut cmd = CommandBuilder::new("bash");
         cmd.env("TERM", "xterm-256color");
         cmd.env("COLORTERM", "truecolor");
-        TerminalHandle::new(TerminalId::new(), cmd, None).ok()
+        TerminalHandle::new(TerminalId::new(), PtyBackend::new(cmd), None).ok()
     });
 
     rect()

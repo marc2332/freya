@@ -16,6 +16,7 @@ use crate::{
     },
 };
 mod accessibility;
+mod clipboard;
 pub mod config;
 mod drivers;
 pub mod extensions;
@@ -125,6 +126,9 @@ fn launch_inner(mut launch_config: LaunchConfig) {
     freya_core::hotreload::connect_subsecond();
 
     let global_contexts = GlobalContexts::default();
+    global_contexts.insert_context(crate::clipboard::create_clipboard(
+        event_loop.owned_display_handle(),
+    ));
     for insert_global in launch_config.globals {
         insert_global(&global_contexts);
     }

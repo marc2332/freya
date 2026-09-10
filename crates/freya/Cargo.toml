@@ -1,6 +1,6 @@
 [package]
 name = "freya"
-version = "0.5.0-rc.4"
+version = "0.5.0-rc.5"
 description = "Cross-platform and native GUI Library powered by Skia."
 edition = "2024"
 license = "MIT"
@@ -19,11 +19,12 @@ features = ["all-publish"]
 no-default-features = true
 
 [features]
-default = ["winit"]
+default = ["winit", "gpu"]
 # Shortcuts
 all = ["all-crossplatform", "tray", "html", "camera", "video"]
 all-crossplatform = [
   "winit",
+  "gpu",
   "router",
   "i18n",
   "remote-asset",
@@ -42,6 +43,7 @@ all-crossplatform = [
   "titlebar",
   "borderless",
   "terminal",
+  "terminal-pty",
   "query",
   "code-editor",
   "zoom-shortcuts",
@@ -62,6 +64,7 @@ all-debug = [
 ]
 all-tests = [
   "winit",
+  "gpu",
   "router",
   "i18n",
   "remote-asset",
@@ -81,6 +84,7 @@ all-tests = [
 docs = ["all-debug"]
 # Features
 winit = ["dep:freya-winit", "dep:freya-performance-plugin"]
+gpu = ["freya-winit?/gpu"]
 router = [
   "dep:freya-router",
   "freya-components/router",
@@ -111,6 +115,7 @@ html = ["dep:freya-html"]
 titlebar = ["freya-components/titlebar"]
 borderless = ["winit", "dep:freya-borderless-plugin"]
 terminal = ["dep:freya-terminal"]
+terminal-pty = ["terminal", "freya-terminal/pty"]
 code-editor = ["dep:freya-code-editor"]
 camera = ["dep:freya-camera"]
 web = ["dep:freya-web"]

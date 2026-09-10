@@ -58,6 +58,7 @@ use crate::{
     layers::Layer,
     prelude::*,
     style::{
+        font_feature::FontFeature,
         font_size::FontSize,
         font_slant::FontSlant,
         font_weight::FontWeight,
@@ -806,6 +807,39 @@ where
     fn letter_spacing(mut self, letter_spacing: impl Into<LetterSpacing>) -> Self {
         self.get_text_style_data().letter_spacing = Some(letter_spacing.into());
         self
+    }
+
+    /// Add an OpenType font feature.
+    fn font_feature(mut self, font_feature: impl Into<FontFeature>) -> Self {
+        self.get_text_style_data()
+            .font_features
+            .push(font_feature.into());
+        self
+    }
+
+    /// Every digit shares the same width, so changing numbers do not shift the layout.
+    fn font_tabular(self) -> Self {
+        self.font_feature(FontFeature::TABULAR_NUMBERS)
+    }
+
+    /// Lowercase letters render as small capitals.
+    fn font_small_caps(self) -> Self {
+        self.font_feature(FontFeature::SMALL_CAPS)
+    }
+
+    /// Zero renders with a slash or dot to tell it apart from the letter O.
+    fn font_slashed_zero(self) -> Self {
+        self.font_feature(FontFeature::SLASHED_ZERO)
+    }
+
+    /// Sequences like `1/2` render as fractions.
+    fn font_fractions(self) -> Self {
+        self.font_feature(FontFeature::FRACTIONS)
+    }
+
+    /// Disable standard ligatures like `fi` or the joined `=>` of coding fonts.
+    fn font_no_ligatures(self) -> Self {
+        self.font_feature(FontFeature::NO_LIGATURES)
     }
 
     /// Add a font family to try, in order of preference.

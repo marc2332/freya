@@ -22,6 +22,10 @@ define_theme! {
         color: Color,
         width: Size,
         height: Size,
+        min_width: Size,
+        min_height: Size,
+        max_width: Size,
+        max_height: Size,
         padding: Gaps,
         spacing: f32,
     }
@@ -212,6 +216,10 @@ impl Component for Popup {
             color,
             width,
             height,
+            min_width,
+            min_height,
+            max_width,
+            max_height,
             padding,
             spacing,
         } = get_theme!(&self.theme, PopupThemePreference, "popup");
@@ -258,6 +266,10 @@ impl Component for Popup {
                         .shadow(Shadow::new().y(4.).blur(5.).color((0, 0, 0, 30)))
                         .width(width)
                         .height(height)
+                        .min_width(min_width)
+                        .min_height(min_height)
+                        .max_width(max_width)
+                        .max_height(max_height)
                         .spacing(spacing)
                         .padding(padding)
                         .on_global_key_down(on_global_key_down)
