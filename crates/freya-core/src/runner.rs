@@ -1339,11 +1339,11 @@ impl Runner {
             );
         }
 
-        let added = diff
-            .added
-            .iter()
-            .map(|path| path.as_ref())
-            .collect::<FxHashSet<_>>();
+        let added = if diff.moved.is_empty() {
+            FxHashSet::default()
+        } else {
+            diff.added.iter().map(|path| path.as_ref()).collect()
+        };
 
         for (parent, movements) in diff.moved.into_iter().sorted_by(|(a, _), (b, _)| {
             for (x, y) in a.iter().zip(b.iter()) {
