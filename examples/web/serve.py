@@ -2,7 +2,9 @@ import errno
 import functools
 import http.server
 import os
+import re
 import sys
+import urllib.request
 
 INDEX = """<!doctype html>
 <html lang="en">
@@ -48,6 +50,56 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         **http.server.SimpleHTTPRequestHandler.extensions_map,
         ".wasm": "application/wasm",
     }
+
+    proxied_origin = None
+
+    def do_GET(self):
+        if self.path.startswith("/proxy/"):
+            url = re.sub(r"^(https?):/+", r"\1://", self.path[len("/proxy/") :])
+            origin = re.match(r"^https?://[^/]+", url)
+            if origin:
+                Handler.proxied_origin = origin[0]
+            self.proxy(url)
+        elif Handler.proxied_origin and not os.path.exists(self.translate_path(self.path)):
+            # Serve missing files from the last proxied origin.
+            self.proxy(Handler.proxied_origin + self.path)
+        else:
+            super().do_GET()
+
+    def proxy(self, url):
+        request = urllib.request.Request(
+            url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0",
+                "Accept": "*/*",
+            },
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                body = response.read()
+                content_type = response.headers.get("Content-Type", "application/octet-stream")
+        except Exception as error:
+            self.send_error(502, f"Proxy request failed: {error}")
+            return
+        origin = re.match(r"^https?://[^/]+", url)
+        if origin and ("text/html" in content_type or "text/css" in content_type):
+            body = rewrite_urls(body, origin[0].encode())
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+
+def rewrite_urls(body, origin):
+    """Rewrite links and assets to go through the proxy."""
+    body = re.sub(rb'(href|src|action)=(["\'])(https?:)//', rb"\1=\2/proxy/\3//", body)
+    body = re.sub(rb'(href|src|action)=(["\'])//', rb"\1=\2/proxy/https://", body)
+    body = re.sub(rb'(href|src|action)=(["\'])/(?!/|proxy/)', rb"\1=\2/proxy/" + origin + rb"/", body)
+    body = re.sub(rb'url\((["\']?)(https?:)//', rb"url(\1/proxy/\2//", body)
+    body = re.sub(rb'url\((["\']?)//', rb"url(\1/proxy/https://", body)
+    body = re.sub(rb'url\((["\']?)/(?!/|proxy/)', rb"url(\1/proxy/" + origin + rb"/", body)
+    return body
 
 
 def main() -> int:

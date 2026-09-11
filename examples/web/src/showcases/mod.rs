@@ -1,6 +1,7 @@
 mod animation;
 mod components;
 mod effects;
+mod html;
 mod i18n;
 mod kanban;
 mod markdown;
@@ -13,6 +14,7 @@ pub use crate::showcases::{
     animation::AnimationShowcase,
     components::ComponentsShowcase,
     effects::EffectsShowcase,
+    html::HtmlShowcase,
     i18n::I18nShowcase,
     kanban::KanbanShowcase,
     markdown::MarkdownShowcase,

@@ -197,6 +197,7 @@ impl TestingRunner {
                     .ok()
                     .map(|clipboard| Box::new(clipboard) as Box<dyn ClipboardProvider>),
             ));
+            global_contexts.insert_context(EmbeddedFonts::default());
             global_contexts
         });
 
@@ -319,6 +320,17 @@ impl TestingRunner {
             .unwrap_or_else(|| panic!("Failed to load font {font_name}."));
         self.font_provider
             .register_typeface(typeface, Some(font_name));
+        self.runner.run_in(|| {
+            let contexts = GlobalContexts::get();
+            let mut fonts = contexts
+                .try_get_context::<EmbeddedFonts>()
+                .unwrap_or_default();
+            fonts.0.push((
+                font_name.to_string().into(),
+                Bytes::copy_from_slice(font_data),
+            ));
+            contexts.insert_context(fonts);
+        });
     }
 
     fn invalidate_text_layout(&mut self) {
