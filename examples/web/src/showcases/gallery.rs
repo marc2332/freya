@@ -12,8 +12,6 @@ use crate::showcases::{
 const RUST_LOGO: &[u8] = include_bytes!("../rust_logo.png");
 const PREVIEW_URL: &str =
     "https://raw.githubusercontent.com/marc2332/freya/main/website/public/preview.png";
-const FROG_URL: &str =
-    "https://raw.githubusercontent.com/marc2332/freya/main/examples/frog_typing.gif";
 
 demos! {
     ButtonDemo => "Button" {
@@ -453,12 +451,6 @@ demos! {
                         .height(Size::px(28.))
                 }),
             )
-    }
-
-    GifViewerDemo => "GifViewer" {
-        GifViewer::new(FROG_URL)
-            .width(Size::px(200.))
-            .height(Size::px(150.))
     }
 
     FloatingTabDemo => "FloatingTab" {

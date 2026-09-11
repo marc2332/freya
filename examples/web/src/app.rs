@@ -33,6 +33,8 @@ pub enum Route {
         Material,
         #[route("/markdown", MarkdownShowcase)]
         Markdown,
+        #[route("/gif", GifShowcase)]
+        Gif,
         #[route("/scroll", ScrollShowcase)]
         Scroll,
         #[route("/drag-drop", DragDropShowcase)]
@@ -165,6 +167,7 @@ fn sidebar() -> Rect {
                 (Route::Effects, "Effects"),
                 (Route::Material, "Material Design"),
                 (Route::Markdown, "Markdown"),
+                (Route::Gif, "Gif"),
                 (Route::Scroll, "Virtual Scroll"),
                 (Route::DragDrop, "Drag and Drop"),
                 (Route::I18n, "i18n"),
