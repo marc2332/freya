@@ -30,16 +30,15 @@ jobs:
           version=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "freya") | .version')
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=v$version" >> "$GITHUB_OUTPUT"
-      - name: Install cargo-release
-        uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
-        with:
-          tool: cargo-release
       - name: Publish to crates.io (dry run)
-        run: cargo release publish --workspace --no-confirm
+        uses: marc2332/letmerelease@58a745fdeb93e184bd8cfe3b04a67565c0c8662f # v0.1.1
+        with:
+          token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          dry-run: true
       - name: Publish to crates.io
-        run: cargo release publish --workspace --execute --no-confirm
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        uses: marc2332/letmerelease@58a745fdeb93e184bd8cfe3b04a67565c0c8662f # v0.1.1
+        with:
+          token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
       - name: Push tag
         env:
           TAG: ${{ steps.version.outputs.tag }}
