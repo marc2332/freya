@@ -39,11 +39,10 @@ struct DelayedCss;
 
 impl NetProvider for DelayedCss {
     fn fetch(&self, _doc_id: usize, request: Request, handler: Box<dyn NetHandler>) {
-        blocking::unblock(move || {
+        std::thread::spawn(move || {
             sleep(Duration::from_millis(100));
             handler.bytes(request.url.to_string(), Bytes::from_static(CSS.as_bytes()));
-        })
-        .detach();
+        });
     }
 }
 
