@@ -157,7 +157,6 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
     fn on_event(&mut self, event: &mut PluginEvent, handle: PluginHandle) {
         match event {
             PluginEvent::KeyboardInput {
-                window,
                 key,
                 modifiers,
                 is_pressed,
@@ -170,10 +169,12 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 };
                 if *is_pressed && *modifiers == *shortcut_modifiers && key_matches {
                     self.enabled = !self.enabled;
-                    handle.send_event_loop_event(NativeEvent::Window(NativeWindowEvent {
-                        window_id: window.id(),
-                        action: NativeWindowEventAction::User(UserEvent::RequestRedraw),
-                    }));
+                    for window_id in self.metrics.keys() {
+                        handle.send_event_loop_event(NativeEvent::Window(NativeWindowEvent {
+                            window_id: *window_id,
+                            action: NativeWindowEventAction::User(UserEvent::RequestRedraw),
+                        }));
+                    }
                 }
             }
             PluginEvent::WindowCreated {
@@ -190,6 +191,9 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 let metrics = self.get_metrics(window.id());
                 metrics.graphics_driver = graphics_driver;
                 metrics.gpu_name = gpu_name.map(str::to_string);
+            }
+            PluginEvent::WindowClosed { window, .. } => {
+                self.metrics.remove(&window.id());
             }
             PluginEvent::AfterRedraw { window, .. } => {
                 let metrics = self.get_metrics(window.id());
