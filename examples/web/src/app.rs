@@ -99,7 +99,7 @@ impl Component for AppShell {
                     .horizontal()
                     .background(surface)
                     .overflow(Overflow::Clip)
-                    .maybe_child((!compact).then(sidebar))
+                    .maybe_child((!compact).then(|| sidebar(theme)))
                     .child(
                         rect()
                             .key("content")
@@ -134,7 +134,7 @@ impl Component for AppShell {
                                 .on_press(move |_| close_sidebar()),
                         )
                         .child(
-                            sidebar()
+                            sidebar(theme)
                                 .position(Position::new_absolute().left(drawer_left).top(0.))
                                 .layer(Layer::Relative(100))
                                 .opacity(0.6 + 0.4 * progress)
@@ -145,7 +145,9 @@ impl Component for AppShell {
     }
 }
 
-fn sidebar() -> Rect {
+fn sidebar(mut theme: State<Theme>) -> Rect {
+    let is_dark = theme.read().name == "dark";
+
     rect()
         .width(Size::px(240.))
         .height(Size::fill())
@@ -183,5 +185,20 @@ fn sidebar() -> Rect {
         .child(
             Link::new("https://github.com/marc2332/freya")
                 .child(SideBarItem::new().child("And more!")),
+        )
+        .child(
+            SideBarItem::new()
+                .on_press(move |_| theme.set(if is_dark { light_theme() } else { dark_theme() }))
+                .child(
+                    rect()
+                        .horizontal()
+                        .width(Size::fill())
+                        .main_align(Alignment::space_between())
+                        .cross_align(Alignment::center())
+                        .child("Dark mode")
+                        .child(Switch::new().toggled(is_dark).on_toggle(move |_| {
+                            theme.set(if is_dark { light_theme() } else { dark_theme() })
+                        })),
+                ),
         )
 }
