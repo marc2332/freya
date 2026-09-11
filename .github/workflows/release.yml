@@ -31,12 +31,12 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=v$version" >> "$GITHUB_OUTPUT"
       - name: Publish to crates.io (dry run)
-        uses: marc2332/letmerelease@0b22c8ae11ea3e83c9aba94db78daab41933775b # 0.1.0
+        uses: marc2332/letmerelease@58a745fdeb93e184bd8cfe3b04a67565c0c8662f # v0.1.1
         with:
           token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
           dry-run: true
       - name: Publish to crates.io
-        uses: marc2332/letmerelease@0b22c8ae11ea3e83c9aba94db78daab41933775b # 0.1.0
+        uses: marc2332/letmerelease@58a745fdeb93e184bd8cfe3b04a67565c0c8662f # v0.1.1
         with:
           token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
       - name: Push tag
