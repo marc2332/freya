@@ -10,7 +10,7 @@ pub enum ClipboardError {
     NotAvailable,
 }
 
-/// Access the clipboard.
+/// App clipboard.
 ///
 /// # Examples
 ///
@@ -26,33 +26,33 @@ pub enum ClipboardError {
 /// Clipboard::set("Hello, Freya!".to_string());
 /// ```
 #[derive(Clone, Copy, PartialEq)]
-pub struct Clipboard;
+pub struct Clipboard(State<Option<Box<dyn ClipboardProvider>>>);
 
 impl Clipboard {
-    #[track_caller]
-    pub(crate) fn create_or_create() -> State<Option<Box<dyn ClipboardProvider>>> {
-        consume_root_context()
+    pub fn create(provider: Option<Box<dyn ClipboardProvider>>) -> Self {
+        Self(State::create_global(provider))
     }
 
-    // Read from the clipboard
+    /// Read from the clipboard.
     #[track_caller]
     pub fn get() -> Result<String, ClipboardError> {
-        Self::create_or_create()
-            .write()
-            .as_mut()
-            .ok_or(ClipboardError::NotAvailable)?
-            .get_contents()
+        Self::with_provider(|provider| provider.get_contents())?
             .map_err(|_| ClipboardError::FailedToRead)
     }
 
-    // Write to the clipboard
+    /// Write to the clipboard.
     #[track_caller]
     pub fn set(contents: String) -> Result<(), ClipboardError> {
-        Self::create_or_create()
-            .write()
-            .as_mut()
-            .ok_or(ClipboardError::NotAvailable)?
-            .set_contents(contents)
+        Self::with_provider(|provider| provider.set_contents(contents))?
             .map_err(|_| ClipboardError::FailedToSet)
+    }
+
+    fn with_provider<T>(
+        run: impl FnOnce(&mut dyn ClipboardProvider) -> T,
+    ) -> Result<T, ClipboardError> {
+        let mut clipboard = GlobalContexts::get().get_context::<Clipboard>();
+        let mut provider = clipboard.0.write();
+        let provider = provider.as_mut().ok_or(ClipboardError::NotAvailable)?;
+        Ok(run(provider.as_mut()))
     }
 }

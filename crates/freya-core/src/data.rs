@@ -40,6 +40,7 @@ use crate::{
         color::Color,
         corner_radius::CornerRadius,
         fill::Fill,
+        font_feature::FontFeature,
         font_size::FontSize,
         font_slant::FontSlant,
         font_weight::FontWeight,
@@ -135,6 +136,7 @@ pub struct TextStyleState {
     pub font_weight: FontWeight,
     pub font_width: FontWidth,
     pub letter_spacing: LetterSpacing,
+    pub font_features: Vec<FontFeature>,
 }
 
 impl Default for TextStyleState {
@@ -152,6 +154,7 @@ impl Default for TextStyleState {
             font_weight: FontWeight::default(),
             font_width: FontWidth::default(),
             letter_spacing: LetterSpacing::default(),
+            font_features: Vec::new(),
         }
     }
 }
@@ -174,6 +177,8 @@ impl TextStyleState {
         let letter_spacing = data.letter_spacing.unwrap_or(parent.letter_spacing);
         let mut font_families = data.font_families.clone();
         font_families.extend_from_slice(&parent.font_families);
+        let mut font_features = parent.font_features.clone();
+        font_features.extend_from_slice(&data.font_features);
 
         Self {
             color,
@@ -188,6 +193,7 @@ impl TextStyleState {
             font_width,
             letter_spacing,
             font_families,
+            font_features,
         }
     }
 
@@ -228,6 +234,7 @@ pub struct TextStyleData {
     pub font_weight: Option<FontWeight>,
     pub font_width: Option<FontWidth>,
     pub letter_spacing: Option<LetterSpacing>,
+    pub font_features: Vec<FontFeature>,
 }
 
 #[derive(Debug, Default)]
