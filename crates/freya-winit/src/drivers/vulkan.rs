@@ -84,6 +84,7 @@ use raw_window_handle::{
     HandleError,
     HasDisplayHandle,
     HasWindowHandle,
+    RawDisplayHandle,
 };
 use winit::{
     dpi::PhysicalSize,
@@ -114,6 +115,7 @@ pub struct VulkanDriver {
     swapchain_images: Vec<Image>,
     swapchain_extent: Extent2D,
     transparent: bool,
+    wayland: bool,
     gr_context: ManuallyDrop<DirectContext>,
     image_available_semaphore: Semaphore,
     render_finished_semaphore: Semaphore,
@@ -180,6 +182,11 @@ impl VulkanDriver {
             create_logical_device(&instance, physical_device, queue_family_index)?;
         let device = Arc::new(device);
 
+        let wayland = matches!(
+            window.display_handle()?.as_raw(),
+            RawDisplayHandle::Wayland(_)
+        );
+
         let swapchain_size = window.inner_size();
 
         let (swapchain, swapchain_fns, swapchain_images, swapchain_extent) = create_swapchain(
@@ -192,6 +199,7 @@ impl VulkanDriver {
             swapchain_size,
             None,
             transparent,
+            wayland,
         )?;
 
         let gr_context = create_gr_context(
@@ -242,6 +250,7 @@ impl VulkanDriver {
             swapchain_images,
             swapchain_extent,
             transparent,
+            wayland,
             gr_context: ManuallyDrop::new(gr_context),
             image_available_semaphore,
             render_finished_semaphore,
@@ -272,6 +281,7 @@ impl VulkanDriver {
             size,
             Some(old_swapchain),
             self.transparent,
+            self.wayland,
         )
         .map_err(|error| {
             tracing::error!("Failed to recreate Vulkan swapchain: {error}");
@@ -654,6 +664,7 @@ fn create_swapchain(
     size: PhysicalSize<u32>,
     old_swapchain: Option<SwapchainKHR>,
     transparent: bool,
+    wayland: bool,
 ) -> Result<(SwapchainKHR, DeviceSwapchainFns, Vec<Image>, Extent2D), Box<dyn std::error::Error>> {
     let surface_caps =
         unsafe { surface_fns.get_physical_device_surface_capabilities(physical_device, surface)? };
@@ -668,7 +679,15 @@ fn create_swapchain(
         })
         .ok_or("No suitable Vulkan surface format found")?;
 
-    let present_mode = PresentModeKHR::FIFO;
+    // Winit already paces redraws on Wayland, where FIFO would throttle a second time and cost an
+    // extra refresh period per frame. Everywhere else FIFO is what keeps the loop from free running.
+    let present_modes =
+        unsafe { surface_fns.get_physical_device_surface_present_modes(physical_device, surface)? };
+    let present_mode = if wayland && present_modes.contains(&PresentModeKHR::MAILBOX) {
+        PresentModeKHR::MAILBOX
+    } else {
+        PresentModeKHR::FIFO
+    };
 
     let extent = if surface_caps.current_extent.width == u32::MAX {
         Extent2D {
@@ -684,7 +703,17 @@ fn create_swapchain(
     } else {
         surface_caps.current_extent
     };
-    let image_count = surface_caps.min_image_count.max(2);
+
+    // MAILBOX needs a third image to swap into while another one is queued.
+    let wanted_image_count = if present_mode == PresentModeKHR::MAILBOX {
+        3
+    } else {
+        2
+    };
+    let mut image_count = surface_caps.min_image_count.max(wanted_image_count);
+    if surface_caps.max_image_count > 0 {
+        image_count = image_count.min(surface_caps.max_image_count);
+    }
 
     // If transparency is requested but the surface doesn't support a suitable
     // composite alpha mode, bail out so the caller can fall back to OpenGL.
