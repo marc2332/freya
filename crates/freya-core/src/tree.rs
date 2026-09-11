@@ -215,6 +215,15 @@ impl Tree {
         mutations: Mutations,
         scale_factor: f32,
     ) -> MutationsApplyResult {
+        // No need to check anything
+        if mutations.is_empty() && self.elements.contains_key(&NodeId::ROOT) {
+            return MutationsApplyResult {
+                needs_render: false,
+                needs_accessibility: false,
+                auto_focus: self.accessibility_diff.requested_auto_focus.take(),
+            };
+        }
+
         let mut needs_render = !mutations.removed.is_empty();
         let mut needs_accessibility = !mutations.removed.is_empty();
         let mut dirty = Vec::<(NodeId, DiffModifies)>::default();

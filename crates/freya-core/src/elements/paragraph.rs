@@ -803,6 +803,10 @@ impl TextStyleState {
         text_style.set_letter_spacing(f32::from(self.letter_spacing) * scale_factor as f32);
         text_style.set_decoration_type(self.text_decoration.into());
 
+        for font_feature in self.font_features.iter() {
+            text_style.add_font_feature(&font_feature.name, font_feature.value);
+        }
+
         if self.text_height.needs_custom_height() {
             text_style.set_height_override(true);
             text_style.set_half_leading(true);
@@ -849,6 +853,10 @@ impl Span<'_> {
         ));
         text_style.set_decoration_type(span_style.text_decoration.into());
         text_style.set_letter_spacing(f32::from(span_style.letter_spacing) * scale_factor as f32);
+
+        for font_feature in span_style.font_features.iter() {
+            text_style.add_font_feature(&font_feature.name, font_feature.value);
+        }
 
         if let Some(line_height) = line_height {
             text_style.set_height_override(true);
