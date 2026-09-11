@@ -115,7 +115,7 @@ impl Default for CursorStyleData {
     fn default() -> Self {
         Self {
             color: Color::BLACK,
-            highlight_color: Color::from_rgb(87, 108, 188),
+            highlight_color: Color::from_argb(128, 87, 108, 188),
             style: CursorStyle::default(),
         }
     }
