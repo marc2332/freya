@@ -1,8 +1,11 @@
+#![cfg_attr(not(target_os = "emscripten"), allow(dead_code))]
+
 use freya::{
     html::*,
     prelude::*,
 };
 
+#[cfg(target_os = "emscripten")]
 const NOTO_SANS: &[u8] = include_bytes!("../../../crates/freya-edit/tests/NotoSans-Regular.ttf");
 
 const START_PAGE: &str = r#"
@@ -34,6 +37,7 @@ const START_PAGE: &str = r#"
 "#;
 
 fn main() {
+    #[cfg(target_os = "emscripten")]
     freya::web::launch(freya::web::WebConfig::new(app).with_font("Noto Sans", NOTO_SANS));
 }
 
