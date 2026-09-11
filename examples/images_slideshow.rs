@@ -15,7 +15,7 @@ fn app() -> impl IntoElement {
     let mut selected = use_state(|| 2);
 
     let on_wheel = move |e: Event<WheelEventData>| {
-        if e.delta_y > 0. {
+        if e.pixels().y > 0. {
             *selected.write() -= 1;
         } else {
             *selected.write() += 1;

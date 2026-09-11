@@ -1032,16 +1032,12 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 }
 
                 WindowEvent::MouseWheel { delta, phase, .. } if phase != TouchPhase::Cancelled => {
-                    const WHEEL_PIXELS_PER_LINE: f64 = 53.0;
-
                     let scale_factor = app.effective_scale_factor();
 
                     let (delta_x, delta_y, source) = match delta {
-                        MouseScrollDelta::LineDelta(x, y) => (
-                            x as f64 * WHEEL_PIXELS_PER_LINE,
-                            y as f64 * WHEEL_PIXELS_PER_LINE,
-                            WheelSource::Line,
-                        ),
+                        MouseScrollDelta::LineDelta(x, y) => {
+                            (x as f64, y as f64, WheelSource::Line)
+                        }
                         MouseScrollDelta::PixelDelta(position) => {
                             let position = position.to_logical::<f64>(scale_factor);
                             (position.x, position.y, WheelSource::Pixel)

@@ -489,8 +489,9 @@ impl Component for Input {
                 } else if cursor_bottom + inner_margin.vertical()
                     > visible_start_y + viewport.height()
                 {
-                    scroll_controller
-                        .scroll_to_y(-(cursor_bottom + inner_margin.vertical() - viewport.height()));
+                    scroll_controller.scroll_to_y(
+                        -(cursor_bottom + inner_margin.vertical() - viewport.height()),
+                    );
                 }
             }
         };

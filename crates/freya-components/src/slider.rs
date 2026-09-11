@@ -211,13 +211,14 @@ impl Component for Slider {
         let on_wheel = {
             let on_moved = self.on_moved.clone();
             move |e: Event<WheelEventData>| {
-                if e.delta_y == 0.0 {
+                let delta_y = e.pixels().y;
+                if delta_y == 0.0 {
                     return;
                 }
                 e.stop_propagation();
                 let delta = match step {
-                    Some(step) => step * e.delta_y.signum(),
-                    None => e.delta_y * 0.1,
+                    Some(step) => step * delta_y.signum(),
+                    None => delta_y * 0.1,
                 };
                 on_moved.call(snap(value + delta));
             }

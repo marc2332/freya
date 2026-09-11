@@ -82,7 +82,7 @@ pub fn virtual_scroll_view_smooth_scrolling() {
 
     test.send_event(PlatformEvent::Wheel {
         name: WheelEventName::Wheel,
-        scroll: (0., -300.).into(),
+        scroll: (0., -300. / PIXELS_PER_LINE).into(),
         cursor: (5., 5.).into(),
         source: WheelSource::Line,
     });

@@ -12,10 +12,13 @@ use std::{
 use freya_core::{
     notify::ArcNotify,
     prelude::{
+        PIXELS_PER_LINE,
         Platform,
         TaskHandle,
         UseId,
         UserEvent,
+        WheelEventData,
+        WheelSource,
     },
 };
 use keyboard_types::{
@@ -110,8 +113,8 @@ pub(crate) struct TerminalInner {
     pub(crate) last_write_time: Instant,
     pub(crate) pressed_button: Option<TerminalMouseButton>,
     pub(crate) modifiers: Modifiers,
-    /// Fraction of a line left over from previous wheel events.
-    pub(crate) wheel_remainder: f64,
+    pub(crate) line_remainder: f64,
+    pub(crate) notch_remainder: f64,
 }
 
 impl Drop for TerminalCleaner {
@@ -440,23 +443,47 @@ impl TerminalHandle {
     /// Route a wheel event to scrollback, PTY mouse, or arrow-key sequences
     /// depending on the active mouse mode and alt-screen state (matches wezterm/kitty).
     ///
-    /// `lines` is the distance in terminal lines, positive when scrolling up.
-    pub fn wheel(&self, lines: f64, row: f32, col: f32) {
-        let scroll_delta = self.accumulate_scroll(lines);
+    /// Mouse aware programs get one report per wheel notch, everything else scrolls by lines.
+    pub fn wheel(&self, event: &WheelEventData, cell_height: f32, row: f32, col: f32) {
+        const TOUCHPAD_SCROLL_MULTIPLIER: f64 = 9.0;
+
+        let pixels = match event.source {
+            WheelSource::Pixel => event.pixels().y * TOUCHPAD_SCROLL_MULTIPLIER,
+            WheelSource::Line | WheelSource::Custom => event.pixels().y,
+        };
+
+        let mode = self.mode();
+
+        if mode.intersects(Mode::MOUSE_MODE) && self.term.borrow().display_offset() == 0 {
+            let notches = {
+                let mut inner = self.inner.borrow_mut();
+                accumulate(&mut inner.notch_remainder, pixels / PIXELS_PER_LINE)
+            };
+            if notches != 0 {
+                let wheel_event =
+                    encode_wheel_event(row as usize, col as usize, notches as f64, mode);
+                let _ = self.write_raw(
+                    wheel_event
+                        .repeat(notches.unsigned_abs() as usize)
+                        .as_bytes(),
+                );
+            }
+            return;
+        }
+
+        let scroll_delta = {
+            let mut inner = self.inner.borrow_mut();
+            accumulate(&mut inner.line_remainder, pixels / cell_height as f64)
+        };
 
         if scroll_delta == 0 {
             return;
         }
 
         let repeats = scroll_delta.unsigned_abs() as usize;
-        let mode = self.mode();
 
         if self.term.borrow().display_offset() > 0 {
             self.scroll(scroll_delta);
-        } else if mode.intersects(Mode::MOUSE_MODE) {
-            let wheel_event =
-                encode_wheel_event(row as usize, col as usize, scroll_delta as f64, mode);
-            let _ = self.write_raw(wheel_event.repeat(repeats).as_bytes());
         } else if mode.contains(Mode::ALT_SCREEN) {
             let app_cursor = mode.contains(Mode::APP_CURSOR);
             let key = match (scroll_delta > 0, app_cursor) {
@@ -469,18 +496,6 @@ impl TerminalHandle {
         } else {
             self.scroll(scroll_delta);
         }
-    }
-
-    /// Whole lines to scroll for `lines`, carrying the fraction into the next wheel event.
-    fn accumulate_scroll(&self, lines: f64) -> i32 {
-        let mut inner = self.inner.borrow_mut();
-        let pending = if inner.wheel_remainder * lines < 0. {
-            lines
-        } else {
-            inner.wheel_remainder + lines
-        };
-        inner.wheel_remainder = pending.fract();
-        pending.trunc() as i32
     }
 
     /// Borrow the underlying rio-vt `Crosswords` for direct read access.
@@ -581,4 +596,15 @@ impl TerminalHandle {
         };
         (Pos::new(Line(line), Column(column)), side)
     }
+}
+
+/// Whole units to apply for `amount`, carrying the fraction into the next wheel event.
+fn accumulate(remainder: &mut f64, amount: f64) -> i32 {
+    let pending = if *remainder * amount < 0. {
+        amount
+    } else {
+        *remainder + amount
+    };
+    *remainder = pending.fract();
+    pending.trunc() as i32
 }

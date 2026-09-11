@@ -176,6 +176,9 @@ pub enum WheelSource {
     Custom,
 }
 
+/// Logical pixels scrolled by one line, used to resolve [`WheelSource::Line`] deltas.
+pub const PIXELS_PER_LINE: f64 = 53.0;
+
 impl WheelSource {
     /// Whether the event came from a physical device rather than being synthesized from code.
     pub fn is_device(&self) -> bool {
@@ -186,10 +189,11 @@ impl WheelSource {
 /// Data of a Wheel event.
 #[derive(Debug, Clone, PartialEq)]
 pub struct WheelEventData {
+    /// Device the scroll came from, which also gives the unit of the deltas.
     pub source: WheelSource,
-    /// Horizontal scroll in logical pixels, positive when scrolling left.
+    /// Horizontal scroll, positive when scrolling left.
     pub delta_x: f64,
-    /// Vertical scroll in logical pixels, positive when scrolling up.
+    /// Vertical scroll, positive when scrolling up.
     pub delta_y: f64,
     pub global_location: CursorPoint,
     pub element_location: CursorPoint,
@@ -209,6 +213,19 @@ impl WheelEventData {
             source,
             global_location,
             element_location,
+        }
+    }
+
+    /// Scroll distance in logical pixels, resolving lines with [`PIXELS_PER_LINE`].
+    pub fn pixels(&self) -> CursorPoint {
+        match self.source {
+            WheelSource::Line => CursorPoint::new(
+                self.delta_x * PIXELS_PER_LINE,
+                self.delta_y * PIXELS_PER_LINE,
+            ),
+            WheelSource::Pixel | WheelSource::Custom => {
+                CursorPoint::new(self.delta_x, self.delta_y)
+            }
         }
     }
 }

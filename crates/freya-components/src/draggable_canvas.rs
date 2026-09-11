@@ -98,8 +98,9 @@ impl Component for DraggableCanvas {
 
         let on_wheel = move |e: Event<WheelEventData>| {
             let mut current_offset = offset.write();
-            current_offset.x += e.delta_x;
-            current_offset.y += e.delta_y;
+            let scroll = e.pixels();
+            current_offset.x += scroll.x;
+            current_offset.y += scroll.y;
         };
 
         let (offset_x, offset_y) = offset().to_tuple();

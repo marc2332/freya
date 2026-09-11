@@ -531,10 +531,11 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                 && (*pressing_shift.read() || invert_scroll_wheel)
                 && (!*pressing_shift.read() || !invert_scroll_wheel);
 
+            let scroll = e.pixels();
             let (x_movement, y_movement) = if invert_direction {
-                (e.delta_y as f32, e.delta_x as f32)
+                (scroll.y as f32, scroll.x as f32)
             } else {
-                (e.delta_x as f32, e.delta_y as f32)
+                (scroll.x as f32, scroll.y as f32)
             };
 
             if e.source == WheelSource::Line {
