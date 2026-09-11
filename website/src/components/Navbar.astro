@@ -1,5 +1,13 @@
-<div class="w-full pb-2 py-2 px-4 sm:py-10 bg-custom-dark-black fixed top-0 left-0 z-50">
-  <div class="mx-auto lg:w-content text-stone-300">
+---
+export interface Props {
+  wide?: boolean;
+}
+
+const { wide = false } = Astro.props;
+---
+
+<div class="w-full pb-2 py-2 px-4 sm:py-10 bg-custom-dark-black">
+  <div class:list={["mx-auto text-stone-300", wide ? "w-full" : "lg:w-content"]}>
     <div class="w-full flex justify-center items-center sm:hidden pb-2">
       <a class="mx-4 hover:text-white" title="Freya Home Page" href="/">
         <img src="/logo.svg" width="40" class="inline-block" />

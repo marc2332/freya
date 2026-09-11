@@ -35,6 +35,7 @@ impl Component for MarkdownShowcase {
     fn render(&self) -> impl IntoElement {
         ScrollView::new().child(
             rect()
+                .padding(24.)
                 .spacing(20.)
                 .child(heading("Markdown", "Some markdown"))
                 .child(MarkdownViewer::new(CONTENT)),
