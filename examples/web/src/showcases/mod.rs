@@ -1,4 +1,3 @@
-/// Declares one component per demo and collects them all into a `DEMOS` slice.
 macro_rules! demos {
     ($($name:ident => $title:literal $body:block)*) => {
         $(
@@ -57,7 +56,6 @@ pub fn heading(title: &str, subtitle: &str) -> impl IntoElement {
         .child(rect().opacity(0.6).child(subtitle))
 }
 
-/// A menu laid out in place, [MenuContainer] floats over its parent instead.
 fn inline_menu() -> Rect {
     let colors = use_theme().read().colors.clone();
     let a11y_id = use_a11y();
@@ -71,7 +69,6 @@ fn inline_menu() -> Rect {
         .border(Border::new().width(1.).fill(colors.border))
 }
 
-/// A single component demo, shown as one card of a [DemoGrid].
 pub struct Demo {
     pub title: &'static str,
     pub render: fn() -> Element,
@@ -104,7 +101,6 @@ impl Demo {
     }
 }
 
-/// A virtualized grid of fixed size cards, one per demo.
 #[derive(PartialEq)]
 pub struct DemoGrid {
     pub title: &'static str,
