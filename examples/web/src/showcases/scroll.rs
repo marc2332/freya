@@ -20,7 +20,7 @@ impl Component for ScrollShowcase {
                     rect()
                         .key(item.index)
                         .height(Size::px(item.size))
-                        .padding((4., 0., 4., 24.))
+                        .padding((4., 24., 4., 24.))
                         .child(
                             rect()
                                 .expanded()
