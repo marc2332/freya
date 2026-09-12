@@ -1,4 +1,10 @@
 use freya_core::prelude::*;
+use freya_engine::prelude::{
+    ClipOp,
+    Color,
+    RRect,
+    SkRect,
+};
 use freya_winit::{
     extensions::WinitPlatformExt,
     plugins::{
@@ -87,12 +93,36 @@ impl FreyaPlugin for BorderlessPlugin {
         "borderless"
     }
 
-    fn on_event(&mut self, _event: &mut PluginEvent, _handle: PluginHandle) {}
+    fn on_event(&mut self, event: &mut PluginEvent, _handle: PluginHandle) {
+        if self.corner_radius <= 0. {
+            return;
+        }
+        match event {
+            PluginEvent::BeforeRender { canvas, window, .. } => {
+                canvas.clear(Color::TRANSPARENT);
+                canvas.save();
+                if window.fullscreen().is_some() || window.is_maximized() {
+                    return;
+                }
+                let size = window.inner_size();
+                let radius = self.corner_radius * window.scale_factor() as f32;
+                let rounded_window = RRect::new_rect_xy(
+                    SkRect::from_wh(size.width as f32, size.height as f32),
+                    radius,
+                    radius,
+                );
+                canvas.clip_rrect(rounded_window, ClipOp::Intersect, true);
+            }
+            PluginEvent::AfterRender { canvas, .. } => {
+                canvas.restore();
+            }
+            _ => {}
+        }
+    }
 
     fn root_component(&self, root: Element) -> Element {
         BorderlessRoot {
             thickness: self.thickness,
-            corner_radius: self.corner_radius,
             inner: root,
         }
         .into_element()
@@ -102,18 +132,13 @@ impl FreyaPlugin for BorderlessPlugin {
 #[derive(Clone, PartialEq)]
 struct BorderlessRoot {
     thickness: f32,
-    corner_radius: f32,
     inner: Element,
 }
 
 impl Component for BorderlessRoot {
     fn render(&self) -> impl IntoElement {
-        let maximized = use_maximized();
-
         rect()
             .expanded()
-            .overflow(Overflow::Clip)
-            .maybe(!maximized(), |el| el.corner_radius(self.corner_radius))
             .child(self.inner.clone())
             .maybe(!cfg!(target_os = "macos"), |el| {
                 el.child(ResizeBands::new(self.thickness))
