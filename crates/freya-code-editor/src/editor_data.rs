@@ -34,15 +34,13 @@ pub struct CodeEditorData {
     pub(crate) dragging: TextDragging,
     pub(crate) pending_edit: Option<InputEdit>,
     pub language: Option<EditorLanguage>,
-    pub scroll_controller: ScrollController,
-    /// Size of the visible area, kept up to date by [`CodeEditor`](crate::editor_ui::CodeEditor).
     pub viewport: Size2D,
     theme: EditorSyntaxTheme,
 }
 
 impl CodeEditorData {
-    /// Creates the editor data for the given [`Rope`] and with the given language.
-    pub fn create(rope: Rope, language: impl Into<Option<EditorLanguage>>) -> Self {
+    /// Creates the editor data for the given [`Rope`] and language.
+    pub fn new(rope: Rope, language: impl Into<Option<EditorLanguage>>) -> Self {
         let mut data = Self {
             rope,
             selection: TextSelection::new_cursor(0),
@@ -52,7 +50,6 @@ impl CodeEditorData {
             dragging: TextDragging::default(),
             pending_edit: None,
             language: language.into(),
-            scroll_controller: ScrollController::new(0, 0, Vec::new()),
             viewport: Size2D::default(),
             theme: EditorSyntaxTheme::default(),
         };
@@ -60,15 +57,19 @@ impl CodeEditorData {
         data
     }
 
-    /// Scrolls the viewport vertically just enough to make the cursor line visible.
+    /// Scrolls the given controller vertically just enough to make the cursor line visible.
     ///
     /// Returns whether the scroll position changed.
-    pub fn scroll_to_cursor(&mut self, line_height: f32) -> bool {
+    pub fn scroll_to_cursor(
+        &self,
+        mut scroll_controller: ScrollController,
+        line_height: f32,
+    ) -> bool {
         if self.viewport.height <= 0. || line_height <= 0. {
             return false;
         }
 
-        let (_, scroll_y) = self.scroll_controller.into();
+        let (_, scroll_y) = scroll_controller.into();
         let scrolled = -scroll_y as f32;
         let cursor_top = self.cursor_row() as f32 * line_height;
         let cursor_bottom = cursor_top + line_height;
@@ -81,7 +82,7 @@ impl CodeEditorData {
             return false;
         };
 
-        self.scroll_controller.scroll_to_y(-target as i32)
+        scroll_controller.scroll_to_y(-target as i32)
     }
 
     /// Reconfigures the highlighter with the current language and theme.
@@ -123,7 +124,6 @@ impl CodeEditorData {
     pub fn process(
         &mut self,
         font_size: f32,
-        line_height: f32,
         font_family: &str,
         edit_event: EditableEvent,
     ) -> bool {
@@ -249,7 +249,6 @@ impl CodeEditorData {
                             self.dragging = TextDragging::default();
                         }
                         if !event.is_empty() {
-                            self.scroll_to_cursor(line_height);
                             processed = true;
                         }
                     }

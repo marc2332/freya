@@ -66,10 +66,9 @@ impl Component for EditorLineUI {
             let mut editor = editor.clone();
             let font_family = font_family.clone();
             move |e: Event<FocusPressEventData>| {
-                let processed = editor.write_if(|mut editor_editor| {
-                    editor_editor.process(
+                let processed = editor.write_if(|mut editor| {
+                    editor.process(
                         font_size,
-                        line_height,
                         &font_family,
                         EditableEvent::Down {
                             location: e.element_location(),
@@ -87,10 +86,9 @@ impl Component for EditorLineUI {
         let on_pointer_move = {
             let font_family = font_family.clone();
             move |e: Event<PointerEventData>| {
-                editor.write_if(|mut editor_editor| {
-                    editor_editor.process(
+                editor.write_if(|mut editor| {
+                    editor.process(
                         font_size,
-                        line_height,
                         &font_family,
                         EditableEvent::Move {
                             location: e.element_location(),

@@ -245,7 +245,7 @@ fn app() -> impl IntoElement {
             tree_sitter_rust::LANGUAGE,
             tree_sitter_rust::HIGHLIGHTS_QUERY,
         );
-        let mut editor = CodeEditorData::create(rope, language);
+        let mut editor = CodeEditorData::new(rope, language);
         editor.parse();
         editor.measure(14., "Jetbrains Mono");
         editor
