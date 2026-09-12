@@ -14,7 +14,7 @@ fn editor_app() -> impl IntoElement {
                 .collect::<Vec<_>>()
                 .join("\n"),
         );
-        let mut editor = CodeEditorData::create(rope, None);
+        let mut editor = CodeEditorData::new(rope, None);
         editor.parse();
         editor.measure(14., "Jetbrains Mono");
         editor
@@ -23,18 +23,14 @@ fn editor_app() -> impl IntoElement {
     CodeEditor::new(editor, a11y_id).a11y_auto_focus(true)
 }
 
-fn first_visible_line(lines: &[TestingNode]) -> String {
-    let children = lines[0].children();
-    let paragraph = children[1].element();
-    Paragraph::try_downcast(&*paragraph)
-        .map(|paragraph| {
-            paragraph
-                .spans
-                .iter()
-                .map(|span| span.text.trim().to_string())
-                .collect::<String>()
-        })
-        .unwrap()
+fn line_text(line: &TestingNode) -> String {
+    let element = line.children()[1].element();
+    let paragraph = Paragraph::try_downcast(&*element).unwrap();
+    paragraph
+        .spans
+        .iter()
+        .map(|span| span.text.trim().to_string())
+        .collect()
 }
 
 #[test]
@@ -51,17 +47,17 @@ pub fn code_editor_scrolls_to_cursor() {
         .unwrap();
     let lines = || scrollview.children()[0].children()[0].children();
 
-    assert_eq!(first_visible_line(&lines()), "line 0");
+    assert_eq!(line_text(&lines()[0]), "line 0");
 
     for _ in 0..60 {
         test.press_key(Key::Named(NamedKey::ArrowDown));
     }
 
-    assert_eq!(first_visible_line(&lines()), "line 34");
+    assert_eq!(line_text(&lines()[0]), "line 34");
 
     for _ in 0..40 {
         test.press_key(Key::Named(NamedKey::ArrowUp));
     }
 
-    assert_eq!(first_visible_line(&lines()), "line 20");
+    assert_eq!(line_text(&lines()[0]), "line 20");
 }
