@@ -4,6 +4,7 @@ pub mod corner_radius;
 pub mod cursor;
 pub mod default_fonts;
 pub mod fill;
+pub mod font_feature;
 pub mod font_size;
 pub mod font_slant;
 pub mod font_weight;

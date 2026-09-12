@@ -13,6 +13,11 @@ use crate::{
 };
 
 define_theme! {
+    for = Table;
+    theme_field = theme;
+    for = TableRow;
+    theme_field = theme;
+
     %[component]
     pub Table {
         %[fields]

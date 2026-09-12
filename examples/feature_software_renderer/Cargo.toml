@@ -1,0 +1,12 @@
+[package]
+name = "feature_software_renderer"
+publish = false
+edition = "2024"
+
+[lints]
+workspace = true
+
+[dependencies]
+freya = { path = "../../crates/freya", default-features = false, features = [
+  "winit",
+] }

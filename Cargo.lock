@@ -2331,6 +2331,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "feature_software_renderer"
+version = "0.0.0"
+dependencies = [
+ "freya",
+]
+
+[[package]]
 name = "feature_tray"
 version = "0.0.0"
 dependencies = [
@@ -2608,6 +2615,7 @@ name = "freya-borderless-plugin"
 version = "0.5.0-rc.5"
 dependencies = [
  "freya-core",
+ "freya-engine",
  "freya-winit",
  "torin",
 ]
