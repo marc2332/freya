@@ -80,6 +80,11 @@ pub struct ColorsSheet {
     pub surface_inverse_secondary: Color,
     pub surface_inverse_tertiary: Color,
 
+    pub contrast: Color,
+    pub contrast_secondary: Color,
+    pub contrast_tertiary: Color,
+    pub contrast_quaternary: Color,
+
     // Borders
     pub border: Color,
     pub border_focus: Color,
