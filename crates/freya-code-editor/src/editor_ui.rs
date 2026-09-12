@@ -3,9 +3,10 @@ use std::borrow::Cow;
 use freya_components::{
     get_theme_or_default,
     scrollviews::{
+        ScrollConfig,
         ScrollController,
-        ScrollEvent,
         VirtualScrollView,
+        use_scroll_controller,
     },
 };
 use freya_core::prelude::*;
@@ -32,6 +33,8 @@ pub struct CodeEditor {
     font_family: Cow<'static, str>,
     a11y_id: AccessibilityId,
     a11y_auto_focus: bool,
+    cursor_mode: CursorMode,
+    scroll_controller: Option<ScrollController>,
     pub(crate) theme: Option<EditorThemePartial>,
     on_pre_key_down: Callback<Event<KeyboardEventData>, bool>,
 }
@@ -51,6 +54,8 @@ impl CodeEditor {
             font_family: Cow::Borrowed("Jetbrains Mono"),
             a11y_id,
             a11y_auto_focus: false,
+            cursor_mode: CursorMode::Expanded,
+            scroll_controller: None,
             theme: None,
             on_pre_key_down: Callback::new(|e: Event<KeyboardEventData>| {
                 e.stop_propagation();
@@ -97,6 +102,21 @@ impl CodeEditor {
         self
     }
 
+    /// Set the [`CursorMode`]. Defaults to [`CursorMode::Expanded`].
+    pub fn cursor_mode(mut self, cursor_mode: impl Into<CursorMode>) -> Self {
+        self.cursor_mode = cursor_mode.into();
+        self
+    }
+
+    /// Sets the [`ScrollController`] driving the scroll position, instead of an internal one.
+    pub fn scroll_controller(
+        mut self,
+        scroll_controller: impl Into<Option<ScrollController>>,
+    ) -> Self {
+        self.scroll_controller = scroll_controller.into();
+        self
+    }
+
     /// Sets whether the editor automatically receives focus.
     pub fn a11y_auto_focus(mut self, a11y_auto_focus: bool) -> Self {
         self.a11y_auto_focus = a11y_auto_focus;
@@ -126,6 +146,8 @@ impl Component for CodeEditor {
             font_family,
             a11y_id,
             a11y_auto_focus,
+            cursor_mode,
+            scroll_controller,
             theme,
             on_pre_key_down,
         } = self.clone();
@@ -136,39 +158,8 @@ impl Component for CodeEditor {
 
         let editor_data = editor.read();
 
-        let scroll_controller = use_hook(|| {
-            let notifier = State::create(());
-            let requests = State::create(vec![]);
-            ScrollController::managed(
-                notifier,
-                requests,
-                State::create(Callback::new({
-                    let mut editor = editor.clone();
-                    move |ev| {
-                        editor.write_if(|mut editor| {
-                            let current = editor.scrolls;
-                            match ev {
-                                ScrollEvent::X(x) => {
-                                    editor.scrolls.0 = x;
-                                }
-                                ScrollEvent::Y(y) => {
-                                    editor.scrolls.1 = y;
-                                }
-                            }
-                            current != editor.scrolls
-                        })
-                    }
-                })),
-                State::create(Callback::new({
-                    let editor = editor.clone();
-                    move |_| {
-                        let editor = editor.read();
-                        editor.scrolls
-                    }
-                })),
-            )
-        });
-
+        let scroll_controller =
+            scroll_controller.unwrap_or_else(|| use_scroll_controller(ScrollConfig::default));
         let line_height = (font_size * line_height).floor();
         let lines_len = editor_data.metrics.syntax_blocks.len();
 
@@ -188,6 +179,7 @@ impl Component for CodeEditor {
 
         let on_key_down = {
             let mut editor = editor.clone();
+            let mut scroll_controller = scroll_controller;
             let font_family = font_family.clone();
             move |e: Event<KeyboardEventData>| {
                 const LINES_JUMP_ALT: usize = 5;
@@ -202,14 +194,16 @@ impl Component for CodeEditor {
 
                 editor.write_if(|mut editor| {
                     let lines_jump = (line_height * LINES_JUMP_ALT as f32).ceil() as i32;
-                    let min_height = -(lines_len as f32 * line_height) as i32;
-                    let max_height = 0; // TODO, this should be the height of the viewport
-                    let current_scroll = editor.scrolls.1;
+                    let content_height = lines_len as f32 * line_height;
+                    let viewport_height = editor.viewport.height;
+                    let min_scroll = -(content_height - viewport_height).max(0.) as i32;
+                    let max_scroll = 0;
+                    let (_, current_scroll) = scroll_controller.into();
 
                     let events = match &key {
                         Key::Named(NamedKey::ArrowUp) if modifiers.contains(Modifiers::ALT) => {
-                            let jump = (current_scroll + lines_jump).clamp(min_height, max_height);
-                            editor.scrolls.1 = jump;
+                            let jump = (current_scroll + lines_jump).clamp(min_scroll, max_scroll);
+                            scroll_controller.scroll_to_y(jump);
                             (0..LINES_JUMP_ALT)
                                 .map(|_| EditableEvent::KeyDown {
                                     key: &key,
@@ -220,8 +214,8 @@ impl Component for CodeEditor {
                                 .collect::<Vec<EditableEvent>>()
                         }
                         Key::Named(NamedKey::ArrowDown) if modifiers.contains(Modifiers::ALT) => {
-                            let jump = (current_scroll - lines_jump).clamp(min_height, max_height);
-                            editor.scrolls.1 = jump;
+                            let jump = (current_scroll - lines_jump).clamp(min_scroll, max_scroll);
+                            scroll_controller.scroll_to_y(jump);
                             (0..LINES_JUMP_ALT)
                                 .map(|_| EditableEvent::KeyDown {
                                     key: &key,
@@ -257,6 +251,10 @@ impl Component for CodeEditor {
                         changed |= editor.process(font_size, &font_family, event);
                     }
 
+                    if changed {
+                        editor.scroll_to_cursor(scroll_controller, line_height);
+                    }
+
                     changed
                 });
             }
@@ -266,8 +264,19 @@ impl Component for CodeEditor {
             let mut editor = editor.clone();
             let font_family = font_family.clone();
             move |_: Event<PointerEventData>| {
-                editor.write_if(|mut editor_editor| {
-                    editor_editor.process(font_size, &font_family, EditableEvent::Release)
+                editor.write_if(|mut editor| {
+                    editor.process(font_size, &font_family, EditableEvent::Release)
+                });
+            }
+        };
+
+        let on_sized = {
+            let mut editor = editor.clone();
+            move |e: Event<SizedEventData>| {
+                editor.write_if(|mut editor| {
+                    let changed = editor.viewport != e.area.size;
+                    editor.viewport = e.area.size;
+                    changed
                 });
             }
         };
@@ -294,12 +303,14 @@ impl Component for CodeEditor {
                         gutter,
                         show_whitespace,
                         font_family: font_family.clone(),
+                        cursor_mode,
                         theme: theme.clone(),
                         a11y_id,
                     }
                     .into()
                 })
                 .scroll_controller(scroll_controller)
+                .on_sized(on_sized)
                 .length(lines_len)
                 .item_size(line_height),
             )
