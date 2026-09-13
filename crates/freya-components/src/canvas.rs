@@ -163,6 +163,11 @@ impl ElementExt for CanvasElement {
             &paint,
         );
 
+        context.canvas.clip_rect(
+            SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
+            ClipOp::Intersect,
+            true,
+        );
         context.canvas.translate((area.min_x(), area.min_y()));
         context
             .canvas

@@ -2331,6 +2331,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "feature_software_renderer"
+version = "0.0.0"
+dependencies = [
+ "freya",
+]
+
+[[package]]
 name = "feature_tray"
 version = "0.0.0"
 dependencies = [

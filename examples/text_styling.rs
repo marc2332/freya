@@ -2,7 +2,11 @@
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
 )]
+use std::time::Duration;
+
+use async_io::Timer;
 use freya::prelude::*;
+use futures_lite::stream::StreamExt;
 
 fn main() {
     launch(
@@ -138,6 +142,7 @@ fn app() -> impl IntoElement {
                             .letter_spacing(10.),
                     ),
             ))
+            .child(section("Font features", Counter))
             .child(section(
                 "Text decoration",
                 rect()
@@ -237,6 +242,30 @@ fn app() -> impl IntoElement {
                     ),
             )),
     )
+}
+
+#[derive(PartialEq)]
+struct Counter;
+
+impl Component for Counter {
+    fn render(&self) -> impl IntoElement {
+        let mut millis = use_state(|| 0);
+
+        use_hook(move || {
+            spawn(async move {
+                let mut interval = Timer::interval(Duration::from_millis(100));
+                loop {
+                    interval.next().await;
+                    *millis.write() += 137;
+                }
+            });
+        });
+
+        label()
+            .text(format!("{:.3}s elapsed", *millis.read() as f32 / 1000.))
+            .font_size(20.)
+            .font_tabular()
+    }
 }
 
 fn section(title: &'static str, content: impl IntoElement) -> impl IntoElement {

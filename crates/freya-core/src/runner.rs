@@ -118,6 +118,15 @@ pub struct Mutations {
     pub moved: FxHashMap<NodeId, Vec<MutationMove>>,
 }
 
+impl Mutations {
+    pub fn is_empty(&self) -> bool {
+        self.added.is_empty()
+            && self.modified.is_empty()
+            && self.removed.is_empty()
+            && self.moved.is_empty()
+    }
+}
+
 impl Debug for Mutations {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!(
@@ -701,6 +710,11 @@ impl Runner {
     pub fn sync_and_update(&mut self) -> Mutations {
         self.handle_events_immediately();
         use itertools::Itertools;
+
+        // No need to check anything
+        if self.dirty_scopes.is_empty() {
+            return Mutations::default();
+        }
 
         #[cfg(all(debug_assertions, feature = "debug-integrity"))]
         self.verify_scopes_integrity();
