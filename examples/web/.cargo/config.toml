@@ -1,5 +1,6 @@
-[build]
-target = "wasm32-unknown-emscripten"
+[alias]
+web = ["run", "--target", "wasm32-unknown-emscripten"]
+desktop = ["run", "--features", "desktop"]
 
 [profile.dev.package.freya-skia-bindings]
 opt-level = 3

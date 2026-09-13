@@ -29,6 +29,7 @@ impl Component for AnimationShowcase {
         let (progress, color) = animation.get().value();
 
         rect()
+            .padding(24.)
             .spacing(20.)
             .child(heading("Animation", "Press the button"))
             .child(
