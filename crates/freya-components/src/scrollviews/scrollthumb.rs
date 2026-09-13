@@ -16,6 +16,7 @@ use crate::{
     },
 };
 
+#[derive(PartialEq)]
 enum ScrollThumbState {
     Idle,
     Hovering,
@@ -58,6 +59,7 @@ impl ComponentOwned for ScrollThumb {
                     Alignment::end(),
                 ),
             };
+
         let thumb_background = match *state.read() {
             _ if self.clicking_scrollbar.read().is_some() => {
                 scrollbar_theme.active_thumb_background
@@ -67,12 +69,15 @@ impl ComponentOwned for ScrollThumb {
             ScrollThumbState::Idle => scrollbar_theme.thumb_background,
         };
 
-        let on_pointer_over = move |_| state.set(ScrollThumbState::Hovering);
-        let on_pointer_out = move |_| state.set(ScrollThumbState::Idle);
+        let on_pointer_over = move |_| state.set_if_modified(ScrollThumbState::Hovering);
+        let on_pointer_out = move |_| state.set_if_modified(ScrollThumbState::Idle);
 
         rect()
             .width(width)
             .height(height)
+            .padding(padding)
+            .main_align(main_align)
+            .cross_align(cross_align)
             .on_pointer_over(on_pointer_over)
             .on_pointer_out(on_pointer_out)
             .on_pointer_down(move |e: Event<PointerEventData>| {
@@ -92,9 +97,6 @@ impl ComponentOwned for ScrollThumb {
                 e.stop_propagation();
                 self.clicking_scrollbar.set(None);
             })
-            .padding(padding)
-            .main_align(main_align)
-            .cross_align(cross_align)
             .child(
                 rect()
                     .width(pill_width)

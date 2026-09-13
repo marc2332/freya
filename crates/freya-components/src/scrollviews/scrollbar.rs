@@ -44,12 +44,6 @@ define_theme! {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Debug)]
-enum ScrollBarState {
-    Idle,
-    Hovering,
-}
-
 #[derive(Clone, PartialEq)]
 pub struct ScrollBar {
     pub(crate) theme: Option<ScrollBarThemePartial>,
@@ -64,28 +58,24 @@ impl ComponentOwned for ScrollBar {
     fn render(self) -> impl IntoElement {
         let scrollbar_theme = get_theme!(&self.theme, ScrollBarThemePreference, "scrollbar");
 
-        let mut state = use_state(|| ScrollBarState::Idle);
+        let mut hovering = use_state(|| false);
 
-        let is_expanded =
-            self.clicking_scrollbar.read().is_some() || *state.read() == ScrollBarState::Hovering;
+        let is_expanded = self.clicking_scrollbar.read().is_some() || *hovering.read();
 
         let animation = use_animation_with_dependencies(&is_expanded, |conf, is_expanded| {
             conf.on_creation(OnCreation::Finish);
             conf.on_change(OnChange::Rerun);
 
+            let expand = |from: f32, to: f32| {
+                AnimNum::new(from, to)
+                    .time(207)
+                    .function(Function::Expo)
+                    .ease(Ease::Out)
+            };
             let value = (
-                AnimNum::new(5., 8.)
-                    .time(207)
-                    .function(Function::Expo)
-                    .ease(Ease::Out),
-                AnimNum::new(0., 220.)
-                    .time(207)
-                    .function(Function::Expo)
-                    .ease(Ease::Out),
-                AnimNum::new(0., SCROLLBAR_MARGIN)
-                    .time(207)
-                    .function(Function::Expo)
-                    .ease(Ease::Out),
+                expand(5., 8.),
+                expand(0., 220.),
+                expand(0., SCROLLBAR_MARGIN),
             );
 
             if *is_expanded {
@@ -110,7 +100,7 @@ impl ComponentOwned for ScrollBar {
             thumb_offset_y,
         ) = match self.axis {
             Axis::X => (
-                self.size.clone(),
+                self.size,
                 Size::px(20.),
                 0.,
                 -20.,
@@ -124,7 +114,7 @@ impl ComponentOwned for ScrollBar {
             ),
             Axis::Y => (
                 Size::px(20.),
-                self.size.clone(),
+                self.size,
                 -20.,
                 0.,
                 Size::px(cross_size),
@@ -139,12 +129,12 @@ impl ComponentOwned for ScrollBar {
 
         let on_pointer_over = move |_| {
             if !cfg!(target_os = "android") {
-                state.set(ScrollBarState::Hovering);
+                hovering.set_if_modified(true);
             }
         };
         let on_pointer_out = move |_| {
             if !cfg!(target_os = "android") {
-                state.set(ScrollBarState::Idle);
+                hovering.set_if_modified(false);
             }
         };
 
@@ -193,7 +183,7 @@ impl ComponentOwned for ScrollBar {
                             .offset_x(thumb_offset_x)
                             .offset_y(thumb_offset_y)
                             .child(ScrollThumb {
-                                theme: self.theme.clone(),
+                                theme: self.theme,
                                 clicking_scrollbar: self.clicking_scrollbar,
                                 axis: self.axis,
                                 size: self.thumb_size,
