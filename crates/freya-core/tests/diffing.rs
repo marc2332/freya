@@ -760,7 +760,7 @@ fn element_diffing8() {
     assert!(mutations.modified.is_empty());
     assert_eq!(mutations.removed.len(), 1);
     assert_eq!(mutations.moved.len(), 1);
-    assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 2);
+    assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 1);
     tree.apply_mutations(mutations, 1.0);
     assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 }
@@ -2118,5 +2118,19 @@ fn grandchild_addition_under_parent_shifted_by_removal() {
     replay_nested_keyed_layouts(&[
         vec![(0, vec![]), (2, vec![(1, 0, false)]), (3, vec![])],
         vec![(3, vec![]), (2, vec![(1, 2, false)])],
+    ]);
+}
+
+/// A keyed reorder that also inserts a new sibling among the moved ones in the same frame.
+#[test]
+fn reorder_with_insertion_among_moved_siblings() {
+    replay_nested_keyed_layouts(&[
+        vec![(0, vec![]), (5, vec![]), (2, vec![])],
+        vec![
+            (2, vec![]),
+            (1, vec![]),
+            (5, vec![(2, 0, true)]),
+            (0, vec![]),
+        ],
     ]);
 }
