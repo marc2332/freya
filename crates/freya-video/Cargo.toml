@@ -29,7 +29,7 @@ anyhow = { workspace = true }
 
 [dev-dependencies]
 freya = { path = "../freya" }
-freya-components = { workspace = true }
-freya-testing = { workspace = true }
+freya-components = { path = "../freya-components" }
+freya-testing = { path = "../freya-testing" }
 torin = { workspace = true }
 ureq = { workspace = true }
