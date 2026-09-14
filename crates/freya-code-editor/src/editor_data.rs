@@ -51,7 +51,7 @@ impl CodeEditorData {
             dragging: TextDragging::default(),
             pending_edit: None,
             language: language.into(),
-            scroll_controller: ScrollController::new(0, 0, Vec::new()),
+            scroll_controller: ScrollController::new(0, 0),
             viewport: Size2D::default(),
             theme: EditorSyntaxTheme::default(),
         };

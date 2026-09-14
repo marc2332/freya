@@ -220,11 +220,6 @@ impl Component for ScrollView {
         let direction = layout.direction;
         let drag_scrolling = self.drag_scrolling;
 
-        scroll_controller.use_apply(
-            size.read().inner_sizes.width,
-            size.read().inner_sizes.height,
-        );
-
         let corrected_scrolled_x = get_corrected_scroll_position(
             size.read().inner_sizes.width,
             size.read().area.width(),
@@ -521,7 +516,8 @@ impl Component for ScrollView {
                             .spacing(layout.spacing.get())
                             .overflow(Overflow::Clip)
                             .on_sized(move |e: Event<SizedEventData>| {
-                                size.set_if_modified(e.clone())
+                                size.set_if_modified(e.clone());
+                                scroll_controller.apply_layout(e.inner_sizes, e.area.size);
                             })
                             .children(self.children.clone()),
                     )

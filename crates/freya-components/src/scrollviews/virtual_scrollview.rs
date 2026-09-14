@@ -489,8 +489,6 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
             ),
         };
 
-        scroll_controller.use_apply(inner_width, inner_height);
-
         let corrected_scrolled_x =
             get_corrected_scroll_position(inner_width, size.read().area.width(), scrolled_x as f32);
 
@@ -754,6 +752,27 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
             }
         };
 
+        let on_sized = {
+            let item_size = self.item_size.clone();
+            let length = self.length;
+            move |e: Event<SizedEventData>| {
+                size.set_if_modified(e.clone());
+
+                let content_size = match direction {
+                    Direction::Vertical => Size2D::new(
+                        e.inner_sizes.width,
+                        item_size.total_size(e.area.height(), scrolled_y as f32, length),
+                    ),
+                    Direction::Horizontal => Size2D::new(
+                        item_size.total_size(e.area.width(), scrolled_x as f32, length),
+                        e.inner_sizes.height,
+                    ),
+                };
+
+                scroll_controller.apply_layout(content_size, e.area.size);
+            }
+        };
+
         rect()
             .width(layout.width.clone())
             .height(layout.height.clone())
@@ -790,9 +809,7 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                             .offset_x(offset_x)
                             .offset_y(offset_y)
                             .overflow(Overflow::Clip)
-                            .on_sized(move |e: Event<SizedEventData>| {
-                                size.set_if_modified(e.clone())
-                            })
+                            .on_sized(on_sized)
                             .children(children),
                     )
                     .maybe_child(vertical_scrollbar_is_visible.then_some({

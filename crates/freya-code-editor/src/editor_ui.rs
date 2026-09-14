@@ -28,6 +28,7 @@ pub struct CodeEditor {
     font_family: Cow<'static, str>,
     a11y_id: AccessibilityId,
     a11y_auto_focus: bool,
+    cursor_mode: CursorMode,
     pub(crate) theme: Option<EditorThemePartial>,
     on_pre_key_down: Callback<Event<KeyboardEventData>, bool>,
 }
@@ -47,6 +48,7 @@ impl CodeEditor {
             font_family: Cow::Borrowed("Jetbrains Mono"),
             a11y_id,
             a11y_auto_focus: false,
+            cursor_mode: CursorMode::Expanded,
             theme: None,
             on_pre_key_down: Callback::new(|e: Event<KeyboardEventData>| {
                 e.stop_propagation();
@@ -93,6 +95,12 @@ impl CodeEditor {
         self
     }
 
+    /// Set the [`CursorMode`]. Defaults to [`CursorMode::Expanded`].
+    pub fn cursor_mode(mut self, cursor_mode: impl Into<CursorMode>) -> Self {
+        self.cursor_mode = cursor_mode.into();
+        self
+    }
+
     /// Sets whether the editor automatically receives focus.
     pub fn a11y_auto_focus(mut self, a11y_auto_focus: bool) -> Self {
         self.a11y_auto_focus = a11y_auto_focus;
@@ -122,6 +130,7 @@ impl Component for CodeEditor {
             font_family,
             a11y_id,
             a11y_auto_focus,
+            cursor_mode,
             theme,
             on_pre_key_down,
         } = self.clone();
@@ -278,6 +287,7 @@ impl Component for CodeEditor {
                         gutter,
                         show_whitespace,
                         font_family: font_family.clone(),
+                        cursor_mode,
                         theme: theme.clone(),
                         a11y_id,
                     }
