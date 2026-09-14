@@ -17,6 +17,7 @@ pub mod io;
 pub mod layers;
 pub mod lifecycle;
 pub mod lru_cache;
+pub mod mapper;
 pub mod node_id;
 pub mod notify;
 pub mod path_element;
@@ -131,6 +132,7 @@ pub mod prelude {
             writable::*,
             writable_utils::*,
         },
+        mapper::Mappers,
         platform::*,
         reactive_context::ReactiveContext,
         rendering_ticker::RenderingTicker,

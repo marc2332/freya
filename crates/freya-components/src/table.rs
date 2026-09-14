@@ -153,12 +153,18 @@ enum TableRowState {
 pub struct TableRow {
     pub theme: Option<TableThemePartial>,
     pub children: Vec<Element>,
+    mappers: Mappers<Rect>,
     key: DiffKey,
 }
 
 impl TableRow {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn with(mut self, mapper: impl FnMut(Rect) -> Rect + 'static) -> Self {
+        self.mappers.push(mapper);
+        self
     }
 }
 
@@ -191,6 +197,8 @@ impl Component for TableRow {
             row_background
         };
 
+        let mappers = self.mappers.clone();
+
         rect()
             .on_pointer_enter(move |_| state.set(TableRowState::Hovering))
             .on_pointer_leave(move |_| state.set(TableRowState::Idle))
@@ -216,6 +224,7 @@ impl Component for TableRow {
                     .width(Size::fill())
                     .background(divider_fill),
             )
+            .with(move |rect| mappers.apply(rect))
     }
 
     fn render_key(&self) -> DiffKey {
