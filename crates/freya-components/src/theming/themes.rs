@@ -90,6 +90,11 @@ pub const LIGHT_COLORS: ColorsSheet = ColorsSheet {
     surface_inverse_secondary: Color::from_rgb(110, 110, 110),
     surface_inverse_tertiary: Color::from_rgb(90, 90, 90),
 
+    contrast: Color::from_rgb(180, 180, 180),
+    contrast_secondary: Color::from_rgb(150, 150, 150),
+    contrast_tertiary: Color::from_rgb(130, 130, 130),
+    contrast_quaternary: Color::from_rgb(115, 115, 115),
+
     // Borders
     border: Color::from_rgb(210, 210, 210),
     border_focus: Color::from_rgb(180, 180, 180),
@@ -132,6 +137,11 @@ pub const DARK_COLORS: ColorsSheet = ColorsSheet {
     surface_inverse: Color::from_rgb(135, 135, 135),
     surface_inverse_secondary: Color::from_rgb(150, 150, 150),
     surface_inverse_tertiary: Color::from_rgb(170, 170, 170),
+
+    contrast: Color::from_rgb(135, 135, 135),
+    contrast_secondary: Color::from_rgb(150, 150, 150),
+    contrast_tertiary: Color::from_rgb(170, 170, 170),
+    contrast_quaternary: Color::from_rgb(210, 210, 210),
 
     // Borders
     border: Color::from_rgb(60, 60, 60),
@@ -319,10 +329,11 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "scrollbar",
         ScrollBarThemePreference {
-            background: Preference::Reference("surface_primary"),
-            thumb_background: Preference::Reference("surface_inverse"),
-            hover_thumb_background: Preference::Reference("surface_inverse_secondary"),
-            active_thumb_background: Preference::Reference("surface_inverse_tertiary"),
+            background: Preference::Reference("border"),
+            thumb_background: Preference::Reference("contrast"),
+            visible_thumb_background: Preference::Reference("contrast_secondary"),
+            hover_thumb_background: Preference::Reference("contrast_tertiary"),
+            active_thumb_background: Preference::Reference("contrast_quaternary"),
             size: Preference::Specific(15.),
         },
     );
