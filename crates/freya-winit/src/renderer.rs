@@ -646,7 +646,15 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                     }
                                     NativeWindowErasedEventAction::CloseWindow(window_id) => {
                                         // Its fine to ignore if the window doesnt exist anymore
-                                        let _ = self.windows.remove(&window_id);
+                                        if let Some(app) = self.windows.remove(&window_id) {
+                                            self.plugins.send(
+                                                PluginEvent::WindowClosed {
+                                                    window: &app.window,
+                                                    tree: &app.tree,
+                                                },
+                                                PluginHandle::new(&self.proxy),
+                                            );
+                                        }
                                         let has_windows = !self.windows.is_empty();
 
                                         let has_tray = {
@@ -745,7 +753,15 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     }
 
                     if matches!(decision, CloseDecision::Close) {
-                        self.windows.remove(&window_id);
+                        if let Some(app) = self.windows.remove(&window_id) {
+                            self.plugins.send(
+                                PluginEvent::WindowClosed {
+                                    window: &app.window,
+                                    tree: &app.tree,
+                                },
+                                PluginHandle::new(&self.proxy),
+                            );
+                        }
                         let has_windows = !self.windows.is_empty();
 
                         let has_tray = {
