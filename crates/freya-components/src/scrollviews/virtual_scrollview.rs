@@ -212,6 +212,7 @@ pub struct VirtualScrollView<D, B: Fn(VirtualItem, &D) -> Element> {
     show_scrollbar: bool,
     scroll_with_arrows: bool,
     scroll_controller: Option<ScrollController>,
+    on_sized: Option<EventHandler<Event<SizedEventData>>>,
     invert_scroll_wheel: bool,
     drag_scrolling: bool,
     scrollbar_theme: Option<ScrollBarThemePartial>,
@@ -263,6 +264,7 @@ impl<B: Fn(VirtualItem, &()) -> Element> VirtualScrollView<(), B> {
             show_scrollbar: true,
             scroll_with_arrows: true,
             scroll_controller: None,
+            on_sized: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
             scrollbar_theme: None,
@@ -286,6 +288,7 @@ impl<B: Fn(VirtualItem, &()) -> Element> VirtualScrollView<(), B> {
             show_scrollbar: true,
             scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
+            on_sized: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
             scrollbar_theme: None,
@@ -333,6 +336,7 @@ impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
             show_scrollbar: true,
             scroll_with_arrows: true,
             scroll_controller: None,
+            on_sized: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
             scrollbar_theme: None,
@@ -361,6 +365,7 @@ impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
             show_scrollbar: true,
             scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
+            on_sized: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
             scrollbar_theme: None,
@@ -425,6 +430,12 @@ impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
         scroll_controller: impl Into<Option<ScrollController>>,
     ) -> Self {
         self.scroll_controller = scroll_controller.into();
+        self
+    }
+
+    /// Runs the handler with the size of the visible area, which excludes the scrollbars.
+    pub fn on_sized(mut self, on_sized: impl Into<EventHandler<Event<SizedEventData>>>) -> Self {
+        self.on_sized = Some(on_sized.into());
         self
     }
 
@@ -752,27 +763,6 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
             }
         };
 
-        let on_sized = {
-            let item_size = self.item_size.clone();
-            let length = self.length;
-            move |e: Event<SizedEventData>| {
-                size.set_if_modified(e.clone());
-
-                let content_size = match direction {
-                    Direction::Vertical => Size2D::new(
-                        e.inner_sizes.width,
-                        item_size.total_size(e.area.height(), scrolled_y as f32, length),
-                    ),
-                    Direction::Horizontal => Size2D::new(
-                        item_size.total_size(e.area.width(), scrolled_x as f32, length),
-                        e.inner_sizes.height,
-                    ),
-                };
-
-                scroll_controller.apply_layout(content_size, e.area.size);
-            }
-        };
-
         rect()
             .width(layout.width.clone())
             .height(layout.height.clone())
@@ -809,7 +799,19 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                             .offset_x(offset_x)
                             .offset_y(offset_y)
                             .overflow(Overflow::Clip)
-                            .on_sized(on_sized)
+                            .on_sized({
+                                let on_sized = self.on_sized.clone();
+                                move |e: Event<SizedEventData>| {
+                                    size.set_if_modified(e.clone());
+                                    scroll_controller.apply_layout(
+                                        Size2D::new(e.inner_sizes.width, e.inner_sizes.height),
+                                        e.area.size,
+                                    );
+                                    if let Some(on_sized) = &on_sized {
+                                        on_sized.call(e);
+                                    }
+                                }
+                            })
                             .children(children),
                     )
                     .maybe_child(vertical_scrollbar_is_visible.then_some({

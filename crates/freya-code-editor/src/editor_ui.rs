@@ -292,7 +292,6 @@ impl Component for CodeEditor {
                 el.on_key_down(on_key_down).on_key_up(on_key_up)
             })
             .on_global_pointer_press(on_global_pointer_press)
-            .on_sized(on_sized)
             .child(
                 VirtualScrollView::new(move |item, _| {
                     EditorLineUI {
@@ -311,6 +310,7 @@ impl Component for CodeEditor {
                     .into()
                 })
                 .scroll_controller(scroll_controller)
+                .on_sized(on_sized)
                 .length(lines_len)
                 .item_size(line_height),
             )
