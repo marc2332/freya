@@ -14,6 +14,7 @@ impl Component for I18nShowcase {
         let mut count = use_state(|| 0);
 
         rect()
+            .padding(24.)
             .spacing(20.)
             .child(heading("Internationalization", "Multiple languages"))
             .child(

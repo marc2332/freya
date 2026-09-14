@@ -1,6 +1,6 @@
 [package]
 name = "freya-video"
-version = "0.5.0-rc.5"
+version = "0.5.0-rc.6"
 edition = "2024"
 description = "Video playback component for Freya apps"
 license = "MIT"
@@ -29,7 +29,7 @@ anyhow = { workspace = true }
 
 [dev-dependencies]
 freya = { path = "../freya" }
-freya-components = { workspace = true }
-freya-testing = { workspace = true }
+freya-components = { path = "../freya-components" }
+freya-testing = { path = "../freya-testing" }
 torin = { workspace = true }
 ureq = { workspace = true }

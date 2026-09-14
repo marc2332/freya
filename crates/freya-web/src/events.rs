@@ -159,17 +159,16 @@ impl BrowserState {
         let event = unsafe { &*event };
 
         let (scale, source) = match event.delta_mode {
-            DOM_DELTA_LINE => (53., WheelSource::Line),
+            DOM_DELTA_LINE => (20., WheelSource::Line),
             DOM_DELTA_PAGE => (400., WheelSource::Line),
             _ => {
                 // Not every browser reports wheels in line mode, a notch lands as one large pixel delta.
                 let dominant_delta = event.delta_x.abs().max(event.delta_y.abs());
-                let source = if dominant_delta >= 40. {
-                    WheelSource::Line
+                if dominant_delta >= 40. {
+                    (1., WheelSource::Line)
                 } else {
-                    WheelSource::Pixel
-                };
-                (2., source)
+                    (2., WheelSource::Pixel)
+                }
             }
         };
 
