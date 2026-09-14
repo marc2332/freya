@@ -21,7 +21,10 @@ use crate::{
     },
     define_theme,
     get_theme,
-    icons::arrow::ArrowIcon,
+    icons::{
+        IconThemePartialExt,
+        arrow::ArrowIcon,
+    },
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

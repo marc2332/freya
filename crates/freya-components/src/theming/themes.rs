@@ -28,6 +28,7 @@ use crate::{
     chip::ChipThemePreference,
     color_picker::ColorPickerThemePreference,
     floating_tab::FloatingTabThemePreference,
+    icons::IconThemePreference,
     input::{
         InputColorsThemePreference,
         InputLayoutThemePreference,
@@ -508,10 +509,15 @@ fn register_base_component_themes(theme: &mut Theme) {
         },
     );
     theme.set(
+        "icon",
+        IconThemePreference {
+            fill: Preference::Reference("text_primary"),
+        },
+    );
+    theme.set(
         "table",
         TableThemePreference {
             background: Preference::Reference("background"),
-            arrow_fill: Preference::Reference("text_primary"),
             row_background: Preference::Specific(Color::TRANSPARENT),
             hover_row_background: Preference::Reference("surface_secondary"),
             divider_fill: Preference::Reference("surface_primary"),
