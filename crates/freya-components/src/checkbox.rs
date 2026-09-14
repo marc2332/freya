@@ -5,7 +5,10 @@ use torin::prelude::*;
 use crate::{
     define_theme,
     get_theme,
-    icons::tick::TickIcon,
+    icons::{
+        IconThemePartialExt,
+        tick::TickIcon,
+    },
 };
 
 define_theme! {

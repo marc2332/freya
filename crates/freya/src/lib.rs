@@ -215,6 +215,7 @@ pub mod components {
         icons::{
             arrow::*,
             tick::*,
+            *,
         },
         image_viewer::*,
         input::*,
