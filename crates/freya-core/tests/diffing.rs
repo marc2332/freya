@@ -258,7 +258,7 @@ fn state_reconcillation2() {
         let mut value = use_state(|| 5);
         rect()
             .children(
-                vec![
+                [
                     rect()
                         .on_mouse_up(move |_| {
                             *value.write() += 1;
@@ -270,11 +270,8 @@ fn state_reconcillation2() {
                         })
                         .into(),
                 ]
-                .with(
-                    (0..*value.read())
-                        .map(|_| from_fn_captured(|| counter(5)))
-                        .collect::<Vec<_>>(),
-                ),
+                .into_iter()
+                .chain((0..*value.read()).map(|_| from_fn_captured(|| counter(5)))),
             )
             .into()
     }

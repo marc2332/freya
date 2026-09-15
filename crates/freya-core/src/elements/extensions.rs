@@ -36,11 +36,17 @@ use crate::{
         EventHandlerType,
         EventHandlers,
     },
-    elements::image::{
-        AspectRatio,
-        ImageCover,
-        ImageData,
-        SamplingMode,
+    elements::{
+        image::{
+            AspectRatio,
+            Image,
+            ImageCover,
+            ImageData,
+            SamplingMode,
+        },
+        label::Label,
+        paragraph::Paragraph,
+        rect::Rect,
     },
     event_handler::EventHandler,
     events::{
@@ -143,18 +149,18 @@ pub trait KeyExt: Sized {
     }
 }
 
-/// Trait for concatenating two lists into one.
-pub trait ListExt {
-    /// Append the contents of `other`, returning the combined list.
-    fn with(self, other: Self) -> Self;
-}
-
-impl<T> ListExt for Vec<T> {
-    fn with(mut self, other: Self) -> Self {
-        self.extend(other);
-        self
+/// Methods for unconditionally modifying an element.
+pub trait WithExt: Sized {
+    /// Applies `with` immediately.
+    fn with(self, with: impl FnOnce(Self) -> Self) -> Self {
+        with(self)
     }
 }
+
+impl WithExt for Rect {}
+impl WithExt for Label {}
+impl WithExt for Paragraph {}
+impl WithExt for Image {}
 
 macro_rules! event_handlers {
     (
