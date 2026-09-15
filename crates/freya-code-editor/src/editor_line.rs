@@ -28,6 +28,7 @@ pub struct EditorLineUI {
     pub(crate) gutter: bool,
     pub(crate) show_whitespace: bool,
     pub(crate) font_family: Cow<'static, str>,
+    pub(crate) cursor_mode: CursorMode,
     pub(crate) theme: EditorTheme,
     pub(crate) a11y_id: AccessibilityId,
 }
@@ -46,6 +47,7 @@ impl Component for EditorLineUI {
             gutter,
             show_whitespace,
             font_family,
+            cursor_mode,
             theme,
             a11y_id,
         } = self.clone();
@@ -64,8 +66,8 @@ impl Component for EditorLineUI {
             let mut editor = editor.clone();
             let font_family = font_family.clone();
             move |e: Event<FocusPressEventData>| {
-                let processed = editor.write_if(|mut editor_editor| {
-                    editor_editor.process(
+                let processed = editor.write_if(|mut editor| {
+                    editor.process(
                         font_size,
                         &font_family,
                         EditableEvent::Down {
@@ -84,8 +86,8 @@ impl Component for EditorLineUI {
         let on_pointer_move = {
             let font_family = font_family.clone();
             move |e: Event<PointerEventData>| {
-                editor.write_if(|mut editor_editor| {
-                    editor_editor.process(
+                editor.write_if(|mut editor| {
+                    editor.process(
                         font_size,
                         &font_family,
                         EditableEvent::Move {
@@ -146,7 +148,7 @@ impl Component for EditorLineUI {
                     .cursor_color(theme.cursor)
                     .cursor_style(CursorStyle::Block)
                     .cursor_index(cursor_index)
-                    .cursor_mode(CursorMode::Expanded)
+                    .cursor_mode(cursor_mode)
                     .vertical_align(VerticalAlign::Center)
                     .highlights(highlights.map(|h| vec![h]))
                     .highlight_color(theme.highlight)

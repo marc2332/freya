@@ -8,12 +8,14 @@ use std::{
     time::Duration,
 };
 
+use freya_components::scrollviews::ScrollController;
 use freya_core::{
     elements::paragraph::ParagraphHolderInner,
     prelude::*,
 };
 use freya_edit::*;
 use ropey::Rope;
+use torin::geometry::Size2D;
 use tree_sitter::InputEdit;
 
 use crate::{
@@ -30,13 +32,14 @@ pub struct CodeEditorData {
     pub(crate) last_saved_history_change: usize,
     pub(crate) metrics: EditorMetrics,
     pub(crate) dragging: TextDragging,
-    pub(crate) scrolls: (i32, i32),
     pub(crate) pending_edit: Option<InputEdit>,
     pub language: Option<EditorLanguage>,
+    pub viewport: Size2D,
     theme: EditorSyntaxTheme,
 }
 
 impl CodeEditorData {
+    /// Creates the editor data for the given [`Rope`] and language.
     pub fn new(rope: Rope, language: impl Into<Option<EditorLanguage>>) -> Self {
         let mut data = Self {
             rope,
@@ -45,13 +48,41 @@ impl CodeEditorData {
             last_saved_history_change: 0,
             metrics: EditorMetrics::new(),
             dragging: TextDragging::default(),
-            scrolls: (0, 0),
             pending_edit: None,
             language: language.into(),
+            viewport: Size2D::default(),
             theme: EditorSyntaxTheme::default(),
         };
         data.configure_highlighter();
         data
+    }
+
+    /// Scrolls the given controller vertically just enough to make the cursor line visible.
+    ///
+    /// Returns whether the scroll position changed.
+    pub fn scroll_to_cursor(
+        &self,
+        mut scroll_controller: ScrollController,
+        line_height: f32,
+    ) -> bool {
+        if self.viewport.height <= 0. || line_height <= 0. {
+            return false;
+        }
+
+        let (_, scroll_y) = scroll_controller.into();
+        let scrolled = -scroll_y as f32;
+        let cursor_top = self.cursor_row() as f32 * line_height;
+        let cursor_bottom = cursor_top + line_height;
+
+        let target = if cursor_top < scrolled {
+            cursor_top
+        } else if cursor_bottom > scrolled + self.viewport.height {
+            cursor_bottom - self.viewport.height
+        } else {
+            return false;
+        };
+
+        scroll_controller.scroll_to_y(-target as i32)
     }
 
     /// Reconfigures the highlighter with the current language and theme.
