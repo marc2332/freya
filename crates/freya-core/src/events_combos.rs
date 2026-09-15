@@ -30,7 +30,7 @@ const MULTI_PRESS_ELAPSED: Duration = Duration::from_millis(500);
 /// # use freya::prelude::*;
 /// # fn app() -> impl IntoElement {
 /// rect().on_pointer_down(|e: Event<PointerEventData>| {
-///     if EventsCombos::pressed(e.global_location()).is_double() {
+///     if EventsCombos::<()>::pressed(e.global_location()).is_double() {
 ///         println!("Double press");
 ///     }
 /// })
