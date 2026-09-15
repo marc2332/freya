@@ -67,7 +67,7 @@ impl<Gesture: Clone + PartialEq + 'static> EventsCombos<Gesture> {
                     pressing: State::create_in_scope(false, ScopeId::ROOT),
                     marker: PhantomData,
                 };
-                provide_context_for_scope_id(combos.clone(), ScopeId::ROOT);
+                provide_context_for_scope_id(combos, ScopeId::ROOT);
                 combos
             }
         }
