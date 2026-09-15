@@ -1,8 +1,13 @@
 use freya_core::prelude::*;
 use torin::{
-    geometry::Point2D,
+    geometry::{
+        Point2D,
+        Size2D,
+    },
     prelude::Direction,
 };
+
+use crate::scrollviews::shared::get_corrected_scroll_position;
 
 /// Where along an axis a scroll should land, the beginning or the end.
 #[derive(Default, PartialEq, Eq)]
@@ -10,6 +15,16 @@ pub enum ScrollPosition {
     #[default]
     Start,
     End,
+}
+
+impl ScrollPosition {
+    /// Scroll offset in pixels of this position.
+    fn offset(&self) -> i32 {
+        match self {
+            Self::Start => 0,
+            Self::End => ScrollController::END,
+        }
+    }
 }
 
 /// Initial configuration for a [`ScrollController`] created with [`use_scroll_controller`].
@@ -21,49 +36,26 @@ pub struct ScrollConfig {
     pub default_horizontal_position: ScrollPosition,
 }
 
-/// A pending request to scroll an axis to a given [`ScrollPosition`], consumed on the next layout.
-pub struct ScrollRequest {
-    pub(crate) position: ScrollPosition,
-    pub(crate) direction: Direction,
-    pub(crate) init: bool,
-}
-
-impl ScrollRequest {
-    /// Creates a request to scroll `direction` to `position`.
-    pub fn new(position: ScrollPosition, direction: Direction) -> ScrollRequest {
-        ScrollRequest {
-            position,
-            direction,
-            init: false,
-        }
-    }
-}
-
-/// An absolute scroll movement along one axis, in pixels.
-enum ScrollEvent {
-    X(i32),
-    Y(i32),
-}
-
-/// Handle to drive and read a scrollable area programmatically.
+/// Handle to drive a scrollview programmatically.
 ///
-/// By default a scrollable owns its scroll position and only the user can move it, through the
+/// By default a scrollview owns its scroll position and only the user can move it, through the
 /// wheel, the scrollbar, arrow keys or dragging. A [`ScrollController`] lets your own code read and
 /// change that position instead. Create one with [`use_scroll_controller`] and hand it to a
-/// scrollable through its `new_controlled` constructor.
+/// scrollview through its `new_controlled` constructor.
 ///
 /// Some cases where a controller is needed:
 ///
 /// - Jumping to the top or bottom in response to an action, for example scrolling a chat to the
 ///   newest message after sending one.
-/// - Keeping several scrollables in sync, like a diff view with two panes that move together.
+/// - Keeping several scrollviews in sync, like a diff view with two panes that move together.
 /// - Reading the current scroll position to drive something else, such as a "scroll to top" button
 ///   that only appears once the user has scrolled down.
 ///
 /// # Scrolling from code
 ///
-/// [`scroll_to`](ScrollController::scroll_to) queues a jump to the start or end of an axis, applied
-/// on the next layout. This is the common way to snap a list to its top or bottom.
+/// [`scroll_to`](ScrollController::scroll_to) jumps to the start or end of an axis, with the end
+/// resolved against the content on the next layout. This is the common way to snap a list to its
+/// top or bottom.
 ///
 /// ```rust
 /// # use freya::prelude::*;
@@ -89,10 +81,10 @@ enum ScrollEvent {
 /// [`scroll_to_x`](ScrollController::scroll_to_x). The current position is available by converting
 /// the controller into a `(i32, i32)` tuple of `(x, y)` pixels.
 ///
-/// # Keeping scrollables in sync
+/// # Keeping scrollviews in sync
 ///
-/// Because a [`ScrollController`] is a cheap [`Copy`] handle, pass the same one to several
-/// scrollables and they share a single scroll position: moving any of them moves the rest.
+/// Because a [`ScrollController`] is a cheap [`Copy`] handle, you can pass the same one to several
+/// scrollviews and they share a single scroll position, moving any of them moves the rest.
 ///
 /// ```rust
 /// # use freya::prelude::*;
@@ -135,91 +127,45 @@ enum ScrollEvent {
 /// ```
 #[derive(PartialEq, Clone, Copy)]
 pub struct ScrollController {
-    notifier: State<()>,
-    requests: State<Vec<ScrollRequest>>,
-    on_scroll: State<Callback<ScrollEvent, bool>>,
-    get_scroll: State<Callback<(), (i32, i32)>>,
+    scroll: State<(i32, i32)>,
 }
 
 impl From<ScrollController> for (i32, i32) {
     /// Reads the current `(x, y)` scroll position in pixels.
     fn from(val: ScrollController) -> Self {
-        val.get_scroll.read().call(())
+        *val.scroll.read()
     }
 }
 
 impl ScrollController {
-    /// Creates a controller starting at scroll position `(x, y)` with a list of requests to apply.
-    pub fn new(x: i32, y: i32, initial_requests: Vec<ScrollRequest>) -> Self {
-        let mut scroll = State::create((x, y));
+    /// Offset of an axis scrolled to its end, resolved against the content size on the next layout.
+    const END: i32 = i32::MIN;
+
+    /// Creates a controller starting at the scroll position `(x, y)`.
+    pub fn new(x: i32, y: i32) -> Self {
         Self {
-            notifier: State::create(()),
-            requests: State::create(initial_requests),
-            on_scroll: State::create(Callback::new(move |ev| {
-                let current = *scroll.read();
-                match ev {
-                    ScrollEvent::X(x) => {
-                        scroll.write().0 = x;
-                    }
-                    ScrollEvent::Y(y) => {
-                        scroll.write().1 = y;
-                    }
-                }
-                current != *scroll.read()
-            })),
-            get_scroll: State::create(Callback::new(move |_| *scroll.read())),
+            scroll: State::create((x, y)),
         }
     }
 
-    /// Applies any pending requests against the given content size. Called by the scrollable on every layout.
-    pub fn use_apply(&mut self, width: f32, height: f32) {
-        let _ = self.notifier.read();
-        for request in self.requests.write().drain(..) {
-            match request {
-                ScrollRequest {
-                    position: ScrollPosition::Start,
-                    direction: Direction::Vertical,
-                    ..
-                } => {
-                    self.on_scroll.write().call(ScrollEvent::Y(0));
-                }
-                ScrollRequest {
-                    position: ScrollPosition::Start,
-                    direction: Direction::Horizontal,
-                    ..
-                } => {
-                    self.on_scroll.write().call(ScrollEvent::X(0));
-                }
-                ScrollRequest {
-                    position: ScrollPosition::End,
-                    direction: Direction::Vertical,
-                    init,
-                    ..
-                } => {
-                    if init && height == 0. {
-                        continue;
-                    }
-                    let (_x, y) = self.get_scroll.read().call(());
-                    self.on_scroll
-                        .write()
-                        .call(ScrollEvent::Y(y - height as i32));
-                }
-                ScrollRequest {
-                    position: ScrollPosition::End,
-                    direction: Direction::Horizontal,
-                    init,
-                    ..
-                } => {
-                    if init && width == 0. {
-                        continue;
-                    }
+    /// Turns an axis scrolled to its end into a pixel position, once the content size is known.
+    pub(crate) fn apply_layout(&mut self, content_size: Size2D, viewport_size: Size2D) {
+        let (x, y) = *self.scroll.peek();
 
-                    let (x, _y) = self.get_scroll.read().call(());
-                    self.on_scroll
-                        .write()
-                        .call(ScrollEvent::X(x - width as i32));
-                }
-            }
+        if x == Self::END {
+            self.scroll_to_x(get_corrected_scroll_position(
+                content_size.width,
+                viewport_size.width,
+                x as f32,
+            ) as i32);
+        }
+
+        if y == Self::END {
+            self.scroll_to_y(get_corrected_scroll_position(
+                content_size.height,
+                viewport_size.height,
+                y as f32,
+            ) as i32);
         }
     }
 
@@ -230,43 +176,40 @@ impl ScrollController {
 
     /// Scrolls the horizontal axis to `to` pixels. Returns whether the position actually changed.
     pub fn scroll_to_x(&mut self, to: i32) -> bool {
-        self.on_scroll.write().call(ScrollEvent::X(to))
+        let changed = self.scroll.peek().0 != to;
+        if changed {
+            self.scroll.write().0 = to;
+        }
+        changed
     }
 
     /// Scrolls the vertical axis to `to` pixels. Returns whether the position actually changed.
     pub fn scroll_to_y(&mut self, to: i32) -> bool {
-        self.on_scroll.write().call(ScrollEvent::Y(to))
+        let changed = self.scroll.peek().1 != to;
+        if changed {
+            self.scroll.write().1 = to;
+        }
+        changed
     }
 
-    /// Queues a scroll of `scroll_direction` to `scroll_position`, applied on the next layout.
+    /// Scrolls `scroll_direction` to `scroll_position`.
     pub fn scroll_to(&mut self, scroll_position: ScrollPosition, scroll_direction: Direction) {
-        self.requests
-            .write()
-            .push(ScrollRequest::new(scroll_position, scroll_direction));
-        self.notifier.write();
+        let to = scroll_position.offset();
+        match scroll_direction {
+            Direction::Vertical => self.scroll_to_y(to),
+            Direction::Horizontal => self.scroll_to_x(to),
+        };
     }
 }
 
-/// Creates a [`ScrollController`] tied to the component, configured by the returned [`ScrollConfig`].
-pub fn use_scroll_controller(init: impl FnOnce() -> ScrollConfig) -> ScrollController {
+/// Creates a [`ScrollController`], configured by the returned [`ScrollConfig`].
+pub fn use_scroll_controller(config: impl FnOnce() -> ScrollConfig) -> ScrollController {
     use_hook(|| {
-        let config = init();
+        let config = config();
 
         ScrollController::new(
-            0,
-            0,
-            vec![
-                ScrollRequest {
-                    position: config.default_vertical_position,
-                    direction: Direction::Vertical,
-                    init: true,
-                },
-                ScrollRequest {
-                    position: config.default_horizontal_position,
-                    direction: Direction::Horizontal,
-                    init: true,
-                },
-            ],
+            config.default_horizontal_position.offset(),
+            config.default_vertical_position.offset(),
         )
     })
 }
