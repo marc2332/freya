@@ -343,6 +343,7 @@ pub struct ResizablePanel {
     min_size: Option<f32>,
     children: Vec<Element>,
     order: Option<usize>,
+    overflow: Overflow,
 }
 
 impl KeyExt for ResizablePanel {
@@ -365,6 +366,7 @@ impl ResizablePanel {
             min_size: None,
             children: vec![],
             order: None,
+            overflow: Overflow::Clip,
         }
     }
 
@@ -381,6 +383,12 @@ impl ResizablePanel {
 
     pub fn order(mut self, order: impl Into<usize>) -> Self {
         self.order = Some(order.into());
+        self
+    }
+
+    /// Sets how content is clipped inside the panel bounds.
+    pub fn overflow(mut self, overflow: impl Into<Overflow>) -> Self {
+        self.overflow = overflow.into();
         self
     }
 }
@@ -432,7 +440,7 @@ impl Component for ResizablePanel {
             .a11y_role(AccessibilityRole::Pane)
             .width(width)
             .height(height)
-            .overflow(Overflow::Clip)
+            .overflow(self.overflow)
             .children(self.children.clone())
     }
 
