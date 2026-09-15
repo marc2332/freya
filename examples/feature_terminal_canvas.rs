@@ -192,7 +192,7 @@ impl Component for TerminalPanel {
                                                 _ => TerminalMouseButton::Left,
                                             };
                                             let selection_type =
-                                                match EventsCombos::pressed(e.element_location) {
+                                                match EventsCombos::<()>::pressed(e.element_location) {
                                                     PressEventType::Double => {
                                                         SelectionType::Semantic
                                                     }
