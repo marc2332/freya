@@ -22,6 +22,8 @@ use torin::{
         Area,
         Content,
         Direction,
+        Point2D,
+        Vector2D,
     },
     size::Size,
 };
@@ -466,25 +468,27 @@ impl Component for Input {
             };
 
             let cursor_rect = paragraph.cursor_rect(&text, editor.cursor_pos(), text_align);
-            let cursor_x = cursor_rect.left / (*scale_factor as f32) + padding.left();
-
+            let cursor_location =
+                Point2D::new(cursor_rect.left, cursor_rect.top) / (*scale_factor as f32);
+            let visible_cursor_location =
+                cursor_location + Vector2D::new(padding.left(), padding.top());
             // Visible window start
             let visible_start_x = viewport.min_x() - area.peek().min_x();
 
             // Minimally reveal the cursor
-            if cursor_x < visible_start_x {
-                scroll_controller.scroll_to_x(-cursor_x as i32);
-            } else if cursor_x > visible_start_x + viewport.width() {
-                scroll_controller.scroll_to_x(-(cursor_x - viewport.width()) as i32);
+            if visible_cursor_location.x < visible_start_x {
+                scroll_controller.scroll_to_x(-cursor_location.x as i32);
+            } else if visible_cursor_location.x > visible_start_x + viewport.width() {
+                scroll_controller
+                    .scroll_to_x(-(visible_cursor_location.x - viewport.width()) as i32);
             }
 
             if multiline {
-                let cursor_top = cursor_rect.top / (*scale_factor as f32) + padding.top();
                 let cursor_bottom = cursor_rect.bottom / (*scale_factor as f32) + padding.top();
                 let visible_start_y = viewport.min_y() - area.peek().min_y();
 
-                if cursor_top < visible_start_y {
-                    scroll_controller.scroll_to_y(-cursor_top as i32);
+                if visible_cursor_location.y < visible_start_y {
+                    scroll_controller.scroll_to_y(-cursor_location.y as i32);
                 } else if cursor_bottom > visible_start_y + viewport.height() {
                     scroll_controller.scroll_to_y(-(cursor_bottom - viewport.height()) as i32);
                 }
