@@ -16,6 +16,7 @@ use freya_engine::prelude::{
 use torin::prelude::{
     Area,
     Size2D,
+    SizeModel,
 };
 
 use crate::{
@@ -200,12 +201,14 @@ impl ElementExt for LabelElement {
     }
 
     fn measure(&self, context: LayoutContext) -> Option<(Size2D, Rc<dyn Any>)> {
+        let content_area_size =
+            (*context.area_size - context.torin_node.padding.into()).max(Size2D::zero());
         let cached_paragraph = CachedParagraph {
             text_style_state: context.text_style_state,
             spans: &[Span::new(&*self.text)],
             max_lines: self.max_lines,
             line_height: self.line_height,
-            width: context.area_size.width,
+            width: content_area_size.width,
         };
         let paragraph = context
             .text_cache
@@ -242,7 +245,7 @@ impl ElementExt for LabelElement {
                         {
                             f32::MAX
                         } else {
-                            context.area_size.width + 1.0
+                            content_area_size.width + 1.0
                         },
                     );
                     paragraph
@@ -259,7 +262,9 @@ impl ElementExt for LabelElement {
                     .insert(context.node_id, &cached_paragraph, paragraph)
             });
 
-        let size = Size2D::new(paragraph.longest_line(), paragraph.height()).max(Size2D::zero());
+        let size = Size2D::new(paragraph.longest_line(), paragraph.height())
+            .max(Size2D::zero())
+            .with_gaps(&context.torin_node.padding);
 
         Some((size, paragraph))
     }
@@ -285,7 +290,10 @@ impl ElementExt for LabelElement {
         let layout_data = context.layout_node.data.as_ref().unwrap();
         let paragraph = layout_data.downcast_ref::<SkParagraph>().unwrap();
 
-        paragraph.paint_at(context.canvas, context.layout_node.visible_area().origin);
+        paragraph.paint_at(
+            context.canvas,
+            context.layout_node.inner_area.origin.cast_unit(),
+        );
     }
 }
 

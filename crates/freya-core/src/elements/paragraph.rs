@@ -30,11 +30,13 @@ use freya_engine::prelude::{
 };
 use torin::prelude::{
     Area,
+    CursorPoint,
     Length,
     Point2D,
     Position,
     PostMeasure,
     Size2D,
+    SizeModel,
 };
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -103,6 +105,7 @@ pub fn paragraph() -> Paragraph {
 pub struct ParagraphHolderInner {
     pub paragraph: Rc<SkParagraph>,
     pub scale_factor: f64,
+    pub padding: Point2D,
 }
 
 /// A shared slot that receives the laid-out paragraph, so callers can hit-test and measure
@@ -125,6 +128,20 @@ impl Debug for ParagraphHolder {
 impl Default for ParagraphHolder {
     fn default() -> Self {
         Self(Rc::new(RefCell::new(None)))
+    }
+}
+
+impl ParagraphHolder {
+    pub fn relative_location(&self, location: CursorPoint) -> CursorPoint {
+        let holder_data = self.0.borrow();
+        let Some(holder) = holder_data.as_ref() else {
+            return location;
+        };
+
+        CursorPoint::new(
+            location.x - f64::from(holder.padding.x) / holder.scale_factor,
+            location.y - f64::from(holder.padding.y) / holder.scale_factor,
+        )
     }
 }
 
@@ -295,12 +312,14 @@ impl ElementExt for ParagraphElement {
     }
 
     fn measure(&self, context: LayoutContext) -> Option<(Size2D, Rc<dyn Any>)> {
+        let content_area_size =
+            (*context.area_size - context.torin_node.padding.into()).max(Size2D::zero());
         let cached_paragraph = CachedParagraph {
             text_style_state: context.text_style_state,
             spans: &self.spans,
             max_lines: self.max_lines,
             line_height: self.line_height,
-            width: context.area_size.width,
+            width: content_area_size.width,
         };
         let paragraph = context
             .text_cache
@@ -316,7 +335,7 @@ impl ElementExt for ParagraphElement {
                 {
                     f32::MAX
                 } else {
-                    context.area_size.width + 1.0
+                    content_area_size.width + 1.0
                 };
 
                 let paragraph = self.build_paragraph(
@@ -332,7 +351,9 @@ impl ElementExt for ParagraphElement {
                     .insert(context.node_id, &cached_paragraph, paragraph)
             });
 
-        let size = Size2D::new(paragraph.longest_line(), paragraph.height()).max(Size2D::zero());
+        let size = Size2D::new(paragraph.longest_line(), paragraph.height())
+            .max(Size2D::zero())
+            .with_gaps(&context.torin_node.padding);
 
         self.sk_paragraph
             .0
@@ -340,6 +361,10 @@ impl ElementExt for ParagraphElement {
             .replace(ParagraphHolderInner {
                 paragraph,
                 scale_factor: context.scale_factor,
+                padding: Point2D::new(
+                    context.torin_node.padding.left(),
+                    context.torin_node.padding.top(),
+                ),
             });
 
         Some((size, Rc::new(())))
@@ -401,14 +426,18 @@ impl ElementExt for ParagraphElement {
             .replace(ParagraphHolderInner {
                 paragraph: Rc::new(paragraph),
                 scale_factor: context.scale_factor,
+                padding: Point2D::new(
+                    self.layout.layout.padding.left(),
+                    self.layout.layout.padding.top(),
+                ),
             });
 
-        let visible_area = context.node_layout.visible_area();
+        let inner_area = context.node_layout.inner_area;
         let vertical_offset = match self.vertical_align {
             VerticalAlign::Start => 0.0,
-            VerticalAlign::Center => (visible_area.height() - paragraph_height).max(0.0) / 2.0,
+            VerticalAlign::Center => (inner_area.height() - paragraph_height).max(0.0) / 2.0,
         };
-        let origin = visible_area.origin;
+        let origin = inner_area.origin;
 
         let mut offsets = Vec::new();
         let mut hidden_children = Vec::new();
@@ -441,15 +470,15 @@ impl ElementExt for ParagraphElement {
     fn render(&self, context: RenderContext) {
         let paragraph = self.sk_paragraph.0.borrow();
         let ParagraphHolderInner { paragraph, .. } = paragraph.as_ref().unwrap();
-        let visible_area = context.layout_node.visible_area();
+        let inner_area = context.layout_node.inner_area;
 
         let cursor_area = match self.cursor_mode {
-            CursorMode::Fit => visible_area,
+            CursorMode::Fit => inner_area.cast_unit(),
             CursorMode::Expanded => context.layout_node.area,
         };
 
         let paragraph_height = paragraph.height();
-        let area_height = visible_area.height();
+        let area_height = inner_area.height();
         let vertical_offset = match self.vertical_align {
             VerticalAlign::Start => 0.0,
             VerticalAlign::Center => (area_height - paragraph_height).max(0.0) / 2.0,
@@ -536,7 +565,7 @@ impl ElementExt for ParagraphElement {
         // Draw text
         paragraph.paint_at(
             context.canvas,
-            Point2D::new(visible_area.min_x(), visible_area.min_y() + vertical_offset),
+            Point2D::new(inner_area.min_x(), inner_area.min_y() + vertical_offset).cast_unit(),
         );
 
         // Draw cursor

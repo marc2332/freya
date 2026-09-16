@@ -57,10 +57,12 @@ impl EditableEvent<'_> {
                 editor_line,
                 holder,
             } => {
+                let location = holder.relative_location(location);
                 let holder = holder.0.borrow();
                 let ParagraphHolderInner {
                     paragraph,
                     scale_factor,
+                    ..
                 } = holder.as_ref().unwrap();
 
                 let mut text_editor = editor.write();
@@ -142,6 +144,7 @@ impl EditableEvent<'_> {
                 editor_line,
                 holder,
             } => {
+                let location = holder.relative_location(location);
                 if dragging.peek().clicked {
                     EventsCombos::moved(location);
 
@@ -149,6 +152,7 @@ impl EditableEvent<'_> {
                     let ParagraphHolderInner {
                         paragraph,
                         scale_factor,
+                        ..
                     } = paragraph.as_ref().unwrap();
 
                     let dist_position = location.mul(*scale_factor);
