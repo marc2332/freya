@@ -36,6 +36,7 @@
 //! - [UI and Components](self::_docs::ui_and_components)
 //! - [Elements](self::elements)
 //! - [Events](self::_docs::events)
+//! - [Fonts](self::_docs::fonts)
 //! - [Hooks](self::_docs::hooks)
 //! - [State](self::_docs::state_management)
 //! - [Async](self::_docs::_async)
