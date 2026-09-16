@@ -132,7 +132,7 @@ impl Default for ParagraphHolder {
 }
 
 impl ParagraphHolder {
-    pub fn relative_location(&self, location: CursorPoint) -> CursorPoint {
+    pub fn visible_location(&self, location: CursorPoint) -> CursorPoint {
         let holder_data = self.0.borrow();
         let Some(holder) = holder_data.as_ref() else {
             return location;

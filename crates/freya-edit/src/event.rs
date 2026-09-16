@@ -57,7 +57,7 @@ impl EditableEvent<'_> {
                 editor_line,
                 holder,
             } => {
-                let location = holder.relative_location(location);
+                let location = holder.visible_location(location);
                 let holder = holder.0.borrow();
                 let ParagraphHolderInner {
                     paragraph,
@@ -144,7 +144,7 @@ impl EditableEvent<'_> {
                 editor_line,
                 holder,
             } => {
-                let location = holder.relative_location(location);
+                let location = holder.visible_location(location);
                 if dragging.peek().clicked {
                     EventsCombos::moved(location);
 
