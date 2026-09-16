@@ -46,7 +46,7 @@ define_theme! {
     pub InputLayout {
         %[fields]
         corner_radius: CornerRadius,
-        inner_margin: Gaps,
+        padding: Gaps,
     }
 }
 
@@ -432,7 +432,7 @@ impl Component for Input {
 
         let mode = self.mode;
         let text_align = self.text_align;
-        let inner_margin = theme_layout.inner_margin;
+        let padding = theme_layout.padding;
         let multiline = self.multiline;
         let mut follow_cursor = move || {
             if !a11y_id.is_focused() || display_placeholder {
@@ -466,7 +466,7 @@ impl Component for Input {
             };
 
             let cursor_rect = paragraph.cursor_rect(&text, editor.cursor_pos(), text_align);
-            let cursor_x = cursor_rect.left / (*scale_factor as f32) + inner_margin.left();
+            let cursor_x = cursor_rect.left / (*scale_factor as f32) + padding.left();
 
             // Visible window start
             let visible_start_x = viewport.min_x() - area.peek().min_x();
@@ -479,9 +479,8 @@ impl Component for Input {
             }
 
             if multiline {
-                let cursor_top = cursor_rect.top / (*scale_factor as f32) + inner_margin.top();
-                let cursor_bottom =
-                    cursor_rect.bottom / (*scale_factor as f32) + inner_margin.top();
+                let cursor_top = cursor_rect.top / (*scale_factor as f32) + padding.top();
+                let cursor_bottom = cursor_rect.bottom / (*scale_factor as f32) + padding.top();
                 let visible_start_y = viewport.min_y() - area.peek().min_y();
 
                 if cursor_top < visible_start_y {
@@ -797,7 +796,7 @@ impl Component for Input {
                             .min_width(Size::percent(100.))
                             .maybe(self.multiline, |el| el.max_width(Size::percent(100.)))
                             .maybe(self.enabled, |el| el.on_focus_press(on_focus_press))
-                            .padding(theme_layout.inner_margin)
+                            .padding(theme_layout.padding)
                             .cursor_index(cursor_index)
                             .cursor_color(cursor_color)
                             .color(color)
