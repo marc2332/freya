@@ -555,12 +555,8 @@ pub fn virtual_scroll_view_keyboard_navigation() {
         "0 Hello, World!"
     );
 
-    // Focus the scrollview by clicking and dragging on the scrollbar, then moving back
-    test.move_cursor((495., 20.));
-    test.sync_and_update();
+    // Focus the scrollview without changing its scroll position.
     test.press_cursor((495., 20.));
-    test.sync_and_update();
-    test.move_cursor((495., 25.));
     test.sync_and_update();
     test.move_cursor((495., 20.));
     test.sync_and_update();
@@ -664,12 +660,8 @@ pub fn virtual_scroll_view_keyboard_navigation_horizontal() {
         "0"
     );
 
-    // Focus the scrollview by clicking and dragging on the scrollbar, then moving back
-    test.move_cursor((20., 495.));
-    test.sync_and_update();
+    // Focus the scrollview without changing its scroll position.
     test.press_cursor((20., 495.));
-    test.sync_and_update();
-    test.move_cursor((25., 495.));
     test.sync_and_update();
     test.move_cursor((20., 495.));
     test.sync_and_update();
