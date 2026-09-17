@@ -118,6 +118,7 @@ pub mod prelude {
         WinitPlatformExt,
         config::{
             CloseDecision,
+            GpuResourceCacheLimit,
             LaunchConfig,
             RendererPreference,
             WindowConfig,
