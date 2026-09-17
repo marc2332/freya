@@ -1,8 +1,19 @@
+use freya_animation::prelude::{
+    AnimNum,
+    AnimatedValue,
+    Ease,
+    Function,
+    OnChange,
+    OnCreation,
+    ReadAnimatedValue,
+    use_animation_with_dependencies,
+};
 use freya_core::prelude::*;
 use torin::{
     prelude::{
         Alignment,
         Direction,
+        Gaps,
         Position,
     },
     size::Size,
@@ -13,7 +24,10 @@ use crate::{
     get_theme,
     scrollviews::{
         ScrollThumb,
-        shared::Axis,
+        shared::{
+            Axis,
+            SCROLLBAR_MARGIN,
+        },
     },
 };
 
@@ -23,16 +37,11 @@ define_theme! {
         %[fields]
         background: Color,
         thumb_background: Color,
+        visible_thumb_background: Color,
         hover_thumb_background: Color,
         active_thumb_background: Color,
         size: f32,
     }
-}
-
-#[derive(Clone, Copy, PartialEq, Debug)]
-enum ScrollBarState {
-    Idle,
-    Hovering,
 }
 
 #[derive(Clone, PartialEq)]
@@ -42,61 +51,90 @@ pub struct ScrollBar {
     pub axis: Axis,
     pub offset: f32,
     pub size: Size,
-    pub thumb: ScrollThumb,
+    pub thumb_size: f32,
 }
 
 impl ComponentOwned for ScrollBar {
     fn render(self) -> impl IntoElement {
         let scrollbar_theme = get_theme!(&self.theme, ScrollBarThemePreference, "scrollbar");
 
-        let mut state = use_state(|| ScrollBarState::Idle);
+        let mut hovering = use_state(|| false);
 
-        let (cross_size, cross_offset, opacity) = match *state.read() {
-            _ if self.clicking_scrollbar.read().is_some() => (16., 0., 160),
-            ScrollBarState::Idle => (12., 3., 0),
-            ScrollBarState::Hovering => (16., 0., 160),
-        };
+        let is_expanded = self.clicking_scrollbar.read().is_some() || *hovering.read();
+
+        let animation = use_animation_with_dependencies(&is_expanded, |conf, is_expanded| {
+            conf.on_creation(OnCreation::Finish);
+            conf.on_change(OnChange::Rerun);
+
+            let expand = |from: f32, to: f32| {
+                AnimNum::new(from, to)
+                    .time(207)
+                    .function(Function::Expo)
+                    .ease(Ease::Out)
+            };
+            let value = (
+                expand(5., 8.),
+                expand(0., 220.),
+                expand(0., SCROLLBAR_MARGIN),
+            );
+
+            if *is_expanded {
+                value
+            } else {
+                value.into_reversed()
+            }
+        });
+        let (cross_size, opacity, cross_gap) = animation.get().value();
 
         let (
             width,
             height,
             offset_x,
             offset_y,
-            inner_offset_x,
-            inner_offset_y,
-            inner_width,
-            inner_height,
+            bar_width,
+            bar_height,
+            bar_margin,
+            thumb_width,
+            thumb_height,
+            thumb_offset_x,
+            thumb_offset_y,
         ) = match self.axis {
             Axis::X => (
-                self.size.clone(),
-                Size::px(16.),
+                self.size,
+                Size::px(20.),
                 0.,
-                -16.,
-                self.offset,
-                cross_offset,
-                self.size.clone(),
+                -20.,
+                Size::fill(),
                 Size::px(cross_size),
+                Gaps::new(0., SCROLLBAR_MARGIN, cross_gap, SCROLLBAR_MARGIN),
+                Size::Inner,
+                Size::px(20.),
+                self.offset + SCROLLBAR_MARGIN,
+                0.,
             ),
             Axis::Y => (
-                Size::px(16.),
-                self.size.clone(),
-                -16.,
+                Size::px(20.),
+                self.size,
+                -20.,
                 0.,
-                cross_offset,
-                self.offset,
                 Size::px(cross_size),
-                self.size.clone(),
+                Size::fill(),
+                Gaps::new(SCROLLBAR_MARGIN, cross_gap, SCROLLBAR_MARGIN, 0.),
+                Size::px(20.),
+                Size::Inner,
+                0.,
+                self.offset + SCROLLBAR_MARGIN,
             ),
         };
 
         let on_pointer_over = move |_| {
             if !cfg!(target_os = "android") {
-                state.set(ScrollBarState::Hovering);
+                hovering.set_if_modified(true);
             }
         };
         let on_pointer_out = move |_| {
             if !cfg!(target_os = "android") {
-                state.set(ScrollBarState::Idle);
+                hovering.set_if_modified(false);
             }
         };
 
@@ -121,16 +159,38 @@ impl ComponentOwned for ScrollBar {
                         Direction::horizontal()
                     })
                     .cross_align(Alignment::end())
-                    .background(scrollbar_theme.background.with_a(opacity))
                     .on_pointer_over(on_pointer_over)
                     .on_pointer_out(on_pointer_out)
                     .child(
                         rect()
-                            .width(inner_width)
-                            .height(inner_height)
-                            .offset_x(inner_offset_x)
-                            .offset_y(inner_offset_y)
-                            .child(self.thumb),
+                            .width(bar_width)
+                            .height(bar_height)
+                            .margin(bar_margin)
+                            .background(scrollbar_theme.background.with_a(opacity as u8))
+                            .corner_radius(8.)
+                            .shadow(Shadow::new().blur(6.).color((
+                                0,
+                                0,
+                                0,
+                                (opacity * 0.28) as u8,
+                            ))),
+                    )
+                    .child(
+                        rect()
+                            .position(Position::new_absolute())
+                            .width(thumb_width)
+                            .height(thumb_height)
+                            .offset_x(thumb_offset_x)
+                            .offset_y(thumb_offset_y)
+                            .child(ScrollThumb {
+                                theme: self.theme,
+                                clicking_scrollbar: self.clicking_scrollbar,
+                                axis: self.axis,
+                                size: self.thumb_size,
+                                cross_size,
+                                cross_gap,
+                                bar_hovered: is_expanded,
+                            }),
                     ),
             )
     }

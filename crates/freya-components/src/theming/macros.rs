@@ -313,6 +313,11 @@ impl ResolvablePreference<Color> for Preference<Color> {
                 "surface_inverse_secondary" => colors_sheet.surface_inverse_secondary,
                 "surface_inverse_tertiary" => colors_sheet.surface_inverse_tertiary,
 
+                "contrast" => colors_sheet.contrast,
+                "contrast_secondary" => colors_sheet.contrast_secondary,
+                "contrast_tertiary" => colors_sheet.contrast_tertiary,
+                "contrast_quaternary" => colors_sheet.contrast_quaternary,
+
                 // Borders
                 "border" => colors_sheet.border,
                 "border_focus" => colors_sheet.border_focus,

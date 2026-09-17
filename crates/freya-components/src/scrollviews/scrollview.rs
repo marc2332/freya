@@ -20,7 +20,6 @@ use crate::scrollviews::{
     ScrollBarThemePartial,
     ScrollConfig,
     ScrollController,
-    ScrollThumb,
     shared::{
         Axis,
         get_container_sizes,
@@ -252,13 +251,14 @@ impl Component for ScrollView {
             ),
         );
 
-        let horizontal_scrollbar_is_visible = !timeout.elapsed()
+        let is_visible = !timeout.elapsed() || clicking_scrollbar.read().is_some();
+        let horizontal_scrollbar_is_visible = is_visible
             && is_scrollbar_visible(
                 self.show_scrollbar,
                 size.read().inner_sizes.width,
                 size.read().area.width(),
             );
-        let vertical_scrollbar_is_visible = !timeout.elapsed()
+        let vertical_scrollbar_is_visible = is_visible
             && is_scrollbar_visible(
                 self.show_scrollbar,
                 size.read().inner_sizes.height,
@@ -532,12 +532,7 @@ impl Component for ScrollView {
                             axis: Axis::Y,
                             offset: scrollbar_y,
                             size: Size::px(size.read().area.height()),
-                            thumb: ScrollThumb {
-                                theme: self.scrollbar_theme.clone(),
-                                clicking_scrollbar,
-                                axis: Axis::Y,
-                                size: scrollbar_height,
-                            },
+                            thumb_size: scrollbar_height,
                         })
                     })),
             )
@@ -548,12 +543,7 @@ impl Component for ScrollView {
                     axis: Axis::X,
                     offset: scrollbar_x,
                     size: Size::px(size.read().area.width()),
-                    thumb: ScrollThumb {
-                        theme: self.scrollbar_theme.clone(),
-                        clicking_scrollbar,
-                        axis: Axis::X,
-                        size: scrollbar_width,
-                    },
+                    thumb_size: scrollbar_width,
                 })
             }))
     }
