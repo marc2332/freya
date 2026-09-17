@@ -24,7 +24,7 @@ fn editor_app() -> impl IntoElement {
 }
 
 fn line_text(line: &TestingNode) -> String {
-    let element = line.children()[1].element();
+    let element = line.children()[0].element();
     let paragraph = Paragraph::try_downcast(&*element).unwrap();
     paragraph
         .spans
@@ -40,8 +40,29 @@ pub fn code_editor_scrolls_to_cursor() {
 
     let scrollview = test
         .find(|node, element| {
+            let containers = node.children();
+            let contents = containers.first().map(TestingNode::children);
+            let lines = contents
+                .as_ref()
+                .and_then(|content| content.first())
+                .map(TestingNode::children);
+            let has_paragraph = lines
+                .as_ref()
+                .and_then(|lines| lines.first())
+                .map(|line| {
+                    let children = line.children();
+                    children
+                        .first()
+                        .map(|paragraph| Paragraph::try_downcast(&*paragraph.element()).is_some())
+                        .unwrap_or(false)
+                })
+                .unwrap_or(false);
+
             Rect::try_downcast(element)
-                .filter(|rect| rect.accessibility.builder.role() == AccessibilityRole::ScrollView)
+                .filter(|rect| {
+                    rect.accessibility.builder.role() == AccessibilityRole::ScrollView
+                        && has_paragraph
+                })
                 .map(move |_| node)
         })
         .unwrap();
