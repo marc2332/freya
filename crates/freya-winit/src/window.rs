@@ -443,9 +443,7 @@ impl AppWindow {
 
     /// Resolve the cursor icon from the hovered nodes and update the window cursor if it changed.
     pub(crate) fn update_cursor_icon(&mut self) {
-        if self.mouse_state == ElementState::Pressed
-            || self.position == CursorPoint::from((-1., -1.))
-        {
+        if self.position == CursorPoint::from((-1., -1.)) {
             return;
         }
         let cursor_icon = self.tree.cursor_icon(&self.nodes_state);
