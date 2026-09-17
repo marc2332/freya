@@ -11,10 +11,14 @@ use freya_components::{
 };
 use freya_core::prelude::*;
 use freya_edit::EditableEvent;
+use torin::size::Size;
 
 use crate::{
     editor_data::CodeEditorData,
-    editor_line::EditorLineUI,
+    editor_line::{
+        EditorGutterLineUI,
+        EditorLineUI,
+    },
     editor_theme::{
         EditorTheme,
         EditorThemePartial,
@@ -270,6 +274,9 @@ impl Component for CodeEditor {
             }
         };
 
+        let gutter_editor = editor.clone();
+        let gutter_theme = theme.clone();
+
         let on_sized = {
             let mut editor = editor.clone();
             move |e: Event<SizedEventData>| {
@@ -293,26 +300,49 @@ impl Component for CodeEditor {
             })
             .on_global_pointer_press(on_global_pointer_press)
             .child(
-                VirtualScrollView::new(move |item, _| {
-                    EditorLineUI {
-                        editor: editor.clone(),
-                        font_size,
-                        line_height,
-                        line_index: item.index,
-                        read_only,
-                        gutter,
-                        show_whitespace,
-                        font_family: font_family.clone(),
-                        cursor_mode,
-                        theme: theme.clone(),
-                        a11y_id,
-                    }
-                    .into()
-                })
-                .scroll_controller(scroll_controller)
-                .on_sized(on_sized)
-                .length(lines_len)
-                .item_size(line_height),
+                rect()
+                    .horizontal()
+                    .maybe_child(gutter.then(|| {
+                        let gutter_width = font_size * 5.0;
+                        VirtualScrollView::new(move |item, _| {
+                            EditorGutterLineUI {
+                                editor: gutter_editor.clone(),
+                                font_size,
+                                line_height,
+                                line_index: item.index,
+                                theme: gutter_theme.clone(),
+                            }
+                            .into()
+                        })
+                        .width(Size::px(gutter_width))
+                        .show_scrollbar(false)
+                        .scroll_controller(scroll_controller)
+                        .length(lines_len)
+                        .item_size(line_height)
+                    }))
+                    .child(
+                        VirtualScrollView::new(move |item, _| {
+                            EditorLineUI {
+                                editor: editor.clone(),
+                                font_size,
+                                line_height,
+                                line_index: item.index,
+                                read_only,
+                                show_whitespace,
+                                font_family: font_family.clone(),
+                                cursor_mode,
+                                theme: theme.clone(),
+                                a11y_id,
+                                scroll_controller,
+                            }
+                            .into()
+                        })
+                        .expanded()
+                        .scroll_controller(scroll_controller)
+                        .on_sized(on_sized)
+                        .length(lines_len)
+                        .item_size(line_height),
+                    ),
             )
     }
 }

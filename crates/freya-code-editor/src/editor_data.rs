@@ -57,7 +57,7 @@ impl CodeEditorData {
         data
     }
 
-    /// Scrolls the given controller vertically just enough to make the cursor line visible.
+    /// Scrolls the given controller just enough to make the cursor visible.
     ///
     /// Returns whether the scroll position changed.
     pub fn scroll_to_cursor(
@@ -65,24 +65,49 @@ impl CodeEditorData {
         mut scroll_controller: ScrollController,
         line_height: f32,
     ) -> bool {
-        if self.viewport.height <= 0. || line_height <= 0. {
+        if self.viewport.width <= 0.
+            || self.viewport.height <= 0.
+            || line_height <= 0.
+            || self.metrics.char_width <= 0.
+        {
             return false;
         }
 
-        let (_, scroll_y) = scroll_controller.into();
-        let scrolled = -scroll_y as f32;
+        let (scroll_x, scroll_y) = scroll_controller.into();
+        let scrolled_x = -scroll_x as f32;
+        let scrolled_y = -scroll_y as f32;
+        let cursor_left = self.cursor_col() as f32 * self.metrics.char_width;
+        let cursor_right = cursor_left + self.metrics.char_width;
         let cursor_top = self.cursor_row() as f32 * line_height;
         let cursor_bottom = cursor_top + line_height;
 
-        let target = if cursor_top < scrolled {
-            cursor_top
-        } else if cursor_bottom > scrolled + self.viewport.height {
-            cursor_bottom - self.viewport.height
+        let horizontal_target = if cursor_left < scrolled_x {
+            Some(cursor_left)
+        } else if cursor_right > scrolled_x + self.viewport.width {
+            Some(cursor_right - self.viewport.width)
         } else {
-            return false;
+            None
         };
 
-        scroll_controller.scroll_to_y(-target as i32)
+        let vertical_target = if cursor_top < scrolled_y {
+            Some(cursor_top)
+        } else if cursor_bottom > scrolled_y + self.viewport.height {
+            Some(cursor_bottom - self.viewport.height)
+        } else {
+            None
+        };
+
+        let mut changed = false;
+
+        if let Some(target) = horizontal_target {
+            changed |= scroll_controller.scroll_to_x(-target as i32);
+        }
+
+        if let Some(target) = vertical_target {
+            changed |= scroll_controller.scroll_to_y(-target as i32);
+        }
+
+        changed
     }
 
     /// Reconfigures the highlighter with the current language and theme.
