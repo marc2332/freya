@@ -5,12 +5,20 @@ use torin::{
     size::Size,
 };
 
-use crate::svg_viewer::SvgViewer;
+use crate::{
+    get_theme,
+    icons::{
+        IconTheme,
+        IconThemePartial,
+        IconThemePreference,
+    },
+    svg_viewer::SvgViewer,
+};
 
 #[derive(Clone, PartialEq)]
 pub struct TickIcon {
     layout: LayoutData,
-    fill: Color,
+    pub(crate) theme: Option<IconThemePartial>,
 }
 
 impl LayoutExt for TickIcon {
@@ -36,7 +44,7 @@ impl TickIcon {
                 ..Default::default()
             }
             .into(),
-            fill: Color::BLACK,
+            theme: None,
         }
     }
 
@@ -44,15 +52,11 @@ impl TickIcon {
         self.layout.margin = margin.into();
         self
     }
-
-    pub fn fill(mut self, fill: impl Into<Color>) -> Self {
-        self.fill = fill.into();
-        self
-    }
 }
 
 impl Component for TickIcon {
     fn render(&self) -> impl IntoElement {
+        let IconTheme { fill } = get_theme!(&self.theme, IconThemePreference, "icon");
         SvgViewer::new(
             r#"
             <svg viewBox="0 0 333 263" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -65,6 +69,6 @@ impl Component for TickIcon {
         .width(self.layout.width.clone())
         .height(self.layout.height.clone())
         .margin(self.layout.margin)
-        .fill(self.fill)
+        .fill(fill)
     }
 }
