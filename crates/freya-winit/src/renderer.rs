@@ -604,7 +604,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 app.window.request_redraw();
                             }
                             UserEvent::OpenUrl(url) => {
-                                let _ = open::that(url);
+                                if let Err(error) = open::that(&url) {
+                                    tracing::error!(%error, %url, "Failed to open URL");
+                                }
                             }
                             UserEvent::SetCustomScaleFactor(custom_scale_factor) => {
                                 app.set_custom_scale_factor(custom_scale_factor);
