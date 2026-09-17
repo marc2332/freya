@@ -67,6 +67,7 @@ use crate::{
         Color,
         ContainerExt,
         ContainerPositionExt,
+        EffectExt,
         EventHandlersExt,
         KeyExt,
         LayerExt,
@@ -153,6 +154,7 @@ pub struct ParagraphElement {
     pub cursor_style: CursorStyle,
     pub cursor_mode: CursorMode,
     pub vertical_align: VerticalAlign,
+    pub effect: Option<EffectData>,
 }
 
 impl Default for ParagraphElement {
@@ -176,6 +178,7 @@ impl Default for ParagraphElement {
             cursor_style: CursorStyle::default(),
             cursor_mode: CursorMode::default(),
             vertical_align: VerticalAlign::default(),
+            effect: None,
         }
     }
 }
@@ -224,6 +227,10 @@ impl ElementExt for ParagraphElement {
             diff.insert(DiffModifies::LAYER);
         }
 
+        if self.effect != paragraph.effect {
+            diff.insert(DiffModifies::EFFECT);
+        }
+
         if self.text_style_data != paragraph.text_style_data {
             diff.insert(DiffModifies::STYLE);
         }
@@ -262,7 +269,7 @@ impl ElementExt for ParagraphElement {
         Cow::Borrowed(&self.layout)
     }
     fn effect(&'_ self) -> Option<Cow<'_, EffectData>> {
-        None
+        self.effect.as_ref().map(Cow::Borrowed)
     }
 
     fn style(&'_ self) -> Cow<'_, StyleState> {
@@ -970,6 +977,12 @@ impl AccessibilityExt for Paragraph {
 impl TextStyleExt for Paragraph {
     fn get_text_style_data(&mut self) -> &mut TextStyleData {
         &mut self.element.text_style_data
+    }
+}
+
+impl EffectExt for Paragraph {
+    fn get_effect(&mut self) -> &mut EffectData {
+        self.element.effect.get_or_insert_with(EffectData::default)
     }
 }
 
