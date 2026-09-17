@@ -6,7 +6,11 @@ use std::{
 };
 
 use accesskit_winit::WindowEvent as AccessibilityWindowEvent;
-use freya_core::integration::*;
+use freya_components::cache::AssetCacher;
+use freya_core::{
+    integration::*,
+    metrics::Metrics,
+};
 use freya_engine::prelude::{
     FontCollection,
     FontMgr,
@@ -858,6 +862,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             }
                         }
 
+                        let resource_cache = app.driver.resource_cache_usage();
                         let present_result = app.driver.present(
                             app.window.inner_size().cast(),
                             &app.window,
@@ -883,6 +888,18 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
 
                                 render_pipeline.render();
 
+                                let cached_assets = app.runner.with_root_context(|| {
+                                    AssetCacher::try_get()
+                                        .map(|asset_cacher| asset_cacher.cached_size())
+                                        .unwrap_or_default()
+                                });
+                                let metrics = Metrics::new(
+                                    &app.runner,
+                                    &app.tree,
+                                    cached_assets,
+                                    resource_cache,
+                                );
+
                                 self.plugins.send(
                                     PluginEvent::AfterRender {
                                         window: &app.window,
@@ -890,6 +907,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                         font_collection: &self.font_collection,
                                         tree: &app.tree,
                                         animation_clock: &app.animation_clock,
+                                        metrics,
                                     },
                                     PluginHandle::new(&self.proxy),
                                 );

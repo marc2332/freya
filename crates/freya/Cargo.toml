@@ -59,7 +59,7 @@ all-debug = [
   "all",
   "dep:freya-testing",
   "dep:freya-plotters-backend",
-  "performance",
+  "metrics",
   "web",
 ]
 all-tests = [
@@ -83,7 +83,7 @@ all-tests = [
 ]
 docs = ["all-debug"]
 # Features
-winit = ["dep:freya-winit", "dep:freya-performance-plugin"]
+winit = ["dep:freya-winit", "dep:freya-metrics-plugin"]
 gpu = ["freya-winit?/gpu"]
 router = [
   "dep:freya-router",
@@ -94,7 +94,7 @@ remote-asset = ["freya-components/remote-asset", "freya-markdown?/remote-asset"]
 i18n = ["dep:freya-i18n"]
 engine = []
 devtools = ["dep:freya-devtools", "freya-core/devtools"]
-performance = ["winit"]
+metrics = ["winit"]
 plot = ["dep:plotters", "dep:freya-plotters-backend"]
 hotreload = ["winit", "freya-core/hotreload", "freya-winit/hotreload"]
 gif = ["freya-components/gif"]
@@ -147,7 +147,7 @@ freya-borderless-plugin = { workspace = true, optional = true }
 freya-web = { workspace = true, optional = true }
 
 # Performance
-freya-performance-plugin = { workspace = true, optional = true }
+freya-metrics-plugin = { workspace = true, optional = true }
 freya-material-design = { workspace = true, optional = true }
 freya-testing = { workspace = true, optional = true }
 

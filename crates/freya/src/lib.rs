@@ -98,7 +98,7 @@
 //!
 //! ## Misc features
 //! - `devtools`: Enables devtools support.
-//! - `performance`: Reexports the performance overlay plugin. The plugin is auto-added in debug builds.
+//! - `metrics`: Reexports the metrics overlay plugin. The plugin is auto-added in debug builds.
 //! - `vulkan`: Enables Vulkan rendering support.
 //! - `hotpath`: Enables Freya's internal usage of hotpath.
 //! - `hotreload`: Enables hot reload support via the `dx` CLI from `dioxus-cli`. See [Hot Reload](self::_docs::hot_reload).
@@ -140,8 +140,8 @@ pub mod prelude {
         #[cfg(feature = "devtools")]
         let launch_config = launch_config.with_plugin(freya_devtools::DevtoolsPlugin::default());
         #[cfg(debug_assertions)]
-        let launch_config = launch_config
-            .with_plugin(freya_performance_plugin::PerformanceOverlayPlugin::default());
+        let launch_config =
+            launch_config.with_plugin(freya_metrics_plugin::MetricsPlugin::default());
         freya_winit::launch(launch_config)
     }
 
@@ -397,11 +397,11 @@ pub mod video {
     pub use freya_video::*;
 }
 
-/// Reexport `freya-performance-plugin` when the `performance` feature is enabled.
-#[cfg(feature = "performance")]
-#[cfg_attr(feature = "docs", doc(cfg(feature = "performance")))]
-pub mod performance {
-    pub use freya_performance_plugin::*;
+/// Reexport `freya-metrics-plugin` when the `metrics` feature is enabled.
+#[cfg(feature = "metrics")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "metrics")))]
+pub mod metrics {
+    pub use freya_metrics_plugin::*;
 }
 
 /// Reexport `freya-borderless-plugin` when the `borderless` feature is enabled.

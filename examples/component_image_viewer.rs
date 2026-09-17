@@ -23,6 +23,7 @@ fn app() -> impl IntoElement {
         .center()
         .child(
             ImageViewer::new(uri)
+                .decode_mode(DecodeMode::Custom(Size2D::new(800., 600.)))
                 .width(Size::percent(25.))
                 .a11y_alt("Beautiful landscape."),
         )
