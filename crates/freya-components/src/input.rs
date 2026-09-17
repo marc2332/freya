@@ -480,17 +480,17 @@ impl Component for Input {
                 scroll_controller.scroll_to_x(-cursor_location.x as i32);
             } else if visible_cursor_location.x > visible_start_x + viewport.width() {
                 scroll_controller
-                    .scroll_to_x(-(visible_cursor_location.x - viewport.width()) as i32);
+                    .scroll_to_x(-(area.peek().width() - viewport.width()).max(0.0) as i32);
             }
 
             if multiline {
-                let cursor_bottom = cursor_rect.bottom / (*scale_factor as f32) + padding.top();
+                let cursor_bottom = cursor_rect.bottom / (*scale_factor as f32) + padding.bottom();
                 let visible_start_y = viewport.min_y() - area.peek().min_y();
 
                 if visible_cursor_location.y < visible_start_y {
                     scroll_controller.scroll_to_y(-cursor_location.y as i32);
                 } else if cursor_bottom > visible_start_y + viewport.height() {
-                    scroll_controller.scroll_to_y(-(cursor_bottom - viewport.height()) as i32);
+                    scroll_controller.scroll_to_y(-(cursor_location.y - viewport.height()) as i32);
                 }
             }
         };
