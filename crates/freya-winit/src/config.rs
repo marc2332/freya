@@ -288,6 +288,11 @@ impl From<usize> for GpuResourceCacheLimit {
 }
 
 impl GpuResourceCacheLimit {
+    /// Creates a custom cache limit from a number of mebibytes.
+    pub const fn from_mb(megabytes: usize) -> Self {
+        Self::Custom(megabytes * 1024 * 1024)
+    }
+
     /// Returns the cache limit in bytes.
     pub const fn bytes(self) -> usize {
         match self {
