@@ -1,26 +1,20 @@
 //! # Fonts
 //!
-//! Freya uses the fonts available to its renderer. You can use the platform's default fonts, embed
+//! Freya makes the fonts installed in your system available to your app, but you can also embed
 //! fonts in your application, or load them while the application is running.
 //!
 //! ## Choosing a font
 //!
 //! Set the font family on an element with [`font_family`](freya_core::elements::extensions::TextStyleExt::font_family).
-//! The family name must match the name registered with Freya, not necessarily the name of the font
-//! file. Font properties such as [`font_size`](freya_core::elements::extensions::TextStyleExt::font_size),
-//! [`font_weight`](freya_core::elements::extensions::TextStyleExt::font_weight), and
-//! [`font_slant`](freya_core::elements::extensions::TextStyleExt::font_slant) can be used alongside it.
+//! The family name must match the name of the installed font or the one you used to register it in your Freya app.
 //!
 //! ```rust,no_run
-//! use freya::prelude::*;
-//!
+//! # use freya::prelude::*;
 //! fn app() -> impl IntoElement {
-//!     rect().child(
-//!         label()
-//!             .font_family("Noto Sans")
-//!             .font_size(24.)
-//!             .text("Text using Noto Sans"),
-//!     )
+//!     label()
+//!         .font_size(24.)
+//!         .font_family("Noto Sans")
+//!         .text("Text using Noto Sans"),
 //! }
 //! ```
 //!
@@ -30,12 +24,10 @@
 //! ## Embedding a font
 //!
 //! Register a font before launching the application with [`LaunchConfig::with_font`](freya_winit::config::LaunchConfig::with_font).
-//! The first argument is the name that will later be passed to `font_family`. The font bytes are
-//! commonly included in the executable with `include_bytes!`:
+//! The first argument is the name that will later be passed to `font_family`. The font bytes get embedded in the executable with `include_bytes!`:
 //!
 //! ```text
-//! use freya::prelude::*;
-//!
+//! # use freya::prelude::*;
 //! fn main() {
 //!     launch(
 //!         LaunchConfig::new()
@@ -63,8 +55,7 @@
 //! is useful when the font is optional or selected by the user:
 //!
 //! ```rust,no_run
-//! use freya::prelude::*;
-//!
+//! # use freya::prelude::*;
 //! fn load_user_font() {
 //!     let font_data = match std::fs::read("./fonts/my-font.ttf") {
 //!         Ok(font_data) => font_data,
@@ -87,8 +78,7 @@
 //! After loading the font, use the registered name on an element:
 //!
 //! ```rust,no_run
-//! use freya::prelude::*;
-//!
+//! # use freya::prelude::*;
 //! fn app() -> impl IntoElement {
 //!     label()
 //!         .font_family("My Font")
@@ -97,8 +87,7 @@
 //! ```
 //!
 //! A font loaded at runtime is not persisted by Freya. Load it again each time the application
-//! starts if it is needed on every launch. Keep the font data alive only as long as needed by your
-//! application; Freya copies it into the renderer's font collection.
+//! starts if it is needed on every launch.
 //!
 //! ## Web applications
 //!
