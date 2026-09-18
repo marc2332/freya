@@ -5,6 +5,7 @@ use std::{
     task::Waker,
 };
 
+#[cfg(feature = "accessibility")]
 use accesskit_winit::WindowEvent as AccessibilityWindowEvent;
 use freya_components::cache::AssetCacher;
 use freya_core::{
@@ -31,12 +32,13 @@ use torin::prelude::{
 };
 #[cfg(all(feature = "tray", not(target_os = "linux")))]
 use tray_icon::TrayIcon;
+#[cfg(feature = "accessibility")]
+use winit::dpi::{
+    LogicalPosition,
+    LogicalSize,
+};
 use winit::{
     application::ApplicationHandler,
-    dpi::{
-        LogicalPosition,
-        LogicalSize,
-    },
     event::{
         ElementState,
         Ime,
@@ -55,6 +57,8 @@ use winit::{
     },
 };
 
+#[cfg(feature = "accessibility")]
+use crate::integration::is_ime_role;
 use crate::{
     accessibility::AccessibilityTask,
     config::{
@@ -62,7 +66,6 @@ use crate::{
         WindowConfig,
     },
     drivers::GraphicsDriver,
-    integration::is_ime_role,
     plugins::{
         PluginEvent,
         PluginHandle,
@@ -158,6 +161,7 @@ impl RendererContext<'_> {
 pub enum NativeWindowEventAction {
     PollRunner,
 
+    #[cfg(feature = "accessibility")]
     Accessibility(AccessibilityWindowEvent),
 
     PlatformEvent(PlatformEvent),
@@ -257,6 +261,7 @@ pub enum NativeEvent {
     Preferences(mundy::Preferences),
 }
 
+#[cfg(feature = "accessibility")]
 impl From<accesskit_winit::Event> for NativeEvent {
     fn from(event: accesskit_winit::Event) -> Self {
         NativeEvent::Window(NativeWindowEvent {
@@ -572,14 +577,17 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 tracing::info!("{:#?}", app.runner);
                             }
                         }
+                        #[cfg(feature = "accessibility")]
                         NativeWindowEventAction::Accessibility(
                             accesskit_winit::WindowEvent::AccessibilityDeactivated,
                         ) => {
                             app.screen_reader.set(false);
                         }
+                        #[cfg(feature = "accessibility")]
                         NativeWindowEventAction::Accessibility(
                             accesskit_winit::WindowEvent::ActionRequested(_),
                         ) => {}
+                        #[cfg(feature = "accessibility")]
                         NativeWindowEventAction::Accessibility(
                             accesskit_winit::WindowEvent::InitialTreeRequested,
                         ) => {
@@ -718,6 +726,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
     ) {
         let mut needs_recovery = false;
         if let Some(app) = &mut self.windows.get_mut(&window_id) {
+            #[cfg(feature = "accessibility")]
             app.accessibility_adapter.process_event(&app.window, &event);
             match event {
                 WindowEvent::ThemeChanged(theme) => {
@@ -957,6 +966,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             AccessibilityTask::ProcessUpdate { mode } => {
                                 app.process_accessibility_update(mode);
                             }
+                            #[cfg(feature = "accessibility")]
                             AccessibilityTask::Init => {
                                 let title = app.window.title();
                                 let update = app.accessibility.init(&mut app.tree, &title);
@@ -982,8 +992,11 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                     LogicalSize::new(area.width(), area.height()),
                                 );
 
-                                app.screen_reader.set(true);
-                                app.accessibility_adapter.update_if_active(|| update);
+                                #[cfg(feature = "accessibility")]
+                                {
+                                    app.screen_reader.set(true);
+                                    app.accessibility_adapter.update_if_active(|| update);
+                                }
                             }
                             AccessibilityTask::None => {}
                         }
