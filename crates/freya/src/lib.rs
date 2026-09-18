@@ -71,6 +71,8 @@
 //!
 //! - `all`: Enables all the features listed below
 //! - `winit`: Reexports [freya_winit] and enables the launch entrypoint. Enabled by default.
+//! - `gpu`: Enables GPU rendering support. Enabled by default.
+//! - `accessibility`: Enables the AccessKit accessibility backend for winit. Enabled by default.
 //! - `router`: Reexport [freya_router] under [router]
 //! - `i18n`: Reexport [freya_i18n] under [i18n]
 //! - `remote-asset`: Enables support for **HTTP** asset sources for [ImageViewer](components::ImageViewer) and [GifViewer](components::GifViewer) components.
