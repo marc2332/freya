@@ -421,7 +421,8 @@ impl ScrollController {
 
     /// Freezes the scroll where it is, returning the velocity it was moving at.
     pub fn stop(&mut self) -> Vector2D {
-        if let Some(task) = self.task.write().take() {
+        let task = self.task.write().take();
+        if let Some(task) = task {
             task.cancel();
 
             let position = self.damp.peek().position.to_i32();
