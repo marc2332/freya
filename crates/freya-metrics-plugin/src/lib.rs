@@ -403,7 +403,7 @@ impl FreyaPlugin for MetricsPlugin {
                     ];
                     if let Some((usage, limit)) = metrics.resource_cache {
                         rows.push((
-                            "GrContext",
+                            "GPU Cache",
                             format!(
                                 "{}/{}",
                                 format_bytes(usage).replace(' ', ""),

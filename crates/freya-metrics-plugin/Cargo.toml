@@ -2,7 +2,7 @@
 name = "freya-metrics-plugin"
 version = "0.5.0-rc.6"
 edition = "2024"
-description = "Performance and metrics overlays for Freya."
+description = "Metrics overlays for Freya."
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
 readme = "../../README.md"
