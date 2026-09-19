@@ -274,9 +274,6 @@ impl Component for CodeEditor {
             }
         };
 
-        let gutter_editor = editor.clone();
-        let gutter_theme = theme.clone();
-
         let on_sized = {
             let mut editor = editor.clone();
             move |e: Event<SizedEventData>| {
@@ -304,13 +301,15 @@ impl Component for CodeEditor {
                     .horizontal()
                     .maybe_child(gutter.then(|| {
                         let gutter_width = font_size * 5.0;
+                        let editor = editor.clone();
+                        let theme = theme.clone();
                         VirtualScrollView::new(move |item, _| {
                             EditorGutterLineUI {
-                                editor: gutter_editor.clone(),
+                                editor: editor.clone(),
                                 font_size,
                                 line_height,
                                 line_index: item.index,
-                                theme: gutter_theme.clone(),
+                                theme: theme.clone(),
                             }
                             .into()
                         })
