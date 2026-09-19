@@ -24,9 +24,8 @@
 //! ```rust,no_run
 //! # use freya::prelude::*;
 //! launch(
-//!     LaunchConfig::new().with_window(
-//!         WindowConfig::new(app).with_renderer(RendererPreference::Software),
-//!     ),
+//!     LaunchConfig::new()
+//!         .with_window(WindowConfig::new(app).with_renderer(RendererPreference::Software)),
 //! );
 //! # fn app() -> impl IntoElement { "" }
 //! ```
