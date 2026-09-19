@@ -40,6 +40,7 @@
 //! - [State](self::_docs::state_management)
 //! - [Async](self::_docs::_async)
 //! - [Layers](self::_docs::layers)
+//! - [Optimizing](self::_docs::optimizing)
 //! - [Platforms](self::_docs::platforms)
 //! - [Android](https://github.com/marc2332/freya/tree/main/examples/android)
 //! - [Web](https://github.com/marc2332/freya/tree/main/examples/web)
