@@ -23,8 +23,8 @@ pub fn app() -> impl IntoElement {
 #[rustfmt::skip]
 pub enum Route {
     #[layout(AppShell)]
-        #[route("/", ComponentsShowcase)]
-        Components,
+        #[route("/", GalleryShowcase)]
+        Gallery,
         #[route("/animation", AnimationShowcase)]
         Animation,
         #[route("/effects", EffectsShowcase)]
@@ -33,10 +33,12 @@ pub enum Route {
         Material,
         #[route("/markdown", MarkdownShowcase)]
         Markdown,
+        #[route("/gif", GifShowcase)]
+        Gif,
         #[route("/scroll", ScrollShowcase)]
         Scroll,
-        #[route("/kanban", KanbanShowcase)]
-        Kanban,
+        #[route("/drag-drop", DragDropShowcase)]
+        DragDrop,
         #[route("/i18n", I18nShowcase)]
         I18n,
 }
@@ -82,7 +84,6 @@ impl Component for AppShell {
         rect()
             .native_router()
             .expanded()
-            .center()
             .theme_color()
             .theme_background()
             .on_sized(move |event: Event<SizedEventData>| {
@@ -94,34 +95,30 @@ impl Component for AppShell {
             })
             .child(
                 rect()
-                    .width(Size::percent(if compact { 100. } else { 85. }))
-                    .height(Size::percent(if compact { 100. } else { 85. }))
+                    .expanded()
                     .horizontal()
                     .background(surface)
                     .overflow(Overflow::Clip)
-                    .maybe(!compact, |el| {
-                        el.corner_radius(20.)
-                            .shadow((0., 10., 30., 0., (0, 0, 0, 40)))
-                    })
-                    .maybe_child((!compact).then(sidebar))
+                    .maybe_child((!compact).then(|| sidebar(theme)))
                     .child(
                         rect()
                             .key("content")
                             .expanded()
-                            .padding(if compact { 12. } else { 24. })
                             .maybe(compact, |el| {
-                                el.spacing(16.).child(
-                                    Button::new()
-                                        .flat()
-                                        .expanded()
-                                        .corner_radius(99.)
-                                        .on_press(open_sidebar)
-                                        .child(
-                                            SvgViewer::new(lucide::menu())
-                                                .stroke(icon_color)
-                                                .width(Size::px(20.))
-                                                .height(Size::px(20.)),
-                                        ),
+                                el.child(
+                                    rect().padding((12., 12., 0., 12.)).child(
+                                        Button::new()
+                                            .flat()
+                                            .expanded()
+                                            .corner_radius(99.)
+                                            .on_press(open_sidebar)
+                                            .child(
+                                                SvgViewer::new(lucide::menu())
+                                                    .stroke(icon_color)
+                                                    .width(Size::px(20.))
+                                                    .height(Size::px(20.)),
+                                            ),
+                                    ),
                                 )
                             })
                             .child(rect().key("page").expanded().child(Outlet::<Route>::new())),
@@ -137,7 +134,7 @@ impl Component for AppShell {
                                 .on_press(move |_| close_sidebar()),
                         )
                         .child(
-                            sidebar()
+                            sidebar(theme)
                                 .position(Position::new_absolute().left(drawer_left).top(0.))
                                 .layer(Layer::Relative(100))
                                 .opacity(0.6 + 0.4 * progress)
@@ -148,7 +145,9 @@ impl Component for AppShell {
     }
 }
 
-fn sidebar() -> Rect {
+fn sidebar(mut theme: State<Theme>) -> Rect {
+    let is_dark = theme.read().name == "dark";
+
     rect()
         .width(Size::px(240.))
         .height(Size::fill())
@@ -165,13 +164,14 @@ fn sidebar() -> Rect {
         )
         .children(
             [
-                (Route::Components, "Components"),
+                (Route::Gallery, "Gallery"),
                 (Route::Animation, "Animation"),
                 (Route::Effects, "Effects"),
                 (Route::Material, "Material Design"),
                 (Route::Markdown, "Markdown"),
+                (Route::Gif, "Gif"),
                 (Route::Scroll, "Virtual Scroll"),
-                (Route::Kanban, "Kanban"),
+                (Route::DragDrop, "Drag and Drop"),
                 (Route::I18n, "i18n"),
             ]
             .map(|(route, title)| {
@@ -185,5 +185,20 @@ fn sidebar() -> Rect {
         .child(
             Link::new("https://github.com/marc2332/freya")
                 .child(SideBarItem::new().child("And more!")),
+        )
+        .child(
+            SideBarItem::new()
+                .on_press(move |_| theme.set(if is_dark { light_theme() } else { dark_theme() }))
+                .child(
+                    rect()
+                        .horizontal()
+                        .width(Size::fill())
+                        .main_align(Alignment::space_between())
+                        .cross_align(Alignment::center())
+                        .child("Dark mode")
+                        .child(Switch::new().toggled(is_dark).on_toggle(move |_| {
+                            theme.set(if is_dark { light_theme() } else { dark_theme() })
+                        })),
+                ),
         )
 }

@@ -160,7 +160,7 @@ impl Component for CodeEditor {
             EditorTheme::light().into()
         });
 
-        let editor_data = editor.read();
+        let editor_data = editor.read_unchecked();
 
         let scroll_controller =
             scroll_controller.unwrap_or_else(|| use_scroll_controller(ScrollConfig::default));

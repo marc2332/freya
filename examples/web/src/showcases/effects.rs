@@ -17,6 +17,7 @@ impl Component for EffectsShowcase {
         });
 
         rect()
+            .padding(24.)
             .spacing(20.)
             .child(heading("Effects", "Shapes, colors and rotation"))
             .child(

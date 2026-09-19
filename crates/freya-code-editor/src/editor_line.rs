@@ -51,7 +51,7 @@ impl Component for EditorLineUI {
 
         let holder = use_state(ParagraphHolder::default);
 
-        let editor_data = editor.read();
+        let editor_data = editor.read_unchecked();
 
         let longest_width = editor_data.metrics.longest_width;
         let line = editor_data.metrics.syntax_blocks.get_line(line_index);

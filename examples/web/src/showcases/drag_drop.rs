@@ -62,9 +62,9 @@ impl Component for TaskCard {
 }
 
 #[derive(PartialEq)]
-pub struct KanbanShowcase;
+pub struct DragDropShowcase;
 
-impl Component for KanbanShowcase {
+impl Component for DragDropShowcase {
     fn render(&self) -> impl IntoElement {
         let tasks = use_state(|| {
             vec![
@@ -76,10 +76,11 @@ impl Component for KanbanShowcase {
         });
 
         rect()
+            .padding(24.)
             .spacing(16.)
             .expanded()
             .child(heading(
-                "Kanban",
+                "Drag and Drop",
                 "Pick up a card and drop it somewhere else",
             ))
             .child(

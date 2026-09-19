@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2024"
 publish = false
 
+[features]
+desktop = ["freya/winit"]
+
 [dependencies]
 freya = { path = "../../crates/freya", default-features = false, features = [
   "web",
@@ -13,6 +16,8 @@ freya = { path = "../../crates/freya", default-features = false, features = [
   "markdown",
   "i18n",
   "remote-asset",
+  "calendar",
+  "gif",
 ] }
 
 [[bin]]
