@@ -19,12 +19,13 @@ features = ["all-publish"]
 no-default-features = true
 
 [features]
-default = ["winit", "gpu"]
+default = ["winit", "gpu", "accessibility"]
 # Shortcuts
 all = ["all-crossplatform", "tray", "webview", "camera", "video"]
 all-crossplatform = [
   "winit",
   "gpu",
+  "accessibility",
   "router",
   "i18n",
   "remote-asset",
@@ -65,6 +66,7 @@ all-debug = [
 all-tests = [
   "winit",
   "gpu",
+  "accessibility",
   "router",
   "i18n",
   "remote-asset",
@@ -85,6 +87,7 @@ docs = ["all-debug"]
 # Features
 winit = ["dep:freya-winit", "dep:freya-metrics-plugin"]
 gpu = ["freya-winit?/gpu"]
+accessibility = ["freya-winit?/accessibility"]
 router = [
   "dep:freya-router",
   "freya-components/router",
@@ -123,7 +126,7 @@ zoom-shortcuts = ["freya-components/zoom-shortcuts"]
 
 [dependencies]
 freya-core = { workspace = true }
-freya-winit = { workspace = true, optional = true }
+freya-winit = { workspace = true, optional = true, default-features = false }
 torin = { workspace = true }
 freya-edit = { workspace = true }
 freya-clipboard = { workspace = true }
