@@ -14,7 +14,7 @@
 //!     label()
 //!         .font_size(24.)
 //!         .font_family("Noto Sans")
-//!         .text("Text using Noto Sans"),
+//!         .text("Text using Noto Sans")
 //! }
 //! ```
 //!
