@@ -98,7 +98,7 @@
 //!
 //! ## Misc features
 //! - `devtools`: Enables devtools support.
-//! - `metrics`: Reexports the metrics overlay plugin. The plugin is auto-added in debug builds.
+//! - `metrics`: Reexports the metrics plugin. The plugin is auto-added in debug builds.
 //! - `vulkan`: Enables Vulkan rendering support.
 //! - `hotpath`: Enables Freya's internal usage of hotpath.
 //! - `hotreload`: Enables hot reload support via the `dx` CLI from `dioxus-cli`. See [Hot Reload](self::_docs::hot_reload).
