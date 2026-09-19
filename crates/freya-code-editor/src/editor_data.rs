@@ -107,6 +107,7 @@ impl CodeEditorData {
                 let ParagraphHolderInner {
                     paragraph,
                     scale_factor,
+                    ..
                 } = holder.as_ref().unwrap();
 
                 let current_selection = self.selection().clone();
@@ -161,6 +162,7 @@ impl CodeEditorData {
                     let ParagraphHolderInner {
                         paragraph,
                         scale_factor,
+                        ..
                     } = paragraph.as_ref().unwrap();
 
                     let dist_position = location.mul(*scale_factor);
