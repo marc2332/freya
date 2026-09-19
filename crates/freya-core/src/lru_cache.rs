@@ -94,6 +94,18 @@ impl<V, ID: Hash + Eq, const USER_CAPACITY: usize> LRUCache<V, ID, USER_CAPACITY
         value
     }
 
+    pub fn len(&self) -> usize {
+        self.map.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.map.is_empty()
+    }
+
+    pub fn users_len(&self) -> usize {
+        self.users.len()
+    }
+
     pub fn remove(&mut self, id: &ID) {
         let Some(hashes) = self.users.remove(id) else {
             return;

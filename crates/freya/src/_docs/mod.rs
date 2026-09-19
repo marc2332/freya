@@ -8,6 +8,7 @@ pub mod fonts;
 pub mod hooks;
 pub mod hot_reload;
 pub mod layers;
+pub mod optimizing;
 pub mod platforms;
 pub mod state_management;
 pub mod tokio_integration;

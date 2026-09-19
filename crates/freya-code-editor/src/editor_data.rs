@@ -129,7 +129,7 @@ impl CodeEditorData {
                 let press_selection =
                     self.measure_selection(char_position.position as usize, editor_line);
 
-                let new_selection = match EventsCombos::pressed(location) {
+                let new_selection = match EventsCombos::<()>::pressed(location) {
                     PressEventType::Quadruple => {
                         TextSelection::new_range((0, self.rope.len_utf16_cu()))
                     }

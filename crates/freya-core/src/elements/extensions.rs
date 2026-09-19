@@ -934,15 +934,6 @@ where
         self.get_style().corner_radius = corner_radius.into();
         self
     }
-
-    /// Set the [`CursorIcon`] shown while the element is hovered.
-    ///
-    /// When multiple hovered elements define a cursor, the one painted on top wins.
-    /// While a mouse button is pressed the cursor stays still.
-    fn cursor(mut self, cursor: impl Into<Option<CursorIcon>>) -> Self {
-        self.get_style().cursor = cursor.into();
-        self
-    }
 }
 
 impl<T: StyleExt> CornerRadiusExt for T {
@@ -1077,6 +1068,15 @@ where
 pub trait EffectExt: Sized {
     /// Returns a mutable reference to the element's effect data.
     fn get_effect(&mut self) -> &mut EffectData;
+
+    /// Set the [`CursorIcon`] shown while the element is hovered.
+    ///
+    /// When multiple hovered elements define a cursor, the one painted on top wins.
+    /// While a mouse button is pressed the cursor stays still.
+    fn cursor(mut self, cursor: impl Into<Option<CursorIcon>>) -> Self {
+        self.get_effect().cursor = cursor.into();
+        self
+    }
 
     /// Replace all of the element's effect data at once. See [`EffectData`].
     fn effect(mut self, effect: EffectData) -> Self {

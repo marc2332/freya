@@ -193,7 +193,12 @@ impl Tree {
                         .unwrap_or_default(),
                 )
             })
-            .find_map(|node_id| self.elements.get(node_id).and_then(|el| el.style().cursor))
+            .find_map(|node_id| {
+                self.elements
+                    .get(node_id)
+                    .and_then(|element| element.effect())
+                    .and_then(|effect| effect.cursor)
+            })
             .unwrap_or_default()
     }
 

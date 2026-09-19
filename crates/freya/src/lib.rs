@@ -41,6 +41,7 @@
 //! - [Async](self::_docs::_async)
 //! - [Fonts](self::_docs::fonts)
 //! - [Layers](self::_docs::layers)
+//! - [Optimizing](self::_docs::optimizing)
 //! - [Platforms](self::_docs::platforms)
 //! - [Android](https://github.com/marc2332/freya/tree/main/examples/android)
 //! - [Web](https://github.com/marc2332/freya/tree/main/examples/web)
@@ -72,6 +73,8 @@
 //!
 //! - `all`: Enables all the features listed below
 //! - `winit`: Reexports [freya_winit] and enables the launch entrypoint. Enabled by default.
+//! - `gpu`: Enables GPU rendering support. Enabled by default.
+//! - `accessibility`: Enables the AccessKit accessibility backend for winit. Enabled by default.
 //! - `router`: Reexport [freya_router] under [router]
 //! - `i18n`: Reexport [freya_i18n] under [i18n]
 //! - `remote-asset`: Enables support for **HTTP** asset sources for [ImageViewer](components::ImageViewer) and [GifViewer](components::GifViewer) components.
@@ -99,7 +102,7 @@
 //!
 //! ## Misc features
 //! - `devtools`: Enables devtools support.
-//! - `performance`: Reexports the performance overlay plugin. The plugin is auto-added in debug builds.
+//! - `metrics`: Reexports the metrics plugin. The plugin is auto-added in debug builds.
 //! - `vulkan`: Enables Vulkan rendering support.
 //! - `hotpath`: Enables Freya's internal usage of hotpath.
 //! - `hotreload`: Enables hot reload support via the `dx` CLI from `dioxus-cli`. See [Hot Reload](self::_docs::hot_reload).
@@ -119,6 +122,7 @@ pub mod prelude {
         WinitPlatformExt,
         config::{
             CloseDecision,
+            GpuResourceCacheLimit,
             LaunchConfig,
             RendererPreference,
             WindowConfig,
@@ -141,8 +145,8 @@ pub mod prelude {
         #[cfg(feature = "devtools")]
         let launch_config = launch_config.with_plugin(freya_devtools::DevtoolsPlugin::default());
         #[cfg(debug_assertions)]
-        let launch_config = launch_config
-            .with_plugin(freya_performance_plugin::PerformanceOverlayPlugin::default());
+        let launch_config =
+            launch_config.with_plugin(freya_metrics_plugin::MetricsPlugin::default());
         freya_winit::launch(launch_config)
     }
 
@@ -398,11 +402,11 @@ pub mod video {
     pub use freya_video::*;
 }
 
-/// Reexport `freya-performance-plugin` when the `performance` feature is enabled.
-#[cfg(feature = "performance")]
-#[cfg_attr(feature = "docs", doc(cfg(feature = "performance")))]
-pub mod performance {
-    pub use freya_performance_plugin::*;
+/// Reexport `freya-metrics-plugin` when the `metrics` feature is enabled.
+#[cfg(feature = "metrics")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "metrics")))]
+pub mod metrics {
+    pub use freya_metrics_plugin::*;
 }
 
 /// Reexport `freya-borderless-plugin` when the `borderless` feature is enabled.

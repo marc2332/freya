@@ -134,7 +134,7 @@ impl Component for CodeEditor {
             EditorTheme::light().into()
         });
 
-        let editor_data = editor.read();
+        let editor_data = editor.read_unchecked();
 
         let scroll_controller = use_hook(|| {
             let notifier = State::create(());

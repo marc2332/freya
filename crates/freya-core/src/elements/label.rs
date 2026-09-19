@@ -40,6 +40,7 @@ use crate::{
     prelude::{
         AccessibilityExt,
         ContainerExt,
+        EffectExt,
         EventHandlersExt,
         KeyExt,
         LayerExt,
@@ -97,6 +98,7 @@ pub struct LabelElement {
     pub max_lines: Option<usize>,
     pub line_height: Option<f32>,
     pub relative_layer: Layer,
+    pub effect: Option<EffectData>,
 }
 
 impl Default for LabelElement {
@@ -112,6 +114,7 @@ impl Default for LabelElement {
             max_lines: None,
             line_height: None,
             relative_layer: Layer::default(),
+            effect: None,
         }
     }
 }
@@ -145,6 +148,10 @@ impl ElementExt for LabelElement {
             diff.insert(DiffModifies::LAYER);
         }
 
+        if self.effect != label.effect {
+            diff.insert(DiffModifies::EFFECT);
+        }
+
         if self.text_style_data != label.text_style_data
             || self.line_height != label.line_height
             || self.max_lines != label.max_lines
@@ -168,7 +175,7 @@ impl ElementExt for LabelElement {
     }
 
     fn effect(&'_ self) -> Option<Cow<'_, EffectData>> {
-        None
+        self.effect.as_ref().map(Cow::Borrowed)
     }
 
     fn style(&'_ self) -> Cow<'_, StyleState> {
@@ -320,6 +327,12 @@ impl AccessibilityExt for Label {
 impl TextStyleExt for Label {
     fn get_text_style_data(&mut self) -> &mut TextStyleData {
         &mut self.element.text_style_data
+    }
+}
+
+impl EffectExt for Label {
+    fn get_effect(&mut self) -> &mut EffectData {
+        self.element.effect.get_or_insert_with(EffectData::default)
     }
 }
 
