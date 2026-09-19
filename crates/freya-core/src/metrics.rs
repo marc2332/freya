@@ -13,6 +13,8 @@ pub struct Metrics {
     pub reactive_contexts: usize,
     pub tree_nodes: usize,
     pub layout_nodes: usize,
+    pub text_cache_size: usize,
+    pub text_cache_users: usize,
     pub cached_assets: usize,
     pub resource_cache: Option<(usize, usize)>,
 }
@@ -39,6 +41,8 @@ impl Metrics {
             reactive_contexts: scope_storages.len(),
             tree_nodes: tree.elements.len(),
             layout_nodes: tree.layout.size(),
+            text_cache_size: tree.text_cache.len(),
+            text_cache_users: tree.text_cache.users_len(),
             cached_assets,
             resource_cache,
         }

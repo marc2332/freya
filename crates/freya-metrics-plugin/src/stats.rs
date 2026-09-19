@@ -35,6 +35,8 @@ pub(crate) fn draw_stats_overlay(
         ("Cached assets", metrics.cached_assets),
         ("Contexts", metrics.contexts),
         ("Reactive contexts", metrics.reactive_contexts),
+        ("Text cache", metrics.text_cache_size),
+        ("Text cache users", metrics.text_cache_users),
     ];
     let mut keys_builder =
         ParagraphBuilder::new(&ParagraphStyle::default(), font_collection.clone());
