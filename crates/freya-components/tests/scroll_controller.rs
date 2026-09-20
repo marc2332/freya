@@ -79,6 +79,35 @@ pub fn virtual_scroll_view_starts_at_the_end() {
 }
 
 #[test]
+pub fn controlled_scroll_view_clamps_programmatic_scrolls() {
+    fn app() -> impl IntoElement {
+        let mut scroll_controller = use_scroll_controller(ScrollConfig::default);
+        let scroll_to_end = move |_| {
+            scroll_controller.scroll_to_y(-10_000);
+        };
+
+        rect()
+            .child(position_label(scroll_controller))
+            .child(Button::new().on_press(scroll_to_end).child("Scroll"))
+            .child(
+                ScrollView::new_controlled(scroll_controller).children((0..30).map(|i| {
+                    label()
+                        .key(i)
+                        .height(Size::px(50.))
+                        .text(format!("{i} Hello, World!"))
+                })),
+            )
+    }
+
+    let mut test = launch_test(app);
+    test.sync_and_update();
+    test.click_cursor((10., 10.));
+    test.sync_and_update();
+
+    assert_eq!(reported_position(&test), "position -1030");
+}
+
+#[test]
 pub fn scroll_view_starts_at_the_end() {
     fn app() -> impl IntoElement {
         let scroll_controller = use_scroll_controller(end_config);
