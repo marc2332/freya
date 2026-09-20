@@ -37,7 +37,6 @@ define_theme! {
         %[fields]
         background: Color,
         thumb_background: Color,
-        visible_thumb_background: Color,
         hover_thumb_background: Color,
         active_thumb_background: Color,
         size: f32,
@@ -189,7 +188,6 @@ impl ComponentOwned for ScrollBar {
                                 size: self.thumb_size,
                                 cross_size,
                                 cross_gap,
-                                bar_hovered: is_expanded,
                             }),
                     ),
             )

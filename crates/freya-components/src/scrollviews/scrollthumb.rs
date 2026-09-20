@@ -30,7 +30,6 @@ pub struct ScrollThumb {
     pub size: f32,
     pub cross_size: f32,
     pub cross_gap: f32,
-    pub bar_hovered: bool,
 }
 
 impl ComponentOwned for ScrollThumb {
@@ -65,7 +64,6 @@ impl ComponentOwned for ScrollThumb {
                 scrollbar_theme.active_thumb_background
             }
             ScrollThumbState::Hovering => scrollbar_theme.hover_thumb_background,
-            ScrollThumbState::Idle if self.bar_hovered => scrollbar_theme.visible_thumb_background,
             ScrollThumbState::Idle => scrollbar_theme.thumb_background,
         };
 

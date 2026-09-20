@@ -83,7 +83,12 @@ pub const SCROLLBAR_MARGIN: f32 = 3.0;
 fn get_thumb_ranges(inner_size: f32, viewport_size: f32) -> (f32, f32, f32) {
     let track_size = viewport_size - SCROLLBAR_MARGIN * 2.0;
     let viewable_ratio = viewport_size / inner_size;
-    let scrollbar_size = (track_size * viewable_ratio).max(MIN_SCROLLBAR_SIZE);
+    let minimum_thumb_size = if track_size > MIN_SCROLLBAR_SIZE {
+        MIN_SCROLLBAR_SIZE
+    } else {
+        0.
+    };
+    let scrollbar_size = (track_size * viewable_ratio).max(minimum_thumb_size);
 
     let available_scroll_range = inner_size - viewport_size;
     let available_thumb_range = track_size - scrollbar_size;
@@ -187,4 +192,30 @@ pub fn handle_key_event(
         _ => return None,
     };
     Some((x, y))
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::scrollviews::shared::{
+        SCROLLBAR_MARGIN,
+        get_scroll_position_from_cursor,
+        get_scrollbar_pos_and_size,
+    };
+
+    #[test]
+    fn scrollbar_can_drag_when_the_track_is_smaller_than_the_minimum_thumb() {
+        for viewport_size in 51..=56 {
+            let viewport_size = viewport_size as f32;
+            let inner_size = viewport_size * 2.;
+            let track_size = viewport_size - SCROLLBAR_MARGIN * 2.;
+
+            let (_, thumb_size) = get_scrollbar_pos_and_size(inner_size, viewport_size, 0.);
+
+            assert!(thumb_size < track_size);
+            assert_eq!(
+                get_scroll_position_from_cursor(viewport_size, inner_size, viewport_size),
+                -viewport_size as i32
+            );
+        }
+    }
 }

@@ -9,6 +9,8 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
+    // use_init_theme(|| dark_theme());
+
     rect()
         .child(
             ScrollView::new()
