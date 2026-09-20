@@ -30,7 +30,7 @@ Documentation is located in `./crates/freya/src/_docs`.
 - Components are data types (usually structs) that implement `PartialEq` and the `Component` trait 
 - Freya has a built-in `Into<Label>` for `String` and `&str`, so, `label().text("Hey")` could be just simplified to `"Hey"`
 - When dynamically modifying an element (rect, paragraph, etc) do not store it in a variable so that you get access to the element, instead simply declare it as the
-  last returning value in the component and then use apis like `when(bool, callback)` or `map(value, callback)` to modify it.
+  last returning value in the component and then use apis like `maybe(bool, callback)` or `map(value, callback)` to modify it.
 
 ## General instructions
 

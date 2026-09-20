@@ -73,7 +73,7 @@ impl EditableEvent<'_> {
 
                 dragging.write().clicked = true;
 
-                match EventsCombos::pressed(location) {
+                match EventsCombos::<()>::pressed(location) {
                     PressEventType::Triple => {
                         let current_selection = text_editor.selection().clone();
 
@@ -143,7 +143,7 @@ impl EditableEvent<'_> {
                 holder,
             } => {
                 if dragging.peek().clicked {
-                    EventsCombos::moved(location);
+                    EventsCombos::<()>::moved(location);
 
                     let paragraph = holder.0.borrow();
                     let ParagraphHolderInner {

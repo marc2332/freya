@@ -157,7 +157,7 @@
 //! # use freya::prelude::*;
 //! # fn app() -> impl IntoElement {
 //! rect().on_pointer_down(|e: Event<PointerEventData>| {
-//!     match EventsCombos::pressed(e.global_location()) {
+//!     match EventsCombos::<()>::pressed(e.global_location()) {
 //!         PressEventType::Single => println!("Move the cursor"),
 //!         PressEventType::Double => println!("Select the word"),
 //!         PressEventType::Triple => println!("Select the line"),

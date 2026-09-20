@@ -313,6 +313,19 @@ impl Runner {
         assert_eq!(size, visited.len())
     }
 
+    pub fn with_root_context<T>(&self, run: impl FnOnce() -> T) -> T {
+        CurrentContext::run(
+            CurrentContext {
+                scope_id: ScopeId::ROOT,
+                scopes_storages: self.scopes_storages.clone(),
+                tasks: self.tasks.clone(),
+                task_id_counter: self.task_id_counter.clone(),
+                sender: self.sender.clone(),
+            },
+            run,
+        )
+    }
+
     pub fn provide_root_context<T: 'static + Clone>(&mut self, context: impl FnOnce() -> T) -> T {
         CurrentContext::run(
             CurrentContext {

@@ -242,7 +242,7 @@ where
 
     #[track_caller]
     pub fn peek_unchecked(&self) -> ReadRef<'static, Value> {
-        self.value.peek()
+        self.value.peek_unchecked()
     }
 
     /// Read the current state value without subscribing to changes.
@@ -256,7 +256,7 @@ where
     /// ```
     #[track_caller]
     pub fn peek(&'_ self) -> ReadRef<'_, Value> {
-        self.value.peek()
+        self.value.peek_unchecked()
     }
 
     pub(crate) fn cleanup(&self) {
@@ -525,7 +525,7 @@ where
     #[track_caller]
     pub fn read(&'_ self) -> ReadRef<'_, Value> {
         self.subscribe_if_not();
-        self.antenna.peek().station.value.peek()
+        self.antenna.peek().station.value.peek_unchecked()
     }
 
     /// Read the current state value inside a callback.
@@ -682,7 +682,7 @@ where
     Channel: RadioChannel<Value>,
     Value: 'static,
 {
-    fn write_state(&mut self) -> WriteRef<'static, Value> {
+    fn write_state(&mut self) -> WriteRef<'_, Value> {
         let antenna = self.antenna.peek();
         let channel = antenna.channel.clone();
         let value = antenna.station.value.write_unchecked();
@@ -693,7 +693,7 @@ where
         value
     }
 
-    fn peek_state(&self) -> ReadRef<'static, Value> {
+    fn peek_state(&self) -> ReadRef<'_, Value> {
         self.antenna.peek().station.peek_unchecked()
     }
 }

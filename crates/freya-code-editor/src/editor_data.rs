@@ -8,12 +8,14 @@ use std::{
     time::Duration,
 };
 
+use freya_components::scrollviews::ScrollController;
 use freya_core::{
     elements::paragraph::ParagraphHolderInner,
     prelude::*,
 };
 use freya_edit::*;
 use ropey::Rope;
+use torin::geometry::Size2D;
 use tree_sitter::InputEdit;
 
 use crate::{
@@ -30,13 +32,14 @@ pub struct CodeEditorData {
     pub(crate) last_saved_history_change: usize,
     pub(crate) metrics: EditorMetrics,
     pub(crate) dragging: TextDragging,
-    pub(crate) scrolls: (i32, i32),
     pub(crate) pending_edit: Option<InputEdit>,
     pub language: Option<EditorLanguage>,
+    pub viewport: Size2D,
     theme: EditorSyntaxTheme,
 }
 
 impl CodeEditorData {
+    /// Creates the editor data for the given [`Rope`] and language.
     pub fn new(rope: Rope, language: impl Into<Option<EditorLanguage>>) -> Self {
         let mut data = Self {
             rope,
@@ -45,13 +48,66 @@ impl CodeEditorData {
             last_saved_history_change: 0,
             metrics: EditorMetrics::new(),
             dragging: TextDragging::default(),
-            scrolls: (0, 0),
             pending_edit: None,
             language: language.into(),
+            viewport: Size2D::default(),
             theme: EditorSyntaxTheme::default(),
         };
         data.configure_highlighter();
         data
+    }
+
+    /// Scrolls the given controller just enough to make the cursor visible.
+    ///
+    /// Returns whether the scroll position changed.
+    pub fn scroll_to_cursor(
+        &self,
+        mut scroll_controller: ScrollController,
+        line_height: f32,
+    ) -> bool {
+        if self.viewport.width <= 0.
+            || self.viewport.height <= 0.
+            || line_height <= 0.
+            || self.metrics.char_width <= 0.
+        {
+            return false;
+        }
+
+        let (scroll_x, scroll_y) = scroll_controller.into();
+        let scrolled_x = -scroll_x as f32;
+        let scrolled_y = -scroll_y as f32;
+        let cursor_left = self.cursor_col() as f32 * self.metrics.char_width;
+        let cursor_right = cursor_left + self.metrics.char_width;
+        let cursor_top = self.cursor_row() as f32 * line_height;
+        let cursor_bottom = cursor_top + line_height;
+
+        let horizontal_target = if cursor_left < scrolled_x {
+            Some(cursor_left)
+        } else if cursor_right > scrolled_x + self.viewport.width {
+            Some(cursor_right - self.viewport.width)
+        } else {
+            None
+        };
+
+        let vertical_target = if cursor_top < scrolled_y {
+            Some(cursor_top)
+        } else if cursor_bottom > scrolled_y + self.viewport.height {
+            Some(cursor_bottom - self.viewport.height)
+        } else {
+            None
+        };
+
+        let mut changed = false;
+
+        if let Some(target) = horizontal_target {
+            changed |= scroll_controller.scroll_to_x(-target as i32);
+        }
+
+        if let Some(target) = vertical_target {
+            changed |= scroll_controller.scroll_to_y(-target as i32);
+        }
+
+        changed
     }
 
     /// Reconfigures the highlighter with the current language and theme.
@@ -129,7 +185,7 @@ impl CodeEditorData {
                 let press_selection =
                     self.measure_selection(char_position.position as usize, editor_line);
 
-                let new_selection = match EventsCombos::pressed(location) {
+                let new_selection = match EventsCombos::<()>::pressed(location) {
                     PressEventType::Quadruple => {
                         TextSelection::new_range((0, self.rope.len_utf16_cu()))
                     }

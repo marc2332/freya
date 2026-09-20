@@ -140,7 +140,7 @@ pub struct Button {
     layout_variant: ButtonLayoutVariant,
     enabled: bool,
     focusable: bool,
-    cursor_icon: CursorIcon,
+    cursor_icon: Option<CursorIcon>,
 }
 
 impl Default for Button {
@@ -174,7 +174,7 @@ impl Button {
             elements: Vec::default(),
             enabled: true,
             focusable: true,
-            cursor_icon: CursorIcon::default(),
+            cursor_icon: None,
             key: DiffKey::None,
         }
     }
@@ -264,7 +264,7 @@ impl Button {
     }
 
     /// Override the cursor icon shown when hovering over the button while enabled.
-    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+    pub fn cursor(mut self, cursor_icon: impl Into<Option<CursorIcon>>) -> Self {
         self.cursor_icon = cursor_icon.into();
         self
     }
@@ -391,7 +391,7 @@ impl Component for Button {
             .cursor(if self.enabled {
                 self.cursor_icon
             } else {
-                CursorIcon::NotAllowed
+                CursorIcon::NotAllowed.into()
             })
             .children(self.elements.clone())
     }
