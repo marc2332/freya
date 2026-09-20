@@ -40,7 +40,7 @@ impl ScrollRequest {
 }
 
 /// An absolute scroll movement along one axis, in pixels.
-pub enum ScrollEvent {
+enum ScrollEvent {
     X(i32),
     Y(i32),
 }
@@ -168,20 +168,6 @@ impl ScrollController {
                 current != *scroll.read()
             })),
             get_scroll: State::create(Callback::new(move |_| *scroll.read())),
-        }
-    }
-    /// Builds a controller from externally owned state, letting the caller manage its storage.
-    pub fn managed(
-        notifier: State<()>,
-        requests: State<Vec<ScrollRequest>>,
-        on_scroll: State<Callback<ScrollEvent, bool>>,
-        get_scroll: State<Callback<(), (i32, i32)>>,
-    ) -> Self {
-        Self {
-            notifier,
-            requests,
-            on_scroll,
-            get_scroll,
         }
     }
 
