@@ -39,6 +39,7 @@
 //! - [Hooks](self::_docs::hooks)
 //! - [State](self::_docs::state_management)
 //! - [Async](self::_docs::_async)
+//! - [Fonts](self::_docs::fonts)
 //! - [Layers](self::_docs::layers)
 //! - [Optimizing](self::_docs::optimizing)
 //! - [Platforms](self::_docs::platforms)
