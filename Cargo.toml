@@ -248,6 +248,13 @@ opt-level = 3
 lto = true
 opt-level = 3
 
+[profile.web-release]
+inherits = "release"
+codegen-units = 1
+opt-level = "z"
+panic = "abort"
+strip = "symbols"
+
 # Optimizes the freya devtools server
 [profile.dev.package.freya-devtools]
 opt-level = 3
