@@ -159,21 +159,13 @@ impl ScrollController {
         }
     }
 
-    /// Turns an axis scrolled to its end into a pixel position, once the content size is known.
+    /// Updates the content and viewport bounds used to clamp scroll positions.
     pub(crate) fn apply_layout(&mut self, content_size: Size2D, viewport_size: Size2D) {
         self.bounds.set(Some((content_size, viewport_size)));
 
         let (x, y) = *self.scroll.peek();
-        self.scroll_to_x(get_corrected_scroll_position(
-            content_size.width,
-            viewport_size.width,
-            x as f32,
-        ) as i32);
-        self.scroll_to_y(get_corrected_scroll_position(
-            content_size.height,
-            viewport_size.height,
-            y as f32,
-        ) as i32);
+        self.scroll_to_x(x);
+        self.scroll_to_y(y);
     }
 
     pub(crate) fn position(self) -> Point2D {
@@ -183,7 +175,7 @@ impl ScrollController {
 
     /// Scrolls the horizontal axis to `to` pixels. Returns whether the position actually changed.
     pub fn scroll_to_x(&mut self, to: i32) -> bool {
-        let to = self.bounded_x(to);
+        let to = self.bounded_position(to, Direction::Horizontal);
         let changed = self.scroll.peek().0 != to;
         if changed {
             self.scroll.write().0 = to;
@@ -193,7 +185,7 @@ impl ScrollController {
 
     /// Scrolls the vertical axis to `to` pixels. Returns whether the position actually changed.
     pub fn scroll_to_y(&mut self, to: i32) -> bool {
-        let to = self.bounded_y(to);
+        let to = self.bounded_position(to, Direction::Vertical);
         let changed = self.scroll.peek().1 != to;
         if changed {
             self.scroll.write().1 = to;
@@ -201,24 +193,16 @@ impl ScrollController {
         changed
     }
 
-    fn bounded_x(&self, position: i32) -> i32 {
-        if position == Self::END {
+    fn bounded_position(&self, position: i32, direction: Direction) -> i32 {
+        let Some((content_size, viewport_size)) = *self.bounds.read() else {
             return position;
-        }
+        };
 
-        (*self.bounds.read()).map_or(position, |(content, viewport)| {
-            get_corrected_scroll_position(content.width, viewport.width, position as f32) as i32
-        })
-    }
-
-    fn bounded_y(&self, position: i32) -> i32 {
-        if position == Self::END {
-            return position;
-        }
-
-        (*self.bounds.read()).map_or(position, |(content, viewport)| {
-            get_corrected_scroll_position(content.height, viewport.height, position as f32) as i32
-        })
+        let (content_size, viewport_size) = match direction {
+            Direction::Horizontal => (content_size.width, viewport_size.width),
+            Direction::Vertical => (content_size.height, viewport_size.height),
+        };
+        get_corrected_scroll_position(content_size, viewport_size, position as f32) as i32
     }
 
     /// Scrolls `scroll_direction` to `scroll_position`.
