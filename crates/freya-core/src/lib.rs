@@ -17,6 +17,7 @@ pub mod io;
 pub mod layers;
 pub mod lifecycle;
 pub mod lru_cache;
+pub mod metrics;
 pub mod node_id;
 pub mod notify;
 pub mod path_element;

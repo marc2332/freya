@@ -1,8 +1,8 @@
 [package]
-name = "freya-performance-plugin"
+name = "freya-metrics-plugin"
 version = "0.5.0-rc.6"
 edition = "2024"
-description = "Icons library for Freya."
+description = "Metrics overlays for Freya."
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
 readme = "../../README.md"
@@ -18,3 +18,4 @@ workspace = true
 freya-core = { workspace = true }
 freya-winit = { workspace = true }
 freya-engine = { workspace = true }
+tracing = { workspace = true }

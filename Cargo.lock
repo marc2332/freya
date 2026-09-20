@@ -2249,7 +2249,7 @@ dependencies = [
  "freya-edit",
  "freya-engine",
  "freya-i18n",
- "freya-performance-plugin",
+ "freya-metrics-plugin",
  "freya-radio",
  "freya-skia-safe",
  "freya-testing",
@@ -2570,7 +2570,7 @@ dependencies = [
  "freya-icons",
  "freya-markdown",
  "freya-material-design",
- "freya-performance-plugin",
+ "freya-metrics-plugin",
  "freya-plotters-backend",
  "freya-query",
  "freya-radio",
@@ -2650,6 +2650,7 @@ dependencies = [
  "freya-core",
  "freya-edit",
  "freya-engine",
+ "freya-testing",
  "ropey",
  "rustc-hash 2.1.3",
  "smallvec",
@@ -2829,12 +2830,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "freya-performance-plugin"
+name = "freya-metrics-plugin"
 version = "0.5.0-rc.6"
 dependencies = [
  "freya-core",
  "freya-engine",
  "freya-winit",
+ "tracing",
 ]
 
 [[package]]

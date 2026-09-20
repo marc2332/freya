@@ -79,7 +79,7 @@ pub struct ButtonSegment {
     on_press: Option<EventHandler<Event<PressEventData>>>,
     selected: bool,
     enabled: bool,
-    cursor_icon: CursorIcon,
+    cursor_icon: Option<CursorIcon>,
     key: DiffKey,
 }
 
@@ -97,7 +97,7 @@ impl ButtonSegment {
             on_press: None,
             selected: false,
             enabled: true,
-            cursor_icon: CursorIcon::default(),
+            cursor_icon: None,
             key: DiffKey::None,
         }
     }
@@ -134,7 +134,7 @@ impl ButtonSegment {
     }
 
     /// Override the cursor icon shown when hovering over this component while enabled.
-    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+    pub fn cursor(mut self, cursor_icon: impl Into<Option<CursorIcon>>) -> Self {
         self.cursor_icon = cursor_icon.into();
         self
     }
@@ -219,7 +219,7 @@ impl Component for ButtonSegment {
             .cursor(if self.enabled {
                 self.cursor_icon
             } else {
-                CursorIcon::NotAllowed
+                CursorIcon::NotAllowed.into()
             })
             .horizontal()
             .width(width)
