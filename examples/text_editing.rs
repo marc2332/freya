@@ -17,6 +17,7 @@ fn app() -> impl IntoElement {
     let a11y_id = use_a11y();
 
     paragraph()
+        .padding(12.)
         .a11y_id(a11y_id)
         .cursor_index(editable.editor().read().cursor_pos())
         .highlights(

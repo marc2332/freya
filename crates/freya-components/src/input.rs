@@ -20,9 +20,10 @@ use torin::{
     prelude::{
         Alignment,
         Area,
-        AreaModel,
         Content,
         Direction,
+        Point2D,
+        Vector2D,
     },
     size::Size,
 };
@@ -47,7 +48,7 @@ define_theme! {
     pub InputLayout {
         %[fields]
         corner_radius: CornerRadius,
-        inner_margin: Gaps,
+        padding: Gaps,
     }
 }
 
@@ -433,7 +434,7 @@ impl Component for Input {
 
         let mode = self.mode;
         let text_align = self.text_align;
-        let inner_margin = theme_layout.inner_margin;
+        let padding = theme_layout.padding;
         let multiline = self.multiline;
         let mut follow_cursor = move || {
             if !a11y_id.is_focused() || display_placeholder {
@@ -445,6 +446,7 @@ impl Component for Input {
             let Some(ParagraphHolderInner {
                 paragraph,
                 scale_factor,
+                ..
             }) = holder.as_ref()
             else {
                 warn!("Paragraph should be build by now.");
@@ -466,32 +468,29 @@ impl Component for Input {
             };
 
             let cursor_rect = paragraph.cursor_rect(&text, editor.cursor_pos(), text_align);
-            let cursor_x = cursor_rect.left / (*scale_factor as f32);
-
+            let cursor_location =
+                Point2D::new(cursor_rect.left, cursor_rect.top) / (*scale_factor as f32);
+            let visible_cursor_location =
+                cursor_location + Vector2D::new(padding.left(), padding.top());
             // Visible window start
             let visible_start_x = viewport.min_x() - area.peek().min_x();
 
             // Minimally reveal the cursor
-            if cursor_x < visible_start_x {
-                scroll_controller.scroll_to_x(-cursor_x as i32);
-            } else if cursor_x + inner_margin.horizontal() > visible_start_x + viewport.width() {
+            if visible_cursor_location.x < visible_start_x {
+                scroll_controller.scroll_to_x(-cursor_location.x as i32);
+            } else if visible_cursor_location.x > visible_start_x + viewport.width() {
                 scroll_controller
-                    .scroll_to_x(-(cursor_x + inner_margin.horizontal() - viewport.width()) as i32);
+                    .scroll_to_x(-(area.peek().width() - viewport.width()).max(0.0) as i32);
             }
 
             if multiline {
-                let cursor_top = cursor_rect.top / (*scale_factor as f32);
-                let cursor_bottom = cursor_rect.bottom / (*scale_factor as f32);
+                let cursor_bottom = cursor_rect.bottom / (*scale_factor as f32) + padding.bottom();
                 let visible_start_y = viewport.min_y() - area.peek().min_y();
 
-                if cursor_top < visible_start_y {
-                    scroll_controller.scroll_to_y(-cursor_top as i32);
-                } else if cursor_bottom + inner_margin.vertical()
-                    > visible_start_y + viewport.height()
-                {
-                    scroll_controller.scroll_to_y(
-                        -(cursor_bottom + inner_margin.vertical() - viewport.height()) as i32,
-                    );
+                if visible_cursor_location.y < visible_start_y {
+                    scroll_controller.scroll_to_y(-cursor_location.y as i32);
+                } else if cursor_bottom > visible_start_y + viewport.height() {
+                    scroll_controller.scroll_to_y(-(cursor_location.y - viewport.height()) as i32);
                 }
             }
         };
@@ -595,7 +594,7 @@ impl Component for Input {
             }
             movement_timeout.reset();
             if !display_placeholder {
-                let text_area = area.read().without_gaps(&inner_margin).to_f64();
+                let text_area = area.read().to_f64();
                 let global_location = e.global_location().clamp(text_area.min(), text_area.max());
                 let location = (global_location - text_area.min()).to_point();
                 editable.process_event(EditableEvent::Down {
@@ -631,7 +630,7 @@ impl Component for Input {
 
         let on_global_pointer_move = move |e: Event<PointerEventData>| {
             if a11y_id.is_focused() && *is_dragging.read() {
-                let text_area = area.read().without_gaps(&inner_margin).to_f64();
+                let text_area = area.read().to_f64();
                 let location = (e.global_location() - text_area.min()).to_point();
                 editable.process_event(EditableEvent::Move {
                     location,
@@ -803,16 +802,10 @@ impl Component for Input {
                         paragraph()
                             .holder(holder.read().clone())
                             .on_sized(on_paragraph_sized)
-                            .min_width(Size::func(move |context| {
-                                Some(context.parent - theme_layout.inner_margin.horizontal())
-                            }))
-                            .maybe(self.multiline, |el| {
-                                el.max_width(Size::func(move |context| {
-                                    Some(context.parent - theme_layout.inner_margin.horizontal())
-                                }))
-                            })
+                            .min_width(Size::percent(100.))
+                            .maybe(self.multiline, |el| el.max_width(Size::percent(100.)))
                             .maybe(self.enabled, |el| el.on_focus_press(on_focus_press))
-                            .margin(theme_layout.inner_margin)
+                            .padding(theme_layout.padding)
                             .cursor_index(cursor_index)
                             .cursor_color(cursor_color)
                             .color(color)
