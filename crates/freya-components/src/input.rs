@@ -692,6 +692,11 @@ impl Component for Input {
         };
 
         let on_paragraph_sized = move |e: Event<SizedEventData>| {
+            let viewport = viewport_area();
+            if viewport.width() > 0. {
+                scroll_controller.apply_layout(e.area.size, viewport.size);
+            }
+
             let text_size_changed = area.peek().size != e.area.size;
             area.set_if_modified(e.area);
             if text_size_changed {

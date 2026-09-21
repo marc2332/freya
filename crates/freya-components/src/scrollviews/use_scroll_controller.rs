@@ -131,6 +131,7 @@ pub struct ScrollConfig {
 #[derive(PartialEq, Clone, Copy)]
 pub struct ScrollController {
     pub(crate) scroll: State<(i32, i32)>,
+    bounds: State<Option<(Size2D, Size2D)>>,
     pub(crate) damp: State<SmoothDamp>,
     pub(crate) drag: State<Drag>,
     pub(crate) task: State<Option<TaskHandle>>,
@@ -151,31 +152,20 @@ impl ScrollController {
     pub fn new(x: i32, y: i32) -> Self {
         Self {
             scroll: State::create((x, y)),
+            bounds: State::create(None),
             damp: State::create(SmoothDamp::new()),
             drag: State::create(Drag::default()),
             task: State::create(None),
         }
     }
 
-    /// Turns an axis scrolled to its end into a pixel position, once the content size is known.
+    /// Updates the content and viewport bounds used to clamp scroll positions.
     pub(crate) fn apply_layout(&mut self, content_size: Size2D, viewport_size: Size2D) {
+        self.bounds.set(Some((content_size, viewport_size)));
+
         let (x, y) = *self.scroll.peek();
-
-        if x == Self::END {
-            self.scroll_to_x(get_corrected_scroll_position(
-                content_size.width,
-                viewport_size.width,
-                x as f32,
-            ) as i32);
-        }
-
-        if y == Self::END {
-            self.scroll_to_y(get_corrected_scroll_position(
-                content_size.height,
-                viewport_size.height,
-                y as f32,
-            ) as i32);
-        }
+        self.scroll_to_x(x);
+        self.scroll_to_y(y);
     }
 
     pub(crate) fn position(self) -> Point2D {
@@ -185,6 +175,7 @@ impl ScrollController {
 
     /// Scrolls the horizontal axis to `to` pixels. Returns whether the position actually changed.
     pub fn scroll_to_x(&mut self, to: i32) -> bool {
+        let to = self.bounded_position(to, Direction::Horizontal);
         let changed = self.scroll.peek().0 != to;
         if changed {
             self.scroll.write().0 = to;
@@ -194,11 +185,24 @@ impl ScrollController {
 
     /// Scrolls the vertical axis to `to` pixels. Returns whether the position actually changed.
     pub fn scroll_to_y(&mut self, to: i32) -> bool {
+        let to = self.bounded_position(to, Direction::Vertical);
         let changed = self.scroll.peek().1 != to;
         if changed {
             self.scroll.write().1 = to;
         }
         changed
+    }
+
+    fn bounded_position(&self, position: i32, direction: Direction) -> i32 {
+        let Some((content_size, viewport_size)) = *self.bounds.read() else {
+            return position;
+        };
+
+        let (content_size, viewport_size) = match direction {
+            Direction::Horizontal => (content_size.width, viewport_size.width),
+            Direction::Vertical => (content_size.height, viewport_size.height),
+        };
+        get_corrected_scroll_position(content_size, viewport_size, position as f32) as i32
     }
 
     /// Scrolls `scroll_direction` to `scroll_position`.
