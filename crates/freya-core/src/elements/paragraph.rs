@@ -31,6 +31,7 @@ use freya_engine::prelude::{
 use torin::prelude::{
     Area,
     CursorPoint,
+    Gaps,
     Length,
     Point2D,
     Position,
@@ -106,7 +107,7 @@ pub fn paragraph() -> Paragraph {
 pub struct ParagraphHolderInner {
     pub paragraph: Rc<SkParagraph>,
     pub scale_factor: f64,
-    pub padding: Point2D,
+    pub padding: Gaps,
 }
 
 /// A shared slot that receives the laid-out paragraph, so callers can hit-test and measure
@@ -140,8 +141,8 @@ impl ParagraphHolder {
         };
 
         CursorPoint::new(
-            location.x - f64::from(holder.padding.x) / holder.scale_factor,
-            location.y - f64::from(holder.padding.y) / holder.scale_factor,
+            location.x - f64::from(holder.padding.left()) / holder.scale_factor,
+            location.y - f64::from(holder.padding.top()) / holder.scale_factor,
         )
     }
 }
@@ -368,10 +369,7 @@ impl ElementExt for ParagraphElement {
             .replace(ParagraphHolderInner {
                 paragraph,
                 scale_factor: context.scale_factor,
-                padding: Point2D::new(
-                    context.torin_node.padding.left(),
-                    context.torin_node.padding.top(),
-                ),
+                padding: context.torin_node.padding,
             });
 
         Some((size, Rc::new(())))
@@ -433,10 +431,7 @@ impl ElementExt for ParagraphElement {
             .replace(ParagraphHolderInner {
                 paragraph: Rc::new(paragraph),
                 scale_factor: context.scale_factor,
-                padding: Point2D::new(
-                    self.layout.layout.padding.left(),
-                    self.layout.layout.padding.top(),
-                ),
+                padding: self.layout.layout.padding,
             });
 
         let inner_area = context.node_layout.inner_area;
