@@ -374,21 +374,21 @@ fn register_base_component_themes(theme: &mut Theme) {
         "input_layout",
         InputLayoutThemePreference {
             corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
-            inner_margin: Preference::Specific(Gaps::new(8., 8., 8., 8.)),
+            padding: Preference::Specific(Gaps::new(8., 8., 8., 8.)),
         },
     );
     theme.set(
         "compact_input_layout",
         InputLayoutThemePreference {
             corner_radius: Preference::Specific(CornerRadius::new_all(4.)),
-            inner_margin: Preference::Specific(Gaps::new(4., 6., 4., 6.)),
+            padding: Preference::Specific(Gaps::new(4., 6., 4., 6.)),
         },
     );
     theme.set(
         "expanded_input_layout",
         InputLayoutThemePreference {
             corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
-            inner_margin: Preference::Specific(Gaps::new(12., 12., 12., 12.)),
+            padding: Preference::Specific(Gaps::new(12., 12., 12., 12.)),
         },
     );
     theme.set(
