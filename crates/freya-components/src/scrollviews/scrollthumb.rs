@@ -10,9 +10,10 @@ use torin::{
 use crate::{
     get_theme,
     scrollviews::{
+        Axis,
         ScrollBarThemePartial,
         ScrollBarThemePreference,
-        shared::Axis,
+        ScrollBarThumbEvents,
     },
 };
 
@@ -24,8 +25,9 @@ enum ScrollThumbState {
 
 #[derive(Clone, PartialEq)]
 pub struct ScrollThumb {
-    pub(crate) theme: Option<ScrollBarThemePartial>,
+    pub theme: Option<ScrollBarThemePartial>,
     pub clicking_scrollbar: State<Option<(Axis, f64)>>,
+    pub thumb_events: ScrollBarThumbEvents,
     pub axis: Axis,
     pub size: f32,
     pub cross_size: f32,
@@ -33,7 +35,7 @@ pub struct ScrollThumb {
 }
 
 impl ComponentOwned for ScrollThumb {
-    fn render(mut self) -> impl IntoElement {
+    fn render(self) -> impl IntoElement {
         let scrollbar_theme = get_theme!(&self.theme, ScrollBarThemePreference, "scrollbar");
         let mut state = use_state(|| ScrollThumbState::Idle);
 
@@ -78,23 +80,8 @@ impl ComponentOwned for ScrollThumb {
             .cross_align(cross_align)
             .on_pointer_over(on_pointer_over)
             .on_pointer_out(on_pointer_out)
-            .on_pointer_down(move |e: Event<PointerEventData>| {
-                if !e.data().is_primary() {
-                    return;
-                }
-                if self.axis == Axis::X {
-                    self.clicking_scrollbar
-                        .set(Some((self.axis, e.element_location().x)));
-                } else {
-                    self.clicking_scrollbar
-                        .set(Some((self.axis, e.element_location().y)));
-                }
-            })
-            .on_pointer_press(move |e: Event<PointerEventData>| {
-                e.prevent_default();
-                e.stop_propagation();
-                self.clicking_scrollbar.set(None);
-            })
+            .on_pointer_down(self.thumb_events.on_pointer_down)
+            .on_pointer_press(self.thumb_events.on_pointer_press)
             .child(
                 rect()
                     .width(pill_width)

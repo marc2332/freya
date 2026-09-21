@@ -9,12 +9,15 @@ use freya_animation::prelude::{
     use_animation_with_dependencies,
 };
 use freya_core::prelude::*;
+use freya_sdk::timeout::Timeout;
 use torin::{
     prelude::{
         Alignment,
         Direction,
         Gaps,
+        Point2D,
         Position,
+        Size2D,
     },
     size::Size,
 };
@@ -23,6 +26,7 @@ use crate::{
     define_theme,
     get_theme,
     scrollviews::{
+        ScrollController,
         ScrollThumb,
         shared::{
             Axis,
@@ -39,29 +43,119 @@ define_theme! {
         thumb_background: Color,
         hover_thumb_background: Color,
         active_thumb_background: Color,
-        size: f32,
+        thumb_cross_size: f32,
+        expanded_thumb_cross_size: f32,
+        opacity: f32,
+        expanded_opacity: f32,
+        cross_gap: f32,
+        expanded_cross_gap: f32,
     }
+}
+
+/// Data passed to a scrollbar renderer.
+#[derive(Clone, PartialEq)]
+pub struct ScrollBarContext {
+    pub axis: Axis,
+    pub scroll_position: Point2D,
+    pub viewport_size: Size2D,
+    pub content_size: Size2D,
+    pub scroll_controller: ScrollController,
+    pub timeout: Timeout,
+    pub clicking_scrollbar: State<Option<(Axis, f64)>>,
+    pub thumb_events: ScrollBarThumbEvents,
+    pub thumb_offset: f32,
+    pub track_size: Size,
+    pub thumb_length: f32,
+}
+
+/// Pointer event handlers for a custom scrollbar thumb.
+#[derive(Clone, PartialEq)]
+pub struct ScrollBarThumbEvents {
+    pub on_pointer_down: EventHandler<Event<PointerEventData>>,
+    pub on_pointer_press: EventHandler<Event<PointerEventData>>,
+}
+
+impl ScrollBarThumbEvents {
+    pub(crate) fn new(axis: Axis, mut clicking_scrollbar: State<Option<(Axis, f64)>>) -> Self {
+        let on_pointer_down = move |event: Event<PointerEventData>| {
+            if !event.data().is_primary() {
+                return;
+            }
+            let location = event.element_location();
+            let pointer = if axis == Axis::X {
+                location.x
+            } else {
+                location.y
+            };
+            clicking_scrollbar.set(Some((axis, pointer)));
+        };
+        let on_pointer_press = move |event: Event<PointerEventData>| {
+            event.prevent_default();
+            event.stop_propagation();
+            clicking_scrollbar.set(None);
+        };
+
+        Self {
+            on_pointer_down: on_pointer_down.into(),
+            on_pointer_press: on_pointer_press.into(),
+        }
+    }
+}
+
+/// Renders Freya's default scrollbar.
+pub fn default_scrollbar(context: ScrollBarContext) -> Element {
+    ScrollBar::new(context).into()
 }
 
 #[derive(Clone, PartialEq)]
 pub struct ScrollBar {
-    pub(crate) theme: Option<ScrollBarThemePartial>,
-    pub clicking_scrollbar: State<Option<(Axis, f64)>>,
-    pub axis: Axis,
-    pub offset: f32,
-    pub size: Size,
-    pub thumb_size: f32,
+    context: ScrollBarContext,
+    theme: Option<ScrollBarThemePartial>,
+    key: DiffKey,
+}
+
+impl ScrollBar {
+    /// Creates a built-in scrollbar from renderer context data.
+    pub fn new(context: ScrollBarContext) -> Self {
+        Self {
+            context,
+            theme: None,
+            key: DiffKey::None,
+        }
+    }
+
+    /// Overrides built-in scrollbar theme values for this instance.
+    pub fn theme(mut self, theme: ScrollBarThemePartial) -> Self {
+        self.theme = Some(theme);
+        self
+    }
+}
+
+impl KeyExt for ScrollBar {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
 }
 
 impl ComponentOwned for ScrollBar {
     fn render(self) -> impl IntoElement {
-        let scrollbar_theme = get_theme!(&self.theme, ScrollBarThemePreference, "scrollbar");
-
+        let ScrollBar { context, theme, .. } = self;
+        let scrollbar_theme = get_theme!(&theme, ScrollBarThemePreference, "scrollbar");
+        let ScrollBarContext {
+            axis,
+            timeout,
+            clicking_scrollbar,
+            thumb_events,
+            thumb_offset,
+            track_size,
+            thumb_length,
+            ..
+        } = context;
         let mut hovering = use_state(|| false);
+        let is_hidden = timeout.elapsed() && clicking_scrollbar.read().is_none();
+        let is_expanded = clicking_scrollbar.read().is_some() || *hovering.read();
 
-        let is_expanded = self.clicking_scrollbar.read().is_some() || *hovering.read();
-
-        let animation = use_animation_with_dependencies(&is_expanded, |conf, is_expanded| {
+        let animation = use_animation_with_dependencies(&is_expanded, move |conf, is_expanded| {
             conf.on_creation(OnCreation::Finish);
             conf.on_change(OnChange::Rerun);
 
@@ -72,9 +166,15 @@ impl ComponentOwned for ScrollBar {
                     .ease(Ease::Out)
             };
             let value = (
-                expand(5., 8.),
-                expand(0., 220.),
-                expand(0., SCROLLBAR_MARGIN),
+                expand(
+                    scrollbar_theme.thumb_cross_size,
+                    scrollbar_theme.expanded_thumb_cross_size,
+                ),
+                expand(scrollbar_theme.opacity, scrollbar_theme.expanded_opacity),
+                expand(
+                    scrollbar_theme.cross_gap,
+                    scrollbar_theme.expanded_cross_gap,
+                ),
             );
 
             if *is_expanded {
@@ -97,9 +197,9 @@ impl ComponentOwned for ScrollBar {
             thumb_height,
             thumb_offset_x,
             thumb_offset_y,
-        ) = match self.axis {
+        ) = match axis {
             Axis::X => (
-                self.size,
+                track_size,
                 Size::px(20.),
                 0.,
                 -20.,
@@ -108,12 +208,12 @@ impl ComponentOwned for ScrollBar {
                 Gaps::new(0., SCROLLBAR_MARGIN, cross_gap, SCROLLBAR_MARGIN),
                 Size::Inner,
                 Size::px(20.),
-                self.offset + SCROLLBAR_MARGIN,
+                thumb_offset + SCROLLBAR_MARGIN,
                 0.,
             ),
             Axis::Y => (
                 Size::px(20.),
-                self.size,
+                track_size,
                 -20.,
                 0.,
                 Size::px(cross_size),
@@ -122,7 +222,7 @@ impl ComponentOwned for ScrollBar {
                 Size::px(20.),
                 Size::Inner,
                 0.,
-                self.offset + SCROLLBAR_MARGIN,
+                thumb_offset + SCROLLBAR_MARGIN,
             ),
         };
 
@@ -139,8 +239,8 @@ impl ComponentOwned for ScrollBar {
 
         rect()
             .position(Position::new_absolute())
-            .width(width)
-            .height(height)
+            .width(if is_hidden { Size::px(0.) } else { width })
+            .height(if is_hidden { Size::px(0.) } else { height })
             .offset_x(offset_x)
             .offset_y(offset_y)
             .layer(999)
@@ -152,7 +252,7 @@ impl ComponentOwned for ScrollBar {
                 rect()
                     .width(Size::fill())
                     .height(Size::fill())
-                    .direction(if self.axis == Axis::Y {
+                    .direction(if axis == Axis::Y {
                         Direction::vertical()
                     } else {
                         Direction::horizontal()
@@ -182,14 +282,19 @@ impl ComponentOwned for ScrollBar {
                             .offset_x(thumb_offset_x)
                             .offset_y(thumb_offset_y)
                             .child(ScrollThumb {
-                                theme: self.theme,
-                                clicking_scrollbar: self.clicking_scrollbar,
-                                axis: self.axis,
-                                size: self.thumb_size,
+                                theme,
+                                clicking_scrollbar,
+                                thumb_events,
+                                axis,
+                                size: thumb_length,
                                 cross_size,
                                 cross_gap,
                             }),
                     ),
             )
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
     }
 }
