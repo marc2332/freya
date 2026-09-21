@@ -157,6 +157,9 @@ pub trait WinitPlatformExt {
         F: FnOnce(&mut SkiaSurface) -> T + 'static;
 }
 
+#[derive(Clone, Copy, PartialEq)]
+struct WindowDragGesture;
+
 pub trait WindowDragExt {
     /// Drag the window on left press and move, toggle maximize on double press.
     fn window_drag(self) -> Self;
@@ -168,20 +171,22 @@ impl WindowDragExt for Rect {
             if e.button() != Some(MouseButton::Left) {
                 return;
             }
-            if EventsCombos::pressed(e.global_location()).is_double() {
+            if EventsCombos::<WindowDragGesture>::pressed(e.global_location()).is_double() {
                 Platform::get().with_window(Platform::window_id(), |window| {
                     window.set_maximized(!window.is_maximized());
                 });
             }
         })
         .on_global_pointer_move(|e: Event<PointerEventData>| {
-            if EventsCombos::moved(e.global_location()) {
+            if EventsCombos::<WindowDragGesture>::moved(e.global_location()) {
                 Platform::get().with_window(Platform::window_id(), |window| {
                     let _ = window.drag_window();
                 });
             }
         })
-        .on_global_pointer_press(|_: Event<PointerEventData>| EventsCombos::released())
+        .on_global_pointer_press(|_: Event<PointerEventData>| {
+            EventsCombos::<WindowDragGesture>::released();
+        })
     }
 }
 

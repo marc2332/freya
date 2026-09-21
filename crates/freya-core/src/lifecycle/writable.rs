@@ -78,7 +78,7 @@ impl<T: 'static> Writable<T> {
     /// Create from local `State<T>`.
     pub fn from_state(state: State<T>) -> Self {
         Self {
-            peek_fn: Rc::new(move || state.peek()),
+            peek_fn: Rc::new(move || state.peek_unchecked()),
             write_fn: Rc::new(move || state.write_silently()),
             subscribe_fn: Rc::new(move || state.subscribe()),
             notify_fn: Rc::new(move || state.notify()),
@@ -102,26 +102,36 @@ impl<T: 'static> Writable<T> {
 
     /// Read the value and subscribe to changes.
     #[track_caller]
-    pub fn read(&self) -> ReadRef<'static, T> {
+    pub fn read(&self) -> ReadRef<'_, T> {
         self.subscribe();
         self.peek()
     }
 
     /// Read the value without subscribing.
     #[track_caller]
-    pub fn peek(&self) -> ReadRef<'static, T> {
+    pub fn peek(&self) -> ReadRef<'_, T> {
+        (self.peek_fn)()
+    }
+
+    /// Read the value and subscribe to changes, returning a static guard.
+    ///
+    /// This bypasses the borrow of the [`Writable`] handle, but the underlying
+    /// storage still checks for conflicting runtime borrows.
+    #[track_caller]
+    pub fn read_unchecked(&self) -> ReadRef<'static, T> {
+        self.subscribe();
         (self.peek_fn)()
     }
 
     /// Write the value and notify subscribers.
     #[track_caller]
-    pub fn write(&mut self) -> WriteRef<'static, T> {
+    pub fn write(&mut self) -> WriteRef<'_, T> {
         self.notify();
         (self.write_fn)()
     }
 
     #[track_caller]
-    pub fn write_if(&mut self, with: impl FnOnce(WriteRef<'static, T>) -> bool) -> bool {
+    pub fn write_if(&mut self, with: impl FnOnce(WriteRef<'_, T>) -> bool) -> bool {
         let changed = with((self.write_fn)());
         if changed {
             self.notify();

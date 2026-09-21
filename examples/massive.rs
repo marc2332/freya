@@ -6,14 +6,14 @@ use freya::{
     helpers::from_fn_standalone,
     prelude::*,
 };
-use freya_performance_plugin::PerformanceOverlayPlugin;
+use freya_metrics_plugin::MetricsPlugin;
 
 #[cfg_attr(feature = "hotpath", hotpath::main(percentiles = [90, 95, 99]))]
 fn main() {
     launch(
         LaunchConfig::new()
             .with_window(WindowConfig::new(app))
-            .with_plugin(PerformanceOverlayPlugin::default()),
+            .with_plugin(MetricsPlugin::default()),
     )
 }
 

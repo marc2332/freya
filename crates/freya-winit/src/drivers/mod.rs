@@ -213,6 +213,21 @@ impl GraphicsDriver {
         }
     }
 
+    pub fn resource_cache_usage(&self) -> Option<(usize, usize)> {
+        match self {
+            #[cfg(all(
+                any(target_os = "linux", target_os = "windows", target_os = "android"),
+                feature = "gpu"
+            ))]
+            Self::OpenGl(driver) => Some(driver.resource_cache_usage()),
+            #[cfg(all(target_os = "macos", feature = "gpu"))]
+            Self::Metal(driver) => Some(driver.resource_cache_usage()),
+            #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
+            Self::Vulkan(driver) => Some(driver.resource_cache_usage()),
+            Self::Software(_) => None,
+        }
+    }
+
     /// The name of the active graphics driver.
     pub fn name(&self) -> &'static str {
         match self {
