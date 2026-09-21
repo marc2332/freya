@@ -361,30 +361,22 @@ demos! {
         Table::new()
             .column_widths([Size::flex(1.), Size::flex(1.)])
             .child(
-                TableHead::new().child(
-                    TableRow::new()
-                        .child(
-                            TableCell::new()
-                                .order_direction(Some(if ascending() {
-                                    OrderDirection::Down
-                                } else {
-                                    OrderDirection::Up
-                                }))
-                                .on_press(move |_| ascending.toggle())
-                                .child("Name"),
-                        )
-                        .child(TableCell::new().child("Type")),
-                ),
+                TableRow::new()
+                    .child(
+                        rect()
+                            .horizontal()
+                            .cross_align(Alignment::Center)
+                            .on_press(move |_| ascending.toggle())
+                            .child(ArrowIcon::new().margin(Gaps::new(0., 10., 0., 0.)).rotate(
+                                if ascending() { 0. } else { 180. },
+                            ))
+                            .child("Name"),
+                    )
+                    .child("Type"),
             )
-            .child(
-                TableBody::new()
-                    .children(gods.into_iter().map(|(name, kind)| {
-                        TableRow::new()
-                            .key(name)
-                            .child(TableCell::new().child(name))
-                            .child(TableCell::new().child(kind))
-                    })),
-            )
+            .children(gods.into_iter().map(|(name, kind)| {
+                TableRow::new().key(name).child(name).child(kind)
+            }))
     }
 
     ScrollViewDemo => "ScrollView" {
