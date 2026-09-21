@@ -16,11 +16,11 @@ use torin::{
 };
 
 use crate::scrollviews::{
+    ScrollBar,
     ScrollBarContext,
     ScrollBarThumbEvents,
     ScrollConfig,
     ScrollController,
-    default_scrollbar,
     shared::{
         Axis,
         get_container_sizes,
@@ -96,7 +96,7 @@ impl Default for ScrollView {
             invert_scroll_wheel: false,
             drag_scrolling: true,
             on_sized: None,
-            scrollbar: default_scrollbar.into(),
+            scrollbar: ScrollBar::default_renderer(),
             key: DiffKey::None,
         }
     }

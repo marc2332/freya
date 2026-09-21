@@ -17,11 +17,11 @@ use torin::{
 };
 
 use crate::scrollviews::{
+    ScrollBar,
     ScrollBarContext,
     ScrollBarThumbEvents,
     ScrollConfig,
     ScrollController,
-    default_scrollbar,
     shared::{
         Axis,
         get_container_sizes,
@@ -254,7 +254,7 @@ impl<B: Fn(VirtualItem, &()) -> Element> VirtualScrollView<(), B> {
             on_sized: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
-            scrollbar: default_scrollbar.into(),
+            scrollbar: ScrollBar::default_renderer(),
             key: DiffKey::None,
         }
     }
@@ -278,7 +278,7 @@ impl<B: Fn(VirtualItem, &()) -> Element> VirtualScrollView<(), B> {
             on_sized: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
-            scrollbar: default_scrollbar.into(),
+            scrollbar: ScrollBar::default_renderer(),
             key: DiffKey::None,
         }
     }
@@ -326,7 +326,7 @@ impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
             on_sized: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
-            scrollbar: default_scrollbar.into(),
+            scrollbar: ScrollBar::default_renderer(),
             key: DiffKey::None,
         }
     }
@@ -355,7 +355,7 @@ impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
             on_sized: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
-            scrollbar: default_scrollbar.into(),
+            scrollbar: ScrollBar::default_renderer(),
             key: DiffKey::None,
         }
     }

@@ -102,11 +102,6 @@ impl ScrollBarThumbEvents {
     }
 }
 
-/// Renders Freya's default scrollbar.
-pub fn default_scrollbar(context: ScrollBarContext) -> Element {
-    ScrollBar::new(context).into()
-}
-
 #[derive(Clone, PartialEq)]
 pub struct ScrollBar {
     context: ScrollBarContext,
@@ -115,6 +110,11 @@ pub struct ScrollBar {
 }
 
 impl ScrollBar {
+    /// Creates the default scrollbar renderer.
+    pub fn default_renderer() -> Callback<ScrollBarContext, Element> {
+        (|context| Self::new(context).into()).into()
+    }
+
     /// Creates a built-in scrollbar from renderer context data.
     pub fn new(context: ScrollBarContext) -> Self {
         Self {
