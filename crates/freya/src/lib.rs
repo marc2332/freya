@@ -42,6 +42,7 @@
 //! - [Fonts](self::_docs::fonts)
 //! - [Layers](self::_docs::layers)
 //! - [Optimizing](self::_docs::optimizing)
+//! - [Platform Integration](freya_core::platform::Platform)
 //! - [Platforms](self::_docs::platforms)
 //! - [Android](https://github.com/marc2332/freya/tree/main/examples/android)
 //! - [Web](https://github.com/marc2332/freya/tree/main/examples/web)
