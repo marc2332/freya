@@ -14,9 +14,13 @@ categories = ["gui", "asynchronous"]
 [lints]
 workspace = true
 
+[package.metadata.docs.rs]
+features = ["docs"]
+
 [features]
 router = ["dep:freya-router"]
 remote-asset = ["dep:reqwest", "dep:url"]
+docs = []
 gif = ["dep:gif"]
 calendar = ["dep:chrono"]
 titlebar = []
