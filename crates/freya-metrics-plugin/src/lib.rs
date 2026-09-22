@@ -283,11 +283,11 @@ impl FreyaPlugin for MetricsPlugin {
                 metrics,
             } => {
                 let performance_metrics = self.get_metrics(window.id()).performance_metrics();
-                tracing::info!(
+                tracing::debug!(
                     target: "freya::metrics::performance",
                     metrics = ?performance_metrics,
                 );
-                tracing::info!(
+                tracing::debug!(
                     target: "freya::metrics::stats",
                     metrics = ?metrics,
                 );
