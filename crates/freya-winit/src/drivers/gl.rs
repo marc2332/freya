@@ -78,7 +78,7 @@ pub struct OpenGLDriver {
 
 impl Drop for OpenGLDriver {
     fn drop(&mut self) {
-        self.gr_context.abandon();
+        self.gr_context.release_resources_and_abandon();
     }
 }
 
