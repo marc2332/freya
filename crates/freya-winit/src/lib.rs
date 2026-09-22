@@ -8,6 +8,7 @@ use freya_core::integration::GlobalContexts;
 
 use crate::{
     config::LaunchConfig,
+    drivers::GraphicsContext,
     renderer::{
         LaunchProxy,
         NativeEvent,
@@ -156,6 +157,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
         waker,
         exit_on_close: launch_config.exit_on_close,
         gpu_resource_cache_limit: launch_config.gpu_resource_cache_limit,
+        graphics_context: GraphicsContext::default(),
     };
 
     #[cfg(feature = "tray")]
