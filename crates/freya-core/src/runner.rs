@@ -734,9 +734,13 @@ impl Runner {
 
         let mut mutations = Mutations::default();
 
+        self.dirty_scopes
+            .retain(|scope_id| self.scopes.contains_key(scope_id));
+
         let dirty_scopes = self
             .dirty_scopes
-            .drain()
+            .iter()
+            .copied()
             .filter_map(|id| self.scopes.get(&id).cloned())
             .sorted_by_key(|s| s.borrow().height)
             .map(|s| s.borrow().id)
@@ -746,7 +750,7 @@ impl Runner {
 
         for scope_id in dirty_scopes {
             // No need to run scopes more than once
-            if visited_scopes.contains(&scope_id) {
+            if visited_scopes.contains(&scope_id) || !self.dirty_scopes.remove(&scope_id) {
                 continue;
             }
 
