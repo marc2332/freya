@@ -138,10 +138,6 @@ impl InputValidator {
 ///     let value = use_state(String::new);
 ///     Input::new(value).placeholder("Type here")
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_input.png").render();
 /// ```
 /// ## **Filled**
 ///
@@ -151,10 +147,6 @@ impl InputValidator {
 ///     let value = use_state(String::new);
 ///     Input::new(value).placeholder("Type here").filled()
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_filled_input.png").render();
 /// ```
 /// ## **Flat**
 ///
@@ -164,21 +156,9 @@ impl InputValidator {
 ///     let value = use_state(String::new);
 ///     Input::new(value).placeholder("Type here").flat()
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_flat_input.png").render();
 /// ```
 ///
-/// # Preview
-/// ![Input Preview][input]
-/// ![Filled Input Preview][filled_input]
-/// ![Flat Input Preview][flat_input]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("input", "images/gallery_input.png"),
-    doc = embed_doc_image::embed_image!("filled_input", "images/gallery_filled_input.png"),
-    doc = embed_doc_image::embed_image!("flat_input", "images/gallery_flat_input.png"),
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct Input {
     pub(crate) theme_colors: Option<InputColorsThemePartial>,

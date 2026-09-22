@@ -65,10 +65,6 @@ pub enum ButtonLayoutVariant {
 ///         .on_press(|_| println!("Pressed!"))
 ///         .child("Press me")
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_button.png").render();
 /// ```
 /// ## **Filled**
 ///
@@ -80,10 +76,6 @@ pub enum ButtonLayoutVariant {
 ///         .filled()
 ///         .child("Press me")
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_filled_button.png").render();
 /// ```
 /// ## **Outline**
 ///
@@ -95,10 +87,6 @@ pub enum ButtonLayoutVariant {
 ///         .outline()
 ///         .child("Press me")
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_outline_button.png").render();
 /// ```
 /// ## **Flat**
 ///
@@ -110,23 +98,9 @@ pub enum ButtonLayoutVariant {
 ///         .flat()
 ///         .child("Press me")
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_flat_button.png").render();
 /// ```
 ///
-/// # Preview
-/// ![Button Preview][button]
-/// ![Outline Button Preview][outline_button]
-/// ![Filled Button Preview][filled_button]
-/// ![Flat Button Preview][flat_button]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("button", "images/gallery_button.png"),
-    doc = embed_doc_image::embed_image!("filled_button", "images/gallery_filled_button.png"),
-    doc = embed_doc_image::embed_image!("outline_button", "images/gallery_outline_button.png"),
-    doc = embed_doc_image::embed_image!("flat_button", "images/gallery_flat_button.png"),
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct Button {
     pub(crate) theme_colors: Option<ButtonColorsThemePartial>,

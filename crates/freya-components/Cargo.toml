@@ -14,13 +14,9 @@ categories = ["gui", "asynchronous"]
 [lints]
 workspace = true
 
-[package.metadata.docs.rs]
-features = ["docs"]
-
 [features]
 router = ["dep:freya-router"]
 remote-asset = ["dep:reqwest", "dep:url"]
-docs = ["dep:embed-doc-image"]
 gif = ["dep:gif"]
 calendar = ["dep:chrono"]
 titlebar = []
@@ -58,9 +54,6 @@ cfg-if = "1.0"
 # Errors
 anyhow = { workspace = true }
 thiserror = { workspace = true }
-
-# Docs
-embed-doc-image = { version = "0.1.4", optional = true }
 
 # GIF
 gif = { version = "0.13.3", optional = true }
