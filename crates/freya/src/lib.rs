@@ -43,6 +43,10 @@
 //! - [Platforms](self::_docs::platforms)
 //! - [Development Setup](self::_docs::development_setup)
 //! - [Extending Components](self::_docs::extending_components)
+#![cfg_attr(
+    feature = "wgpu",
+    doc = " - [Sharing GPU textures with wgpu](self::_docs::wgpu_textures)"
+)]
 //!
 //! ### Learn
 //! - [Built-in Components](crate::components)
@@ -59,6 +63,7 @@
 //! - [Terminal](freya_terminal)
 //! - [Camera](freya_camera)
 //! - [Video](freya_video)
+//! - [Wgpu](freya_wgpu)
 //! - [Freya Query](freya_query)
 //! - [Tokio Integration](self::_docs::tokio_integration)
 //! - [Borderless Windows](self::_docs::borderless)
@@ -77,6 +82,7 @@
 //! - `sdk-tokio`: Enables the Tokio utilities from [freya_sdk]. Implies `sdk`.
 //! - `gif`: Enables the [GifViewer](components::GifViewer) component.
 //! - `video`: Reexport [freya_video] under [video].
+//! - `wgpu`: Reexport [freya_wgpu] under [wgpu], to share GPU textures with wgpu renderers.
 //! - `plot`: Reexport of plotters under [plot].
 //! - `material-design`: Reexport [freya_material_design] under [material_design].
 //! - `calendar`: Enables the [Calendar](components::Calendar) component.
@@ -382,6 +388,13 @@ pub mod camera {
 #[cfg_attr(feature = "docs", doc(cfg(feature = "video")))]
 pub mod video {
     pub use freya_video::*;
+}
+
+/// Reexport `freya-wgpu` when the `wgpu` feature is enabled.
+#[cfg(feature = "wgpu")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "wgpu")))]
+pub mod wgpu {
+    pub use freya_wgpu::*;
 }
 
 /// Reexport `freya-performance-plugin` when the `performance` feature is enabled.

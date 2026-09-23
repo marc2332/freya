@@ -17,8 +17,9 @@ use crate::{
 };
 mod accessibility;
 pub mod config;
-mod drivers;
+pub mod drivers;
 pub mod extensions;
+pub mod gpu_interop;
 pub mod integration;
 pub mod plugins;
 pub mod renderer;
@@ -147,6 +148,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
         waker,
         exit_on_close: launch_config.exit_on_close,
         gpu_resource_cache_limit: launch_config.gpu_resource_cache_limit,
+        external_gpu_device: launch_config.external_gpu_device,
     };
 
     #[cfg(feature = "tray")]

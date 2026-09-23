@@ -22,10 +22,13 @@ use winit::{
     },
 };
 
-use crate::renderer::{
-    NativeEvent,
-    NativeWindowEvent,
-    NativeWindowEventAction,
+use crate::{
+    gpu_interop::GpuInterop,
+    renderer::{
+        NativeEvent,
+        NativeWindowEvent,
+        NativeWindowEventAction,
+    },
 };
 
 #[derive(Clone)]
@@ -103,9 +106,12 @@ impl PluginsManager {
 
 /// Event emitted to Plugins.
 pub enum PluginEvent<'a> {
-    /// A runner just got created.
+    /// A runner just got created, before it renders for the first time.
+    ///
+    /// Root contexts a plugin wants every component to see have to be provided here.
     RunnerCreated {
         runner: &'a mut Runner,
+        gpu_interop: &'a GpuInterop,
     },
     /// A Window just got created.
     WindowCreated {
@@ -116,13 +122,18 @@ pub enum PluginEvent<'a> {
         runner: &'a mut Runner,
         graphics_driver: &'static str,
         gpu_name: Option<&'a str>,
+        /// Shared GPU device access, empty unless the window renders on an external device.
+        gpu_interop: &'a GpuInterop,
     },
 
     /// The graphics driver was rebuilt at runtime.
+    ///
+    /// Every GPU resource created on the previous device is invalid from this point on.
     GraphicsDriverChanged {
         window: &'a Window,
         graphics_driver: &'static str,
         gpu_name: Option<&'a str>,
+        gpu_interop: &'a GpuInterop,
     },
 
     /// A Window just got closed.

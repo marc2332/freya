@@ -1,0 +1,25 @@
+[package]
+name = "bevy"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+# Its own workspace, so the main one never has to build Bevy.
+[workspace]
+
+[dependencies]
+freya = { path = "../../crates/freya", features = ["wgpu"] }
+futures-lite = "2.6"
+
+[dependencies.bevy]
+version = "0.19.1"
+default-features = false
+features = [
+  "std",
+  "bevy_log",
+  "bevy_asset",
+  "bevy_window",
+  "bevy_render",
+  "bevy_core_pipeline",
+  "bevy_pbr",
+]

@@ -44,6 +44,8 @@ pub struct MetalDriver {
     metal_layer: Retained<CAMetalLayer>,
     command_queue: Retained<ProtocolObject<dyn MTLCommandQueue>>,
     gr_context: DirectContext,
+    /// Whether the device was created by Freya rather than by an external renderer.
+    owns_device: bool,
 }
 
 impl MetalDriver {
@@ -52,12 +54,51 @@ impl MetalDriver {
         window_attributes: WindowAttributes,
         gpu_resource_cache_limit: usize,
     ) -> (Self, Window) {
-        let transparent = window_attributes.transparent;
-        let window = event_loop
-            .create_window(window_attributes)
-            .expect("Could not create window with Metal context");
-
         let device = MTLCreateSystemDefaultDevice().expect("No Metal-capable device found");
+        let command_queue = device
+            .newCommandQueue()
+            .expect("Could not create Metal command queue");
+
+        Self::build(
+            event_loop,
+            window_attributes,
+            gpu_resource_cache_limit,
+            device,
+            command_queue,
+            true,
+        )
+        .expect("Could not create window with Metal context")
+    }
+
+    /// Build the driver on a Metal device owned by an external renderer.
+    ///
+    /// Sharing the command queue is what orders the owner's work against Freya's command buffers.
+    pub fn from_external(
+        event_loop: &ActiveEventLoop,
+        window_attributes: WindowAttributes,
+        gpu_resource_cache_limit: usize,
+        external: crate::drivers::ExternalMetalDevice,
+    ) -> Result<(Self, Window), Box<dyn std::error::Error>> {
+        Self::build(
+            event_loop,
+            window_attributes,
+            gpu_resource_cache_limit,
+            external.device,
+            external.command_queue,
+            false,
+        )
+    }
+
+    fn build(
+        event_loop: &ActiveEventLoop,
+        window_attributes: WindowAttributes,
+        gpu_resource_cache_limit: usize,
+        device: Retained<ProtocolObject<dyn MTLDevice>>,
+        command_queue: Retained<ProtocolObject<dyn MTLCommandQueue>>,
+        owns_device: bool,
+    ) -> Result<(Self, Window), Box<dyn std::error::Error>> {
+        let transparent = window_attributes.transparent;
+        let window = event_loop.create_window(window_attributes)?;
 
         let size = window.inner_size();
 
@@ -76,28 +117,21 @@ impl MetalDriver {
                 layer.setOpaque(false);
             }
 
-            let raw_handle = window
-                .window_handle()
-                .expect("Could not get window handle")
-                .as_raw();
+            let raw_handle = window.window_handle()?.as_raw();
 
             match raw_handle {
                 RawWindowHandle::AppKit(appkit) => {
                     let view = unsafe { (appkit.ns_view.as_ptr() as *mut NSView).as_ref() }
-                        .expect("NSView pointer is null");
+                        .ok_or("NSView pointer is null")?;
 
                     view.setWantsLayer(true);
                     view.setLayer(Some(&layer));
                 }
-                _ => panic!("Metal driver only supports AppKit (macOS) windows"),
+                _ => return Err("Metal driver only supports AppKit windows".into()),
             };
 
             layer
         };
-
-        let command_queue = device
-            .newCommandQueue()
-            .expect("Could not create Metal command queue");
 
         let backend = unsafe {
             mtl::BackendContext::new(
@@ -107,7 +141,7 @@ impl MetalDriver {
         };
 
         let mut gr_context =
-            direct_contexts::make_metal(&backend, None).expect("Could not create Metal context");
+            direct_contexts::make_metal(&backend, None).ok_or("Could not create Metal context")?;
 
         gr_context.set_resource_cache_limit(gpu_resource_cache_limit);
 
@@ -115,9 +149,15 @@ impl MetalDriver {
             metal_layer,
             command_queue,
             gr_context,
+            owns_device,
         };
 
-        (driver, window)
+        Ok((driver, window))
+    }
+
+    /// The Skia context when the device is shared with an external renderer.
+    pub fn shared_gr_context(&self) -> Option<DirectContext> {
+        (!self.owns_device).then(|| self.gr_context.clone())
     }
 
     pub fn present(

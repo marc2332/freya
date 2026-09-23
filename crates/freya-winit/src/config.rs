@@ -23,6 +23,7 @@ use winit::{
 };
 
 use crate::{
+    drivers::ExternalGpuDevice,
     plugins::{
         FreyaPlugin,
         PluginsManager,
@@ -265,6 +266,7 @@ pub struct LaunchConfig {
     pub(crate) exit_on_close: bool,
     pub(crate) event_loop: Option<winit::event_loop::EventLoop<crate::renderer::NativeEvent>>,
     pub(crate) gpu_resource_cache_limit: usize,
+    pub(crate) external_gpu_device: Option<ExternalGpuDevice>,
 }
 
 impl Default for LaunchConfig {
@@ -280,6 +282,7 @@ impl Default for LaunchConfig {
             exit_on_close: true,
             event_loop: None,
             gpu_resource_cache_limit: 1024 * 1024 * 1024,
+            external_gpu_device: None,
         }
     }
 }
@@ -287,6 +290,16 @@ impl Default for LaunchConfig {
 impl LaunchConfig {
     pub fn new() -> LaunchConfig {
         LaunchConfig::default()
+    }
+
+    /// Render on a GPU device created by an external renderer such as wgpu.
+    ///
+    /// Freya builds its swapchain and Skia context on that device instead of creating its own, so
+    /// the renderer's textures can be drawn without any copy. If the device cannot be used the
+    /// launch still succeeds on a device of Freya's own, with sharing disabled.
+    pub fn with_external_gpu_device(mut self, external_gpu_device: ExternalGpuDevice) -> Self {
+        self.external_gpu_device = Some(external_gpu_device);
+        self
     }
 
     /// Load a window icon from image bytes. Pass the result to [`WindowConfig::with_icon`].

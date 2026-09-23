@@ -57,7 +57,10 @@ use crate::{
         CloseDecision,
         WindowConfig,
     },
-    drivers::GraphicsDriver,
+    drivers::{
+        ExternalGpuDevice,
+        GraphicsDriver,
+    },
     integration::is_ime_role,
     plugins::{
         PluginEvent,
@@ -95,6 +98,7 @@ pub struct WinitRenderer {
     pub waker: Waker,
     pub exit_on_close: bool,
     pub gpu_resource_cache_limit: usize,
+    pub external_gpu_device: Option<ExternalGpuDevice>,
 }
 
 pub struct RendererContext<'a> {
@@ -107,6 +111,7 @@ pub struct RendererContext<'a> {
     pub font_collection: &'a mut FontCollection,
     pub active_event_loop: &'a ActiveEventLoop,
     pub gpu_resource_cache_limit: usize,
+    pub external_gpu_device: Option<ExternalGpuDevice>,
 }
 
 impl RendererContext<'_> {
@@ -120,6 +125,7 @@ impl RendererContext<'_> {
             self.font_manager,
             self.fallback_fonts,
             self.gpu_resource_cache_limit,
+            self.external_gpu_device.clone(),
             self.global_contexts,
         );
 
@@ -291,6 +297,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     &self.font_manager,
                     &self.fallback_fonts,
                     self.gpu_resource_cache_limit,
+                    self.external_gpu_device.clone(),
                     &self.global_contexts,
                 );
 
@@ -319,7 +326,13 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     active_event_loop,
                     app_window.window_attributes.clone(),
                     self.gpu_resource_cache_limit,
+                    self.external_gpu_device.clone(),
                 );
+
+                app_window.gpu_interop.invalidate();
+                if let Some(shared) = new_driver.gpu_interop() {
+                    app_window.gpu_interop.share(shared);
+                }
 
                 let new_id = new_window.id();
                 app_window.driver = new_driver;
@@ -355,6 +368,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     font_manager: &mut self.font_manager,
                     font_collection: &mut self.font_collection,
                     gpu_resource_cache_limit: self.gpu_resource_cache_limit,
+                    external_gpu_device: self.external_gpu_device.clone(),
                     global_contexts: &self.global_contexts,
                 };
                 (cb)(&mut renderer_context);
@@ -383,6 +397,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     font_manager: &mut self.font_manager,
                     font_collection: &mut self.font_collection,
                     gpu_resource_cache_limit: self.gpu_resource_cache_limit,
+                    external_gpu_device: self.external_gpu_device.clone(),
                 };
                 match action {
                     NativeTrayEventAction::TrayEvent(icon_event) => {
@@ -411,6 +426,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             &self.font_manager,
                             &self.fallback_fonts,
                             self.gpu_resource_cache_limit,
+                            self.external_gpu_device.clone(),
                             &self.global_contexts,
                         );
 
@@ -625,6 +641,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                             &self.font_manager,
                                             &self.fallback_fonts,
                                             self.gpu_resource_cache_limit,
+                                            self.external_gpu_device.clone(),
                                             &self.global_contexts,
                                         );
 
@@ -673,6 +690,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                             font_manager: &mut self.font_manager,
                                             font_collection: &mut self.font_collection,
                                             gpu_resource_cache_limit: self.gpu_resource_cache_limit,
+                                            external_gpu_device: self.external_gpu_device.clone(),
                                         };
                                         (cb)(window_id, &mut renderer_context);
                                     }
@@ -724,6 +742,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             font_manager: &mut self.font_manager,
                             font_collection: &mut self.font_collection,
                             gpu_resource_cache_limit: self.gpu_resource_cache_limit,
+                            external_gpu_device: self.external_gpu_device.clone(),
                         };
                         on_close(renderer_context, window_id)
                     } else {
@@ -1157,12 +1176,14 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 self.gpu_resource_cache_limit,
                 app.window_attributes.transparent,
             );
+            app.gpu_interop.invalidate();
             tracing::info!("Recovered onto the {} driver", app.driver.name());
             self.plugins.send(
                 PluginEvent::GraphicsDriverChanged {
                     window: &app.window,
                     graphics_driver: app.driver.name(),
                     gpu_name: app.driver.gpu_name(),
+                    gpu_interop: &app.gpu_interop,
                 },
                 PluginHandle::new(&self.proxy),
             );

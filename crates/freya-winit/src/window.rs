@@ -70,7 +70,11 @@ use crate::{
         OnCloseHook,
         WindowConfig,
     },
-    drivers::GraphicsDriver,
+    drivers::{
+        ExternalGpuDevice,
+        GraphicsDriver,
+    },
+    gpu_interop::GpuInterop,
     integration::is_ime_role,
     plugins::{
         PluginEvent,
@@ -115,6 +119,8 @@ pub struct AppWindow {
     pub(crate) platform: Platform,
 
     pub(crate) animation_clock: AnimationClock,
+
+    pub(crate) gpu_interop: GpuInterop,
 
     pub(crate) background: Color,
 
@@ -188,6 +194,7 @@ impl AppWindow {
         font_manager: &FontMgr,
         fallback_fonts: &[Cow<'static, str>],
         gpu_resource_cache_limit: usize,
+        external_gpu_device: Option<ExternalGpuDevice>,
         global_contexts: &GlobalContexts,
     ) -> Self {
         #[cfg(feature = "hotreload")]
@@ -221,6 +228,7 @@ impl AppWindow {
             active_event_loop,
             window_attributes.clone(),
             gpu_resource_cache_limit,
+            external_gpu_device,
         );
 
         if let Some(window_handle_hook) = window_config.window_handle_hook.take() {
@@ -250,6 +258,12 @@ impl AppWindow {
 
         let animation_clock = AnimationClock::new();
         runner.provide_root_context(|| animation_clock.clone());
+
+        let gpu_interop = GpuInterop::default();
+        if let Some(shared) = driver.gpu_interop() {
+            gpu_interop.share(shared);
+        }
+        runner.provide_root_context(|| gpu_interop.clone());
 
         runner.provide_root_context(AssetCacher::create);
         let custom_scale_factor = clamp_custom_scale_factor(window_config.custom_scale_factor);
@@ -328,6 +342,7 @@ impl AppWindow {
         plugins.send(
             PluginEvent::RunnerCreated {
                 runner: &mut runner,
+                gpu_interop: &gpu_interop,
             },
             PluginHandle::new(event_loop_proxy),
         );
@@ -396,6 +411,7 @@ impl AppWindow {
                 runner: &mut runner,
                 graphics_driver: driver.name(),
                 gpu_name: driver.gpu_name(),
+                gpu_interop: &gpu_interop,
             },
             PluginHandle::new(event_loop_proxy),
         );
@@ -431,6 +447,8 @@ impl AppWindow {
             platform,
 
             animation_clock,
+
+            gpu_interop,
 
             background: window_config.background,
 

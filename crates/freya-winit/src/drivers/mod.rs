@@ -1,3 +1,4 @@
+mod external;
 #[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
 mod gl;
 #[cfg(target_os = "macos")]
@@ -6,6 +7,7 @@ mod software;
 #[cfg(any(target_os = "linux", target_os = "windows"))]
 mod vulkan;
 
+pub use external::*;
 use freya_engine::prelude::Surface as SkiaSurface;
 use winit::{
     dpi::PhysicalSize,
@@ -15,6 +17,15 @@ use winit::{
         WindowAttributes,
     },
 };
+
+use crate::gpu_interop::{
+    GpuBackend,
+    SharedGpu,
+};
+
+/// Frames a shared resource must outlive, covering the in flight frame and the layout restore
+/// that Skia submits after presenting it.
+const RETIRE_FRAMES: usize = 3;
 
 /// Unrecoverable graphics error requiring a driver rebuild.
 #[derive(Debug)]
@@ -42,7 +53,26 @@ impl GraphicsDriver {
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
         gpu_resource_cache_limit: usize,
+        external_gpu_device: Option<ExternalGpuDevice>,
     ) -> (Self, Window) {
+        // A device owned by an external renderer takes priority over the driver ladder below.
+        if let Some(external) = external_gpu_device {
+            let driver_name = external.driver_name();
+            match Self::from_external(
+                event_loop,
+                window_attributes.clone(),
+                gpu_resource_cache_limit,
+                external,
+            ) {
+                Ok(driver_and_window) => return driver_and_window,
+                Err(err) => {
+                    tracing::warn!(
+                        "{driver_name} initialization on the external GPU device failed, textures will not be shared: {err}"
+                    );
+                }
+            }
+        }
+
         let renderer = std::env::var("FREYA_RENDERER")
             .ok()
             .map(|v| v.to_ascii_lowercase());
@@ -128,6 +158,59 @@ impl GraphicsDriver {
             let (driver, window) = software::SoftwareDriver::new(event_loop, window_attributes)
                 .expect("Failed to initialize software renderer fallback");
             return (Self::Software(driver), window);
+        }
+    }
+
+    /// Build the driver on a GPU device owned by an external renderer.
+    #[cfg_attr(
+        not(any(target_os = "linux", target_os = "windows", target_os = "macos")),
+        allow(unused_variables)
+    )]
+    fn from_external(
+        event_loop: &ActiveEventLoop,
+        window_attributes: WindowAttributes,
+        gpu_resource_cache_limit: usize,
+        external: ExternalGpuDevice,
+    ) -> Result<(Self, Window), Box<dyn std::error::Error>> {
+        match external {
+            #[cfg(any(target_os = "linux", target_os = "windows"))]
+            ExternalGpuDevice::Vulkan(device) => vulkan::VulkanDriver::from_external(
+                event_loop,
+                window_attributes,
+                gpu_resource_cache_limit,
+                device,
+            )
+            .map(|(driver, window)| (Self::Vulkan(driver), window)),
+            #[cfg(target_os = "macos")]
+            ExternalGpuDevice::Metal(device) => metal::MetalDriver::from_external(
+                event_loop,
+                window_attributes,
+                gpu_resource_cache_limit,
+                device,
+            )
+            .map(|(driver, window)| (Self::Metal(driver), window)),
+        }
+    }
+
+    /// The GPU state when the driver runs on a shared device, `None` for every other driver.
+    pub fn gpu_interop(&self) -> Option<SharedGpu> {
+        match self {
+            #[cfg(any(target_os = "linux", target_os = "windows"))]
+            Self::Vulkan(vk) => {
+                vk.shared_gr_context()
+                    .map(|(context, queue_family_index)| SharedGpu {
+                        backend: GpuBackend::Vulkan { queue_family_index },
+                        context,
+                        retire_frames: RETIRE_FRAMES,
+                    })
+            }
+            #[cfg(target_os = "macos")]
+            Self::Metal(mtl) => mtl.shared_gr_context().map(|context| SharedGpu {
+                backend: GpuBackend::Metal,
+                context,
+                retire_frames: RETIRE_FRAMES,
+            }),
+            _ => None,
         }
     }
 

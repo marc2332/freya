@@ -21,7 +21,7 @@ no-default-features = true
 [features]
 default = ["winit"]
 # Shortcuts
-all = ["all-crossplatform", "tray", "webview", "camera", "video"]
+all = ["all-crossplatform", "tray", "webview", "camera", "video", "wgpu"]
 all-crossplatform = [
   "winit",
   "router",
@@ -94,6 +94,7 @@ plot = ["dep:plotters", "dep:freya-plotters-backend"]
 hotreload = ["winit", "freya-core/hotreload", "freya-winit/hotreload"]
 gif = ["freya-components/gif"]
 video = ["dep:freya-video"]
+wgpu = ["dep:freya-wgpu"]
 calendar = ["freya-components/calendar"]
 markdown = ["dep:freya-markdown"]
 markdown-code-editor = ["markdown", "code-editor", "freya-markdown/code-editor"]
@@ -135,6 +136,7 @@ freya-webview = { workspace = true, optional = true }
 freya-terminal = { workspace = true, optional = true }
 freya-code-editor = { workspace = true, optional = true }
 freya-video = { workspace = true, optional = true }
+freya-wgpu = { workspace = true, optional = true }
 freya-camera = { workspace = true, optional = true }
 freya-borderless-plugin = { workspace = true, optional = true }
 

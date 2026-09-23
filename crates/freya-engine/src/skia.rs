@@ -12,12 +12,17 @@ pub use skia_safe::gpu::vk;
 pub use skia_safe::gpu::{
     self,
     BackendRenderTarget,
+    BackendTexture,
     Budgeted,
     DirectContext,
+    MutableTextureState,
     RecordingContext,
     SurfaceOrigin,
     backend_render_targets,
+    backend_semaphores,
+    backend_textures,
     direct_contexts,
+    images as gpu_images,
     surfaces::{
         render_target,
         wrap_backend_render_target,

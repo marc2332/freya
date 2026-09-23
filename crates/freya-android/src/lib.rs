@@ -80,7 +80,7 @@ impl FreyaPlugin for AndroidPlugin {
     }
 
     fn on_event(&mut self, event: &mut PluginEvent, _handle: PluginHandle) {
-        if let PluginEvent::RunnerCreated { runner } = event {
+        if let PluginEvent::RunnerCreated { runner, .. } = event {
             let app = self.app.clone();
             runner.provide_root_context(move || app);
         }

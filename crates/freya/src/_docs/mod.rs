@@ -11,3 +11,5 @@ pub mod platforms;
 pub mod state_management;
 pub mod tokio_integration;
 pub mod ui_and_components;
+#[cfg(feature = "wgpu")]
+pub mod wgpu_textures;

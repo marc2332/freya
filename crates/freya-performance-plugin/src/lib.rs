@@ -144,6 +144,7 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 window,
                 graphics_driver,
                 gpu_name,
+                ..
             } => {
                 let metrics = self.get_metrics(window.id());
                 metrics.graphics_driver = graphics_driver;

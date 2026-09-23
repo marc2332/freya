@@ -75,6 +75,7 @@ use freya_engine::prelude::{
     Surface as SkiaSurface,
     SurfaceOrigin,
     backend_render_targets,
+    backend_semaphores,
     direct_contexts,
     gpu::ContextOptions,
     vk,
@@ -121,6 +122,8 @@ pub struct VulkanDriver {
     cmd_buf: CommandBuffer,
     cmd_pool: CommandPool,
     gpu_cache_purged: bool,
+    /// Whether the device and instance were created by Freya and must be destroyed on drop.
+    owns_device: bool,
     pub(crate) gpu_name: String,
 }
 
@@ -138,8 +141,10 @@ impl Drop for VulkanDriver {
             self.device.destroy_command_pool(self.cmd_pool, None);
             self.swapchain_fns.destroy_swapchain(self.swapchain, None);
             self.surface_fns.destroy_surface(self.surface, None);
-            self.device.destroy_device(None);
-            self.instance.destroy_instance(None);
+            if self.owns_device {
+                self.device.destroy_device(None);
+                self.instance.destroy_instance(None);
+            }
         }
     }
 }
@@ -180,8 +185,160 @@ impl VulkanDriver {
             create_logical_device(&instance, physical_device, queue_family_index)?;
         let device = Arc::new(device);
 
-        let swapchain_size = window.inner_size();
+        let instance_extension_names = instance_extensions
+            .iter()
+            .filter_map(|name| unsafe { CStr::from_ptr(*name) }.to_str().ok())
+            .collect::<Vec<_>>();
+        let device_extension_names = DEVICE_EXTENSIONS
+            .iter()
+            .filter_map(|extension| extension.to_str().ok())
+            .collect::<Vec<_>>();
 
+        let driver = Self::assemble(
+            window.inner_size(),
+            transparent,
+            entry,
+            instance,
+            surface_fns,
+            surface,
+            physical_device,
+            queue_family_index,
+            device,
+            queue,
+            gpu_name,
+            gpu_resource_cache_limit,
+            &instance_extension_names,
+            &device_extension_names,
+            api_version,
+            true,
+        )?;
+
+        Ok((driver, window))
+    }
+
+    /// Build the driver on a Vulkan device owned by an external renderer.
+    ///
+    /// Freya creates its own surface, swapchain and Skia context, and never destroys the device.
+    pub fn from_external(
+        event_loop: &ActiveEventLoop,
+        window_attributes: WindowAttributes,
+        gpu_resource_cache_limit: usize,
+        external: crate::drivers::ExternalVulkanDevice,
+    ) -> Result<(Self, Window), Box<dyn std::error::Error>> {
+        let transparent = window_attributes.transparent;
+        let window = event_loop.create_window(window_attributes)?;
+
+        let crate::drivers::ExternalVulkanDevice {
+            entry,
+            instance,
+            physical_device,
+            device,
+            queue,
+            queue_family_index,
+            api_version,
+            instance_extensions,
+            device_extensions,
+        } = external;
+
+        let surface_fns = InstanceSurfaceFns::new(&entry, &instance);
+        let surface = unsafe {
+            ash_window::create_surface(
+                &entry,
+                &instance,
+                window.display_handle()?.as_raw(),
+                window.window_handle()?.as_raw(),
+                None,
+            )?
+        };
+
+        let cleanup_fns = surface_fns.clone();
+        let window_size = window.inner_size();
+        let build = move || -> Result<Self, Box<dyn std::error::Error>> {
+            let supports_present = unsafe {
+                surface_fns.get_physical_device_surface_support(
+                    physical_device,
+                    queue_family_index,
+                    surface,
+                )?
+            };
+            if !supports_present {
+                return Err(
+                    "The external Vulkan queue family cannot present to the window surface".into(),
+                );
+            }
+
+            if !device_extensions
+                .iter()
+                .any(|extension| extension.as_c_str() == KHR_SWAPCHAIN_NAME)
+            {
+                return Err(
+                    "The external Vulkan device did not enable the swapchain extension".into(),
+                );
+            }
+
+            let gpu_name = unsafe { instance.get_physical_device_properties(physical_device) }
+                .device_name_as_c_str()
+                .map(|name| name.to_string_lossy().into_owned())
+                .unwrap_or_default();
+
+            let instance_extension_names = instance_extensions
+                .iter()
+                .filter_map(|extension| extension.to_str().ok())
+                .collect::<Vec<_>>();
+            let device_extension_names = device_extensions
+                .iter()
+                .filter_map(|extension| extension.to_str().ok())
+                .collect::<Vec<_>>();
+
+            Self::assemble(
+                window_size,
+                transparent,
+                entry,
+                instance,
+                surface_fns,
+                surface,
+                physical_device,
+                queue_family_index,
+                device,
+                queue,
+                gpu_name,
+                gpu_resource_cache_limit,
+                &instance_extension_names,
+                &device_extension_names,
+                api_version,
+                false,
+            )
+        };
+
+        match build() {
+            Ok(driver) => Ok((driver, window)),
+            Err(error) => {
+                unsafe { cleanup_fns.destroy_surface(surface, None) };
+                Err(error)
+            }
+        }
+    }
+
+    /// Build the swapchain, Skia context and per frame objects on an already picked device.
+    #[allow(clippy::too_many_arguments)]
+    fn assemble(
+        window_size: PhysicalSize<u32>,
+        transparent: bool,
+        entry: Entry,
+        instance: Instance,
+        surface_fns: InstanceSurfaceFns,
+        surface: SurfaceKHR,
+        physical_device: PhysicalDevice,
+        queue_family_index: u32,
+        device: Arc<Device>,
+        queue: Queue,
+        gpu_name: String,
+        gpu_resource_cache_limit: usize,
+        instance_extensions: &[&str],
+        device_extensions: &[&str],
+        api_version: u32,
+        owns_device: bool,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
         let (swapchain, swapchain_fns, swapchain_images, swapchain_extent) = create_swapchain(
             &instance,
             &device,
@@ -189,7 +346,7 @@ impl VulkanDriver {
             &surface_fns,
             surface,
             queue_family_index,
-            swapchain_size,
+            window_size,
             None,
             transparent,
         )?;
@@ -203,6 +360,7 @@ impl VulkanDriver {
             queue_family_index,
             gpu_resource_cache_limit,
             instance_extensions,
+            device_extensions,
             api_version,
         )?;
 
@@ -228,7 +386,7 @@ impl VulkanDriver {
             )?[0]
         };
 
-        let driver = Self {
+        Ok(Self {
             entry,
             instance,
             surface_fns,
@@ -249,10 +407,14 @@ impl VulkanDriver {
             cmd_buf,
             cmd_pool,
             gpu_cache_purged: false,
+            owns_device,
             gpu_name,
-        };
+        })
+    }
 
-        Ok((driver, window))
+    /// The Skia context and queue family when the device is shared with an external renderer.
+    pub fn shared_gr_context(&self) -> Option<(DirectContext, u32)> {
+        (!self.owns_device).then(|| ((*self.gr_context).clone(), self.queue_family_index))
     }
 
     fn recreate_swapchain(&mut self, size: PhysicalSize<u32>) -> Result<(), DriverError> {
@@ -371,6 +533,14 @@ impl VulkanDriver {
         )
         .ok_or(DriverError::DeviceLost)?;
 
+        // Skia's own submission has to wait for the presentation engine to release the image.
+        let acquired =
+            unsafe { backend_semaphores::make_vk(self.image_available_semaphore.as_raw() as _) };
+        let waited = surface.wait(&[acquired], false);
+        if !waited {
+            tracing::warn!("Skia rejected the acquire semaphore, the swapchain image may be torn");
+        }
+
         render(&mut surface);
 
         window.pre_present_notify();
@@ -411,16 +581,21 @@ impl VulkanDriver {
                 .map_err(Self::vulkan_to_driver_error)?;
         };
 
+        // A binary semaphore can only be waited once, and Skia's submit already did.
         let wait_semaphores = [self.image_available_semaphore];
         let wait_stages = [PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT];
 
         let signal_semaphores = [self.render_finished_semaphore];
 
-        let submit_infos = [SubmitInfo::default()
-            .wait_semaphores(&wait_semaphores)
-            .wait_dst_stage_mask(&wait_stages)
+        let mut submit_info = SubmitInfo::default()
             .command_buffers(std::slice::from_ref(&self.cmd_buf))
-            .signal_semaphores(&signal_semaphores)];
+            .signal_semaphores(&signal_semaphores);
+        if !waited {
+            submit_info = submit_info
+                .wait_semaphores(&wait_semaphores)
+                .wait_dst_stage_mask(&wait_stages);
+        }
+        let submit_infos = [submit_info];
 
         unsafe {
             // Reset only right before submit so earlier returns leave the fence signaled.
@@ -743,7 +918,8 @@ fn create_gr_context(
     queue: Queue,
     queue_family_index: u32,
     gpu_resource_cache_limit: usize,
-    instance_extensions: &[*const c_char],
+    instance_extensions: &[&str],
+    device_extensions: &[&str],
     api_version: u32,
 ) -> Result<DirectContext, Box<dyn std::error::Error>> {
     let get_proc = unsafe {
@@ -765,15 +941,6 @@ fn create_gr_context(
         }
     };
 
-    let instance_extensions = instance_extensions
-        .iter()
-        .filter_map(|name| unsafe { CStr::from_ptr(*name) }.to_str().ok())
-        .collect::<Vec<_>>();
-    let device_extensions = DEVICE_EXTENSIONS
-        .iter()
-        .filter_map(|extension| extension.to_str().ok())
-        .collect::<Vec<_>>();
-
     let max_api_version = vk::Version::new(
         api_version_major(api_version) as usize,
         api_version_minor(api_version) as usize,
@@ -789,7 +956,7 @@ fn create_gr_context(
             &get_proc,
             Some(max_api_version),
         )
-        .with_extensions(&instance_extensions, &device_extensions)
+        .with_extensions(instance_extensions, device_extensions)
         .build()
     };
 

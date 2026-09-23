@@ -1,0 +1,41 @@
+[package]
+name = "freya-wgpu"
+version = "0.5.0-rc.4"
+description = "Share GPU textures between wgpu renderers and Freya"
+edition = "2024"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "wgpu", "gpu", "3d", "graphics"]
+categories = ["gui", "graphics"]
+
+[lints]
+workspace = true
+
+[dependencies]
+freya-core = { workspace = true }
+freya-engine = { workspace = true }
+freya-winit = { workspace = true }
+torin = { workspace = true }
+
+wgpu = { workspace = true }
+tracing = { workspace = true }
+rustc-hash = { workspace = true }
+winit = { workspace = true }
+
+[target.'cfg(any(target_os = "linux", target_os = "windows"))'.dependencies]
+wgpu = { workspace = true, features = ["vulkan"] }
+ash = { workspace = true }
+freya-engine = { workspace = true, features = ["vulkan"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+wgpu = { workspace = true, features = ["metal"] }
+objc2 = { version = "0.6" }
+objc2-metal = { version = "0.3" }
+freya-engine = { workspace = true, features = ["metal"] }
+
+[dev-dependencies]
+freya = { path = "../freya" }
+freya-testing = { workspace = true }
