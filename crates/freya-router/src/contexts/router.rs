@@ -81,11 +81,14 @@ impl RouterContextInner {
 ///
 /// ```rust,no_run
 /// # use freya::{components::Button, prelude::*, router::*};
-/// # #[derive(Routable, Clone, PartialEq)]
-/// # enum Route { #[route("/")] Home, #[route("/settings")] Settings }
 /// # #[derive(PartialEq)]
-/// # struct Page;
-/// # impl Component for Page {
+/// # struct Home;
+/// # impl Component for Home {
+/// #     fn render(&self) -> impl IntoElement { "Home" }
+/// # }
+/// # #[derive(PartialEq)]
+/// # struct Settings;
+/// # impl Component for Settings {
 /// #     fn render(&self) -> impl IntoElement {
 /// let router = RouterContext::get();
 /// Button::new()
@@ -95,6 +98,8 @@ impl RouterContextInner {
 ///     .child("Settings")
 /// #     }
 /// # }
+/// # #[derive(Routable, Clone, PartialEq)]
+/// # enum Route { #[route("/")] Home, #[route("/settings")] Settings }
 /// ```
 #[derive(Clone, Copy)]
 pub struct RouterContext {

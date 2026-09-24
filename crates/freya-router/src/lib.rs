@@ -18,8 +18,11 @@
 //!
 //! ```rust,no_run
 //! # use freya::{components::Button, prelude::*, router::*};
-//! # #[derive(Routable, Clone, PartialEq)]
-//! # enum Route { #[route("/")] Home, #[route("/settings")] Settings }
+//! # #[derive(PartialEq)]
+//! # struct Home;
+//! # impl Component for Home {
+//! #     fn render(&self) -> impl IntoElement { "Home" }
+//! # }
 //! # #[derive(PartialEq)]
 //! # struct Settings;
 //! # impl Component for Settings {
@@ -32,6 +35,8 @@
 //!     .child("Save")
 //! #     }
 //! # }
+//! # #[derive(Routable, Clone, PartialEq)]
+//! # enum Route { #[route("/")] Home, #[route("/settings")] Settings }
 //! ```
 //!
 //! Use `freya::components::NativeRouterExt` with `rect().native_router()` to
