@@ -15,9 +15,9 @@ cd freya
 
 > **Note:** The repository uses two toolchain files: [`rust-toolchain.toml`](./rust-toolchain.toml) for the stable toolchain and [`rust-toolchain-nightly.toml`](./rust-toolchain-nightly.toml) for the nightly toolchain required for formatting.
 
-#### Nix
+#### devenv
 
-A [flake.nix](./flake.nix) is included in the repository. Run `nix develop` to enter a dev shell with all required tools and dependencies (stable toolchain). For the nightly toolchain, use `nix develop .#unstable` instead.
+A [devenv.nix](./devenv.nix) is included in the repository. Run `devenv allow` once, then enter the repository to activate a shell with all required tools and dependencies. The stable toolchain is pinned by `rust-toolchain.toml`, and the nightly toolchain is pinned by `rust-toolchain-nightly.toml`.
 
 #### Without Nix
 

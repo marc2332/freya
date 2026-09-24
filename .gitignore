@@ -1,4 +1,5 @@
 target
+.devenv/
 .idea
 snapshot_before.png
 snapshot_after.png
@@ -14,3 +15,14 @@ state_query_sqlite_data
 CLAUDE.md
 
 .direnv
+
+# Devenv
+.devenv*
+devenv.local.nix
+devenv.local.yaml
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
