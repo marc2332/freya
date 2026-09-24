@@ -19,7 +19,7 @@ use crate::{
     router_cfg::RouterConfig,
 };
 
-/// An error that is thrown when the router fails to parse a route
+/// An error returned when a route cannot be parsed.
 #[derive(Debug, Clone)]
 pub struct ParseRouteError {
     message: String,
@@ -75,7 +75,27 @@ impl RouterContextInner {
     }
 }
 
-/// A collection of router data that manages all routing functionality.
+/// Navigation state for the nearest [`Router`](crate::components::Router).
+///
+/// You can retrieve this context with [`Self::get`].
+///
+/// ```rust,no_run
+/// # use freya::{components::Button, prelude::*, router::*};
+/// # #[derive(Routable, Clone, PartialEq)]
+/// # enum Route { #[route("/")] Home, #[route("/settings")] Settings }
+/// # #[derive(PartialEq)]
+/// # struct Page;
+/// # impl Component for Page {
+/// #     fn render(&self) -> impl IntoElement {
+/// let router = RouterContext::get();
+/// Button::new()
+///     .on_press(move |_| {
+///         let _ = router.replace(Route::Settings);
+///     })
+///     .child("Settings")
+/// #     }
+/// # }
+/// ```
 #[derive(Clone, Copy)]
 pub struct RouterContext {
     inner: State<RouterContextInner>,
@@ -104,8 +124,10 @@ impl RouterContext {
         }
     }
 
-    /// Create a global [`RouterContext`] that lives for the entire application lifetime.
-    /// This is useful for sharing router state across multiple windows.
+    /// Creates a router context that lives for the application lifetime.
+    ///
+    /// This is useful for sharing router state across multiple windows. Provide it
+    /// to each window with [`use_share_router`](crate::components::use_share_router).
     ///
     /// This is **not** a hook, do not use it inside components like you would [`use_route`](crate::hooks::use_route).
     /// You would usually want to call this in your `main` function, not anywhere else.
@@ -147,10 +169,17 @@ impl RouterContext {
         }
     }
 
+    /// Returns the router context from the current component subtree, if present.
+    ///
+    /// Unlike [`Self::get`], this does not panic outside a router.
     pub fn try_get() -> Option<Self> {
         try_consume_context()
     }
 
+    /// Returns the router context from the current component subtree.
+    ///
+    /// Call this while rendering a descendant of [`Router`](crate::components::Router),
+    /// then capture the returned context in event handlers. This panics outside a router.
     #[track_caller]
     pub fn get() -> Self {
         consume_context()
@@ -168,25 +197,26 @@ impl RouterContext {
         self.inner.peek().history.can_go_forward()
     }
 
-    /// Go back to the previous location.
+    /// Goes back to the previous location.
     ///
-    /// Will fail silently if there is no previous location to go to.
+    /// Does nothing when there is no previous location.
     pub fn go_back(&self) {
         self.inner.peek().history.go_back();
         self.change_route();
     }
 
-    /// Go back to the next location.
+    /// Goes forward to the next location.
     ///
-    /// Will fail silently if there is no next location to go to.
+    /// Does nothing when there is no next location.
     pub fn go_forward(&self) {
         self.inner.peek().history.go_forward();
         self.change_route();
     }
 
-    /// Push a new location.
+    /// Pushes a location onto the navigation history.
     ///
-    /// The previous location will be available to go back to.
+    /// Pass a route variant for an internal destination.
+    /// External URLs return [`ExternalNavigationFailure`].
     pub fn push(
         &self,
         target: impl Into<NavigationTarget>,
@@ -204,9 +234,9 @@ impl RouterContext {
         Ok(())
     }
 
-    /// Replace the current location.
+    /// Replaces the current location without adding a history entry.
     ///
-    /// The previous location will **not** be available to go back to.
+    /// External URLs return [`ExternalNavigationFailure`].
     pub fn replace(
         &self,
         target: impl Into<NavigationTarget>,
@@ -224,7 +254,10 @@ impl RouterContext {
         Ok(())
     }
 
-    /// The route that is currently active.
+    /// Returns the active route as `R`.
+    ///
+    /// This subscribes the current component to route changes. Prefer
+    /// [`use_route`](crate::hooks::use_route) in components.
     pub fn current<R: Routable>(&self) -> R {
         let absolute_route = self.full_route_string();
         // If this is a child route, map the absolute route to the child route before parsing
@@ -244,7 +277,9 @@ impl RouterContext {
         }
     }
 
-    /// The full route that is currently active. If this is called from inside a child router, this will always return the parent's view of the route.
+    /// Returns the complete active route as a path string.
+    ///
+    /// From a child router, this returns the root router's path.
     pub fn full_route_string(&self) -> String {
         let inner = self.inner.read();
         inner.subscribe_to_current_context();
@@ -252,7 +287,7 @@ impl RouterContext {
         self.inner.peek().history.current_route()
     }
 
-    /// Get the site map of the router.
+    /// Returns the route type's generated site map.
     pub fn site_map(&self) -> &'static [SiteMapSegment] {
         self.inner.read().site_map
     }
@@ -266,7 +301,10 @@ impl RouterContext {
     }
 }
 
-/// This context is set to the RouterConfig on_update method
+/// A typed wrapper around [`RouterContext`].
+///
+/// This exposes the same navigation operations while accepting the route type
+/// directly. It is intended for APIs that need a typed router context.
 pub struct GenericRouterContext<R> {
     inner: RouterContext,
     _marker: std::marker::PhantomData<R>,
@@ -288,23 +326,23 @@ where
         self.inner.can_go_forward()
     }
 
-    /// Go back to the previous location.
+    /// Goes back to the previous location.
     ///
-    /// Will fail silently if there is no previous location to go to.
+    /// Does nothing when there is no previous location.
     pub fn go_back(&self) {
         self.inner.go_back();
     }
 
-    /// Go back to the next location.
+    /// Goes forward to the next location.
     ///
-    /// Will fail silently if there is no next location to go to.
+    /// Does nothing when there is no next location.
     pub fn go_forward(&self) {
         self.inner.go_forward();
     }
 
-    /// Push a new location.
+    /// Pushes a location onto the navigation history.
     ///
-    /// The previous location will be available to go back to.
+    /// The previous location becomes available through [`Self::go_back`].
     pub fn push(
         &self,
         target: impl Into<NavigationTarget<R>>,
@@ -312,9 +350,7 @@ where
         self.inner.push(target.into())
     }
 
-    /// Replace the current location.
-    ///
-    /// The previous location will **not** be available to go back to.
+    /// Replaces the current location without adding a history entry.
     pub fn replace(
         &self,
         target: impl Into<NavigationTarget<R>>,
@@ -322,7 +358,7 @@ where
         self.inner.replace(target.into())
     }
 
-    /// The route that is currently active.
+    /// Returns the active route.
     pub fn current(&self) -> R
     where
         R: Clone,
