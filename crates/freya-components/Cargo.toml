@@ -1,6 +1,6 @@
 [package]
 name = "freya-components"
-version = "0.5.0-rc.5"
+version = "0.5.0-rc.7"
 edition = "2024"
 description = "Components for Freya apps"
 license = "MIT"
@@ -20,7 +20,7 @@ features = ["docs"]
 [features]
 router = ["dep:freya-router"]
 remote-asset = ["dep:reqwest", "dep:url"]
-docs = ["dep:embed-doc-image"]
+docs = []
 gif = ["dep:gif"]
 calendar = ["dep:chrono"]
 titlebar = []
@@ -58,9 +58,6 @@ cfg-if = "1.0"
 # Errors
 anyhow = { workspace = true }
 thiserror = { workspace = true }
-
-# Docs
-embed-doc-image = { version = "0.1.4", optional = true }
 
 # GIF
 gif = { version = "0.13.3", optional = true }

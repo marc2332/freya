@@ -84,6 +84,7 @@ impl DerefMut for LayoutData {
 
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct EffectData {
+    pub cursor: Option<CursorIcon>,
     pub overflow: Overflow,
     pub rotation: Option<f32>,
     pub scale: Option<Scale>,
@@ -101,7 +102,6 @@ pub struct StyleState {
     pub corner_radius: CornerRadius,
     pub borders: Vec<Border>,
     pub shadows: Vec<Shadow>,
-    pub cursor: Option<CursorIcon>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -115,7 +115,7 @@ impl Default for CursorStyleData {
     fn default() -> Self {
         Self {
             color: Color::BLACK,
-            highlight_color: Color::from_rgb(87, 108, 188),
+            highlight_color: Color::from_argb(128, 87, 108, 188),
             style: CursorStyle::default(),
         }
     }

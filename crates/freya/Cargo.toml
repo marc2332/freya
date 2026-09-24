@@ -1,6 +1,6 @@
 [package]
 name = "freya"
-version = "0.5.0-rc.5"
+version = "0.5.0-rc.7"
 description = "Cross-platform and native GUI Library powered by Skia."
 edition = "2024"
 license = "MIT"
@@ -19,12 +19,13 @@ features = ["all-publish"]
 no-default-features = true
 
 [features]
-default = ["winit", "gpu"]
+default = ["winit", "gpu", "accessibility"]
 # Shortcuts
 all = ["all-crossplatform", "tray", "html", "camera", "video"]
 all-crossplatform = [
   "winit",
   "gpu",
+  "accessibility",
   "router",
   "i18n",
   "remote-asset",
@@ -59,12 +60,13 @@ all-debug = [
   "all",
   "dep:freya-testing",
   "dep:freya-plotters-backend",
-  "performance",
+  "metrics",
   "web",
 ]
 all-tests = [
   "winit",
   "gpu",
+  "accessibility",
   "router",
   "i18n",
   "remote-asset",
@@ -83,8 +85,9 @@ all-tests = [
 ]
 docs = ["all-debug"]
 # Features
-winit = ["dep:freya-winit", "dep:freya-performance-plugin"]
+winit = ["dep:freya-winit", "dep:freya-metrics-plugin"]
 gpu = ["freya-winit?/gpu"]
+accessibility = ["freya-winit?/accessibility"]
 router = [
   "dep:freya-router",
   "freya-components/router",
@@ -94,7 +97,7 @@ remote-asset = ["freya-components/remote-asset", "freya-markdown?/remote-asset"]
 i18n = ["dep:freya-i18n"]
 engine = []
 devtools = ["dep:freya-devtools", "freya-core/devtools"]
-performance = ["winit"]
+metrics = ["winit"]
 plot = ["dep:plotters", "dep:freya-plotters-backend"]
 hotreload = ["winit", "freya-core/hotreload", "freya-winit/hotreload"]
 gif = ["freya-components/gif"]
@@ -123,7 +126,7 @@ zoom-shortcuts = ["freya-components/zoom-shortcuts"]
 
 [dependencies]
 freya-core = { workspace = true }
-freya-winit = { workspace = true, optional = true }
+freya-winit = { workspace = true, optional = true, default-features = false }
 torin = { workspace = true }
 freya-edit = { workspace = true }
 freya-clipboard = { workspace = true }
@@ -147,7 +150,7 @@ freya-borderless-plugin = { workspace = true, optional = true }
 freya-web = { workspace = true, optional = true }
 
 # Performance
-freya-performance-plugin = { workspace = true, optional = true }
+freya-metrics-plugin = { workspace = true, optional = true }
 freya-material-design = { workspace = true, optional = true }
 freya-testing = { workspace = true, optional = true }
 

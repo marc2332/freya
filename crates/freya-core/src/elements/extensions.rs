@@ -36,11 +36,17 @@ use crate::{
         EventHandlerType,
         EventHandlers,
     },
-    elements::image::{
-        AspectRatio,
-        ImageCover,
-        ImageData,
-        SamplingMode,
+    elements::{
+        image::{
+            AspectRatio,
+            Image,
+            ImageCover,
+            ImageData,
+            SamplingMode,
+        },
+        label::Label,
+        paragraph::Paragraph,
+        rect::Rect,
     },
     event_handler::EventHandler,
     events::{
@@ -143,18 +149,18 @@ pub trait KeyExt: Sized {
     }
 }
 
-/// Trait for concatenating two lists into one.
-pub trait ListExt {
-    /// Append the contents of `other`, returning the combined list.
-    fn with(self, other: Self) -> Self;
-}
-
-impl<T> ListExt for Vec<T> {
-    fn with(mut self, other: Self) -> Self {
-        self.extend(other);
-        self
+/// Methods for unconditionally modifying an element.
+pub trait WithExt: Sized {
+    /// Applies `with` immediately.
+    fn with(self, with: impl FnOnce(Self) -> Self) -> Self {
+        with(self)
     }
 }
+
+impl WithExt for Rect {}
+impl WithExt for Label {}
+impl WithExt for Paragraph {}
+impl WithExt for Image {}
 
 macro_rules! event_handlers {
     (
@@ -711,6 +717,12 @@ where
         self.get_image_data().snap_to_grid = snap_to_grid;
         self
     }
+
+    /// Apply a Gaussian blur of the given radius to the image.
+    fn blur(mut self, blur: f32) -> Self {
+        self.get_image_data().blur = blur;
+        self
+    }
 }
 
 /// Methods for describing an element in the accessibility tree.
@@ -934,15 +946,6 @@ where
         self.get_style().corner_radius = corner_radius.into();
         self
     }
-
-    /// Set the [`CursorIcon`] shown while the element is hovered.
-    ///
-    /// When multiple hovered elements define a cursor, the one painted on top wins.
-    /// While a mouse button is pressed the cursor stays still.
-    fn cursor(mut self, cursor: impl Into<Option<CursorIcon>>) -> Self {
-        self.get_style().cursor = cursor.into();
-        self
-    }
 }
 
 impl<T: StyleExt> CornerRadiusExt for T {
@@ -1073,10 +1076,19 @@ where
     }
 }
 
-/// Methods for visual effects applied to an element: clipping, blur, rotation, opacity and scale.
+/// Methods for visual effects applied to an element: clipping, backdrop blur, rotation, opacity and scale.
 pub trait EffectExt: Sized {
     /// Returns a mutable reference to the element's effect data.
     fn get_effect(&mut self) -> &mut EffectData;
+
+    /// Set the [`CursorIcon`] shown while the element is hovered.
+    ///
+    /// When multiple hovered elements define a cursor, the one painted on top wins.
+    /// While a mouse button is pressed the cursor stays still.
+    fn cursor(mut self, cursor: impl Into<Option<CursorIcon>>) -> Self {
+        self.get_effect().cursor = cursor.into();
+        self
+    }
 
     /// Replace all of the element's effect data at once. See [`EffectData`].
     fn effect(mut self, effect: EffectData) -> Self {
@@ -1090,8 +1102,8 @@ pub trait EffectExt: Sized {
         self
     }
 
-    /// Apply a gaussian blur of the given radius to the element.
-    fn blur(mut self, blur: f32) -> Self {
+    /// Apply a Gaussian blur of the given radius to the backdrop behind the element.
+    fn backdrop_blur(mut self, blur: f32) -> Self {
         self.get_effect().blur = Some(blur);
         self
     }

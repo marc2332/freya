@@ -4,9 +4,9 @@ use freya_core::{
         Event,
         EventHandlersExt,
         EventsCombos,
+        MouseButton,
         Platform,
         PointerEventData,
-        PressEventType,
         UserEvent,
         consume_root_context,
     },
@@ -157,30 +157,35 @@ pub trait WinitPlatformExt {
         F: FnOnce(&mut SkiaSurface) -> T + 'static;
 }
 
+#[derive(Clone, Copy, PartialEq)]
+struct WindowDragGesture;
+
 pub trait WindowDragExt {
+    /// Drag the window on left press and move, toggle maximize on double press.
     fn window_drag(self) -> Self;
 }
 
 impl WindowDragExt for Rect {
     fn window_drag(self) -> Self {
-        self.on_pointer_down(move |e: Event<PointerEventData>| {
-            match EventsCombos::pressed(e.global_location()) {
-                PressEventType::Single => {
-                    Platform::get().with_window(Platform::window_id(), |window| {
-                        let _ = window.drag_window();
-                    });
-                }
-                PressEventType::Double => {
-                    Platform::get().with_window(Platform::window_id(), |window| {
-                        if window.is_maximized() {
-                            window.set_maximized(false);
-                        } else {
-                            window.set_maximized(true);
-                        }
-                    });
-                }
-                _ => {}
+        self.on_pointer_down(|e: Event<PointerEventData>| {
+            if e.button() != Some(MouseButton::Left) {
+                return;
             }
+            if EventsCombos::<WindowDragGesture>::pressed(e.global_location()).is_double() {
+                Platform::get().with_window(Platform::window_id(), |window| {
+                    window.set_maximized(!window.is_maximized());
+                });
+            }
+        })
+        .on_global_pointer_move(|e: Event<PointerEventData>| {
+            if EventsCombos::<WindowDragGesture>::moved(e.global_location()) {
+                Platform::get().with_window(Platform::window_id(), |window| {
+                    let _ = window.drag_window();
+                });
+            }
+        })
+        .on_global_pointer_press(|_: Event<PointerEventData>| {
+            EventsCombos::<WindowDragGesture>::released();
         })
     }
 }

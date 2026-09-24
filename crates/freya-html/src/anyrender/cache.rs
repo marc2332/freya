@@ -1,3 +1,5 @@
+// Adapted from https://github.com/DioxusLabs/anyrender/blob/main/crates/anyrender_skia/src/cache.rs
+
 use std::hash::{
     Hash,
     Hasher,

@@ -7,8 +7,11 @@ use freya_core::prelude::NavigationMode;
 
 #[derive(Hash, PartialEq, Eq)]
 pub enum AccessibilityTask {
+    #[cfg(feature = "accessibility")]
     Init,
-    ProcessUpdate { mode: Option<NavigationMode> },
+    ProcessUpdate {
+        mode: Option<NavigationMode>,
+    },
     None,
 }
 

@@ -981,9 +981,9 @@ freya = { version = "...", features = ["router", "radio"] }
 | `titlebar` | Custom window titlebar component |
 | `borderless` | `BorderlessPlugin` helpers for undecorated windows (`freya-borderless-plugin`) |
 | `devtools` | Developer tools overlay |
-| `performance` | Performance monitoring plugin |
+| `metrics` | Metrics overlay plugin (`freya-metrics-plugin`) |
 | `hotpath` | Hot-path optimization |
-| `all` | All of the above (except devtools/performance/hotpath) |
+| `all` | All of the above (except devtools/metrics/hotpath) |
 
 ## Further Reference
 

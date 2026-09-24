@@ -65,10 +65,6 @@ pub enum ButtonLayoutVariant {
 ///         .on_press(|_| println!("Pressed!"))
 ///         .child("Press me")
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_button.png").render();
 /// ```
 /// ## **Filled**
 ///
@@ -80,10 +76,6 @@ pub enum ButtonLayoutVariant {
 ///         .filled()
 ///         .child("Press me")
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_filled_button.png").render();
 /// ```
 /// ## **Outline**
 ///
@@ -95,10 +87,6 @@ pub enum ButtonLayoutVariant {
 ///         .outline()
 ///         .child("Press me")
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_outline_button.png").render();
 /// ```
 /// ## **Flat**
 ///
@@ -110,23 +98,9 @@ pub enum ButtonLayoutVariant {
 ///         .flat()
 ///         .child("Press me")
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_flat_button.png").render();
 /// ```
 ///
-/// # Preview
-/// ![Button Preview][button]
-/// ![Outline Button Preview][outline_button]
-/// ![Filled Button Preview][filled_button]
-/// ![Flat Button Preview][flat_button]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("button", "images/gallery_button.png"),
-    doc = embed_doc_image::embed_image!("filled_button", "images/gallery_filled_button.png"),
-    doc = embed_doc_image::embed_image!("outline_button", "images/gallery_outline_button.png"),
-    doc = embed_doc_image::embed_image!("flat_button", "images/gallery_flat_button.png"),
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct Button {
     pub(crate) theme_colors: Option<ButtonColorsThemePartial>,
@@ -140,7 +114,7 @@ pub struct Button {
     layout_variant: ButtonLayoutVariant,
     enabled: bool,
     focusable: bool,
-    cursor_icon: CursorIcon,
+    cursor_icon: Option<CursorIcon>,
 }
 
 impl Default for Button {
@@ -174,7 +148,7 @@ impl Button {
             elements: Vec::default(),
             enabled: true,
             focusable: true,
-            cursor_icon: CursorIcon::default(),
+            cursor_icon: None,
             key: DiffKey::None,
         }
     }
@@ -264,7 +238,7 @@ impl Button {
     }
 
     /// Override the cursor icon shown when hovering over the button while enabled.
-    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+    pub fn cursor(mut self, cursor_icon: impl Into<Option<CursorIcon>>) -> Self {
         self.cursor_icon = cursor_icon.into();
         self
     }
@@ -391,7 +365,7 @@ impl Component for Button {
             .cursor(if self.enabled {
                 self.cursor_icon
             } else {
-                CursorIcon::NotAllowed
+                CursorIcon::NotAllowed.into()
             })
             .children(self.elements.clone())
     }

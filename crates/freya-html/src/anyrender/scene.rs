@@ -1,3 +1,5 @@
+// Adapted from https://github.com/DioxusLabs/anyrender/blob/main/crates/anyrender_skia/src/scene.rs
+
 use std::sync::Arc;
 
 use anyrender::{

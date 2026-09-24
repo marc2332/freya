@@ -9,4 +9,13 @@ const NOTO_SANS: &[u8] = include_bytes!("../../../crates/freya-edit/tests/NotoSa
 fn main() {
     #[cfg(target_os = "emscripten")]
     freya::web::launch(freya::web::WebConfig::new(app::app).with_font("Noto Sans", NOTO_SANS));
+
+    #[cfg(feature = "desktop")]
+    freya::prelude::launch(
+        freya::prelude::LaunchConfig::new().with_window(
+            freya::prelude::WindowConfig::new(app::app)
+                .with_size(1200., 750.)
+                .with_title("Freya Demo"),
+        ),
+    );
 }
