@@ -15,7 +15,7 @@ categories = ["gui", "asynchronous"]
 workspace = true
 
 [package.metadata.docs.rs]
-features = ["docs"]
+features = ["docs", "remote-asset"]
 
 [features]
 router = ["dep:freya-router"]

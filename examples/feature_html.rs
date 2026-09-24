@@ -93,7 +93,7 @@ const HTML: &str = r#"
 "#;
 
 fn app() -> impl IntoElement {
-    let handle = use_html_handle(|| HtmlSource::html(HTML));
+    let handle = use_html(|| HtmlSource::html(HTML));
 
     rect()
         .expanded()

@@ -20,10 +20,10 @@ use crate::{
 /// # use freya_html::prelude::*;
 /// # fn app() -> impl IntoElement {
 /// // Inline HTML
-/// let inline = use_html_handle(|| HtmlSource::html("<p>Hello <b>world</b></p>"));
+/// let inline = use_html(|| HtmlSource::html("<p>Hello <b>world</b></p>"));
 /// HtmlViewer::new(inline);
 /// // Or a remote document, sized explicitly
-/// let remote = use_html_handle(|| HtmlSource::url("https://example.com"));
+/// let remote = use_html(|| HtmlSource::url("https://example.com"));
 /// HtmlViewer::new(remote)
 ///     .width(Size::px(400.))
 ///     .height(Size::px(300.))

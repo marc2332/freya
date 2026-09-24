@@ -69,6 +69,7 @@
 //! - [Borderless Windows](self::_docs::borderless)
 //! - [Devtools](self::_docs::devtools)
 //! - [Hot Reload](self::_docs::hot_reload)
+//! - [HTTP Requests](freya_components::http)
 //!
 //! ## Features flags
 //!
@@ -78,7 +79,7 @@
 //! - `accessibility`: Enables the AccessKit accessibility backend for winit. Enabled by default.
 //! - `router`: Reexport [freya_router] under [router]
 //! - `i18n`: Reexport [freya_i18n] under [i18n]
-//! - `remote-asset`: Enables support for **HTTP** asset sources for [ImageViewer](components::ImageViewer) and [GifViewer](components::GifViewer) components.
+//! - `remote-asset`: Enables [HTTP requests](freya_components::http) and remote sources for [ImageViewer](components::ImageViewer) and [GifViewer](components::GifViewer).
 //! - `tray`: Enables tray support using the [tray_icon] crate.
 //! - `sdk`: Reexport [freya_sdk] under [sdk].
 //! - `sdk-tokio`: Enables the Tokio utilities from [freya_sdk]. Implies `sdk`.

@@ -1,7 +1,42 @@
+//! HTTP requests with the `remote-asset` feature enabled.
+//!
+//! ```rust,no_run
+//! use freya_components::{
+//!     Url,
+//!     http,
+//! };
+//!
+//! # async fn load() -> anyhow::Result<()> {
+//! let url = Url::parse("https://example.com")?;
+//! let bytes = http::fetch(url).await?;
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! Native requests use a default client unless you provide one at launch:
+//!
+//! ```rust,no_run
+//! # use freya::prelude::*;
+//! # fn app() -> impl IntoElement { "Hello" }
+//! fn main() -> Result<(), reqwest::Error> {
+//!     let client = reqwest::blocking::Client::builder()
+//!         .user_agent("MyApp/1.0")
+//!         .build()?;
+//!     launch(
+//!         LaunchConfig::new()
+//!             .with_global(client)
+//!             .with_window(WindowConfig::new(app)),
+//!     );
+//!     Ok(())
+//! }
+//! ```
+//!
+//! On web, requests use the browser and follow its CORS rules.
+
 use bytes::Bytes;
 use url::Url;
 
-/// Fetches `url` through the app-wide HTTP client, or the browser itself on web.
+/// Fetches `url` using the app-wide HTTP client on native platforms.
 #[cfg(not(target_os = "emscripten"))]
 pub async fn fetch(url: Url) -> anyhow::Result<Bytes> {
     let client: reqwest::blocking::Client = freya_core::prelude::GlobalContexts::get()
@@ -10,7 +45,9 @@ pub async fn fetch(url: Url) -> anyhow::Result<Bytes> {
         .await
 }
 
-/// Fetches `url` through the app-wide HTTP client, or the browser itself on web.
+/// Fetches `url` using the browser's HTTP client on web.
+///
+/// Browser CORS rules apply. Returns an error if the request fails.
 #[cfg(target_os = "emscripten")]
 pub async fn fetch(url: Url) -> anyhow::Result<Bytes> {
     use std::ffi::{

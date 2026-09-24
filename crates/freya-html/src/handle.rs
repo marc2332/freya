@@ -37,7 +37,7 @@ struct HtmlHistory {
 /// # use freya::prelude::*;
 /// # use freya_html::prelude::*;
 /// # fn app() -> impl IntoElement {
-/// let mut handle = use_html_handle(|| HtmlSource::url("https://example.com"));
+/// let mut handle = use_html(|| HtmlSource::url("https://example.com"));
 ///
 /// rect()
 ///     .child(Button::new().child("Back").on_press(move |_| handle.back()))
@@ -183,6 +183,6 @@ async fn load_url(view: Rc<RefCell<BlitzState>>, url: String) {
 }
 
 /// Creates an [HtmlHandle] starting at the source returned by `init`.
-pub fn use_html_handle(init: impl FnOnce() -> HtmlSource) -> HtmlHandle {
+pub fn use_html(init: impl FnOnce() -> HtmlSource) -> HtmlHandle {
     use_hook(move || HtmlHandle::create(init()))
 }
