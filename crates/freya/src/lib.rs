@@ -39,8 +39,10 @@
 //! - [Hooks](self::_docs::hooks)
 //! - [State](self::_docs::state_management)
 //! - [Async](self::_docs::_async)
+//! - [Fonts](self::_docs::fonts)
 //! - [Layers](self::_docs::layers)
 //! - [Optimizing](self::_docs::optimizing)
+//! - [Platform Integration](freya_core::platform::Platform)
 //! - [Platforms](self::_docs::platforms)
 //! - [Android](https://github.com/marc2332/freya/tree/main/examples/android)
 //! - [Web](https://github.com/marc2332/freya/tree/main/examples/web)
@@ -218,6 +220,7 @@ pub mod components {
         icons::{
             arrow::*,
             tick::*,
+            *,
         },
         image_viewer::*,
         input::*,

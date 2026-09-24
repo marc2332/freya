@@ -183,8 +183,21 @@ fn sidebar(mut theme: State<Theme>) -> Rect {
             }),
         )
         .child(
-            Link::new("https://github.com/marc2332/freya")
-                .child(SideBarItem::new().child("And more!")),
+            Link::new("https://github.com/marc2332/freya").child(
+                SideBarItem::new().child(
+                    rect()
+                        .horizontal()
+                        .width(Size::fill())
+                        .main_align(Alignment::space_between())
+                        .cross_align(Alignment::center())
+                        .child("And more!")
+                        .child(
+                            SvgViewer::new(lucide::arrow_up_right())
+                                .width(Size::px(16.))
+                                .height(Size::px(16.)),
+                        ),
+                ),
+            ),
         )
         .child(
             SideBarItem::new()

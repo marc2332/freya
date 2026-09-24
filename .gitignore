@@ -14,6 +14,16 @@ other
 state_query_sqlite_data
 CLAUDE.md
 
+.bash_profile
+.bashrc
+.env
+.gitconfig
+.mcp.json
+.profile
+.ripgreprc
+.zprofile
+.zshrc
+
 .direnv
 
 # Devenv
