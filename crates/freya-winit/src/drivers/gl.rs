@@ -16,7 +16,6 @@ use freya_engine::prelude::{
     SurfaceOrigin,
     backend_render_targets,
     direct_contexts,
-    wrap_backend_render_target,
 };
 use gl::{
     types::*,
@@ -63,6 +62,8 @@ use winit::{
         WindowAttributes,
     },
 };
+
+use crate::drivers::surface::wrap_render_target;
 
 /// Graphics driver using OpenGL.
 pub struct OpenGLDriver {
@@ -247,13 +248,11 @@ impl OpenGLDriver {
             stencil_size,
             fb_info,
         );
-        let surface = wrap_backend_render_target(
+        let surface = wrap_render_target(
             &mut gr_context,
             &render_target,
             SurfaceOrigin::BottomLeft,
             ColorType::RGBA8888,
-            None,
-            None,
         )
         .ok_or("could not create OpenGL skia surface")?;
 
@@ -292,13 +291,11 @@ impl OpenGLDriver {
             self.stencil_size,
             self.fb_info,
         );
-        let surface = wrap_backend_render_target(
+        let surface = wrap_render_target(
             &mut self.gr_context,
             &render_target,
             SurfaceOrigin::BottomLeft,
             ColorType::RGBA8888,
-            None,
-            None,
         )
         .expect("Could not create skia surface");
 

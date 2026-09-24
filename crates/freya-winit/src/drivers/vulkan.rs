@@ -78,7 +78,6 @@ use freya_engine::prelude::{
     direct_contexts,
     gpu::ContextOptions,
     vk,
-    wrap_backend_render_target,
 };
 use raw_window_handle::{
     HandleError,
@@ -95,7 +94,10 @@ use winit::{
     },
 };
 
-use crate::drivers::DriverError;
+use crate::drivers::{
+    DriverError,
+    surface::wrap_render_target,
+};
 
 /// Extensions enabled on the logical device and reported to Skia.
 const DEVICE_EXTENSIONS: &[&CStr] = &[KHR_SWAPCHAIN_NAME];
@@ -376,13 +378,11 @@ impl VulkanDriver {
             &sk_image_info,
         );
 
-        let mut surface = wrap_backend_render_target(
+        let mut surface = wrap_render_target(
             &mut self.gr_context,
             &render_target,
             SurfaceOrigin::TopLeft,
             ColorType::BGRA8888,
-            None,
-            None,
         )
         .ok_or(DriverError::DeviceLost)?;
 

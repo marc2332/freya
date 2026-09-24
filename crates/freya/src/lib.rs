@@ -75,6 +75,7 @@
 //! - `all`: Enables all the features listed below
 //! - `winit`: Reexports [freya_winit] and enables the launch entrypoint. Enabled by default.
 //! - `gpu`: Enables GPU rendering support. Enabled by default.
+//! - `platform-text-gamma`: Tunes native surface text contrast and gamma. Enabled by default. See [Platform text rendering](#platform-text-rendering).
 //! - `accessibility`: Enables the AccessKit accessibility backend for winit. Enabled by default.
 //! - `router`: Reexport [freya_router] under [router]
 //! - `i18n`: Reexport [freya_i18n] under [i18n]
@@ -100,6 +101,21 @@
 //! - `code-editor`: Reexport [freya_code_editor] under [code_editor].
 //! - `camera`: Reexport [freya_camera] under [camera].
 //! - `web`: Reexport [freya_web] under [web].
+//!
+//! ## Platform text rendering
+//!
+//! `platform-text-gamma` applies fixed text-blending settings to native GPU and software surfaces:
+//! - Linux: contrast `0.2` and gamma `1.0`.
+//! - macOS: Chromium-style contrast `0.0` and gamma `0.0`, Skia's special value for sRGB.
+//! - Windows, Android, and other platforms: unchanged Skia defaults.
+//!
+//! Custom properties keep unknown pixel geometry, disabling LCD color fringes. These settings affect
+//! glyph-edge blending and perceived weight, not font outlines or the selected font weight.
+//! They are not read from the OS or display and do not affect headless `freya-testing` surfaces.
+//!
+//! To use Skia defaults everywhere, set `default-features = false` and enable the features you need,
+//! such as `features = ["winit", "gpu", "accessibility"]`, without `platform-text-gamma` or `all`.
+//! Cargo features are additive, so no dependency may enable `platform-text-gamma` for this opt-out.
 //!
 //! ## Misc features
 //! - `devtools`: Enables devtools support.
