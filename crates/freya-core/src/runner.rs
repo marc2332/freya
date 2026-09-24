@@ -1412,15 +1412,20 @@ impl Runner {
                     old_children.get(&from).unwrap().node_id
                 };
 
+                if scope
+                    .borrow()
+                    .nodes
+                    .get(&to_path)
+                    .is_some_and(|node| node.node_id == node_id)
+                {
+                    continue;
+                }
+
                 let current_path = scope
                     .borrow()
                     .nodes
                     .find_child_path(&parent, |v| v.is_some_and(|v| v.node_id == node_id))
                     .unwrap();
-
-                if current_path == to_path {
-                    continue;
-                }
 
                 // Everything before `to` is already final
                 let path_entry = scope.borrow_mut().nodes.remove(&current_path).unwrap();
