@@ -717,6 +717,12 @@ where
         self.get_image_data().snap_to_grid = snap_to_grid;
         self
     }
+
+    /// Apply a Gaussian blur of the given radius to the image.
+    fn blur(mut self, blur: f32) -> Self {
+        self.get_image_data().blur = blur;
+        self
+    }
 }
 
 /// Methods for describing an element in the accessibility tree.
@@ -1070,7 +1076,7 @@ where
     }
 }
 
-/// Methods for visual effects applied to an element: clipping, blur, rotation, opacity and scale.
+/// Methods for visual effects applied to an element: clipping, backdrop blur, rotation, opacity and scale.
 pub trait EffectExt: Sized {
     /// Returns a mutable reference to the element's effect data.
     fn get_effect(&mut self) -> &mut EffectData;
@@ -1096,8 +1102,8 @@ pub trait EffectExt: Sized {
         self
     }
 
-    /// Apply a gaussian blur of the given radius to the element.
-    fn blur(mut self, blur: f32) -> Self {
+    /// Apply a Gaussian blur of the given radius to the backdrop behind the element.
+    fn backdrop_blur(mut self, blur: f32) -> Self {
         self.get_effect().blur = Some(blur);
         self
     }
