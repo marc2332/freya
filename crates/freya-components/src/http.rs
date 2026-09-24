@@ -1,19 +1,11 @@
 use bytes::Bytes;
 use url::Url;
 
-#[cfg(not(target_os = "emscripten"))]
-const USER_AGENT: &str = "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0";
-
 /// Fetches `url` through the app-wide HTTP client, or the browser itself on web.
 #[cfg(not(target_os = "emscripten"))]
 pub async fn fetch(url: Url) -> anyhow::Result<Bytes> {
     let client: reqwest::blocking::Client = freya_core::prelude::GlobalContexts::get()
-        .get_context_or_insert(|| {
-            reqwest::blocking::Client::builder()
-                .user_agent(USER_AGENT)
-                .build()
-                .expect("Failed to build the HTTP client.")
-        });
+        .get_context_or_insert(reqwest::blocking::Client::new);
     freya_core::prelude::thread(move || Ok(client.get(url).send()?.error_for_status()?.bytes()?))
         .await
 }
