@@ -234,21 +234,9 @@ impl ResizableContext {
 ///         .panel(ResizablePanel::new(PanelSize::percent(50.)).child("Panel 1"))
 ///         .panel(ResizablePanel::new(PanelSize::percent(50.)).child("Panel 2"))
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(
-/// #       ResizableContainer::new()
-/// #           .panel(ResizablePanel::new(PanelSize::percent(50.)).child("Panel 1"))
-/// #           .panel(ResizablePanel::new(PanelSize::percent(50.)).child("Panel 2"))
-/// #   )
-/// # }, "./images/gallery_resizable_container.png").render();
 /// ```
 ///
-/// # Preview
-/// ![ResizableContainer Preview][resizable_container]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("resizable_container", "images/gallery_resizable_container.png"),
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(PartialEq, Clone)]
 pub struct ResizableContainer {
     direction: Direction,

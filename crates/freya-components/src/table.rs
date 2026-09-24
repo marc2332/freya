@@ -144,22 +144,9 @@ impl Component for TableRow {
 ///         .child(TableRow::new().child("Data 1").child("Data 2"))
 ///         .child(TableRow::new().child("Data 3").child("Data 4"))
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().padding(8.).center().expanded().child(
-/// #       app()
-/// #   )
-/// # }, "./images/gallery_table.png")
-/// #   .with_hook(|t| { t.move_cursor((125., 125.)); t.sync_and_update(); })
-/// #   .with_scale_factor(0.9)
-/// #   .render();
 /// ```
 ///
-/// # Preview
-/// ![Table Preview][table]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("table", "images/gallery_table.png"),
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(PartialEq, Default)]
 pub struct Table {
     pub theme: Option<TableThemePartial>,
