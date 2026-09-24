@@ -1,5 +1,6 @@
-[build]
-target = "wasm32-unknown-emscripten"
+[alias]
+web = ["run", "--target", "wasm32-unknown-emscripten"]
+desktop = ["run", "--features", "desktop"]
 
 [profile.dev.package.freya-skia-bindings]
 opt-level = 3
@@ -10,6 +11,7 @@ EMCC_CFLAGS = "-fwasm-exceptions"
 [target.wasm32-unknown-emscripten]
 runner = ["python3", "serve.py"]
 rustflags = [
+  "-Clink-arg=-Oz",
   "-Clink-arg=-sMAX_WEBGL_VERSION=2",
   "-Clink-arg=-sALLOW_MEMORY_GROWTH=1",
   "-Clink-arg=-sSTACK_SIZE=16MB",

@@ -290,7 +290,7 @@ pub type ReadRef<'a, T> =
 pub type WriteRef<'a, T> =
     <generational_box::UnsyncStorage as generational_box::AnyStorage>::Mut<'a, T>;
 
-impl<T> State<T> {
+impl<T: 'static> State<T> {
     /// Read the current value and subscribe the current component to changes.
     ///
     /// When the state value changes, any component or hook that has called `read()` will re-render.
@@ -303,7 +303,7 @@ impl<T> State<T> {
     /// let current_value = count.read();
     /// ```
     #[track_caller]
-    pub fn read(&self) -> ReadRef<'static, T> {
+    pub fn read(&self) -> ReadRef<'_, T> {
         let Some(value) = self.try_read() else {
             panic!("Reading the State failed because it is already borrowed or it was dropped.")
         };
@@ -323,7 +323,7 @@ impl<T> State<T> {
     ///     println!("{count}");
     /// }
     /// ```
-    pub fn try_read(&self) -> Option<ReadRef<'static, T>> {
+    pub fn try_read(&self) -> Option<ReadRef<'_, T>> {
         if let Some(mut rc) = ReactiveContext::try_current() {
             let subscribers = self.subscribers.try_read().ok()?;
             rc.subscribe(&subscribers);
@@ -363,7 +363,7 @@ impl<T> State<T> {
     ///
     /// Prefer `read()` over `peek()` unless you specifically need non-reactive access.
     #[track_caller]
-    pub fn peek(&self) -> ReadRef<'static, T> {
+    pub fn peek(&self) -> ReadRef<'_, T> {
         let Some(value) = self.try_peek() else {
             panic!("Peeking the State failed because it is already borrowed or it was dropped.")
         };
@@ -383,8 +383,24 @@ impl<T> State<T> {
     ///     println!("{count}");
     /// }
     /// ```
-    pub fn try_peek(&self) -> Option<ReadRef<'static, T>> {
+    pub fn try_peek(&self) -> Option<ReadRef<'_, T>> {
         self.key.try_read().ok()
+    }
+
+    /// Read the current value and subscribe to changes, returning a static guard.
+    ///
+    /// Use this when the guard must not be tied to the borrow of the [`State`] handle.
+    pub fn read_unchecked(&self) -> ReadRef<'static, T> {
+        self.subscribe();
+        self.peek_unchecked()
+    }
+
+    /// Read the current value without subscribing, returning a static guard.
+    ///
+    /// This bypasses the borrow of the [`State`] handle, but the underlying storage
+    /// still checks for conflicting runtime borrows.
+    pub fn peek_unchecked(&self) -> ReadRef<'static, T> {
+        self.key.read()
     }
 
     /// Get a mutable reference to the state value and notify subscribers.
@@ -414,7 +430,7 @@ impl<T> State<T> {
     /// - `with_mut()` for closure-based mutations
     /// - `set()` for replacing the entire value
     #[track_caller]
-    pub fn write(&mut self) -> WriteRef<'static, T> {
+    pub fn write(&mut self) -> WriteRef<'_, T> {
         let Some(value) = self.try_write() else {
             panic!("Writing to the State failed because it is already borrowed or it was dropped.")
         };
@@ -436,7 +452,7 @@ impl<T> State<T> {
     ///     *count += 1;
     /// }
     /// ```
-    pub fn try_write(&mut self) -> Option<WriteRef<'static, T>> {
+    pub fn try_write(&mut self) -> Option<WriteRef<'_, T>> {
         self.try_write_unchecked()
     }
 

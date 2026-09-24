@@ -47,6 +47,11 @@ pub struct MetalDriver {
 }
 
 impl MetalDriver {
+    pub fn resource_cache_usage(&self) -> (usize, usize) {
+        let usage = self.gr_context.resource_cache_usage();
+        (usage.resource_bytes, self.gr_context.resource_cache_limit())
+    }
+
     pub fn new(
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,

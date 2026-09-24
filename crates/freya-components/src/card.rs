@@ -59,17 +59,9 @@ pub enum CardLayoutVariant {
 ///         .height(Size::percent(75.))
 ///         .child("Hello, World!")
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_card.png").render();
 /// ```
 ///
-/// # Preview
-/// ![Card Preview][card]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("card", "images/gallery_card.png"),
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct Card {
     pub(crate) theme_colors: Option<CardColorsThemePartial>,
@@ -82,7 +74,7 @@ pub struct Card {
     style_variant: CardStyleVariant,
     layout_variant: CardLayoutVariant,
     hoverable: bool,
-    cursor_icon: CursorIcon,
+    cursor_icon: Option<CursorIcon>,
 }
 
 impl Default for Card {
@@ -141,7 +133,7 @@ impl Card {
             on_press: None,
             elements: Vec::default(),
             hoverable: false,
-            cursor_icon: CursorIcon::default(),
+            cursor_icon: None,
             key: DiffKey::None,
         }
     }
@@ -208,7 +200,7 @@ impl Card {
     }
 
     /// Override the cursor icon shown when hovering over this component while hoverable.
-    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+    pub fn cursor(mut self, cursor_icon: impl Into<Option<CursorIcon>>) -> Self {
         self.cursor_icon = cursor_icon.into();
         self
     }

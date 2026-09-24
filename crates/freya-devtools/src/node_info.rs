@@ -177,6 +177,13 @@ impl NodeState {
             attributes.push(("shadow", AttributeType::Shadow(shadow)));
         }
 
+        for font_feature in self.text_style.font_features.iter() {
+            attributes.push((
+                "font_feature",
+                AttributeType::Text(format!("{} {}", font_feature.name, font_feature.value)),
+            ));
+        }
+
         for text_shadow in self.text_style.text_shadows.iter() {
             attributes.push(("text_shadow", AttributeType::TextShadow(text_shadow)));
         }

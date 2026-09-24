@@ -8,6 +8,7 @@ export interface Props {
   image?: string;
   url?: string;
   type?: string;
+  wide?: boolean;
 }
 
 const {
@@ -16,6 +17,7 @@ const {
   image = "/preview.png",
   url,
   type = "website",
+  wide = false,
 } = Astro.props;
 
 const canonicalUrl = url ? new URL(url, Astro.site).href : undefined;
@@ -44,9 +46,9 @@ const imageUrl = new URL(image, Astro.site).href;
 		<title>{title}</title>
 	</head>
 	<body>
-		<main class="mx-auto lg:w-content text-white">
-			<Navbar/>
-			<div class="pt-32 px-4 ">
+		<main class:list={["mx-auto text-white", wide ? "w-full max-w-[1620px]" : "lg:w-content"]}>
+			<Navbar wide={wide} />
+			<div class="pt-8 px-4 ">
 				<slot />
 			</div>
 			<Footer/>

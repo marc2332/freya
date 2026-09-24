@@ -6,10 +6,10 @@ use crate::prelude::*;
 /// All convenience methods ([`WritableUtils::set`], [`WritableUtils::set_if_modified`], etc.) are provided as defaults.
 pub trait WritableUtils<T: 'static> {
     /// Get a mutable reference to the value, notifying subscribers.
-    fn write_state(&mut self) -> WriteRef<'static, T>;
+    fn write_state(&mut self) -> WriteRef<'_, T>;
 
     /// Read the current value without subscribing to changes.
-    fn peek_state(&self) -> ReadRef<'static, T>;
+    fn peek_state(&self) -> ReadRef<'_, T>;
 
     /// Replace the current value and notify subscribers.
     ///
@@ -86,27 +86,27 @@ pub trait WritableUtils<T: 'static> {
     ///     *value *= 2;
     /// });
     /// ```
-    fn with_mut(&mut self, with: impl FnOnce(WriteRef<'static, T>)) {
+    fn with_mut(&mut self, with: impl FnOnce(WriteRef<'_, T>)) {
         with(self.write_state());
     }
 }
 
 impl<T: 'static> WritableUtils<T> for State<T> {
-    fn write_state(&mut self) -> WriteRef<'static, T> {
+    fn write_state(&mut self) -> WriteRef<'_, T> {
         self.write()
     }
 
-    fn peek_state(&self) -> ReadRef<'static, T> {
+    fn peek_state(&self) -> ReadRef<'_, T> {
         self.peek()
     }
 }
 
 impl<T: 'static> WritableUtils<T> for Writable<T> {
-    fn write_state(&mut self) -> WriteRef<'static, T> {
+    fn write_state(&mut self) -> WriteRef<'_, T> {
         self.write()
     }
 
-    fn peek_state(&self) -> ReadRef<'static, T> {
+    fn peek_state(&self) -> ReadRef<'_, T> {
         self.peek()
     }
 }

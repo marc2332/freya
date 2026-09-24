@@ -1,6 +1,9 @@
-use std::time::{
-    Duration,
-    Instant,
+use std::{
+    marker::PhantomData,
+    time::{
+        Duration,
+        Instant,
+    },
 };
 
 use torin::prelude::CursorPoint;
@@ -27,18 +30,33 @@ const MULTI_PRESS_ELAPSED: Duration = Duration::from_millis(500);
 /// # use freya::prelude::*;
 /// # fn app() -> impl IntoElement {
 /// rect().on_pointer_down(|e: Event<PointerEventData>| {
-///     if EventsCombos::pressed(e.global_location()).is_double() {
+///     if EventsCombos::<()>::pressed(e.global_location()).is_double() {
 ///         println!("Double press");
 ///     }
 /// })
 /// # }
 /// ```
-#[derive(Clone, Copy, PartialEq)]
-pub struct EventsCombos {
+pub struct EventsCombos<Gesture = ()> {
     pub(crate) last_press: State<Option<(Instant, CursorPoint, u8)>>,
+    pub(crate) pressing: State<bool>,
+    marker: PhantomData<Gesture>,
 }
 
-impl EventsCombos {
+impl<Gesture> Clone for EventsCombos<Gesture> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<Gesture> Copy for EventsCombos<Gesture> {}
+
+impl<Gesture> PartialEq for EventsCombos<Gesture> {
+    fn eq(&self, other: &Self) -> bool {
+        self.last_press == other.last_press && self.pressing == other.pressing
+    }
+}
+
+impl<Gesture: Clone + PartialEq + 'static> EventsCombos<Gesture> {
     /// Get the app-wide combos state, creating it on first use.
     pub fn get() -> Self {
         match try_consume_root_context() {
@@ -46,6 +64,8 @@ impl EventsCombos {
             None => {
                 let combos = EventsCombos {
                     last_press: State::create_in_scope(None, ScopeId::ROOT),
+                    pressing: State::create_in_scope(false, ScopeId::ROOT),
+                    marker: PhantomData,
                 };
                 provide_context_for_scope_id(combos, ScopeId::ROOT);
                 combos
@@ -53,16 +73,24 @@ impl EventsCombos {
         }
     }
 
-    /// Break the combo when the pointer drags away from the last press.
-    pub fn moved(location: CursorPoint) {
+    /// Break the combo when the held pointer drags away from the last press.
+    pub fn moved(location: CursorPoint) -> bool {
         let mut combos = Self::get();
-        let dragged_away = matches!(
-            &*combos.last_press.read(),
-            Some((_, last_location, _)) if last_location.distance_to(location) > LOCATION_THRESHOLD
-        );
+        let dragged_away = *combos.pressing.read()
+            && matches!(
+                &*combos.last_press.read(),
+                Some((_, last_location, _)) if last_location.distance_to(location) > LOCATION_THRESHOLD
+            );
         if dragged_away {
             combos.last_press.set(None);
+            combos.pressing.set(false);
         }
+        dragged_away
+    }
+
+    /// Mark the pointer as released.
+    pub fn released() {
+        Self::get().pressing.set(false);
     }
 
     /// Register a press and get its position in the combo.
@@ -86,6 +114,7 @@ impl EventsCombos {
         combos
             .last_press
             .set(Some((Instant::now(), location, click_count)));
+        combos.pressing.set(true);
         event_type
     }
 }

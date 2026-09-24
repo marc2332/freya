@@ -30,17 +30,8 @@ define_theme! {
 ///
 ///     Slider::new(move |per| percentage.set(per)).value(percentage())
 /// }
-///
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().padding(48.).center().expanded().child(app())
-/// # }, "./images/gallery_slider.png").render();
 /// ```
-/// # Preview
-/// ![Slider Preview][slider]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("slider", "images/gallery_slider.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct Slider {
     pub(crate) theme: Option<SliderThemePartial>,
@@ -50,7 +41,7 @@ pub struct Slider {
     direction: Direction,
     enabled: bool,
     scroll_enabled: bool,
-    cursor_icon: CursorIcon,
+    cursor_icon: Option<CursorIcon>,
     step: Option<f64>,
     key: DiffKey,
 }
@@ -71,7 +62,7 @@ impl Slider {
             direction: Direction::Horizontal,
             enabled: true,
             scroll_enabled: true,
-            cursor_icon: CursorIcon::default(),
+            cursor_icon: None,
             step: None,
             key: DiffKey::None,
         }
@@ -111,7 +102,7 @@ impl Slider {
     }
 
     /// Override the cursor icon shown when hovering over this component while enabled.
-    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+    pub fn cursor(mut self, cursor_icon: impl Into<Option<CursorIcon>>) -> Self {
         self.cursor_icon = cursor_icon.into();
         self
     }
@@ -316,7 +307,7 @@ impl Component for Slider {
             .cursor(if self.enabled {
                 self.cursor_icon
             } else {
-                CursorIcon::NotAllowed
+                CursorIcon::NotAllowed.into()
             })
             .border(border)
             .corner_radius(50.)

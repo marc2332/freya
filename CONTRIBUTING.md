@@ -89,7 +89,7 @@ Freya is split in various crates, each with it's own meaning and purpose, here i
 - `freya-i18n`: Language translation library for Freya powered by the Fluent Project.
 - `freya-edit`: Text Editing capabilities to create from simple to complex text editors.
 - `freya-animation`: Animate numeric or color values for your components.
-- `freya-performance-plugin`: Renders a small overlay in the top left corner of your app showing different stats, like FPS, frame time, layout time, tree time, etc.
+- `freya-metrics-plugin`: Metrics plugin with performance and stats overlays, including FPS, frame timings, tasks, assets, scopes, and contexts.
 - `freya-clipboard`: Provides a os-backed clipboard for you to read from and write to.
 - `freya-router`: Fully typed router API to manage multiple pages in your app.
 - `freya-router-macro`: Macros for `freya-router`.

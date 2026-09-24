@@ -6,7 +6,7 @@ edition = "2024"
 
 [dependencies]
 freya = { workspace = true, features = [
-  "performance",
+  "metrics",
   "router",
   "material-design",
   "code-editor",

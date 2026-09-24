@@ -32,7 +32,6 @@ use crate::scrollviews::{
         is_scrollbar_visible,
     },
     use_scroll_controller,
-    use_smooth_scroll,
 };
 
 /// Scrollable area with bidirectional support and scrollbars.
@@ -52,24 +51,9 @@ use crate::scrollviews::{
 ///     ScrollView::new()
 ///         .child("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum laoreet tristique diam, ut gravida enim. Phasellus viverra vitae risus sit amet iaculis. Morbi porttitor quis nisl eu vulputate. Etiam vitae ligula a purus suscipit iaculis non ac risus. Suspendisse potenti. Aenean orci massa, ornare ut elit id, tristique commodo dui. Vestibulum laoreet tristique diam, ut gravida enim. Phasellus viverra vitae risus sit amet iaculis. Vestibulum laoreet tristique diam, ut gravida enim. Phasellus viverra vitae risus sit amet iaculis. Vestibulum laoreet tristique diam, ut gravida enim. Phasellus viverra vitae risus sit amet iaculis.")
 /// }
-///
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # },
-/// # "./images/gallery_scrollview.png")
-/// #
-/// # .with_hook(|t| {
-/// #   t.move_cursor((125., 115.));
-/// #   t.sync_and_update();
-/// # });
 /// ```
 ///
-/// # Preview
-/// ![ScrollView Preview][scrollview]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("scrollview", "images/gallery_scrollview.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct ScrollView {
     children: Vec<Element>,
@@ -214,16 +198,10 @@ impl Component for ScrollView {
             .unwrap_or_else(|| use_scroll_controller(ScrollConfig::default));
         let mut dragging_content = use_state::<Option<CursorPoint>>(|| None);
         let mut drag_origin = use_state::<Option<CursorPoint>>(|| None);
-        let mut smooth_scroll = use_smooth_scroll(|| scroll_controller);
         let (scrolled_x, scrolled_y) = scroll_controller.into();
         let layout = &self.layout.layout;
         let direction = layout.direction;
         let drag_scrolling = self.drag_scrolling;
-
-        scroll_controller.use_apply(
-            size.read().inner_sizes.width,
-            size.read().inner_sizes.height,
-        );
 
         let corrected_scrolled_x = get_corrected_scroll_position(
             size.read().inner_sizes.width,
@@ -237,8 +215,8 @@ impl Component for ScrollView {
             scrolled_y as f32,
         );
 
-        let smooth_position =
-            smooth_scroll.position(Point2D::new(corrected_scrolled_x, corrected_scrolled_y));
+        let smooth_position = scroll_controller
+            .animated_position(Point2D::new(corrected_scrolled_x, corrected_scrolled_y));
         let rendered_position = Point2D::new(
             get_corrected_scroll_position(
                 size.read().inner_sizes.width,
@@ -292,7 +270,7 @@ impl Component for ScrollView {
                 if dragging_content().is_some() {
                     let content = size.read().inner_sizes;
                     let viewport = size.read().area.size;
-                    smooth_scroll.release_drag(rendered_position, content, viewport);
+                    scroll_controller.release_drag(rendered_position, content, viewport);
                 }
                 dragging_content.set(None);
                 drag_origin.set(None);
@@ -313,9 +291,9 @@ impl Component for ScrollView {
 
             let animate = e.source == WheelSource::Line;
             if animate {
-                smooth_scroll.animate_from(rendered_position);
+                scroll_controller.animate_from(rendered_position);
             } else {
-                smooth_scroll.stop();
+                scroll_controller.stop();
             }
             let (base_x, base_y) = if animate {
                 (corrected_scrolled_x, corrected_scrolled_y)
@@ -357,7 +335,7 @@ impl Component for ScrollView {
                     let coords = e.global_location();
                     let delta = prev - coords;
 
-                    smooth_scroll.drag(delta.to_f32());
+                    scroll_controller.drag(delta.to_f32());
                     scroll_controller.scroll_to_y((rendered_position.y - delta.y as f32) as i32);
                     scroll_controller.scroll_to_x((rendered_position.x - delta.x as f32) as i32);
 
@@ -377,7 +355,7 @@ impl Component for ScrollView {
                     if distance.x > DRAG_THRESHOLD || distance.y > DRAG_THRESHOLD {
                         let delta = origin - coords;
 
-                        smooth_scroll.drag(delta.to_f32());
+                        scroll_controller.drag(delta.to_f32());
                         scroll_controller
                             .scroll_to_y((rendered_position.y - delta.y as f32) as i32);
                         scroll_controller
@@ -395,7 +373,7 @@ impl Component for ScrollView {
             let clicking_scrollbar = clicking_scrollbar.peek();
 
             if clicking_scrollbar.is_some() {
-                smooth_scroll.stop();
+                scroll_controller.stop();
             }
 
             if let Some((Axis::Y, y)) = *clicking_scrollbar {
@@ -453,7 +431,7 @@ impl Component for ScrollView {
                 viewport_width,
                 direction,
             ) {
-                smooth_scroll.animate_from(rendered_position);
+                scroll_controller.animate_from(rendered_position);
                 scroll_controller.scroll_to_x(x as i32);
                 scroll_controller.scroll_to_y(y as i32);
                 e.stop_propagation();
@@ -477,7 +455,7 @@ impl Component for ScrollView {
 
         let on_pointer_down = move |e: Event<PointerEventData>| {
             if drag_scrolling && matches!(e.data(), PointerEventData::Touch(_)) {
-                smooth_scroll.begin_drag();
+                scroll_controller.begin_drag();
                 drag_origin.set(Some(e.global_location()));
             }
         };
@@ -521,7 +499,8 @@ impl Component for ScrollView {
                             .spacing(layout.spacing.get())
                             .overflow(Overflow::Clip)
                             .on_sized(move |e: Event<SizedEventData>| {
-                                size.set_if_modified(e.clone())
+                                size.set_if_modified(e.clone());
+                                scroll_controller.apply_layout(e.inner_sizes, e.area.size);
                             })
                             .children(self.children.clone()),
                     )

@@ -70,55 +70,5 @@ cfg_if::cfg_if! {
     }
 }
 
-/// | 1 | 2 | 3 | 4 |
-/// | ------------- | ------------- | ------------- | ------------- |
-/// | ![Switch Preview][gallery_toggled_switch] | ![Button Preview][gallery_button] | ![Filled Button Preview][gallery_filled_button] | ![Outline Button Preview][gallery_outline_button] |
-/// | [Switch](switch::Switch)        | [Button](button::Button)        | [Filled Button](button::Button)        | [Outline Button](button::Button)        |
-/// | ![Flat Button Preview][gallery_flat_button] | ![Slider Preview][gallery_slider] | ![Checkbox Preview][gallery_checkbox] | ![RadioItem Preview][gallery_radio] |
-/// | [Flat Button](button::Button)        | [Slider](slider::Slider)        | [Checkbox](checkbox::Checkbox)        | [RadioItem](radio_item::RadioItem)        |
-/// | ![ProgressBar Preview][gallery_progressbar] | ![Select Preview][gallery_select] | ![GifViewer Preview][gallery_gif_viewer] | ![Accordion Preview][gallery_accordion] |
-/// | [ProgressBar](progressbar::ProgressBar)        | [Select](select::Select)        | [GifViewer](gif_viewer::GifViewer) | [Accordion](accordion::Accordion) |
-/// | ![Floating Tab Preview][gallery_floating_tab] | ![ImageViewer Preview][gallery_image_viewer] | ![ScrollView Preview][gallery_scrollview] | ![VirtualScrollView Preview][gallery_virtual_scrollview] |
-/// | [FloatingTab](floating_tab::FloatingTab)        | [ImageViewer](image_viewer::ImageViewer) | [ScrollView](scrollviews::ScrollView) | [VirtualScrollView](scrollviews::VirtualScrollView) |
-/// | ![Circular Loader Preview][gallery_circular_loader] | ![SegmentedButton Preview][gallery_segmented_button] | ![Tooltip Preview][gallery_tooltip] | ![Calendar Preview][gallery_calendar] |
-/// | [CircularLoader](loader::CircularLoader)        | [SegmentedButton](segmented_button::SegmentedButton) | [Tooltip](tooltip::Tooltip) | [Calendar](calendar::Calendar) |
-/// | ![ColorPicker Preview][gallery_color_picker] | ![Chip Preview][gallery_chip] | ![Menu Preview][gallery_menu] | ![Popup Preview][gallery_popup] |
-/// | [ColorPicker](color_picker::ColorPicker)        | [Chip](chip::Chip)        | [Menu](menu::Menu)        | [Popup](popup::Popup)        |
-/// | ![ResizableContainer Preview][gallery_resizable_container] | ![Sidebar Preview][gallery_sidebar] | ![Table Preview][gallery_table] | ![Card Preview][gallery_card] |
-/// | [ResizableContainer](resizable_container::ResizableContainer)        | [SideBarItem](sidebar::SideBarItem)        | [Table](table::Table)        | [Card](card::Card)       |
-/// | ![Input Preview][gallery_input] | ![Filled Input Preview][gallery_filled_input] | ![Flat Input Preview][gallery_flat_input] |
-/// | [Input](input::Input)        | [Filled Input](input::Input)        | [Flat Input](input::Input)        |
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("gallery_button", "images/gallery_button.png"),
-    doc = embed_doc_image::embed_image!("gallery_filled_button", "images/gallery_filled_button.png"),
-    doc = embed_doc_image::embed_image!("gallery_outline_button", "images/gallery_outline_button.png"),
-    doc = embed_doc_image::embed_image!("gallery_toggled_switch", "images/gallery_toggled_switch.png"),
-    doc = embed_doc_image::embed_image!("gallery_slider", "images/gallery_slider.png"),
-    doc = embed_doc_image::embed_image!("gallery_checkbox", "images/gallery_checkbox.png"),
-    doc = embed_doc_image::embed_image!("gallery_radio", "images/gallery_radio.png"),
-    doc = embed_doc_image::embed_image!("gallery_input", "images/gallery_input.png"),
-    doc = embed_doc_image::embed_image!("gallery_filled_input", "images/gallery_filled_input.png"),
-    doc = embed_doc_image::embed_image!("gallery_flat_input", "images/gallery_flat_input.png"),
-    doc = embed_doc_image::embed_image!("gallery_progressbar", "images/gallery_progressbar.png"),
-    doc = embed_doc_image::embed_image!("gallery_select", "images/gallery_select.png"),
-    doc = embed_doc_image::embed_image!("gallery_accordion", "images/gallery_accordion.png"),
-    doc = embed_doc_image::embed_image!("gallery_floating_tab", "images/gallery_floating_tab.png"),
-    doc = embed_doc_image::embed_image!("gallery_image_viewer", "images/gallery_image_viewer.png"),
-    doc = embed_doc_image::embed_image!("gallery_scrollview", "images/gallery_scrollview.png"),
-    doc = embed_doc_image::embed_image!("gallery_virtual_scrollview", "images/gallery_virtual_scrollview.png"),
-    doc = embed_doc_image::embed_image!("gallery_circular_loader", "images/gallery_circular_loader.png"),
-    doc = embed_doc_image::embed_image!("gallery_tooltip", "images/gallery_tooltip.png"),
-    doc = embed_doc_image::embed_image!("gallery_gif_viewer", "images/gallery_gif_viewer.png"),
-    doc = embed_doc_image::embed_image!("gallery_segmented_button", "images/gallery_segmented_button.png"),
-    doc = embed_doc_image::embed_image!("gallery_flat_button", "images/gallery_flat_button.png"),
-    doc = embed_doc_image::embed_image!("gallery_calendar", "images/gallery_calendar.png"),
-    doc = embed_doc_image::embed_image!("gallery_color_picker", "images/gallery_color_picker.png"),
-    doc = embed_doc_image::embed_image!("gallery_chip", "images/gallery_chip.png"),
-    doc = embed_doc_image::embed_image!("gallery_menu", "images/gallery_menu.png"),
-    doc = embed_doc_image::embed_image!("gallery_popup", "images/gallery_popup.png"),
-    doc = embed_doc_image::embed_image!("gallery_resizable_container", "images/gallery_resizable_container.png"),
-    doc = embed_doc_image::embed_image!("gallery_sidebar", "images/gallery_sidebar.png"),
-    doc = embed_doc_image::embed_image!("gallery_table", "images/gallery_table.png"),
-    doc = embed_doc_image::embed_image!("gallery_card", "images/gallery_card.png"),
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 pub fn gallery() {}

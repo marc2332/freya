@@ -167,19 +167,15 @@ impl Component for TodoRow {
 
         TableRow::new()
             .child(
-                TableCell::new().child(
-                    Button::new()
-                        .on_press(move |_| toggle_mutation.mutate(id))
-                        .child(if self.completed { "✓" } else { "○" }),
-                ),
+                Button::new()
+                    .on_press(move |_| toggle_mutation.mutate(id))
+                    .child(if self.completed { "✓" } else { "○" }),
             )
-            .child(TableCell::new().child(self.title.clone()))
+            .child(self.title.clone())
             .child(
-                TableCell::new().child(
-                    Button::new()
-                        .on_press(move |_| delete_mutation.mutate(id))
-                        .child("Delete"),
-                ),
+                Button::new()
+                    .on_press(move |_| delete_mutation.mutate(id))
+                    .child("Delete"),
             )
     }
 
@@ -229,17 +225,12 @@ fn app() -> impl IntoElement {
                     Table::new()
                         .column_widths([Size::px(60.), Size::flex(1.), Size::px(130.)])
                         .child(
-                            TableHead::new().child(
-                                TableRow::new()
-                                    .child(TableCell::new().child("Status"))
-                                    .child(TableCell::new().child("Title"))
-                                    .child(TableCell::new().child("Actions")),
-                            ),
+                            TableRow::new()
+                                .child("Status")
+                                .child("Title")
+                                .child("Actions"),
                         )
-                        .child(
-                            TableBody::new()
-                                .child(ScrollView::new().children(todos.iter().map(TodoRow::new))),
-                        )
+                        .child(ScrollView::new().children(todos.iter().map(TodoRow::new)))
                         .into_element()
                 }
             }

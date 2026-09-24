@@ -225,6 +225,15 @@ impl AssetCacher {
         }
     }
 
+    /// Read the number of successfully cached assets.
+    pub fn cached_size(&self) -> usize {
+        self.registry
+            .read()
+            .values()
+            .filter(|asset_state| matches!(&asset_state.asset, Asset::Cached(_)))
+            .count()
+    }
+
     /// Read the size of the cache registry.
     pub fn size(&self) -> usize {
         self.registry.read().len()

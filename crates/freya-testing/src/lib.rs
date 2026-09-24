@@ -48,9 +48,12 @@ use std::{
 };
 
 use accesskit::TreeUpdate;
-use freya_clipboard::copypasta::{
-    ClipboardContext,
-    ClipboardProvider,
+use freya_clipboard::{
+    copypasta::{
+        ClipboardContext,
+        ClipboardProvider,
+    },
+    prelude::Clipboard,
 };
 use freya_components::{
     cache::AssetCacher,
@@ -86,64 +89,12 @@ pub mod prelude {
     };
 
     pub use crate::{
-        DocRunner,
         TestingRunner,
-        launch_doc,
         launch_test,
     };
 }
 
-type DocRunnerHook = Box<dyn FnOnce(&mut TestingRunner)>;
-
 type PendingFonts = Rc<RefCell<Vec<(Cow<'static, str>, Bytes)>>>;
-
-pub struct DocRunner {
-    app: AppComponent,
-    size: Size2D,
-    scale_factor: f64,
-    hook: Option<DocRunnerHook>,
-    image_path: PathBuf,
-}
-
-impl DocRunner {
-    pub fn render(self) {
-        let (mut test, _) = TestingRunner::new(self.app, self.size, |_| {}, self.scale_factor);
-        if let Some(hook) = self.hook {
-            (hook)(&mut test);
-        }
-        test.render_to_file(self.image_path);
-    }
-
-    pub fn with_hook(mut self, hook: impl FnOnce(&mut TestingRunner) + 'static) -> Self {
-        self.hook = Some(Box::new(hook));
-        self
-    }
-
-    pub fn with_image_path(mut self, image_path: PathBuf) -> Self {
-        self.image_path = image_path;
-        self
-    }
-
-    pub fn with_scale_factor(mut self, scale_factor: f64) -> Self {
-        self.scale_factor = scale_factor;
-        self
-    }
-
-    pub fn with_size(mut self, size: Size2D) -> Self {
-        self.size = size;
-        self
-    }
-}
-
-pub fn launch_doc(app: impl Into<AppComponent>, path: impl Into<PathBuf>) -> DocRunner {
-    DocRunner {
-        app: app.into(),
-        size: Size2D::new(250., 250.),
-        scale_factor: 1.0,
-        hook: None,
-        image_path: path.into(),
-    }
-}
 
 pub fn launch_test(app: impl Into<AppComponent>) -> TestingRunner {
     TestingRunner::new(app, Size2D::new(500., 500.), |_| {}, 1.0).0
@@ -187,7 +138,15 @@ impl TestingRunner {
         let app = app.into();
         let mut runner = Runner::new(move || integration(app.clone()).into_element());
 
-        runner.provide_root_context(GlobalContexts::default);
+        runner.provide_root_context(|| {
+            let global_contexts = GlobalContexts::default();
+            global_contexts.insert_context(Clipboard::create(
+                ClipboardContext::new()
+                    .ok()
+                    .map(|clipboard| Box::new(clipboard) as Box<dyn ClipboardProvider>),
+            ));
+            global_contexts
+        });
 
         runner.provide_root_context(ScreenReader::new);
 
@@ -250,14 +209,6 @@ impl TestingRunner {
                     }
                 }),
             }
-        });
-
-        runner.provide_root_context(|| {
-            let clipboard: Option<Box<dyn ClipboardProvider>> = ClipboardContext::new()
-                .ok()
-                .map(|c| Box::new(c) as Box<dyn ClipboardProvider>);
-
-            State::create(clipboard)
         });
 
         runner.provide_root_context(|| tree.borrow().accessibility_generator.clone());

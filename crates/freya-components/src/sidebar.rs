@@ -54,19 +54,9 @@ pub enum SideBarItemStatus {
 ///         )
 ///         .child(rect().expanded().center().child("Main content"))
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(
-/// #       app()
-/// #   )
-/// # }, "./images/gallery_sidebar.png")
-/// # .with_hook(|t| { t.move_cursor((20., 20.)); t.sync_and_update(); })
-/// # .with_scale_factor(0.75)
-/// # .render();
 /// ```
 ///
-/// # Preview
-/// ![SideBarItem Preview][SideBarItem]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 
 #[derive(Clone, PartialEq)]
 pub struct SideBarItem {

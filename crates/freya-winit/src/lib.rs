@@ -8,6 +8,7 @@ use freya_core::integration::GlobalContexts;
 
 use crate::{
     config::LaunchConfig,
+    drivers::GraphicsContext,
     renderer::{
         LaunchProxy,
         NativeEvent,
@@ -16,6 +17,7 @@ use crate::{
     },
 };
 mod accessibility;
+mod clipboard;
 pub mod config;
 mod drivers;
 pub mod extensions;
@@ -125,6 +127,9 @@ fn launch_inner(mut launch_config: LaunchConfig) {
     freya_core::hotreload::connect_subsecond();
 
     let global_contexts = GlobalContexts::default();
+    global_contexts.insert_context(crate::clipboard::create_clipboard(
+        event_loop.owned_display_handle(),
+    ));
     for insert_global in launch_config.globals {
         insert_global(&global_contexts);
     }
@@ -152,6 +157,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
         waker,
         exit_on_close: launch_config.exit_on_close,
         gpu_resource_cache_limit: launch_config.gpu_resource_cache_limit,
+        graphics_context: GraphicsContext::default(),
     };
 
     #[cfg(feature = "tray")]

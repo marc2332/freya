@@ -6,6 +6,7 @@ import Layout from "../layouts/Layout.astro";
     title="Demo - Freya, Rust GUI library"
     description="A Freya app running in your browser, compiled to WebAssembly."
     url="/demo"
+    wide
 >
     <h1 class="text-3xl sm:text-4xl font-bold">Demo</h1>
     <p class="mt-2 text-stone-300">
@@ -14,7 +15,7 @@ import Layout from "../layouts/Layout.astro";
 
     <div
         id="demo-frame"
-        class="relative mt-8 mb-16 w-full rounded-xl overflow-hidden border border-stone-700 bg-white"
+        class="relative mt-6 mb-12 rounded-xl overflow-hidden border border-stone-700 bg-white"
     >
         <canvas id="canvas" draggable="false"></canvas>
         <div
@@ -28,7 +29,8 @@ import Layout from "../layouts/Layout.astro";
 
 <style>
     #demo-frame {
-        height: min(75vh, 700px);
+        width: 100%;
+        height: min(88vh, 1000px);
     }
 
     #canvas {

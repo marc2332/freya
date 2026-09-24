@@ -7,7 +7,10 @@ use torin::{
 use crate::{
     define_theme,
     get_theme,
-    icons::tick::TickIcon,
+    icons::{
+        IconThemePartialExt,
+        tick::TickIcon,
+    },
 };
 
 define_theme! {
@@ -79,7 +82,7 @@ pub struct ButtonSegment {
     on_press: Option<EventHandler<Event<PressEventData>>>,
     selected: bool,
     enabled: bool,
-    cursor_icon: CursorIcon,
+    cursor_icon: Option<CursorIcon>,
     key: DiffKey,
 }
 
@@ -97,7 +100,7 @@ impl ButtonSegment {
             on_press: None,
             selected: false,
             enabled: true,
-            cursor_icon: CursorIcon::default(),
+            cursor_icon: None,
             key: DiffKey::None,
         }
     }
@@ -134,7 +137,7 @@ impl ButtonSegment {
     }
 
     /// Override the cursor icon shown when hovering over this component while enabled.
-    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+    pub fn cursor(mut self, cursor_icon: impl Into<Option<CursorIcon>>) -> Self {
         self.cursor_icon = cursor_icon.into();
         self
     }
@@ -219,7 +222,7 @@ impl Component for ButtonSegment {
             .cursor(if self.enabled {
                 self.cursor_icon
             } else {
-                CursorIcon::NotAllowed
+                CursorIcon::NotAllowed.into()
             })
             .horizontal()
             .width(width)
@@ -267,17 +270,9 @@ impl Component for ButtonSegment {
 ///             .child(format!("Option {i}"))
 ///     }))
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_segmented_button.png").render();
 /// ```
 ///
-/// # Preview
-/// ![SegmentedButton Preview][segmented_button]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("segmented_button", "images/gallery_segmented_button.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct SegmentedButton {
     pub(crate) theme: Option<SegmentedButtonThemePartial>,

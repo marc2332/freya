@@ -118,6 +118,15 @@ pub struct Mutations {
     pub moved: FxHashMap<NodeId, Vec<MutationMove>>,
 }
 
+impl Mutations {
+    pub fn is_empty(&self) -> bool {
+        self.added.is_empty()
+            && self.modified.is_empty()
+            && self.removed.is_empty()
+            && self.moved.is_empty()
+    }
+}
+
 impl Debug for Mutations {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!(
@@ -302,6 +311,19 @@ impl Runner {
             });
         }
         assert_eq!(size, visited.len())
+    }
+
+    pub fn with_root_context<T>(&self, run: impl FnOnce() -> T) -> T {
+        CurrentContext::run(
+            CurrentContext {
+                scope_id: ScopeId::ROOT,
+                scopes_storages: self.scopes_storages.clone(),
+                tasks: self.tasks.clone(),
+                task_id_counter: self.task_id_counter.clone(),
+                sender: self.sender.clone(),
+            },
+            run,
+        )
     }
 
     pub fn provide_root_context<T: 'static + Clone>(&mut self, context: impl FnOnce() -> T) -> T {
@@ -701,6 +723,11 @@ impl Runner {
     pub fn sync_and_update(&mut self) -> Mutations {
         self.handle_events_immediately();
         use itertools::Itertools;
+
+        // No need to check anything
+        if self.dirty_scopes.is_empty() {
+            return Mutations::default();
+        }
 
         #[cfg(all(debug_assertions, feature = "debug-integrity"))]
         self.verify_scopes_integrity();

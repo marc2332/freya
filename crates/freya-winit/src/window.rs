@@ -6,11 +6,8 @@ use std::{
     task::Waker,
 };
 
+#[cfg(feature = "accessibility")]
 use accesskit_winit::Adapter;
-use freya_clipboard::copypasta::{
-    ClipboardContext,
-    ClipboardProvider,
-};
 use freya_components::{
     cache::AssetCacher,
     integration::integration,
@@ -39,9 +36,6 @@ use ragnarok::{
     EventsMeasurerRunner,
     NodesState,
 };
-use raw_window_handle::HasDisplayHandle;
-#[cfg(target_os = "linux")]
-use raw_window_handle::RawDisplayHandle;
 use torin::prelude::{
     CursorPoint,
     Size2D,
@@ -72,7 +66,10 @@ use crate::{
         RendererPreference,
         WindowConfig,
     },
-    drivers::GraphicsDriver,
+    drivers::{
+        GraphicsContext,
+        GraphicsDriver,
+    },
     integration::is_ime_role,
     plugins::{
         PluginEvent,
@@ -108,8 +105,10 @@ pub struct AppWindow {
     pub(crate) events_sender: futures_channel::mpsc::UnboundedSender<EventsChunk>,
 
     pub(crate) accessibility: AccessibilityTree,
+    #[cfg(feature = "accessibility")]
     pub(crate) accessibility_adapter: accesskit_winit::Adapter,
     pub(crate) accessibility_tasks_for_next_render: AccessibilityTask,
+    #[cfg(feature = "accessibility")]
     pub(crate) screen_reader: ScreenReader,
 
     pub(crate) process_layout_on_next_render: bool,
@@ -173,6 +172,7 @@ impl AppWindow {
             LogicalSize::new(area.width(), area.height()),
         );
 
+        #[cfg(feature = "accessibility")]
         if self.screen_reader.is_on() {
             self.accessibility_adapter.update_if_active(|| update);
         }
@@ -199,6 +199,7 @@ impl AppWindow {
         font_manager: &FontMgr,
         fallback_fonts: &[Cow<'static, str>],
         gpu_resource_cache_limit: usize,
+        graphics_context: &mut GraphicsContext,
         global_contexts: &GlobalContexts,
     ) -> Self {
         #[cfg(feature = "hotreload")]
@@ -233,6 +234,7 @@ impl AppWindow {
             window_attributes.clone(),
             gpu_resource_cache_limit,
             window_config.renderer,
+            graphics_context,
         );
 
         tracing::info!(
@@ -318,34 +320,6 @@ impl AppWindow {
             }
         });
 
-        let clipboard = {
-            if let Ok(handle) = window.display_handle() {
-                #[allow(clippy::match_single_binding)]
-                match handle.as_raw() {
-                    #[cfg(target_os = "linux")]
-                    RawDisplayHandle::Wayland(handle) => {
-                        let (_primary, clipboard) = unsafe {
-                            use freya_clipboard::copypasta::wayland_clipboard;
-
-                            wayland_clipboard::create_clipboards_from_external(
-                                handle.display.as_ptr(),
-                            )
-                        };
-                        let clipboard: Box<dyn ClipboardProvider> = Box::new(clipboard);
-                        Some(clipboard)
-                    }
-                    _ => ClipboardContext::new().ok().map(|c| {
-                        let clipboard: Box<dyn ClipboardProvider> = Box::new(c);
-                        clipboard
-                    }),
-                }
-            } else {
-                None
-            }
-        };
-
-        runner.provide_root_context(|| State::create(clipboard));
-
         runner.provide_root_context(|| tree.accessibility_generator.clone());
 
         runner.provide_root_context(|| tree.accessibility_generator.clone());
@@ -380,6 +354,7 @@ impl AppWindow {
             fallback_fonts,
         );
 
+        #[cfg(feature = "accessibility")]
         let accessibility_adapter =
             Adapter::with_event_loop_proxy(active_event_loop, &window, event_loop_proxy.clone());
 
@@ -444,8 +419,10 @@ impl AppWindow {
             events_sender,
 
             accessibility: AccessibilityTree::default(),
+            #[cfg(feature = "accessibility")]
             accessibility_adapter,
             accessibility_tasks_for_next_render: AccessibilityTask::ProcessUpdate { mode: None },
+            #[cfg(feature = "accessibility")]
             screen_reader,
 
             process_layout_on_next_render: true,
@@ -478,9 +455,7 @@ impl AppWindow {
 
     /// Resolve the cursor icon from the hovered nodes and update the window cursor if it changed.
     pub(crate) fn update_cursor_icon(&mut self) {
-        if self.mouse_state == ElementState::Pressed
-            || self.position == CursorPoint::from((-1., -1.))
-        {
+        if self.position == CursorPoint::from((-1., -1.)) {
             return;
         }
         let cursor_icon = self.tree.cursor_icon(&self.nodes_state);

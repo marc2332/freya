@@ -37,18 +37,9 @@ define_theme! {
 /// fn app() -> impl IntoElement {
 ///     ProgressBar::new(50.)
 /// }
-///
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().padding(8.).center().expanded().child(app())
-/// # }, "./images/gallery_progressbar.png").render();
 /// ```
 ///
-/// # Preview
-/// ![Progressbar Preview][progressbar]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("progressbar", "images/gallery_progressbar.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct ProgressBar {
     pub(crate) theme: Option<ProgressBarThemePartial>,

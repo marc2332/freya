@@ -41,18 +41,9 @@ define_theme! {
 ///                 .child("Click to check"),
 ///         )
 /// }
-///
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().spacing(8.).center().expanded().child(app())
-/// # }, "./images/gallery_radio.png").render();
 /// ```
 ///
-/// # Preview
-/// ![Radio Preview][radio]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("radio", "images/gallery_radio.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct RadioItem {
     pub(crate) theme: Option<RadioItemThemePartial>,

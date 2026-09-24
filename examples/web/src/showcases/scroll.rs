@@ -10,13 +10,17 @@ impl Component for ScrollShowcase {
         rect()
             .spacing(20.)
             .expanded()
-            .child(heading("Virtual Scroll", "Ten thousand rows"))
+            .child(
+                rect()
+                    .padding((24., 24., 0., 24.))
+                    .child(heading("Virtual Scroll", "Ten thousand rows")),
+            )
             .child(
                 VirtualScrollView::new(|item, _| {
                     rect()
                         .key(item.index)
                         .height(Size::px(item.size))
-                        .padding(4.)
+                        .padding((4., 24., 4., 24.))
                         .child(
                             rect()
                                 .expanded()

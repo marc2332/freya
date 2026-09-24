@@ -27,6 +27,17 @@ impl<A, R> Clone for Callback<A, R> {
     }
 }
 
+impl<A, R> std::fmt::Debug for Callback<A, R> {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            formatter,
+            "Callback<{}, {}>",
+            std::any::type_name::<A>(),
+            std::any::type_name::<R>()
+        )
+    }
+}
+
 impl<A, R> PartialEq for Callback<A, R> {
     fn eq(&self, _other: &Self) -> bool {
         // TODO: Decide whether event handlers should be captured or not.
@@ -55,6 +66,12 @@ impl<R> NoArgCallback<R> {
 impl<R> Clone for NoArgCallback<R> {
     fn clone(&self) -> Self {
         Self(self.0.clone())
+    }
+}
+
+impl<R> std::fmt::Debug for NoArgCallback<R> {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "NoArgCallback<{}>", std::any::type_name::<R>())
     }
 }
 
@@ -115,6 +132,12 @@ impl<T> EventHandler<T> {
 impl<T> Clone for EventHandler<T> {
     fn clone(&self) -> Self {
         Self(self.0.clone())
+    }
+}
+
+impl<T> std::fmt::Debug for EventHandler<T> {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "EventHandler<{}>", std::any::type_name::<T>())
     }
 }
 
