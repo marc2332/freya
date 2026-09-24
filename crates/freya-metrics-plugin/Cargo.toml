@@ -1,6 +1,6 @@
 [package]
 name = "freya-metrics-plugin"
-version = "0.5.0-rc.6"
+version = "0.5.0-rc.7"
 edition = "2024"
 description = "Metrics overlays for Freya."
 license = "MIT"

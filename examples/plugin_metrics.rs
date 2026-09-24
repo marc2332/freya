@@ -15,7 +15,7 @@ use tracing_subscriber::{
 
 fn main() {
     fmt()
-        .with_env_filter(EnvFilter::new("freya::metrics=trace"))
+        .with_env_filter(EnvFilter::new("freya::metrics=debug"))
         .init();
 
     launch(
