@@ -15,6 +15,7 @@ fn app() -> impl IntoElement {
     )
     .aspect_ratio(AspectRatio::Max)
     .image_cover(ImageCover::Center)
+    .blur(4.)
     .expanded()
     .center()
     .horizontal()
@@ -37,7 +38,7 @@ fn app() -> impl IntoElement {
             .background((255, 255, 255, 0.30))
             .color((255, 255, 255))
             .corner_radius(12.0)
-            .blur(5.0)
+            .backdrop_blur(5.0)
             .child("Blur: 5px"),
     )
     .child(
@@ -48,7 +49,7 @@ fn app() -> impl IntoElement {
             .background((255, 255, 255, 0.30))
             .color((255, 255, 255))
             .corner_radius(12.0)
-            .blur(10.0)
+            .backdrop_blur(10.0)
             .child("Blur: 10px"),
     )
     .child(
@@ -59,7 +60,7 @@ fn app() -> impl IntoElement {
             .background((255, 255, 255, 0.30))
             .color((255, 255, 255))
             .corner_radius(12.0)
-            .blur(20.0)
+            .backdrop_blur(20.0)
             .child("Blur: 20px"),
     )
 }
