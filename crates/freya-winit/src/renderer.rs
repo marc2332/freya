@@ -17,6 +17,7 @@ use freya_engine::prelude::{
     FontMgr,
     SkData,
     TypefaceFontProvider,
+    register_font_typeface,
 };
 use futures_lite::future::FutureExt as _;
 use futures_util::{
@@ -451,8 +452,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     return;
                 };
 
-                self.font_provider
-                    .register_typeface(typeface, Some(font_name.as_ref()));
+                register_font_typeface(&mut self.font_provider, font_name.as_ref(), typeface);
                 self.font_collection.clear_caches();
 
                 for app in self.windows.values_mut() {
