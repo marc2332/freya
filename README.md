@@ -675,7 +675,7 @@ fn app() -> impl IntoElement {
 
 ### HTML Rendering
 
-Render HTML and CSS content natively inside your applications, powered by the [Blitz](https://github.com/DioxusLabs/blitz) engine and painted directly into Freya's canvas.
+Render HTML and CSS content natively inside your applications, powered by the [Blitz](https://github.com/DioxusLabs/blitz) engine.
 Enable with the `html` feature.
 
 <details>

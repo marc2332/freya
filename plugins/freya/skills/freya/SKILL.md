@@ -890,7 +890,7 @@ Button::new().ripple().child("Click me")
 
 ## HTML
 
-Enable with `features = ["html"]`. Renders an HTML + CSS document with Blitz, painted directly into Freya's canvas:
+Enable with `features = ["html"]`. Renders an HTML + CSS document with Blitz:
 
 ```rust
 use freya::html::*;

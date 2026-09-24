@@ -9361,13 +9361,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "web_html"
-version = "0.1.0"
-dependencies = [
- "freya",
-]
-
-[[package]]
 name = "webpki-root-certs"
 version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"

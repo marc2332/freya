@@ -56,8 +56,7 @@ const HTML: &str = r#"
     <div style="padding: 32px;">
       <h1 style="color: #e94560; margin-bottom: 8px;">Hello from Blitz</h1>
       <p style="font-size: 16px; line-height: 1.5;">
-        Everything below is plain HTML and CSS rendered by <b>Blitz</b> straight
-        into Freya's canvas and without JavaScript.
+        Everything below is plain HTML and CSS rendered by <b>Blitz</b> without JavaScript.
       </p>
 
       <div class="card">
