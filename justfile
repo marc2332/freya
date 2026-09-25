@@ -19,7 +19,7 @@ f-nix:
     alejandra flake.nix
 
 web-demo:
-    cd examples/web && cargo build --profile web-release --target wasm32-unknown-emscripten
+    cd examples/web && cargo build --profile web-release --target wasm32-unknown-emscripten --features freya/web
     mkdir -p website/public/demo
     cp "${CARGO_TARGET_DIR:-target}"/wasm32-unknown-emscripten/web-release/web_example.js website/public/demo/
     cp "${CARGO_TARGET_DIR:-target}"/wasm32-unknown-emscripten/web-release/web_example.wasm website/public/demo/
