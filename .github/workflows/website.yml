@@ -6,12 +6,14 @@ on:
     branches:
       - main
     paths:
+      - "README.md"
       - "website/**"
       - "crates/**"
       - "examples/web/**"
       - ".github/workflows/website.yml"
   pull_request:
     paths:
+      - "README.md"
       - "website/**"
       - "crates/**"
       - "examples/web/**"
@@ -58,6 +60,20 @@ jobs:
 
       - name: Build the demo
         run: just web-demo
+
+      - name: Generate website sponsor data
+        run: |
+          while IFS= read -r entry; do
+            href=${entry#*href=\"}
+            href=${href%%\"*}
+            avatar=${entry#*src=\"}
+            avatar=${avatar%%\"*}
+            avatar=${avatar//&#x2F;/\/}
+            name=${entry#*alt=\"}
+            name=${name%%\"*}
+            jq -nc --arg href "$href" --arg avatar "$avatar" --arg name "$name" \
+              '{href: $href, avatar: $avatar, name: (if $name == "" then "Freya sponsor" else $name end)}'
+          done < <(sed -n '/<!-- sponsors -->/p' README.md | grep -oE '<a href="[^"]+"><img src="[^"]+"[^>]*alt="[^"]*"') | jq -s . > website/public/sponsors.json
 
       - name: Deploy
         uses: amondnet/vercel-action@de09aeac2ace6599ec9b11ef87558759a496bac4 # v42.3.0
