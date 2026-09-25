@@ -237,6 +237,7 @@ impl Component for SelectableText {
             .a11y_id(a11y_id)
             .a11y_focusable(true)
             .holder(holder.read().clone())
+            .cursor(CursorIcon::Text)
             .cursor_color(Color::BLACK)
             .highlights(highlights.map(|h| vec![h]))
             .on_mouse_up(on_mouse_up)
