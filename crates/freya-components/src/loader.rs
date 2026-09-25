@@ -26,18 +26,9 @@ define_theme! {
 /// fn app() -> impl IntoElement {
 ///     CircularLoader::new()
 /// }
-///
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().spacing(8.).center().expanded().child(app())
-/// # }, "./images/gallery_circular_loader.png").render();
 /// ```
 ///
-/// # Preview
-/// ![Circular Loader Preview][circular_loader]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("circular_loader", "images/gallery_circular_loader.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(PartialEq)]
 pub struct CircularLoader {
     pub(crate) theme: Option<CircularLoaderThemePartial>,

@@ -77,31 +77,9 @@ define_theme! {
 ///                 )
 ///         }))
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   let mut show_menu = use_state(|| true);
-/// #   rect().center().expanded().child(
-/// #       rect()
-/// #           .child(
-/// #               Button::new()
-/// #                   .on_press(move |_| show_menu.toggle())
-/// #                   .child("Open Menu"),
-/// #           )
-/// #           .maybe_child(show_menu().then(|| {
-/// #               Menu::new()
-/// #                   .on_close(move |_| show_menu.set(false))
-/// #                   .child(MenuButton::new().child("Open"))
-/// #                   .child(MenuButton::new().child("Save"))
-/// #           }))
-/// #   )
-/// # }, "./images/gallery_menu.png").with_hook(|t| { t.poll(std::time::Duration::from_millis(1), std::time::Duration::from_millis(100)); }).render();
 /// ```
 ///
-/// # Preview
-/// ![Menu Preview][menu]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("menu", "images/gallery_menu.png"),
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Default, Clone, PartialEq)]
 pub struct Menu {
     pub(crate) theme: Option<MenuContainerThemePartial>,

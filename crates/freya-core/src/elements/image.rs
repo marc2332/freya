@@ -22,6 +22,8 @@ use freya_engine::prelude::{
     SamplingOptions,
     SkImage,
     SkRect,
+    TileMode,
+    blur,
     raster_from_data,
 };
 use torin::prelude::Size2D;
@@ -183,6 +185,8 @@ pub struct ImageData {
     pub image_cover: ImageCover,
     /// Snap the image to the pixels grid.
     pub snap_to_grid: bool,
+    /// Gaussian blur radius applied to the image.
+    pub blur: f32,
 }
 
 #[derive(PartialEq, Clone)]
@@ -230,6 +234,10 @@ impl ElementExt for ImageElement {
             if self.image_handle.image.dimensions() != image.image_handle.image.dimensions() {
                 diff.insert(DiffModifies::LAYOUT);
             }
+        }
+
+        if self.image_data != image.image_data {
+            diff.insert(DiffModifies::STYLE);
         }
 
         if self.effect != image.effect {
@@ -367,6 +375,17 @@ impl ElementExt for ImageElement {
 
         let mut paint = Paint::default();
         paint.set_anti_alias(true);
+        if self.image_data.blur > 0. {
+            paint.set_image_filter(blur(
+                (
+                    self.image_data.blur * context.scale_factor as f32,
+                    self.image_data.blur * context.scale_factor as f32,
+                ),
+                TileMode::Clamp,
+                None,
+                None,
+            ));
+        }
 
         context.canvas.draw_image_rect_with_sampling_options(
             &self.image_handle.image,
