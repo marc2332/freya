@@ -5,7 +5,7 @@ import Layout from "../layouts/Layout.astro";
 import FeatureSection from "../components/FeatureSection.astro";
 import PlatformIcon from "../components/PlatformIcon.astro";
 
-const readme = readFileSync(new URL("../../../README.md", import.meta.url), "utf8");
+const readme = readFileSync("../README.md", "utf8");
 const sponsors = [...readme.matchAll(/<a href="([^"]+)"><img src="([^"]+)"[^>]*alt="([^"]*)"/g)].map(
   ([, href, avatar, name]) => ({
     href: href.replaceAll("&#x2F;", "/"),
