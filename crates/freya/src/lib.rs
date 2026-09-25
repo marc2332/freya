@@ -48,6 +48,7 @@
 //! - [Web](https://github.com/marc2332/freya/tree/main/examples/web)
 //! - [Development Setup](self::_docs::development_setup)
 //! - [Extending Components](self::_docs::extending_components)
+//! - [Custom Elements](freya_core::element::ElementExt)
 //!
 //! ### Learn
 //! - [Built-in Components](crate::components)
