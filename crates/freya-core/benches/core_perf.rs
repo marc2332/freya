@@ -16,7 +16,6 @@ use torin::{
 };
 
 const ROWS: usize = 1000;
-const SPARSE_ROWS: usize = 10_000;
 const CONTAINERS: usize = 100;
 const CASCADE_ROWS: usize = 100;
 const ITERATIONS: usize = 30;
@@ -96,31 +95,14 @@ fn elements() {
     });
 }
 
-#[derive(Clone, Copy)]
-enum RunnerReorder {
-    None,
-    Rotate,
-    SwapTail,
-}
-
-fn runner_app(reorder: RunnerReorder, row_count: usize) -> Element {
+fn runner_app(rotate: bool) -> Element {
     let mut version = use_state(|| 0u64);
-    let version_value = *version.read() as usize;
+    let rotation = if rotate { *version.read() as usize } else { 0 };
 
     rect()
         .on_mouse_up(move |_| *version.write() += 1)
-        .children((0..row_count).map(|slot| {
-            let index = match reorder {
-                RunnerReorder::None => slot,
-                RunnerReorder::Rotate => (slot + version_value) % row_count,
-                RunnerReorder::SwapTail if version_value % 2 == 1 && slot == row_count - 2 => {
-                    row_count - 1
-                }
-                RunnerReorder::SwapTail if version_value % 2 == 1 && slot == row_count - 1 => {
-                    row_count - 2
-                }
-                RunnerReorder::SwapTail => slot,
-            };
+        .children((0..ROWS).map(|slot| {
+            let index = (slot + rotation) % ROWS;
             rect()
                 .key(index)
                 .child(label().text(format!("Row {index}")))
@@ -131,28 +113,16 @@ fn runner_app(reorder: RunnerReorder, row_count: usize) -> Element {
 
 fn runner() {
     bench("runner: mount 1000 rows", || {
-        mounted_runner(|| runner_app(RunnerReorder::None, ROWS))
+        mounted_runner(|| runner_app(false))
     });
 
-    let (mut runner, mut tree, target) = mounted_runner(|| runner_app(RunnerReorder::None, ROWS));
+    let (mut runner, mut tree, target) = mounted_runner(|| runner_app(false));
     bench("runner: no-change rebuild", || {
         update(&mut runner, &mut tree, target, EventName::MouseUp)
     });
 
-    let (mut runner, mut tree, target) = mounted_runner(|| runner_app(RunnerReorder::Rotate, ROWS));
+    let (mut runner, mut tree, target) = mounted_runner(|| runner_app(true));
     bench("runner: rotate all keys", || {
-        update(&mut runner, &mut tree, target, EventName::MouseUp)
-    });
-
-    let (mut runner, mut tree, target) =
-        mounted_runner(|| runner_app(RunnerReorder::SwapTail, ROWS));
-    bench("runner: swap last two keys (1000)", || {
-        update(&mut runner, &mut tree, target, EventName::MouseUp)
-    });
-
-    let (mut runner, mut tree, target) =
-        mounted_runner(|| runner_app(RunnerReorder::SwapTail, SPARSE_ROWS));
-    bench("runner: swap last two keys (10000)", || {
         update(&mut runner, &mut tree, target, EventName::MouseUp)
     });
 }
