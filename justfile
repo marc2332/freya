@@ -17,7 +17,7 @@ f-check:
     RUSTFMT="${FREYA_NIGHTLY_RUSTFMT:-$(rustup which --toolchain {{nightly_toolchain}} rustfmt)}" {{nightly_cargo}} fmt --all --check -- --error-on-unformatted --unstable-features
 
 f-nix:
-    alejandra devenv.nix
+    alejandra flake.nix
 
 web-demo:
     cd examples/web && cargo build --profile web-release --target wasm32-unknown-emscripten

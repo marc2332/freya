@@ -15,9 +15,9 @@ cd freya
 
 > **Note:** The repository uses two toolchain files: [`rust-toolchain.toml`](./rust-toolchain.toml) for the stable toolchain and [`rust-toolchain-nightly.toml`](./rust-toolchain-nightly.toml) for the nightly toolchain required for formatting.
 
-#### devenv
+#### Nix development shell
 
-A [devenv.nix](./devenv.nix) is included in the repository. Run `devenv allow` once, then enter the repository to activate a shell with all required tools and dependencies. The stable toolchain is pinned by `rust-toolchain.toml`, and the nightly toolchain is pinned by `rust-toolchain-nightly.toml`.
+The repository's [flake.nix](./flake.nix) provides the stable and nightly Rust toolchains, native dependencies, Emscripten and development tools on x86_64 Linux. Install [Nix](https://nixos.org/download/) with flakes enabled, [direnv](https://direnv.net/) and [nix-direnv](https://github.com/nix-community/nix-direnv). Run `direnv allow` once per worktree to automatically load the development environment when entering it. You can also use `nix develop` directly. The stable toolchain is pinned by `rust-toolchain.toml`, and the nightly toolchain is pinned by `rust-toolchain-nightly.toml`.
 
 #### Without Nix
 
