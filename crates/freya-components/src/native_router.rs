@@ -1,8 +1,12 @@
 use freya_core::prelude::*;
 use freya_router::prelude::RouterContext;
 
+/// Adds native back and forward mouse button navigation to an element.
+///
+/// Call [`Self::native_router`] on a root `rect` inside a router. See the
+/// [router example](https://github.com/marc2332/freya/blob/main/examples/feature_router_complex.rs).
 pub trait NativeRouterExt {
-    /// Wire native back/forward mouse buttons to router navigation.
+    /// Wires native back and forward mouse buttons to router navigation.
     fn native_router(self) -> Self;
 }
 
