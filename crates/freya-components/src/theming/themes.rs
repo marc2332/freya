@@ -320,7 +320,7 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "scrollbar",
         ScrollBarThemePreference {
-            background: Preference::Reference("surface_primary"),
+            background: Preference::Reference("border"),
             thumb_background: Preference::Reference("surface_inverse"),
             hover_thumb_background: Preference::Reference("surface_inverse_secondary"),
             active_thumb_background: Preference::Reference("surface_inverse_tertiary"),
