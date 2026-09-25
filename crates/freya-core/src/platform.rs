@@ -21,10 +21,6 @@ use crate::{
     user_event::UserEvent,
 };
 
-/// Fonts embedded at startup.
-#[derive(Clone, Default)]
-pub struct EmbeddedFonts(pub Vec<(Cow<'static, str>, Bytes)>);
-
 /// How the user is navigating the application.
 #[derive(Clone, Copy, PartialEq, Eq, Default, Debug, Hash)]
 pub enum NavigationMode {

@@ -13,7 +13,6 @@ use freya_core::{
     prelude::{
         Color,
         CursorIcon,
-        EmbeddedFonts,
     },
 };
 use ragnarok::{
@@ -66,7 +65,7 @@ impl WebApp {
 
         let surface = WebSurface::new(size.to_i32())?;
 
-        let mut fonts = Fonts::new(config.fonts.clone(), config.default_fonts);
+        let mut fonts = Fonts::new(config.fonts, config.default_fonts);
 
         let (events_sender, events_receiver) = futures_channel::mpsc::unbounded();
 
@@ -74,9 +73,7 @@ impl WebApp {
         let mut runner = Runner::new(move || integration(app.clone()).into_element());
 
         runner.provide_root_context(ScreenReader::new);
-        runner
-            .provide_root_context(GlobalContexts::default)
-            .insert_context(EmbeddedFonts(config.fonts));
+        runner.provide_root_context(GlobalContexts::default);
 
         let (ticker_sender, ticker) = RenderingTicker::new();
         runner.provide_root_context(|| ticker);

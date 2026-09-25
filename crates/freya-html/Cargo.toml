@@ -24,6 +24,7 @@ smol_str = "0.3"
 
 futures-channel = { workspace = true }
 futures-lite = { workspace = true }
+parley = "0.11"
 
 blitz-dom = { version = "=0.3.0-beta.2", features = ["default", "floats"] }
 blitz-html = "=0.3.0-beta.2"
@@ -36,9 +37,6 @@ kurbo = "0.13.1"
 peniko = "0.6"
 hashbrown = "0.17.0"
 url = { workspace = true }
-
-[target.'cfg(target_os = "emscripten")'.dependencies]
-parley = "0.11"
 
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
 oaty = "0.2"

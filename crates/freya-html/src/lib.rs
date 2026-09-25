@@ -10,7 +10,11 @@
 //! # }
 //! ```
 //!
-//! Use [`HtmlSource::url`] to load a remote page. For HTTP requests outside the viewer,
+//! Use [`HtmlSource::url`] to load a remote page. Add local fonts with
+//! [`HtmlViewer::font`]. On web, provide a font for inline documents or load one
+//! through CSS `@font-face`.
+//!
+//! For HTTP requests outside the viewer,
 //! enable Freya's `remote-asset` feature and use [`freya_components::http::fetch`]:
 //!
 //! ```rust,no_run

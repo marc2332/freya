@@ -33,6 +33,7 @@ use crate::{
 pub struct HtmlViewer {
     handle: HtmlHandle,
     layout: LayoutData,
+    fonts: Vec<Bytes>,
 }
 
 impl HtmlViewer {
@@ -41,8 +42,15 @@ impl HtmlViewer {
         Self {
             handle,
             layout: LayoutData::default(),
+            fonts: Vec::new(),
         }
         .expanded()
+    }
+
+    /// Adds a font to the document's font collection.
+    pub fn font(mut self, font: impl Into<Bytes>) -> Self {
+        self.fonts.push(font.into());
+        self
     }
 }
 
@@ -58,13 +66,16 @@ impl Component for HtmlViewer {
     fn render(&self) -> impl IntoElement {
         let platform = Platform::get();
         let mut handle = self.handle;
+        let fonts = self.fonts.clone();
 
         let state = use_hook(move || {
             let platform = Platform::get();
             let (wake_tx, mut wake_rx) = futures_channel::mpsc::unbounded::<()>();
             let (nav_tx, mut nav_rx) = futures_channel::mpsc::unbounded::<String>();
             let (fetch_tx, mut fetch_rx) = futures_channel::mpsc::unbounded::<FetchRequest>();
-            let state = Rc::new(RefCell::new(BlitzState::new(wake_tx, nav_tx, fetch_tx)));
+            let state = Rc::new(RefCell::new(BlitzState::new(
+                wake_tx, nav_tx, fetch_tx, fonts,
+            )));
             handle.attach(state.clone());
 
             spawn(async move {

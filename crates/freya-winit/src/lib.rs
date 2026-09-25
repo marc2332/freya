@@ -133,10 +133,6 @@ fn launch_inner(mut launch_config: LaunchConfig) {
     for insert_global in launch_config.globals {
         insert_global(&global_contexts);
     }
-    global_contexts.insert_context(freya_core::prelude::EmbeddedFonts(
-        launch_config.embedded_fonts,
-    ));
-
     let mut renderer = WinitRenderer {
         windows: HashMap::default(),
         global_contexts,

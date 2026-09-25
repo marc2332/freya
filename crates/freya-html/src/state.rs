@@ -41,6 +41,7 @@ use blitz_traits::{
     },
 };
 use freya_core::prelude::{
+    Bytes,
     Code as FreyaCode,
     Key as FreyaKey,
     Modifiers as FreyaModifiers,
@@ -78,6 +79,7 @@ use crate::{
 /// Owns a parsed Blitz document and paints it directly into Freya's Skia canvas.
 pub(crate) struct BlitzState {
     document: Option<HtmlDocument>,
+    fonts: Vec<Bytes>,
     net_provider: Arc<dyn NetProvider>,
     shell_provider: Arc<dyn ShellProvider>,
     navigation_provider: Arc<dyn NavigationProvider>,
@@ -97,10 +99,12 @@ impl BlitzState {
         wake: UnboundedSender<()>,
         navigate: UnboundedSender<String>,
         fetch: UnboundedSender<FetchRequest>,
+        fonts: Vec<Bytes>,
     ) -> Self {
         let redraw = Arc::new(AtomicBool::new(true));
         Self {
             document: None,
+            fonts,
             net_provider: Arc::new(HttpNetProvider { fetch }),
             shell_provider: Arc::new(FreyaShellProvider {
                 redraw: redraw.clone(),
@@ -123,8 +127,7 @@ impl BlitzState {
             net_provider: Some(self.net_provider.clone()),
             shell_provider: Some(self.shell_provider.clone()),
             navigation_provider: Some(self.navigation_provider.clone()),
-            #[cfg(target_os = "emscripten")]
-            font_ctx: embedded_font_context(),
+            font_ctx: font_context(&self.fonts),
             ..Default::default()
         };
         self.document = Some(HtmlDocument::from_html(html, config));
@@ -288,12 +291,7 @@ impl BlitzState {
     }
 }
 
-#[cfg(target_os = "emscripten")]
-fn embedded_font_context() -> Option<blitz_dom::FontContext> {
-    use freya_core::prelude::{
-        EmbeddedFonts,
-        GlobalContexts,
-    };
+fn font_context(fonts: &[Bytes]) -> Option<blitz_dom::FontContext> {
     use parley::fontique::{
         Blob,
         Collection,
@@ -302,8 +300,7 @@ fn embedded_font_context() -> Option<blitz_dom::FontContext> {
         SourceCache,
     };
 
-    let fonts = GlobalContexts::get().try_get_context::<EmbeddedFonts>()?;
-    if fonts.0.is_empty() {
+    if fonts.is_empty() {
         return None;
     }
 
@@ -311,11 +308,11 @@ fn embedded_font_context() -> Option<blitz_dom::FontContext> {
         source_cache: SourceCache::new_shared(),
         collection: Collection::new(CollectionOptions {
             shared: false,
-            system_fonts: false,
+            system_fonts: !cfg!(target_os = "emscripten"),
         }),
     };
     let mut family_ids = Vec::new();
-    for (_, data) in &fonts.0 {
+    for data in fonts {
         let decoded = blitz_dom::decode_font_bytes(data).into_owned();
         let registered = context
             .collection

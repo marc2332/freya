@@ -70,6 +70,10 @@ impl Component for HtmlShowcase {
             .expanded()
             .spacing(20.)
             .child(heading("HTML", "HTML + CSS rendered by Blitz"))
-            .child(HtmlViewer::new(handle).expanded())
+            .child(
+                HtmlViewer::new(handle)
+                    .font(Bytes::from_static(crate::NOTO_SANS))
+                    .expanded(),
+            )
     }
 }
