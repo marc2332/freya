@@ -13,8 +13,7 @@ fn app() -> impl IntoElement {
     let mut editable = use_editable(|| "Hello, World!".to_string(), EditableConfig::new);
     let a11y_id = use_a11y();
 
-    rect().padding(24.).child(
-        paragraph()
+    paragraph()
             .a11y_id(a11y_id)
             .cursor_index(editable.editor().read().cursor_pos())
             .highlights(
@@ -55,6 +54,5 @@ fn app() -> impl IntoElement {
                 editable.process_event(EditableEvent::KeyUp { key: &e.key });
             })
             .span(editable.editor().read().to_string())
-            .holder(holder.read().clone()),
-    )
+        .holder(holder.read().clone())
 }
