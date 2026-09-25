@@ -33,7 +33,6 @@ use crate::scrollviews::{
         is_scrollbar_visible,
     },
     use_scroll_controller,
-    use_smooth_scroll,
 };
 
 /// Defines how each item of a [`VirtualScrollView`] is sized along the scroll axis.
@@ -187,21 +186,9 @@ pub struct VirtualItem {
 ///         .item_size(25.),
 ///     )
 /// }
-///
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_virtual_scrollview.png").with_hook(|t| {
-/// #   t.move_cursor((125., 115.));
-/// #   t.sync_and_update();
-/// # });
 /// ```
 ///
-/// # Preview
-/// ![VirtualScrollView Preview][virtual_scrollview]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("virtual_scrollview", "images/gallery_virtual_scrollview.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone)]
 pub struct VirtualScrollView<D, B: Fn(VirtualItem, &D) -> Element> {
     builder: B,
@@ -212,6 +199,7 @@ pub struct VirtualScrollView<D, B: Fn(VirtualItem, &D) -> Element> {
     show_scrollbar: bool,
     scroll_with_arrows: bool,
     scroll_controller: Option<ScrollController>,
+    on_sized: Option<EventHandler<Event<SizedEventData>>>,
     invert_scroll_wheel: bool,
     drag_scrolling: bool,
     scrollbar_theme: Option<ScrollBarThemePartial>,
@@ -263,6 +251,7 @@ impl<B: Fn(VirtualItem, &()) -> Element> VirtualScrollView<(), B> {
             show_scrollbar: true,
             scroll_with_arrows: true,
             scroll_controller: None,
+            on_sized: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
             scrollbar_theme: None,
@@ -286,6 +275,7 @@ impl<B: Fn(VirtualItem, &()) -> Element> VirtualScrollView<(), B> {
             show_scrollbar: true,
             scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
+            on_sized: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
             scrollbar_theme: None,
@@ -333,6 +323,7 @@ impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
             show_scrollbar: true,
             scroll_with_arrows: true,
             scroll_controller: None,
+            on_sized: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
             scrollbar_theme: None,
@@ -361,6 +352,7 @@ impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
             show_scrollbar: true,
             scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
+            on_sized: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
             scrollbar_theme: None,
@@ -428,6 +420,12 @@ impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
         self
     }
 
+    /// Runs the handler with the size of the visible area, which excludes the scrollbars.
+    pub fn on_sized(mut self, on_sized: impl Into<EventHandler<Event<SizedEventData>>>) -> Self {
+        self.on_sized = Some(on_sized.into());
+        self
+    }
+
     /// Sets the minimum width the scroll view can shrink to.
     pub fn min_width(mut self, min_width: impl Into<Size>) -> Self {
         self.layout.minimum_width = min_width.into();
@@ -467,7 +465,6 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
             .unwrap_or_else(|| use_scroll_controller(ScrollConfig::default));
         let mut dragging_content = use_state::<Option<CursorPoint>>(|| None);
         let mut drag_origin = use_state::<Option<CursorPoint>>(|| None);
-        let mut smooth_scroll = use_smooth_scroll(|| scroll_controller);
         let (scrolled_x, scrolled_y) = scroll_controller.into();
         let layout = &self.layout.layout;
         let direction = layout.direction;
@@ -489,8 +486,6 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
             ),
         };
 
-        scroll_controller.use_apply(inner_width, inner_height);
-
         let corrected_scrolled_x =
             get_corrected_scroll_position(inner_width, size.read().area.width(), scrolled_x as f32);
 
@@ -500,8 +495,8 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
             scrolled_y as f32,
         );
 
-        let smooth_position =
-            smooth_scroll.position(Point2D::new(corrected_scrolled_x, corrected_scrolled_y));
+        let smooth_position = scroll_controller
+            .animated_position(Point2D::new(corrected_scrolled_x, corrected_scrolled_y));
         let rendered_position = Point2D::new(
             get_corrected_scroll_position(inner_width, size.read().area.width(), smooth_position.x),
             get_corrected_scroll_position(
@@ -539,7 +534,11 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
             if drag_scrolling && (dragging_content().is_some() || drag_origin().is_some()) {
                 if dragging_content().is_some() {
                     let content = Size2D::new(inner_width, inner_height);
-                    smooth_scroll.release_drag(rendered_position, content, size.read().area.size);
+                    scroll_controller.release_drag(
+                        rendered_position,
+                        content,
+                        size.read().area.size,
+                    );
                 }
                 dragging_content.set(None);
                 drag_origin.set(None);
@@ -560,9 +559,9 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
 
             let animate = e.source == WheelSource::Line;
             if animate {
-                smooth_scroll.animate_from(rendered_position);
+                scroll_controller.animate_from(rendered_position);
             } else {
-                smooth_scroll.stop();
+                scroll_controller.stop();
             }
             let (base_x, base_y) = if animate {
                 (corrected_scrolled_x, corrected_scrolled_y)
@@ -604,7 +603,7 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                     let coords = e.global_location();
                     let delta = prev - coords;
 
-                    smooth_scroll.drag(delta.to_f32());
+                    scroll_controller.drag(delta.to_f32());
                     scroll_controller.scroll_to_y((rendered_position.y - delta.y as f32) as i32);
                     scroll_controller.scroll_to_x((rendered_position.x - delta.x as f32) as i32);
 
@@ -624,7 +623,7 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                     if distance.x > DRAG_THRESHOLD || distance.y > DRAG_THRESHOLD {
                         let delta = origin - coords;
 
-                        smooth_scroll.drag(delta.to_f32());
+                        scroll_controller.drag(delta.to_f32());
                         scroll_controller
                             .scroll_to_y((rendered_position.y - delta.y as f32) as i32);
                         scroll_controller
@@ -642,7 +641,7 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
             let clicking_scrollbar = clicking_scrollbar.peek();
 
             if clicking_scrollbar.is_some() {
-                smooth_scroll.stop();
+                scroll_controller.stop();
             }
 
             if let Some((Axis::Y, y)) = *clicking_scrollbar {
@@ -700,7 +699,7 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                 viewport_width,
                 direction,
             ) {
-                smooth_scroll.animate_from(rendered_position);
+                scroll_controller.animate_from(rendered_position);
                 scroll_controller.scroll_to_x(x as i32);
                 scroll_controller.scroll_to_y(y as i32);
                 e.stop_propagation();
@@ -749,7 +748,7 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
 
         let on_pointer_down = move |e: Event<PointerEventData>| {
             if drag_scrolling && matches!(e.data(), PointerEventData::Touch(_)) {
-                smooth_scroll.begin_drag();
+                scroll_controller.begin_drag();
                 drag_origin.set(Some(e.global_location()));
             }
         };
@@ -790,8 +789,36 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                             .offset_x(offset_x)
                             .offset_y(offset_y)
                             .overflow(Overflow::Clip)
-                            .on_sized(move |e: Event<SizedEventData>| {
-                                size.set_if_modified(e.clone())
+                            .on_sized({
+                                let item_size = self.item_size.clone();
+                                let length = self.length;
+                                let on_sized = self.on_sized.clone();
+                                move |e: Event<SizedEventData>| {
+                                    size.set_if_modified(e.clone());
+                                    let content_size = match direction {
+                                        Direction::Vertical => Size2D::new(
+                                            e.inner_sizes.width,
+                                            item_size.total_size(
+                                                e.area.height(),
+                                                scrolled_y as f32,
+                                                length,
+                                            ),
+                                        ),
+                                        Direction::Horizontal => Size2D::new(
+                                            item_size.total_size(
+                                                e.area.width(),
+                                                scrolled_x as f32,
+                                                length,
+                                            ),
+                                            e.inner_sizes.height,
+                                        ),
+                                    };
+
+                                    scroll_controller.apply_layout(content_size, e.area.size);
+                                    if let Some(on_sized) = &on_sized {
+                                        on_sized.call(e);
+                                    }
+                                }
                             })
                             .children(children),
                     )

@@ -21,40 +21,52 @@ use crate::{
     user_event::UserEvent,
 };
 
+/// How the user is navigating the application.
 #[derive(Clone, Copy, PartialEq, Eq, Default, Debug, Hash)]
 pub enum NavigationMode {
+    /// Navigation is driven by a pointing device or touch input.
     #[default]
     NotKeyboard,
+    /// Navigation is driven by keyboard input.
     Keyboard,
 }
 
+/// The color theme preferred by the operating system.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum PreferredTheme {
+    /// The operating system prefers a light color theme.
     #[default]
     Light,
+    /// The operating system prefers a dark color theme.
     Dark,
 }
 
-/// Platform an app runs on.
+/// Operating system targeted by an application.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TargetPlatform {
+    /// Microsoft Windows.
     Windows,
+    /// Apple macOS.
     MacOs,
+    /// Linux.
     Linux,
+    /// Android.
     Android,
+    /// Apple iOS.
     Ios,
+    /// An operating system Freya does not recognize.
     Unknown,
 }
 
 impl TargetPlatform {
-    /// Get the current [`TargetPlatform`] otherwise falls back to [`TargetPlatform::detect`].
+    /// Returns the target platform from the current Freya context, or detects the compile target.
     pub fn get() -> Self {
         CurrentContext::try_with(|_| try_consume_root_context())
             .flatten()
             .unwrap_or_else(Self::detect)
     }
 
-    /// Platform of the current compile target.
+    /// Detects the operating system of the current compile target.
     pub fn detect() -> Self {
         if cfg!(target_os = "windows") {
             Self::Windows
@@ -71,62 +83,87 @@ impl TargetPlatform {
         }
     }
 
+    /// Returns whether this is a desktop operating system.
     pub fn is_desktop(&self) -> bool {
         matches!(self, Self::Windows | Self::MacOs | Self::Linux)
     }
 
+    /// Returns whether this is a mobile operating system.
     pub fn is_mobile(&self) -> bool {
         matches!(self, Self::Android | Self::Ios)
     }
 }
 
-/// Access point to different Freya-managed states such as the focused node,
-/// root window size, navigation mode, and theme preference.
+/// Reactive state and APIs provided by Freya for the current window.
 ///
-/// Retrieve it from any component with [`Platform::get`].
+/// Retrieve it from a component with [`Platform::get`]. Each state field is a [`State`]. Calling
+/// [`State::read`] subscribes the component to changes, so use it when the UI should react to a
+/// platform update.
+///
+/// # Example
+///
+/// ```rust,no_run
+/// use freya_core::prelude::*;
+///
+/// fn app() -> impl IntoElement {
+///     let platform = Platform::get();
+///     let root_size = *platform.root_size.read();
+///     let preferred_theme = *platform.preferred_theme.read();
+///
+///     format!(
+///         "Window: {:.0} × {:.0}, preferred theme: {preferred_theme:?}",
+///         root_size.width, root_size.height,
+///     )
+/// }
+/// ```
+
 #[derive(Clone)]
 pub struct Platform {
-    /// The [`AccessibilityId`] of the currently focused node.
+    /// The [`AccessibilityId`] of the node currently focused for accessibility.
     pub focused_accessibility_id: State<AccessibilityId>,
-    /// The accessibility node data of the currently focused node.
+    /// Accessibility data for the node currently focused for accessibility.
     pub focused_accessibility_node: State<accesskit::Node>,
-    /// The size of the root window.
+    /// The root window's logical size.
     pub root_size: State<Size2D>,
-    /// Rendering scale factor, the OS scale factor multiplied by the custom scale factor.
+    /// The effective rendering scale factor, including the operating system and custom factors.
     pub scale_factor: State<f64>,
-    /// Custom scale factor, change it with [`Platform::set_custom_scale_factor`].
+    /// The custom scale factor. Use [`Platform::set_custom_scale_factor`] to change it.
     pub custom_scale_factor: State<f64>,
-    /// The current [`NavigationMode`].
+    /// The current input [`NavigationMode`].
     pub navigation_mode: State<NavigationMode>,
-    /// The OS-level [`PreferredTheme`].
+    /// The color theme preferred by the operating system.
     pub preferred_theme: State<PreferredTheme>,
-    /// Whether the app currently has the OS-level focus.
+    /// Whether the application currently has operating-system focus.
     pub is_app_focused: State<bool>,
-    /// The OS-level [`AccentColor`].
+    /// The accent color supplied by the operating system, when available.
     pub accent_color: State<AccentColor>,
-    /// Sender used to dispatch [`UserEvent`]s to the active renderer.
+    /// Dispatches [`UserEvent`] values to the active renderer.
     pub sender: Rc<dyn Fn(UserEvent)>,
 }
 
 impl Platform {
-    /// Retrieve the [`Platform`] from the root context.
+    /// Returns the [`Platform`] for the current window.
+    ///
+    /// This must be called while a Freya component is rendering or handling an event.
     #[track_caller]
     pub fn get() -> Self {
         consume_root_context()
     }
 
-    /// Dispatch a [`UserEvent`] to the active renderer.
+    /// Dispatches a [`UserEvent`] to the active renderer.
     pub fn send(&self, event: UserEvent) {
         (self.sender)(event)
     }
 
-    /// Request the renderer to use a custom scale factor, multiplied with the
-    /// OS scale factor. The value might get clamped to a reasonable range.
+    /// Requests a custom rendering scale factor.
+    ///
+    /// The effective scale factor is this value multiplied by the operating system scale factor.
+    /// Freya clamps the requested value to its supported range.
     pub fn set_custom_scale_factor(&self, custom_scale_factor: f64) {
         self.send(UserEvent::SetCustomScaleFactor(custom_scale_factor));
     }
 
-    /// Load a font at runtime, making it available under the given name in all windows.
+    /// Loads a font at runtime under the given family name in all windows.
     ///
     /// # Example
     ///

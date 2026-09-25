@@ -5,7 +5,10 @@ use torin::prelude::*;
 use crate::{
     define_theme,
     get_theme,
-    icons::arrow::ArrowIcon,
+    icons::{
+        IconThemePartialExt,
+        arrow::ArrowIcon,
+    },
     menu::MenuGroup,
 };
 
@@ -57,25 +60,15 @@ pub enum SelectStatus {
 ///                 .child(val.to_string())
 ///         }))
 /// }
-///
-/// # use freya_testing::prelude::*;
-/// # use std::time::Duration;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_select.png").with_hook(|t| { t.move_cursor((125., 125.)); t.click_cursor((125., 125.)); t.poll(Duration::from_millis(1), Duration::from_millis(350)); }).with_scale_factor(1.).render();
 /// ```
 ///
-/// # Preview
-/// ![Select Preview][select]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("select", "images/gallery_select.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct Select {
     pub(crate) theme: Option<SelectThemePartial>,
     selected_item: Option<Element>,
     children: Vec<Element>,
-    cursor_icon: CursorIcon,
+    cursor_icon: Option<CursorIcon>,
     key: DiffKey,
 }
 
@@ -103,7 +96,7 @@ impl Select {
             theme: None,
             selected_item: None,
             children: Vec::new(),
-            cursor_icon: CursorIcon::default(),
+            cursor_icon: None,
             key: DiffKey::None,
         }
     }
@@ -119,7 +112,7 @@ impl Select {
     }
 
     /// Override the cursor icon shown when hovering over this component.
-    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+    pub fn cursor(mut self, cursor_icon: impl Into<Option<CursorIcon>>) -> Self {
         self.cursor_icon = cursor_icon.into();
         self
     }

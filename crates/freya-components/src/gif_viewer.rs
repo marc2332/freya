@@ -181,19 +181,9 @@ impl GifSource {
 ///
 ///     GifViewer::new(source)
 /// }
-///
-/// # use freya_testing::prelude::*;
-/// # use std::path::PathBuf;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(GifViewer::new(("frog-typing", include_bytes!("../../../examples/frog_typing.gif"))))
-/// # }, "./images/gallery_gif_viewer.png").with_hook(|t| { t.poll(std::time::Duration::from_millis(1), std::time::Duration::from_millis(1500)); t.sync_and_update(); }).with_scale_factor(1.).render();
 /// ```
 ///
-/// # Preview
-/// ![Gif Preview][gif_viewer]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("gif_viewer", "images/gallery_gif_viewer.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(PartialEq)]
 pub struct GifViewer {
     source: GifSource,

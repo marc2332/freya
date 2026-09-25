@@ -206,10 +206,14 @@ impl<Key: NodeKey> NodesState<Key> {
                         tracing::info!("Marked as hovered {:?}", node_key);
                     }
                     name if name.is_pressed() => {
+                        hovered_nodes.insert(*node_key);
                         pressed_nodes.insert(*node_key);
 
                         #[cfg(debug_assertions)]
-                        tracing::info!("Marked as pressed {:?}", node_key);
+                        {
+                            tracing::info!("Marked as hovered {:?}", node_key);
+                            tracing::info!("Marked as pressed {:?}", node_key);
+                        }
                     }
                     _ => {}
                 }

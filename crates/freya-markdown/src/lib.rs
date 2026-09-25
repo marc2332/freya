@@ -17,9 +17,6 @@ use freya_components::{
     get_theme_or_default,
     table::{
         Table,
-        TableBody,
-        TableCell,
-        TableHead,
         TableRow,
     },
     theming::macros::Preference,
@@ -960,30 +957,24 @@ impl Component for MarkdownViewer {
                     .background(background_divider)
                     .into(),
                 MarkdownElement::Table { headers, rows } => {
-                    let mut head = TableHead::new();
-                    let mut header_row = TableRow::new();
-                    for (col_idx, header_spans) in headers.into_iter().enumerate() {
-                        header_row = header_row.child(
-                            TableCell::new().key(col_idx).child(
-                                render_spans(&header_spans, table_font_size, color, color_code)
-                                    .font_weight(FontWeight::BOLD),
-                            ),
-                        );
-                    }
-                    head = head.child(header_row);
+                    let header_row = TableRow::new().children(headers.iter().map(|header_spans| {
+                        render_spans(header_spans, table_font_size, color, color_code)
+                            .font_weight(FontWeight::BOLD)
+                    }));
 
-                    let mut body = TableBody::new();
-                    for (row_idx, row) in rows.into_iter().enumerate() {
-                        let mut table_row = TableRow::new().key(row_idx);
-                        for (col_idx, cell_spans) in row.into_iter().enumerate() {
-                            table_row = table_row.child(TableCell::new().key(col_idx).child(
-                                render_spans(&cell_spans, table_font_size, color, color_code),
-                            ));
-                        }
-                        body = body.child(table_row);
-                    }
+                    let body_rows = rows.into_iter().enumerate().map(|(row_idx, row)| {
+                        TableRow::new()
+                            .key(row_idx)
+                            .children(row.iter().map(|cell_spans| {
+                                render_spans(cell_spans, table_font_size, color, color_code)
+                            }))
+                    });
 
-                    Table::new().key(idx).child(head).child(body).into()
+                    Table::new()
+                        .key(idx)
+                        .child(header_row)
+                        .children(body_rows)
+                        .into()
                 }
             };
 

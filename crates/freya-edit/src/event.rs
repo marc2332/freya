@@ -57,10 +57,12 @@ impl EditableEvent<'_> {
                 editor_line,
                 holder,
             } => {
+                let location = holder.visible_location(location);
                 let holder = holder.0.borrow();
                 let ParagraphHolderInner {
                     paragraph,
                     scale_factor,
+                    ..
                 } = holder.as_ref().unwrap();
 
                 let mut text_editor = editor.write();
@@ -73,7 +75,7 @@ impl EditableEvent<'_> {
 
                 dragging.write().clicked = true;
 
-                match EventsCombos::pressed(location) {
+                match EventsCombos::<()>::pressed(location) {
                     PressEventType::Triple => {
                         let current_selection = text_editor.selection().clone();
 
@@ -142,13 +144,15 @@ impl EditableEvent<'_> {
                 editor_line,
                 holder,
             } => {
+                let location = holder.visible_location(location);
                 if dragging.peek().clicked {
-                    EventsCombos::moved(location);
+                    EventsCombos::<()>::moved(location);
 
                     let paragraph = holder.0.borrow();
                     let ParagraphHolderInner {
                         paragraph,
                         scale_factor,
+                        ..
                     } = paragraph.as_ref().unwrap();
 
                     let dist_position = location.mul(*scale_factor);

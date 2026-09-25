@@ -42,7 +42,7 @@ fn app() -> impl IntoElement {
                 .child(text)
                 .on_pointer_down(move |e: Event<PointerEventData>| {
                     if e.is_primary() {
-                        press_type.set(Some(EventsCombos::pressed(e.global_location())));
+                        press_type.set(Some(EventsCombos::<()>::pressed(e.global_location())));
                     }
                 }),
         )

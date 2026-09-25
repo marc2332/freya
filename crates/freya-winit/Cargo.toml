@@ -1,6 +1,6 @@
 [package]
 name = "freya-winit"
-version = "0.5.0-rc.6"
+version = "0.5.0-rc.7"
 description = "Winit renderer for Freya"
 edition = "2024"
 license = "MIT"
@@ -39,7 +39,7 @@ ragnarok = { workspace = true }
 keyboard-types = { workspace = true }
 
 # Accessibility
-accesskit_winit = { workspace = true }
+accesskit_winit = { workspace = true, optional = true }
 accesskit = { workspace = true }
 
 # Other
@@ -111,7 +111,7 @@ freya-engine = { workspace = true, features = ["metal"], optional = true }
 freya = { path = "../freya" }
 
 [features]
-default = ["gpu"]
+default = ["gpu", "accessibility"]
 gpu = [
   "dep:freya-engine",
   "dep:gl",
@@ -124,6 +124,7 @@ gpu = [
   "dep:objc2-quartz-core",
   "dep:objc2-app-kit",
 ]
+accessibility = ["dep:accesskit_winit"]
 hotpath = ["hotpath/hotpath"]
 hotreload = ["freya-core/hotreload"]
 tray = ["dep:tray-icon", "dep:gtk"]

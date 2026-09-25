@@ -16,6 +16,7 @@ use freya_engine::prelude::{
 use torin::prelude::{
     Area,
     Size2D,
+    SizeModel,
 };
 
 use crate::{
@@ -40,6 +41,7 @@ use crate::{
     prelude::{
         AccessibilityExt,
         ContainerExt,
+        EffectExt,
         EventHandlersExt,
         KeyExt,
         LayerExt,
@@ -97,6 +99,7 @@ pub struct LabelElement {
     pub max_lines: Option<usize>,
     pub line_height: Option<f32>,
     pub relative_layer: Layer,
+    pub effect: Option<EffectData>,
 }
 
 impl Default for LabelElement {
@@ -112,6 +115,7 @@ impl Default for LabelElement {
             max_lines: None,
             line_height: None,
             relative_layer: Layer::default(),
+            effect: None,
         }
     }
 }
@@ -145,6 +149,10 @@ impl ElementExt for LabelElement {
             diff.insert(DiffModifies::LAYER);
         }
 
+        if self.effect != label.effect {
+            diff.insert(DiffModifies::EFFECT);
+        }
+
         if self.text_style_data != label.text_style_data
             || self.line_height != label.line_height
             || self.max_lines != label.max_lines
@@ -168,7 +176,7 @@ impl ElementExt for LabelElement {
     }
 
     fn effect(&'_ self) -> Option<Cow<'_, EffectData>> {
-        None
+        self.effect.as_ref().map(Cow::Borrowed)
     }
 
     fn style(&'_ self) -> Cow<'_, StyleState> {
@@ -200,12 +208,14 @@ impl ElementExt for LabelElement {
     }
 
     fn measure(&self, context: LayoutContext) -> Option<(Size2D, Rc<dyn Any>)> {
+        let content_area_size =
+            (*context.area_size - context.torin_node.padding.into()).max(Size2D::zero());
         let cached_paragraph = CachedParagraph {
             text_style_state: context.text_style_state,
             spans: &[Span::new(&*self.text)],
             max_lines: self.max_lines,
             line_height: self.line_height,
-            width: context.area_size.width,
+            width: content_area_size.width,
         };
         let paragraph = context
             .text_cache
@@ -242,7 +252,7 @@ impl ElementExt for LabelElement {
                         {
                             f32::MAX
                         } else {
-                            context.area_size.width + 1.0
+                            content_area_size.width + 1.0
                         },
                     );
                     paragraph
@@ -259,7 +269,9 @@ impl ElementExt for LabelElement {
                     .insert(context.node_id, &cached_paragraph, paragraph)
             });
 
-        let size = Size2D::new(paragraph.longest_line(), paragraph.height()).max(Size2D::zero());
+        let size = Size2D::new(paragraph.longest_line(), paragraph.height())
+            .max(Size2D::zero())
+            .with_gaps(&context.torin_node.padding);
 
         Some((size, paragraph))
     }
@@ -285,7 +297,10 @@ impl ElementExt for LabelElement {
         let layout_data = context.layout_node.data.as_ref().unwrap();
         let paragraph = layout_data.downcast_ref::<SkParagraph>().unwrap();
 
-        paragraph.paint_at(context.canvas, context.layout_node.visible_area().origin);
+        paragraph.paint_at(
+            context.canvas,
+            context.layout_node.inner_area.origin.cast_unit(),
+        );
     }
 }
 
@@ -320,6 +335,12 @@ impl AccessibilityExt for Label {
 impl TextStyleExt for Label {
     fn get_text_style_data(&mut self) -> &mut TextStyleData {
         &mut self.element.text_style_data
+    }
+}
+
+impl EffectExt for Label {
+    fn get_effect(&mut self) -> &mut EffectData {
+        self.element.effect.get_or_insert_with(EffectData::default)
     }
 }
 

@@ -7,12 +7,20 @@ use freya::{
     animation::*,
     prelude::*,
 };
-use freya_performance_plugin::PerformanceOverlayPlugin;
+use freya_metrics_plugin::MetricsPlugin;
+use tracing_subscriber::{
+    filter::EnvFilter,
+    fmt,
+};
 
 fn main() {
+    fmt()
+        .with_env_filter(EnvFilter::new("freya::metrics=debug"))
+        .init();
+
     launch(
         LaunchConfig::new()
-            .with_plugin(PerformanceOverlayPlugin::default().with_visible(true))
+            .with_plugin(MetricsPlugin::default().with_visible_performance(true))
             .with_window(WindowConfig::new(app)),
     )
 }

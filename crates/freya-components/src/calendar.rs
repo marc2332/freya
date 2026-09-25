@@ -21,7 +21,10 @@ use crate::{
     },
     define_theme,
     get_theme,
-    icons::arrow::ArrowIcon,
+    icons::{
+        IconThemePartialExt,
+        arrow::ArrowIcon,
+    },
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -88,16 +91,9 @@ impl From<NaiveDate> for CalendarDate {
 ///         .on_change(move |date| selected.set(Some(date)))
 ///         .on_view_change(move |date| view_date.set(date))
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_calendar.png").with_hook(|_| {}).with_scale_factor(0.8).render();
 /// ```
 ///
-/// # Preview
-///
-/// ![Calendar Preview][gallery_calendar]
-#[cfg_attr(feature = "docs", doc = embed_doc_image::embed_image!("gallery_calendar", "images/gallery_calendar.png"))]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct Calendar {
     pub(crate) theme: Option<CalendarThemePartial>,

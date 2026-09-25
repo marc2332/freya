@@ -2,6 +2,7 @@ use freya_core::prelude::*;
 use torin::{
     content::Content,
     gaps::Gaps,
+    node::Node,
     prelude::Alignment,
     size::Size,
 };
@@ -9,20 +10,16 @@ use torin::{
 use crate::{
     define_theme,
     get_theme,
-    icons::arrow::ArrowIcon,
 };
 
 define_theme! {
     for = Table;
-    theme_field = theme;
-    for = TableRow;
     theme_field = theme;
 
     %[component]
     pub Table {
         %[fields]
         background: Color,
-        arrow_fill: Color,
         hover_row_background: Color,
         row_background: Color,
         divider_fill: Color,
@@ -31,136 +28,47 @@ define_theme! {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Default)]
-pub enum OrderDirection {
-    Up,
-    #[default]
-    Down,
+/// Resolved theme and column widths a [Table] shares with its rows.
+#[derive(Clone)]
+pub struct TableConfig {
+    pub theme: TableTheme,
+    pub column_widths: Option<Vec<Size>>,
 }
 
 #[derive(PartialEq)]
-pub struct TableArrow {
-    pub order_direction: OrderDirection,
+pub struct TableRow {
+    pub children: Vec<Element>,
+    layout: LayoutData,
     key: DiffKey,
 }
 
-impl TableArrow {
-    pub fn new(order_direction: OrderDirection) -> Self {
+impl Default for TableRow {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl TableRow {
+    pub fn new() -> Self {
         Self {
-            order_direction,
+            children: vec![],
+            layout: Node {
+                width: Size::fill(),
+                ..Default::default()
+            }
+            .into(),
             key: DiffKey::None,
         }
     }
 }
 
-impl KeyExt for TableArrow {
-    fn write_key(&mut self) -> &mut DiffKey {
-        &mut self.key
+impl LayoutExt for TableRow {
+    fn get_layout(&mut self) -> &mut LayoutData {
+        &mut self.layout
     }
 }
 
-impl Component for TableArrow {
-    fn render(&self) -> impl IntoElement {
-        let TableTheme { arrow_fill, .. } =
-            get_theme!(None::<TableThemePartial>, TableThemePreference, "table");
-        let rotate = match self.order_direction {
-            OrderDirection::Down => 0.,
-            OrderDirection::Up => 180.,
-        };
-        ArrowIcon::new().rotate(rotate).fill(arrow_fill)
-    }
-
-    fn render_key(&self) -> DiffKey {
-        self.key.clone().or(self.default_key())
-    }
-}
-
-/// TableHead props (manual)
-#[derive(PartialEq, Default)]
-pub struct TableHead {
-    pub children: Vec<Element>,
-    key: DiffKey,
-}
-
-impl TableHead {
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
-
-impl ChildrenExt for TableHead {
-    fn get_children(&mut self) -> &mut Vec<Element> {
-        &mut self.children
-    }
-}
-
-impl KeyExt for TableHead {
-    fn write_key(&mut self) -> &mut DiffKey {
-        &mut self.key
-    }
-}
-
-impl Component for TableHead {
-    fn render(&self) -> impl IntoElement {
-        rect().width(Size::fill()).children(self.children.clone())
-    }
-
-    fn render_key(&self) -> DiffKey {
-        self.key.clone().or(self.default_key())
-    }
-}
-
-#[derive(PartialEq, Default)]
-pub struct TableBody {
-    pub children: Vec<Element>,
-    key: DiffKey,
-}
-
-impl TableBody {
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
-impl ChildrenExt for TableBody {
-    fn get_children(&mut self) -> &mut Vec<Element> {
-        &mut self.children
-    }
-}
-
-impl KeyExt for TableBody {
-    fn write_key(&mut self) -> &mut DiffKey {
-        &mut self.key
-    }
-}
-
-impl Component for TableBody {
-    fn render(&self) -> impl IntoElement {
-        rect().width(Size::fill()).children(self.children.clone())
-    }
-
-    fn render_key(&self) -> DiffKey {
-        self.key.clone().or(self.default_key())
-    }
-}
-
-#[derive(PartialEq, Clone, Copy)]
-enum TableRowState {
-    Idle,
-    Hovering,
-}
-
-#[derive(PartialEq, Default)]
-pub struct TableRow {
-    pub theme: Option<TableThemePartial>,
-    pub children: Vec<Element>,
-    key: DiffKey,
-}
-
-impl TableRow {
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
+impl ContainerExt for TableRow {}
 
 impl ChildrenExt for TableRow {
     fn get_children(&mut self) -> &mut Vec<Element> {
@@ -176,145 +84,47 @@ impl KeyExt for TableRow {
 
 impl Component for TableRow {
     fn render(&self) -> impl IntoElement {
-        let theme = get_theme!(&self.theme, TableThemePreference, "table");
-        let config = use_try_consume::<TableConfig>().unwrap_or_default();
-        let mut state = use_state(|| TableRowState::Idle);
-        let TableTheme {
-            divider_fill,
-            hover_row_background,
-            row_background,
-            ..
-        } = theme;
-        let background = if state() == TableRowState::Hovering {
-            hover_row_background
+        let TableConfig {
+            theme,
+            column_widths,
+        } = use_try_consume::<TableConfig>().unwrap_or_else(|| TableConfig {
+            theme: get_theme!(None::<TableThemePartial>, TableThemePreference, "table"),
+            column_widths: None,
+        });
+        let mut hovering = use_state(|| false);
+        let background = if hovering() {
+            theme.hover_row_background
         } else {
-            row_background
+            theme.row_background
         };
 
         rect()
-            .on_pointer_enter(move |_| state.set(TableRowState::Hovering))
-            .on_pointer_leave(move |_| state.set(TableRowState::Idle))
-            .background(background)
-            .child(
-                rect()
-                    .width(Size::fill())
-                    .horizontal()
-                    .content(Content::Flex)
-                    .children(self.children.iter().enumerate().map(|(index, child)| {
-                        let width = config
-                            .column_widths
-                            .as_ref()
-                            .and_then(|widths| widths.get(index).cloned())
-                            .unwrap_or_else(|| Size::flex(1.));
-
-                        rect().width(width).child(child.clone())
-                    })),
-            )
-            .child(
-                rect()
-                    .height(Size::px(1.))
-                    .width(Size::fill())
-                    .background(divider_fill),
-            )
-    }
-
-    fn render_key(&self) -> DiffKey {
-        self.key.clone().or(self.default_key())
-    }
-}
-
-#[derive(PartialEq)]
-pub struct TableCell {
-    pub children: Vec<Element>,
-    /// optional press handler
-    pub on_press: Option<EventHandler<Event<PressEventData>>>,
-    /// optional visual order direction
-    pub order_direction: Option<OrderDirection>,
-    /// padding as typed Gaps
-    pub padding: Gaps,
-    /// height as typed Size
-    pub height: Size,
-    key: DiffKey,
-}
-
-impl ChildrenExt for TableCell {
-    fn get_children(&mut self) -> &mut Vec<Element> {
-        &mut self.children
-    }
-}
-
-impl Default for TableCell {
-    fn default() -> Self {
-        Self {
-            children: vec![],
-            on_press: None,
-            order_direction: None,
-            padding: Gaps::new_all(5.0),
-            height: Size::px(35.0),
-            key: DiffKey::None,
-        }
-    }
-}
-
-impl TableCell {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn padding(mut self, padding: Gaps) -> Self {
-        self.padding = padding;
-        self
-    }
-
-    pub fn height(mut self, height: impl Into<Size>) -> Self {
-        self.height = height.into();
-        self
-    }
-
-    pub fn on_press(mut self, handler: impl Into<EventHandler<Event<PressEventData>>>) -> Self {
-        self.on_press = Some(handler.into());
-        self
-    }
-
-    pub fn order_direction(mut self, dir: Option<OrderDirection>) -> Self {
-        self.order_direction = dir;
-        self
-    }
-}
-
-impl KeyExt for TableCell {
-    fn write_key(&mut self) -> &mut DiffKey {
-        &mut self.key
-    }
-}
-
-impl Component for TableCell {
-    fn render(&self) -> impl IntoElement {
-        let mut container = rect()
-            .overflow(Overflow::Clip)
-            .padding(self.padding)
-            .width(Size::fill())
-            .main_align(Alignment::End)
+            .layout(self.layout.clone())
+            .horizontal()
+            .content(Content::Flex)
             .cross_align(Alignment::Center)
-            .height(self.height.clone())
-            .horizontal();
+            .background(background)
+            .border(Border::new().fill(theme.divider_fill).width(BorderWidth {
+                bottom: 1.,
+                ..Default::default()
+            }))
+            .on_pointer_enter(move |_| hovering.set(true))
+            .on_pointer_leave(move |_| hovering.set(false))
+            .children(self.children.iter().enumerate().map(|(index, child)| {
+                let width = column_widths
+                    .as_ref()
+                    .and_then(|widths| widths.get(index).cloned())
+                    .unwrap_or_else(|| Size::flex(1.));
 
-        if let Some(on_press) = &self.on_press {
-            let handler = on_press.clone();
-            container = container.on_press(move |e| handler.call(e));
-        }
-
-        if let Some(order_direction) = self.order_direction {
-            container = container.child(
                 rect()
-                    .margin(Gaps::new_all(10.0))
-                    .width(Size::px(10.0))
-                    .height(Size::px(10.0))
-                    .child(TableArrow::new(order_direction)),
-            );
-        }
-
-        container.children(self.children.clone())
+                    .width(width)
+                    .overflow(Overflow::Clip)
+                    .padding(Gaps::new_all(5.0))
+                    .horizontal()
+                    .main_align(Alignment::End)
+                    .cross_align(Alignment::Center)
+                    .child(child.clone())
+            }))
     }
 
     fn render_key(&self) -> DiffKey {
@@ -330,75 +140,25 @@ impl Component for TableCell {
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
 ///     Table::new()
-///         .child(
-///             TableHead::new().child(
-///                 TableRow::new()
-///                     .child(TableCell::new().child("Header 1"))
-///                     .child(TableCell::new().child("Header 2")),
-///             ),
-///         )
-///         .child(
-///             TableBody::new().child(
-///                 TableRow::new()
-///                     .child(TableCell::new().child("Data 1"))
-///                     .child(TableCell::new().child("Data 2")),
-///             ),
-///         )
-///         .child(
-///             TableBody::new().child(
-///                 TableRow::new()
-///                     .child(TableCell::new().child("Data 3"))
-///                     .child(TableCell::new().child("Data 4")),
-///             ),
-///         )
+///         .child(TableRow::new().child("Header 1").child("Header 2"))
+///         .child(TableRow::new().child("Data 1").child("Data 2"))
+///         .child(TableRow::new().child("Data 3").child("Data 4"))
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().padding(8.).center().expanded().child(
-/// #       app()
-/// #   )
-/// # }, "./images/gallery_table.png")
-/// #   .with_hook(|t| { t.move_cursor((125., 125.)); t.sync_and_update(); })
-/// #   .with_scale_factor(0.9)
-/// #   .render();
 /// ```
 ///
-/// # Preview
-/// ![Table Preview][table]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("table", "images/gallery_table.png"),
-)]
-#[derive(PartialEq)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
+#[derive(PartialEq, Default)]
 pub struct Table {
-    pub height: Size,
     pub theme: Option<TableThemePartial>,
     pub column_widths: Option<Vec<Size>>,
     pub children: Vec<Element>,
+    layout: LayoutData,
     key: DiffKey,
-}
-
-impl Default for Table {
-    fn default() -> Self {
-        Self {
-            height: Size::Inner,
-            theme: None,
-            column_widths: None,
-            children: vec![],
-            key: DiffKey::None,
-        }
-    }
 }
 
 impl Table {
     pub fn new() -> Self {
-        Self {
-            ..Default::default()
-        }
-    }
-
-    pub fn height(mut self, height: impl Into<Size>) -> Self {
-        self.height = height.into();
-        self
+        Self::default()
     }
 
     pub fn theme(mut self, theme: TableThemePartial) -> Self {
@@ -427,49 +187,32 @@ impl KeyExt for Table {
     }
 }
 
-#[derive(Clone, Default)]
-pub struct TableConfig {
-    pub column_widths: Option<Vec<Size>>,
-}
-
-impl TableConfig {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn with_column_widths(column_widths: Vec<Size>) -> Self {
-        Self {
-            column_widths: Some(column_widths),
-        }
+impl LayoutExt for Table {
+    fn get_layout(&mut self) -> &mut LayoutData {
+        &mut self.layout
     }
 }
+
+impl ContainerExt for Table {}
 
 impl Component for Table {
     fn render(&self) -> impl IntoElement {
-        let TableTheme {
-            background,
-            corner_radius,
-            divider_fill,
-            color,
-            ..
-        } = get_theme!(&self.theme, TableThemePreference, "table");
-
-        let config = match &self.column_widths {
-            Some(widths) => TableConfig::with_column_widths(widths.clone()),
-            None => TableConfig::default(),
-        };
-        provide_context(config);
+        let theme = get_theme!(&self.theme, TableThemePreference, "table");
+        provide_context(TableConfig {
+            theme: theme.clone(),
+            column_widths: self.column_widths.clone(),
+        });
 
         rect()
+            .layout(self.layout.clone())
             .overflow(Overflow::Clip)
-            .color(color)
-            .background(background)
-            .corner_radius(corner_radius)
-            .height(self.height.clone())
+            .color(theme.color)
+            .background(theme.background)
+            .corner_radius(theme.corner_radius)
             .border(
                 Border::new()
                     .alignment(BorderAlignment::Outer)
-                    .fill(divider_fill)
+                    .fill(theme.divider_fill)
                     .width(1.0),
             )
             .children(self.children.clone())

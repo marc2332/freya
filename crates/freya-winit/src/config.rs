@@ -267,6 +267,43 @@ impl WindowConfig {
     }
 }
 
+/// GPU resource cache limit used by the renderer.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum GpuResourceCacheLimit {
+    /// 128 MiB for applications with low graphics resource usage.
+    Small,
+    /// 256 MiB, matching Skia's default cache limit.
+    #[default]
+    Normal,
+    /// 1 GiB for applications with large graphics resource usage.
+    Large,
+    /// A custom limit in bytes.
+    Custom(usize),
+}
+
+impl From<usize> for GpuResourceCacheLimit {
+    fn from(bytes: usize) -> Self {
+        Self::Custom(bytes)
+    }
+}
+
+impl GpuResourceCacheLimit {
+    /// Creates a custom cache limit from a number of mebibytes.
+    pub const fn from_mb(megabytes: usize) -> Self {
+        Self::Custom(megabytes * 1024 * 1024)
+    }
+
+    /// Returns the cache limit in bytes.
+    pub const fn bytes(self) -> usize {
+        match self {
+            Self::Small => 128 * 1024 * 1024,
+            Self::Normal => 256 * 1024 * 1024,
+            Self::Large => 1024 * 1024 * 1024,
+            Self::Custom(bytes) => bytes,
+        }
+    }
+}
+
 pub type EmbeddedFonts = Vec<(Cow<'static, str>, Bytes)>;
 #[cfg(feature = "tray")]
 pub type TrayIconGetter = Box<dyn FnOnce() -> tray_icon::TrayIcon + Send>;
@@ -310,7 +347,7 @@ impl Default for LaunchConfig {
             globals: Vec::new(),
             exit_on_close: true,
             event_loop: None,
-            gpu_resource_cache_limit: 1024 * 1024 * 1024,
+            gpu_resource_cache_limit: GpuResourceCacheLimit::default().bytes(),
         }
     }
 }
@@ -458,9 +495,12 @@ impl LaunchConfig {
         self
     }
 
-    /// Set the Skia GPU resource cache limit, in bytes, applied to every window. Defaults to 1 GB.
-    pub fn with_gpu_resource_cache_limit(mut self, gpu_resource_cache_limit: usize) -> Self {
-        self.gpu_resource_cache_limit = gpu_resource_cache_limit;
+    /// Set the Skia GPU resource cache limit applied to every window. Defaults to [`GpuResourceCacheLimit::Normal`].
+    pub fn with_gpu_resource_cache_limit(
+        mut self,
+        gpu_resource_cache_limit: impl Into<GpuResourceCacheLimit>,
+    ) -> Self {
+        self.gpu_resource_cache_limit = gpu_resource_cache_limit.into().bytes();
         self
     }
 }

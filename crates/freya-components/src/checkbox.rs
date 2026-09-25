@@ -5,7 +5,10 @@ use torin::prelude::*;
 use crate::{
     define_theme,
     get_theme,
-    icons::tick::TickIcon,
+    icons::{
+        IconThemePartialExt,
+        tick::TickIcon,
+    },
 };
 
 define_theme! {
@@ -44,18 +47,9 @@ define_theme! {
 ///                 .child("Click to check"),
 ///         )
 /// }
-///
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_checkbox.png").render();
 /// ```
 ///
-/// # Preview
-/// ![Checkbox Preview][checkbox]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("checkbox", "images/gallery_checkbox.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct Checkbox {
     pub(crate) theme: Option<CheckboxThemePartial>,
