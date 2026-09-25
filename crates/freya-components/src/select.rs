@@ -60,19 +60,9 @@ pub enum SelectStatus {
 ///                 .child(val.to_string())
 ///         }))
 /// }
-///
-/// # use freya_testing::prelude::*;
-/// # use std::time::Duration;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_select.png").with_hook(|t| { t.move_cursor((125., 125.)); t.click_cursor((125., 125.)); t.poll(Duration::from_millis(1), Duration::from_millis(350)); }).with_scale_factor(1.).render();
 /// ```
 ///
-/// # Preview
-/// ![Select Preview][select]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("select", "images/gallery_select.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct Select {
     pub(crate) theme: Option<SelectThemePartial>,

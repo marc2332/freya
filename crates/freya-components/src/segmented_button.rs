@@ -270,17 +270,9 @@ impl Component for ButtonSegment {
 ///             .child(format!("Option {i}"))
 ///     }))
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_segmented_button.png").render();
 /// ```
 ///
-/// # Preview
-/// ![SegmentedButton Preview][segmented_button]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("segmented_button", "images/gallery_segmented_button.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct SegmentedButton {
     pub(crate) theme: Option<SegmentedButtonThemePartial>,

@@ -30,17 +30,8 @@ define_theme! {
 ///
 ///     Slider::new(move |per| percentage.set(per)).value(percentage())
 /// }
-///
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().padding(48.).center().expanded().child(app())
-/// # }, "./images/gallery_slider.png").render();
 /// ```
-/// # Preview
-/// ![Slider Preview][slider]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("slider", "images/gallery_slider.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct Slider {
     pub(crate) theme: Option<SliderThemePartial>,

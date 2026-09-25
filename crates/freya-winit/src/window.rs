@@ -66,7 +66,10 @@ use crate::{
         RendererPreference,
         WindowConfig,
     },
-    drivers::GraphicsDriver,
+    drivers::{
+        GraphicsContext,
+        GraphicsDriver,
+    },
     integration::is_ime_role,
     plugins::{
         PluginEvent,
@@ -196,6 +199,7 @@ impl AppWindow {
         font_manager: &FontMgr,
         fallback_fonts: &[Cow<'static, str>],
         gpu_resource_cache_limit: usize,
+        graphics_context: &mut GraphicsContext,
         global_contexts: &GlobalContexts,
     ) -> Self {
         #[cfg(feature = "hotreload")]
@@ -230,6 +234,7 @@ impl AppWindow {
             window_attributes.clone(),
             gpu_resource_cache_limit,
             window_config.renderer,
+            graphics_context,
         );
 
         tracing::info!(

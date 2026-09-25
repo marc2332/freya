@@ -73,18 +73,9 @@ impl ChildrenExt for FloatingTab {
 ///         .child(FloatingTab::new().child("Page 1"))
 ///         .child(FloatingTab::new().child("Page 2"))
 /// }
-///
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_floating_tab.png").with_hook(|t| { t.move_cursor((125., 115.)); t.sync_and_update(); }).with_scale_factor(1.).render();
 /// ```
 ///
-/// # Preview
-/// ![FloatingTab Preview][floating_tab]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("floating_tab", "images/gallery_floating_tab.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 impl FloatingTab {
     pub fn new() -> Self {
         Self {

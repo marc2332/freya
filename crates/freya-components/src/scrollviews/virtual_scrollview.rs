@@ -186,21 +186,9 @@ pub struct VirtualItem {
 ///         .item_size(25.),
 ///     )
 /// }
-///
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_virtual_scrollview.png").with_hook(|t| {
-/// #   t.move_cursor((125., 115.));
-/// #   t.sync_and_update();
-/// # });
 /// ```
 ///
-/// # Preview
-/// ![VirtualScrollView Preview][virtual_scrollview]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("virtual_scrollview", "images/gallery_virtual_scrollview.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone)]
 pub struct VirtualScrollView<D, B: Fn(VirtualItem, &D) -> Element> {
     builder: B,

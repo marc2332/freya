@@ -698,8 +698,8 @@ impl Rect {
         self
     }
 
-    /// Apply a gaussian blur of the given radius to the rect.
-    pub fn blur(mut self, blur: f32) -> Self {
+    /// Apply a Gaussian blur of the given radius to the backdrop behind the rect.
+    pub fn backdrop_blur(mut self, blur: f32) -> Self {
         self.element
             .effect
             .get_or_insert_with(Default::default)
