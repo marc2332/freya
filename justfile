@@ -1,5 +1,6 @@
 toolchain := `sed -nr 's/channel = "(.*)"/\1/p' rust-toolchain.toml`
 nightly_toolchain := `sed -nr 's/channel = "(.*)"/\1/p' rust-toolchain-nightly.toml`
+nightly_cargo := env_var_or_default("FREYA_NIGHTLY_CARGO", "rustup run " + nightly_toolchain + " cargo")
 
 rv:
     @echo '{{toolchain}}'
@@ -9,11 +10,11 @@ rv-nightly:
 
 f:
     taplo fmt
-    RUSTUP_TOOLCHAIN={{nightly_toolchain}} cargo fmt --all -- --error-on-unformatted --unstable-features
+    RUSTFMT="${FREYA_NIGHTLY_RUSTFMT:-$(rustup which --toolchain {{nightly_toolchain}} rustfmt)}" {{nightly_cargo}} fmt --all -- --error-on-unformatted --unstable-features
 
 f-check:
     taplo fmt --check
-    RUSTUP_TOOLCHAIN={{nightly_toolchain}} cargo fmt --all --check -- --error-on-unformatted --unstable-features
+    RUSTFMT="${FREYA_NIGHTLY_RUSTFMT:-$(rustup which --toolchain {{nightly_toolchain}} rustfmt)}" {{nightly_cargo}} fmt --all --check -- --error-on-unformatted --unstable-features
 
 f-nix:
     alejandra flake.nix
@@ -48,7 +49,7 @@ t-layout:
     cargo nextest run --package torin
 
 d:
-    RUSTDOCFLAGS="--cfg docsrs" RUSTUP_TOOLCHAIN={{nightly_toolchain}} cargo doc --no-deps --workspace --features "all, docs" --open
+    RUSTDOCFLAGS="--cfg docsrs" {{nightly_cargo}} doc --no-deps --workspace --features "all, docs" --open
 
 tc:
     cargo nextest run --workspace --exclude examples --exclude web --exclude freya-web --features all-tests

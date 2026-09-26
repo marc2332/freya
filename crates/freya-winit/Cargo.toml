@@ -112,6 +112,7 @@ freya = { path = "../freya" }
 
 [features]
 default = ["gpu", "accessibility"]
+platform-text-gamma = []
 gpu = [
   "dep:freya-engine",
   "dep:gl",

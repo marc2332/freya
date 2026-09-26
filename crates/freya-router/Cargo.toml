@@ -21,4 +21,4 @@ url = { workspace = true }
 rustversion = "1.0.21"
 
 [dev-dependencies]
-freya = { path = "../freya" }
+freya = { path = "../freya", features = ["router"] }

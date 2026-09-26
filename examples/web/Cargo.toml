@@ -10,6 +10,7 @@ desktop = ["freya/winit"]
 [dependencies]
 freya = { path = "../../crates/freya", default-features = false, features = [
   "web",
+  "html",
   "router",
   "material-design",
   "icons-lucide",

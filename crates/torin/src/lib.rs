@@ -22,7 +22,6 @@ pub use values::*;
 pub mod prelude {
     pub use crate::{
         custom_measurer::*,
-        gaps::*,
         geometry::*,
         measure::*,
         node::*,
