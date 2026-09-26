@@ -76,6 +76,7 @@ pub use skia_safe::{
     RuntimeEffect,
     SamplingOptions,
     Shader,
+    Size,
     Surface,
     SurfaceProps,
     SurfacePropsFlags,
