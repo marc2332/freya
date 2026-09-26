@@ -306,6 +306,7 @@ impl SkiaScenePainter<'_> {
         } else {
             FontHinting::None
         });
+        font.set_subpixel(true);
         font.set_edging(Edging::SubpixelAntiAlias);
 
         self.cache.font.insert(cache_key, font.clone());
