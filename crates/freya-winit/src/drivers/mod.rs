@@ -6,6 +6,7 @@ mod gl;
 #[cfg(all(target_os = "macos", feature = "gpu"))]
 mod metal;
 mod software;
+mod surface;
 #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
 mod vulkan;
 

@@ -320,11 +320,16 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "scrollbar",
         ScrollBarThemePreference {
-            background: Preference::Reference("surface_primary"),
+            background: Preference::Reference("border"),
             thumb_background: Preference::Reference("surface_inverse"),
             hover_thumb_background: Preference::Reference("surface_inverse_secondary"),
             active_thumb_background: Preference::Reference("surface_inverse_tertiary"),
-            size: Preference::Specific(15.),
+            thumb_cross_size: Preference::Specific(5.),
+            expanded_thumb_cross_size: Preference::Specific(8.),
+            opacity: Preference::Specific(0.),
+            expanded_opacity: Preference::Specific(220.),
+            cross_gap: Preference::Specific(0.),
+            expanded_cross_gap: Preference::Specific(3.),
         },
     );
     theme.set(

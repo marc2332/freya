@@ -48,6 +48,7 @@
 //! - [Web](https://github.com/marc2332/freya/tree/main/examples/web)
 //! - [Development Setup](self::_docs::development_setup)
 //! - [Extending Components](self::_docs::extending_components)
+//! - [Custom Elements](freya_core::element::ElementExt)
 //!
 //! ### Learn
 //! - [Built-in Components](crate::components)
@@ -101,6 +102,7 @@
 //! - `code-editor`: Reexport [freya_code_editor] under [code_editor].
 //! - `camera`: Reexport [freya_camera] under [camera].
 //! - `web`: Reexport [freya_web] under [web].
+//! - `platform-text-gamma`: Applies platform-specific text contrast and gamma on Linux and macOS. Enabled by default.
 //!
 //! ## Misc features
 //! - `devtools`: Enables devtools support.
