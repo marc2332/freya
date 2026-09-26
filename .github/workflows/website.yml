@@ -14,8 +14,6 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - "website/**"
-      - "crates/**"
-      - "examples/web/**"
       - ".github/workflows/website.yml"
 
 permissions:
