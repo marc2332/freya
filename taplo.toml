@@ -1,2 +1,2 @@
 include = ["**/*.toml"]
-exclude = [".direnv/**"]
+exclude = [".direnv/**", ".devenv/**"]
