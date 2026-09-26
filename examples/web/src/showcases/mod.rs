@@ -21,6 +21,7 @@ mod drag_drop;
 mod effects;
 mod gallery;
 mod gif;
+mod html;
 mod i18n;
 mod markdown;
 mod material;
@@ -34,6 +35,7 @@ pub use crate::showcases::{
     effects::EffectsShowcase,
     gallery::GalleryShowcase,
     gif::GifShowcase,
+    html::HtmlShowcase,
     i18n::I18nShowcase,
     markdown::MarkdownShowcase,
     material::MaterialShowcase,

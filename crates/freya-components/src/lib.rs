@@ -21,7 +21,7 @@ pub mod draggable_canvas;
 pub mod element_expansions;
 pub mod floating_tab;
 #[cfg(feature = "remote-asset")]
-pub(crate) mod http;
+pub mod http;
 pub mod icons;
 pub mod image_viewer;
 pub mod input;

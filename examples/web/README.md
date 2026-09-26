@@ -5,11 +5,13 @@
 
 ## Setup
 
+The repository's Nix development shell provides the `wasm32-unknown-emscripten` target and [Emscripten](https://emscripten.org/docs/getting_started/downloads.html), including `emcc`.
+
+Without Nix, install the Rust target and Emscripten 4.0 or newer with `emcc` in `PATH`:
+
 ```sh
 rustup target add wasm32-unknown-emscripten
 ```
-
-[Emscripten](https://emscripten.org/docs/getting_started/downloads.html) 4.0 or newer, with `emcc` in `PATH`.
 
 ## Web
 
