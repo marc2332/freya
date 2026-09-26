@@ -537,7 +537,7 @@ use freya::prelude::*;
 use freya::plot::*;
 use freya::plot::plotters::*;
 
-fn on_render(ctx: &mut RenderContext, (cursor_x, cursor_y): (f64, f64)) {
+fn on_render(ctx: &mut FillRenderContext, (cursor_x, cursor_y): (f64, f64)) {
     let backend = PlotSkiaBackend::new(
         ctx.canvas,
         ctx.font_collection,
@@ -591,7 +591,7 @@ fn app() -> impl IntoElement {
         }
     };
 
-    canvas(RenderCallback::new(move |context| {
+    rect().background(RenderCallback::new(move |context| {
         on_render(context, cursor_position().to_tuple());
     }))
     .expanded()

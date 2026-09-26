@@ -25,6 +25,7 @@ use crate::{
             LinearGradient,
             RadialGradient,
         },
+        render_callback::RenderCallback,
         shader::ShaderFill,
     },
 };
@@ -55,6 +56,10 @@ pub enum Fill {
     RadialGradient(Box<RadialGradient>),
     /// A [`ConicGradient`].
     ConicGradient(Box<ConicGradient>),
+    /// Custom drawing for rect backgrounds and label or paragraph overlays.
+    /// Span fills do not invoke callbacks.
+    #[cfg_attr(feature = "serde", serde(skip))]
+    Callback(RenderCallback),
 }
 
 impl Fill {
@@ -85,6 +90,13 @@ impl Fill {
         text_style.set_foreground_paint(&paint);
     }
 
+    pub fn render_callback(&self) -> Option<&RenderCallback> {
+        match self {
+            Self::Callback(callback) => Some(callback),
+            _ => None,
+        }
+    }
+
     pub fn apply_to_paint(&self, paint: &mut Paint, area: Area) {
         match &self {
             Fill::Color(color) => {
@@ -101,6 +113,9 @@ impl Fill {
             }
             Fill::Shader(shader) => {
                 paint.set_shader(shader.prepare_shader(area));
+            }
+            Fill::Callback(_) => {
+                paint.set_color(Color::TRANSPARENT);
             }
         }
     }
@@ -121,7 +136,14 @@ impl Hash for Fill {
             Fill::LinearGradient(gradient) => gradient.hash(state),
             Fill::RadialGradient(gradient) => gradient.hash(state),
             Fill::ConicGradient(gradient) => gradient.hash(state),
+            Fill::Callback(callback) => callback.hash(state),
         }
+    }
+}
+
+impl From<RenderCallback> for Fill {
+    fn from(callback: RenderCallback) -> Self {
+        Self::Callback(callback)
     }
 }
 
@@ -193,6 +215,7 @@ impl fmt::Display for Fill {
             Self::LinearGradient(gradient) => gradient.as_ref().fmt(f),
             Self::RadialGradient(gradient) => gradient.as_ref().fmt(f),
             Self::ConicGradient(gradient) => gradient.as_ref().fmt(f),
+            Self::Callback(callback) => callback.fmt(f),
         }
     }
 }
