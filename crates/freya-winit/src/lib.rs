@@ -85,6 +85,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
         FontMgr,
         SkData,
         TypefaceFontProvider,
+        register_font_typeface,
     };
     use winit::event_loop::EventLoop;
 
@@ -104,7 +105,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
         let typeface = font_mgr
             .new_from_data(SkData::new_copy(&font_data), None)
             .unwrap_or_else(|| panic!("Failed to load font {font_name}."));
-        provider.register_typeface(typeface, Some(font_name.as_ref()));
+        register_font_typeface(&mut provider, font_name.as_ref(), typeface);
     }
     let font_mgr: FontMgr = provider.clone().into();
     font_collection.set_default_font_manager(def_mgr, None);

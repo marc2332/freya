@@ -75,6 +75,10 @@ pub use skia_safe::{
     V3,
     canvas::SaveLayerRec,
     font::Edging as FontEdging,
+    font_arguments::{
+        VariationPosition,
+        variation_position::Coordinate as VariationCoordinate,
+    },
     font_style::{
         Slant,
         Weight,
