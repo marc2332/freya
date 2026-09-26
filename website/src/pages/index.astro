@@ -1,7 +1,16 @@
 ---
+import { readFileSync } from "node:fs";
 import { Code } from "astro:components";
 import Layout from "../layouts/Layout.astro";
 import FeatureSection from "../components/FeatureSection.astro";
+import PlatformIcon from "../components/PlatformIcon.astro";
+
+const sponsors = JSON.parse(readFileSync("public/sponsors.json", "utf8"));
+const usedBy = [
+  { name: "Polyfrost", href: "https://polyfrost.org", logo: "/polyfrost-logo.svg" },
+  { name: "Myself", href: "https://github.com/marc2332" },
+  { name: "Other community members", href: "https://github.com/marc2332/freya" },
+];
 
 const EXAMPLE_CODE = `
 fn app() -> impl IntoElement {
@@ -15,27 +24,20 @@ fn app() -> impl IntoElement {
         .background((15, 163, 242))
         .font_weight(FontWeight::BOLD)
         .font_size(75.)
-        .shadow((0., 4., 20., 4., (0, 0, 0, 80)))
         .child(count.read().to_string());
 
     let actions = rect()
         .horizontal()
-        .width(Size::fill())
-        .height(Size::percent(50.))
         .center()
         .spacing(8.0)
         .child(
             Button::new()
-                .on_press(move |_| {
-                    *count.write() += 1;
-                })
+                .on_press(move |_| *count.write() += 1)
                 .child("Increase"),
         )
         .child(
             Button::new()
-                .on_press(move |_| {
-                    *count.write() -= 1;
-                })
+                .on_press(move |_| *count.write() -= 1)
                 .child("Decrease"),
         );
 
@@ -45,35 +47,33 @@ fn app() -> impl IntoElement {
 
 const features = [
   {
-    title: "Out of the Box Components",
+    title: "Built-in Components",
     description:
       "Freya ships with a rich set of built-in components, from simple ones like Button, Switch, and Slider to more complex ones like VirtualScrollView, Calendar, and ColorPicker.",
-    mediaUrl:
-      "https://github.com/user-attachments/assets/3dd1b7bf-0c9e-4257-a308-f2e3ca057ff1",
+    mediaUrl: "/freya-gallery.png",
     mediaType: "image" as const,
+    actionUrl: "/demo",
+    actionLabel: "See the demo",
   },
   {
     title: "Smooth Animations",
     description:
-      "Create transitions for colors, sizes, positions, and other visual properties. The animation API gives you full control over timing, easing functions, and animation sequences.",
-    mediaUrl:
-      "https://github.com/user-attachments/assets/ab0c4637-7c04-4dd3-8c6f-c841d4e163d7",
-    mediaType: "image" as const,
+      "Create transitions for colors, sizes, positions, and other visual properties. The animation APIs give you full control over timing, easing functions, and animation sequences.",
+    mediaUrl: "/freya-animations.mp4",
+    mediaType: "video" as const,
   },
   {
-    title: "Rich Text Editing",
+    title: "Flexible Text editing",
     description:
       "Text editing capabilities that go beyond simple input fields. Build rich text editors with cursor management, text selection, keyboard shortcuts, custom formatting, and virtualization.",
-    mediaUrl:
-      "https://github.com/user-attachments/assets/27fbbcab-3ab4-4dc7-b984-47cec280123c",
+    mediaUrl: "/freya-text-editing.png",
     mediaType: "image" as const,
   },
   {
     title: "Code Editor",
     description:
-      "Create full-featured code editors with Rope-based text editing and tree-sitter syntax highlighting. State agnostic, so it works with any data source that can be turned into a Writable.",
-    mediaUrl:
-      "https://github.com/user-attachments/assets/4d6c4571-ae74-4c24-a05f-9c715b6b3438",
+      "Create full-featured code editors with Rope-based text editing and tree-sitter syntax highlighting.",
+    mediaUrl: "/freya-code-editor.png",
     mediaType: "image" as const,
   },
   {
@@ -91,14 +91,6 @@ const features = [
     mediaUrl:
       "https://github.com/user-attachments/assets/236285ea-a2c2-4739-a59d-029a7c3ef601",
     mediaType: "video" as const,
-  },
-  {
-    title: "WebView Integration",
-    description:
-      "Embed web content into your native applications. Display web-based content alongside native UI components, or build hybrid applications with ease.",
-    mediaUrl:
-      "https://github.com/user-attachments/assets/60d6db71-fa22-4bbb-a4ad-1ff00a056614",
-    mediaType: "image" as const,
   },
   {
     title: "Terminal Emulation",
@@ -121,43 +113,38 @@ const features = [
 ---
 
 <Layout title="Freya - GUI Library for Rust">
-  <div class="flex flex-col lg:flex-row justify-center items-center pb-8">
-    <img class="mx-auto mb-8 sm:m-0" src="/logo.svg" width="150" />
-    <div class="inline-block sm:p-4">
-      <p>
-        Build cross-platform GUI applications using 🦀 <a
+  <div class="flex flex-col justify-start items-start pt-12 lg:pt-20 pb-8">
+    <div class="max-w-2xl">
+      <h1 class="text-3xl lg:text-4xl font-bold mb-4">Build GUI apps with Rust</h1>
+      <p class="mb-5 text-stone-300">
+        Build <strong>cross-platform</strong>, <strong>performant</strong>, <strong>accessible</strong> and <strong>unique</strong> apps with 🦀 <a
           href="https://www.rust-lang.org/"
-          class="underline">Rust</a
-        >. <br />Powered by 🎨 <a
-          href="https://skia.org/"
-          rel="noreferrer"
-          class="underline">Skia</a
-        >.
+          class="underline">Rust</a>.
       </p>
-      <br />
-      <a
-        class="sm:inline-block sm:my-0 block text-start sm:text-center px-6 my-2 mr-2 py-2 bg-custom-purple rounded-lg text-white hover:bg-custom-purple-dark transition-colors delay-[10]"
-        href="/demo"
-        >Demo</a
-      >
-      <a
-        class="sm:inline-block sm:my-0 block text-start sm:text-center px-6 my-2 mr-2 py-2 bg-sky-500 rounded-lg text-black hover:bg-sky-600 transition-colors delay-[10]"
-        href="https://docs.rs/freya/latest/freya/"
-        >Get Started</a
-      >
-      <a
-        class="sm:inline-block sm:my-0 block text-start sm:text-center px-6 my-2 mr-2 py-2 bg-orange-300 rounded-lg text-black hover:bg-orange-400 transition-colors delay-[10]"
-        href="https://github.com/marc2332/freya">Source Code</a
-      >
-      <a
-        class="sm:inline-block sm:my-0 block text-start sm:text-center px-6 my-2 mr-2 py-2 bg-pink-300 rounded-lg text-black hover:bg-pink-400 transition-colors delay-[10]"
-        href="https://github.com/sponsors/marc2332">Sponsor</a
-      >
+      <div class="flex flex-wrap gap-2">
+        <a
+          class="block text-center px-6 py-2 bg-sky-500 rounded-lg text-black hover:bg-sky-600 transition-colors delay-[10]"
+          href="https://docs.rs/freya/latest/freya/"
+          >Get Started</a
+        >
+        <a
+          class="block text-center px-6 py-2 bg-orange-300 rounded-lg text-black hover:bg-orange-400 transition-colors delay-[10]"
+          href="https://github.com/marc2332/freya">Source Code</a
+        >
+        <a
+          class="block text-center px-6 py-2 bg-pink-300 rounded-lg text-black hover:bg-pink-400 transition-colors delay-[10]"
+          href="/support">Support</a
+        >
+        <a
+          class="block text-center px-6 py-2 bg-emerald-400 rounded-lg text-black hover:bg-emerald-500 transition-colors delay-[10]"
+          href="/demo">Demo</a
+        >
+      </div>
     </div>
   </div>
 
   <div
-    class="p-6 py-8 lg:w-[60rem] lg:flex gap-10 block justify-evenly items-center mx-auto text-black border border-stone-800 m-2 rounded-2xl bg-custom-dark-gray"
+    class="p-6 py-8 lg:w-content lg:flex gap-10 block justify-evenly items-center mx-auto text-black border border-stone-800 m-2 rounded-2xl bg-custom-dark-gray shadow-lg shadow-black/20"
   >
     <div class="text-xs hidden lg:block">
       <Code code={EXAMPLE_CODE} lang="rs" />
@@ -166,12 +153,87 @@ const features = [
       <video muted autoplay playsinline loop class="rounded-xl">
         <source src="/demo.webm" type="video/webm" />
       </video>
-      <a
-        class="w-36 bg-custom-purple p-2 text-center rounded-lg text-white hover:bg-custom-purple-dark transition-colors delay-[10]"
-        href="https://github.com/marc2332/freya#trying-it-out">Run locally</a
-      >
+      <div class="flex gap-3">
+        <a
+          class="w-36 bg-custom-purple p-2 text-center rounded-lg text-white hover:bg-custom-purple-dark transition-colors delay-[10]"
+          href="https://github.com/marc2332/freya#trying-it-out-">Run locally</a
+        >
+        <a
+          class="w-36 bg-white p-2 text-center rounded-lg text-black hover:bg-stone-200 transition-colors delay-[10]"
+          href="https://github.com/marc2332/freya/tree/main/examples">More examples</a
+        >
+      </div>
     </div>
   </div>
+
+  <section class="mt-12 lg:mt-16 py-8 lg:py-12 border-y border-stone-800/50">
+    <div class="max-w-4xl grid gap-8">
+      <div>
+        <h2 class="text-xl lg:text-2xl font-bold text-stone-200 mb-5">Sponsors</h2>
+        <div class="flex flex-wrap gap-3 min-h-12">
+          {
+            sponsors.length > 0 ? sponsors.map((sponsor) => (
+              <a href={sponsor.href} title={sponsor.name}>
+                <img
+                  class="h-12 w-12 rounded-full border border-stone-700 hover:border-custom-purple transition-colors"
+                  src={sponsor.avatar}
+                  alt={sponsor.name}
+                  loading="lazy"
+                />
+              </a>
+            )) : <p class="text-stone-400">Support Freya on GitHub Sponsors.</p>
+          }
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xl lg:text-2xl font-bold text-stone-200 mb-5">Used by</h2>
+        <div class="grid sm:grid-cols-3 gap-3">
+          {
+            usedBy.map((project) => (
+              <a
+                class:list={[
+                  "flex min-h-20 items-center justify-center rounded-lg border border-stone-700 px-4 text-center transition-colors hover:border-custom-purple",
+                  project.logo ? "bg-white" : "bg-custom-dark-gray text-stone-400 hover:text-white",
+                ]}
+                href={project.href}
+              >
+                {project.logo ? (
+                  <img class="max-h-10 max-w-full" src={project.logo} alt={project.name} loading="lazy" />
+                ) : project.name}
+              </a>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-8 lg:py-12 border-b border-stone-800/50">
+    <div class="max-w-4xl">
+      <h2 class="text-xl lg:text-2xl font-bold text-stone-200 mt-2 mb-4">Cross-platform</h2>
+      <p class="text-stone-400 text-lg leading-relaxed max-w-2xl">
+        Freya brings the same Rust components and rendering model to desktop, mobile, and the browser.
+        Platform-specific integrations can be added when your project needs them.
+      </p>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-3 mt-8">
+        {
+          [
+            ["Linux", "Desktop"],
+            ["Windows", "Desktop"],
+            ["macOS", "Desktop"],
+            ["Android", "Experimental"],
+            ["Web", "Experimental"],
+          ].map(([platform, type]) => (
+            <div class="rounded-xl border border-stone-700 bg-custom-dark-gray p-4">
+              <PlatformIcon name={platform as "Linux" | "Windows" | "macOS" | "Android" | "Web"} />
+              <p class="text-white font-semibold mt-3">{platform}</p>
+              <p class="text-stone-500 text-sm mt-1">{type}</p>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
 
   <div class="mt-16 lg:mt-24 divide-y divide-stone-800/50">
     {
@@ -183,6 +245,8 @@ const features = [
           mediaType={feature.mediaType}
           reverse={i % 2 !== 0}
           wide={feature.wide}
+          actionUrl={feature.actionUrl}
+          actionLabel={feature.actionLabel}
         />
       ))
     }
@@ -205,7 +269,7 @@ const features = [
       >
       <a
         class="px-6 py-2 bg-pink-300 rounded-lg text-black hover:bg-pink-400 transition-colors delay-[10]"
-        href="https://github.com/sponsors/marc2332">Sponsor</a
+        href="/support">Support</a
       >
     </div>
   </div>
