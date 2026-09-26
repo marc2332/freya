@@ -58,16 +58,18 @@ fn late_stylesheet_with_transition_settles() {
     document.set_viewport(Viewport::new(200, 200, 1.0, ColorScheme::Light));
 
     let created = Instant::now();
-    document.resolve(created.elapsed().as_secs_f64());
-    sleep(Duration::from_millis(200));
-    for _ in 0..100 {
+    let deadline = created + Duration::from_secs(3);
+    loop {
         document.resolve(created.elapsed().as_secs_f64());
-        if !document.is_animating() {
+        if document.author_stylesheets().next().is_some() && !document.is_animating() {
             break;
         }
+        assert!(
+            Instant::now() < deadline,
+            "stylesheet or transition never settled"
+        );
         sleep(Duration::from_millis(16));
     }
-    assert!(!document.is_animating(), "transition never settled");
 
     let mut surface = raster_n32_premul((200, 200)).unwrap();
     let mut cache = SkiaSceneCache::new();
