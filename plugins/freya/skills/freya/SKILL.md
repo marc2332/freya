@@ -178,15 +178,15 @@ Catalog (all prefixed `on_`):
 - **Touch**: `touch_start`, `touch_end`, `touch_move`, `touch_cancel`.
 - **File drop**: `file_drop`.
 - **Layout**: `sized` (measured size changed).
-- **Global** (no hit-test; use sparingly): `global_pointer_press`, `global_pointer_down`, `global_pointer_move`, `global_key_down`, `global_key_up`, `global_file_hover`, `global_file_hover_cancelled`.
-- **Capture** (run before regular handlers): `capture_global_pointer_press`, `capture_global_pointer_move`.
+- **Global** (no hit-test; use sparingly): `global_pointer_up`, `global_pointer_down`, `global_pointer_move`, `global_key_down`, `global_key_up`, `global_file_hover`, `global_file_hover_cancelled`.
+- **Capture** (run before regular handlers): `capture_global_pointer_up`, `capture_global_pointer_move`.
 
 **Prefer `on_press` over raw mouse/pointer events** for interactive elements: it covers click, tap, and keyboard activation, so accessibility comes free. Use `on_mouse_*` / `on_pointer_*` only when you need pointer-specific behavior (drag handles, canvas tools).
 
 `Event<T>` has two cancellation methods, plus `.map(...)` / `.try_map(...)` to transform inner data:
 
 - `.stop_propagation()`: don't bubble this event to ancestor handlers. No effect on events that don't bubble (move/enter/leave, capture, global).
-- `.prevent_default()`: don't fire the follow-up events this one triggers (e.g. in `on_mouse_up`, suppresses the `on_pointer_press` and `on_global_pointer_press` that would follow).
+- `.prevent_default()`: don't fire the follow-up events this one triggers (e.g. in `on_mouse_up`, suppresses the `on_pointer_press` and `on_global_pointer_up` that would follow).
 
 ### Callback props on custom components
 

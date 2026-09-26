@@ -265,7 +265,7 @@ impl Component for Switch {
                     }
                 })
             })
-            .on_global_pointer_press(move |_| pressing.set_if_modified(false))
+            .on_global_pointer_up(move |_| pressing.set_if_modified(false))
             .on_pointer_leave(move |_| pressing.set_if_modified(false))
             .cursor(if self.enabled {
                 self.cursor_icon

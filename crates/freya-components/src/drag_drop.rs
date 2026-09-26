@@ -159,7 +159,7 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
             });
         };
 
-        let on_global_pointer_press = move |_: Event<PointerEventData>| {
+        let on_global_pointer_up = move |_: Event<PointerEventData>| {
             if !matches!(phase(), DragPhase::Idle) {
                 phase.set(DragPhase::Idle);
                 *drags.write() = None;
@@ -173,7 +173,7 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
 
         rect()
             .layout(self.layout.clone())
-            .on_global_pointer_press(on_global_pointer_press)
+            .on_global_pointer_up(on_global_pointer_up)
             .on_global_pointer_move(on_global_pointer_move)
             .maybe(self.enabled, |el| el.on_pointer_down(on_pointer_down))
             .maybe_child((dragging.zip(self.drag_element.clone())).map(

@@ -540,7 +540,7 @@ impl Component for ResizableHandle {
             clicking.set(true);
         };
 
-        let on_global_pointer_press = move |_: Event<PointerEventData>| {
+        let on_global_pointer_up = move |_: Event<PointerEventData>| {
             clicking.set_if_modified(false);
         };
 
@@ -566,7 +566,7 @@ impl Component for ResizableHandle {
                 allow_resizing.set(true);
             })
             .on_pointer_down(on_pointer_down)
-            .on_global_pointer_press(on_global_pointer_press)
+            .on_global_pointer_up(on_global_pointer_up)
             .on_pointer_enter(on_pointer_enter)
             .on_capture_global_pointer_move(on_capture_global_pointer_move)
             .on_pointer_leave(on_pointer_leave)
