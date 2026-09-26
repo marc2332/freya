@@ -49,11 +49,6 @@ define_theme! {
 /// fn app() -> impl IntoElement {
 ///     Tooltip::new_text("Hello, World!")
 /// }
-///
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_tooltip.png").render();
 /// ```
 ///
 /// Use [Tooltip::new] to show any element:
@@ -79,11 +74,7 @@ define_theme! {
 /// # let _ = app();
 /// ```
 ///
-/// # Preview
-/// ![Tooltip Preview][tooltip]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("tooltip", "images/gallery_tooltip.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(PartialEq, Clone)]
 pub struct Tooltip {
     /// Theme override.

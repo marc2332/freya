@@ -24,7 +24,7 @@ use crate::config::RendererPreference;
 
 /// Unrecoverable graphics error requiring a driver rebuild.
 #[derive(Debug)]
-// Only the Vulkan driver reports these.
+// Used by the Vulkan driver.
 #[cfg_attr(
     not(all(any(target_os = "linux", target_os = "windows"), feature = "gpu")),
     allow(dead_code)
@@ -32,6 +32,13 @@ use crate::config::RendererPreference;
 pub enum DriverError {
     DeviceLost,
     OutOfMemory,
+}
+
+/// Shared Vulkan context.
+#[derive(Default)]
+pub struct GraphicsContext {
+    #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
+    vulkan: vulkan::SharedVulkan,
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -55,13 +62,14 @@ impl GraphicsDriver {
         window_attributes: WindowAttributes,
         gpu_resource_cache_limit: usize,
         preference: RendererPreference,
+        graphics_context: &mut GraphicsContext,
     ) -> (Self, Window) {
         let from_env = std::env::var("FREYA_RENDERER")
             .ok()
             .map(|value| value.to_ascii_lowercase());
         let renderer = preference.as_name().or(from_env.as_deref());
 
-        // Opt-in via FREYA_RENDERER=software, available on every platform.
+        // Select the software renderer.
         if renderer == Some("software") {
             match software::SoftwareDriver::new(event_loop, window_attributes.clone()) {
                 Ok((driver, window)) => return (Self::Software(driver), window),
@@ -97,9 +105,7 @@ impl GraphicsDriver {
             }
         }
 
-        // Linux: Vulkan by default, set FREYA_RENDERER=opengl to force OpenGL.
-        // Windows: OpenGL by default, set FREYA_RENDERER=vulkan to force Vulkan.
-        // If both fail, falls back to the software renderer.
+        // Select the platform renderer with software fallback.
         #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
         {
             let use_vulkan = if cfg!(target_os = "windows") {
@@ -113,6 +119,7 @@ impl GraphicsDriver {
                     event_loop,
                     window_attributes.clone(),
                     gpu_resource_cache_limit,
+                    &mut graphics_context.vulkan,
                 ) {
                     Ok((driver, window)) => return (Self::Vulkan(driver), window),
                     Err(err) => {
@@ -254,7 +261,7 @@ impl GraphicsDriver {
             ))]
             Self::OpenGl(gl) => gl.gpu_name.as_deref(),
             #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
-            Self::Vulkan(vk) => Some(vk.gpu_name.as_str()),
+            Self::Vulkan(vk) => Some(vk.gpu_name()),
             _ => None,
         }
     }

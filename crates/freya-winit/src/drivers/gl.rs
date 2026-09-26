@@ -79,7 +79,13 @@ pub struct OpenGLDriver {
 
 impl Drop for OpenGLDriver {
     fn drop(&mut self) {
-        self.gr_context.abandon();
+        if !self.gl_context.is_current() && self.gl_context.make_current(&self.gl_surface).is_err()
+        {
+            self.gr_context.abandon();
+            return;
+        }
+
+        self.gr_context.release_resources_and_abandon();
     }
 }
 

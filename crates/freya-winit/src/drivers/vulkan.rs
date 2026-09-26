@@ -1,4 +1,5 @@
 use std::{
+    cell::RefCell,
     ffi::{
         CStr,
         CString,
@@ -6,7 +7,10 @@ use std::{
     },
     mem::ManuallyDrop,
     ptr,
-    sync::Arc,
+    rc::{
+        Rc,
+        Weak,
+    },
 };
 
 use ash::{
@@ -80,7 +84,6 @@ use freya_engine::prelude::{
     vk,
 };
 use raw_window_handle::{
-    HandleError,
     HasDisplayHandle,
     HasWindowHandle,
     RawDisplayHandle,
@@ -99,73 +102,69 @@ use crate::drivers::{
     surface::wrap_render_target,
 };
 
-/// Extensions enabled on the logical device and reported to Skia.
+/// Vulkan device extensions used by Skia.
 const DEVICE_EXTENSIONS: &[&CStr] = &[KHR_SWAPCHAIN_NAME];
 
-/// Graphics driver using Vulkan.
-pub struct VulkanDriver {
+/// Weak reference to the shared Vulkan context.
+#[derive(Default)]
+pub struct SharedVulkan {
+    context: Weak<VulkanInner>,
+}
+
+impl SharedVulkan {
+    /// Get or create the shared context and window surface.
+    fn acquire(
+        &mut self,
+        window: &Window,
+        gpu_resource_cache_limit: usize,
+    ) -> Result<(Rc<VulkanInner>, SurfaceKHR), Box<dyn std::error::Error>> {
+        if let Some(inner) = self.context.upgrade() {
+            let surface = inner.create_presentable_surface(window)?;
+            return Ok((inner, surface));
+        }
+
+        let (inner, surface) = VulkanInner::new(window, gpu_resource_cache_limit)?;
+        self.context = Rc::downgrade(&inner);
+
+        Ok((inner, surface))
+    }
+}
+
+/// Shared Vulkan and Skia state.
+struct VulkanInner {
     entry: Entry,
     instance: Instance,
     surface_fns: InstanceSurfaceFns,
-    surface: SurfaceKHR,
+    swapchain_fns: DeviceSwapchainFns,
     physical_device: PhysicalDevice,
     queue_family_index: u32,
-    device: Arc<Device>,
+    device: Device,
     queue: Queue,
-    swapchain: SwapchainKHR,
-    swapchain_fns: DeviceSwapchainFns,
-    swapchain_images: Vec<Image>,
-    swapchain_extent: Extent2D,
-    transparent: bool,
-    wayland: bool,
-    gr_context: ManuallyDrop<DirectContext>,
-    image_available_semaphore: Semaphore,
-    render_finished_semaphore: Semaphore,
-    in_flight_fence: Fence,
-    cmd_buf: CommandBuffer,
-    cmd_pool: CommandPool,
-    gpu_cache_purged: bool,
-    pub(crate) gpu_name: String,
+    gr_context: RefCell<ManuallyDrop<DirectContext>>,
+    gpu_name: String,
 }
 
-impl Drop for VulkanDriver {
+impl Drop for VulkanInner {
     fn drop(&mut self) {
         unsafe {
             let _ = self.device.device_wait_idle();
-            // Skia must release its GPU resources while the device is still alive.
-            ManuallyDrop::drop(&mut self.gr_context);
-            self.device
-                .destroy_semaphore(self.image_available_semaphore, None);
-            self.device
-                .destroy_semaphore(self.render_finished_semaphore, None);
-            self.device.destroy_fence(self.in_flight_fence, None);
-            self.device.destroy_command_pool(self.cmd_pool, None);
-            self.swapchain_fns.destroy_swapchain(self.swapchain, None);
-            self.surface_fns.destroy_surface(self.surface, None);
+            // Drop Skia before the Vulkan device.
+            ManuallyDrop::drop(self.gr_context.get_mut());
             self.device.destroy_device(None);
             self.instance.destroy_instance(None);
         }
     }
 }
 
-impl VulkanDriver {
-    pub fn resource_cache_usage(&self) -> (usize, usize) {
-        let usage = self.gr_context.resource_cache_usage();
-        (usage.resource_bytes, self.gr_context.resource_cache_limit())
-    }
-
-    pub fn new(
-        event_loop: &ActiveEventLoop,
-        window_attributes: WindowAttributes,
+impl VulkanInner {
+    /// Create shared Vulkan and Skia state.
+    fn new(
+        window: &Window,
         gpu_resource_cache_limit: usize,
-    ) -> Result<(Self, Window), Box<dyn std::error::Error>> {
-        let transparent = window_attributes.transparent;
-        let window = event_loop.create_window(window_attributes)?;
-
+    ) -> Result<(Rc<Self>, SurfaceKHR), Box<dyn std::error::Error>> {
         let entry = unsafe { Entry::load()? };
 
-        // The requested version must match the one the loader reports, otherwise Skia fails to
-        // create its Vulkan context.
+        // Use the Vulkan loader's API version for Skia.
         let api_version =
             unsafe { entry.try_enumerate_instance_version() }?.unwrap_or(API_VERSION_1_0);
 
@@ -187,33 +186,12 @@ impl VulkanDriver {
 
         let (device, queue) =
             create_logical_device(&instance, physical_device, queue_family_index)?;
-        let device = Arc::new(device);
-
-        let wayland = matches!(
-            window.display_handle()?.as_raw(),
-            RawDisplayHandle::Wayland(_)
-        );
-
-        let swapchain_size = window.inner_size();
-
-        let (swapchain, swapchain_fns, swapchain_images, swapchain_extent) = create_swapchain(
-            &instance,
-            &device,
-            physical_device,
-            &surface_fns,
-            surface,
-            queue_family_index,
-            swapchain_size,
-            None,
-            transparent,
-            wayland,
-        )?;
 
         let gr_context = create_gr_context(
             &entry,
             &instance,
             physical_device,
-            device.clone(),
+            &device,
             queue,
             queue_family_index,
             gpu_resource_cache_limit,
@@ -221,11 +199,154 @@ impl VulkanDriver {
             api_version,
         )?;
 
-        let (image_available_semaphore, render_finished_semaphore, in_flight_fence) =
-            create_sync_objects(&device)?;
+        let swapchain_fns = DeviceSwapchainFns::new(&instance, &device);
 
-        let cmd_pool = unsafe {
-            device.create_command_pool(
+        let inner = Rc::new(Self {
+            entry,
+            instance,
+            surface_fns,
+            swapchain_fns,
+            physical_device,
+            queue_family_index,
+            device,
+            queue,
+            gr_context: RefCell::new(ManuallyDrop::new(gr_context)),
+            gpu_name,
+        });
+
+        Ok((inner, surface))
+    }
+
+    /// Create a presentable window surface.
+    fn create_presentable_surface(
+        &self,
+        window: &Window,
+    ) -> Result<SurfaceKHR, Box<dyn std::error::Error>> {
+        let surface = self.create_surface(window)?;
+        let supported = unsafe {
+            self.surface_fns.get_physical_device_surface_support(
+                self.physical_device,
+                self.queue_family_index,
+                surface,
+            )?
+        };
+
+        if !supported {
+            unsafe { self.surface_fns.destroy_surface(surface, None) };
+            return Err("the shared Vulkan device cannot present to this window".into());
+        }
+
+        Ok(surface)
+    }
+
+    fn create_surface(&self, window: &Window) -> Result<SurfaceKHR, Box<dyn std::error::Error>> {
+        Ok(unsafe {
+            ash_window::create_surface(
+                &self.entry,
+                &self.instance,
+                window.display_handle()?.as_raw(),
+                window.window_handle()?.as_raw(),
+                None,
+            )?
+        })
+    }
+}
+
+/// Graphics driver using Vulkan.
+pub struct VulkanDriver {
+    shared: Rc<VulkanInner>,
+    surface: SurfaceKHR,
+    swapchain: SwapchainKHR,
+    swapchain_images: Vec<Image>,
+    swapchain_extent: Extent2D,
+    transparent: bool,
+    wayland: bool,
+    image_available_semaphore: Semaphore,
+    render_finished_semaphore: Semaphore,
+    in_flight_fence: Fence,
+    cmd_buf: CommandBuffer,
+    cmd_pool: CommandPool,
+    gpu_cache_purged: bool,
+}
+
+impl Drop for VulkanDriver {
+    fn drop(&mut self) {
+        // Flush pending Skia work.
+        self.shared.gr_context.borrow_mut().flush_and_submit();
+        let device = &self.shared.device;
+        unsafe {
+            let _ = device.device_wait_idle();
+            device.destroy_semaphore(self.image_available_semaphore, None);
+            device.destroy_semaphore(self.render_finished_semaphore, None);
+            device.destroy_fence(self.in_flight_fence, None);
+            device.destroy_command_pool(self.cmd_pool, None);
+            self.shared
+                .swapchain_fns
+                .destroy_swapchain(self.swapchain, None);
+            self.shared.surface_fns.destroy_surface(self.surface, None);
+        }
+    }
+}
+
+impl VulkanDriver {
+    pub fn resource_cache_usage(&self) -> (usize, usize) {
+        let gr_context = self.shared.gr_context.borrow();
+        let usage = gr_context.resource_cache_usage();
+        (usage.resource_bytes, gr_context.resource_cache_limit())
+    }
+
+    pub fn new(
+        event_loop: &ActiveEventLoop,
+        window_attributes: WindowAttributes,
+        gpu_resource_cache_limit: usize,
+        shared_context: &mut SharedVulkan,
+    ) -> Result<(Self, Window), Box<dyn std::error::Error>> {
+        let transparent = window_attributes.transparent;
+        let window = event_loop.create_window(window_attributes)?;
+
+        let (shared, surface) = shared_context.acquire(&window, gpu_resource_cache_limit)?;
+        let wayland = matches!(
+            window.display_handle()?.as_raw(),
+            RawDisplayHandle::Wayland(_)
+        );
+
+        // Initialize handles for partial cleanup.
+        let mut driver = Self {
+            shared,
+            surface,
+            swapchain: SwapchainKHR::null(),
+            swapchain_images: Vec::new(),
+            swapchain_extent: Extent2D::default(),
+            transparent,
+            wayland,
+            image_available_semaphore: Semaphore::null(),
+            render_finished_semaphore: Semaphore::null(),
+            in_flight_fence: Fence::null(),
+            cmd_buf: CommandBuffer::null(),
+            cmd_pool: CommandPool::null(),
+            gpu_cache_purged: false,
+        };
+
+        let (swapchain, swapchain_images, swapchain_extent) = create_swapchain(
+            &driver.shared,
+            surface,
+            window.inner_size(),
+            None,
+            transparent,
+            wayland,
+        )?;
+        driver.swapchain = swapchain;
+        driver.swapchain_images = swapchain_images;
+        driver.swapchain_extent = swapchain_extent;
+
+        let (image_available_semaphore, render_finished_semaphore, in_flight_fence) =
+            create_sync_objects(&driver.shared.device)?;
+        driver.image_available_semaphore = image_available_semaphore;
+        driver.render_finished_semaphore = render_finished_semaphore;
+        driver.in_flight_fence = in_flight_fence;
+
+        driver.cmd_pool = unsafe {
+            driver.shared.device.create_command_pool(
                 &CommandPoolCreateInfo::default().flags(
                     CommandPoolCreateFlags::TRANSIENT
                         | CommandPoolCreateFlags::RESET_COMMAND_BUFFER,
@@ -234,57 +355,34 @@ impl VulkanDriver {
             )?
         };
 
-        let cmd_buf = unsafe {
-            device.allocate_command_buffers(
+        driver.cmd_buf = unsafe {
+            driver.shared.device.allocate_command_buffers(
                 &CommandBufferAllocateInfo::default()
-                    .command_pool(cmd_pool)
+                    .command_pool(driver.cmd_pool)
                     .level(CommandBufferLevel::PRIMARY)
                     .command_buffer_count(1),
             )?[0]
         };
 
-        let driver = Self {
-            entry,
-            instance,
-            surface_fns,
-            surface,
-            physical_device,
-            queue_family_index,
-            device,
-            queue,
-            swapchain,
-            swapchain_fns,
-            swapchain_images,
-            swapchain_extent,
-            transparent,
-            wayland,
-            gr_context: ManuallyDrop::new(gr_context),
-            image_available_semaphore,
-            render_finished_semaphore,
-            in_flight_fence,
-            cmd_buf,
-            cmd_pool,
-            gpu_cache_purged: false,
-            gpu_name,
-        };
-
         Ok((driver, window))
+    }
+
+    /// Return the GPU name.
+    pub(crate) fn gpu_name(&self) -> &str {
+        &self.shared.gpu_name
     }
 
     fn recreate_swapchain(&mut self, size: PhysicalSize<u32>) -> Result<(), DriverError> {
         unsafe {
-            self.device
+            self.shared
+                .device
                 .device_wait_idle()
                 .map_err(Self::vulkan_to_driver_error)?;
         }
         let old_swapchain = self.swapchain;
-        let (swapchain, swapchain_fns, swapchain_images, swapchain_extent) = create_swapchain(
-            &self.instance,
-            &self.device,
-            self.physical_device,
-            &self.surface_fns,
+        let (swapchain, swapchain_images, swapchain_extent) = create_swapchain(
+            &self.shared,
             self.surface,
-            self.queue_family_index,
             size,
             Some(old_swapchain),
             self.transparent,
@@ -295,11 +393,12 @@ impl VulkanDriver {
             DriverError::DeviceLost
         })?;
         self.swapchain = swapchain;
-        self.swapchain_fns = swapchain_fns;
         self.swapchain_images = swapchain_images;
         self.swapchain_extent = swapchain_extent;
         unsafe {
-            self.swapchain_fns.destroy_swapchain(old_swapchain, None);
+            self.shared
+                .swapchain_fns
+                .destroy_swapchain(old_swapchain, None);
         }
         Ok(())
     }
@@ -315,13 +414,14 @@ impl VulkanDriver {
         }
 
         unsafe {
-            self.device
+            self.shared
+                .device
                 .wait_for_fences(&[self.in_flight_fence], true, u64::MAX)
                 .map_err(Self::vulkan_to_driver_error)?;
         }
 
         let (image_index, suboptimal) = match unsafe {
-            self.swapchain_fns.acquire_next_image(
+            self.shared.swapchain_fns.acquire_next_image(
                 self.swapchain,
                 u64::MAX,
                 self.image_available_semaphore,
@@ -342,7 +442,7 @@ impl VulkanDriver {
             Err(error) => match Self::vulkan_to_driver_error(error) {
                 DriverError::OutOfMemory if !self.gpu_cache_purged => {
                     tracing::warn!("Vulkan out of memory acquiring image, purging GPU cache");
-                    self.gr_context.free_gpu_resources();
+                    self.shared.gr_context.borrow_mut().free_gpu_resources();
                     self.gpu_cache_purged = true;
                     window.request_redraw();
                     return Ok(());
@@ -379,7 +479,7 @@ impl VulkanDriver {
         );
 
         let mut surface = wrap_render_target(
-            &mut self.gr_context,
+            &mut self.shared.gr_context.borrow_mut(),
             &render_target,
             SurfaceOrigin::TopLeft,
             ColorType::BGRA8888,
@@ -390,10 +490,11 @@ impl VulkanDriver {
 
         window.pre_present_notify();
 
-        self.gr_context.flush_and_submit();
+        self.shared.gr_context.borrow_mut().flush_and_submit();
 
         unsafe {
-            self.device
+            self.shared
+                .device
                 .begin_command_buffer(self.cmd_buf, &CommandBufferBeginInfo::default())
                 .map_err(Self::vulkan_to_driver_error)?;
 
@@ -411,7 +512,7 @@ impl VulkanDriver {
                     layer_count: 1,
                 });
 
-            self.device.cmd_pipeline_barrier(
+            self.shared.device.cmd_pipeline_barrier(
                 self.cmd_buf,
                 PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT,
                 PipelineStageFlags::BOTTOM_OF_PIPE,
@@ -421,7 +522,8 @@ impl VulkanDriver {
                 &[image_barrier],
             );
 
-            self.device
+            self.shared
+                .device
                 .end_command_buffer(self.cmd_buf)
                 .map_err(Self::vulkan_to_driver_error)?;
         };
@@ -438,13 +540,15 @@ impl VulkanDriver {
             .signal_semaphores(&signal_semaphores)];
 
         unsafe {
-            // Reset only right before submit so earlier returns leave the fence signaled.
-            self.device
+            // Reset the fence before submission.
+            self.shared
+                .device
                 .reset_fences(&[self.in_flight_fence])
                 .map_err(Self::vulkan_to_driver_error)?;
 
-            self.device
-                .queue_submit(self.queue, &submit_infos, self.in_flight_fence)
+            self.shared
+                .device
+                .queue_submit(self.shared.queue, &submit_infos, self.in_flight_fence)
                 .map_err(Self::vulkan_to_driver_error)?;
         };
 
@@ -455,7 +559,11 @@ impl VulkanDriver {
             .swapchains(&swapchains)
             .image_indices(&image_indices);
 
-        let result = unsafe { self.swapchain_fns.queue_present(self.queue, &present_info) };
+        let result = unsafe {
+            self.shared
+                .swapchain_fns
+                .queue_present(self.shared.queue, &present_info)
+        };
 
         drop(surface);
 
@@ -488,30 +596,23 @@ impl VulkanDriver {
         size: PhysicalSize<u32>,
     ) -> Result<(), DriverError> {
         unsafe {
-            self.device
+            self.shared
+                .device
                 .device_wait_idle()
                 .map_err(Self::vulkan_to_driver_error)?;
-            self.swapchain_fns.destroy_swapchain(self.swapchain, None);
-            self.surface_fns.destroy_surface(self.surface, None);
+            self.shared
+                .swapchain_fns
+                .destroy_swapchain(self.swapchain, None);
+            self.shared.surface_fns.destroy_surface(self.surface, None);
         }
-        // Null handles keep Drop safe if any of the steps below fail.
+        // Initialize handles for partial cleanup.
         self.swapchain = SwapchainKHR::null();
         self.surface = SurfaceKHR::null();
 
-        let handle_error = |error: HandleError| {
-            tracing::error!("Failed to get a window handle: {error}");
+        self.surface = self.shared.create_surface(window).map_err(|error| {
+            tracing::error!("Failed to recreate the Vulkan surface: {error}");
             DriverError::DeviceLost
-        };
-        self.surface = unsafe {
-            ash_window::create_surface(
-                &self.entry,
-                &self.instance,
-                window.display_handle().map_err(handle_error)?.as_raw(),
-                window.window_handle().map_err(handle_error)?.as_raw(),
-                None,
-            )
-            .map_err(Self::vulkan_to_driver_error)?
-        };
+        })?;
 
         self.recreate_swapchain(size)
     }
@@ -523,7 +624,7 @@ impl VulkanDriver {
         self.recreate_swapchain(size)
     }
 
-    /// Map a Vulkan error to a recovery action.
+    /// Map Vulkan errors to driver errors.
     fn vulkan_to_driver_error(error: ash::vk::Result) -> DriverError {
         match error {
             ash::vk::Result::ERROR_OUT_OF_DEVICE_MEMORY
@@ -558,7 +659,7 @@ fn create_instance(
     Ok(unsafe { entry.create_instance(&create_info, None)? })
 }
 
-/// Rank real GPUs by preference, software implementations like llvmpipe are rejected.
+/// Rank hardware Vulkan device types.
 fn device_type_rank(device_type: PhysicalDeviceType) -> Option<u32> {
     match device_type {
         PhysicalDeviceType::DISCRETE_GPU => Some(0),
@@ -658,24 +759,26 @@ fn create_logical_device(
     Ok((device, queue))
 }
 
-#[allow(clippy::too_many_arguments, clippy::type_complexity)]
+#[allow(clippy::type_complexity)]
 fn create_swapchain(
-    instance: &Instance,
-    device: &Device,
-    physical_device: PhysicalDevice,
-    surface_fns: &InstanceSurfaceFns,
+    shared: &VulkanInner,
     surface: SurfaceKHR,
-    queue_family_index: u32,
     size: PhysicalSize<u32>,
     old_swapchain: Option<SwapchainKHR>,
     transparent: bool,
     wayland: bool,
-) -> Result<(SwapchainKHR, DeviceSwapchainFns, Vec<Image>, Extent2D), Box<dyn std::error::Error>> {
-    let surface_caps =
-        unsafe { surface_fns.get_physical_device_surface_capabilities(physical_device, surface)? };
+) -> Result<(SwapchainKHR, Vec<Image>, Extent2D), Box<dyn std::error::Error>> {
+    let surface_caps = unsafe {
+        shared
+            .surface_fns
+            .get_physical_device_surface_capabilities(shared.physical_device, surface)?
+    };
 
-    let surface_formats =
-        unsafe { surface_fns.get_physical_device_surface_formats(physical_device, surface)? };
+    let surface_formats = unsafe {
+        shared
+            .surface_fns
+            .get_physical_device_surface_formats(shared.physical_device, surface)?
+    };
 
     let format = surface_formats
         .iter()
@@ -684,10 +787,12 @@ fn create_swapchain(
         })
         .ok_or("No suitable Vulkan surface format found")?;
 
-    // Winit already paces redraws on Wayland, where FIFO would throttle a second time and cost an
-    // extra refresh period per frame. Everywhere else FIFO is what keeps the loop from free running.
-    let present_modes =
-        unsafe { surface_fns.get_physical_device_surface_present_modes(physical_device, surface)? };
+    // Use MAILBOX on Wayland when available.
+    let present_modes = unsafe {
+        shared
+            .surface_fns
+            .get_physical_device_surface_present_modes(shared.physical_device, surface)?
+    };
     let present_mode = if wayland && present_modes.contains(&PresentModeKHR::MAILBOX) {
         PresentModeKHR::MAILBOX
     } else {
@@ -708,8 +813,7 @@ fn create_swapchain(
     } else {
         surface_caps.current_extent
     };
-
-    // MAILBOX needs a third image to swap into while another one is queued.
+    // Use three images for MAILBOX.
     let wanted_image_count = if present_mode == PresentModeKHR::MAILBOX {
         3
     } else {
@@ -720,8 +824,7 @@ fn create_swapchain(
         image_count = image_count.min(surface_caps.max_image_count);
     }
 
-    // If transparency is requested but the surface doesn't support a suitable
-    // composite alpha mode, bail out so the caller can fall back to OpenGL.
+    // Select a supported transparency mode.
     let composite_alpha = if transparent {
         if surface_caps
             .supported_composite_alpha
@@ -754,18 +857,17 @@ fn create_swapchain(
                 | ImageUsageFlags::TRANSFER_DST,
         )
         .image_sharing_mode(SharingMode::EXCLUSIVE)
-        .queue_family_indices(std::slice::from_ref(&queue_family_index))
+        .queue_family_indices(std::slice::from_ref(&shared.queue_family_index))
         .pre_transform(surface_caps.current_transform)
         .composite_alpha(composite_alpha)
         .present_mode(present_mode)
         .clipped(true)
         .old_swapchain(old_swapchain.unwrap_or(SwapchainKHR::null()));
 
-    let swapchain_fns = DeviceSwapchainFns::new(instance, device);
-    let swapchain = unsafe { swapchain_fns.create_swapchain(&create_info, None)? };
-    let images = unsafe { swapchain_fns.get_swapchain_images(swapchain)? };
+    let swapchain = unsafe { shared.swapchain_fns.create_swapchain(&create_info, None)? };
+    let images = unsafe { shared.swapchain_fns.get_swapchain_images(swapchain)? };
 
-    Ok((swapchain, swapchain_fns, images, extent))
+    Ok((swapchain, images, extent))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -773,7 +875,7 @@ fn create_gr_context(
     entry: &Entry,
     instance: &Instance,
     physical_device: PhysicalDevice,
-    device: Arc<Device>,
+    device: &Device,
     queue: Queue,
     queue_family_index: u32,
     gpu_resource_cache_limit: usize,

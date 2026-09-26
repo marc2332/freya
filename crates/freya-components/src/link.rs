@@ -35,6 +35,12 @@ pub enum LinkTooltip {
     Custom(String),
 }
 
+/// An wrapper component that navigates to an internal route or external URL on press.
+///
+/// Pass a route variant to push it through the nearest router when pressed. Pass
+/// an absolute URL to open it in the system browser.
+///
+/// See the [router example](https://github.com/marc2332/freya/blob/main/examples/feature_router.rs).
 #[derive(PartialEq)]
 pub struct Link {
     /// Theme override.
@@ -62,6 +68,7 @@ impl KeyExt for Link {
 }
 
 impl Link {
+    /// Creates a link to an internal route or external URL.
     pub fn new(to: impl Into<NavigationTarget>) -> Self {
         Self {
             to: to.into(),
@@ -72,6 +79,7 @@ impl Link {
         }
     }
 
+    /// Sets the tooltip shown while hovering over this link.
     pub fn tooltip(mut self, tooltip: impl Into<LinkTooltip>) -> Self {
         self.tooltip = tooltip.into();
         self

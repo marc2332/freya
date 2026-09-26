@@ -59,17 +59,9 @@ pub enum CardLayoutVariant {
 ///         .height(Size::percent(75.))
 ///         .child("Hello, World!")
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_card.png").render();
 /// ```
 ///
-/// # Preview
-/// ![Card Preview][card]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("card", "images/gallery_card.png"),
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct Card {
     pub(crate) theme_colors: Option<CardColorsThemePartial>,
