@@ -61,7 +61,7 @@
 //! - [Material Design](freya_material_design)
 //! - [Plotters](freya_plotters_backend)
 //! - [Testing](freya_testing)
-//! - [WebView](freya_webview)
+//! - [HTML Viewer](freya_html)
 //! - [Terminal](freya_terminal)
 //! - [Camera](freya_camera)
 //! - [Video](freya_video)
@@ -70,6 +70,7 @@
 //! - [Borderless Windows](self::_docs::borderless)
 //! - [Devtools](self::_docs::devtools)
 //! - [Hot Reload](self::_docs::hot_reload)
+//! - [HTTP Requests](freya_components::http)
 //!
 //! ## Features flags
 //!
@@ -79,7 +80,7 @@
 //! - `accessibility`: Enables the AccessKit accessibility backend for winit. Enabled by default.
 //! - `router`: Reexport [freya_router] under [router]
 //! - `i18n`: Reexport [freya_i18n] under [i18n]
-//! - `remote-asset`: Enables support for **HTTP** asset sources for [ImageViewer](components::ImageViewer) and [GifViewer](components::GifViewer) components.
+//! - `remote-asset`: Enables [HTTP requests](freya_components::http) and remote sources for [ImageViewer](components::ImageViewer) and [GifViewer](components::GifViewer).
 //! - `tray`: Enables tray support using the [tray_icon] crate.
 //! - `sdk`: Reexport [freya_sdk] under [sdk].
 //! - `sdk-tokio`: Enables the Tokio utilities from [freya_sdk]. Implies `sdk`.
@@ -93,7 +94,7 @@
 //! - `radio`: Reexport [freya_radio] under [radio].
 //! - `query`: Reexport [freya_query] under [query].
 //! - `markdown`: Reexport [freya_markdown] under [markdown].
-//! - `webview`: Reexport [freya_webview] under [webview].
+//! - `html`: Reexport [freya_html] under [html].
 //! - `titlebar`: Enables the [TitlebarButton](components::TitlebarButton) component.
 //! - `borderless`: Reexport [freya_borderless_plugin] under [borderless]. See [Borderless Windows](self::_docs::borderless).
 //! - `terminal`: Reexport [freya_terminal] under [terminal].
@@ -366,11 +367,11 @@ pub mod query {
     pub use freya_query::prelude::*;
 }
 
-/// Reexport `freya-webview` when the `webview` feature is enabled.
-#[cfg(feature = "webview")]
-#[cfg_attr(feature = "docs", doc(cfg(feature = "webview")))]
-pub mod webview {
-    pub use freya_webview::prelude::*;
+/// Reexport `freya-html` when the `html` feature is enabled.
+#[cfg(feature = "html")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "html")))]
+pub mod html {
+    pub use freya_html::prelude::*;
 }
 
 /// Reexport `freya-terminal` when the `terminal` feature is enabled.
