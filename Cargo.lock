@@ -2388,7 +2388,6 @@ dependencies = [
  "freya-core",
  "freya-edit",
  "freya-engine",
- "freya-html",
  "freya-i18n",
  "freya-metrics-plugin",
  "freya-radio",
@@ -2469,6 +2468,14 @@ version = "0.0.0"
 dependencies = [
  "freya",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "feature_html"
+version = "0.0.0"
+dependencies = [
+ "freya",
+ "freya-html",
 ]
 
 [[package]]
