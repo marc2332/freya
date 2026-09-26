@@ -27,6 +27,33 @@ pub fn resizable_container_basic() {
 }
 
 #[test]
+pub fn resizable_container_layout() {
+    fn resizable_container_layout_app() -> impl IntoElement {
+        ResizableContainer::new()
+            .width(Size::px(300.))
+            .height(Size::px(200.))
+            .panel(
+                ResizablePanel::new(PanelSize::percent(50.)).child(label().expanded().text("Top")),
+            )
+            .panel(
+                ResizablePanel::new(PanelSize::percent(50.))
+                    .child(label().expanded().text("Bottom")),
+            )
+    }
+
+    let mut test = launch_test(resizable_container_layout_app);
+    test.sync_and_update();
+
+    let labels = test.find_many(|node, element| Label::try_downcast(element).map(move |_| node));
+
+    assert_eq!(labels.len(), 2);
+    assert_eq!(labels[0].layout().area.width(), 300.);
+    assert_eq!(labels[0].layout().area.height(), 98.);
+    assert_eq!(labels[1].layout().area.width(), 300.);
+    assert_eq!(labels[1].layout().area.height(), 98.);
+}
+
+#[test]
 pub fn resizable_container_horizontal() {
     fn resizable_container_horizontal_app() -> impl IntoElement {
         ResizableContainer::new()

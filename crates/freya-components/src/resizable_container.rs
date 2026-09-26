@@ -2,6 +2,7 @@ use freya_core::prelude::*;
 use thiserror::Error;
 use torin::{
     content::Content,
+    node::Node,
     prelude::{
         Area,
         Direction,
@@ -239,7 +240,7 @@ impl ResizableContext {
 /// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(PartialEq, Clone)]
 pub struct ResizableContainer {
-    direction: Direction,
+    layout: LayoutData,
     panels: Vec<ResizablePanel>,
     controller: Option<Writable<ResizableContext>>,
 }
@@ -250,17 +251,31 @@ impl Default for ResizableContainer {
     }
 }
 
+impl LayoutExt for ResizableContainer {
+    fn get_layout(&mut self) -> &mut LayoutData {
+        &mut self.layout
+    }
+}
+
+impl ContainerExt for ResizableContainer {}
+
 impl ResizableContainer {
     pub fn new() -> Self {
         Self {
-            direction: Direction::Vertical,
+            layout: Node {
+                width: Size::fill(),
+                height: Size::fill(),
+                content: Content::flex(),
+                ..Default::default()
+            }
+            .into(),
             panels: vec![],
             controller: None,
         }
     }
 
     pub fn direction(mut self, direction: Direction) -> Self {
-        self.direction = direction;
+        self.layout.direction = direction;
         self
     }
 
@@ -287,11 +302,11 @@ impl Component for ResizableContainer {
         let mut size = use_state(Area::default);
         use_provide_context(|| size);
 
-        let direction = use_reactive(&self.direction);
+        let direction = use_reactive(&self.layout.direction);
         use_provide_context(|| {
             self.controller.clone().unwrap_or_else(|| {
                 let mut state = State::create(ResizableContext {
-                    direction: self.direction,
+                    direction: self.layout.direction,
                     ..Default::default()
                 });
 
@@ -307,10 +322,8 @@ impl Component for ResizableContainer {
         });
 
         rect()
-            .direction(self.direction)
+            .layout(self.layout.clone())
             .on_sized(move |e: Event<SizedEventData>| size.set(e.area))
-            .expanded()
-            .content(Content::flex())
             .children(self.panels.iter().enumerate().flat_map(|(i, e)| {
                 if i > 0 {
                     vec![
