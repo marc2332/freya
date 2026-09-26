@@ -101,6 +101,7 @@
 //! - `code-editor`: Reexport [freya_code_editor] under [code_editor].
 //! - `camera`: Reexport [freya_camera] under [camera].
 //! - `web`: Reexport [freya_web] under [web].
+//! - `platform-text-gamma`: Applies platform-specific text contrast and gamma on Linux and macOS. Enabled by default.
 //!
 //! ## Misc features
 //! - `devtools`: Enables devtools support.
