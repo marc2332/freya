@@ -196,10 +196,10 @@
 //! The combo is shared by the whole app and every call advances it, so call `pressed` once per
 //! press.
 //!
-//! ## Components don't have events
+//! ## Exposing events from components
 //!
-//! Components are just data and a `render` method. To expose a "click" or "change" hook from
-//! a component, accept a callback as a field and forward it from the inner element.
+//! Components render elements that receive events. To expose a specific action such as a
+//! "click" or "change", accept a callback as a field and forward it from the inner element.
 //!
 //! ```rust, no_run
 //! # use freya::prelude::*;
@@ -217,4 +217,37 @@
 //!             .child("Press me")
 //!     }
 //! }
+//! ```
+//!
+//! To expose the full set of element handlers on a component, implement
+//! [`EventHandlersExt`](freya_core::prelude::EventHandlersExt) and forward the stored handlers
+//! to the element returned by `render`:
+//!
+//! ```rust, no_run
+//! # use freya::prelude::*;
+//! #[derive(PartialEq)]
+//! struct Clickable {
+//!     event_handlers: EventHandlers,
+//! }
+//!
+//! impl EventHandlersExt for Clickable {
+//!     fn get_event_handlers(&mut self) -> &mut EventHandlers {
+//!         &mut self.event_handlers
+//!     }
+//! }
+//!
+//! impl Component for Clickable {
+//!     fn render(&self) -> impl IntoElement {
+//!         rect()
+//!             .event_handlers(self.event_handlers.clone())
+//!             .child("Press me")
+//!     }
+//! }
+//!
+//! # fn app() -> impl IntoElement {
+//! Clickable {
+//!     event_handlers: EventHandlers::default(),
+//! }
+//! .on_press(|_| println!("Pressed!"))
+//! # }
 //! ```
