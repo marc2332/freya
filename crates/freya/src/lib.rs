@@ -206,7 +206,6 @@ pub mod components {
         attached::*,
         button::*,
         cache::*,
-        canvas::*,
         card::*,
         checkbox::*,
         chip::*,

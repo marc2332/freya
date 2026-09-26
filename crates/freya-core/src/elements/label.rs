@@ -51,6 +51,7 @@ use crate::{
         TextAlign,
         TextStyleExt,
     },
+    style::render_callback::RenderContext as FillRenderContext,
     text_cache::CachedParagraph,
     tree::DiffModifies,
 };
@@ -297,10 +298,23 @@ impl ElementExt for LabelElement {
         let layout_data = context.layout_node.data.as_ref().unwrap();
         let paragraph = layout_data.downcast_ref::<SkParagraph>().unwrap();
 
-        paragraph.paint_at(
-            context.canvas,
-            context.layout_node.inner_area.origin.cast_unit(),
-        );
+        let origin = context.layout_node.inner_area.origin;
+        paragraph.paint_at(context.canvas, origin.cast_unit());
+        if let Some(callback) = context.text_style_state.color.render_callback() {
+            let layer = context.canvas.save();
+            context.canvas.translate(origin.to_tuple());
+            context
+                .canvas
+                .scale((context.scale_factor as f32, context.scale_factor as f32));
+            callback.call(&mut FillRenderContext {
+                canvas: context.canvas,
+                font_collection: context.font_collection,
+                origin: (origin / context.scale_factor as f32).cast_unit(),
+                size: paragraph.fill_area().size / context.scale_factor as f32,
+                text_style_state: context.text_style_state,
+            });
+            context.canvas.restore_to_count(layer);
+        }
     }
 }
 
