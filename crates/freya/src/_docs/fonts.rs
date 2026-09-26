@@ -33,7 +33,7 @@
 //!         LaunchConfig::new()
 //!             .with_font(
 //!                 "My Font",
-//!                 include_bytes!("../assets/my-font.ttf"),
+//!                 Bytes::from_static(include_bytes!("../assets/my-font.ttf")),
 //!             )
 //!             .with_default_font("My Font")
 //!             .with_window(WindowConfig::new(app)),
