@@ -172,6 +172,10 @@ pub mod prelude {
         visible_size::VisibleSize,
     };
 }
+
+/// Reexport the Torin layout crate.
+pub use torin;
+
 /// Built-in elements like `rect`, `label` or `paragraph`.
 pub mod elements {
     pub use freya_core::elements::*;
