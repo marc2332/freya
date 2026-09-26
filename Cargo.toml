@@ -56,6 +56,7 @@ members = [
   "./examples/web",
   "./examples/component_video",
   "./examples/feature_camera",
+  "./examples/feature_html",
   "./examples/feature_software_renderer",
   "./examples/feature_tray",
   "./examples/feature_tray_radio_state",
@@ -202,7 +203,6 @@ freya-testing = { workspace = true }
 freya-i18n = { workspace = true }
 freya-metrics-plugin = { workspace = true }
 freya-radio = { workspace = true }
-freya-html = { workspace = true }
 tree-sitter-rust = "0.24"
 
 freya-skia-safe = { workspace = true }
