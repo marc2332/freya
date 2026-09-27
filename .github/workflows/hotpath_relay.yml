@@ -1,0 +1,38 @@
+name: Hotpath relay
+
+on:
+  workflow_run:
+    workflows: [Hotpath]
+    types: [completed]
+
+jobs:
+  timing:
+    uses: pawurb/hotpath-rs/.github/workflows/hotpath-relay.yml@main
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    with:
+      benchmark: timing
+      artifact_name: hotpath-timing
+      report_file: timing.json
+  alloc:
+    uses: pawurb/hotpath-rs/.github/workflows/hotpath-relay.yml@main
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    with:
+      benchmark: alloc
+      artifact_name: hotpath-alloc
+      report_file: alloc.json
+  core:
+    uses: pawurb/hotpath-rs/.github/workflows/hotpath-relay.yml@main
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    with:
+      benchmark: core
+      artifact_name: hotpath-core
+      report_file: core.json
