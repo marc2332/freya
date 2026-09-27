@@ -182,37 +182,37 @@ pub enum Size {
 
 impl Size {
     /// Use an [`Inner`](Size::Inner) size.
-    pub fn auto() -> Size {
+    pub const fn auto() -> Size {
         Size::Inner
     }
 
     /// Use a [`Fill`](Size::Fill) size.
-    pub fn fill() -> Size {
+    pub const fn fill() -> Size {
         Size::Fill
     }
 
     /// Use a [`FillMinimum`](Size::FillMinimum) size.
-    pub fn fill_minimum() -> Size {
+    pub const fn fill_minimum() -> Size {
         Size::FillMinimum
     }
 
     /// Use a [`Percentage`](Size::Percentage) size.
-    pub fn percent(percent: f32) -> Size {
+    pub const fn percent(percent: f32) -> Size {
         Size::Percentage(Length::new(percent))
     }
 
     /// Use a [`Pixels`](Size::Pixels) size.
-    pub fn px(px: f32) -> Size {
+    pub const fn px(px: f32) -> Size {
         Size::Pixels(Length::new(px))
     }
 
     /// Use a [`RootPercentage`](Size::RootPercentage) size.
-    pub fn window_percent(percent: f32) -> Size {
+    pub const fn window_percent(percent: f32) -> Size {
         Size::RootPercentage(Length::new(percent))
     }
 
     /// Use a [`Flex`](Size::Flex) size.
-    pub fn flex(flex: f32) -> Size {
+    pub const fn flex(flex: f32) -> Size {
         Size::Flex(Length::new(flex))
     }
 
@@ -229,18 +229,18 @@ impl Size {
         Self::Fn(Box::new(SizeFn::new_data(func, data)))
     }
 
-    pub(crate) fn flex_grow(&self) -> Option<Length> {
+    pub(crate) const fn flex_grow(&self) -> Option<Length> {
         match self {
             Self::Flex(f) => Some(*f),
             _ => None,
         }
     }
 
-    pub(crate) fn is_flex(&self) -> bool {
+    pub(crate) const fn is_flex(&self) -> bool {
         matches!(self, Self::Flex(_))
     }
 
-    pub(crate) fn inner_sized(&self) -> bool {
+    pub(crate) const fn inner_sized(&self) -> bool {
         matches!(self, Self::Inner | Self::FillMinimum)
     }
 
@@ -339,7 +339,11 @@ impl Size {
         final_value
     }
 
-    pub(crate) fn most_fitting_size<'a>(&self, size: &'a f32, available_size: &'a f32) -> &'a f32 {
+    pub(crate) const fn most_fitting_size<'a>(
+        &self,
+        size: &'a f32,
+        available_size: &'a f32,
+    ) -> &'a f32 {
         match self {
             Self::Inner => available_size,
             _ => size,

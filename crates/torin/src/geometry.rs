@@ -221,7 +221,7 @@ fn calculate_extreme_corners(area: &Area, center: Point2D) -> (Point2D, Point2D)
 }
 
 impl AlignAxis {
-    pub fn new(direction: &Direction, alignment_direction: AlignmentDirection) -> Self {
+    pub const fn new(direction: &Direction, alignment_direction: AlignmentDirection) -> Self {
         match direction {
             Direction::Vertical => match alignment_direction {
                 AlignmentDirection::Main => AlignAxis::Height,
