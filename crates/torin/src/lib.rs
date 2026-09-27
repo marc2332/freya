@@ -1,4 +1,4 @@
-#![warn(clippy::pedantic, clippy::perf)]
+#![warn(clippy::pedantic, clippy::perf, clippy::missing_const_for_fn)]
 #![allow(
     clippy::must_use_candidate,
     clippy::module_name_repetitions,

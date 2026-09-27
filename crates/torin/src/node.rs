@@ -310,7 +310,7 @@ impl Node {
     }
 
     /// Has properties that depend on the inner Nodes?
-    pub fn does_depend_on_inner(&self) -> bool {
+    pub const fn does_depend_on_inner(&self) -> bool {
         self.width.inner_sized()
             || self.height.inner_sized()
             || self.depends_on_inner
@@ -318,7 +318,7 @@ impl Node {
     }
 
     /// Whether the alignments of this Node resize its children.
-    pub fn alignments_change_sizes(&self) -> bool {
+    pub const fn alignments_change_sizes(&self) -> bool {
         let (main_axis_inner, cross_axis_inner) = match self.direction {
             Direction::Vertical => (self.height.inner_sized(), self.width.inner_sized()),
             Direction::Horizontal => (self.width.inner_sized(), self.height.inner_sized()),
@@ -328,10 +328,10 @@ impl Node {
     }
 
     /// Has properties that make its children dependant on it?
-    pub fn do_inner_depend_on_parent(&self) -> bool {
+    pub const fn do_inner_depend_on_parent(&self) -> bool {
         self.cross_alignment.is_not_start()
             || self.main_alignment.is_not_start()
             || self.has_layout_references
-            || self.content == Content::Flex
+            || matches!(self.content, Content::Flex)
     }
 }
