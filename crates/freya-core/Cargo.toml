@@ -74,6 +74,7 @@ tracing-subscriber = { workspace = true }
 [features]
 hotpath = ["hotpath/hotpath", "ragnarok/hotpath"]
 hotpath-alloc = ["hotpath/hotpath-alloc"]
+hotpath-cloud = ["hotpath/hotpath-cloud"]
 hotreload = ["dep:subsecond", "dep:dioxus-devtools"]
 debug-integrity = []
 devtools = ["serde"]

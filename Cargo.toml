@@ -176,7 +176,7 @@ accesskit = "0.24.0"
 accesskit_winit = "0.33.0"
 
 # Performance
-hotpath = "0.26.0"
+hotpath = { git = "https://github.com/pawurb/hotpath-rs", branch = "main" }
 
 # Errors
 anyhow = "1.0.100"
