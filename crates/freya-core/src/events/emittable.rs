@@ -15,6 +15,7 @@ use crate::{
             WheelEventData,
         },
         name::EventName,
+        platform::MouseEventName,
     },
     integration::PlatformEvent,
     node_id::NodeId,
@@ -79,7 +80,7 @@ impl EmmitableEvent {
                 node_id,
                 name,
                 PlatformEvent::Mouse {
-                    name: crate::events::platform::MouseEventName::MouseMove,
+                    name: MouseEventName::MouseMove,
                     cursor,
                     button: None,
                 },
