@@ -869,7 +869,7 @@ impl Span<'_> {
         let span_style = TextStyleState::from_data(text_style_state, &self.text_style_data);
         let mut text_style = TextStyle::new();
 
-        let mut font_families = text_style_state.font_families.clone();
+        let mut font_families = span_style.font_families.clone();
         font_families.extend_from_slice(fallback_fonts);
 
         span_style
