@@ -75,6 +75,17 @@ impl EmmitableEvent {
         let bubbles = name.does_bubble();
 
         match platform_event {
+            PlatformEvent::MouseLeave { cursor } => Self::new(
+                node_id,
+                name,
+                PlatformEvent::Mouse {
+                    name: crate::events::platform::MouseEventName::MouseMove,
+                    cursor,
+                    button: None,
+                },
+                node_area,
+                scale_factor,
+            ),
             PlatformEvent::Mouse {
                 name: platform_event_name,
                 cursor,

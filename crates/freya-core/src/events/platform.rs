@@ -92,6 +92,8 @@ pub enum PlatformEvent {
         cursor: CursorPoint,
         button: Option<MouseButton>,
     },
+    /// The mouse left the window at its last known position.
+    MouseLeave { cursor: CursorPoint },
     /// A Keyboard Event.
     Keyboard {
         name: KeyboardEventName,
@@ -191,6 +193,10 @@ impl ragnarok::SourceEvent for PlatformEvent {
         )
     }
 
+    fn is_pointer_exit(&self) -> bool {
+        matches!(self, Self::MouseLeave { .. })
+    }
+
     /// Check if this event is a touch released event.
     fn is_touch_released(&self) -> bool {
         matches!(
@@ -205,6 +211,7 @@ impl ragnarok::SourceEvent for PlatformEvent {
     fn as_event_name(&self) -> EventName {
         match self {
             Self::Mouse { name, .. } => (*name).into(),
+            Self::MouseLeave { .. } => EventName::MouseMove,
             Self::Keyboard { name, .. } => (*name).into(),
             Self::Wheel { name, .. } => (*name).into(),
             Self::ImePreedit { name, .. } => (*name).into(),
