@@ -153,7 +153,7 @@ impl ComponentOwned for Menu {
             .on_press(move |ev: Event<PressEventData>| {
                 ev.stop_propagation();
             })
-            .on_global_pointer_press(move |_: Event<PointerEventData>| {
+            .on_global_pointer_up(move |_: Event<PointerEventData>| {
                 if let Some(on_close) = &self.on_close {
                     on_close.call(());
                 }

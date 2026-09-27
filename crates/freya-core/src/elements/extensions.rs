@@ -217,8 +217,8 @@ pub trait EventHandlersExt: Sized {
         Pointer,
         PointerEventData;
 
-        /// Fires when a pointer (mouse or touch) is pressed anywhere, even outside the element.
-        global_pointer_press => EventName::GlobalPointerPress;
+        /// Fires when a pointer (mouse or touch) is released anywhere, even outside the element.
+        global_pointer_up => EventName::GlobalPointerUp;
         /// Fires when a pointer (mouse or touch) goes down anywhere, even outside the element.
         global_pointer_down => EventName::GlobalPointerDown;
         /// Fires when a pointer (mouse or touch) moves anywhere, even outside the element.
@@ -226,8 +226,8 @@ pub trait EventHandlersExt: Sized {
 
         /// Like [`on_global_pointer_move`](Self::on_global_pointer_move), but fires during the top-down capture phase.
         capture_global_pointer_move => EventName::CaptureGlobalPointerMove;
-        /// Like [`on_global_pointer_press`](Self::on_global_pointer_press), but fires during the top-down capture phase.
-        capture_global_pointer_press => EventName::CaptureGlobalPointerPress;
+        /// Like [`on_global_pointer_up`](Self::on_global_pointer_up), but fires during the top-down capture phase.
+        capture_global_pointer_up => EventName::CaptureGlobalPointerUp;
     }
 
     event_handlers! {

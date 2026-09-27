@@ -232,7 +232,7 @@ impl Component for ColorPicker {
             DragTarget::None => {}
         };
 
-        let on_global_pointer_press = move |_| {
+        let on_global_pointer_up = move |_| {
             // Only close the popup if it wasnt being dragged and it is open
             if is_open && dragging() == DragTarget::None {
                 open.set(false);
@@ -283,7 +283,7 @@ impl Component for ColorPicker {
 
         let popup = rect()
             .on_global_pointer_move(on_global_pointer_move)
-            .on_global_pointer_press(on_global_pointer_press)
+            .on_global_pointer_up(on_global_pointer_up)
             .width(self.width.clone())
             .padding(8.)
             .corner_radius(6.)
