@@ -28,41 +28,26 @@ jobs:
       - name: Install linux dependencies
         run: |
           sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev libwebkit2gtk-4.1-dev libasound2-dev
-      - name: Timing benchmark
+      - name: Dev benchmark
         env:
-          HOTPATH_BENCHMARK: timing
+          HOTPATH_BENCHMARK: dev_perf
           HOTPATH_UPLOAD: ${{ github.event_name == 'push' && '1' || '0' }}
           HOTPATH_OUTPUT_FORMAT: ${{ github.event_name == 'push' && 'none' || 'json' }}
-          HOTPATH_OUTPUT_PATH: timing.json
-        run: just ps-ci
-      - name: Allocation benchmark
-        env:
-          HOTPATH_BENCHMARK: alloc
-          HOTPATH_UPLOAD: ${{ github.event_name == 'push' && '1' || '0' }}
-          HOTPATH_OUTPUT_FORMAT: ${{ github.event_name == 'push' && 'none' || 'json' }}
-          HOTPATH_OUTPUT_PATH: alloc.json
-        run: just pa-ci
+          HOTPATH_OUTPUT_PATH: ${{ github.workspace }}/dev_perf.json
+        run: just pd-ci
       - name: Core benchmark
         env:
           HOTPATH_BENCHMARK: core
           HOTPATH_UPLOAD: ${{ github.event_name == 'push' && '1' || '0' }}
           HOTPATH_OUTPUT_FORMAT: ${{ github.event_name == 'push' && 'none' || 'json' }}
-          HOTPATH_OUTPUT_PATH: core.json
+          HOTPATH_OUTPUT_PATH: ${{ github.workspace }}/core.json
         run: just pc-ci
-      - name: Upload timing report
+      - name: Upload dev report
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: hotpath-timing
-          path: timing.json
-          retention-days: 1
-          if-no-files-found: error
-      - name: Upload allocation report
-        if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: hotpath-alloc
-          path: alloc.json
+          name: hotpath-dev
+          path: dev_perf.json
           retention-days: 1
           if-no-files-found: error
       - name: Upload core report

@@ -6,26 +6,16 @@ on:
     types: [completed]
 
 jobs:
-  timing:
+  dev:
     uses: pawurb/hotpath-rs/.github/workflows/hotpath-relay.yml@main
     permissions:
       actions: read
       contents: read
       id-token: write
     with:
-      benchmark: timing
-      artifact_name: hotpath-timing
-      report_file: timing.json
-  alloc:
-    uses: pawurb/hotpath-rs/.github/workflows/hotpath-relay.yml@main
-    permissions:
-      actions: read
-      contents: read
-      id-token: write
-    with:
-      benchmark: alloc
-      artifact_name: hotpath-alloc
-      report_file: alloc.json
+      benchmark: dev_perf
+      artifact_name: hotpath-dev
+      report_file: dev_perf.json
   core:
     uses: pawurb/hotpath-rs/.github/workflows/hotpath-relay.yml@main
     permissions:
