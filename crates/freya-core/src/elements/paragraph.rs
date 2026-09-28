@@ -919,14 +919,20 @@ impl ParagraphPaintExt for SkParagraph {
     }
 
     fn fill_area(&self) -> Area {
-        let max_width = self.max_width();
-        let width = if max_width < f32::MAX {
-            max_width
-        } else {
-            self.longest_line()
-        };
+        let (left, right) = self
+            .get_line_metrics()
+            .into_iter()
+            .filter(|line| line.width > 0.0)
+            .map(|line| (line.left as f32, (line.left + line.width) as f32))
+            .reduce(|(left, right), (line_left, line_right)| {
+                (left.min(line_left), right.max(line_right))
+            })
+            .unwrap_or((0.0, self.longest_line()));
 
-        Area::new(Point2D::zero(), Size2D::new(width, self.height()))
+        Area::new(
+            Point2D::new(left, 0.0),
+            Size2D::new(right - left, self.height()),
+        )
     }
 }
 
