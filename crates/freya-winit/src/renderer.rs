@@ -873,7 +873,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             );
 
                             if std::mem::take(&mut app.send_mouse_move_on_next_layout)
-                                && app.position != CursorPoint::from((-1., -1.))
+                                && app.cursor_in_window
                             {
                                 app.process_platform_events(
                                     vec![PlatformEvent::Mouse {
@@ -1155,12 +1155,10 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     if std::mem::replace(&mut app.mouse_state, ElementState::Released)
                         == ElementState::Released
                     {
-                        app.position = CursorPoint::from((-1., -1.));
+                        app.cursor_in_window = false;
                         app.process_platform_events(
-                            vec![PlatformEvent::Mouse {
-                                name: MouseEventName::MouseMove,
+                            vec![PlatformEvent::PointerExit {
                                 cursor: app.position,
-                                button: None,
                             }],
                             &mut self.plugins,
                             PluginHandle::new(&self.proxy),
@@ -1169,6 +1167,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 }
                 WindowEvent::CursorMoved { position, .. } => {
                     app.position = CursorPoint::from((position.x, position.y));
+                    app.cursor_in_window = true;
 
                     let mut platform_events = vec![PlatformEvent::Mouse {
                         name: MouseEventName::MouseMove,
