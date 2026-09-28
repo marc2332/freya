@@ -76,7 +76,7 @@ impl EmmitableEvent {
         let bubbles = name.does_bubble();
 
         match platform_event {
-            PlatformEvent::MouseLeave { cursor } => Self::new(
+            PlatformEvent::PointerExit { cursor } => Self::new(
                 node_id,
                 name,
                 PlatformEvent::Mouse {

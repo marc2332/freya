@@ -1157,7 +1157,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     {
                         app.cursor_in_window = false;
                         app.process_platform_events(
-                            vec![PlatformEvent::MouseLeave {
+                            vec![PlatformEvent::PointerExit {
                                 cursor: app.position,
                             }],
                             &mut self.plugins,

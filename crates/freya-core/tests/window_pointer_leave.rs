@@ -6,7 +6,7 @@ use freya_testing::TestingRunner;
 use torin::size::Size;
 
 #[test]
-fn window_leave_clears_hover_without_global_move() {
+fn pointer_exit_clears_hover_without_global_move() {
     #[derive(Clone, Copy)]
     struct Counters(State<(usize, usize, usize)>);
 
@@ -34,7 +34,7 @@ fn window_leave_clears_hover_without_global_move() {
     test.move_cursor((10., 10.));
     assert_eq!(*counters.0.peek(), (1, 0, 1));
 
-    test.send_event(PlatformEvent::MouseLeave {
+    test.send_event(PlatformEvent::PointerExit {
         cursor: (10., 10.).into(),
     });
     test.sync_and_update();
