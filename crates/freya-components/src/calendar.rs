@@ -9,6 +9,7 @@ use chrono::{
 use freya_core::prelude::*;
 use torin::{
     content::Content,
+    node::Node,
     size::Size,
 };
 
@@ -50,7 +51,6 @@ pub struct CalendarDay {
     pub selected: bool,
 }
 
-/// The dates and weekdays needed to render a month.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CalendarMonth {
     pub first_day: CalendarDate,
@@ -77,6 +77,7 @@ impl CalendarMonth {
         let days_in_month = (1..=31).rev().find(|day| {
             NaiveDate::from_ymd_opt(first_day.year(), first_day.month(), *day).is_some()
         })?;
+
         let leading = match week_start {
             WeekStart::Sunday => first_day.weekday().num_days_from_sunday(),
             WeekStart::Monday => first_day.weekday().num_days_from_monday(),
@@ -125,7 +126,7 @@ impl CalendarMonth {
 pub struct CalendarGrid {
     month: CalendarMonth,
     render_cell: Callback<CalendarDay, Element>,
-    width: Size,
+    layout: LayoutData,
     key: DiffKey,
 }
 
@@ -137,17 +138,23 @@ impl CalendarGrid {
         Self {
             month,
             render_cell: render_cell.into(),
-            width: Size::px(252.),
+            layout: Node {
+                width: Size::px(250.),
+                ..Default::default()
+            }
+            .into(),
             key: DiffKey::None,
         }
     }
+}
 
-    /// Sets the grid width. Defaults to 252 pixels.
-    pub fn width(mut self, width: impl Into<Size>) -> Self {
-        self.width = width.into();
-        self
+impl LayoutExt for CalendarGrid {
+    fn get_layout(&mut self) -> &mut LayoutData {
+        &mut self.layout
     }
 }
+
+impl ContainerExt for CalendarGrid {}
 
 impl KeyExt for CalendarGrid {
     fn write_key(&mut self) -> &mut DiffKey {
@@ -158,9 +165,9 @@ impl KeyExt for CalendarGrid {
 impl Component for CalendarGrid {
     fn render(&self) -> impl IntoElement {
         rect()
+            .layout(self.layout.clone())
             .horizontal()
             .content(Content::wrap())
-            .width(self.width.clone())
             .children(
                 self.month
                     .days

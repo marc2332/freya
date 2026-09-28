@@ -291,7 +291,7 @@ demos! {
         let mut selected = use_state(|| None::<CalendarDate>);
         let mut view_date = use_state(CalendarDate::now);
 
-        rect().map(CalendarMonth::new(view_date(), selected(), WeekStart::Monday), |el, month| {
+        rect().width(Size::px(250.)).map(CalendarMonth::new(view_date(), selected(), WeekStart::Monday), |el, month| {
             let previous_month = month.previous_month;
             let next_month = month.next_month;
             let title = format!("{:02}/{}", month.first_day.month, month.first_day.year);
@@ -300,9 +300,9 @@ demos! {
                 .child(Button::new().on_press(move |_| view_date.set(previous_month)).child("‹"))
                 .child(label().width(Size::flex(1.)).text_align(TextAlign::Center).text(title))
                 .child(Button::new().on_press(move |_| view_date.set(next_month)).child("›")))
-                .child(rect().horizontal().content(Content::wrap()).width(Size::px(252.))
+                .child(rect().horizontal().content(Content::wrap())
                     .children(month.weekdays.iter().map(|weekday| {
-                        rect().width(Size::px(36.)).height(Size::px(36.)).center()
+                        rect().width(Size::px(35.)).height(Size::px(36.)).center()
                             .child(weekday.to_string())
                     })))
                 .child(CalendarGrid::new(month, move |day| {
@@ -310,7 +310,7 @@ demos! {
                         .flat()
                         .padding(0.)
                         .enabled(day.in_month)
-                        .width(Size::px(36.))
+                        .width(Size::px(35.))
                         .height(Size::px(36.))
                         .maybe(day.selected, |el| el.filled())
                         .on_press(move |_| selected.set(Some(day.date)))

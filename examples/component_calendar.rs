@@ -23,7 +23,7 @@ fn app() -> impl IntoElement {
 
             el.child(
                 rect()
-                    .width(Size::px(252.))
+                    .width(Size::px(250.))
                     .child(
                         rect()
                             .horizontal()
@@ -48,28 +48,24 @@ fn app() -> impl IntoElement {
                             ),
                     )
                     .child(
-                        rect()
-                            .horizontal()
-                            .content(Content::wrap())
-                            .width(Size::px(252.))
-                            .children(
-                                ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
-                                    .into_iter()
-                                    .map(|name| {
-                                        rect()
-                                            .width(Size::px(36.))
-                                            .height(Size::px(36.))
-                                            .center()
-                                            .child(name)
-                                    }),
-                            ),
+                        rect().horizontal().content(Content::wrap()).children(
+                            ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+                                .into_iter()
+                                .map(|name| {
+                                    rect()
+                                        .width(Size::px(35.))
+                                        .height(Size::px(36.))
+                                        .center()
+                                        .child(name)
+                                }),
+                        ),
                     )
                     .child(CalendarGrid::new(month, move |day| {
                         Button::new()
                             .flat()
                             .padding(0.)
                             .enabled(day.in_month)
-                            .width(Size::px(36.))
+                            .width(Size::px(35.))
                             .height(Size::px(36.))
                             .maybe(day.selected, |el| el.filled())
                             .on_press(move |_| selected.set(Some(day.date)))
