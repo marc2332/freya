@@ -12,33 +12,10 @@ use torin::{
     size::Size,
 };
 
-use crate::{
-    button::{
-        Button,
-        ButtonColorsThemePartialExt,
-        ButtonLayoutThemePartialExt,
-    },
-    define_theme,
-    get_theme,
-};
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WeekStart {
     Sunday,
     Monday,
-}
-
-define_theme! {
-    %[component]
-    pub CalendarCell {
-        %[fields]
-        day_background: Color,
-        day_hover_background: Color,
-        day_selected_background: Color,
-        color: Color,
-        day_other_month_color: Color,
-        day_corner_radius: CornerRadius,
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -143,92 +120,6 @@ impl CalendarMonth {
     }
 }
 
-/// A selectable calendar cell with the default day styling.
-#[derive(Clone, PartialEq)]
-pub struct CalendarCell {
-    day: CalendarDay,
-    on_change: Option<EventHandler<CalendarDate>>,
-    theme: Option<CalendarCellThemePartial>,
-    key: DiffKey,
-}
-
-impl CalendarCell {
-    pub fn new(day: CalendarDay) -> Self {
-        Self {
-            day,
-            on_change: None,
-            theme: None,
-            key: DiffKey::None,
-        }
-    }
-
-    pub fn on_change(mut self, handler: impl Into<EventHandler<CalendarDate>>) -> Self {
-        self.on_change = Some(handler.into());
-        self
-    }
-
-    pub fn theme(mut self, theme: CalendarCellThemePartial) -> Self {
-        self.theme = Some(theme);
-        self
-    }
-}
-
-impl KeyExt for CalendarCell {
-    fn write_key(&mut self) -> &mut DiffKey {
-        &mut self.key
-    }
-}
-
-impl Component for CalendarCell {
-    fn render(&self) -> impl IntoElement {
-        let theme = get_theme!(&self.theme, CalendarCellThemePreference, "calendar_cell");
-        let (color, background, hover_background) = if self.day.selected {
-            (
-                theme.color,
-                theme.day_selected_background,
-                theme.day_selected_background,
-            )
-        } else if self.day.in_month {
-            (
-                theme.color,
-                theme.day_background,
-                theme.day_hover_background,
-            )
-        } else {
-            (
-                theme.day_other_month_color,
-                Color::TRANSPARENT,
-                Color::TRANSPARENT,
-            )
-        };
-        let date = self.day.date;
-
-        Button::new()
-            .flat()
-            .padding(0.)
-            .enabled(self.day.in_month)
-            .width(Size::px(36.))
-            .height(Size::px(36.))
-            .background(background)
-            .hover_background(hover_background)
-            .corner_radius(theme.day_corner_radius)
-            .map(
-                self.on_change.clone().filter(|_| self.day.in_month),
-                |el, handler| el.on_press(move |_| handler.call(date)),
-            )
-            .child(
-                label()
-                    .text(date.day.to_string())
-                    .color(color)
-                    .font_size(14.),
-            )
-    }
-
-    fn render_key(&self) -> DiffKey {
-        self.key.clone().or(self.default_key())
-    }
-}
-
 /// A month grid whose cells are rendered by the caller.
 #[derive(Clone, PartialEq)]
 pub struct CalendarGrid {
@@ -241,7 +132,7 @@ pub struct CalendarGrid {
 impl CalendarGrid {
     pub fn new(
         month: CalendarMonth,
-        render_cell: impl Into<Callback<CalendarDay, Element>>,
+        render_cell: impl FnMut(CalendarDay) -> Element + 'static,
     ) -> Self {
         Self {
             month,

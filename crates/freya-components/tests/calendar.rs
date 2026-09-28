@@ -41,7 +41,13 @@ fn composed_grid_uses_custom_header_and_buttons() {
             .child(format!("Month {}", month.first_day.month))
             .child("Lun")
             .child(CalendarGrid::new(month, |day| {
-                CalendarCell::new(day).into()
+                Button::new()
+                    .flat()
+                    .enabled(day.in_month)
+                    .width(Size::px(36.))
+                    .height(Size::px(36.))
+                    .child(day.date.day.to_string())
+                    .into()
             }))
     }
 
