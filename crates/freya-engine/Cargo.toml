@@ -16,8 +16,8 @@ workspace = true
 
 [features]
 gl = ["freya-skia-safe/gl"]
-vulkan = ["freya-skia-safe/vulkan"]
-metal = ["freya-skia-safe/metal"]
+vulkan = ["freya-skia-safe/ganesh", "freya-skia-safe/vulkan"]
+metal = ["freya-skia-safe/ganesh", "freya-skia-safe/metal"]
 x11 = ["freya-skia-safe/x11"]
 wayland = ["freya-skia-safe/wayland"]
 
