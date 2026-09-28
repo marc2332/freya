@@ -296,7 +296,7 @@ demos! {
             let next_month = month.next_month;
             let title = format!("{:02}/{}", month.first_day.month, month.first_day.year);
 
-            el.child(rect().horizontal()
+            el.child(rect().horizontal().content(Content::flex()).width(Size::fill())
                 .child(Button::new().on_press(move |_| view_date.set(previous_month)).child("‹"))
                 .child(label().width(Size::flex(1.)).text_align(TextAlign::Center).text(title))
                 .child(Button::new().on_press(move |_| view_date.set(next_month)).child("›")))

@@ -28,6 +28,7 @@ fn app() -> impl IntoElement {
                         rect()
                             .horizontal()
                             .content(Content::flex())
+                            .width(Size::fill())
                             .child(
                                 Button::new()
                                     .flat()
