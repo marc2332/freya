@@ -35,8 +35,12 @@ c:
 
 c-ci:
     taplo check
-    cargo clippy --workspace --examples --bins --features "all-debug" -- -D warnings
-    RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --workspace --features "all-debug"
+    cargo clippy --workspace --exclude freya-web --exclude web --examples --bins --features "all-debug-native" -- -D warnings
+    RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --workspace --exclude freya-web --exclude web --features "all-debug-native"
+
+c-ci-web:
+    cargo clippy --package freya-web --package web --lib --bins --examples -- -D warnings
+    RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --package freya-web --package web
 
 e example:
     cargo run --example {{example}}

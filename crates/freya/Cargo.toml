@@ -57,13 +57,13 @@ all-publish = [
   "dep:freya-testing",
   "dep:freya-plotters-backend",
 ]
-all-debug = [
+all-debug-native = [
   "all",
   "dep:freya-testing",
   "dep:freya-plotters-backend",
   "metrics",
-  "web",
 ]
+all-debug = ["all-debug-native", "web"]
 all-tests = [
   "winit",
   "gpu",
