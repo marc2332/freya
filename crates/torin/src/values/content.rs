@@ -17,45 +17,45 @@ pub enum Content {
 
 impl Content {
     /// Use a [`Normal`](Content::Normal) content.
-    pub fn normal() -> Content {
+    pub const fn normal() -> Content {
         Content::Normal
     }
 
     /// Use a [`Fit`](Content::Fit) content.
-    pub fn fit() -> Content {
+    pub const fn fit() -> Content {
         Content::Fit
     }
 
     /// Use a [`Flex`](Content::Flex) content.
-    pub fn flex() -> Content {
+    pub const fn flex() -> Content {
         Content::Flex
     }
 
     /// Use a [`Wrap`](Content::Wrap) content with no spacing.
-    pub fn wrap() -> Content {
+    pub const fn wrap() -> Content {
         Content::Wrap { wrap_spacing: None }
     }
 
     /// Use a [`Wrap`](Content::Wrap) content with the given spacing.
-    pub fn wrap_spacing(spacing: f32) -> Content {
+    pub const fn wrap_spacing(spacing: f32) -> Content {
         Content::Wrap {
             wrap_spacing: Some(spacing),
         }
     }
 
-    pub fn is_fit(&self) -> bool {
-        self == &Self::Fit
+    pub const fn is_fit(&self) -> bool {
+        matches!(self, Self::Fit)
     }
 
-    pub fn is_flex(&self) -> bool {
-        self == &Self::Flex
+    pub const fn is_flex(&self) -> bool {
+        matches!(self, Self::Flex)
     }
 
-    pub fn is_wrap(&self) -> bool {
+    pub const fn is_wrap(&self) -> bool {
         matches!(self, Self::Wrap { .. })
     }
 
-    pub fn allows_alignments(&self) -> bool {
+    pub const fn allows_alignments(&self) -> bool {
         matches!(self, Self::Normal | Self::Flex | Self::Fit)
     }
 }
