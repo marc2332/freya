@@ -470,7 +470,7 @@ impl Component for Input {
                 if visible_cursor_location.y < visible_start_y {
                     scroll_controller.scroll_to_y(-cursor_location.y as i32);
                 } else if cursor_bottom > visible_start_y + viewport.height() {
-                    scroll_controller.scroll_to_y(-(cursor_location.y - viewport.height()) as i32);
+                    scroll_controller.scroll_to_y(-(cursor_bottom - viewport.height()) as i32);
                 }
             }
         };
