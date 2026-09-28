@@ -291,11 +291,26 @@ demos! {
         let mut selected = use_state(|| None::<CalendarDate>);
         let mut view_date = use_state(CalendarDate::now);
 
-        Calendar::new()
-            .selected(selected())
-            .view_date(view_date())
-            .on_change(move |date| selected.set(Some(date)))
-            .on_view_change(move |date| view_date.set(date))
+        rect().map(CalendarMonth::new(view_date(), selected(), WeekStart::Monday), |el, month| {
+            let previous_month = month.previous_month;
+            let next_month = month.next_month;
+            let title = format!("{:02}/{}", month.first_day.month, month.first_day.year);
+
+            el.child(rect().horizontal()
+                .child(Button::new().on_press(move |_| view_date.set(previous_month)).child("‹"))
+                .child(label().width(Size::flex(1.)).text_align(TextAlign::Center).text(title))
+                .child(Button::new().on_press(move |_| view_date.set(next_month)).child("›")))
+                .child(rect().horizontal().content(Content::wrap()).width(Size::px(252.))
+                    .children(month.weekdays.iter().map(|weekday| {
+                        rect().width(Size::px(36.)).height(Size::px(36.)).center()
+                            .child(weekday.to_string())
+                    })))
+                .child(CalendarGrid::new(month, move |day| {
+                    CalendarCell::new(day)
+                        .on_change(move |date| selected.set(Some(date)))
+                        .into()
+                }))
+        })
     }
 
     ColorPickerDemo => "ColorPicker" {
