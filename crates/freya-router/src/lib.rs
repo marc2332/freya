@@ -1,13 +1,54 @@
-//! Routing
+//! # Routing
 //!
-//! High-level routing utilities for Freya applications. This crate provides
-//! components like [Outlet](self::components::Outlet) and [Router](self::components::Router), hooks such as [use_route](self::hooks::use_route), and the
-//! RouterContext to programmatically interact with navigation state.
+//! Declarative, in-memory routing for Freya applications. Define a route enum with
+//! `#[derive(Routable)]`, mount a [Router](components::Router), and render the
+//! active page with an [Outlet](components::Outlet).
+//!
+//! Enable Freya's `router` feature and import the reexport with
+//! `use freya::router::*;`. `freya::components::Link` provides declarative
+//! navigation. Use [RouterContext](prelude::RouterContext) for navigation from event
+//! handlers and other imperative code in a component.
+//!
+//! # Navigation
+//!
+//! `Link::new(Route::Settings)` pushes an internal route when pressed. To navigate
+//! in an event handler, obtain the context in an event handler and
+//! call [`RouterContext::push`](prelude::RouterContext::push) or
+//! [`RouterContext::replace`](prelude::RouterContext::replace).
+//!
+//! ```rust,no_run
+//! # use freya::{components::Button, prelude::*, router::*};
+//! # #[derive(PartialEq)]
+//! # struct Home;
+//! # impl Component for Home {
+//! #     fn render(&self) -> impl IntoElement { "Home" }
+//! # }
+//! # #[derive(PartialEq)]
+//! # struct Settings;
+//! # impl Component for Settings {
+//! #     fn render(&self) -> impl IntoElement {
+//! let router = RouterContext::get();
+//! Button::new()
+//!     .on_press(move |_| {
+//!         let _ = router.push(Route::Home);
+//!     })
+//!     .child("Save")
+//! #     }
+//! # }
+//! # #[derive(Routable, Clone, PartialEq)]
+//! # enum Route { #[route("/")] Home, #[route("/settings")] Settings }
+//! ```
+//!
+//! Use `freya::components::NativeRouterExt` with `rect().native_router()` to
+//! handle native back and forward mouse buttons.
+//!
+//! See the [basic router example](https://github.com/marc2332/freya/blob/main/examples/feature_router.rs),
+//! [nested routes and history example](https://github.com/marc2332/freya/blob/main/examples/feature_router_complex.rs),
+//! and [shared multi-window router example](https://github.com/marc2332/freya/blob/main/examples/feature_multi_window_router.rs).
 //!
 //! # Example
 //!
-//! A minimal router that switches between two routes. See `examples/feature_router.rs`
-//! for a runnable demo.
+//! A minimal router that switches between two routes.
 //!
 //! ```rust
 //! use freya::{
@@ -81,6 +122,7 @@ mod contexts {
     };
     pub(crate) mod router;
     pub use router::{
+        ExternalNavigationFailure,
         GenericRouterContext,
         ParseRouteError,
         RouterContext,

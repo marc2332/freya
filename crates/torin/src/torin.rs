@@ -43,7 +43,7 @@ pub enum RootNodeCandidate<Key: NodeKey> {
 
 impl<Key: NodeKey> RootNodeCandidate<Key> {
     #[must_use]
-    pub fn take(&mut self) -> Self {
+    pub const fn take(&mut self) -> Self {
         mem::replace(self, Self::None)
     }
 
@@ -146,7 +146,7 @@ impl<Key: NodeKey> Torin<Key> {
     }
 
     /// Read the HashSet of dirty nodes
-    pub fn get_dirty_nodes(&self) -> &FxHashMap<Key, DirtyReason> {
+    pub const fn get_dirty_nodes(&self) -> &FxHashMap<Key, DirtyReason> {
         &self.dirty
     }
 

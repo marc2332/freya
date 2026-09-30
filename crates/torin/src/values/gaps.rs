@@ -73,43 +73,43 @@ impl Gaps {
         Self::new(vertical, horizontal, vertical, horizontal)
     }
 
-    pub fn fill_vertical(&mut self, value: f32) {
+    pub const fn fill_vertical(&mut self, value: f32) {
         self.top = Length::new(value);
         self.bottom = Length::new(value);
     }
 
-    pub fn fill_horizontal(&mut self, value: f32) {
+    pub const fn fill_horizontal(&mut self, value: f32) {
         self.right = Length::new(value);
         self.left = Length::new(value);
     }
 
-    pub fn fill_all(&mut self, value: f32) {
+    pub const fn fill_all(&mut self, value: f32) {
         self.fill_horizontal(value);
         self.fill_vertical(value);
     }
 
-    pub fn horizontal(&self) -> f32 {
-        (self.right + self.left).get()
+    pub const fn horizontal(&self) -> f32 {
+        self.right.0 + self.left.0
     }
 
-    pub fn vertical(&self) -> f32 {
-        (self.top + self.bottom).get()
+    pub const fn vertical(&self) -> f32 {
+        self.top.0 + self.bottom.0
     }
 
-    pub fn top(&self) -> f32 {
-        self.top.get()
+    pub const fn top(&self) -> f32 {
+        self.top.0
     }
 
-    pub fn right(&self) -> f32 {
-        self.right.get()
+    pub const fn right(&self) -> f32 {
+        self.right.0
     }
 
-    pub fn bottom(&self) -> f32 {
-        self.bottom.get()
+    pub const fn bottom(&self) -> f32 {
+        self.bottom.0
     }
 
-    pub fn left(&self) -> f32 {
-        self.left.get()
+    pub const fn left(&self) -> f32 {
+        self.left.0
     }
 
     pub fn pretty(&self) -> String {

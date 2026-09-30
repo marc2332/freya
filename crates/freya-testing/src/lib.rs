@@ -70,6 +70,7 @@ use freya_engine::prelude::{
     SkData,
     TypefaceFontProvider,
     raster_n32_premul,
+    register_font_typeface,
 };
 use ragnarok::{
     CursorPoint,
@@ -265,8 +266,7 @@ impl TestingRunner {
             .unwrap()
             .new_from_data(SkData::new_copy(font_data), None)
             .unwrap_or_else(|| panic!("Failed to load font {font_name}."));
-        self.font_provider
-            .register_typeface(typeface, Some(font_name));
+        register_font_typeface(&mut self.font_provider, font_name, typeface);
     }
 
     fn invalidate_text_layout(&mut self) {

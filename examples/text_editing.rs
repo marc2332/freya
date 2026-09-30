@@ -17,6 +17,7 @@ fn app() -> impl IntoElement {
     let a11y_id = use_a11y();
 
     paragraph()
+        .padding(12.)
         .a11y_id(a11y_id)
         .cursor_index(editable.editor().read().cursor_pos())
         .highlights(
@@ -42,7 +43,7 @@ fn app() -> impl IntoElement {
                 holder: &holder.read(),
             });
         })
-        .on_global_pointer_press(move |_: Event<PointerEventData>| {
+        .on_global_pointer_up(move |_: Event<PointerEventData>| {
             editable.process_event(EditableEvent::Release)
         })
         .on_key_down(move |e: Event<KeyboardEventData>| {

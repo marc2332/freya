@@ -122,7 +122,7 @@ fn app() -> impl IntoElement {
                                 }
                             }
                         })
-                        .on_global_pointer_press({
+                        .on_global_pointer_up({
                             let handle = handle.clone();
                             move |_: Event<PointerEventData>| {
                                 handle.release();

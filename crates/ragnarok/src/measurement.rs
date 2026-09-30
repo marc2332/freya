@@ -27,6 +27,9 @@ pub fn measure_source_global_events<
     emmitable_events: &mut Vec<Emmitable>,
 ) {
     for source_event in source_events {
+        if source_event.is_pointer_exit() {
+            continue;
+        }
         let event_name = source_event.as_event_name();
         let derived_events_names = event_name.get_derived_events();
 
@@ -76,6 +79,9 @@ pub fn measure_potential_events<
                 continue;
             }
             for source_event in source_events {
+                if source_event.is_pointer_exit() {
+                    continue;
+                }
                 let Some(cursor) = source_event.try_location() else {
                     if focus_id == Some(*node_id) {
                         let potential_event = PotentialEvent {

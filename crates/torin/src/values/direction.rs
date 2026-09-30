@@ -9,12 +9,12 @@ pub enum Direction {
 
 impl Direction {
     /// Use a [`Vertical`](Direction::Vertical) direction.
-    pub fn vertical() -> Direction {
+    pub const fn vertical() -> Direction {
         Direction::Vertical
     }
 
     /// Use a [`Horizontal`](Direction::Horizontal) direction.
-    pub fn horizontal() -> Direction {
+    pub const fn horizontal() -> Direction {
         Direction::Horizontal
     }
 

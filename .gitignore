@@ -4,8 +4,7 @@ snapshot_before.png
 snapshot_after.png
 documents_example
 bacon.toml
-.envrc
-.direnv
+.direnv/
 **/.DS_Store
 *demo-*.png
 embedded-frames
@@ -23,4 +22,7 @@ CLAUDE.md
 .zprofile
 .zshrc
 
-.direnv
+.devenv*
+
+# pre-commit
+.pre-commit-config.yaml

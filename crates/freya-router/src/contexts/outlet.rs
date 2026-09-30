@@ -26,7 +26,7 @@ pub struct OutletContext<R> {
 }
 
 impl<R> OutletContext<R> {
-    /// Creates a new outlet context starting at level 0
+    /// Creates an outlet context at the root route level.
     pub fn new() -> Self {
         Self {
             current_level: 0,
@@ -34,7 +34,7 @@ impl<R> OutletContext<R> {
         }
     }
 
-    /// Creates a new outlet context for the next nesting level
+    /// Returns an outlet context for the next nested route level.
     pub fn next(&self) -> Self {
         Self {
             current_level: self.current_level + 1,
@@ -42,7 +42,7 @@ impl<R> OutletContext<R> {
         }
     }
 
-    /// Creates the outlet context of the previous nesting level
+    /// Returns an outlet context for the previous nested route level.
     pub fn previous(&self) -> Self {
         Self {
             current_level: self.current_level.saturating_sub(1),
@@ -50,7 +50,7 @@ impl<R> OutletContext<R> {
         }
     }
 
-    /// Returns the current nesting level of this outlet
+    /// Returns this outlet's nested route level.
     pub fn level(&self) -> usize {
         self.current_level
     }
@@ -65,6 +65,10 @@ impl<R> OutletContext<R> {
     }
 }
 
+/// Returns the outlet context for the current nested route level.
+///
+/// This hook is used internally by [`Outlet`](crate::components::Outlet). It is
+/// public for custom components that render nested routes.
 pub fn use_outlet_context<R: Clone + 'static>() -> OutletContext<R> {
     use_hook(|| {
         if let Some(next) = try_consume_own_context::<OutletContext<R>>() {

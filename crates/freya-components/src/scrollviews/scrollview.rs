@@ -17,10 +17,10 @@ use torin::{
 
 use crate::scrollviews::{
     ScrollBar,
-    ScrollBarThemePartial,
+    ScrollBarContext,
+    ScrollBarThumbEvents,
     ScrollConfig,
     ScrollController,
-    ScrollThumb,
     shared::{
         Axis,
         get_container_sizes,
@@ -64,7 +64,7 @@ pub struct ScrollView {
     invert_scroll_wheel: bool,
     drag_scrolling: bool,
     on_sized: Option<EventHandler<Event<SizedEventData>>>,
-    scrollbar_theme: Option<ScrollBarThemePartial>,
+    scrollbar: Callback<ScrollBarContext, Element>,
     key: DiffKey,
 }
 
@@ -96,7 +96,7 @@ impl Default for ScrollView {
             invert_scroll_wheel: false,
             drag_scrolling: true,
             on_sized: None,
-            scrollbar_theme: None,
+            scrollbar: ScrollBar::default_renderer(),
             key: DiffKey::None,
         }
     }
@@ -152,9 +152,9 @@ impl ScrollView {
         self
     }
 
-    /// Sets the theme used by the scrollbar.
-    pub fn scrollbar_theme(mut self, scrollbar_theme: ScrollBarThemePartial) -> Self {
-        self.scrollbar_theme = Some(scrollbar_theme);
+    /// Sets the renderer used for each visible scrollbar.
+    pub fn scrollbar(mut self, scrollbar: impl Into<Callback<ScrollBarContext, Element>>) -> Self {
+        self.scrollbar = scrollbar.into();
         self
     }
 
@@ -230,18 +230,16 @@ impl Component for ScrollView {
             ),
         );
 
-        let horizontal_scrollbar_is_visible = !timeout.elapsed()
-            && is_scrollbar_visible(
-                self.show_scrollbar,
-                size.read().inner_sizes.width,
-                size.read().area.width(),
-            );
-        let vertical_scrollbar_is_visible = !timeout.elapsed()
-            && is_scrollbar_visible(
-                self.show_scrollbar,
-                size.read().inner_sizes.height,
-                size.read().area.height(),
-            );
+        let horizontal_scrollbar_is_visible = is_scrollbar_visible(
+            self.show_scrollbar,
+            size.read().inner_sizes.width,
+            size.read().area.width(),
+        );
+        let vertical_scrollbar_is_visible = is_scrollbar_visible(
+            self.show_scrollbar,
+            size.read().inner_sizes.height,
+            size.read().area.height(),
+        );
 
         let (scrollbar_x, scrollbar_width) = get_scrollbar_pos_and_size(
             size.read().inner_sizes.width,
@@ -260,7 +258,7 @@ impl Component for ScrollView {
         let scroll_with_arrows = self.scroll_with_arrows;
         let invert_scroll_wheel = self.invert_scroll_wheel;
 
-        let on_capture_global_pointer_press = move |e: Event<PointerEventData>| {
+        let on_capture_global_pointer_up = move |e: Event<PointerEventData>| {
             if clicking_scrollbar.read().is_some() {
                 e.prevent_default();
                 clicking_scrollbar.set(None);
@@ -475,7 +473,7 @@ impl Component for ScrollView {
             .scrollable(true)
             .map(self.on_sized.clone(), |el, on_sized| el.on_sized(on_sized))
             .on_wheel(on_wheel)
-            .on_capture_global_pointer_press(on_capture_global_pointer_press)
+            .on_capture_global_pointer_up(on_capture_global_pointer_up)
             .on_mouse_move(on_mouse_move)
             .on_capture_global_pointer_move(on_capture_global_pointer_move)
             .on_key_down(on_key_down)
@@ -505,35 +503,35 @@ impl Component for ScrollView {
                             .children(self.children.clone()),
                     )
                     .maybe_child(vertical_scrollbar_is_visible.then_some({
-                        rect().child(ScrollBar {
-                            theme: self.scrollbar_theme.clone(),
-                            clicking_scrollbar,
+                        rect().child(self.scrollbar.call(ScrollBarContext {
                             axis: Axis::Y,
-                            offset: scrollbar_y,
-                            size: Size::px(size.read().area.height()),
-                            thumb: ScrollThumb {
-                                theme: self.scrollbar_theme.clone(),
-                                clicking_scrollbar,
-                                axis: Axis::Y,
-                                size: scrollbar_height,
-                            },
-                        })
+                            scroll_position: rendered_position,
+                            viewport_size: size.read().area.size,
+                            content_size: size.read().inner_sizes,
+                            scroll_controller,
+                            timeout,
+                            clicking_scrollbar,
+                            thumb_events: ScrollBarThumbEvents::new(Axis::Y, clicking_scrollbar),
+                            thumb_offset: scrollbar_y,
+                            track_size: Size::px(size.read().area.height()),
+                            thumb_length: scrollbar_height,
+                        }))
                     })),
             )
             .maybe_child(horizontal_scrollbar_is_visible.then_some({
-                rect().child(ScrollBar {
-                    theme: self.scrollbar_theme.clone(),
-                    clicking_scrollbar,
+                rect().child(self.scrollbar.call(ScrollBarContext {
                     axis: Axis::X,
-                    offset: scrollbar_x,
-                    size: Size::px(size.read().area.width()),
-                    thumb: ScrollThumb {
-                        theme: self.scrollbar_theme.clone(),
-                        clicking_scrollbar,
-                        axis: Axis::X,
-                        size: scrollbar_width,
-                    },
-                })
+                    scroll_position: rendered_position,
+                    viewport_size: size.read().area.size,
+                    content_size: size.read().inner_sizes,
+                    scroll_controller,
+                    timeout,
+                    clicking_scrollbar,
+                    thumb_events: ScrollBarThumbEvents::new(Axis::X, clicking_scrollbar),
+                    thumb_offset: scrollbar_x,
+                    track_size: Size::px(size.read().area.width()),
+                    thumb_length: scrollbar_width,
+                }))
             }))
     }
 

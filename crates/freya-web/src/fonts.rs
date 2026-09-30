@@ -6,6 +6,7 @@ use freya_engine::prelude::{
     FontMgr,
     SkData,
     TypefaceFontProvider,
+    register_font_typeface,
 };
 
 /// Fonts available to the app, embedded at startup or loaded at runtime.
@@ -62,7 +63,7 @@ impl Fonts {
             return false;
         };
 
-        self.provider.register_typeface(typeface, Some(name));
+        register_font_typeface(&mut self.provider, name, typeface);
         true
     }
 }

@@ -96,6 +96,7 @@ pub struct AppWindow {
     pub(crate) nodes_state: NodesState<NodeId>,
 
     pub(crate) position: CursorPoint,
+    pub(crate) cursor_in_window: bool,
     pub(crate) mouse_state: ElementState,
     pub(crate) modifiers_state: ModifiersState,
     pub(crate) cursor_icon: CursorIcon,
@@ -411,6 +412,7 @@ impl AppWindow {
 
             mouse_state: ElementState::Released,
             position: CursorPoint::default(),
+            cursor_in_window: false,
             modifiers_state: ModifiersState::default(),
             cursor_icon: CursorIcon::default(),
             pressed_keys: Vec::new(),
@@ -455,7 +457,7 @@ impl AppWindow {
 
     /// Resolve the cursor icon from the hovered nodes and update the window cursor if it changed.
     pub(crate) fn update_cursor_icon(&mut self) {
-        if self.position == CursorPoint::from((-1., -1.)) {
+        if !self.cursor_in_window {
             return;
         }
         let cursor_icon = self.tree.cursor_icon(&self.nodes_state);

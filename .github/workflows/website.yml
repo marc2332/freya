@@ -8,15 +8,16 @@ on:
     paths:
       - "README.md"
       - "website/**"
+      - "Cargo.lock"
       - "crates/**"
       - "examples/web/**"
       - ".github/workflows/website.yml"
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - "README.md"
       - "website/**"
-      - "crates/**"
-      - "examples/web/**"
+      - "Cargo.lock"
       - ".github/workflows/website.yml"
 
 permissions:
@@ -29,7 +30,7 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name != 'pull_request' || (!github.event.pull_request.draft && github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
 
     steps:
@@ -52,7 +53,7 @@ jobs:
       - name: Install emsdk
         uses: mymindstorm/setup-emsdk@6ab9eb1bda2574c4ddb79809fc9247783eaf9021 # v14
         with:
-          version: 4.0.0
+          version: 5.0.0
           actions-cache-folder: emsdk-cache
 
       - name: Install just
