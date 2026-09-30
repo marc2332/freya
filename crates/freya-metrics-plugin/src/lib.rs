@@ -384,6 +384,14 @@ impl FreyaPlugin for MetricsPlugin {
                                     * 1000.0
                             ),
                         ),
+                        (
+                            "Window Size",
+                            format!(
+                                "{}x{}",
+                                window.inner_size().width,
+                                window.inner_size().height
+                            ),
+                        ),
                         ("Scale Factor", format!("{}x", window.scale_factor())),
                         (
                             "Animation clock speed",
