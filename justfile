@@ -72,17 +72,14 @@ ps:
 pa:
     cargo bench --package freya-core --bench dev_perf --features "hotpath, hotpath-alloc"
 
-ps-ci:
-    cargo bench --package freya-core --bench dev_perf --features "hotpath"
-
-pa-ci:
-    cargo bench --package freya-core --bench dev_perf --features "hotpath, hotpath-alloc"
+pd-ci:
+    cargo bench --package freya-core --bench dev_perf --features "hotpath, hotpath-alloc, hotpath-cloud"
 
 pc:
     cargo bench --package freya-core --bench core_perf --features "hotpath, hotpath-alloc"
 
 pc-ci:
-    cargo bench --package freya-core --bench core_perf --features "hotpath, hotpath-alloc"
+    cargo bench --package freya-core --bench core_perf --features "hotpath, hotpath-alloc, hotpath-cloud"
 
 ba:
     cargo build --all-targets --workspace -F freya/all-debug
