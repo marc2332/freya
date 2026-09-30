@@ -124,6 +124,7 @@ pub mod prelude {
             context::*,
             effect::*,
             future_task::*,
+            global_context::*,
             memo::*,
             reactive::*,
             readable::*,
@@ -191,7 +192,7 @@ pub mod integration {
             platform::*,
         },
         lifecycle::{
-            context::GlobalContexts,
+            global_context::GlobalContexts,
             state::State,
             writable_utils::WritableUtils,
         },

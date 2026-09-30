@@ -9,11 +9,15 @@
 //! - [`spawn`](crate::prelude::spawn) runs a future attached to the current
 //!   component scope, it gets cancelled when that component unmounts. Use it for
 //!   async work owned by a component.
-//! - [`spawn_forever`](crate::prelude::spawn_forever) runs a future attached to
-//!   the root scope, it keeps running until the app exits. Use it for app-wide
-//!   background work that must outlive the component that started it.
+//! - [`spawn_in_window`](crate::prelude::spawn_in_window) runs a future attached
+//!   to the window's root scope, it survives its component but stops when the
+//!   window closes.
+//! - [`spawn_global`](crate::prelude::spawn_global) runs a future on the event
+//!   loop, it survives window closure and stops when the event loop exits.
+//!   It can access [`GlobalContexts`](crate::prelude::GlobalContexts), but not
+//!   component or window context.
 //!
-//! Both return a [`TaskHandle`](crate::prelude::TaskHandle) to cancel the task
+//! All three return a [`TaskHandle`](crate::prelude::TaskHandle) to cancel the task
 //! manually. [`.owned()`](crate::prelude::TaskHandle::owned) upgrades it to an
 //! [`OwnedTaskHandle`](crate::prelude::OwnedTaskHandle) that cancels the task
 //! when its last clone is dropped.

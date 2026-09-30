@@ -451,7 +451,7 @@ impl Component for ImageViewer {
                     let asset_config = asset_config.clone();
                     let target = *target;
                     let sampling_mode = sampling_mode.clone();
-                    spawn_forever(async move {
+                    spawn_in_window(async move {
                         match source.load(target, sampling_mode).await {
                             Ok((image, bytes)) => {
                                 asset_cacher.update_asset(
