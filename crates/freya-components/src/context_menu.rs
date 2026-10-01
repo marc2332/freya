@@ -134,7 +134,7 @@ impl ComponentOwned for ContextMenuViewer {
         });
 
         use_side_effect(move || {
-            if !*Platform::get().is_app_focused.read() {
+            if !*Platform::get().current_window().is_app_focused.read() {
                 context.menu.set(None);
             }
         });

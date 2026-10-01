@@ -651,7 +651,8 @@ fn build_theme(name: &'static str, mut colors: ColorsSheet) -> Theme {
 }
 
 fn current_accent_color() -> Option<Color> {
-    let platform: Platform = try_consume_root_context()?;
+    let window_id: CurrentWindowId = try_consume_root_context()?;
+    let platform = Platform::get().try_window(window_id.0)?;
     let accent = platform.accent_color.read().0?;
     let [r, g, b, _] = accent.to_u8_array();
     Some(Color::from_rgb(r, g, b))

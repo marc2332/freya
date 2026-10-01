@@ -65,14 +65,13 @@ impl ContainerExt for HtmlViewer {}
 
 impl Component for HtmlViewer {
     fn render(&self) -> impl IntoElement {
-        let platform = Platform::get();
+        let platform = Platform::get().current_window();
         let mut handle = self.handle;
         let fonts = self.fonts.clone();
 
         let state = use_hook(move || {
-            let platform = Platform::get();
+            let platform = Platform::get().current_window();
             let resource_cache = ResourceCache::get();
-
             let (wake_tx, mut wake_rx) = futures_channel::mpsc::unbounded::<()>();
             let (nav_tx, mut nav_rx) = futures_channel::mpsc::unbounded::<String>();
             let (fetch_tx, mut fetch_rx) = futures_channel::mpsc::unbounded::<FetchRequest>();

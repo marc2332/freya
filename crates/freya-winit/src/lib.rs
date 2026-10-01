@@ -6,7 +6,10 @@ use std::sync::Arc;
 
 use freya_core::{
     integration::GlobalContexts,
-    prelude::GlobalTasks,
+    prelude::{
+        GlobalTasks,
+        Platform,
+    },
 };
 
 use crate::{
@@ -131,6 +134,12 @@ fn launch_inner(mut launch_config: LaunchConfig) {
     freya_core::hotreload::connect_subsecond();
 
     let global_contexts = GlobalContexts::register();
+    global_contexts.insert_context(Platform::new({
+        let proxy = proxy.clone();
+        move |event| {
+            let _ = proxy.send_event(NativeEvent::Generic(NativeGenericEvent::User(event)));
+        }
+    }));
     global_contexts.insert_context(crate::clipboard::create_clipboard(
         event_loop.owned_display_handle(),
     ));
