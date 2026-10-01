@@ -217,19 +217,23 @@ impl WinitPlatformExt for Platform {
 
     fn set_window_title(&self, window_id: WindowId, title: impl Into<String>) {
         let title = title.into();
-        let _ = self.post_callback(move |context| {
-            if let Some(app) = context.windows.get_mut(&window_id) {
-                app.set_title(&title);
-            }
-        });
+        self.send(GlobalUserEvent::Erased(SingleThreadErasedEvent(Box::new(
+            NativePlatformErasedEventAction::RendererCallback(Box::new(move |context| {
+                if let Some(app) = context.windows.get_mut(&window_id) {
+                    app.set_title(&title);
+                }
+            })),
+        ))));
     }
 
     fn with_window(&self, window_id: WindowId, callback: impl FnOnce(&mut Window) + 'static) {
-        let _ = self.post_callback(move |context| {
-            if let Some(app) = context.windows.get_mut(&window_id) {
-                callback(&mut app.window);
-            }
-        });
+        self.send(GlobalUserEvent::Erased(SingleThreadErasedEvent(Box::new(
+            NativePlatformErasedEventAction::RendererCallback(Box::new(move |context| {
+                if let Some(app) = context.windows.get_mut(&window_id) {
+                    callback(&mut app.window);
+                }
+            })),
+        ))));
     }
 
     fn post_callback<F, T: 'static>(&self, callback: F) -> futures_channel::oneshot::Receiver<T>
