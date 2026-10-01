@@ -10,7 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: hotpath-${{ github.ref }}
-      cancel-in-progress: true
+      # A cancelled push run leaves its commit without a baseline.
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
     permissions:
       contents: read
       id-token: write
@@ -31,14 +32,14 @@ jobs:
       - name: Dev benchmark
         env:
           HOTPATH_BENCHMARK: dev_perf
-          HOTPATH_UPLOAD: ${{ github.event_name == 'push' && '1' || '0' }}
+          HOTPATH_UPLOAD: ${{ github.event_name == 'push' && 'fail-on-error' || '0' }}
           HOTPATH_OUTPUT_FORMAT: ${{ github.event_name == 'push' && 'none' || 'json' }}
           HOTPATH_OUTPUT_PATH: ${{ github.workspace }}/dev_perf.json
         run: just pd-ci
       - name: Core benchmark
         env:
           HOTPATH_BENCHMARK: core
-          HOTPATH_UPLOAD: ${{ github.event_name == 'push' && '1' || '0' }}
+          HOTPATH_UPLOAD: ${{ github.event_name == 'push' && 'fail-on-error' || '0' }}
           HOTPATH_OUTPUT_FORMAT: ${{ github.event_name == 'push' && 'none' || 'json' }}
           HOTPATH_OUTPUT_PATH: ${{ github.workspace }}/core.json
         run: just pc-ci
