@@ -85,9 +85,6 @@ use crate::{
 
 pub type RenderCallback = Box<dyn FnOnce(&mut SkiaSurface)>;
 
-#[derive(Clone, Copy)]
-pub struct CurrentWindowId(pub WindowId);
-
 pub struct AppWindow {
     pub(crate) runner: Runner,
     pub(crate) tree: Tree,
@@ -121,7 +118,7 @@ pub struct AppWindow {
 
     pub(crate) ticker_sender: RenderingTickerSender,
 
-    pub(crate) platform: Platform,
+    pub(crate) platform: PlatformWindow,
 
     pub(crate) animation_clock: AnimationClock,
 
@@ -276,8 +273,6 @@ impl AppWindow {
 
         runner.provide_root_context(AssetCacher::create);
 
-        runner.provide_root_context(|| CurrentWindowId(window.id()));
-
         let custom_scale_factor = clamp_custom_scale_factor(window_config.custom_scale_factor);
         let scale_factor = window.scale_factor() * custom_scale_factor;
 
@@ -286,7 +281,7 @@ impl AppWindow {
         let window_size = window.inner_size();
         let accent_color_preference = accent_color_preference();
         runner.provide_root_context(TargetPlatform::detect);
-        let platform = runner.provide_root_context({
+        let platform = runner.run_in({
             let event_loop_proxy = event_loop_proxy.clone();
             let window_id = window.id();
             let theme = match window.theme() {
@@ -294,7 +289,8 @@ impl AppWindow {
                 _ => PreferredTheme::Light,
             };
             let is_app_focused = window.has_focus();
-            move || Platform {
+            move || PlatformWindow {
+                id: u64::from(window_id),
                 focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
                 focused_accessibility_node: State::create(accesskit::Node::new(
                     accesskit::Role::Window,
@@ -318,8 +314,8 @@ impl AppWindow {
             }
         });
 
-        runner.provide_root_context(|| tree.accessibility_generator.clone());
-
+        Platform::get().register_window(platform.clone());
+        runner.provide_root_context(|| CurrentWindowId(platform.id));
         runner.provide_root_context(|| tree.accessibility_generator.clone());
 
         runner.provide_root_context(|| font_collection.clone());
@@ -476,7 +472,7 @@ impl AppWindow {
         self.window.scale_factor() * *self.platform.custom_scale_factor.peek()
     }
 
-    /// Syncs the effective scale factor on [`Platform`] and invalidates layout.
+    /// Syncs the effective scale factor on [`PlatformWindow`] and invalidates layout.
     pub fn scale_factor_changed(&mut self) {
         self.platform
             .scale_factor

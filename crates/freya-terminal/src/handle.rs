@@ -246,7 +246,7 @@ impl TerminalHandle {
             modifiers: Modifiers::empty(),
         }));
 
-        let platform = Platform::get();
+        let platform = Platform::get().current_window();
         let task = spawn_in_window({
             let term = term.clone();
             let backend = backend.clone();
@@ -454,7 +454,7 @@ impl TerminalHandle {
             return;
         }
         term.scroll_display(target);
-        Platform::get().send(UserEvent::RequestRedraw);
+        Platform::get().current_window().request_redraw();
     }
 
     /// Current working directory reported via OSC 7.
@@ -629,7 +629,7 @@ impl TerminalHandle {
     pub fn start_selection(&self, row: f32, col: f32, selection_type: SelectionType) {
         let (point, side) = self.point_and_side_at(row, col);
         self.term.borrow_mut().selection = Some(Selection::new(selection_type, point, side));
-        Platform::get().send(UserEvent::RequestRedraw);
+        Platform::get().current_window().request_redraw();
     }
 
     /// Extend the in-progress selection, if any.
@@ -637,7 +637,7 @@ impl TerminalHandle {
         let (point, side) = self.point_and_side_at(row, col);
         if let Some(selection) = self.term.borrow_mut().selection.as_mut() {
             selection.update(point, side);
-            Platform::get().send(UserEvent::RequestRedraw);
+            Platform::get().current_window().request_redraw();
         }
     }
 

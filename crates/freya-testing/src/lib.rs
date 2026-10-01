@@ -119,13 +119,23 @@ pub struct TestingRunner {
     font_manager: FontMgr,
     font_collection: FontCollection,
 
-    platform: Platform,
+    platform: PlatformWindow,
 
     animation_clock: AnimationClock,
     ticker_sender: RenderingTickerSender,
 
     default_fonts: Vec<Cow<'static, str>>,
     scale_factor: f64,
+}
+
+impl Drop for TestingRunner {
+    fn drop(&mut self) {
+        if let Some(contexts) = GlobalContexts::try_get()
+            && let Some(platform) = contexts.try_get_context::<Platform>()
+        {
+            platform.unregister_window(self.platform.id);
+        }
+    }
 }
 
 impl TestingRunner {
@@ -173,12 +183,24 @@ impl TestingRunner {
         font_collection.paragraph_cache_mut().turn_on(false);
 
         let pending_fonts = Rc::new(RefCell::new(Vec::new()));
+        GlobalContexts::get().insert_context(Platform::new({
+            let pending_fonts = pending_fonts.clone();
+            move |event| {
+                if let GlobalUserEvent::LoadFont {
+                    font_name,
+                    font_data,
+                } = event
+                {
+                    pending_fonts.borrow_mut().push((font_name, font_data));
+                }
+            }
+        }));
 
         runner.provide_root_context(TargetPlatform::detect);
-        let platform = runner.provide_root_context({
+        let platform = runner.run_in({
             let requested_focus_strategy = requested_focus_strategy.clone();
-            let pending_fonts = pending_fonts.clone();
-            || Platform {
+            || PlatformWindow {
+                id: 0,
                 focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
                 focused_accessibility_node: State::create(accesskit::Node::new(
                     accesskit::Role::Window,
@@ -195,14 +217,7 @@ impl TestingRunner {
                         UserEvent::FocusAccessibilityNode(strategy) => {
                             requested_focus_strategy.borrow_mut().replace(strategy);
                         }
-                        UserEvent::LoadFont {
-                            font_name,
-                            font_data,
-                        } => {
-                            pending_fonts.borrow_mut().push((font_name, font_data));
-                        }
                         UserEvent::RequestRedraw
-                        | UserEvent::OpenUrl(_)
                         | UserEvent::SetCustomScaleFactor(_)
                         | UserEvent::Erased(_) => {
                             // Nothing
@@ -212,6 +227,8 @@ impl TestingRunner {
             }
         });
 
+        Platform::get().register_window(platform.clone());
+        runner.provide_root_context(|| CurrentWindowId(platform.id));
         runner.provide_root_context(|| tree.borrow().accessibility_generator.clone());
 
         let hook_result = hook(&mut runner);
