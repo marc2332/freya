@@ -18,32 +18,32 @@ pub enum Alignment {
 
 impl Alignment {
     /// Use a [`Start`](Alignment::Start) alignment.
-    pub fn start() -> Alignment {
+    pub const fn start() -> Alignment {
         Alignment::Start
     }
 
     /// Use a [`Center`](Alignment::Center) alignment.
-    pub fn center() -> Alignment {
+    pub const fn center() -> Alignment {
         Alignment::Center
     }
 
     /// Use an [`End`](Alignment::End) alignment.
-    pub fn end() -> Alignment {
+    pub const fn end() -> Alignment {
         Alignment::End
     }
 
     /// Use a [`SpaceBetween`](Alignment::SpaceBetween) alignment.
-    pub fn space_between() -> Alignment {
+    pub const fn space_between() -> Alignment {
         Alignment::SpaceBetween
     }
 
     /// Use a [`SpaceEvenly`](Alignment::SpaceEvenly) alignment.
-    pub fn space_evenly() -> Alignment {
+    pub const fn space_evenly() -> Alignment {
         Alignment::SpaceEvenly
     }
 
     /// Use a [`SpaceAround`](Alignment::SpaceAround) alignment.
-    pub fn space_around() -> Alignment {
+    pub const fn space_around() -> Alignment {
         Alignment::SpaceAround
     }
 

@@ -264,7 +264,7 @@ impl Component for CodeEditor {
             }
         };
 
-        let on_global_pointer_press = {
+        let on_global_pointer_up = {
             let mut editor = editor.clone();
             let font_family = font_family.clone();
             move |_: Event<PointerEventData>| {
@@ -298,7 +298,7 @@ impl Component for CodeEditor {
             .maybe(!read_only, |el| {
                 el.on_key_down(on_key_down).on_key_up(on_key_up)
             })
-            .on_global_pointer_press(on_global_pointer_press)
+            .on_global_pointer_up(on_global_pointer_up)
             .child(
                 rect()
                     .horizontal()
