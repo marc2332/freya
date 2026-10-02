@@ -27,7 +27,7 @@ use freya_engine::prelude::{
 };
 use freya_testing::TestingRunner;
 
-const ITERATIONS: usize = 100;
+const ITERATIONS: usize = 200;
 const COLUMNS: usize = 45;
 const ROWS: usize = 40;
 const CELL_WIDTH: f32 = 54.;

@@ -82,10 +82,10 @@ pc-ci:
     cargo bench --package freya-core --bench core_perf --features "hotpath, hotpath-alloc, hotpath-cloud"
 
 pr workload="render_suite":
-    cargo test --package freya-core --test render_performance --release --features "hotpath" "{{workload}}" -- --ignored --exact --nocapture --test-threads=1
+    HOTPATH_FOCUS="${HOTPATH_FOCUS:-/[/](frame|update|painting)$/}" HOTPATH_EXCLUDE_WRAPPER="${HOTPATH_EXCLUDE_WRAPPER:-1}" cargo test --package freya-core --test render_performance --release --features "hotpath" "{{workload}}" -- --ignored --exact --nocapture --test-threads=1
 
 pr-ci:
-    cargo test --package freya-core --test render_performance --release --features "hotpath, hotpath-alloc, hotpath-cloud" render_suite -- --ignored --exact --nocapture --test-threads=1
+    HOTPATH_FOCUS="${HOTPATH_FOCUS:-/[/](frame|update|painting)$/}" HOTPATH_EXCLUDE_WRAPPER="${HOTPATH_EXCLUDE_WRAPPER:-1}" cargo test --package freya-core --test render_performance --release --features "hotpath, hotpath-alloc, hotpath-cloud" render_suite -- --ignored --exact --nocapture --test-threads=1
 
 ba:
     cargo build --all-targets --workspace -F freya/all-debug
