@@ -62,7 +62,11 @@
     rust = rust-overlay.lib.mkRustBin {} pkgs;
     stableRust = rust.stable."1.97.1".default.override {
       extensions = ["rust-src" "rust-analyzer"];
-      targets = ["wasm32-unknown-emscripten"];
+      targets = [
+        "wasm32-unknown-emscripten"
+        "aarch64-linux-android"
+        "x86_64-linux-android"
+      ];
     };
     nightlyRust = rust.nightly."2026-03-15".minimal.override {
       extensions = ["rust-src" "rust-analyzer" "rustfmt"];
