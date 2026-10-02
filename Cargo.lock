@@ -2980,6 +2980,7 @@ dependencies = [
  "torin",
  "tracing",
  "tracing-subscriber",
+ "tree-sitter-rust",
  "unicode-segmentation",
 ]
 
