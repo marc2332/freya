@@ -19,11 +19,10 @@ use torin::prelude::{
 
 use crate::data::TextStyleState;
 
-/// Context for drawing a rect background or overlaid text in local logical coordinates.
+/// Context for drawing a rect background or overlaid text.
 pub struct RenderContext<'a> {
     pub canvas: &'a Canvas,
     pub font_collection: &'a mut FontCollection,
-    /// Position in the window in logical coordinates. The canvas remains local to this position.
     pub origin: Point2D,
     pub size: Size2D,
     pub text_style_state: &'a TextStyleState,
@@ -70,6 +69,6 @@ impl fmt::Debug for RenderCallback {
 
 impl fmt::Display for RenderCallback {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(formatter, "callback({:p})", Rc::as_ptr(&self.0))
+        write!(formatter, "RenderCallback({:p})", Rc::as_ptr(&self.0))
     }
 }
