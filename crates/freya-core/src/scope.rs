@@ -43,6 +43,9 @@ pub struct Scope {
 
     pub props: Rc<dyn ComponentProps>,
 
+    #[cfg(feature = "hotreload")]
+    pub reload_generation: u64,
+
     pub element: Option<PathElement>,
 }
 
@@ -97,6 +100,7 @@ impl ScopeStorage {
     }
 
     /// Resets only the hooks state, preserving contexts.
+    #[cfg(feature = "hotreload")]
     #[must_use]
     pub(crate) fn reset_hooks(&mut self) -> Vec<Rc<dyn Any>> {
         self.current_run = 0;
