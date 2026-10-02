@@ -302,32 +302,55 @@ fn animation_app() -> impl IntoElement {
     }))
 }
 
+struct TimingNames {
+    frame: &'static str,
+    update: &'static str,
+    painting: &'static str,
+}
+
+macro_rules! timings {
+    ($name:literal) => {
+        TimingNames {
+            frame: concat!($name, "/frame"),
+            update: concat!($name, "/update"),
+            painting: concat!($name, "/painting"),
+        }
+    };
+}
+
 struct RenderWorkload {
     runner: TestingRunner,
 }
 
 impl RenderWorkload {
-    fn run(&mut self, action: impl FnMut(&mut TestingRunner, usize)) {
+    fn run(&mut self, names: TimingNames, action: impl FnMut(&mut TestingRunner, usize)) {
         let initial = self.runner.render();
-        self.run_with_interval(Duration::ZERO, action);
+        self.run_with_interval(names, Duration::ZERO, action);
         assert_ne!(initial.as_bytes(), self.runner.render().as_bytes());
     }
 
+    #[cfg_attr(not(feature = "hotpath"), allow(unused_variables))]
     fn run_with_interval(
         &mut self,
+        names: TimingNames,
         interval: Duration,
         mut action: impl FnMut(&mut TestingRunner, usize),
     ) {
+        let TimingNames {
+            frame,
+            update,
+            painting,
+        } = names;
         for iteration in 0..ITERATIONS {
             if !interval.is_zero() {
                 std::thread::sleep(interval);
             }
-            hotpath::measure_block!("Interaction to rendered frame", {
-                hotpath::measure_block!("Interaction and update", {
+            hotpath::measure_block!(frame, {
+                hotpath::measure_block!(update, {
                     action(&mut self.runner, iteration);
                     self.runner.poll_n(Duration::ZERO, 2);
                 });
-                hotpath::measure_block!("Painting", {
+                hotpath::measure_block!(painting, {
                     self.runner.render_to_surface();
                 });
             });
@@ -361,33 +384,28 @@ fn mount(app: impl Into<AppComponent>) -> (RenderWorkload, Rc<Cell<usize>>) {
     (RenderWorkload { runner }, count)
 }
 
-#[test]
-#[ignore = "Render profiling workload"]
-#[cfg_attr(feature = "hotpath", hotpath::main(percentiles = [50, 95, 99]))]
 fn small_ui() {
     let (mut workload, count) = mount(|| controls_app(2));
     let targets = workload.buttons();
     assert_eq!(targets.len(), 2);
 
-    workload.run(|runner, iteration| runner.click_cursor(targets[iteration % targets.len()]));
+    workload.run(timings!("small-ui"), |runner, iteration| {
+        runner.click_cursor(targets[iteration % targets.len()]);
+    });
     assert_eq!(count.get(), ITERATIONS);
 }
 
-#[test]
-#[ignore = "Render profiling workload"]
-#[cfg_attr(feature = "hotpath", hotpath::main(percentiles = [50, 95, 99]))]
 fn medium_ui() {
     let (mut workload, count) = mount(|| controls_app(12));
     let targets = workload.buttons();
     assert_eq!(targets.len(), 12);
 
-    workload.run(|runner, iteration| runner.click_cursor(targets[iteration % targets.len()]));
+    workload.run(timings!("medium-ui"), |runner, iteration| {
+        runner.click_cursor(targets[iteration % targets.len()]);
+    });
     assert_eq!(count.get(), ITERATIONS);
 }
 
-#[test]
-#[ignore = "Render profiling workload"]
-#[cfg_attr(feature = "hotpath", hotpath::main(percentiles = [50, 95, 99]))]
 fn large_switches() {
     let (mut runner, count) = TestingRunner::new(
         switches_app,
@@ -399,7 +417,7 @@ fn large_switches() {
     runner.render_to_surface();
     let mut workload = RenderWorkload { runner };
 
-    workload.run(|runner, iteration| {
+    workload.run(timings!("large-switches"), |runner, iteration| {
         let index = 1 + iteration * 17 % (COLUMNS * ROWS - 1);
         runner.click_cursor((
             (index % COLUMNS) as f64 * f64::from(CELL_WIDTH) + 24.,
@@ -409,9 +427,6 @@ fn large_switches() {
     assert_eq!(count.get(), ITERATIONS);
 }
 
-#[test]
-#[ignore = "Render profiling workload"]
-#[cfg_attr(feature = "hotpath", hotpath::main(percentiles = [50, 95, 99]))]
 fn images_medium() {
     let bytes = Bytes::from_static(include_bytes!("../../../examples/rust_logo.png"));
     let image = SkImage::from_encoded(SkData::new_copy(&bytes)).expect("Image must decode");
@@ -430,7 +445,7 @@ fn images_medium() {
     count.set(0);
     let mut workload = RenderWorkload { runner };
 
-    workload.run(|runner, iteration| {
+    workload.run(timings!("images-medium"), |runner, iteration| {
         let index = iteration % 10;
         runner.move_cursor((
             (index % 5) as f64 * 180. + 90.,
@@ -440,9 +455,6 @@ fn images_medium() {
     assert_eq!(count.get(), ITERATIONS);
 }
 
-#[test]
-#[ignore = "Render profiling workload"]
-#[cfg_attr(feature = "hotpath", hotpath::main(percentiles = [50, 95, 99]))]
 fn medium_text() {
     let (mut workload, count) = mount(|| {
         ScrollView::new().children((0..20).map(|index| TextBlock {
@@ -451,13 +463,12 @@ fn medium_text() {
             key: (&index).into(),
         }))
     });
-    workload.run(|runner, _| runner.click_cursor((100., 40.)));
+    workload.run(timings!("medium-text"), |runner, _| {
+        runner.click_cursor((100., 40.))
+    });
     assert_eq!(count.get(), ITERATIONS);
 }
 
-#[test]
-#[ignore = "Render profiling workload"]
-#[cfg_attr(feature = "hotpath", hotpath::main(percentiles = [50, 95, 99]))]
 fn large_text() {
     let (mut workload, count) = mount(|| {
         ScrollView::new().children((0..200).map(|index| TextBlock {
@@ -466,13 +477,12 @@ fn large_text() {
             key: (&index).into(),
         }))
     });
-    workload.run(|runner, _| runner.click_cursor((100., 40.)));
+    workload.run(timings!("large-text"), |runner, _| {
+        runner.click_cursor((100., 40.))
+    });
     assert_eq!(count.get(), ITERATIONS);
 }
 
-#[test]
-#[ignore = "Render profiling workload"]
-#[cfg_attr(feature = "hotpath", hotpath::main(percentiles = [50, 95, 99]))]
 fn medium_code_editor_typing() {
     let source = (0..200)
         .map(|line| format!("fn function_{line}() -> usize {{ {line} }}\n"))
@@ -501,7 +511,9 @@ fn medium_code_editor_typing() {
     runner.render_to_surface();
     let mut workload = RenderWorkload { runner };
 
-    workload.run(|runner, _| runner.write_text("x"));
+    workload.run(timings!("medium-code-editor-typing"), |runner, _| {
+        runner.write_text("x")
+    });
     let editor = editor.peek();
     assert_eq!(editor.rope.len_chars(), initial_length + ITERATIONS);
     assert_eq!(
@@ -510,29 +522,24 @@ fn medium_code_editor_typing() {
     );
 }
 
-#[test]
-#[ignore = "Render profiling workload"]
-#[cfg_attr(feature = "hotpath", hotpath::main(percentiles = [50, 95, 99]))]
 fn medium_scrolling() {
     let (mut workload, _) = mount(|| ScrollView::new().children((0..200).map(scroll_item)));
-    workload.run(|runner, _| runner.scroll((450., 300.), (0., -32.)));
+    workload.run(timings!("medium-scrolling"), |runner, _| {
+        runner.scroll((450., 300.), (0., -32.))
+    });
 }
 
-#[test]
-#[ignore = "Render profiling workload"]
-#[cfg_attr(feature = "hotpath", hotpath::main(percentiles = [50, 95, 99]))]
 fn medium_virtualscrolling() {
     let (mut workload, _) = mount(|| {
         VirtualScrollView::new(|item, _| scroll_item(item.index).into_element())
             .length(200usize)
             .item_size(32.)
     });
-    workload.run(|runner, _| runner.scroll((450., 300.), (0., -32.)));
+    workload.run(timings!("medium-virtualscrolling"), |runner, _| {
+        runner.scroll((450., 300.), (0., -32.))
+    });
 }
 
-#[test]
-#[ignore = "Render profiling workload"]
-#[cfg_attr(feature = "hotpath", hotpath::main(percentiles = [50, 95, 99]))]
 fn medium_animation() {
     let (mut runner, changed) = TestingRunner::new(
         animation_app,
@@ -543,6 +550,50 @@ fn medium_animation() {
     runner.render_to_surface();
     let mut workload = RenderWorkload { runner };
 
-    workload.run_with_interval(Duration::from_millis(16), |_, _| {});
+    workload.run_with_interval(
+        timings!("medium-animation"),
+        Duration::from_millis(16),
+        |_, _| {},
+    );
     assert!(changed.get());
 }
+
+#[cfg_attr(feature = "hotpath", hotpath::main(percentiles = [50, 95, 99], functions_limit = 0))]
+fn profile(workloads: &[fn()]) {
+    for workload in workloads {
+        workload();
+    }
+}
+
+macro_rules! profiling_tests {
+    ($($workload:ident),+ $(,)?) => {
+        #[test]
+        #[ignore = "Render profiling workload"]
+        fn render_suite() {
+            profile(&[$($workload),+]);
+        }
+
+        mod individual {
+            $(
+                #[test]
+                #[ignore = "Render profiling workload"]
+                fn $workload() {
+                    crate::profile(&[crate::$workload]);
+                }
+            )+
+        }
+    };
+}
+
+profiling_tests!(
+    small_ui,
+    medium_ui,
+    large_switches,
+    images_medium,
+    medium_text,
+    large_text,
+    medium_code_editor_typing,
+    medium_scrolling,
+    medium_virtualscrolling,
+    medium_animation,
+);
