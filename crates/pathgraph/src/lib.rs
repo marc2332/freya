@@ -74,7 +74,7 @@ impl<V> PathGraphEntry<V> {
             unreachable!()
         } else if path.len() == 1 {
             if path[0] as usize >= self.items.len() {
-                self.items.pop()
+                None
             } else {
                 Some(self.items.remove(path[0] as usize))
             }
@@ -446,6 +446,22 @@ mod tests {
         assert_eq!(graph.get(&[0, 2]), Some(&100));
         assert_eq!(graph.get(&[0, 3]), None);
         assert_eq!(graph.len(&[0]), Some(3));
+    }
+
+    /// Removing an index past the end of a children list must not touch any sibling.
+    #[test]
+    fn remove_out_of_range_index_removes_nothing() {
+        let mut graph = PathGraph::<u32>::new();
+        graph.insert(&[], 0);
+        graph.insert(&[0], 10);
+        graph.insert(&[0, 0], 100);
+        graph.insert(&[0, 1], 200);
+
+        assert!(graph.remove(&[0, 9]).is_none());
+
+        assert_eq!(graph.get(&[0, 0]), Some(&100));
+        assert_eq!(graph.get(&[0, 1]), Some(&200));
+        assert_eq!(graph.len(&[0]), Some(2));
     }
 
     /// `insert` still shifts when the target slot holds a real sibling.
