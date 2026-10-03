@@ -16,7 +16,7 @@ use freya_core::{
         TaskHandle,
         UseId,
         UserEvent,
-        spawn_forever,
+        spawn_in_window,
     },
 };
 use futures_lite::{
@@ -247,7 +247,7 @@ impl TerminalHandle {
         }));
 
         let platform = Platform::get();
-        let task = spawn_forever({
+        let task = spawn_in_window({
             let term = term.clone();
             let backend = backend.clone();
             let closer_notifier = closer_notifier.clone();

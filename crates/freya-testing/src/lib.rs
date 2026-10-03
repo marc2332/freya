@@ -137,18 +137,18 @@ impl TestingRunner {
         hook: impl FnOnce(&mut Runner) -> T,
         scale_factor: f64,
     ) -> (Self, T) {
+        GlobalContexts::register();
+
         let (events_sender, events_receiver) = futures_channel::mpsc::unbounded();
         let app = app.into();
         let mut runner = Runner::new(move || integration(app.clone()).into_element());
 
-        runner.provide_root_context(|| {
-            let global_contexts = GlobalContexts::default();
-            global_contexts.insert_context(Clipboard::create(
+        runner.with_root_context(|| {
+            GlobalContexts::get().insert_context(Clipboard::create(
                 ClipboardContext::new()
                     .ok()
                     .map(|clipboard| Box::new(clipboard) as Box<dyn ClipboardProvider>),
             ));
-            global_contexts
         });
 
         runner.provide_root_context(ScreenReader::new);

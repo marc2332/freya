@@ -471,11 +471,9 @@ impl LaunchConfig {
         self
     }
 
-    /// Register a single-thread launch task.
-    /// The task receives a [LaunchProxy] that can be used to get access to [RendererContext](crate::renderer::RendererContext).
-    /// The provided callback should return a `'static` future which will be scheduled on the renderer
-    /// thread and polled until completion.
-    pub fn with_future<F, Fut>(mut self, task: F) -> Self
+    /// Register a task on the event loop with a [`LaunchProxy`].
+    /// The task runs on the renderer thread until completion or event-loop shutdown.
+    pub fn with_task<F, Fut>(mut self, task: F) -> Self
     where
         F: FnOnce(LaunchProxy) -> Fut + 'static,
         Fut: Future<Output = ()> + 'static,

@@ -29,27 +29,20 @@ pub struct CurrentContext {
 
 impl CurrentContext {
     pub fn run_with_reactive<T>(new_context: Self, run: impl FnOnce() -> T) -> T {
-        let reactive_context = CURRENT_CONTEXT.with_borrow_mut(|context| {
-            let reactive_context = {
-                let scope_storages = new_context.scopes_storages.borrow();
-                let scope_storage = scope_storages.get(&new_context.scope_id).unwrap();
-                scope_storage.reactive_context.clone()
-            };
-            context.replace(new_context);
-            reactive_context
-        });
-        let res = ReactiveContext::run(reactive_context, run);
-        CURRENT_CONTEXT.with_borrow_mut(|context| context.take());
-        res
+        let reactive_context = {
+            let scope_storages = new_context.scopes_storages.borrow();
+            let scope_storage = scope_storages.get(&new_context.scope_id).unwrap();
+            scope_storage.reactive_context.clone()
+        };
+        Self::run(new_context, || ReactiveContext::run(reactive_context, run))
     }
 
     pub fn run<T>(new_context: Self, run: impl FnOnce() -> T) -> T {
-        CURRENT_CONTEXT.with_borrow_mut(|context| {
-            context.replace(new_context);
-        });
-        let res = run();
-        CURRENT_CONTEXT.with_borrow_mut(|context| context.take());
-        res
+        let previous = CURRENT_CONTEXT.with_borrow_mut(|context| context.replace(new_context));
+        let result = run();
+        let _removed_context =
+            CURRENT_CONTEXT.with_borrow_mut(|context| std::mem::replace(context, previous));
+        result
     }
 
     /// Run a closure using `scope_id` as the current scope, restoring the previous one afterwards.
