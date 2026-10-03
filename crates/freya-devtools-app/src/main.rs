@@ -69,8 +69,10 @@ pub fn app() -> impl IntoElement {
         spawn(async move {
             async fn connect(
                 mut radio: Radio<DevtoolsState, DevtoolsChannel>,
-            ) -> Result<(), tungstenite::Error> {
-                let tcp_stream = TcpStream::connect("127.0.0.1:7354").await?;
+            ) -> Result<(), Box<tungstenite::Error>> {
+                let tcp_stream = TcpStream::connect("127.0.0.1:7354")
+                    .await
+                    .map_err(tungstenite::Error::from)?;
                 let (ws_stream, _response) =
                     async_tungstenite::client_async("ws://127.0.0.1:7354", tcp_stream).await?;
 
