@@ -134,10 +134,11 @@ impl EmbeddedFreya {
         RenderPipeline {
             font_collection: &mut self.font_collection,
             font_manager: &self.font_manager,
-            tree: &self.tree,
+            tree: &mut self.tree,
             canvas: surface.canvas(),
             scale_factor: self.scale_factor,
             background: Color::WHITE,
+            force_full: true,
         }
         .render();
 

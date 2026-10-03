@@ -139,10 +139,14 @@ impl ElementExt for CanvasElement {
         Some(Cow::Borrowed(&self.event_handlers))
     }
 
+    fn is_render_volatile(&self) -> bool {
+        true
+    }
+
     fn clip(&self, context: ClipContext) {
         let area = context.visible_area;
 
-        context.canvas.clip_rect(
+        context.recorder.clip_rect(
             SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
             ClipOp::Intersect,
             true,
@@ -152,35 +156,40 @@ impl ElementExt for CanvasElement {
     fn render(&self, context: RenderContext) {
         let style = self.style();
         let area = context.layout_node.visible_area();
+        let area_rect = SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
 
         let mut paint = Paint::default();
         paint.set_anti_alias(true);
         paint.set_style(PaintStyle::Fill);
         style.background.apply_to_paint(&mut paint, area);
 
-        context.canvas.draw_rect(
-            SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
-            &paint,
-        );
+        context.recorder.draw_rect(area_rect, paint);
 
-        context.canvas.clip_rect(
-            SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
-            ClipOp::Intersect,
-            true,
-        );
-        context.canvas.translate((area.min_x(), area.min_y()));
+        context.recorder.save();
         context
-            .canvas
-            .scale((context.scale_factor as f32, context.scale_factor as f32));
+            .recorder
+            .clip_rect(area_rect, ClipOp::Intersect, true);
+        context.recorder.translate(area.min_x(), area.min_y());
+        context
+            .recorder
+            .scale(context.scale_factor as f32, context.scale_factor as f32);
 
-        let mut canvas_context = CanvasContext {
-            canvas: context.canvas,
-            font_collection: context.font_collection,
-            size: area.size / context.scale_factor as f32,
-            text_style_state: context.text_style_state,
-        };
-        self.on_render.call(&mut canvas_context);
-        context.canvas.restore();
+        let on_render = self.on_render.clone();
+        let size = area.size / context.scale_factor as f32;
+        let text_style_state = context.text_style_state.clone();
+        context.recorder.custom(
+            SkRect::new(0., 0., size.width, size.height),
+            move |custom| {
+                let mut canvas_context = CanvasContext {
+                    canvas: custom.canvas,
+                    font_collection: custom.font_collection,
+                    size,
+                    text_style_state: &text_style_state,
+                };
+                on_render.call(&mut canvas_context);
+            },
+        );
+        context.recorder.restore();
     }
 }
 

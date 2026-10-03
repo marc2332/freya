@@ -10,7 +10,10 @@ use crate::{
         Area,
         Length,
     },
-    torin::Torin,
+    torin::{
+        LayoutChange,
+        Torin,
+    },
     tree_adapter::{
         LayoutNode,
         NodeKey,
@@ -64,6 +67,9 @@ pub trait LayoutMeasurer<Key: NodeKey> {
     ) -> PostMeasure<Key> {
         PostMeasure::default()
     }
+
+    /// Reports a change to a node's cached geometry or measured content.
+    fn notify_layout_change(&mut self, _change: LayoutChange<Key>) {}
 
     fn notify_layout_references(
         &mut self,

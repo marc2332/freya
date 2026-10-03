@@ -12,7 +12,6 @@ use std::{
 };
 
 use freya_engine::prelude::{
-    Canvas,
     FontCollection,
     FontStyle,
     Paint,
@@ -363,6 +362,13 @@ impl ElementExt for ParagraphElement {
             .max(Size2D::zero())
             .with_gaps(&context.torin_node.padding);
 
+        // Cached paragraphs keep the same data identity when remeasurement leaves them unchanged.
+        let data: Rc<dyn Any> = if self.has_inline_content() {
+            Rc::new(())
+        } else {
+            paragraph.clone()
+        };
+
         self.sk_paragraph
             .0
             .borrow_mut()
@@ -372,7 +378,7 @@ impl ElementExt for ParagraphElement {
                 padding: context.torin_node.padding,
             });
 
-        Some((size, Rc::new(())))
+        Some((size, data))
     }
 
     fn should_hook_measurement(&self) -> bool {
@@ -525,16 +531,16 @@ impl ElementExt for ParagraphElement {
                 let caret_rect =
                     paragraph.cursor_rect(&self.text(), *from, context.text_style_state.text_align);
                 context
-                    .canvas
-                    .draw_rect(to_cursor_area(caret_rect), &highlights_paint);
+                    .recorder
+                    .draw_rect(to_cursor_area(caret_rect), highlights_paint.clone());
             }
 
             for rect in rects {
                 let mut rect = rect.rect;
                 rect.right = rect.right.max(6.);
                 context
-                    .canvas
-                    .draw_rect(to_cursor_area(rect), &highlights_paint);
+                    .recorder
+                    .draw_rect(to_cursor_area(rect), highlights_paint.clone());
             }
         }
 
@@ -560,14 +566,15 @@ impl ElementExt for ParagraphElement {
             let width = (cursor_rect.right - cursor_rect.left).max(6.0);
             cursor_rect.right = cursor_rect.left + width;
             context
-                .canvas
-                .draw_rect(to_cursor_area(cursor_rect), &cursor_paint);
+                .recorder
+                .draw_rect(to_cursor_area(cursor_rect), cursor_paint.clone());
         }
 
         // Draw text
-        paragraph.paint_at(
-            context.canvas,
+        context.recorder.draw_styled_paragraph(
+            paragraph,
             Point2D::new(inner_area.min_x(), inner_area.min_y() + vertical_offset).cast_unit(),
+            context.text_style_state,
         );
 
         // Draw cursor
@@ -585,8 +592,8 @@ impl ElementExt for ParagraphElement {
                 _ => cursor_rect.right = cursor_rect.left + 2.,
             }
             context
-                .canvas
-                .draw_rect(to_cursor_area(cursor_rect), &cursor_paint);
+                .recorder
+                .draw_rect(to_cursor_area(cursor_rect), cursor_paint);
         }
     }
 }
@@ -903,21 +910,11 @@ impl Span<'_> {
 }
 
 pub(crate) trait ParagraphPaintExt {
-    /// Paints at `origin` by translating the canvas, so text shaders follow the paragraph.
-    fn paint_at(&self, canvas: &Canvas, origin: Point2D);
-
     /// The box that non-color [Fill]s anchor to, in paragraph coordinates.
     fn fill_area(&self) -> Area;
 }
 
 impl ParagraphPaintExt for SkParagraph {
-    fn paint_at(&self, canvas: &Canvas, origin: Point2D) {
-        let layer = canvas.save();
-        canvas.translate(origin.to_tuple());
-        self.paint(canvas, (0., 0.));
-        canvas.restore_to_count(layer);
-    }
-
     fn fill_area(&self) -> Area {
         let (left, right) = self
             .get_line_metrics()

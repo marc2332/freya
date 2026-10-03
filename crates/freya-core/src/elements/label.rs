@@ -286,7 +286,7 @@ impl ElementExt for LabelElement {
 
     fn clip(&self, context: ClipContext) {
         let area = context.visible_area;
-        context.canvas.clip_rect(
+        context.recorder.clip_rect(
             SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
             ClipOp::Intersect,
             true,
@@ -295,11 +295,12 @@ impl ElementExt for LabelElement {
 
     fn render(&self, context: RenderContext) {
         let layout_data = context.layout_node.data.as_ref().unwrap();
-        let paragraph = layout_data.downcast_ref::<SkParagraph>().unwrap();
+        let paragraph = layout_data.clone().downcast::<SkParagraph>().unwrap();
 
-        paragraph.paint_at(
-            context.canvas,
+        context.recorder.draw_styled_paragraph(
+            &paragraph,
             context.layout_node.inner_area.origin.cast_unit(),
+            context.text_style_state,
         );
     }
 }

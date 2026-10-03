@@ -167,6 +167,12 @@ impl Component for TerminalPanel {
                             .padding(6.)
                             .child(
                                 Terminal::new(handle.clone())
+                                    .on_sized({
+                                        let handle = handle.clone();
+                                        move |event: Event<SizedEventData>| {
+                                            handle.set_area(event.visible_area)
+                                        }
+                                    })
                                     .a11y_id(a11y_id)
                                     .a11y_auto_focus(true)
                                     .a11y_focusable(true)
