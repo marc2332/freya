@@ -26,7 +26,7 @@ impl Layout {
 
         quote! {
             freya::prelude::Element::from(
-                #comp_name { #(#dynamic_segments: #dynamic_segments,)* }
+                #comp_name { #(#dynamic_segments,)* }
             )
         }
     }
