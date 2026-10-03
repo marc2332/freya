@@ -1,5 +1,3 @@
-# Shared policy for benchmarks without a dedicated policy.
-
 pr_comment = "on_change"
 
 [functions]
@@ -9,10 +7,10 @@ min_percent_total = 2
 judged = true
 min_percent_change = 20
 metrics = ["avg", "total"]
-min_calls = 0
+min_calls = 10
 
 [functions.timing]
-judged = false
-min_percent_change = 50
+judged = true
+min_percent_change = 35
 metrics = ["avg", "total"]
-min_calls = 10
+min_calls = 15
