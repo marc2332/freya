@@ -301,6 +301,7 @@ impl ElementExt for LabelElement {
             &paragraph,
             context.layout_node.inner_area.origin.cast_unit(),
             context.text_style_state,
+            context.scale_factor,
         );
     }
 }

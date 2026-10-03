@@ -26,7 +26,12 @@ use torin::prelude::{
 
 use crate::{
     data::TextStyleState,
+    elements::paragraph::ParagraphPaintExt,
     style::{
+        render_callback::{
+            RenderCallback,
+            RenderContext as FillRenderContext,
+        },
         text_align::TextAlign,
         text_shadow::TextShadow,
     },
@@ -466,6 +471,7 @@ impl RenderRecorder {
         paragraph: &Rc<SkParagraph>,
         origin: Point2D,
         text_style: &TextStyleState,
+        scale_factor: f64,
     ) {
         self.draw_paragraph(
             paragraph.clone(),
@@ -473,6 +479,49 @@ impl RenderRecorder {
             &text_style.text_shadows,
             text_style.text_align,
         );
+        if let Some(callback) = text_style.color.render_callback() {
+            self.draw_fill(
+                callback.clone(),
+                origin,
+                paragraph.fill_area().size,
+                text_style,
+                scale_factor,
+            );
+        }
+    }
+
+    pub fn draw_fill(
+        &mut self,
+        callback: RenderCallback,
+        origin: Point2D,
+        size: Size2D,
+        text_style: &TextStyleState,
+        scale_factor: f64,
+    ) {
+        let scale_factor = scale_factor as f32;
+        let text_style = text_style.clone();
+        self.save();
+        self.translate(origin.x, origin.y);
+        self.scale(scale_factor, scale_factor);
+        self.push_unbounded();
+        self.custom(
+            SkRect::from_xywh(
+                0.,
+                0.,
+                size.width / scale_factor,
+                size.height / scale_factor,
+            ),
+            move |custom| {
+                callback.call(&mut FillRenderContext {
+                    canvas: custom.canvas,
+                    font_collection: custom.font_collection,
+                    origin: origin / scale_factor,
+                    size: size / scale_factor,
+                    text_style_state: &text_style,
+                });
+            },
+        );
+        self.restore();
     }
 
     pub fn draw_image_rect(

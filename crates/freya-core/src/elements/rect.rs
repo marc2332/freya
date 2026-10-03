@@ -486,7 +486,9 @@ impl ElementExt for RectElement {
         let mut paint = Paint::default();
         paint.set_anti_alias(true);
         paint.set_style(PaintStyle::Fill);
-        style.background.apply_to_paint(&mut paint, area);
+        if style.background.render_callback().is_none() {
+            style.background.apply_to_paint(&mut paint, area);
+        }
 
         // Container
         let rounded_rect = self.render_rect(&area, context.scale_factor as f32);
@@ -497,7 +499,22 @@ impl ElementExt for RectElement {
         }
 
         let path = path.detach();
-        context.recorder.draw_path(path.clone(), paint);
+        if let Some(callback) = style.background.render_callback() {
+            context.recorder.save();
+            context
+                .recorder
+                .clip_path(path.clone(), ClipOp::Intersect, true);
+            context.recorder.draw_fill(
+                callback.clone(),
+                area.origin,
+                area.size,
+                context.text_style_state,
+                context.scale_factor,
+            );
+            context.recorder.restore();
+        } else {
+            context.recorder.draw_path(path.clone(), paint);
+        }
 
         // Shadows
         for shadow in style.shadows.iter() {

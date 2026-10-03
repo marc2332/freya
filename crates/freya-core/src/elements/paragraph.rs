@@ -575,6 +575,7 @@ impl ElementExt for ParagraphElement {
             paragraph,
             Point2D::new(inner_area.min_x(), inner_area.min_y() + vertical_offset).cast_unit(),
             context.text_style_state,
+            context.scale_factor,
         );
 
         // Draw cursor
