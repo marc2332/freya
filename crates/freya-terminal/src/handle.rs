@@ -53,6 +53,7 @@ use rio_vt::{
         SelectionType,
     },
 };
+use torin::prelude::Area;
 
 use crate::{
     backends::{
@@ -158,6 +159,16 @@ pub(crate) struct TerminalInner {
     pub(crate) last_write_time: Instant,
     pub(crate) pressed_button: Option<TerminalMouseButton>,
     pub(crate) modifiers: Modifiers,
+    pub(crate) area: Option<Area>,
+}
+
+impl TerminalInner {
+    fn invalidate(&self, platform: &Platform) {
+        platform.send(
+            self.area
+                .map_or(UserEvent::RequestRedraw, UserEvent::InvalidateArea),
+        );
+    }
 }
 
 impl Drop for TerminalCleaner {
@@ -196,6 +207,7 @@ pub struct TerminalHandle {
     pub(crate) clipboard_content: Rc<RefCell<Option<String>>>,
     /// Notifier that signals when clipboard content changes via OSC 52.
     pub(crate) clipboard_notifier: ArcNotify,
+    platform: Platform,
 }
 
 impl PartialEq for TerminalHandle {
@@ -244,6 +256,7 @@ impl TerminalHandle {
             last_write_time: Instant::now(),
             pressed_button: None,
             modifiers: Modifiers::empty(),
+            area: None,
         }));
 
         let platform = Platform::get();
@@ -252,6 +265,8 @@ impl TerminalHandle {
             let backend = backend.clone();
             let closer_notifier = closer_notifier.clone();
             let output_notifier = output_notifier.clone();
+            let inner = inner.clone();
+            let platform = platform.clone();
             async move {
                 let mut processor = Processor::default();
                 loop {
@@ -269,20 +284,20 @@ impl TerminalHandle {
                         None => {
                             processor.stop_sync(&mut *term.borrow_mut());
                             output_notifier.notify();
-                            platform.send(UserEvent::RequestRedraw);
+                            inner.borrow().invalidate(&platform);
                         }
                         Some(None) => break,
                         Some(Some(bytes)) => {
                             processor.advance(&mut *term.borrow_mut(), &bytes);
                             output_notifier.notify();
-                            platform.send(UserEvent::RequestRedraw);
+                            inner.borrow().invalidate(&platform);
                         }
                     }
                 }
                 // Output ended, drop the backend and notify observers.
                 *backend.borrow_mut() = None;
                 closer_notifier.notify();
-                platform.send(UserEvent::RequestRedraw);
+                inner.borrow().invalidate(&platform);
             }
         });
 
@@ -302,16 +317,30 @@ impl TerminalHandle {
             clipboard_content,
             clipboard_notifier,
             output_notifier,
+            platform,
         })
+    }
+
+    /// Set the logical window area for rendering invalidation from an `on_sized` callback.
+    pub fn set_area(&self, area: Area) {
+        let scale_factor = *self.platform.scale_factor.peek() as f32;
+        self.inner.borrow_mut().area = Some(area.scale(scale_factor, scale_factor).round_out());
+    }
+
+    fn invalidate(&self) {
+        self.inner.borrow().invalidate(&self.platform);
     }
 
     /// Write data to the backend. Drops any selection and snaps the viewport to the bottom.
     pub fn write(&self, data: &[u8]) -> Result<(), TerminalError> {
         self.write_raw(data)?;
         let mut term = self.term.borrow_mut();
-        term.selection = None;
+        let changed = term.selection.take().is_some() || term.display_offset() != 0;
         term.scroll_display(Scroll::Bottom);
         self.inner.borrow_mut().last_write_time = Instant::now();
+        if changed {
+            self.invalidate();
+        }
         Ok(())
     }
 
@@ -428,6 +457,12 @@ impl TerminalHandle {
 
     /// Resize the terminal. Lossless: the grid reflows on width, preserves scrollback on height.
     pub fn resize(&self, rows: u16, cols: u16) {
+        {
+            let term = self.term.borrow();
+            if term.screen_lines() == rows as usize && term.columns() == cols as usize {
+                return;
+            }
+        }
         // Backend first so SIGWINCH reaches the program before we update locally.
         if let Some(backend) = &mut *self.backend.borrow_mut() {
             backend.resize(rows, cols);
@@ -436,6 +471,7 @@ impl TerminalHandle {
         self.term
             .borrow_mut()
             .resize(CrosswordsSize::new(cols as usize, rows as usize));
+        self.invalidate();
     }
 
     /// Scroll by delta. Positive moves up into scrollback (vt100 convention).
@@ -454,7 +490,7 @@ impl TerminalHandle {
             return;
         }
         term.scroll_display(target);
-        Platform::get().send(UserEvent::RequestRedraw);
+        self.invalidate();
     }
 
     /// Current working directory reported via OSC 7.
@@ -629,7 +665,7 @@ impl TerminalHandle {
     pub fn start_selection(&self, row: f32, col: f32, selection_type: SelectionType) {
         let (point, side) = self.point_and_side_at(row, col);
         self.term.borrow_mut().selection = Some(Selection::new(selection_type, point, side));
-        Platform::get().send(UserEvent::RequestRedraw);
+        self.invalidate();
     }
 
     /// Extend the in-progress selection, if any.
@@ -637,7 +673,7 @@ impl TerminalHandle {
         let (point, side) = self.point_and_side_at(row, col);
         if let Some(selection) = self.term.borrow_mut().selection.as_mut() {
             selection.update(point, side);
-            Platform::get().send(UserEvent::RequestRedraw);
+            self.invalidate();
         }
     }
 

@@ -5,12 +5,16 @@ use std::{
 };
 
 use bytes::Bytes;
+use torin::prelude::Area;
 
 use crate::prelude::AccessibilityFocusStrategy;
 
 #[derive(Debug)]
 pub enum UserEvent {
     RequestRedraw,
+
+    /// Refresh recordings intersecting a physical window area and request a frame.
+    InvalidateArea(Area),
 
     /// Focus with the given strategy
     FocusAccessibilityNode(AccessibilityFocusStrategy),

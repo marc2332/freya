@@ -2,6 +2,7 @@ use std::{
     borrow::Cow,
     fmt,
     pin::Pin,
+    sync::OnceLock,
     task::Waker,
 };
 
@@ -13,9 +14,15 @@ use freya_core::{
     metrics::Metrics,
 };
 use freya_engine::prelude::{
+    Canvas,
+    Color as SkColor,
     FontCollection,
     FontMgr,
+    Paint,
+    PaintStyle,
+    SamplingOptions,
     SkData,
+    SkRect,
     TypefaceFontProvider,
     register_font_typeface,
 };
@@ -275,6 +282,32 @@ impl From<accesskit_winit::Event> for NativeEvent {
             window_id: event.window_id,
             action: NativeWindowEventAction::Accessibility(event.window_event),
         })
+    }
+}
+
+impl WinitRenderer {
+    /// Flash the last frame's damage in red when `FREYA_DEBUG_DAMAGE=1`. Only
+    /// for transient canvases, a persistent one would keep the tint forever.
+    fn draw_damage_overlay(canvas: &Canvas, damage: &Damage) {
+        static ENABLED: OnceLock<bool> = OnceLock::new();
+        let enabled = *ENABLED.get_or_init(|| {
+            std::env::var("FREYA_DEBUG_DAMAGE")
+                .is_ok_and(|value| value == "1" || value.eq_ignore_ascii_case("true"))
+        });
+        if !enabled || damage.is_full() {
+            return;
+        }
+        let mut overlay_paint = Paint::default();
+        overlay_paint.set_style(PaintStyle::Fill);
+        overlay_paint.set_color(SkColor::from_argb(60, 255, 0, 0));
+        for rect in damage.rects() {
+            let rect = rect.round_out();
+            overlay_paint.set_anti_alias(false);
+            canvas.draw_rect(
+                SkRect::new(rect.min_x(), rect.min_y(), rect.max_x(), rect.max_y()),
+                &overlay_paint,
+            );
+        }
     }
 }
 
@@ -609,6 +642,10 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             UserEvent::RequestRedraw => {
                                 app.window.request_redraw();
                             }
+                            UserEvent::InvalidateArea(area) => {
+                                app.tree.render_state.invalidate_area(area);
+                                app.window.request_redraw();
+                            }
                             UserEvent::FocusAccessibilityNode(strategy) => {
                                 let task = match strategy {
                                     AccessibilityFocusStrategy::Backward(_)
@@ -888,6 +925,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         }
 
                         let resource_cache = app.driver.resource_cache_usage();
+                        let offscreen_surface = &mut app.offscreen_surface;
                         let present_result = app.driver.present(
                             app.window.inner_size().cast(),
                             &app.window,
@@ -902,16 +940,45 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                     PluginHandle::new(&self.proxy),
                                 );
 
-                                let render_pipeline = RenderPipeline {
-                                    font_collection: &mut self.font_collection,
-                                    font_manager: &self.font_manager,
-                                    tree: &app.tree,
-                                    canvas: surface.canvas(),
-                                    scale_factor,
-                                    background: app.background,
+                                let stale_offscreen =
+                                    offscreen_surface.as_ref().is_none_or(|offscreen| {
+                                        offscreen.width() != surface.width()
+                                            || offscreen.height() != surface.height()
+                                    });
+                                if stale_offscreen {
+                                    *offscreen_surface = surface.new_surface(&surface.image_info());
+                                    app.tree.render_state.damage.mark_full();
+                                }
+
+                                let (canvas, force_full) = match offscreen_surface.as_mut() {
+                                    Some(offscreen) => (offscreen.canvas(), false),
+                                    None => (surface.canvas(), true),
                                 };
 
-                                render_pipeline.render();
+                                RenderPipeline {
+                                    font_collection: &mut self.font_collection,
+                                    font_manager: &self.font_manager,
+                                    tree: &mut app.tree,
+                                    canvas,
+                                    scale_factor,
+                                    background: app.background,
+                                    force_full,
+                                }
+                                .render();
+
+                                if let Some(offscreen) = offscreen_surface.as_mut() {
+                                    offscreen.draw(
+                                        surface.canvas(),
+                                        (0, 0),
+                                        SamplingOptions::default(),
+                                        None,
+                                    );
+                                }
+
+                                Self::draw_damage_overlay(
+                                    surface.canvas(),
+                                    &app.tree.render_state.last_damage,
+                                );
 
                                 let cached_assets = app.runner.with_root_context(|| {
                                     AssetCacher::try_get()
@@ -1272,6 +1339,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
 
         // Rebuild on the same window.
         if needs_recovery && let Some(mut app) = self.windows.remove(&window_id) {
+            app.offscreen_surface = None;
+            app.tree.render_state.damage.mark_full();
             // Drop the lost driver first to release its GPU surface.
             drop(app.driver);
             app.driver = GraphicsDriver::recover_reusing_window(
