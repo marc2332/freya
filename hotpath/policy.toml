@@ -1,5 +1,7 @@
 # Shared policy for benchmarks without a dedicated policy.
 
+pr_comment = "on_change"
+
 [functions]
 min_percent_total = 2
 
