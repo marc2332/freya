@@ -268,7 +268,7 @@ impl EventHandlersExt for SvgViewer {
 
 impl Component for SvgViewer {
     fn render(&self) -> impl IntoElement {
-        let scale_factor = *Platform::get().scale_factor.read();
+        let scale_factor = *Platform::get().current_window().scale_factor.read();
         let layout = self.layout.clone();
         let mut measured = use_state(|| match (&layout.width, &layout.height) {
             (Size::Pixels(width), Size::Pixels(height)) => {
