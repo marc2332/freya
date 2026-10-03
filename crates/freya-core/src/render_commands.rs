@@ -308,7 +308,10 @@ impl RenderRecorder {
             }
         }
 
-        let device_bounds = self.state().matrix.map_rect(local_bounds).0;
+        let mut device_bounds = self.state().matrix.map_rect(local_bounds).0;
+        if paint.is_anti_alias() {
+            device_bounds = device_bounds.with_outset((1.0, 1.0));
+        }
         self.push_device_bounds(device_bounds);
     }
 
