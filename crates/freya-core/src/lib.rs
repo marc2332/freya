@@ -149,6 +149,10 @@ pub mod prelude {
             font_width::*,
             gradient::*,
             letter_spacing::*,
+            render_callback::{
+                RenderCallback,
+                RenderContext as FillRenderContext,
+            },
             scale::*,
             shader::*,
             shadow::*,
