@@ -267,6 +267,10 @@ impl ElementExt for Shader {
         }
     }
 
+    fn is_render_volatile(&self) -> bool {
+        true
+    }
+
     fn render(&self, context: RenderContext) {
         match &self.0 {
             Ok(runtime_effect) => {
@@ -292,14 +296,14 @@ impl ElementExt for Shader {
                 paint.set_color(Color::WHITE);
                 paint.set_shader(shader);
 
-                context.canvas.draw_rect(
+                context.recorder.draw_rect(
                     Rect::new(
                         context.layout_node.area.min_x(),
                         context.layout_node.area.min_y(),
                         context.layout_node.area.max_x(),
                         context.layout_node.area.max_y(),
                     ),
-                    &paint,
+                    paint,
                 );
             }
             Err(err) => {
@@ -314,12 +318,11 @@ impl ElementExt for Shader {
                 let mut paragraph = paragraph_builder.build();
                 paragraph.layout(context.layout_node.area.width());
 
-                paragraph.paint(
-                    context.canvas,
-                    (
-                        context.layout_node.area.min_x(),
-                        context.layout_node.area.min_y(),
-                    ),
+                context.recorder.draw_paragraph(
+                    paragraph,
+                    context.layout_node.area.origin,
+                    &[],
+                    TextAlign::default(),
                 );
             }
         }

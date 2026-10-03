@@ -39,6 +39,12 @@
 //!             rect()
 //!                 .child(
 //!                     Terminal::new(handle.clone())
+//!                         .on_sized({
+//!                             let handle = handle.clone();
+//!                             move |event: Event<SizedEventData>| {
+//!                                 handle.set_area(event.visible_area)
+//!                             }
+//!                         })
 //!                         .a11y_id(a11y_id)
 //!                         .on_mouse_down(move |_| a11y_id.request_focus())
 //!                         .on_key_down(move |e: Event<KeyboardEventData>| {

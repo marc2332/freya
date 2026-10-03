@@ -85,25 +85,31 @@ impl ElementExt for HtmlElement {
         false
     }
 
+    fn is_render_volatile(&self) -> bool {
+        true
+    }
+
     fn render(&self, context: RenderContext) {
         let area = context.layout_node.visible_area();
         let scale = context.scale_factor as f32;
+        let render_rect = self.render_rect(&area, scale);
+        let state = self.state.clone();
 
-        context.canvas.save();
+        context.recorder.save();
         context
-            .canvas
-            .clip_rrect(self.render_rect(&area, scale), ClipOp::Intersect, true);
-
-        self.state.borrow_mut().paint(
-            context.canvas,
-            area.min_x(),
-            area.min_y(),
-            area.width().round() as u32,
-            area.height().round() as u32,
-            scale,
-        );
-
-        context.canvas.restore();
+            .recorder
+            .clip_rrect(render_rect, ClipOp::Intersect, true);
+        context.recorder.custom(*render_rect.rect(), move |custom| {
+            state.borrow_mut().paint(
+                custom.canvas,
+                area.min_x(),
+                area.min_y(),
+                area.width().round() as u32,
+                area.height().round() as u32,
+                scale,
+            );
+        });
+        context.recorder.restore();
     }
 }
 
