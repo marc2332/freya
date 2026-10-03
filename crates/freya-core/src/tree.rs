@@ -724,7 +724,7 @@ impl Tree {
         );
         self.measure_visibility_events(nodes_state, scale_factor);
         events_sender
-            .unbounded_send(EventsChunk::Batch(self.events.drain(..).collect()))
+            .unbounded_send(EventsChunk::Batch(std::mem::take(&mut self.events)))
             .unwrap();
     }
 
