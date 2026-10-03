@@ -288,6 +288,10 @@ impl WebApp {
                     self.tree.accessibility_diff.request_focus(strategy);
                 }
                 UserEvent::RequestRedraw => self.needs_render = true,
+                UserEvent::InvalidateArea(area) => {
+                    self.tree.render_state.invalidate_area(area);
+                    self.needs_render = true;
+                }
                 UserEvent::SetCustomScaleFactor(_) => {}
             }
         }
@@ -347,10 +351,11 @@ impl WebApp {
         let render_pipeline = RenderPipeline {
             font_collection: &mut self.fonts.collection,
             font_manager: &self.fonts.manager,
-            tree: &self.tree,
+            tree: &mut self.tree,
             canvas: self.surface.canvas(),
             scale_factor,
             background: self.background,
+            force_full: true,
         };
         render_pipeline.render();
 

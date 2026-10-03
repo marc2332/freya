@@ -12,6 +12,7 @@ use std::{
 use freya::{
     engine::prelude::{
         Paint,
+        SkRRect,
         SkRect,
     },
     prelude::*,
@@ -60,11 +61,13 @@ impl ElementExt for CoolElement {
         paint.set_anti_alias(true);
         paint.set_color(self.color);
         let corner_radius = 12.;
-        context.canvas.draw_round_rect(
-            SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
-            corner_radius,
-            corner_radius,
-            &paint,
+        context.recorder.draw_rrect(
+            SkRRect::new_rect_xy(
+                SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
+                corner_radius,
+                corner_radius,
+            ),
+            paint,
         );
     }
 }
