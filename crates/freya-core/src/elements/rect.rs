@@ -570,6 +570,9 @@ impl TextStyleExt for Rect {
     }
 }
 
+impl BackgroundExt for Rect {}
+impl DecorationExt for Rect {}
+
 impl StyleExt for Rect {
     fn get_style(&mut self) -> &mut StyleState {
         &mut self.element.style
