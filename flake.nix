@@ -62,12 +62,32 @@
     rust = rust-overlay.lib.mkRustBin {} pkgs;
     stableRust = rust.stable."1.97.1".default.override {
       extensions = ["rust-src" "rust-analyzer"];
+      targets = ["wasm32-unknown-emscripten"];
+    };
+    androidRust = stableRust.override {
       targets = [
         "wasm32-unknown-emscripten"
         "aarch64-linux-android"
         "x86_64-linux-android"
       ];
     };
+    androidPkgs = import nixpkgs {
+      inherit system;
+      config = {
+        allowUnfree = true;
+        android_sdk.accept_license = true;
+      };
+    };
+    androidSdk =
+      (androidPkgs.androidenv.composeAndroidPackages {
+        platformVersions = ["36" "36.1"];
+        buildToolsVersions = ["36.0.0"];
+        includeNDK = true;
+        ndkVersions = ["26.3.11579264"];
+        includeCmake = false;
+      }).androidsdk;
+    androidSdkPath = "${androidSdk}/libexec/android-sdk";
+    androidNdkPath = "${androidSdkPath}/ndk/26.3.11579264";
     nightlyRust = rust.nightly."2026-03-15".minimal.override {
       extensions = ["rust-src" "rust-analyzer" "rustfmt"];
     };
@@ -88,47 +108,60 @@
       unset CARGO_TARGET_DIR NIX_LDFLAGS NIX_LDFLAGS_FOR_BUILD
       MBX_CARGO_SHIM_MODE=1 MBX_CARGO_SHIM_PATH="$0" exec ${mbx}/bin/mbx "$@"
     '';
+    mkDevShell = rustToolchain: extraPackages:
+      pkgs.mkShell {
+        packages = with pkgs;
+          [
+            cargo
+            mbx
+            gpu
+            rustToolchain
+            alejandra
+            cargo-binstall
+            cargo-nextest
+            clang
+            cmake
+            dioxus-cli
+            emscripten
+            git
+            curl
+            just
+            python3
+            taplo
+          ]
+          ++ libraries
+          ++ extraPackages;
+
+        LOCALE_ARCHIVE = "${pkgs.glibcLocales}/lib/locale/locale-archive";
+        CARGO_TARGET_WASM32_UNKNOWN_EMSCRIPTEN_LINKER = "${pkgs.emscripten}/bin/em++";
+        CARGO_TARGET_WASM32_UNKNOWN_EMSCRIPTEN_RUSTFLAGS = "-C link-arg=-sFULL_ES3=1";
+        FREYA_NIGHTLY_CARGO = "${nightlyRust}/bin/cargo";
+        FREYA_NIGHTLY_RUSTFMT = "${nightlyRust}/bin/rustfmt";
+
+        shellHook = ''
+          unset CARGO_TARGET_DIR
+
+          mbx_root="''${CARGO_HOME:-$HOME/.cargo}"
+          if [ ! -x "$mbx_root/bin/mbx" ]; then
+            PATH="${rustToolchain}/bin:$PATH" ${pkgs.cargo-binstall}/bin/cargo-binstall \
+              --locked --no-confirm --root "$mbx_root" mbx
+          fi
+
+          export PATH="${cargo}/bin:${mbx}/bin:${gpu}/bin:$PATH"
+        '';
+      };
   in {
     formatter.${system} = pkgs.alejandra;
-    devShells.${system}.default = pkgs.mkShell {
-      packages = with pkgs;
-        [
-          cargo
-          mbx
-          gpu
-          stableRust
-          alejandra
-          cargo-binstall
-          cargo-nextest
-          clang
-          cmake
-          dioxus-cli
-          emscripten
-          git
-          curl
-          just
-          python3
-          taplo
-        ]
-        ++ libraries;
-
-      LOCALE_ARCHIVE = "${pkgs.glibcLocales}/lib/locale/locale-archive";
-      CARGO_TARGET_WASM32_UNKNOWN_EMSCRIPTEN_LINKER = "${pkgs.emscripten}/bin/em++";
-      CARGO_TARGET_WASM32_UNKNOWN_EMSCRIPTEN_RUSTFLAGS = "-C link-arg=-sFULL_ES3=1";
-      FREYA_NIGHTLY_CARGO = "${nightlyRust}/bin/cargo";
-      FREYA_NIGHTLY_RUSTFMT = "${nightlyRust}/bin/rustfmt";
-
-      shellHook = ''
-        unset CARGO_TARGET_DIR
-
-        mbx_root="''${CARGO_HOME:-$HOME/.cargo}"
-        if [ ! -x "$mbx_root/bin/mbx" ]; then
-          PATH="${stableRust}/bin:$PATH" ${pkgs.cargo-binstall}/bin/cargo-binstall \
-            --locked --no-confirm --root "$mbx_root" mbx
-        fi
-
-        export PATH="${cargo}/bin:${mbx}/bin:${gpu}/bin:$PATH"
-      '';
+    devShells.${system} = {
+      default = mkDevShell stableRust [];
+      android = (mkDevShell androidRust [androidSdk pkgs.cargo-ndk pkgs.jdk17]).overrideAttrs (_: {
+        ANDROID_HOME = androidSdkPath;
+        ANDROID_SDK_ROOT = androidSdkPath;
+        ANDROID_NDK_HOME = androidNdkPath;
+        ANDROID_NDK = androidNdkPath;
+        JAVA_HOME = "${pkgs.jdk17}";
+        GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${androidSdkPath}/build-tools/36.0.0/aapt2";
+      });
     };
   };
 }
