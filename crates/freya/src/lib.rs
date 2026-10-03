@@ -49,6 +49,7 @@
 //! - [Development Setup](self::_docs::development_setup)
 //! - [Extending Components](self::_docs::extending_components)
 //! - [Custom Elements](freya_core::element::ElementExt)
+//! - [Working with AI](self::_docs::ai)
 //!
 //! ### Learn
 //! - [Built-in Components](crate::components)
