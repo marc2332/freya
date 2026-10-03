@@ -41,7 +41,6 @@ use crate::{
         TextStyleData,
     },
     diff_key::DiffKey,
-    elements::rect::RectElement,
     element::{
         ClipContext,
         Element,
@@ -50,6 +49,7 @@ use crate::{
         LayoutContext,
         RenderContext,
     },
+    elements::rect::RectElement,
     layers::Layer,
     prelude::{
         AccessibilityExt,
@@ -401,7 +401,10 @@ impl ElementExt for ImageElement {
 
         context.canvas.restore();
 
-        let corner_radius = self.style.corner_radius.with_scale(context.scale_factor as f32);
+        let corner_radius = self
+            .style
+            .corner_radius
+            .with_scale(context.scale_factor as f32);
         let mut path = PathBuilder::new();
         if corner_radius.smoothing() > 0. {
             path.add_path(&corner_radius.smoothed_path(clip_rrect), None);
