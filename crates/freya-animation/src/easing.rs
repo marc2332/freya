@@ -85,7 +85,7 @@ pub fn apply_value(
 /// Built-in easing functions or a custom normalized easing function.
 ///
 /// ```
-/// use freya_animation::prelude::*;
+/// # use freya::prelude::*;
 ///
 /// let animation = AnimNum::new(0., 100.).time(300).function(Function::Cubic);
 /// ```
