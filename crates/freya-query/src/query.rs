@@ -266,7 +266,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
             _ => false,
         };
         if create_interval_task {
-            let task = spawn_global(async move {
+            let task = spawn_in_window(async move {
                 loop {
                     // Wait as long as the stale time is configured
                     timer(interval).await;
@@ -285,7 +285,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
         if let Some(clean_task) = query_data.clean_task.take() {
             clean_task.cancel();
         }
-        *query_data.clean_task.borrow_mut() = Some(spawn_global(async move {
+        *query_data.clean_task.borrow_mut() = Some(spawn_in_window(async move {
             // Wait as long as the clean time is configured
             timer(query.clean_time).await;
 
@@ -707,7 +707,7 @@ impl<Q: QueryCapability> UseQuery<Q> {
         let query_data = storage.storage.peek().get(&query).cloned().unwrap();
 
         // Run the query
-        spawn_global(async move { QueriesStorage::run_queries(&[(&query, &query_data)]).await });
+        spawn_in_window(async move { QueriesStorage::run_queries(&[(&query, &query_data)]).await });
     }
 }
 
@@ -759,7 +759,7 @@ pub fn use_query<Q: QueryCapability>(query: Query<Q>) -> UseQuery<Q> {
         // Immediately run the query if the value is stale
         if query_data.state.borrow().is_stale(query) {
             let query = query.clone();
-            spawn_global(async move {
+            spawn_in_window(async move {
                 QueriesStorage::run_queries(&[(&query, &query_data)]).await;
             });
         }

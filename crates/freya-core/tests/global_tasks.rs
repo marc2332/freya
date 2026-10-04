@@ -74,8 +74,10 @@ fn global_tasks_survive_window_close() {
                 &GlobalContexts::get().get_context::<Rc<Cell<i32>>>()
             ));
             phases.set(2);
-            spawn_global(async {
-                GlobalContexts::get().get_context::<Rc<Cell<i32>>>().set(3);
+            GlobalContexts::get().get_context_or_insert(|| {
+                spawn_global(async {
+                    GlobalContexts::get().get_context::<Rc<Cell<i32>>>().set(3);
+                })
             });
         })
     });

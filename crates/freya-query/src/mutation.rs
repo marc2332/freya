@@ -238,7 +238,7 @@ impl<Q: MutationCapability> MutationsStorage<Q> {
 
         // Spawn clean up task if there no more reactive contexts
         if mutation_data.reactive_contexts.borrow().len() == 1 {
-            *mutation_data.clean_task.borrow_mut() = Some(spawn_global(async move {
+            *mutation_data.clean_task.borrow_mut() = Some(spawn_in_window(async move {
                 // Wait as long as the stale time is configured
                 timer(mutation.clean_time).await;
 
@@ -416,7 +416,9 @@ impl<Q: MutationCapability> UseMutation<Q> {
         let mutation_data = storage.storage.peek().get(&mutation).cloned().unwrap();
 
         // Run the mutation
-        spawn_global(async move { MutationsStorage::run(&mutation, &mutation_data, keys).await });
+        spawn_in_window(
+            async move { MutationsStorage::run(&mutation, &mutation_data, keys).await },
+        );
     }
 }
 

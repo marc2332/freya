@@ -69,16 +69,12 @@ impl GlobalContexts {
     }
 
     pub fn get_context_or_insert<T: Clone + 'static>(&self, insert: impl FnOnce() -> T) -> T {
-        let mut contexts = self.0.borrow_mut();
-        if let Some(context) = contexts
-            .get(&TypeId::of::<T>())
-            .and_then(|context| context.downcast_ref::<T>())
-        {
-            return context.clone();
+        if let Some(context) = self.try_get_context() {
+            return context;
         }
+
         let value = insert();
-        contexts.insert(TypeId::of::<T>(), Rc::new(value.clone()));
-        value
+        self.insert_context(value)
     }
 }
 

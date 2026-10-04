@@ -1,12 +1,8 @@
+#[cfg(debug_assertions)]
+use std::time::Duration;
 use std::{
     cell::Cell,
     rc::Rc,
-};
-#[cfg(debug_assertions)]
-use std::{
-    task::Waker,
-    thread::sleep,
-    time::Duration,
 };
 
 use freya::prelude::Size;
@@ -242,7 +238,7 @@ fn invalidate_all_from_the_test_runtime() {
     assert_eq!(calls.get(), 1);
 
     test.run_in(|| {
-        spawn_global(async move {
+        spawn_in_window(async move {
             QueriesStorage::<CountCalls>::invalidate_all().await;
         });
     });
@@ -283,45 +279,31 @@ fn mocked_query() {
         rect().child(label().text(format!("{:?}", user.read().state())))
     }
 
-    let (mut test, _) = TestingRunner::new(
-        app,
-        (200., 200.).into(),
-        |_| {
-            GlobalContexts::get().insert_context(QueriesStorage::<GetUserName>::mocked(|_keys| {
-                Ok("Mocked".to_string())
-            }))
-        },
-        1.,
-    );
+    let global_contexts = GlobalContexts::register();
+    global_contexts.insert_context(QueriesStorage::<GetUserName>::mocked(|_keys| {
+        Ok("Mocked".to_string())
+    }));
+    let mut test = launch_test(app);
+    test.poll(Duration::from_millis(10), Duration::from_millis(200));
 
-    test.sync_and_update();
-    test.poll(
-        std::time::Duration::from_millis(10),
-        std::time::Duration::from_millis(200),
-    );
-
-    let label = test
-        .find(|node, element| Label::try_downcast(element).map(|_| node))
-        .unwrap();
-    let element = label.element();
-    let text = &Label::try_downcast(&*element).unwrap().text;
-
-    assert!(
-        text.contains("Mocked"),
-        "the mock did not replace the query, got {text}"
-    );
+    let name = QueriesStorage::<GetUserName>::peek_matching(0)[0]
+        .state()
+        .ok()
+        .cloned();
+    assert_eq!(name.as_deref(), Some("Mocked"));
+    drop(test);
+    global_contexts.unregister();
 }
 
 #[test]
 #[cfg(debug_assertions)]
-fn mocked_async_query_survives_window_close() {
+fn mocked_async_query() {
     fn app() -> impl IntoElement {
         use_query(Query::new(0, GetUserName(Captured(FancyClient))));
         rect()
     }
 
     let global_contexts = GlobalContexts::register();
-    global_contexts.insert_context(GlobalTasks::new(Waker::noop().clone()));
     global_contexts.insert_context(QueriesStorage::<GetUserName>::mocked_async(
         |keys| async move {
             timer(Duration::from_millis(20)).await;
@@ -329,20 +311,7 @@ fn mocked_async_query_survives_window_close() {
         },
     ));
     let mut test = launch_test(app);
-    test.sync_and_update();
-
-    GlobalTasks::get().poll();
-    assert!(
-        QueriesStorage::<GetUserName>::peek_matching(0)[0]
-            .state()
-            .is_loading()
-    );
-    drop(test);
-
-    for _ in 0..20 {
-        GlobalTasks::get().poll();
-        sleep(Duration::from_millis(5));
-    }
+    test.poll(Duration::from_millis(5), Duration::from_millis(100));
 
     let name = QueriesStorage::<GetUserName>::peek_matching(0)[0]
         .state()
@@ -350,6 +319,6 @@ fn mocked_async_query_survives_window_close() {
         .cloned();
 
     assert_eq!(name.as_deref(), Some("Mocked 0"));
-    GlobalTasks::get().clear();
+    drop(test);
     global_contexts.unregister();
 }
