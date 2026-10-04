@@ -435,6 +435,79 @@ fn file_drop_with_multiple_files() {
     );
 }
 
+fn check_pointer_leave_without_exit(with_move: bool, with_enter: bool) {
+    let mut events = State::create_global(Vec::new());
+    let (mut test, _) = TestingRunner::new(
+        move || {
+            rect().padding(25.).child(
+                rect()
+                    .background((15, 163, 242))
+                    .expanded()
+                    .on_pointer_leave(move |_| events.write().push("leave"))
+                    .maybe(with_move, |el| {
+                        el.on_mouse_move(move |_| events.write().push("move"))
+                    })
+                    .maybe(with_enter, |el| {
+                        el.on_pointer_enter(move |_| events.write().push("enter"))
+                    }),
+            )
+        },
+        (500., 450.).into(),
+        |_| {},
+        1.,
+    );
+    test.sync_and_update();
+
+    for index in 0..8 {
+        test.move_cursor((100. + index as f64 * 15., 100.));
+        test.sync_and_update();
+    }
+
+    assert_eq!(
+        events
+            .peek()
+            .iter()
+            .filter(|name| **name == "leave")
+            .count(),
+        0,
+        "unexpected events while the pointer stayed inside: {:?}",
+        events.peek()
+    );
+    assert_eq!(
+        events.peek().iter().filter(|name| **name == "move").count(),
+        if with_move { 8 } else { 0 }
+    );
+    assert_eq!(
+        events
+            .peek()
+            .iter()
+            .filter(|name| **name == "enter")
+            .count(),
+        usize::from(with_enter)
+    );
+
+    let mut expected_events = events.peek().clone();
+    expected_events.push("leave");
+    test.move_cursor((10., 10.));
+    test.sync_and_update();
+    assert_eq!(*events.peek(), expected_events);
+}
+
+#[test]
+fn pointer_leave_only_without_exit() {
+    check_pointer_leave_without_exit(false, false);
+}
+
+#[test]
+fn pointer_leave_with_mouse_move_without_exit() {
+    check_pointer_leave_without_exit(true, false);
+}
+
+#[test]
+fn pointer_leave_with_mouse_move_and_enter_without_exit() {
+    check_pointer_leave_without_exit(true, true);
+}
+
 #[test]
 fn cursor_property() {
     fn app() -> Element {

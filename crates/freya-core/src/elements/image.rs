@@ -19,6 +19,7 @@ use freya_engine::prelude::{
     ImageInfo,
     MipmapMode,
     Paint,
+    PathBuilder,
     SamplingOptions,
     SkImage,
     SkRect,
@@ -26,7 +27,10 @@ use freya_engine::prelude::{
     blur,
     raster_from_data,
 };
-use torin::prelude::Size2D;
+use torin::{
+    prelude::Size2D,
+    scaled::Scaled,
+};
 
 use crate::{
     data::{
@@ -45,12 +49,14 @@ use crate::{
         LayoutContext,
         RenderContext,
     },
+    elements::rect::RectElement,
     layers::Layer,
     prelude::{
         AccessibilityExt,
         ChildrenExt,
         ContainerExt,
         ContainerWithContentExt,
+        DecorationExt,
         EffectExt,
         EventHandlersExt,
         ImageExt,
@@ -58,8 +64,9 @@ use crate::{
         LayerExt,
         LayoutExt,
         MaybeExt,
+        StyleExt,
     },
-    style::corner_radius::CornerRadius,
+    style::color::Color,
     tree::DiffModifies,
 };
 
@@ -80,7 +87,7 @@ pub fn image(image_handle: ImageHandle) -> Image {
             image_data: ImageData::default(),
             relative_layer: Layer::default(),
             effect: None,
-            corner_radius: None,
+            style: StyleState::default(),
         },
         elements: Vec::new(),
     }
@@ -198,7 +205,7 @@ pub struct ImageElement {
     pub image_data: ImageData,
     pub relative_layer: Layer,
     pub effect: Option<EffectData>,
-    pub corner_radius: Option<CornerRadius>,
+    pub style: StyleState,
 }
 
 impl ElementExt for ImageElement {
@@ -244,7 +251,7 @@ impl ElementExt for ImageElement {
             diff.insert(DiffModifies::EFFECT);
         }
 
-        if self.corner_radius != image.corner_radius {
+        if self.style != image.style {
             diff.insert(DiffModifies::STYLE);
         }
 
@@ -264,10 +271,7 @@ impl ElementExt for ImageElement {
     }
 
     fn style(&'_ self) -> Cow<'_, StyleState> {
-        Cow::Owned(StyleState {
-            corner_radius: self.corner_radius.unwrap_or_default(),
-            ..StyleState::default()
-        })
+        Cow::Borrowed(&self.style)
     }
 
     fn text_style(&'_ self) -> Cow<'_, TextStyleData> {
@@ -396,6 +400,44 @@ impl ElementExt for ImageElement {
         );
 
         context.canvas.restore();
+
+        let corner_radius = self
+            .style
+            .corner_radius
+            .with_scale(context.scale_factor as f32);
+        let mut path = PathBuilder::new();
+        if corner_radius.smoothing() > 0. {
+            path.add_path(&corner_radius.smoothed_path(clip_rrect), None);
+        } else {
+            path.add_rrect(clip_rrect, None, None);
+        }
+        let mut path = path.detach();
+
+        for shadow in &self.style.shadows {
+            if shadow.color != Color::TRANSPARENT {
+                let shadow = shadow.with_scale(context.scale_factor as f32);
+                RectElement::render_shadow(
+                    context.canvas,
+                    &mut path,
+                    clip_rrect,
+                    area,
+                    &shadow,
+                    &corner_radius,
+                );
+            }
+        }
+
+        for border in &self.style.borders {
+            if border.is_visible() {
+                let border = border.with_scale(context.scale_factor as f32);
+                RectElement::render_border(
+                    context.canvas,
+                    *clip_rrect.rect(),
+                    &border,
+                    &corner_radius,
+                );
+            }
+        }
     }
 }
 
@@ -431,6 +473,14 @@ impl MaybeExt for Image {}
 impl LayoutExt for Image {
     fn get_layout(&mut self) -> &mut LayoutData {
         &mut self.element.layout
+    }
+}
+
+impl DecorationExt for Image {}
+
+impl StyleExt for Image {
+    fn get_style(&mut self) -> &mut StyleState {
+        &mut self.element.style
     }
 }
 
@@ -473,11 +523,5 @@ impl Image {
         (element as &dyn Any)
             .downcast_ref::<ImageElement>()
             .cloned()
-    }
-
-    /// Round the image's corners, clipping it to the rounded shape. See [`CornerRadius`].
-    pub fn corner_radius(mut self, corner_radius: impl Into<CornerRadius>) -> Self {
-        self.element.corner_radius = Some(corner_radius.into());
-        self
     }
 }

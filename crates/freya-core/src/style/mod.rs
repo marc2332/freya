@@ -11,6 +11,7 @@ pub mod font_weight;
 pub mod font_width;
 pub mod gradient;
 pub mod letter_spacing;
+pub mod render_callback;
 pub mod scale;
 pub mod shader;
 pub mod shadow;
