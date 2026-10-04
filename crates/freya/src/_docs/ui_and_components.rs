@@ -1,7 +1,7 @@
 //! # UI and Components
 //!
 //! Freya uses a [declarative](https://en.wikipedia.org/wiki/Declarative_programming) model for the UI.
-//! This means that you dont instantiate e.g Buttons, you simply declare them and Freya will take care of running them and painting them on screen.
+//! This means that you dont instantiate your UI, you rather declare it and Freya will take care of manage its lifecycle.
 //!
 //! Example of how the UI is declared:
 //!
@@ -12,27 +12,16 @@
 //!     .background((255, 0, 0))
 //!     .width(Size::fill())
 //!     .height(Size::px(100.))
-//!     .on_mouse_up(|_| println!("Clicked!"))
+//!     .on_press(|_| println!("Clicked!"))
 //! # }
 //! ```
 //!
-//! You can also split your UI in reusable pieces called **Components**.
+//! You may split your UI in utility functions or **Components**
 //!
 //! ### [Component](freya_core::prelude::Component) trait
 //!
-//! For normal components you may use the [Component](freya_core::prelude::Component) trait.
-//!
-//! ```rust
-//! # use freya::prelude::*;
-//! #[derive(PartialEq)]
-//! struct App;
-//!
-//! impl Component for App {
-//!     fn render(&self) -> impl IntoElement {
-//!         "Hello, World!"
-//!     }
-//! }
-//! ```
+//! Components are not just a way to split your UI into reusable pieces, they also serve as state boundaries where this means that when a state in your app changes only the components that are subscribed to such state
+//! are actually recomputed, this is an optimization done by the user for Freya to do less work during diffing.
 //!
 //! ## App/Root Component
 //! The app/root component is the component passed to [WindowConfig](crate::prelude::WindowConfig).
@@ -65,12 +54,12 @@
 //! }
 //! ```
 //!
-//! To separate the UI of the app you may create more components.
+//! To create reusable components you use the [Component](freya_core::prelude::Component) trait.
 //!
 //! ```rust
 //! # use freya::prelude::*;
 //! # use std::borrow::Cow;
-//! // Reusable component that we might call as many times we want
+//! // Reusable component that we might create as many times we want
 //! #[derive(PartialEq)]
 //! struct TextLabel(Cow<'static, str>);
 //! impl Component for TextLabel {
@@ -114,7 +103,7 @@
 //!         let mut count = use_state(|| 0);
 //!
 //!         label()
-//!             .on_mouse_up(move |_| *count.write() += 1)
+//!             .on_press(move |_| *count.write() += 1)
 //!             // Here we subscribe to `count` because we called .read() on it
 //!             .text(format!("Increase {}", count.read()))
 //!     }
@@ -196,12 +185,10 @@
 //! }
 //! ```
 //!
-//! ## Components vs Utility Functions
+//! ## Utility Functions
 //!
 //! Not every piece of reusable UI needs to be a full [Component](freya_core::prelude::Component).
 //! Sometimes a plain Rust function is simpler and more appropriate.
-//!
-//! ### Plain utility functions
 //!
 //! When you just want to reuse or encapsulate a chunk of UI with no internal state, a plain
 //! function is the simplest option, no boilerplate, no trait to implement.
@@ -216,39 +203,5 @@
 //!     rect()
 //!         .child(colored_label(Color::RED, "Error"))
 //!         .child(colored_label(Color::GREEN, "Success"))
-//! }
-//! ```
-//!
-//! ### Components with state or render optimization
-//!
-//! Use a [Component](freya_core::prelude::Component) when you need local state, as hooks like
-//! `use_state` only work inside a component's `render` method. Components also enable render
-//! optimization: because [Component](freya_core::prelude::Component) requires [`PartialEq`],
-//! Freya can skip re-running `render` and diffing the entire subtree when the component's data
-//! hasn't changed, something a plain function cannot do.
-//!
-//!
-//! ```rust
-//! # use freya::prelude::*;
-//! // This cannot be a plain function: it owns local state via `use_state`.
-//! // Also, if `initial` doesn't change between parent renders, Freya skips re-rendering
-//! // this component and its entire subtree entirely.
-//! #[derive(PartialEq)]
-//! struct Counter {
-//!     initial: i32,
-//! }
-//!
-//! impl Component for Counter {
-//!     fn render(&self) -> impl IntoElement {
-//!         let mut count = use_state(|| self.initial);
-//!
-//!         label()
-//!             .on_mouse_up(move |_| *count.write() += 1)
-//!             .text(format!("Count: {}", count.read()))
-//!     }
-//! }
-//!
-//! fn app() -> impl IntoElement {
-//!     Counter { initial: 0 }
 //! }
 //! ```

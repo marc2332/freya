@@ -7,7 +7,7 @@ on:
 
 jobs:
   dev:
-    uses: pawurb/hotpath-rs/.github/workflows/hotpath-relay.yml@main
+    uses: pawurb/hotpath-rs/.github/workflows/hotpath-relay.yml@v0.28.0
     permissions:
       actions: read
       contents: read
@@ -17,7 +17,7 @@ jobs:
       artifact_name: hotpath-dev
       report_file: dev_perf.json
   core:
-    uses: pawurb/hotpath-rs/.github/workflows/hotpath-relay.yml@main
+    uses: pawurb/hotpath-rs/.github/workflows/hotpath-relay.yml@v0.28.0
     permissions:
       actions: read
       contents: read
@@ -26,3 +26,13 @@ jobs:
       benchmark: core
       artifact_name: hotpath-core
       report_file: core.json
+  render:
+    uses: pawurb/hotpath-rs/.github/workflows/hotpath-relay.yml@v0.28.0
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    with:
+      benchmark: render
+      artifact_name: hotpath-render
+      report_file: render.json

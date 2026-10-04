@@ -27,7 +27,7 @@
 //!         .background((35, 35, 35))
 //!         .color(Color::WHITE)
 //!         .padding(Gaps::new_all(12.))
-//!         .on_mouse_up(move |_| *count.write() += 1)
+//!         .on_press(move |_| *count.write() += 1)
 //!         .child(format!("Click to increase -> {}", count.read()))
 //! }
 //! ```
@@ -49,6 +49,7 @@
 //! - [Development Setup](self::_docs::development_setup)
 //! - [Extending Components](self::_docs::extending_components)
 //! - [Custom Elements](freya_core::element::ElementExt)
+//! - [Working with AI](self::_docs::ai)
 //!
 //! ### Learn
 //! - [Built-in Components](crate::components)
@@ -210,7 +211,6 @@ pub mod components {
         attached::*,
         button::*,
         cache::*,
-        canvas::*,
         card::*,
         checkbox::*,
         chip::*,

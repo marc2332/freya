@@ -1,4 +1,5 @@
 pub mod _async;
+pub mod ai;
 pub mod borderless;
 pub mod development_setup;
 pub mod devtools;
