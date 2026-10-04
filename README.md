@@ -493,7 +493,7 @@ fn app() -> impl IntoElement {
         .expanded()
         .center()
         .background((240, 240, 240))
-        .on_mouse_up(move |_| *state.write() += 1)
+        .on_press(move |_| *state.write() += 1)
         .child(format!("Clicked: {}", state.read()))
 }
 
