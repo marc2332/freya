@@ -268,11 +268,9 @@ fn peek_query_state_from_the_test() {
         std::time::Duration::from_millis(200),
     );
 
-    let name = test.run_in(|| {
-        QueriesStorage::<GetUserName>::peek_matching(0)
-            .first()
-            .and_then(|query| query.state().ok().cloned())
-    });
+    let name = QueriesStorage::<GetUserName>::peek_matching(0)
+        .first()
+        .and_then(|query| query.state().ok().cloned());
 
     assert_eq!(name.as_deref(), Some("Marc"));
 }
@@ -288,12 +286,10 @@ fn mocked_query() {
     let (mut test, _) = TestingRunner::new(
         app,
         (200., 200.).into(),
-        |runner| {
-            runner.run_in(|| {
-                GlobalContexts::get().insert_context(QueriesStorage::<GetUserName>::mocked(
-                    |_keys| Ok("Mocked".to_string()),
-                ))
-            })
+        |_| {
+            GlobalContexts::get().insert_context(QueriesStorage::<GetUserName>::mocked(|_keys| {
+                Ok("Mocked".to_string())
+            }))
         },
         1.,
     );

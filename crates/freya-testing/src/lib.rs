@@ -143,13 +143,11 @@ impl TestingRunner {
         let app = app.into();
         let mut runner = Runner::new(move || integration(app.clone()).into_element());
 
-        runner.with_root_context(|| {
-            GlobalContexts::get().insert_context(Clipboard::create(
-                ClipboardContext::new()
-                    .ok()
-                    .map(|clipboard| Box::new(clipboard) as Box<dyn ClipboardProvider>),
-            ));
-        });
+        GlobalContexts::get().insert_context(Clipboard::create(
+            ClipboardContext::new()
+                .ok()
+                .map(|clipboard| Box::new(clipboard) as Box<dyn ClipboardProvider>),
+        ));
 
         runner.provide_root_context(ScreenReader::new);
 
