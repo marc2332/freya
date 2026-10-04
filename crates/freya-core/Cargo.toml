@@ -65,11 +65,12 @@ dioxus-devtools = { version = "0.7.4", optional = true }
 cursor-icon = "1.2.0"
 
 [dev-dependencies]
-freya = { path = "../freya" }
+freya = { path = "../freya", features = ["code-editor"] }
 freya-testing = { path = "../freya-testing" }
 freya-core = { path = "../freya-core", features = ["debug-integrity", "test"] }
 freya-engine = { path = "../freya-engine" }
 tracing-subscriber = { workspace = true }
+tree-sitter-rust = "0.24"
 
 [features]
 hotpath = ["hotpath/hotpath", "ragnarok/hotpath"]

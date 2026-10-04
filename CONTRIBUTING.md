@@ -19,6 +19,8 @@ cd freya
 
 The repository's [flake.nix](./flake.nix) provides the stable and nightly Rust toolchains, native dependencies, Emscripten and development tools on x86_64 Linux. Install [Nix](https://nixos.org/download/) with flakes enabled, [direnv](https://direnv.net/) and [nix-direnv](https://github.com/nix-community/nix-direnv). Run `direnv allow` once per worktree to automatically load the development environment when entering it. You can also use `nix develop` directly. The stable toolchain is pinned by `rust-toolchain.toml`, and the nightly toolchain is pinned by `rust-toolchain-nightly.toml`.
 
+For Android development, use `nix develop .#android` to include the Android SDK, NDK, Java, `cargo-ndk` and Android Rust targets. See the [Android example](./examples/android/README.md) for build instructions.
+
 #### Without Nix
 
 You will need the following tools installed:
