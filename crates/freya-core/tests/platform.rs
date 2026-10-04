@@ -41,11 +41,13 @@ fn platform_reads_selected_windows_and_keeps_calling_window_context() {
 fn global_platform_works_after_its_originating_window_closes() {
     let runner = launch_test(|| rect());
     let events = Rc::new(RefCell::new(Vec::new()));
-    let mut platform = Platform::get();
-    platform.sender = Rc::new({
+    let platform = Platform::new({
         let events = events.clone();
         move |event| events.borrow_mut().push(event)
     });
+    let window = runner.run_in(|| Platform::get().current_window());
+    let window_id = window.id;
+    platform.register_window(window);
     let contexts = GlobalContexts::get();
     contexts.insert_context(platform.clone());
     let tasks = contexts.insert_context(GlobalTasks::new(noop_waker()));
@@ -57,6 +59,7 @@ fn global_platform_works_after_its_originating_window_closes() {
         })
     });
     drop(runner);
+    assert!(platform.try_window(window_id).is_none());
     tasks.poll();
 
     assert!(task.is_finished());
