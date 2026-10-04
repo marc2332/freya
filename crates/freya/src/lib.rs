@@ -27,7 +27,7 @@
 //!         .background((35, 35, 35))
 //!         .color(Color::WHITE)
 //!         .padding(Gaps::new_all(12.))
-//!         .on_mouse_up(move |_| *count.write() += 1)
+//!         .on_press(move |_| *count.write() += 1)
 //!         .child(format!("Click to increase -> {}", count.read()))
 //! }
 //! ```
