@@ -210,14 +210,16 @@ impl LaunchProxy {
         });
         let _ = self
             .0
-            .send_event(NativeEvent::Generic(NativeGenericEvent::RendererCallback(
-                cb,
+            .send_event(NativeEvent::Generic(NativeGenericEvent::User(
+                GlobalUserEvent::Erased(SingleThreadErasedEvent(Box::new(
+                    NativePlatformErasedEventAction::RendererCallback(cb),
+                ))),
             )));
         rx
     }
 }
 
-pub type RendererCallback = Box<dyn FnOnce(WindowId, &mut RendererContext) + 'static>;
+pub type RendererCallback = Box<dyn FnOnce(&mut RendererContext) + 'static>;
 
 pub enum NativePlatformErasedEventAction {
     LaunchWindow {
@@ -225,10 +227,6 @@ pub enum NativePlatformErasedEventAction {
         ack: futures_channel::oneshot::Sender<WindowId>,
     },
     CloseWindow(WindowId),
-    RendererCallback(Box<dyn FnOnce(&mut RendererContext) + 'static>),
-}
-
-pub enum NativeWindowErasedEventAction {
     RendererCallback(RendererCallback),
 }
 
@@ -255,7 +253,6 @@ pub struct NativeTrayEvent {
 pub enum NativeGenericEvent {
     PollFutures,
     User(GlobalUserEvent),
-    RendererCallback(Box<dyn FnOnce(&mut RendererContext) + 'static>),
 }
 
 impl fmt::Debug for NativeGenericEvent {
@@ -263,7 +260,6 @@ impl fmt::Debug for NativeGenericEvent {
         match self {
             NativeGenericEvent::PollFutures => f.write_str("PollFutures"),
             NativeGenericEvent::User(event) => f.debug_tuple("User").field(event).finish(),
-            NativeGenericEvent::RendererCallback(_) => f.write_str("RendererCallback"),
         }
     }
 }
@@ -393,21 +389,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
         event: NativeEvent,
     ) {
         match event {
-            NativeEvent::Generic(NativeGenericEvent::RendererCallback(cb)) => {
-                let mut renderer_context = RendererContext {
-                    fallback_fonts: &mut self.fallback_fonts,
-                    active_event_loop,
-                    windows: &mut self.windows,
-                    proxy: &mut self.proxy,
-                    plugins: &mut self.plugins,
-                    font_manager: &mut self.font_manager,
-                    font_collection: &mut self.font_collection,
-                    gpu_resource_cache_limit: self.gpu_resource_cache_limit,
-                    graphics_context: &mut self.graphics_context,
-                    global_contexts: &self.global_contexts,
-                };
-                (cb)(&mut renderer_context);
-            }
             NativeEvent::Generic(NativeGenericEvent::PollFutures) => {
                 GlobalTasks::get().poll();
             }
@@ -551,12 +532,19 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             }
                         }
                         NativePlatformErasedEventAction::RendererCallback(callback) => {
-                            self.user_event(
+                            let mut renderer_context = RendererContext {
+                                fallback_fonts: &mut self.fallback_fonts,
                                 active_event_loop,
-                                NativeEvent::Generic(NativeGenericEvent::RendererCallback(
-                                    callback,
-                                )),
-                            );
+                                windows: &mut self.windows,
+                                proxy: &mut self.proxy,
+                                plugins: &mut self.plugins,
+                                font_manager: &mut self.font_manager,
+                                font_collection: &mut self.font_collection,
+                                gpu_resource_cache_limit: self.gpu_resource_cache_limit,
+                                graphics_context: &mut self.graphics_context,
+                                global_contexts: &self.global_contexts,
+                            };
+                            callback(&mut renderer_context);
                         }
                     }
                 }
@@ -726,30 +714,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             }
                             UserEvent::SetCustomScaleFactor(custom_scale_factor) => {
                                 app.set_custom_scale_factor(custom_scale_factor);
-                            }
-                            UserEvent::Erased(data) => {
-                                let action = data
-                                    .0
-                                    .downcast::<NativeWindowErasedEventAction>()
-                                    .expect("Expected NativeWindowErasedEventAction");
-                                match *action {
-                                    NativeWindowErasedEventAction::RendererCallback(cb) => {
-                                        let window_id = app.window.id();
-                                        let mut renderer_context = RendererContext {
-                                            fallback_fonts: &mut self.fallback_fonts,
-                                            active_event_loop,
-                                            windows: &mut self.windows,
-                                            global_contexts: &self.global_contexts,
-                                            proxy: &mut self.proxy,
-                                            plugins: &mut self.plugins,
-                                            font_manager: &mut self.font_manager,
-                                            font_collection: &mut self.font_collection,
-                                            gpu_resource_cache_limit: self.gpu_resource_cache_limit,
-                                            graphics_context: &mut self.graphics_context,
-                                        };
-                                        (cb)(window_id, &mut renderer_context);
-                                    }
-                                }
                             }
                         },
                         NativeWindowEventAction::PlatformEvent(platform_event) => {

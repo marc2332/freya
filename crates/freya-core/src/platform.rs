@@ -99,10 +99,10 @@ impl TargetPlatform {
     }
 }
 
-/// Application-wide APIs and access to live windows, available from global tasks.
+/// Application-wide platform api.
 #[derive(Clone)]
 pub struct Platform {
-    pub sender: Rc<dyn Fn(GlobalUserEvent)>,
+    sender: Rc<dyn Fn(GlobalUserEvent)>,
     windows: Rc<RefCell<FxHashMap<u64, PlatformWindow>>>,
 }
 
@@ -191,8 +191,7 @@ impl Platform {
 #[derive(Clone, Copy)]
 pub struct CurrentWindowId(pub u64);
 
-/// State and APIs for the window selected by `Platform::window` or `Platform::current_window`.
-/// `current_window` refers to the window you are calling from, not the focused window.
+/// State and APIs for a given window.
 ///
 /// # Example
 ///
@@ -213,7 +212,7 @@ pub struct CurrentWindowId(pub u64);
 #[derive(Clone)]
 pub struct PlatformWindow {
     pub id: u64,
-    /// The accessibility ID of the currently focused node in this window.
+    /// The [`AccessibilityId`] of the currently focused node in this window.
     pub focused_accessibility_id: State<AccessibilityId>,
     /// Accessibility data for this window's currently focused node.
     pub focused_accessibility_node: State<accesskit::Node>,
@@ -221,9 +220,9 @@ pub struct PlatformWindow {
     pub root_size: State<Size2D>,
     /// This window's effective rendering scale factor.
     pub scale_factor: State<f64>,
-    /// The custom scale factor, changed through `set_custom_scale_factor`.
+    /// The custom scale factor, changed through [`Self::set_custom_scale_factor`].
     pub custom_scale_factor: State<f64>,
-    /// The current input navigation mode in this window.
+    /// The current [`NavigationMode`] in this window.
     pub navigation_mode: State<NavigationMode>,
     /// The color theme preferred by the operating system for this window.
     pub preferred_theme: State<PreferredTheme>,
@@ -231,7 +230,7 @@ pub struct PlatformWindow {
     pub is_app_focused: State<bool>,
     /// The operating system's accent color, when available.
     pub accent_color: State<AccentColor>,
-    /// Dispatches events to this window's renderer.
+    /// Dispatches [`UserEvent`]s to this window's renderer.
     pub sender: Rc<dyn Fn(UserEvent)>,
 }
 

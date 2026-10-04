@@ -288,7 +288,7 @@ impl WebApp {
                     self.tree.accessibility_diff.request_focus(strategy);
                 }
                 UserEvent::RequestRedraw => self.needs_render = true,
-                UserEvent::SetCustomScaleFactor(_) | UserEvent::Erased(_) => {}
+                UserEvent::SetCustomScaleFactor(_) => {}
             }
         }
 

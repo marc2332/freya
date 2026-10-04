@@ -28,7 +28,6 @@ pub enum UserEvent {
     FocusAccessibilityNode(AccessibilityFocusStrategy),
     /// Set a custom scale factor.
     SetCustomScaleFactor(f64),
-    Erased(SingleThreadErasedEvent),
 }
 
 pub struct SingleThreadErasedEvent(pub Box<dyn Any>);

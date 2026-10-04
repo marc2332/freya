@@ -9,7 +9,6 @@ use freya_core::{
         Platform,
         PlatformWindow,
         PointerEventData,
-        UserEvent,
     },
     user_event::SingleThreadErasedEvent,
 };
@@ -23,14 +22,13 @@ use crate::{
     config::WindowConfig,
     renderer::{
         NativePlatformErasedEventAction,
-        NativeWindowErasedEventAction,
         RendererContext,
     },
 };
 
 /// Extension trait that adds winit-specific window management capabilities to [`Platform`].
 pub trait WinitPlatformExt {
-    /// Get the [`WindowId`] of the window from whose context this is called.
+    /// Get the [`WindowId`] of the current window.
     ///
     /// # Example
     ///
@@ -258,9 +256,10 @@ impl WinitPlatformWindowExt for PlatformWindow {
     where
         F: FnOnce(&mut SkiaSurface) -> T + 'static,
     {
+        let window_id = self.id.into();
         let (sender, receiver) = futures_channel::oneshot::channel();
-        self.send(UserEvent::Erased(SingleThreadErasedEvent(Box::new(
-            NativeWindowErasedEventAction::RendererCallback(Box::new(move |window_id, context| {
+        Platform::get().send(GlobalUserEvent::Erased(SingleThreadErasedEvent(Box::new(
+            NativePlatformErasedEventAction::RendererCallback(Box::new(move |context| {
                 if let Some(app) = context.windows.get_mut(&window_id) {
                     app.render_callbacks.push(Box::new(move |surface| {
                         let _ = sender.send(callback(surface));
