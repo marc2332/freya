@@ -8,7 +8,6 @@ pub mod button;
 pub mod cache;
 #[cfg(feature = "calendar")]
 pub mod calendar;
-pub mod canvas;
 pub mod card;
 pub mod checkbox;
 pub mod chip;
@@ -21,7 +20,7 @@ pub mod draggable_canvas;
 pub mod element_expansions;
 pub mod floating_tab;
 #[cfg(feature = "remote-asset")]
-pub(crate) mod http;
+pub mod http;
 pub mod icons;
 pub mod image_viewer;
 pub mod input;

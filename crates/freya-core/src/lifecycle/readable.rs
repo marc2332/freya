@@ -176,6 +176,12 @@ pub trait IntoReadable<T: 'static> {
     fn into_readable(self) -> Readable<T>;
 }
 
+impl<T: 'static> IntoReadable<T> for Readable<T> {
+    fn into_readable(self) -> Readable<T> {
+        self
+    }
+}
+
 impl<T: 'static> IntoReadable<T> for State<T> {
     fn into_readable(self) -> Readable<T> {
         Readable::from_state(self)

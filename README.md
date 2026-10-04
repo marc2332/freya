@@ -20,7 +20,7 @@ freya = "0.4"
 Next release:
 
 ```toml
-freya = "0.5.0-rc.7"
+freya = "0.5.0-rc.8"
 ```
 
 `main` branch:
@@ -493,7 +493,7 @@ fn app() -> impl IntoElement {
         .expanded()
         .center()
         .background((240, 240, 240))
-        .on_mouse_up(move |_| *state.write() += 1)
+        .on_press(move |_| *state.write() += 1)
         .child(format!("Clicked: {}", state.read()))
 }
 
@@ -537,7 +537,7 @@ use freya::prelude::*;
 use freya::plot::*;
 use freya::plot::plotters::*;
 
-fn on_render(ctx: &mut RenderContext, (cursor_x, cursor_y): (f64, f64)) {
+fn on_render(ctx: &mut FillRenderContext, (cursor_x, cursor_y): (f64, f64)) {
     let backend = PlotSkiaBackend::new(
         ctx.canvas,
         ctx.font_collection,
@@ -591,7 +591,7 @@ fn app() -> impl IntoElement {
         }
     };
 
-    canvas(RenderCallback::new(move |context| {
+    rect().background(RenderCallback::new(move |context| {
         on_render(context, cursor_position().to_tuple());
     }))
     .expanded()
@@ -673,53 +673,29 @@ fn app() -> impl IntoElement {
   <img src="https://github.com/user-attachments/assets/fdc8e4e9-321a-4ad2-8190-ad6772fc9dc0">
 </div>
 
-### WebView Integration
+### HTML Rendering
 
-Integrate web content into your native applications with Freya's WebView support. Embed web applications, or simply display web-based content alongside your native UI components.
-Enable with the `webview` feature.
+Render HTML and CSS content natively inside your applications, powered by the [Blitz](https://github.com/DioxusLabs/blitz) engine.
+Enable with the `html` feature.
 
 <details>
 <summary>Code</summary>
 
 ```rust
 use freya::prelude::*;
-use freya::webview::*;
+use freya::html::*;
 
 fn app() -> impl IntoElement {
-    // Multi-tab webview implementation
-    let mut tabs = use_state(|| vec![Tab {
-        id: WebViewId::new(),
-        title: "Tab 1".to_string(),
-        url: "https://duckduckgo.com".to_string(),
-    }]);
-    let mut active_tab = use_state(|| tabs.read()[0].id);
+    let handle = use_html(|| HtmlSource::url("https://example.com"));
 
     rect()
         .expanded()
-        .height(Size::fill())
-        .background((35, 35, 35))
-        .child(
-            rect()
-                .width(Size::fill())
-                .height(Size::px(45.))
-                .padding(4.)
-                .background((50, 50, 50))
-                .horizontal()
-                .cross_align(Alignment::Center)
-                .spacing(4.)
-                .children(tabs.read().iter().map(|tab| {
-                    // Tab implementation...
-                }))
-        )
-        .child(WebView::new("https://duckduckgo.com").expanded())
+        .center()
+        .child(HtmlView::new(handle).expanded())
 }
 ```
 
 </details>
-
-<div align="center">
-  <img src="https://github.com/user-attachments/assets/60d6db71-fa22-4bbb-a4ad-1ff00a056614">
-</div>
 
 
 ### Terminal Emulation

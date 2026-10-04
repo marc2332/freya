@@ -217,8 +217,8 @@ pub trait EventHandlersExt: Sized {
         Pointer,
         PointerEventData;
 
-        /// Fires when a pointer (mouse or touch) is pressed anywhere, even outside the element.
-        global_pointer_press => EventName::GlobalPointerPress;
+        /// Fires when a pointer (mouse or touch) is released anywhere, even outside the element.
+        global_pointer_up => EventName::GlobalPointerUp;
         /// Fires when a pointer (mouse or touch) goes down anywhere, even outside the element.
         global_pointer_down => EventName::GlobalPointerDown;
         /// Fires when a pointer (mouse or touch) moves anywhere, even outside the element.
@@ -226,8 +226,8 @@ pub trait EventHandlersExt: Sized {
 
         /// Like [`on_global_pointer_move`](Self::on_global_pointer_move), but fires during the top-down capture phase.
         capture_global_pointer_move => EventName::CaptureGlobalPointerMove;
-        /// Like [`on_global_pointer_press`](Self::on_global_pointer_press), but fires during the top-down capture phase.
-        capture_global_pointer_press => EventName::CaptureGlobalPointerPress;
+        /// Like [`on_global_pointer_up`](Self::on_global_pointer_up), but fires during the top-down capture phase.
+        capture_global_pointer_up => EventName::CaptureGlobalPointerUp;
     }
 
     event_handlers! {
@@ -907,7 +907,16 @@ where
     }
 }
 
-/// Methods for styling an element's box: background, borders, shadows and corners.
+/// Methods for painting an element's background.
+pub trait BackgroundExt: StyleExt {
+    /// Paint the background with a color, gradient or shader. See [`Fill`].
+    fn background(mut self, background: impl Into<Fill>) -> Self {
+        self.get_style().background = background.into();
+        self
+    }
+}
+
+/// Low-level access to an element's [`StyleState`].
 pub trait StyleExt
 where
     Self: Sized,
@@ -920,13 +929,10 @@ where
         *self.get_style() = style;
         self
     }
+}
 
-    /// Paint the background with any [`Fill`]: a [`Color`], a gradient or a shader.
-    fn background(mut self, background: impl Into<Fill>) -> Self {
-        self.get_style().background = background.into();
-        self
-    }
-
+/// Methods for decorating an element.
+pub trait DecorationExt: StyleExt {
     /// Add an outline around the element. See [`Border`].
     fn border(mut self, border: impl Into<Option<Border>>) -> Self {
         if let Some(border) = border.into() {
@@ -948,7 +954,7 @@ where
     }
 }
 
-impl<T: StyleExt> CornerRadiusExt for T {
+impl<T: DecorationExt> CornerRadiusExt for T {
     fn with_corner_radius(mut self, corner_radius: f32) -> Self {
         self.get_style().corner_radius = CornerRadius::new_all(corner_radius);
         self

@@ -184,7 +184,7 @@ impl WindowDragExt for Rect {
                 });
             }
         })
-        .on_global_pointer_press(|_: Event<PointerEventData>| {
+        .on_global_pointer_up(|_: Event<PointerEventData>| {
             EventsCombos::<WindowDragGesture>::released();
         })
     }

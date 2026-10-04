@@ -12,7 +12,7 @@ pub trait NativeRouterExt {
 
 impl NativeRouterExt for Rect {
     fn native_router(self) -> Self {
-        self.on_global_pointer_press(|e: Event<PointerEventData>| match e.button() {
+        self.on_global_pointer_up(|e: Event<PointerEventData>| match e.button() {
             Some(MouseButton::Back) => RouterContext::get().go_back(),
             Some(MouseButton::Forward) => RouterContext::get().go_forward(),
             _ => {}

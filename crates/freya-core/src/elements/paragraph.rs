@@ -80,9 +80,12 @@ use crate::{
         TextStyleExt,
         VerticalAlign,
     },
-    style::cursor::{
-        CursorMode,
-        CursorStyle,
+    style::{
+        cursor::{
+            CursorMode,
+            CursorStyle,
+        },
+        render_callback::RenderContext as FillRenderContext,
     },
     text_cache::CachedParagraph,
     tree::DiffModifies,
@@ -565,10 +568,24 @@ impl ElementExt for ParagraphElement {
         }
 
         // Draw text
-        paragraph.paint_at(
-            context.canvas,
-            Point2D::new(inner_area.min_x(), inner_area.min_y() + vertical_offset).cast_unit(),
-        );
+        let origin = Point2D::new(inner_area.min_x(), inner_area.min_y() + vertical_offset);
+        paragraph.paint_at(context.canvas, origin.cast_unit());
+
+        if let Some(callback) = context.text_style_state.color.render_callback() {
+            let layer = context.canvas.save();
+            context.canvas.translate(origin.to_tuple());
+            context
+                .canvas
+                .scale((context.scale_factor as f32, context.scale_factor as f32));
+            callback.call(&mut FillRenderContext {
+                canvas: context.canvas,
+                font_collection: context.font_collection,
+                origin: origin / context.scale_factor as f32,
+                size: paragraph.fill_area().size / context.scale_factor as f32,
+                text_style_state: context.text_style_state,
+            });
+            context.canvas.restore_to_count(layer);
+        }
 
         // Draw cursor
         if let Some(cursor_index) = self.cursor_index
@@ -869,7 +886,7 @@ impl Span<'_> {
         let span_style = TextStyleState::from_data(text_style_state, &self.text_style_data);
         let mut text_style = TextStyle::new();
 
-        let mut font_families = text_style_state.font_families.clone();
+        let mut font_families = span_style.font_families.clone();
         font_families.extend_from_slice(fallback_fonts);
 
         span_style
@@ -919,14 +936,20 @@ impl ParagraphPaintExt for SkParagraph {
     }
 
     fn fill_area(&self) -> Area {
-        let max_width = self.max_width();
-        let width = if max_width < f32::MAX {
-            max_width
-        } else {
-            self.longest_line()
-        };
+        let (left, right) = self
+            .get_line_metrics()
+            .into_iter()
+            .filter(|line| line.width > 0.0)
+            .map(|line| (line.left as f32, (line.left + line.width) as f32))
+            .reduce(|(left, right), (line_left, line_right)| {
+                (left.min(line_left), right.max(line_right))
+            })
+            .unwrap_or((0.0, self.longest_line()));
 
-        Area::new(Point2D::zero(), Size2D::new(width, self.height()))
+        Area::new(
+            Point2D::new(left, 0.0),
+            Size2D::new(right - left, self.height()),
+        )
     }
 }
 

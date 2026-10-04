@@ -680,7 +680,7 @@ pub fn virtual_scroll_view_keyboard_navigation_horizontal() {
     for _ in 0..5 {
         test.press_key(Key::Named(NamedKey::ArrowRight));
     }
-    test.poll(Duration::from_millis(1), Duration::from_millis(20));
+    test.poll_n(Duration::from_millis(1), 5);
 
     let content = scrollview.children()[0].children()[0].children();
 
@@ -694,7 +694,7 @@ pub fn virtual_scroll_view_keyboard_navigation_horizontal() {
     for _ in 0..3 {
         test.press_key(Key::Named(NamedKey::ArrowLeft));
     }
-    test.poll(Duration::from_millis(1), Duration::from_millis(20));
+    test.poll_n(Duration::from_millis(1), 5);
 
     let content = scrollview.children()[0].children()[0].children();
 
@@ -705,7 +705,7 @@ pub fn virtual_scroll_view_keyboard_navigation_horizontal() {
 
     // Press End to jump to the right
     test.press_key(Key::Named(NamedKey::End));
-    test.poll(Duration::from_millis(1), Duration::from_millis(20));
+    test.poll_n(Duration::from_millis(1), 5);
 
     let content = scrollview.children()[0].children()[0].children();
 
@@ -718,7 +718,7 @@ pub fn virtual_scroll_view_keyboard_navigation_horizontal() {
 
     // Press Home to jump to the left
     test.press_key(Key::Named(NamedKey::Home));
-    test.poll(Duration::from_millis(1), Duration::from_millis(20));
+    test.poll_n(Duration::from_millis(1), 5);
 
     let content = scrollview.children()[0].children()[0].children();
 

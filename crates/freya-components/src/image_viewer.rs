@@ -320,7 +320,7 @@ pub struct ImageViewer {
     image_data: ImageData,
     accessibility: AccessibilityData,
     effect: EffectData,
-    corner_radius: Option<CornerRadius>,
+    style: StyleState,
     decode_mode: DecodeMode,
 
     children: Vec<Element>,
@@ -339,7 +339,7 @@ impl ImageViewer {
             image_data: ImageData::default(),
             accessibility: AccessibilityData::default(),
             effect: EffectData::default(),
-            corner_radius: None,
+            style: StyleState::default(),
             decode_mode: DecodeMode::default(),
             children: Vec::new(),
             loading_placeholder: None,
@@ -389,12 +389,15 @@ impl EffectExt for ImageViewer {
     }
 }
 
-impl ImageViewer {
-    pub fn corner_radius(mut self, corner_radius: impl Into<CornerRadius>) -> Self {
-        self.corner_radius = Some(corner_radius.into());
-        self
-    }
+impl DecorationExt for ImageViewer {}
 
+impl StyleExt for ImageViewer {
+    fn get_style(&mut self) -> &mut StyleState {
+        &mut self.style
+    }
+}
+
+impl ImageViewer {
     /// Custom element rendered while loading.
     pub fn loading_placeholder(mut self, placeholder: impl Into<Element>) -> Self {
         self.loading_placeholder = Some(placeholder.into());
@@ -483,9 +486,7 @@ impl Component for ImageViewer {
                     .image_data(self.image_data.clone())
                     .effect(self.effect.clone())
                     .children(self.children.clone())
-                    .map(self.corner_radius, |img, corner_radius| {
-                        img.corner_radius(corner_radius)
-                    })
+                    .style(self.style.clone())
                     .into_element()
             }
             Asset::Pending | Asset::Loading => rect()

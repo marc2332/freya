@@ -74,7 +74,7 @@ impl<Key: NodeKey> NodesState<Key> {
 
         let source_movement_event = source_events
             .iter()
-            .find(|e| e.is_moved() || e.is_touch_released());
+            .find(|e| e.is_moved() || e.is_touch_released() || e.is_pointer_exit());
         let mut removed_from_hovered = FxHashSet::default();
 
         self.hovered_nodes.retain(|node_key| {
@@ -83,15 +83,18 @@ impl<Key: NodeKey> NodesState<Key> {
                 return false;
             };
 
-            let cursor_still_inside = source_movement_event
-                .and_then(|e| e.try_location())
-                .is_none_or(|cursor| events_measurer.is_point_inside(node_key, cursor));
+            let cursor_still_inside = source_movement_event.is_none_or(|event| {
+                !event.is_pointer_exit()
+                    && event
+                        .try_location()
+                        .is_none_or(|cursor| events_measurer.is_point_inside(node_key, cursor))
+            });
 
             if cursor_still_inside {
                 return true;
             }
 
-            // Cursor moved outside this node, emit leave events
+            // Emit leave events for nodes no longer hovered
             let source_event = source_movement_event.unwrap();
             for derived_event in Name::new_leave().get_derived_events() {
                 if events_measurer.is_listening_to(node_key, &derived_event) {
@@ -118,6 +121,7 @@ impl<Key: NodeKey> NodesState<Key> {
             let new_deepest = emmitable_events
                 .iter()
                 .find(|e| e.name().is_exclusive_enter())
+                .or_else(|| emmitable_events.iter().rev().find(|e| e.name().is_moved()))
                 .map(|e| e.key());
 
             if let Some(old_entered) = self.entered_node {

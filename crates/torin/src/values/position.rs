@@ -114,15 +114,15 @@ impl Position {
         }
     }
 
-    pub fn is_stacked(&self) -> bool {
+    pub const fn is_stacked(&self) -> bool {
         matches!(self, Self::Stacked { .. })
     }
 
-    pub fn is_absolute(&self) -> bool {
+    pub const fn is_absolute(&self) -> bool {
         matches!(self, Self::Absolute { .. })
     }
 
-    pub fn is_global(&self) -> bool {
+    pub const fn is_global(&self) -> bool {
         matches!(self, Self::Global { .. })
     }
 

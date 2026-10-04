@@ -1,3 +1,8 @@
+#[cfg(target_os = "windows")]
+use std::time::{
+    Duration,
+    Instant,
+};
 use std::{
     ffi::{
         CStr,
@@ -16,7 +21,6 @@ use freya_engine::prelude::{
     SurfaceOrigin,
     backend_render_targets,
     direct_contexts,
-    wrap_backend_render_target,
 };
 use gl::{
     types::*,
@@ -64,6 +68,8 @@ use winit::{
     },
 };
 
+use crate::drivers::surface::wrap_render_target;
+
 /// Graphics driver using OpenGL.
 pub struct OpenGLDriver {
     pub(crate) gr_context: DirectContext,
@@ -74,6 +80,8 @@ pub struct OpenGLDriver {
     pub(crate) stencil_size: usize,
     pub(crate) surface: SkiaSurface,
     pub(crate) gpu_name: Option<String>,
+    #[cfg(target_os = "windows")]
+    last_present: Option<Instant>,
 }
 
 impl Drop for OpenGLDriver {
@@ -201,10 +209,11 @@ impl OpenGLDriver {
 
         let gl_context = not_current_gl_context.make_current(&gl_surface)?;
 
-        // Try setting vsync.
-        gl_surface
-            .set_swap_interval(&gl_context, SwapInterval::Wait(NonZeroU32::new(1).unwrap()))
-            .ok();
+        if let Err(error) =
+            gl_surface.set_swap_interval(&gl_context, SwapInterval::Wait(NonZeroU32::MIN))
+        {
+            tracing::warn!("Failed to enable OpenGL vsync: {error}");
+        }
 
         load_with(|s| {
             gl_config
@@ -253,13 +262,11 @@ impl OpenGLDriver {
             stencil_size,
             fb_info,
         );
-        let surface = wrap_backend_render_target(
+        let surface = wrap_render_target(
             &mut gr_context,
             &render_target,
             SurfaceOrigin::BottomLeft,
             ColorType::RGBA8888,
-            None,
-            None,
         )
         .ok_or("could not create OpenGL skia surface")?;
 
@@ -272,9 +279,29 @@ impl OpenGLDriver {
             fb_info,
             surface,
             gpu_name,
+            #[cfg(target_os = "windows")]
+            last_present: None,
         };
 
         Ok(driver)
+    }
+
+    #[cfg(target_os = "windows")]
+    fn wait_for_display(&mut self, window: &Window) {
+        let refresh_rate = window
+            .current_monitor()
+            .and_then(|monitor| monitor.refresh_rate_millihertz())
+            .filter(|refresh_rate| *refresh_rate > 1_000)
+            .unwrap_or(60_000);
+        let frame_interval = Duration::from_secs_f64(1000.0 / refresh_rate as f64);
+
+        if let Some(last_present) = self.last_present
+            && let Some(remaining) = frame_interval.checked_sub(last_present.elapsed())
+        {
+            std::thread::sleep(remaining);
+        }
+
+        self.last_present = Some(Instant::now());
     }
 
     pub fn present(&mut self, window: &Window, render: impl FnOnce(&mut SkiaSurface)) {
@@ -289,6 +316,9 @@ impl OpenGLDriver {
         if let Err(error) = self.gl_surface.swap_buffers(&self.gl_context) {
             tracing::error!("Failed to swap buffers: {:?}", error);
         }
+
+        #[cfg(target_os = "windows")]
+        self.wait_for_display(window);
     }
 
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
@@ -298,13 +328,11 @@ impl OpenGLDriver {
             self.stencil_size,
             self.fb_info,
         );
-        let surface = wrap_backend_render_target(
+        let surface = wrap_render_target(
             &mut self.gr_context,
             &render_target,
             SurfaceOrigin::BottomLeft,
             ColorType::RGBA8888,
-            None,
-            None,
         )
         .expect("Could not create skia surface");
 

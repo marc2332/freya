@@ -5,10 +5,11 @@ edition = "2024"
 publish = false
 
 [features]
-desktop = ["freya/winit"]
+desktop = ["freya/winit", "freya/gpu"]
 
 [dependencies]
 freya = { path = "../../crates/freya", default-features = false, features = [
+  "html",
   "router",
   "material-design",
   "icons-lucide",

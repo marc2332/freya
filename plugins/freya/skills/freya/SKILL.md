@@ -32,7 +32,7 @@ impl Component for Counter {
     fn render(&self) -> impl IntoElement {
         let mut count = use_state(|| self.initial);
         label()
-            .on_mouse_up(move |_| *count.write() += 1)
+            .on_press(move |_| *count.write() += 1)
             .text(format!("Count: {}", count.read()))
     }
 }
@@ -178,15 +178,15 @@ Catalog (all prefixed `on_`):
 - **Touch**: `touch_start`, `touch_end`, `touch_move`, `touch_cancel`.
 - **File drop**: `file_drop`.
 - **Layout**: `sized` (measured size changed).
-- **Global** (no hit-test; use sparingly): `global_pointer_press`, `global_pointer_down`, `global_pointer_move`, `global_key_down`, `global_key_up`, `global_file_hover`, `global_file_hover_cancelled`.
-- **Capture** (run before regular handlers): `capture_global_pointer_press`, `capture_global_pointer_move`.
+- **Global** (no hit-test; use sparingly): `global_pointer_up`, `global_pointer_down`, `global_pointer_move`, `global_key_down`, `global_key_up`, `global_file_hover`, `global_file_hover_cancelled`.
+- **Capture** (run before regular handlers): `capture_global_pointer_up`, `capture_global_pointer_move`.
 
 **Prefer `on_press` over raw mouse/pointer events** for interactive elements: it covers click, tap, and keyboard activation, so accessibility comes free. Use `on_mouse_*` / `on_pointer_*` only when you need pointer-specific behavior (drag handles, canvas tools).
 
 `Event<T>` has two cancellation methods, plus `.map(...)` / `.try_map(...)` to transform inner data:
 
 - `.stop_propagation()`: don't bubble this event to ancestor handlers. No effect on events that don't bubble (move/enter/leave, capture, global).
-- `.prevent_default()`: don't fire the follow-up events this one triggers (e.g. in `on_mouse_up`, suppresses the `on_pointer_press` and `on_global_pointer_press` that would follow).
+- `.prevent_default()`: don't fire the follow-up events this one triggers (e.g. in `on_mouse_up`, suppresses the `on_pointer_press` and `on_global_pointer_up` that would follow).
 
 ### Callback props on custom components
 
@@ -262,7 +262,7 @@ Hooks are prefixed with `use_` (e.g. `use_state`, `use_animation`). Follow these
 ```rust
 let mut state = use_state(|| false);
 let on_click = move |_| state.set(true); // capture, not call inside handler
-rect().on_mouse_up(on_click)
+rect().on_press(on_click)
 ```
 
 ## State Management
@@ -888,13 +888,19 @@ use freya::material_design::*;
 Button::new().ripple().child("Click me")
 ```
 
-## WebView
+## HTML
 
-Enable with `features = ["webview"]`. Embeds a browser view into your UI:
+Enable with `features = ["html"]`. Renders an HTML + CSS document with Blitz:
 
 ```rust
-use freya::webview::*;
-WebView::new("https://example.com").expanded()
+use freya::html::*;
+// The view is driven by a handle, which also exposes history navigation
+// (back/forward) and the current URL. Sources can be remote or inline.
+let mut handle = use_html(|| HtmlSource::url("https://example.com"));
+HtmlView::new(handle).expanded();
+handle.back();
+handle.navigate("https://freyaui.dev");
+use_html(|| HtmlSource::html("<h1>Hello</h1>"));
 ```
 
 ## Terminal
@@ -966,7 +972,7 @@ freya = { version = "...", features = ["router", "radio"] }
 | `markdown` | `Markdown` renderer component |
 | `icons` | SVG icon library via Lucide (`freya-icons`) |
 | `material-design` | Material Design theme (`freya-material-design`) |
-| `webview` | Embed a WebView (`freya-webview`) |
+| `html` | Render HTML + CSS via Blitz (`freya-html`) |
 | `terminal` | Terminal emulator (`freya-terminal`) |
 | `terminal-pty` | Built-in PTY backend for the terminal, implies `terminal` |
 | `code-editor` | Code editing APIs (`freya-code-editor`) |

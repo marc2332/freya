@@ -208,7 +208,7 @@ impl Component for SelectableText {
             editable.process_event(EditableEvent::KeyUp { key: &e.key });
         };
 
-        let on_global_pointer_press = move |_: Event<PointerEventData>| {
+        let on_global_pointer_up = move |_: Event<PointerEventData>| {
             match *status.read() {
                 SelectableTextStatus::Idle if a11y_id.is_focused() => {
                     editable.process_event(EditableEvent::Release);
@@ -246,7 +246,7 @@ impl Component for SelectableText {
             .on_pointer_down(on_pointer_down)
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
-            .on_global_pointer_press(on_global_pointer_press)
+            .on_global_pointer_up(on_global_pointer_up)
             .on_key_down(on_key_down)
             .on_key_up(on_key_up);
 

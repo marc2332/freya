@@ -25,12 +25,29 @@
 //!
 //! Common ones:
 //!
-//! - Pointer / mouse / touch: `on_press`, `on_secondary_down`, `on_pointer_press`, `on_pointer_down`,
-//!   `on_pointer_move`, `on_pointer_enter`, `on_pointer_leave`, `on_pointer_over`, `on_pointer_out`.
-//! - Keyboard: `on_key_down`, `on_key_up`.
-//! - Wheel: `on_wheel`.
-//! - Layout: `on_sized`, `on_visible`, `on_hidden`.
-//! - Files: `on_file_drop`.
+//! - Press: [`on_press`](freya_core::prelude::EventHandlersExt::on_press),
+//!   [`on_secondary_down`](freya_core::prelude::EventHandlersExt::on_secondary_down).
+//! - Pointer: [`on_pointer_press`](freya_core::prelude::EventHandlersExt::on_pointer_press),
+//!   [`on_pointer_down`](freya_core::prelude::EventHandlersExt::on_pointer_down),
+//!   [`on_pointer_move`](freya_core::prelude::EventHandlersExt::on_pointer_move),
+//!   [`on_pointer_enter`](freya_core::prelude::EventHandlersExt::on_pointer_enter),
+//!   [`on_pointer_leave`](freya_core::prelude::EventHandlersExt::on_pointer_leave),
+//!   [`on_pointer_over`](freya_core::prelude::EventHandlersExt::on_pointer_over),
+//!   [`on_pointer_out`](freya_core::prelude::EventHandlersExt::on_pointer_out).
+//! - Mouse: [`on_mouse_down`](freya_core::prelude::EventHandlersExt::on_mouse_down),
+//!   [`on_mouse_up`](freya_core::prelude::EventHandlersExt::on_mouse_up),
+//!   [`on_mouse_move`](freya_core::prelude::EventHandlersExt::on_mouse_move).
+//! - Touch: [`on_touch_start`](freya_core::prelude::EventHandlersExt::on_touch_start),
+//!   [`on_touch_move`](freya_core::prelude::EventHandlersExt::on_touch_move),
+//!   [`on_touch_end`](freya_core::prelude::EventHandlersExt::on_touch_end),
+//!   [`on_touch_cancel`](freya_core::prelude::EventHandlersExt::on_touch_cancel).
+//! - Keyboard: [`on_key_down`](freya_core::prelude::EventHandlersExt::on_key_down),
+//!   [`on_key_up`](freya_core::prelude::EventHandlersExt::on_key_up).
+//! - Wheel: [`on_wheel`](freya_core::prelude::EventHandlersExt::on_wheel).
+//! - Layout: [`on_sized`](freya_core::prelude::EventHandlersExt::on_sized),
+//!   [`on_visible`](freya_core::prelude::EventHandlersExt::on_visible),
+//!   [`on_hidden`](freya_core::prelude::EventHandlersExt::on_hidden).
+//! - Files: [`on_file_drop`](freya_core::prelude::EventHandlersExt::on_file_drop).
 //!
 //! Each handler receives an [`Event<D>`](freya_core::prelude::Event) where `D` is the payload
 //! (e.g [`PointerEventData`](freya_core::prelude::PointerEventData),
@@ -76,10 +93,12 @@
 //! ## Default behavior and `prevent_default`
 //!
 //! Some events have a **default behavior**: side effects that Freya runs after the handler
-//! unless you opt out. The most common case is that an element-level event (e.g `on_mouse_up`)
-//! also dispatches a related **global** event (e.g `on_global_pointer_press`), and that some
-//! events (e.g `on_mouse_down`) get translated into the unified
-//! [pointer events](freya_core::prelude::PointerEventData) (e.g `on_pointer_down`).
+//! unless you opt out. The most common case is that an element-level event (e.g
+//! [`on_mouse_up`](freya_core::prelude::EventHandlersExt::on_mouse_up)) also dispatches a related
+//! **global** event (e.g [`on_global_pointer_up`](freya_core::prelude::EventHandlersExt::on_global_pointer_up)),
+//! and that some events (e.g [`on_mouse_down`](freya_core::prelude::EventHandlersExt::on_mouse_down))
+//! get translated into the unified [pointer events](freya_core::prelude::PointerEventData)
+//! (e.g [`on_pointer_down`](freya_core::prelude::EventHandlersExt::on_pointer_down)).
 //!
 //! Calling [`prevent_default`](freya_core::prelude::Event::prevent_default) cancels those
 //! follow-up events for this dispatch. It is **not** the same as `stop_propagation`:
@@ -88,15 +107,18 @@
 //! - `prevent_default`: cancels **other related events** that would otherwise fire as a
 //!   consequence of this one.
 //!
-//! Each event declares which other events it can cancel. For example a `on_mouse_up` handler
-//! that calls `prevent_default` will additionally cancel the `on_pointer_press` and the
-//! `on_global_pointer_press` events that would have fired afterwards.
+//! Each event declares which other events it can cancel. For example an
+//! [`on_mouse_up`](freya_core::prelude::EventHandlersExt::on_mouse_up) handler that calls
+//! `prevent_default` will additionally cancel the
+//! [`on_pointer_press`](freya_core::prelude::EventHandlersExt::on_pointer_press) and the
+//! [`on_global_pointer_up`](freya_core::prelude::EventHandlersExt::on_global_pointer_up)
+//! events that would have fired afterwards.
 //!
 //! ```rust, no_run
 //! # use freya::prelude::*;
 //! # fn app() -> impl IntoElement {
 //! rect()
-//!     .on_global_pointer_press(|_| println!("Anywhere on screen"))
+//!     .on_global_pointer_up(|_| println!("Anywhere on screen"))
 //!     .child(rect().on_mouse_up(|e: Event<MouseEventData>| {
 //!         // Suppresses the global handler above for this click only.
 //!         e.prevent_default();
@@ -114,9 +136,13 @@
 //! When several events would dispatch in the same frame, Freya processes them in a fixed
 //! priority order:
 //!
-//! 1. **Capture** events (e.g `on_capture_global_pointer_press`, `on_capture_global_pointer_move`).
-//! 2. **Leave** events (`on_pointer_leave`, `on_pointer_out`).
-//! 3. **Enter / over** events (`on_pointer_enter`, `on_pointer_over`).
+//! 1. **Capture** events (e.g
+//!    [`on_capture_global_pointer_up`](freya_core::prelude::EventHandlersExt::on_capture_global_pointer_up),
+//!    [`on_capture_global_pointer_move`](freya_core::prelude::EventHandlersExt::on_capture_global_pointer_move)).
+//! 2. **Leave** events ([`on_pointer_leave`](freya_core::prelude::EventHandlersExt::on_pointer_leave),
+//!    [`on_pointer_out`](freya_core::prelude::EventHandlersExt::on_pointer_out)).
+//! 3. **Enter / over** events ([`on_pointer_enter`](freya_core::prelude::EventHandlersExt::on_pointer_enter),
+//!    [`on_pointer_over`](freya_core::prelude::EventHandlersExt::on_pointer_over)).
 //! 4. Everything else.
 //!
 //! Within the same priority class, events are sorted by layer and cursor position so that
@@ -135,13 +161,13 @@
 //! or focused. They are useful when you want to react to input that is not necessarily aimed
 //! at your element.
 //!
-//! - `on_global_pointer_press`
-//! - `on_global_pointer_down`
-//! - `on_global_pointer_move`
-//! - `on_global_key_down`
-//! - `on_global_key_up`
-//! - `on_global_file_hover`
-//! - `on_global_file_hover_cancelled`
+//! - [`on_global_pointer_up`](freya_core::prelude::EventHandlersExt::on_global_pointer_up)
+//! - [`on_global_pointer_down`](freya_core::prelude::EventHandlersExt::on_global_pointer_down)
+//! - [`on_global_pointer_move`](freya_core::prelude::EventHandlersExt::on_global_pointer_move)
+//! - [`on_global_key_down`](freya_core::prelude::EventHandlersExt::on_global_key_down)
+//! - [`on_global_key_up`](freya_core::prelude::EventHandlersExt::on_global_key_up)
+//! - [`on_global_file_hover`](freya_core::prelude::EventHandlersExt::on_global_file_hover)
+//! - [`on_global_file_hover_cancelled`](freya_core::prelude::EventHandlersExt::on_global_file_hover_cancelled)
 //!
 //! Global events do **not** bubble (they are dispatched directly to every listener), so
 //! `stop_propagation` has no effect on them. A non-global handler that calls
@@ -170,10 +196,10 @@
 //! The combo is shared by the whole app and every call advances it, so call `pressed` once per
 //! press.
 //!
-//! ## Components don't have events
+//! ## Exposing events from components
 //!
-//! Components are just data and a `render` method. To expose a "click" or "change" hook from
-//! a component, accept a callback as a field and forward it from the inner element.
+//! Components render elements that receive events. To expose a specific action such as a
+//! "click" or "change", accept a callback as a field and forward it from the inner element.
 //!
 //! ```rust, no_run
 //! # use freya::prelude::*;
@@ -191,4 +217,37 @@
 //!             .child("Press me")
 //!     }
 //! }
+//! ```
+//!
+//! To expose the full set of element handlers on a component, implement
+//! [`EventHandlersExt`](freya_core::prelude::EventHandlersExt) and forward the stored handlers
+//! to the element returned by `render`:
+//!
+//! ```rust, no_run
+//! # use freya::prelude::*;
+//! #[derive(PartialEq)]
+//! struct Clickable {
+//!     event_handlers: EventHandlers,
+//! }
+//!
+//! impl EventHandlersExt for Clickable {
+//!     fn get_event_handlers(&mut self) -> &mut EventHandlers {
+//!         &mut self.event_handlers
+//!     }
+//! }
+//!
+//! impl Component for Clickable {
+//!     fn render(&self) -> impl IntoElement {
+//!         rect()
+//!             .event_handlers(self.event_handlers.clone())
+//!             .child("Press me")
+//!     }
+//! }
+//!
+//! # fn app() -> impl IntoElement {
+//! Clickable {
+//!     event_handlers: EventHandlers::default(),
+//! }
+//! .on_press(|_| println!("Pressed!"))
+//! # }
 //! ```

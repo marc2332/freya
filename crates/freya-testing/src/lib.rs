@@ -14,7 +14,7 @@
 //!
 //! fn app() -> impl IntoElement {
 //!     let mut state = use_consume::<State<i32>>();
-//!     rect().on_mouse_up(move |_| *state.write() += 1)
+//!     rect().on_press(move |_| *state.write() += 1)
 //! }
 //!
 //! fn main() {
@@ -68,8 +68,10 @@ use freya_engine::prelude::{
     FontCollection,
     FontMgr,
     SkData,
+    SkSurface,
     TypefaceFontProvider,
     raster_n32_premul,
+    register_font_typeface,
 };
 use ragnarok::{
     CursorPoint,
@@ -105,6 +107,7 @@ pub struct TestingRunner {
     runner: Runner,
     tree: Rc<RefCell<Tree>>,
     size: Size2D,
+    surface: Option<SkSurface>,
 
     accessibility: AccessibilityTree,
 
@@ -224,6 +227,7 @@ impl TestingRunner {
             runner,
             tree,
             size,
+            surface: None,
 
             accessibility,
             platform,
@@ -265,8 +269,7 @@ impl TestingRunner {
             .unwrap()
             .new_from_data(SkData::new_copy(font_data), None)
             .unwrap_or_else(|| panic!("Failed to load font {font_name}."));
-        self.font_provider
-            .register_typeface(typeface, Some(font_name));
+        register_font_typeface(&mut self.font_provider, font_name, typeface);
     }
 
     fn invalidate_text_layout(&mut self) {
@@ -562,9 +565,12 @@ impl TestingRunner {
         &mut self.animation_clock
     }
 
-    pub fn render(&mut self) -> SkData {
-        let mut surface = raster_n32_premul((self.size.width as i32, self.size.height as i32))
-            .expect("Failed to create the surface.");
+    /// Render into a persistent surface without encoding an image.
+    pub fn render_to_surface(&mut self) {
+        let surface = self.surface.get_or_insert_with(|| {
+            raster_n32_premul((self.size.width as i32, self.size.height as i32))
+                .expect("Failed to create the surface.")
+        });
 
         let render_pipeline = RenderPipeline {
             font_collection: &mut self.font_collection,
@@ -575,7 +581,11 @@ impl TestingRunner {
             background: Color::WHITE,
         };
         render_pipeline.render();
+    }
 
+    pub fn render(&mut self) -> SkData {
+        self.render_to_surface();
+        let surface = self.surface.as_mut().expect("Surface was initialized.");
         let image = surface.image_snapshot();
         let mut context = surface.direct_context();
         image

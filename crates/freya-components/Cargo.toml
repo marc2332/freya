@@ -1,6 +1,6 @@
 [package]
 name = "freya-components"
-version = "0.5.0-rc.7"
+version = "0.5.0-rc.8"
 edition = "2024"
 description = "Components for Freya apps"
 license = "MIT"
@@ -15,7 +15,7 @@ categories = ["gui", "asynchronous"]
 workspace = true
 
 [package.metadata.docs.rs]
-features = ["docs"]
+features = ["docs", "remote-asset"]
 
 [features]
 router = ["dep:freya-router"]

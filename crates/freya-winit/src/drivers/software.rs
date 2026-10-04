@@ -10,7 +10,6 @@ use freya_engine::prelude::{
     ColorType,
     ImageInfo,
     Surface as SkiaSurface,
-    wrap_pixels,
 };
 use raw_window_handle::{
     DisplayHandle,
@@ -31,6 +30,8 @@ use winit::{
         WindowAttributes,
     },
 };
+
+use crate::drivers::surface::wrap_software_pixels;
 
 struct DisplayHandleWrapper(RawDisplayHandle);
 
@@ -165,7 +166,7 @@ impl SoftwareDriver {
             std::slice::from_raw_parts_mut(pixels.as_mut_ptr() as *mut u8, pixels.len() * 4)
         };
 
-        match wrap_pixels(&info, bytes, Some(row_bytes), None) {
+        match wrap_software_pixels(&info, bytes, row_bytes) {
             Some(mut wrapped_surface) => render(&mut wrapped_surface),
             None => {
                 tracing::error!("Failed to wrap software pixels into a Skia surface");
