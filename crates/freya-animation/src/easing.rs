@@ -86,6 +86,7 @@ pub fn apply_value(
 ///
 /// ```
 /// # use freya::prelude::*;
+/// # use freya::animation::*;
 ///
 /// let animation = AnimNum::new(0., 100.).time(300).function(Function::Cubic);
 /// ```
