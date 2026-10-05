@@ -27,6 +27,7 @@
 
 #[doc(hidden)]
 pub mod anyrender;
+mod cache;
 mod component;
 mod element;
 mod handle;

@@ -68,6 +68,7 @@ use crate::{
         SkiaSceneCache,
         SkiaScenePainter,
     },
+    cache::ResourceCache,
     net::{
         FetchRequest,
         FreyaNavigationProvider,
@@ -99,13 +100,17 @@ impl BlitzState {
         wake: UnboundedSender<()>,
         navigate: UnboundedSender<String>,
         fetch: UnboundedSender<FetchRequest>,
+        resource_cache: ResourceCache,
         fonts: Vec<Bytes>,
     ) -> Self {
         let redraw = Arc::new(AtomicBool::new(true));
         Self {
             document: None,
             fonts,
-            net_provider: Arc::new(HttpNetProvider { fetch }),
+            net_provider: Arc::new(HttpNetProvider {
+                fetch,
+                cache: resource_cache,
+            }),
             shell_provider: Arc::new(FreyaShellProvider {
                 redraw: redraw.clone(),
                 wake,

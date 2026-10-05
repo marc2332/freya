@@ -21,11 +21,13 @@ use blitz_traits::{
 use futures_channel::mpsc::UnboundedSender;
 use url::Url;
 
+use crate::cache::ResourceCache;
+
 pub(crate) type FetchRequest = (Url, Box<dyn NetHandler>);
 
-/// Forwards resource requests to the fetching task.
 pub(crate) struct HttpNetProvider {
     pub fetch: UnboundedSender<FetchRequest>,
+    pub cache: ResourceCache,
 }
 
 impl NetProvider for HttpNetProvider {
@@ -33,6 +35,12 @@ impl NetProvider for HttpNetProvider {
         if !matches!(request.url.scheme(), "http" | "https") {
             return;
         }
+
+        if let Some(bytes) = self.cache.get(&request.url) {
+            handler.bytes(request.url.to_string(), bytes);
+            return;
+        }
+
         let _ = self.fetch.unbounded_send((request.url, handler));
     }
 }
