@@ -26,6 +26,20 @@ impl HtmlSource {
     }
 }
 
+pub struct ElementHit {
+    pub tag: String,
+    pub attributes: Vec<(String, String)>,
+}
+
+impl ElementHit {
+    pub fn attr(&self, name: &str) -> Option<&str> {
+        self.attributes
+            .iter()
+            .find(|(n, _)| n == name)
+            .map(|(_, v)| v.as_str())
+    }
+}
+
 struct HtmlHistory {
     entries: Vec<HtmlSource>,
     index: usize,
@@ -126,6 +140,13 @@ impl HtmlHandle {
     pub fn can_go_forward(&self) -> bool {
         let history = self.history.read();
         history.index + 1 < history.entries.len()
+    }
+
+    pub fn elements_at(&self, x: f32, y: f32) -> Vec<ElementHit> {
+        let Some(view) = self.view.peek().clone() else {
+            return Vec::new();
+        };
+        view.borrow_mut().elements_at(x, y)
     }
 
     /// The URL currently being displayed, `None` for inline documents.
