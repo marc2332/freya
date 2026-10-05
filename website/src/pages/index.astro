@@ -8,8 +8,15 @@ import PlatformIcon from "../components/PlatformIcon.astro";
 const sponsors = JSON.parse(readFileSync("public/sponsors.json", "utf8"));
 const usedBy = [
   { name: "Polyfrost", href: "https://polyfrost.org", logo: "/polyfrost-logo.svg" },
+  {
+    name: "Zerac",
+    href: "https://www.zerac.com/",
+    logo: "/zerac-logo-text.svg",
+    icon: "/zerac-logo-icon.svg",
+    background: "#212d34",
+  },
   { name: "Myself", href: "https://github.com/marc2332" },
-  { name: "Other community members", href: "https://github.com/marc2332/freya" },
+  { name: "Community", href: "https://github.com/marc2332/freya" },
 ];
 
 const EXAMPLE_CODE = `
@@ -187,7 +194,7 @@ const features = [
       </div>
       <div>
         <h2 class="text-xl lg:text-2xl font-bold text-stone-200 mb-5">Used by</h2>
-        <div class="grid sm:grid-cols-3 gap-3">
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {
             usedBy.map((project) => (
               <a
@@ -196,9 +203,23 @@ const features = [
                   project.logo ? "bg-white" : "bg-custom-dark-gray text-stone-400 hover:text-white",
                 ]}
                 href={project.href}
+                style={project.background ? { backgroundColor: project.background } : undefined}
               >
                 {project.logo ? (
-                  <img class="max-h-10 max-w-full" src={project.logo} alt={project.name} loading="lazy" />
+                  <span class="flex items-center justify-center gap-2">
+                    {project.icon && (
+                      <img class="h-9 w-auto" src={project.icon} alt="" loading="lazy" />
+                    )}
+                    <img
+                      class:list={[
+                        "max-w-full",
+                        project.icon ? "h-8 w-auto min-w-0" : "max-h-10",
+                      ]}
+                      src={project.logo}
+                      alt={project.name}
+                      loading="lazy"
+                    />
+                  </span>
                 ) : project.name}
               </a>
             ))
