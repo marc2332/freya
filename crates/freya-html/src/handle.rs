@@ -1,5 +1,6 @@
 use std::{
     cell::RefCell,
+    collections::HashMap,
     rc::Rc,
 };
 
@@ -28,16 +29,7 @@ impl HtmlSource {
 
 pub struct ElementHit {
     pub tag: String,
-    pub attributes: Vec<(String, String)>,
-}
-
-impl ElementHit {
-    pub fn attr(&self, name: &str) -> Option<&str> {
-        self.attributes
-            .iter()
-            .find(|(n, _)| n == name)
-            .map(|(_, v)| v.as_str())
-    }
+    pub attributes: HashMap<String, String>,
 }
 
 struct HtmlHistory {
