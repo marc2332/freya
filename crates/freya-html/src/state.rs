@@ -188,18 +188,22 @@ impl BlitzState {
             return Vec::new();
         };
         document.resolve(self.created.elapsed().as_secs_f64());
-        document.elements_from_point(x, y).iter().filter_map(|node_id| {
-            let node = document.get_node(*node_id)?;
-            let element = node.data.downcast_element()?;
-            Some(ElementHit {
-                tag: element.name.local.to_string(),
-                attributes: element
-                    .attrs
-                    .iter()
-                    .map(|attr| (attr.name.local.to_string(), attr.value.clone()))
-                    .collect(),
+        document
+            .elements_from_point(x, y)
+            .iter()
+            .filter_map(|node_id| {
+                let node = document.get_node(*node_id)?;
+                let element = node.data.downcast_element()?;
+                Some(ElementHit {
+                    tag: element.name.local.to_string(),
+                    attributes: element
+                        .attrs
+                        .iter()
+                        .map(|attr| (attr.name.local.to_string(), attr.value.clone()))
+                        .collect(),
+                })
             })
-        }).collect()
+            .collect()
     }
 
     pub fn mouse_button(
