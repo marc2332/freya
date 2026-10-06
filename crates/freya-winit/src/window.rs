@@ -321,6 +321,10 @@ impl AppWindow {
 
         runner.provide_root_context(|| font_collection.clone());
 
+        for insert_context in window_config.contexts {
+            insert_context(&mut runner);
+        }
+
         plugins.send(
             PluginEvent::RunnerCreated {
                 runner: &mut runner,
