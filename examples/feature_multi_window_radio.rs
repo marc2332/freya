@@ -8,9 +8,9 @@ use freya::{
 };
 
 fn main() {
-    let radio_station = RadioStation::create_global(Data::default());
+    let radio_station = RadioStation::<Data, DataChannel>::create_global(Data::default());
 
-    launch(LaunchConfig::new().with_window(WindowConfig::new_app(CounterApp { radio_station })))
+    launch(LaunchConfig::new().with_window(WindowConfig::new(app).with_root_context(radio_station)))
 }
 
 #[derive(Default)]
@@ -25,34 +25,27 @@ pub enum DataChannel {
 
 impl RadioChannel<Data> for DataChannel {}
 
-struct CounterApp {
-    radio_station: RadioStation<Data, DataChannel>,
-}
+fn app() -> impl IntoElement {
+    let mut radio = use_radio(DataChannel::Count);
 
-impl App for CounterApp {
-    fn render(&self) -> impl IntoElement {
-        use_share_radio(move || self.radio_station);
-        let mut radio = use_radio(DataChannel::Count);
+    let radio_station = use_consume::<RadioStation<Data, DataChannel>>();
+    let on_open = move |_| {
+        spawn(async move {
+            let _ = Platform::get()
+                .launch_window(WindowConfig::new(app).with_root_context(radio_station))
+                .await;
+        });
+    };
 
-        let radio_station = self.radio_station;
-        let on_open = move |_| {
-            spawn(async move {
-                let _ = Platform::get()
-                    .launch_window(WindowConfig::new_app(CounterApp { radio_station }))
-                    .await;
-            });
-        };
+    let on_increase = move |_| {
+        radio.write().count += 1;
+    };
 
-        let on_increase = move |_| {
-            radio.write().count += 1;
-        };
-
-        rect()
-            .expanded()
-            .center()
-            .spacing(6.)
-            .child(format!("Count: {}", radio.read().count))
-            .child(Button::new().on_press(on_increase).child("Increase"))
-            .child(Button::new().on_press(on_open).child("Open another window"))
-    }
+    rect()
+        .expanded()
+        .center()
+        .spacing(6.)
+        .child(format!("Count: {}", radio.read().count))
+        .child(Button::new().on_press(on_increase).child("Increase"))
+        .child(Button::new().on_press(on_open).child("Open another window"))
 }

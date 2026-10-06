@@ -93,7 +93,7 @@ pub type OnCloseHook = Box<dyn FnMut(crate::renderer::RendererContext, WindowId)
 pub struct WindowConfig {
     /// Root component for the window app.
     pub(crate) app: AppComponent,
-    pub(crate) root_hook: Option<Box<dyn FnOnce()>>,
+    pub(crate) root_context: Option<Box<dyn FnOnce()>>,
     /// Size of the Window.
     pub(crate) size: (f64, f64),
     /// Minimum size of the Window.
@@ -159,7 +159,7 @@ impl WindowConfig {
     fn new_with_defaults(app: impl Into<AppComponent>) -> Self {
         Self {
             app: app.into(),
-            root_hook: None,
+            root_context: None,
             size: (700.0, 500.0),
             min_size: None,
             max_size: None,
@@ -178,9 +178,11 @@ impl WindowConfig {
         }
     }
 
-    /// Run once in the window's root scope before its first render.
-    pub fn with_root_hook(mut self, root_hook: impl FnOnce() + 'static) -> Self {
-        self.root_hook = Some(Box::new(root_hook));
+    /// Provide a context to the window's root before its first render.
+    pub fn with_root_context<T: Clone + 'static>(mut self, value: T) -> Self {
+        self.root_context = Some(Box::new(move || {
+            freya_core::prelude::provide_root_context(value);
+        }));
         self
     }
 

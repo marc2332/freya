@@ -321,8 +321,8 @@ impl AppWindow {
 
         runner.provide_root_context(|| font_collection.clone());
 
-        if let Some(root_hook) = window_config.root_hook {
-            runner.run_in(root_hook);
+        if let Some(root_context) = window_config.root_context {
+            runner.run_in(root_context);
         }
 
         plugins.send(

@@ -38,7 +38,7 @@ fn main() {
                     radio_station.write_channel(DataChannel::Count).count += 1;
                 }
             })
-            .with_window(WindowConfig::new_app(MyApp { radio_station })),
+            .with_window(WindowConfig::new(app).with_root_context(radio_station)),
     )
 }
 
@@ -54,24 +54,17 @@ pub enum DataChannel {
 
 impl RadioChannel<Data> for DataChannel {}
 
-struct MyApp {
-    radio_station: RadioStation<Data, DataChannel>,
-}
+fn app() -> impl IntoElement {
+    let mut radio = use_radio(DataChannel::Count);
 
-impl App for MyApp {
-    fn render(&self) -> impl IntoElement {
-        use_share_radio(move || self.radio_station);
-        let mut radio = use_radio(DataChannel::Count);
+    let on_press = move |_| {
+        radio.write().count += 1;
+    };
 
-        let on_press = move |_| {
-            radio.write().count += 1;
-        };
-
-        rect()
-            .expanded()
-            .center()
-            .spacing(6.)
-            .child(format!("Value is {}", radio.read().count))
-            .child(Button::new().on_press(on_press).child("Increase"))
-    }
+    rect()
+        .expanded()
+        .center()
+        .spacing(6.)
+        .child(format!("Value is {}", radio.read().count))
+        .child(Button::new().on_press(on_press).child("Increase"))
 }
