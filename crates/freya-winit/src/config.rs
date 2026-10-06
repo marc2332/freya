@@ -33,7 +33,6 @@ use crate::{
 pub type WindowBuilderHook =
     Box<dyn FnOnce(WindowAttributes, &ActiveEventLoop) -> WindowAttributes>;
 pub type WindowHandleHook = Box<dyn FnOnce(&mut Window)>;
-pub(crate) type RootContextInserter = Box<dyn FnOnce(&mut Runner)>;
 
 /// Preferred GPU type, with fallback to other available hardware.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -94,7 +93,7 @@ pub type OnCloseHook = Box<dyn FnMut(crate::renderer::RendererContext, WindowId)
 pub struct WindowConfig {
     /// Root component for the window app.
     pub(crate) app: AppComponent,
-    pub(crate) contexts: Vec<RootContextInserter>,
+    pub(crate) root_hook: Option<Box<dyn FnOnce()>>,
     /// Size of the Window.
     pub(crate) size: (f64, f64),
     /// Minimum size of the Window.
@@ -160,7 +159,7 @@ impl WindowConfig {
     fn new_with_defaults(app: impl Into<AppComponent>) -> Self {
         Self {
             app: app.into(),
-            contexts: Vec::new(),
+            root_hook: None,
             size: (700.0, 500.0),
             min_size: None,
             max_size: None,
@@ -179,11 +178,9 @@ impl WindowConfig {
         }
     }
 
-    /// Provide a root context for this Window, making the value accessible to the whole app.
-    pub fn with_context<T: Clone + 'static>(mut self, value: T) -> Self {
-        self.contexts.push(Box::new(move |runner| {
-            runner.provide_root_context(|| value);
-        }));
+    /// Run once in the window's root scope before its first render.
+    pub fn with_root_hook(mut self, root_hook: impl FnOnce() + 'static) -> Self {
+        self.root_hook = Some(Box::new(root_hook));
         self
     }
 
