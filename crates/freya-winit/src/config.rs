@@ -33,6 +33,7 @@ use crate::{
 pub type WindowBuilderHook =
     Box<dyn FnOnce(WindowAttributes, &ActiveEventLoop) -> WindowAttributes>;
 pub type WindowHandleHook = Box<dyn FnOnce(&mut Window)>;
+pub(crate) type RootContextInserter = Box<dyn FnOnce(&mut Runner)>;
 
 /// Preferred GPU type, with fallback to other available hardware.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -93,7 +94,7 @@ pub type OnCloseHook = Box<dyn FnMut(crate::renderer::RendererContext, WindowId)
 pub struct WindowConfig {
     /// Root component for the window app.
     pub(crate) app: AppComponent,
-    pub(crate) contexts: Vec<Box<dyn FnOnce(&mut Runner)>>,
+    pub(crate) contexts: Vec<RootContextInserter>,
     /// Size of the Window.
     pub(crate) size: (f64, f64),
     /// Minimum size of the Window.
