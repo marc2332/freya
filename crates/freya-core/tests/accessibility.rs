@@ -68,14 +68,18 @@ fn accessibility_button_click() {
         |runner| runner.provide_root_context(|| State::create(0usize)),
         1.,
     );
-    let update = test.sync_and_update();
-    let (button_id, button) = update
-        .nodes
-        .iter()
-        .find(|(_, node)| node.role() == AccessibilityRole::Button)
+    let button = test
+        .find(|_, element| {
+            let accessibility = element.accessibility();
+            (accessibility.builder.role() == AccessibilityRole::Button)
+                .then(|| accessibility.into_owned())
+        })
         .unwrap();
-    assert!(button.supports_action(AccessibilityAction::Click));
-    assert!(test.send_accessibility_action(action_request(AccessibilityAction::Click, *button_id)));
+    assert!(button.builder.supports_action(AccessibilityAction::Click));
+    assert!(test.send_accessibility_action(action_request(
+        AccessibilityAction::Click,
+        button.a11y_id.unwrap(),
+    )));
     test.sync_and_update();
     assert_eq!(*count.peek(), 1);
 }
