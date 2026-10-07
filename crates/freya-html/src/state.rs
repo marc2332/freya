@@ -68,6 +68,7 @@ use crate::{
         SkiaSceneCache,
         SkiaScenePainter,
     },
+    handle::ElementHit,
     net::{
         FetchRequest,
         FreyaNavigationProvider,
@@ -180,6 +181,29 @@ impl BlitzState {
     pub fn mouse_move(&mut self, x: f32, y: f32) {
         let event = self.pointer_event(x, y, MouseEventButton::Main);
         self.dispatch(UiEvent::PointerMove(event));
+    }
+
+    pub fn elements_at(&mut self, x: f32, y: f32) -> Vec<ElementHit> {
+        let Some(document) = self.document.as_mut() else {
+            return Vec::new();
+        };
+        document.resolve(self.created.elapsed().as_secs_f64());
+        document
+            .elements_from_point(x, y)
+            .iter()
+            .filter_map(|node_id| {
+                let node = document.get_node(*node_id)?;
+                let element = node.data.downcast_element()?;
+                Some(ElementHit {
+                    tag: element.name.local.to_string(),
+                    attributes: element
+                        .attrs
+                        .iter()
+                        .map(|attr| (attr.name.local.to_string(), attr.value.clone()))
+                        .collect(),
+                })
+            })
+            .collect()
     }
 
     pub fn mouse_button(
