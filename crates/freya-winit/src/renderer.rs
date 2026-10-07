@@ -596,8 +596,18 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         }
                         #[cfg(feature = "accessibility")]
                         NativeWindowEventAction::Accessibility(
-                            accesskit_winit::WindowEvent::ActionRequested(_),
-                        ) => {}
+                            accesskit_winit::WindowEvent::ActionRequested(request),
+                        ) => {
+                            if app.accessibility.handle_action(
+                                request,
+                                &mut app.tree,
+                                &app.events_sender,
+                            ) {
+                                app.accessibility_tasks_for_next_render |=
+                                    AccessibilityTask::ProcessUpdate { mode: None };
+                                app.window.request_redraw();
+                            }
+                        }
                         #[cfg(feature = "accessibility")]
                         NativeWindowEventAction::Accessibility(
                             accesskit_winit::WindowEvent::InitialTreeRequested,

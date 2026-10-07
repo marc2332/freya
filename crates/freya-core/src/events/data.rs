@@ -8,6 +8,10 @@ use std::{
     rc::Rc,
 };
 
+pub use accesskit::{
+    Action as AccessibilityAction,
+    ActionRequest as AccessibilityActionEventData,
+};
 use torin::prelude::{
     Area,
     CursorPoint,
@@ -321,6 +325,7 @@ impl FileEventData {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum EventType {
+    AccessibilityAction(AccessibilityActionEventData),
     Mouse(MouseEventData),
     Keyboard(KeyboardEventData),
     Sized(SizedEventData),

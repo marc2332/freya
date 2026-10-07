@@ -237,6 +237,7 @@ impl Component for Switch {
 
         rect()
             .a11y_id(a11y_id)
+            .a11y_enabled(self.enabled)
             .a11y_focusable(self.enabled)
             .a11y_role(AccessibilityRole::Switch)
             .a11y_builder(|builder| builder.set_toggled(Toggled::from(toggled)))

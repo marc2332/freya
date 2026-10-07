@@ -428,6 +428,12 @@ impl TestingRunner {
         self.tree.borrow().cursor_icon(&self.nodes_state)
     }
 
+    /// Queue an action requested by assistive technology for a supported target.
+    pub fn send_accessibility_action(&mut self, request: AccessibilityActionEventData) -> bool {
+        self.accessibility
+            .handle_action(request, &mut self.tree.borrow_mut(), &self.events_sender)
+    }
+
     pub fn send_event(&mut self, platform_event: PlatformEvent) {
         let mut events_measurer_adapter = EventsMeasurerAdapter {
             tree: &mut self.tree.borrow_mut(),

@@ -2,6 +2,7 @@ use std::any::Any;
 
 use accesskit::{
     Action,
+    ActionRequest,
     Affine,
     Node,
     Rect,
@@ -73,6 +74,38 @@ impl AccessibilityTree {
 
     pub fn focused_node_id(&self) -> Option<NodeId> {
         self.map.get(&self.focused_id).cloned()
+    }
+
+    /// Dispatch an action requested by assistive technology.
+    pub fn handle_action(
+        &self,
+        request: ActionRequest,
+        tree: &mut Tree,
+        events_sender: &futures_channel::mpsc::UnboundedSender<EventsChunk>,
+    ) -> bool {
+        if request.target_tree != TreeId::ROOT {
+            return false;
+        }
+        let Some(node_id) = self.map.get(&request.target_node).copied() else {
+            return false;
+        };
+        let Some(element) = tree.elements.get(&node_id) else {
+            return false;
+        };
+        let mut builder = element.accessibility().builder.clone();
+        element.finish_accessibility(&mut builder);
+        if builder.is_disabled() {
+            return false;
+        }
+        events_sender
+            .unbounded_send(EventsChunk::Batch(vec![EmmitableEvent {
+                name: EventName::AccessibilityAction,
+                source_event: EventName::AccessibilityAction,
+                node_id,
+                data: EventType::AccessibilityAction(request),
+                bubbles: true,
+            }]))
+            .is_ok()
     }
 
     /// Initialize the Accessibility Tree
