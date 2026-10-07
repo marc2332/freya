@@ -9,7 +9,6 @@ desktop = ["freya/winit", "freya/gpu"]
 
 [dependencies]
 freya = { path = "../../crates/freya", default-features = false, features = [
-  "web",
   "html",
   "router",
   "material-design",
