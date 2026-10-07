@@ -1,7 +1,7 @@
-use std::collections::HashSet;
+use crate::collections::HashSet;
 
 pub trait NameOfEvent:
-    Clone + PartialEq + Eq + std::hash::Hash + Copy + std::fmt::Debug + Eq + Ord
+    Clone + PartialEq + Eq + core::hash::Hash + Copy + core::fmt::Debug + Eq + Ord
 {
     /// Check if this event means that the pointer device as moved while hovering a node.
     fn is_moved(&self) -> bool;
@@ -47,10 +47,10 @@ pub trait NameOfEvent:
     fn get_derived_events(&self) -> HashSet<Self>;
     /// Get a set of global events derived from this event.
     fn get_global_events(&self) -> HashSet<Self> {
-        HashSet::new()
+        HashSet::default()
     }
     /// Get a set of events that will be discarded once this event is cancelled.
     fn get_cancellable_events(&self) -> HashSet<Self> {
-        HashSet::from([*self])
+        [*self].into_iter().collect()
     }
 }
