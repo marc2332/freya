@@ -51,7 +51,9 @@ pub enum RendererPreference {
     Auto,
     Software,
     OpenGl,
-    Vulkan { gpu_preference: GpuPreference },
+    Vulkan {
+        gpu_preference: GpuPreference,
+    },
 }
 
 impl RendererPreference {
