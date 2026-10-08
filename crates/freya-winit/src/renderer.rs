@@ -1,7 +1,8 @@
+#[cfg(target_os = "android")]
+use std::rc::Rc;
 use std::{
     borrow::Cow,
     fmt,
-    rc::Rc,
 };
 
 #[cfg(feature = "accessibility")]
@@ -338,47 +339,54 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 .proxy
                 .send_event(NativeEvent::Generic(NativeGenericEvent::PollFutures));
         } else {
-            // [Android] Recreate the GraphicsDriver when the app gets brought into the foreground after being suspended,
-            // so we don't end up with a completely black surface with broken rendering.
-            let old_windows: Vec<_> = self.windows.drain().collect();
-            for (old_id, mut app_window) in old_windows {
-                let (new_driver, new_window) = GraphicsDriver::new(
-                    active_event_loop,
-                    app_window.window_attributes.clone(),
-                    self.gpu_resource_cache_limit,
-                    app_window.renderer,
-                    &mut self.graphics_context,
-                );
+            #[cfg(target_os = "android")]
+            {
+                // Recreate Android graphics drivers after suspension to restore rendering.
+                let old_windows: Vec<_> = self.windows.drain().collect();
+                for (old_id, mut app_window) in old_windows {
+                    let (new_driver, new_window) = GraphicsDriver::new(
+                        active_event_loop,
+                        app_window.window_attributes.clone(),
+                        self.gpu_resource_cache_limit,
+                        app_window.renderer,
+                        &mut self.graphics_context,
+                    );
 
-                let new_id = new_window.id();
-                Platform::get().unregister_window(old_id);
-                app_window.platform.id = new_id.into();
-                app_window.platform.sender = Rc::new({
-                    let proxy = self.proxy.clone();
-                    move |event| {
-                        let _ = proxy.send_event(NativeEvent::Window(NativeWindowEvent {
+                    let new_id = new_window.id();
+                    Platform::get().unregister_window(old_id);
+                    app_window.platform.id = new_id.into();
+                    app_window.platform.sender = Rc::new({
+                        let proxy = self.proxy.clone();
+                        move |event| {
+                            let _ = proxy.send_event(NativeEvent::Window(NativeWindowEvent {
+                                window_id: new_id,
+                                action: NativeWindowEventAction::User(event),
+                            }));
+                        }
+                    });
+                    app_window
+                        .runner
+                        .provide_root_context(|| CurrentWindowId(app_window.platform.id));
+                    Platform::get().register_window(app_window.platform.clone());
+                    app_window.driver = new_driver;
+                    app_window.window = new_window;
+                    app_window.process_layout_on_next_render = true;
+                    app_window.tree.layout.reset();
+
+                    self.windows.insert(new_id, app_window);
+
+                    self.proxy
+                        .send_event(NativeEvent::Window(NativeWindowEvent {
                             window_id: new_id,
-                            action: NativeWindowEventAction::User(event),
-                        }));
-                    }
-                });
-                app_window
-                    .runner
-                    .provide_root_context(|| CurrentWindowId(app_window.platform.id));
-                Platform::get().register_window(app_window.platform.clone());
-                app_window.driver = new_driver;
-                app_window.window = new_window;
-                app_window.process_layout_on_next_render = true;
-                app_window.tree.layout.reset();
+                            action: NativeWindowEventAction::PollRunner,
+                        }))
+                        .ok();
+                }
+            }
 
-                self.windows.insert(new_id, app_window);
-
-                self.proxy
-                    .send_event(NativeEvent::Window(NativeWindowEvent {
-                        window_id: new_id,
-                        action: NativeWindowEventAction::PollRunner,
-                    }))
-                    .ok();
+            #[cfg(not(target_os = "android"))]
+            for app_window in self.windows.values() {
+                app_window.window.request_redraw();
             }
         }
     }
@@ -1058,6 +1066,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             "Graphics driver lost while resizing ({error:?}), rebuilding on the same window"
                         );
                         needs_recovery = true;
+                    } else {
+                        app.last_render_size = size;
                     }
 
                     app.window.request_redraw();

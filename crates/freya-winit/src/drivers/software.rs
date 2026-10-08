@@ -153,12 +153,6 @@ impl SoftwareDriver {
             }
         };
 
-        // softbuffer can retain rows from the previous drawable after a
-        // rotation or window resize. Clear the complete backing buffer
-        // before Skia renders the current frame so stale pixels cannot leak
-        // into newly exposed areas.
-        buffer.fill(0);
-
         let info = ImageInfo::new(
             (width.get() as i32, height.get() as i32),
             ColorType::BGRA8888,
