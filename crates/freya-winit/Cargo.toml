@@ -98,7 +98,7 @@ glutin = { workspace = true, optional = true }
 glutin-winit = { workspace = true, optional = true }
 freya-engine = { workspace = true, features = ["gl"], optional = true }
 
-# Rendering Metal (Apple)
+# Metal rendering
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
 objc2-core-foundation = { version = "0.3.2" }
 objc2 = { version = "0.6", optional = true }

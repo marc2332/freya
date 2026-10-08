@@ -1,6 +1,5 @@
 #!/usr/bin/env sh
-# Builds the example for the iOS Simulator and bundles it as an ad-hoc signed .app.
-# Prints the path of the bundle on the last line of stdout.
+# Bundles the simulator example with an ad-hoc signature and prints its path to stdout.
 set -eu
 
 TARGET="aarch64-apple-ios-sim"

@@ -81,7 +81,6 @@ impl GraphicsDriver {
             }
         }
 
-        // Metal (Apple)
         #[cfg(all(any(target_os = "macos", target_os = "ios"), feature = "gpu"))]
         {
             let (driver, window) =
