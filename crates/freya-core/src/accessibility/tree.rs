@@ -97,23 +97,29 @@ impl AccessibilityTree {
         if builder.is_disabled() {
             return false;
         }
-        if request.action == Action::Focus {
-            if !element.accessibility().a11y_focusable.is_enabled() {
-                return false;
+        match request.action {
+            Action::Focus => {
+                if !element.accessibility().a11y_focusable.is_enabled() {
+                    return false;
+                }
+                tree.accessibility_diff
+                    .request_focus(AccessibilityFocusStrategy::Node(request.target_node));
+                true
             }
-            tree.accessibility_diff
-                .request_focus(AccessibilityFocusStrategy::Node(request.target_node));
-            return true;
+            Action::ScrollIntoView => {
+                self.scroll_to(node_id, tree, events_sender);
+                true
+            }
+            _ => events_sender
+                .unbounded_send(EventsChunk::Batch(vec![EmmitableEvent {
+                    name: EventName::AccessibilityAction,
+                    source_event: EventName::AccessibilityAction,
+                    node_id,
+                    data: EventType::AccessibilityAction(request),
+                    bubbles: true,
+                }]))
+                .is_ok(),
         }
-        events_sender
-            .unbounded_send(EventsChunk::Batch(vec![EmmitableEvent {
-                name: EventName::AccessibilityAction,
-                source_event: EventName::AccessibilityAction,
-                node_id,
-                data: EventType::AccessibilityAction(request),
-                bubbles: true,
-            }]))
-            .is_ok()
     }
 
     /// Initialize the Accessibility Tree
