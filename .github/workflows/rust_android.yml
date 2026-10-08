@@ -26,6 +26,7 @@ jobs:
         run: |
           sudo rm -rf /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL
       - name: Install NDK r26d
+        background: true
         run: |
           curl -sSfL -o ndk.zip https://dl.google.com/android/repository/android-ndk-r26d-linux.zip
           unzip -q ndk.zip -d /home/runner
@@ -41,6 +42,8 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+      - name: Wait for setup
+        wait-all:
       - name: Build Android example
         working-directory: examples/android/AndroidApp
         run: ./gradlew buildRelease
