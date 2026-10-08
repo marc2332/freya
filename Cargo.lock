@@ -6667,6 +6667,7 @@ name = "ragnarok"
 version = "0.5.0-rc.9"
 dependencies = [
  "euclid",
+ "hashbrown 0.16.1",
  "hotpath",
  "itertools 0.14.0",
  "rustc-hash 2.1.3",
