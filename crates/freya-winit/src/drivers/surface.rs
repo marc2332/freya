@@ -1,4 +1,13 @@
-#[cfg(feature = "gpu")]
+#[cfg(all(
+    feature = "gpu",
+    any(
+        target_os = "android",
+        target_os = "ios",
+        target_os = "linux",
+        target_os = "macos",
+        target_os = "windows",
+    )
+))]
 use freya_engine::prelude::{
     BackendRenderTarget,
     RecordingContext,
@@ -50,7 +59,16 @@ fn default_surface_props() -> Option<SurfaceProps> {
     None
 }
 
-#[cfg(feature = "gpu")]
+#[cfg(all(
+    feature = "gpu",
+    any(
+        target_os = "android",
+        target_os = "ios",
+        target_os = "linux",
+        target_os = "macos",
+        target_os = "windows",
+    )
+))]
 pub(super) fn wrap_render_target(
     context: &mut RecordingContext,
     render_target: &BackendRenderTarget,
