@@ -848,8 +848,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 PluginHandle::new(&self.proxy),
                             );
                             let size: Size2D = (
-                                app.window.inner_size().width as f32,
-                                app.window.inner_size().height as f32,
+                                crate::drawable_size(&app.window).width as f32,
+                                crate::drawable_size(&app.window).height as f32,
                             )
                                 .into();
 

@@ -65,7 +65,7 @@ impl MetalDriver {
 
         let device = MTLCreateSystemDefaultDevice().expect("No Metal-capable device found");
 
-        let size = window.inner_size();
+        let size = crate::drawable_size(&window);
 
         let metal_layer = {
             let layer = CAMetalLayer::new();
