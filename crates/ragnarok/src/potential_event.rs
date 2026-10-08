@@ -21,7 +21,7 @@ impl<Key: NodeKey, Name: NameOfEvent, Source: SourceEvent> Eq
 impl<Key: NodeKey, Name: NameOfEvent, Source: SourceEvent> PartialOrd
     for PotentialEvent<Key, Name, Source>
 {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
@@ -29,7 +29,7 @@ impl<Key: NodeKey, Name: NameOfEvent, Source: SourceEvent> PartialOrd
 impl<Key: NodeKey, Name: NameOfEvent, Source: SourceEvent> Ord
     for PotentialEvent<Key, Name, Source>
 {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
         other
             .layer
             .cmp(&self.layer)
