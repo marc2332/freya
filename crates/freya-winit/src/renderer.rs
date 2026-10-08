@@ -1015,7 +1015,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                     &app.tree,
                                     &title,
                                 );
-                                app.window.set_ime_allowed(is_ime_role(focused_node.role()));
+                                app.set_ime_allowed(is_ime_role(focused_node.role()));
                                 app.platform
                                     .focused_accessibility_node
                                     .set_if_modified(focused_node);

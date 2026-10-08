@@ -1,5 +1,6 @@
 use std::{
     borrow::Cow,
+    cell::Cell,
     path::PathBuf,
     rc::Rc,
     sync::Arc,
@@ -117,6 +118,7 @@ pub struct AppWindow {
     pub(crate) process_layout_on_next_render: bool,
     pub(crate) send_mouse_move_on_next_layout: bool,
     pub(crate) last_render_size: PhysicalSize<u32>,
+    ime_allowed: Cell<bool>,
 
     pub(crate) render_callbacks: Vec<RenderCallback>,
 
@@ -159,6 +161,14 @@ impl AppWindow {
         return window.inner_size();
     }
 
+    /// Forward the IME state to winit only when it changes. On iOS every call moves the first
+    /// responder, which would steal the keyboard from views that manage text input themselves.
+    pub(crate) fn set_ime_allowed(&self, allowed: bool) {
+        if self.ime_allowed.replace(allowed) != allowed {
+            self.window.set_ime_allowed(allowed);
+        }
+    }
+
     pub(crate) fn process_accessibility_update(&mut self, mode: Option<NavigationMode>) {
         let title = self.window.title();
         let update =
@@ -170,8 +180,7 @@ impl AppWindow {
         let node_id = self.accessibility.focused_node_id().unwrap();
         let layout_node = self.tree.layout.get(&node_id).unwrap();
         let focused_node = AccessibilityTree::create_node(node_id, layout_node, &self.tree, &title);
-        self.window
-            .set_ime_allowed(is_ime_role(focused_node.role()));
+        self.set_ime_allowed(is_ime_role(focused_node.role()));
         self.platform
             .focused_accessibility_node
             .set_if_modified(focused_node);
@@ -461,6 +470,7 @@ impl AppWindow {
             process_layout_on_next_render: true,
             send_mouse_move_on_next_layout: false,
             last_render_size: initial_render_size,
+            ime_allowed: Cell::new(false),
 
             render_callbacks: Vec::new(),
 
