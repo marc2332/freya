@@ -26,7 +26,7 @@ jobs:
           target: aarch64-apple-ios, aarch64-apple-ios-sim
           components: clippy
       - name: Lint for iOS
-        run: cargo clippy -p freya-winit -p ios --target aarch64-apple-ios -- -D warnings
+        run: cargo clippy -p freya-winit -p freya-ios -p ios --target aarch64-apple-ios -- -D warnings
       - name: Build iOS example for devices
         run: cargo build -p ios --target aarch64-apple-ios
       - name: Smoke test iOS example on the simulator

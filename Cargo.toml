@@ -49,6 +49,7 @@ members = [
   "./crates/freya-code-editor",
   "./crates/freya-camera",
   "./crates/freya-android",
+  "./crates/freya-ios",
   "./crates/freya-web",
   "./examples/ai-chat",
   "./examples/state_query_sqlite",
@@ -98,6 +99,7 @@ freya-terminal = { path = "./crates/freya-terminal", version = "0.5.0-rc.10", de
 freya-code-editor = { path = "./crates/freya-code-editor", version = "0.5.0-rc.10" }
 freya-camera = { path = "./crates/freya-camera", version = "0.5.0-rc.10" }
 freya-android = { path = "./crates/freya-android", version = "0.5.0-rc.10" }
+freya-ios = { path = "./crates/freya-ios", version = "0.5.0-rc.10" }
 freya-web = { path = "./crates/freya-web", version = "0.5.0-rc.10" }
 mundy = { version = "0.2.3", default-features = false, features = [
   "async-io",
