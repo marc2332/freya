@@ -97,6 +97,14 @@ impl AccessibilityTree {
         if builder.is_disabled() {
             return false;
         }
+        if request.action == Action::Focus {
+            if !element.accessibility().a11y_focusable.is_enabled() {
+                return false;
+            }
+            tree.accessibility_diff
+                .request_focus(AccessibilityFocusStrategy::Node(request.target_node));
+            return true;
+        }
         events_sender
             .unbounded_send(EventsChunk::Batch(vec![EmmitableEvent {
                 name: EventName::AccessibilityAction,
