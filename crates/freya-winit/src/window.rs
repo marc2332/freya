@@ -60,11 +60,12 @@ use winit::{
     },
 };
 
+#[cfg(target_os = "android")]
+use crate::config::RendererPreference;
 use crate::{
     accessibility::AccessibilityTask,
     config::{
         OnCloseHook,
-        RendererPreference,
         WindowConfig,
     },
     drivers::{
@@ -135,6 +136,7 @@ pub struct AppWindow {
 
     pub(crate) window_attributes: WindowAttributes,
 
+    #[cfg(target_os = "android")]
     pub(crate) renderer: RendererPreference,
 
     #[cfg(feature = "hotreload")]
@@ -472,6 +474,7 @@ impl AppWindow {
 
             window_attributes,
 
+            #[cfg(target_os = "android")]
             renderer: window_config.renderer,
 
             #[cfg(feature = "hotreload")]
