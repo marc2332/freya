@@ -44,6 +44,7 @@ use winit::{
     dpi::{
         LogicalPosition,
         LogicalSize,
+        PhysicalSize,
     },
     event::ElementState,
     event_loop::{
@@ -112,6 +113,7 @@ pub struct AppWindow {
 
     pub(crate) process_layout_on_next_render: bool,
     pub(crate) send_mouse_move_on_next_layout: bool,
+    pub(crate) last_render_size: PhysicalSize<u32>,
 
     pub(crate) render_callbacks: Vec<RenderCallback>,
 
@@ -254,6 +256,7 @@ impl AppWindow {
             target_os = "visionos",
         ))]
         window.set_fullscreen(Some(winit::window::Fullscreen::Borderless(None)));
+        let initial_render_size = crate::drawable_size(&window);
 
         tracing::info!(
             "Using the {} graphics driver on {}, transparency is {}",
@@ -448,6 +451,7 @@ impl AppWindow {
 
             process_layout_on_next_render: true,
             send_mouse_move_on_next_layout: false,
+            last_render_size: initial_render_size,
 
             render_callbacks: Vec::new(),
 
