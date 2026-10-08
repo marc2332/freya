@@ -217,9 +217,7 @@ impl AppWindow {
             .with_decorations(window_config.decorations)
             .with_transparent(window_config.transparent);
 
-        // UIKit owns the root view size on Apple mobile platforms. Applying
-        // Freya's desktop default (700x500) here creates a smaller centered
-        // CAMetalLayer instead of a full-screen drawable.
+        // Let UIKit size the root view instead of applying desktop window dimensions.
         #[cfg(not(any(
             target_os = "ios",
             target_os = "tvos",

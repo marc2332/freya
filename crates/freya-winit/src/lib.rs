@@ -223,10 +223,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
     event_loop.run_app(&mut renderer).unwrap();
 }
 
-/// The size Freya lays out and draws at. On iOS winit's `inner_size` is only the safe area, while
-/// the view (and the Metal layer filling it) covers the whole screen; drawing the safe area's
-/// size into it stretches every frame and puts touches off their targets. Apps keep clear of the
-/// notch and home indicator themselves, as on Android.
+/// Returns the physical size used for layout and rendering, including the iOS safe-area insets.
 pub(crate) fn drawable_size(window: &::winit::window::Window) -> ::winit::dpi::PhysicalSize<u32> {
     #[cfg(target_os = "ios")]
     return window.outer_size();

@@ -1,7 +1,6 @@
 #!/usr/bin/env sh
-# Launches the example on an iOS Simulator and fails if it is not alive after a few seconds.
-# Usage: ./smoke-test.sh [device name or UDID] (defaults to the first available iPhone)
-# Environment: SMOKE_SECONDS (default 20), SCREENSHOT (default target/ios-smoke-test.png)
+# Usage: ./smoke-test.sh [device name or UDID], defaults to the first available iPhone.
+# Environment: SMOKE_SECONDS (default 20), SCREENSHOT (default target/ios-smoke-test.png).
 set -eu
 
 EXAMPLE_DIR="$(cd "$(dirname "$0")" && pwd)"

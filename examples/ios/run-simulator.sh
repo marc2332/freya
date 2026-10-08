@@ -1,6 +1,5 @@
 #!/usr/bin/env sh
-# Builds the example, installs it on an iOS Simulator and launches it with its logs attached.
-# Usage: ./run-simulator.sh [device name or UDID] (defaults to the first available iPhone)
+# Usage: ./run-simulator.sh [device name or UDID], defaults to the first available iPhone.
 set -eu
 
 EXAMPLE_DIR="$(cd "$(dirname "$0")" && pwd)"

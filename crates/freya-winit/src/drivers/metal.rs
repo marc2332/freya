@@ -45,7 +45,7 @@ use winit::{
 
 use crate::drivers::surface::wrap_render_target;
 
-/// Graphics driver using Metal on Apple platforms.
+/// Metal graphics driver for macOS and iOS.
 pub struct MetalDriver {
     metal_layer: Retained<CAMetalLayer>,
     command_queue: Retained<ProtocolObject<dyn MTLCommandQueue>>,

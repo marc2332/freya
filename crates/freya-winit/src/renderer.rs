@@ -846,11 +846,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 WindowEvent::RedrawRequested => {
                     let scale_factor = app.effective_scale_factor();
                     hotpath::measure_block!("RedrawRequested", {
-                        // Some mobile window backends do not emit a
-                        // `Resized` event when the device rotates. Reconcile
-                        // the drawable size before rendering so the software
-                        // surface and layout cannot remain at portrait
-                        // dimensions inside a landscape window.
+                        // Reconcile drawable dimensions when rotation does not emit a resize event.
                         let window_size = crate::drawable_size(&app.window);
                         if window_size != app.last_render_size {
                             app.last_render_size = window_size;
