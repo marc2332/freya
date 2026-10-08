@@ -2828,6 +2828,7 @@ dependencies = [
  "freya-html",
  "freya-i18n",
  "freya-icons",
+ "freya-ios",
  "freya-markdown",
  "freya-material-design",
  "freya-metrics-plugin",
@@ -3091,6 +3092,21 @@ version = "0.5.0-rc.9"
 dependencies = [
  "bytes",
  "freya",
+]
+
+[[package]]
+name = "freya-ios"
+version = "0.5.0-rc.9"
+dependencies = [
+ "freya-core",
+ "freya-winit",
+ "objc2 0.6.4",
+ "objc2-core-foundation",
+ "objc2-foundation 0.3.2",
+ "objc2-ui-kit 0.3.2",
+ "raw-window-handle",
+ "tracing",
+ "winit",
 ]
 
 [[package]]

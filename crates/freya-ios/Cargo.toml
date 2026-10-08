@@ -1,0 +1,25 @@
+[package]
+name = "freya-ios"
+version = "0.5.0-rc.9"
+description = "iOS integration for Freya"
+edition = "2024"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "ios"]
+categories = ["gui"]
+
+[lints]
+workspace = true
+
+[target.'cfg(target_os = "ios")'.dependencies]
+freya-core = { workspace = true }
+freya-winit = { workspace = true }
+winit = { workspace = true }
+raw-window-handle = { workspace = true }
+tracing = { workspace = true }
+objc2 = "0.6"
+objc2-core-foundation = "0.3.2"
+objc2-foundation = "0.3"
+objc2-ui-kit = "0.3"

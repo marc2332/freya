@@ -438,6 +438,12 @@ pub mod android {
     pub use freya_android::*;
 }
 
+/// Reexport `freya-ios` when targeting iOS.
+#[cfg(target_os = "ios")]
+pub mod ios {
+    pub use freya_ios::*;
+}
+
 /// Freya guides.
 #[cfg(doc)]
 pub mod _docs;
