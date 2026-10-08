@@ -3189,9 +3189,9 @@ dependencies = [
 
 [[package]]
 name = "freya-skia-bindings"
-version = "0.100.0-beta.1"
+version = "0.102.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab63f601c617af7bd05abdf71f504577f77760ef12b281f5ab06078d301a6636"
+checksum = "69ad42a4ebefdfe6df2b48fe32f428b88401750a2184603574c67e64f6eecc92"
 dependencies = [
  "bindgen 0.73.2",
  "cc",
@@ -3206,9 +3206,9 @@ dependencies = [
 
 [[package]]
 name = "freya-skia-safe"
-version = "0.100.0-beta.1"
+version = "0.102.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94035ce89b42c8c3b69a854904deea53b1a88d8e1654de270484767ba500cffc"
+checksum = "e4486b586c5c0ad66e24cef0cbcedb3c13ed87342043c029540224205d9bb3d9"
 dependencies = [
  "base64 0.23.1",
  "bitflags 2.13.1",
@@ -3219,9 +3219,9 @@ dependencies = [
 
 [[package]]
 name = "freya-skia-svg-macros"
-version = "0.100.0-beta.1"
+version = "0.102.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b32021e23aabcfb098ad578b547569ebe246bb6658e94b0ae472ca0d5a50977"
+checksum = "d88b35b06aa4f3717b12544dcf3961e60a7d4ecc331afc585a8b1e3002977383"
 dependencies = [
  "proc-macro2",
  "quote",
