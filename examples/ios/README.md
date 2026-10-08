@@ -5,10 +5,6 @@
 
 This example runs the same demo app as the [Android example](../android) (scroll view, widgets, portal, code editor and markdown) on iPhone, rendered with Metal.
 
-<p align="center">
-  <img src="./screenshots/scroll.png" alt="Freya running on the iPhone 17 Pro simulator" width="300">
-</p>
-
 ## Prerequisites
 
 ### Xcode
