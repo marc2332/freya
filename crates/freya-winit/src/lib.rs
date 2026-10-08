@@ -222,11 +222,3 @@ fn launch_inner(mut launch_config: LaunchConfig) {
 
     event_loop.run_app(&mut renderer).unwrap();
 }
-
-/// Returns the physical size used for layout and rendering, including the iOS safe-area insets.
-pub(crate) fn drawable_size(window: &::winit::window::Window) -> ::winit::dpi::PhysicalSize<u32> {
-    #[cfg(target_os = "ios")]
-    return window.outer_size();
-    #[cfg(not(target_os = "ios"))]
-    return window.inner_size();
-}

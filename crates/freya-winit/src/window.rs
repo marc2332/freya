@@ -151,6 +151,14 @@ fn clamp_custom_scale_factor(custom_scale_factor: f64) -> f64 {
 }
 
 impl AppWindow {
+    /// Returns the physical size used for layout and rendering, including the iOS safe-area insets.
+    pub(crate) fn drawable_size(window: &Window) -> PhysicalSize<u32> {
+        #[cfg(target_os = "ios")]
+        return window.outer_size();
+        #[cfg(not(target_os = "ios"))]
+        return window.inner_size();
+    }
+
     pub(crate) fn process_accessibility_update(&mut self, mode: Option<NavigationMode>) {
         let title = self.window.title();
         let update =
@@ -259,7 +267,7 @@ impl AppWindow {
             target_os = "visionos",
         ))]
         window.set_fullscreen(Some(winit::window::Fullscreen::Borderless(None)));
-        let initial_render_size = crate::drawable_size(&window);
+        let initial_render_size = Self::drawable_size(&window);
 
         tracing::info!(
             "Using the {} graphics driver on {}, transparency is {}",
@@ -309,7 +317,7 @@ impl AppWindow {
 
         let mut tree = Tree::default();
 
-        let window_size = crate::drawable_size(&window);
+        let window_size = Self::drawable_size(&window);
         let accent_color_preference = accent_color_preference();
         runner.provide_root_context(TargetPlatform::detect);
         let platform = runner.provide_root_context({
@@ -366,8 +374,8 @@ impl AppWindow {
         }
         tree.measure_layout(
             (
-                crate::drawable_size(&window).width as f32,
-                crate::drawable_size(&window).height as f32,
+                Self::drawable_size(&window).width as f32,
+                Self::drawable_size(&window).height as f32,
             )
                 .into(),
             font_collection,
