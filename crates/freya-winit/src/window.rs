@@ -211,8 +211,21 @@ impl AppWindow {
             .with_visible(false)
             .with_title(window_config.title)
             .with_decorations(window_config.decorations)
-            .with_transparent(window_config.transparent)
-            .with_inner_size(LogicalSize::<f64>::from(window_config.size));
+            .with_transparent(window_config.transparent);
+
+        // UIKit owns the root view size on Apple mobile platforms. Applying
+        // Freya's desktop default (700x500) here creates a smaller centered
+        // CAMetalLayer instead of a full-screen drawable.
+        #[cfg(not(any(
+            target_os = "ios",
+            target_os = "tvos",
+            target_os = "watchos",
+            target_os = "visionos",
+        )))]
+        {
+            window_attributes =
+                window_attributes.with_inner_size(LogicalSize::<f64>::from(window_config.size));
+        }
 
         if let Some(min_size) = window_config.min_size {
             window_attributes =
@@ -237,6 +250,13 @@ impl AppWindow {
             window_config.renderer,
             graphics_context,
         );
+        #[cfg(any(
+            target_os = "ios",
+            target_os = "tvos",
+            target_os = "watchos",
+            target_os = "visionos",
+        ))]
+        window.set_fullscreen(Some(winit::window::Fullscreen::Borderless(None)));
 
         tracing::info!(
             "Using the {} graphics driver on {}, transparency is {}",
