@@ -4413,6 +4413,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ios"
+version = "0.1.0"
+dependencies = [
+ "env_logger",
+ "freya",
+ "tree-sitter-rust",
+]
+
+[[package]]
 name = "ipnet"
 version = "2.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

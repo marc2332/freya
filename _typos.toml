@@ -73,3 +73,4 @@ langid = "langid"
 easer = "easer"
 Ded = "Ded"
 trik = "trik"     # geom3trik
+UDID = "UDID"     # Apple device identifier
