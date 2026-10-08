@@ -79,7 +79,7 @@ impl SoftwareDriver {
         let mut surface = softbuffer::Surface::new(&context, WindowHandleWrapper(window_handle))
             .map_err(|err| format!("Could not create softbuffer surface: {err}"))?;
 
-        let size = window.inner_size();
+        let size = crate::drawable_size(window);
         if let (Some(width), Some(height)) =
             (NonZeroU32::new(size.width), NonZeroU32::new(size.height))
         {

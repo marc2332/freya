@@ -279,7 +279,7 @@ impl AppWindow {
 
         let mut tree = Tree::default();
 
-        let window_size = window.inner_size();
+        let window_size = crate::drawable_size(&window);
         let accent_color_preference = accent_color_preference();
         runner.provide_root_context(TargetPlatform::detect);
         let platform = runner.run_in({
@@ -341,8 +341,8 @@ impl AppWindow {
         }
         tree.measure_layout(
             (
-                window.inner_size().width as f32,
-                window.inner_size().height as f32,
+                crate::drawable_size(&window).width as f32,
+                crate::drawable_size(&window).height as f32,
             )
                 .into(),
             font_collection,
