@@ -43,7 +43,10 @@ use winit::{
     },
 };
 
-use crate::drivers::surface::wrap_render_target;
+use crate::{
+    drivers::surface::wrap_render_target,
+    window::AppWindow,
+};
 
 /// Metal graphics driver for macOS and iOS.
 pub struct MetalDriver {
@@ -83,7 +86,7 @@ impl MetalDriver {
 
         let device = MTLCreateSystemDefaultDevice().expect("No Metal-capable device found");
 
-        let size = crate::drawable_size(&window);
+        let size = AppWindow::drawable_size(&window);
 
         let metal_layer = {
             let layer = CAMetalLayer::new();

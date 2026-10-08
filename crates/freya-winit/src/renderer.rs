@@ -847,7 +847,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     let scale_factor = app.effective_scale_factor();
                     hotpath::measure_block!("RedrawRequested", {
                         // Reconcile drawable dimensions when rotation does not emit a resize event.
-                        let window_size = crate::drawable_size(&app.window);
+                        let window_size = AppWindow::drawable_size(&app.window);
                         if window_size != app.last_render_size {
                             app.last_render_size = window_size;
                             if let Err(error) = app.driver.resize(window_size) {
@@ -870,8 +870,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 PluginHandle::new(&self.proxy),
                             );
                             let size: Size2D = (
-                                crate::drawable_size(&app.window).width as f32,
-                                crate::drawable_size(&app.window).height as f32,
+                                AppWindow::drawable_size(&app.window).width as f32,
+                                AppWindow::drawable_size(&app.window).height as f32,
                             )
                                 .into();
 
