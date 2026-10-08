@@ -18,5 +18,10 @@ fn main() {
         .with_size(400., 700.)
         .with_resizable(false);
 
-    launch(LaunchConfig::new().with_window(window))
+    let config = LaunchConfig::new().with_window(window);
+
+    #[cfg(target_os = "ios")]
+    let config = config.with_plugin(freya::ios::IosPlugin::default());
+
+    launch(config)
 }

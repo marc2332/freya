@@ -1,7 +1,7 @@
 # Experimental iOS Support
 
 > [!WARNING]
-> iOS support is highly experimental. Soft keyboard and IME support are not yet implemented, so Input components and anything relying on keyboard input will not work properly on iOS.
+> iOS support is highly experimental. See [Known limitations](#known-limitations).
 
 This example runs the same demo app as the [Android example](../android) (scroll view, widgets, portal, code editor and markdown) on iPhone, rendered with Metal.
 
@@ -55,6 +55,27 @@ Press `Ctrl+C` to stop the app.
 > [!NOTE]
 > `Info.plist` declares an empty `UILaunchScreen`. Without it iOS runs the app in a legacy compatibility mode with a letterboxed, smaller window.
 
+## Soft keyboard
+
+Register `IosPlugin` to get the soft keyboard with IME composition (for example Japanese or Chinese input):
+
+```rust
+let config = LaunchConfig::new().with_window(WindowConfig::new(app));
+
+#[cfg(target_os = "ios")]
+let config = config.with_plugin(freya::ios::IosPlugin::default());
+
+launch(config)
+```
+
+Password inputs (`InputMode::Hidden`) use a secure keyboard without suggestions.
+
+Without the plugin, winit still shows a basic keyboard, but it only sends plain characters and Backspace.
+
+### Keyboard on the simulator
+
+The simulator connects your Mac's keyboard by default, and while it is connected iOS hides the on-screen keyboard when an input is focused. To use the on-screen keyboard, turn off **I/O > Keyboard > Connect Hardware Keyboard** in the Simulator menu (`Cmd+Shift+K`). With the hardware keyboard connected, you can still show the on-screen keyboard with `Cmd+K`.
+
 ## Smoke test
 
 [`smoke-test.sh`](./smoke-test.sh) launches the app on a simulator and fails if it does not start, exits early or panics:
@@ -87,6 +108,7 @@ cargo run -p ios
 
 ## Known limitations
 
-- No soft keyboard or IME, so text inputs cannot be edited.
+- Autocorrect, autocapitalization and predictive text are disabled. The plugin's native text field only holds the text being composed, so iOS has no surrounding text to base them on.
+- The app is not told the keyboard's height, so the keyboard can cover inputs near the bottom of the screen.
 - The app draws behind the status bar, Dynamic Island and home indicator. Safe areas are not exposed yet, so the demo keeps clear of them with fixed padding.
 - The first frames on the simulator can log `Compilation took longer than 1000 ms` from Skia while it compiles Metal shaders. It is a warning and the app keeps rendering normally.
