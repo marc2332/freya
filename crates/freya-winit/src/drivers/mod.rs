@@ -118,6 +118,7 @@ impl GraphicsDriver {
                     event_loop,
                     window_attributes.clone(),
                     gpu_resource_cache_limit,
+                    preference.gpu_preference(),
                     &mut graphics_context.vulkan,
                 ) {
                     Ok((driver, window)) => return (Self::Vulkan(driver), window),
