@@ -106,6 +106,13 @@ impl AccessibilityTree {
                     .request_focus(AccessibilityFocusStrategy::Node(request.target_node));
                 true
             }
+            Action::Blur => {
+                if self.focused_id == request.target_node {
+                    tree.accessibility_diff
+                        .request_focus(AccessibilityFocusStrategy::Node(ACCESSIBILITY_ROOT_ID));
+                }
+                true
+            }
             Action::ScrollIntoView => {
                 self.scroll_to(node_id, tree, events_sender);
                 true
@@ -469,6 +476,7 @@ impl AccessibilityTree {
         // to focus the current element if it supports it.
         if accessibility_data.a11y_focusable.is_enabled() {
             accessibility_data.builder.add_action(Action::Focus);
+            accessibility_data.builder.add_action(Action::Blur);
         }
 
         let builder = &mut accessibility_data.builder;
