@@ -169,8 +169,8 @@ pub fn scroll_view_scrollbar() {
     // Scroll up with arrows
     for _ in 0..5 {
         test.press_key(Key::Named(NamedKey::ArrowUp));
+        test.poll_n(Duration::from_millis(1), 5);
     }
-    test.poll(Duration::from_millis(1), Duration::from_millis(20));
 
     assert!(content[0].is_visible());
     assert!(content[1].is_visible());
@@ -179,7 +179,7 @@ pub fn scroll_view_scrollbar() {
 
     // Scroll to the bottom with arrows
     test.press_key(Key::Named(NamedKey::End));
-    test.poll(Duration::from_millis(1), Duration::from_millis(20));
+    test.poll_n(Duration::from_millis(1), 5);
 
     assert!(!content[0].is_visible());
     assert!(content[1].is_visible());
