@@ -66,38 +66,38 @@ members = [
 rate-limit.existing-packages = 40
 
 [workspace.dependencies]
-freya = { path = "./crates/freya", version = "0.5.0-rc.9" }
-freya-core = { path = "./crates/freya-core", version = "0.5.0-rc.9" }
-torin = { path = "./crates/torin", version = "0.5.0-rc.9" }
-ragnarok = { path = "./crates/ragnarok", version = "0.5.0-rc.9" }
-freya-clipboard = { path = "./crates/freya-clipboard", version = "0.5.0-rc.9" }
-freya-edit = { path = "./crates/freya-edit", version = "0.5.0-rc.9" }
-freya-winit = { path = "./crates/freya-winit", version = "0.5.0-rc.9", default-features = false }
-freya-components = { path = "./crates/freya-components", version = "0.5.0-rc.9" }
-freya-video = { path = "./crates/freya-video", version = "0.5.0-rc.9" }
-freya-markdown = { path = "./crates/freya-markdown", version = "0.5.0-rc.9" }
-pathgraph = { path = "./crates/pathgraph/", version = "0.5.0-rc.9" }
-freya-animation = { path = "./crates/freya-animation", version = "0.5.0-rc.9" }
-freya-router = { path = "./crates/freya-router", version = "0.5.0-rc.9" }
-freya-router-macro = { path = "./crates/freya-router-macro", version = "0.5.0-rc.9" }
-freya-testing = { path = "./crates/freya-testing", version = "0.5.0-rc.9" }
-freya-i18n = { path = "./crates/freya-i18n", version = "0.5.0-rc.9" }
-freya-metrics-plugin = { path = "./crates/freya-metrics-plugin", version = "0.5.0-rc.9" }
-freya-borderless-plugin = { path = "./crates/freya-borderless-plugin", version = "0.5.0-rc.9" }
-freya-radio = { path = "./crates/freya-radio", version = "0.5.0-rc.9" }
-freya-engine = { path = "./crates/freya-engine", version = "0.5.0-rc.9" }
-freya-devtools = { path = "./crates/freya-devtools", version = "0.5.0-rc.9" }
-freya-icons = { path = "./crates/freya-icons", version = "0.5.0-rc.9" }
-freya-sdk = { path = "./crates/freya-sdk", version = "0.5.0-rc.9" }
-freya-material-design = { path = "./crates/freya-material-design", version = "0.5.0-rc.9" }
-freya-plotters-backend = { path = "./crates/freya-plotters-backend", version = "0.5.0-rc.9" }
-freya-query = { path = "./crates/freya-query", version = "0.5.0-rc.9" }
-freya-html = { path = "./crates/freya-html", version = "0.5.0-rc.9" }
-freya-terminal = { path = "./crates/freya-terminal", version = "0.5.0-rc.9", default-features = false }
-freya-code-editor = { path = "./crates/freya-code-editor", version = "0.5.0-rc.9" }
-freya-camera = { path = "./crates/freya-camera", version = "0.5.0-rc.9" }
-freya-android = { path = "./crates/freya-android", version = "0.5.0-rc.9" }
-freya-web = { path = "./crates/freya-web", version = "0.5.0-rc.9" }
+freya = { path = "./crates/freya", version = "0.5.0-beta.9" }
+freya-core = { path = "./crates/freya-core", version = "0.5.0-beta.9" }
+torin = { path = "./crates/torin", version = "0.5.0-beta.9" }
+ragnarok = { path = "./crates/ragnarok", version = "0.5.0-beta.9" }
+freya-clipboard = { path = "./crates/freya-clipboard", version = "0.5.0-beta.9" }
+freya-edit = { path = "./crates/freya-edit", version = "0.5.0-beta.9" }
+freya-winit = { path = "./crates/freya-winit", version = "0.5.0-beta.9", default-features = false }
+freya-components = { path = "./crates/freya-components", version = "0.5.0-beta.9" }
+freya-video = { path = "./crates/freya-video", version = "0.5.0-beta.9" }
+freya-markdown = { path = "./crates/freya-markdown", version = "0.5.0-beta.9" }
+pathgraph = { path = "./crates/pathgraph/", version = "0.5.0-beta.9" }
+freya-animation = { path = "./crates/freya-animation", version = "0.5.0-beta.9" }
+freya-router = { path = "./crates/freya-router", version = "0.5.0-beta.9" }
+freya-router-macro = { path = "./crates/freya-router-macro", version = "0.5.0-beta.9" }
+freya-testing = { path = "./crates/freya-testing", version = "0.5.0-beta.9" }
+freya-i18n = { path = "./crates/freya-i18n", version = "0.5.0-beta.9" }
+freya-metrics-plugin = { path = "./crates/freya-metrics-plugin", version = "0.5.0-beta.9" }
+freya-borderless-plugin = { path = "./crates/freya-borderless-plugin", version = "0.5.0-beta.9" }
+freya-radio = { path = "./crates/freya-radio", version = "0.5.0-beta.9" }
+freya-engine = { path = "./crates/freya-engine", version = "0.5.0-beta.9" }
+freya-devtools = { path = "./crates/freya-devtools", version = "0.5.0-beta.9" }
+freya-icons = { path = "./crates/freya-icons", version = "0.5.0-beta.9" }
+freya-sdk = { path = "./crates/freya-sdk", version = "0.5.0-beta.9" }
+freya-material-design = { path = "./crates/freya-material-design", version = "0.5.0-beta.9" }
+freya-plotters-backend = { path = "./crates/freya-plotters-backend", version = "0.5.0-beta.9" }
+freya-query = { path = "./crates/freya-query", version = "0.5.0-beta.9" }
+freya-html = { path = "./crates/freya-html", version = "0.5.0-beta.9" }
+freya-terminal = { path = "./crates/freya-terminal", version = "0.5.0-beta.9", default-features = false }
+freya-code-editor = { path = "./crates/freya-code-editor", version = "0.5.0-beta.9" }
+freya-camera = { path = "./crates/freya-camera", version = "0.5.0-beta.9" }
+freya-android = { path = "./crates/freya-android", version = "0.5.0-beta.9" }
+freya-web = { path = "./crates/freya-web", version = "0.5.0-beta.9" }
 mundy = { version = "0.2.3", default-features = false, features = [
   "async-io",
   "callback",
@@ -144,7 +144,7 @@ euclid = "0.22.9"
 itertools = "0.14.0"
 
 # Rendering
-freya-skia-safe = { version = "=0.100.0-beta.1", features = [
+freya-skia-safe = { version = "=0.103.1", features = [
   "textlayout",
   "svg",
   "webp",
