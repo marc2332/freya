@@ -100,6 +100,7 @@ pub struct AppWindow {
     pub(crate) mouse_state: ElementState,
     pub(crate) modifiers_state: ModifiersState,
     pub(crate) cursor_icon: CursorIcon,
+    pub(crate) cursor_visible: bool,
     pub(crate) pressed_keys: Vec<(Key, Code)>,
 
     pub(crate) events_receiver: futures_channel::mpsc::UnboundedReceiver<EventsChunk>,
@@ -415,6 +416,7 @@ impl AppWindow {
             cursor_in_window: false,
             modifiers_state: ModifiersState::default(),
             cursor_icon: CursorIcon::default(),
+            cursor_visible: true,
             pressed_keys: Vec::new(),
 
             events_receiver,
@@ -464,6 +466,11 @@ impl AppWindow {
         if cursor_icon != self.cursor_icon {
             self.cursor_icon = cursor_icon;
             self.window.set_cursor(cursor_icon);
+        }
+        let cursor_visible = self.tree.cursor_visible(&self.nodes_state);
+        if cursor_visible != self.cursor_visible {
+            self.cursor_visible = cursor_visible;
+            self.window.set_cursor_visible(cursor_visible);
         }
     }
 

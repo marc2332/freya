@@ -270,15 +270,6 @@ impl WebApp {
                     self.tree.text_cache.reset();
                     self.needs_render = true;
                 }
-                UserEvent::SetCursorVisible(visible) => {
-                    if visible != self.cursor_visible {
-                        self.cursor_visible = visible;
-                        run_script(&format!(
-                            "document.querySelector('#canvas').style.cursor = '{}';",
-                            if visible { self.cursor.name() } else { "none" }
-                        ));
-                    }
-                }
                 UserEvent::SetCustomScaleFactor(_) | UserEvent::Erased(_) => {}
             }
         }
@@ -318,14 +309,18 @@ impl WebApp {
         }
 
         let cursor = self.tree.cursor_icon(&self.nodes_state);
-        if cursor != self.cursor {
+        let cursor_visible = self.tree.cursor_visible(&self.nodes_state);
+        if cursor != self.cursor || cursor_visible != self.cursor_visible {
             self.cursor = cursor;
-            if self.cursor_visible {
-                run_script(&format!(
-                    "document.querySelector('#canvas').style.cursor = '{}';",
+            self.cursor_visible = cursor_visible;
+            run_script(&format!(
+                "document.querySelector('#canvas').style.cursor = '{}';",
+                if cursor_visible {
                     cursor.name()
-                ));
-            }
+                } else {
+                    "none"
+                }
+            ));
         }
     }
 

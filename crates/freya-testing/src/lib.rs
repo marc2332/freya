@@ -206,7 +206,6 @@ impl TestingRunner {
                         UserEvent::RequestRedraw
                         | UserEvent::OpenUrl(_)
                         | UserEvent::SetCustomScaleFactor(_)
-                        | UserEvent::SetCursorVisible(_)
                         | UserEvent::Erased(_) => {
                             // Nothing
                         }
@@ -427,6 +426,11 @@ impl TestingRunner {
     /// Resolve the [CursorIcon] for the currently hovered nodes.
     pub fn cursor_icon(&self) -> CursorIcon {
         self.tree.borrow().cursor_icon(&self.nodes_state)
+    }
+
+    /// Resolve cursor visibility for the currently hovered nodes.
+    pub fn cursor_visible(&self) -> bool {
+        self.tree.borrow().cursor_visible(&self.nodes_state)
     }
 
     pub fn send_event(&mut self, platform_event: PlatformEvent) {

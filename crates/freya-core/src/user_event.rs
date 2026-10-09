@@ -21,9 +21,6 @@ pub enum UserEvent {
     /// Set a custom scale factor.
     SetCustomScaleFactor(f64),
 
-    /// Show or hide the mouse cursor.
-    SetCursorVisible(bool),
-
     /// Load a font at runtime.
     LoadFont {
         font_name: Cow<'static, str>,

@@ -163,14 +163,6 @@ impl Platform {
         self.send(UserEvent::SetCustomScaleFactor(custom_scale_factor));
     }
 
-    /// Shows or hides the mouse cursor.
-    ///
-    /// In a multi-window app, the cursor of every window is updated to the same
-    /// visibility state, because the event is dispatched to each running event loop.
-    pub fn set_cursor_visible(&self, visible: bool) {
-        self.send(UserEvent::SetCursorVisible(visible));
-    }
-
     /// Loads a font at runtime under the given family name in all windows.
     ///
     /// # Example
