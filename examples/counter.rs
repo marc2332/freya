@@ -6,43 +6,25 @@
 use freya::prelude::*;
 
 fn main() {
-    launch(LaunchConfig::new().with_window(WindowConfig::new(app).with_size(500., 450.)))
+    launch(
+        LaunchConfig::new()
+            .with_font(
+                "Embedded Noto Color Emoji",
+                Bytes::from_static(include_bytes!(
+                    "assets/noto-color-emoji/NotoColorEmoji-Regular.ttf"
+                )),
+            )
+            .with_window(WindowConfig::new(app).with_size(1000., 800.)),
+    )
 }
 
 fn app() -> impl IntoElement {
-    let mut count = use_state(|| 4);
-
-    let counter = rect()
-        .width(Size::fill())
-        .height(Size::percent(50.))
-        .center()
-        .color((255, 255, 255))
-        .background((15, 163, 242))
-        .font_weight(FontWeight::BOLD)
-        .font_size(75.)
-        .shadow((0., 4., 20., 4., (0, 0, 0, 80)))
-        .child(count.read().to_string());
-
-    let actions = rect()
-        .horizontal()
-        .width(Size::fill())
-        .height(Size::percent(50.))
-        .center()
-        .spacing(8.0)
-        .child(
-            Button::new()
-                .on_press(move |_| {
-                    *count.write() += 1;
-                })
-                .child("Increase"),
-        )
-        .child(
-            Button::new()
-                .on_press(move |_| {
-                    *count.write() -= 1;
-                })
-                .child("Decrease"),
-        );
-
-    rect().child(counter).child(actions)
+    rect()
+        .expanded()
+        .padding(20.)
+        .background((245, 245, 245))
+        .color((20, 20, 20))
+        .font_family("Embedded Noto Color Emoji")
+        .font_size(36.)
+        .child("🔍")
 }

@@ -10,6 +10,8 @@ on:
         options:
           - macos-latest
           - ubuntu-latest
+          - ubuntu-22.04
+          - ubuntu-24.04
           - windows-latest
       example_name:
         description: "Example name"
@@ -39,12 +41,33 @@ jobs:
       - name: Install linux dependencies
         if: runner.os == 'Linux'
         run: |
-          sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev libwebkit2gtk-4.1-dev libasound2-dev
+          sudo apt update && sudo apt install -y build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev libwebkit2gtk-4.1-dev libasound2-dev xvfb xauth dbus-x11
 
       - name: Build example
-        run: cargo build --example ${{inputs.example_name}} --release
+        run: cargo build --locked --example "$EXAMPLE_NAME" --release
+        shell: bash
         env:
+          EXAMPLE_NAME: ${{ inputs.example_name }}
+          FORCE_SKIA_BINARIES_DOWNLOAD: "1"
           RUSTFLAGS: ${{ runner.os == 'Windows' && '-Ctarget-feature=+crt-static' || '' }}
+
+      - name: Smoke test Linux example
+        if: runner.os == 'Linux'
+        timeout-minutes: 1
+        shell: bash
+        env:
+          EXAMPLE_NAME: ${{ inputs.example_name }}
+          FREYA_RENDERER: software
+          LIBGL_ALWAYS_SOFTWARE: "1"
+          RUST_BACKTRACE: "1"
+        run: |
+          status=0
+          xvfb-run --auto-servernum dbus-run-session -- \
+            timeout --kill-after=5s 15s "./target/release/examples/$EXAMPLE_NAME" || status=$?
+          if [ "$status" -ne 124 ]; then
+            echo "::error::Example exited before the smoke-test deadline with status $status"
+            exit 1
+          fi
 
       - name: Upload artifacts
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
