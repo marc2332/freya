@@ -71,8 +71,7 @@ impl Component for HtmlViewer {
 
         let state = use_hook(move || {
             let platform = Platform::get();
-            let resource_cache =
-                GlobalContexts::get().get_context_or_insert(ResourceCache::default);
+            let resource_cache = ResourceCache::get();
 
             let (wake_tx, mut wake_rx) = futures_channel::mpsc::unbounded::<()>();
             let (nav_tx, mut nav_rx) = futures_channel::mpsc::unbounded::<String>();
@@ -101,7 +100,7 @@ impl Component for HtmlViewer {
                         match freya_components::http::fetch(url.clone()).await {
                             Ok(bytes) => {
                                 let resolved_url = url.to_string();
-                                resource_cache.insert(url, bytes.clone());
+                                resource_cache.set(url, bytes.clone());
                                 handler.bytes(resolved_url, bytes);
                             }
                             Err(err) => tracing::warn!("Failed to fetch resource {url}: {err}"),

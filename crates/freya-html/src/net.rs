@@ -36,7 +36,7 @@ impl NetProvider for HttpNetProvider {
             return;
         }
 
-        if let Some(bytes) = self.cache.get(&request.url) {
+        if let Some(bytes) = self.cache.read(&request.url) {
             handler.bytes(request.url.to_string(), bytes);
             return;
         }

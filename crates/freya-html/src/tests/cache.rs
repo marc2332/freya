@@ -36,7 +36,7 @@ fn cached_resources_are_delivered_immediately_across_providers() {
     let second = HttpNetProvider { fetch, cache };
     let url = Url::parse("https://example.com/image.png").unwrap();
     let bytes = Bytes::from_static(b"image bytes");
-    first.cache.insert(url.clone(), bytes.clone());
+    first.cache.set(url.clone(), bytes.clone());
 
     for provider in [first, second] {
         let (sender, received) = channel();
@@ -64,5 +64,5 @@ fn uncached_resources_are_forwarded_without_delivering_bytes() {
     let bytes = Bytes::from_static(b"body {}");
     handler.bytes(url.to_string(), bytes.clone());
     assert_eq!(received.try_recv().unwrap(), (url.to_string(), bytes));
-    assert!(provider.cache.get(&url).is_none());
+    assert!(provider.cache.read(&url).is_none());
 }

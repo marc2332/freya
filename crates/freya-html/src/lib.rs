@@ -34,6 +34,7 @@ mod handle;
 mod net;
 mod state;
 
+pub use cache::ResourceCache;
 pub use component::HtmlViewer;
 pub use handle::{
     HtmlHandle,
@@ -43,6 +44,7 @@ pub use handle::{
 
 pub mod prelude {
     pub use crate::{
+        cache::ResourceCache,
         component::HtmlViewer,
         handle::{
             HtmlHandle,
