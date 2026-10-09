@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 # Usage: ./smoke-test.sh [device name or UDID], defaults to the first available iPhone.
-# Environment: SMOKE_SECONDS (default 20), SCREENSHOT (default target/ios-smoke-test.png).
+# Environment: SMOKE_SECONDS (default 20), LAUNCH_TIMEOUT (default 120), SCREENSHOT (default target/ios-smoke-test.png).
 set -eu
 
 EXAMPLE_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -8,6 +8,7 @@ EXAMPLE_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 DEVICE="${1:-$(first_iphone)}"
 SECONDS_ALIVE="${SMOKE_SECONDS:-20}"
+LAUNCH_TIMEOUT="${LAUNCH_TIMEOUT:-120}"
 SCREENSHOT="${SCREENSHOT:-$EXAMPLE_DIR/../../target/ios-smoke-test.png}"
 LOG="$(mktemp)"
 APP="$("$EXAMPLE_DIR/bundle.sh" | tail -n1)"
@@ -18,7 +19,7 @@ xcrun simctl launch --console --terminate-running-process "$DEVICE" "$BUNDLE_ID"
 LAUNCHER=$!
 
 PID=""
-for _ in $(seq 1 30); do
+for _ in $(seq 1 "$LAUNCH_TIMEOUT"); do
     PID="$(pgrep -n -f "Freya.app/ios_exampl[e]" || true)"
     [ -n "$PID" ] && break
     sleep 1
@@ -26,7 +27,11 @@ done
 
 if [ -z "$PID" ]; then
     cat "$LOG"
-    echo "Smoke test failed: the app did not launch" >&2
+    if grep -q "^$BUNDLE_ID: " "$LOG"; then
+        echo "Smoke test failed: the app launched but exited right away" >&2
+    else
+        echo "Smoke test failed: the simulator did not launch the app within ${LAUNCH_TIMEOUT}s" >&2
+    fi
     exit 1
 fi
 
