@@ -37,6 +37,7 @@ mod state;
 pub use cache::ResourceCache;
 pub use component::HtmlViewer;
 pub use handle::{
+    ElementHit,
     HtmlHandle,
     HtmlSource,
     use_html,
@@ -47,6 +48,7 @@ pub mod prelude {
         cache::ResourceCache,
         component::HtmlViewer,
         handle::{
+            ElementHit,
             HtmlHandle,
             HtmlSource,
             use_html,

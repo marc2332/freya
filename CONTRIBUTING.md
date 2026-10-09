@@ -74,15 +74,24 @@ Check the `justfile` for other commands.
 
 ## Architecture Overview
 
-Freya is split in various crates, each with it's own meaning and purpose, here is the list sorted by their importance:
+Freya is split into various crates, each with its own purpose.
 
-- `freya`: Entrypoint to the library used by end users, mainly reexports the other crates.
-- `freya-winit`: Window renderer for Freya.
-- `freya-testing`: Headless renderer for Freya, used for testing.
+### Core crates
+
+These crates are required for `freya-core` to function:
+
 - `freya-core`: Reactivity system, elements tree, hooks, etc.
 - `torin`: UI layout library specifically made for Freya, although it's agnostic.
 - `ragnarok`: UI events measurer (e.g what event to figure when the user clicks in a coordinate).
 - `pathgraph`: Map to store nested data structures based on the assumption that you always know its location.
+
+### Extra crates
+
+These crates provide entrypoints, renderers, components, integrations and other features beyond the core:
+
+- `freya`: Entrypoint to the library used by end users, mainly reexports the other crates.
+- `freya-winit`: Window renderer for Freya.
+- `freya-testing`: Headless renderer for Freya, used for testing.
 - `freya-components`: Collection of components ready to be used out of the box with in Freya apps (Button, Switch, Slider, Table, ScrollView, etc)
 - `freya-engine`: Simple re-export of all Skia APIs used in freya.
 - `freya-devtools`: Devtools server and plugin for Freya.
