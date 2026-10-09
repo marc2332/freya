@@ -84,7 +84,7 @@ The simulator connects your Mac's keyboard by default, and while it is connected
 ./examples/ios/smoke-test.sh
 ```
 
-It keeps the app running for 20 seconds (override with `SMOKE_SECONDS`) and saves a screenshot to `target/ios-smoke-test.png` (override with `SCREENSHOT`).
+It waits up to 120 seconds for the simulator to launch the app (override with `LAUNCH_TIMEOUT`), keeps it running for 20 seconds (override with `SMOKE_SECONDS`) and saves a screenshot to `target/ios-smoke-test.png` (override with `SCREENSHOT`).
 
 CI runs it on every pull request in [`rust_ios.yml`](../../.github/workflows/rust_ios.yml), together with Clippy for the `aarch64-apple-ios` target and a device build. The screenshot is uploaded as the `ios-smoke-test` artifact.
 
