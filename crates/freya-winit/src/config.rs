@@ -34,6 +34,16 @@ pub type WindowBuilderHook =
     Box<dyn FnOnce(WindowAttributes, &ActiveEventLoop) -> WindowAttributes>;
 pub type WindowHandleHook = Box<dyn FnOnce(&mut Window)>;
 
+/// Preferred GPU type, with fallback to other available hardware.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum GpuPreference {
+    /// Prefer an integrated GPU.
+    #[default]
+    PreferIntegrated,
+    /// Prefer a discrete GPU.
+    PreferDiscrete,
+}
+
 /// Graphics driver preference a window asks for.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum RendererPreference {
@@ -41,16 +51,26 @@ pub enum RendererPreference {
     Auto,
     Software,
     OpenGl,
-    Vulkan,
+    Vulkan {
+        gpu_preference: GpuPreference,
+    },
 }
 
 impl RendererPreference {
+    /// Return the Vulkan GPU preference or the default for other renderers.
+    pub fn gpu_preference(self) -> GpuPreference {
+        match self {
+            Self::Vulkan { gpu_preference } => gpu_preference,
+            _ => GpuPreference::default(),
+        }
+    }
+
     pub(crate) fn as_name(self) -> Option<&'static str> {
         match self {
             Self::Auto => None,
             Self::Software => Some("software"),
             Self::OpenGl => Some("opengl"),
-            Self::Vulkan => Some("vulkan"),
+            Self::Vulkan { .. } => Some("vulkan"),
         }
     }
 }
