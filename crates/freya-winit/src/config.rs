@@ -491,8 +491,16 @@ impl LaunchConfig {
         self
     }
 
-    /// Register a task on the event loop with a [`LaunchProxy`].
-    /// The task runs on the renderer thread until completion or event-loop shutdown.
+    /// Register an async task that starts on the app launch.
+    ///
+    /// ```rust,no_run
+    /// # use freya::prelude::*;
+    /// let config = LaunchConfig::new().with_task(|proxy| async move {
+    ///     let _ = proxy
+    ///         .post_callback(|renderer| renderer.launch_window(WindowConfig::new(|| "Hello!")))
+    ///         .await;
+    /// });
+    /// ```
     pub fn with_task<F, Fut>(mut self, task: F) -> Self
     where
         F: FnOnce(LaunchProxy) -> Fut + 'static,
