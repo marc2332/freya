@@ -14,7 +14,7 @@
 //!
 //! fn app() -> impl IntoElement {
 //!     let mut state = use_consume::<State<i32>>();
-//!     rect().on_mouse_up(move |_| *state.write() += 1)
+//!     rect().on_press(move |_| *state.write() += 1)
 //! }
 //!
 //! fn main() {

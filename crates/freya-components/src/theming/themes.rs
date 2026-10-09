@@ -8,8 +8,6 @@ use torin::{
     size::Size,
 };
 
-#[cfg(feature = "calendar")]
-use crate::calendar::CalendarThemePreference;
 #[cfg(feature = "router")]
 use crate::link::LinkThemePreference;
 #[cfg(feature = "titlebar")]
@@ -597,23 +595,6 @@ fn register_base_component_themes(theme: &mut Theme) {
             background: Preference::Reference("surface_tertiary"),
             border_fill: Preference::Reference("border"),
             corner_radius: Preference::Specific(CornerRadius::new_all(99.)),
-        },
-    );
-    #[cfg(feature = "calendar")]
-    theme.set(
-        "calendar",
-        CalendarThemePreference {
-            background: Preference::Reference("surface_tertiary"),
-            day_background: Preference::Specific(Color::TRANSPARENT),
-            day_hover_background: Preference::Reference("surface_secondary"),
-            day_selected_background: Preference::Reference("surface_primary"),
-            color: Preference::Reference("text_primary"),
-            day_other_month_color: Preference::Reference("text_placeholder"),
-            header_color: Preference::Reference("text_primary"),
-            corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
-            padding: Preference::Specific(Gaps::new_all(12.)),
-            day_corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
-            nav_button_hover_background: Preference::Reference("surface_secondary"),
         },
     );
     #[cfg(feature = "titlebar")]

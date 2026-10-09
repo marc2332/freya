@@ -20,7 +20,7 @@ freya = "0.4"
 Next release:
 
 ```toml
-freya = "0.5.0-rc.8"
+freya = "0.5.0-rc.9"
 ```
 
 `main` branch:
@@ -493,7 +493,7 @@ fn app() -> impl IntoElement {
         .expanded()
         .center()
         .background((240, 240, 240))
-        .on_mouse_up(move |_| *state.write() += 1)
+        .on_press(move |_| *state.write() += 1)
         .child(format!("Clicked: {}", state.read()))
 }
 
@@ -537,7 +537,7 @@ use freya::prelude::*;
 use freya::plot::*;
 use freya::plot::plotters::*;
 
-fn on_render(ctx: &mut RenderContext, (cursor_x, cursor_y): (f64, f64)) {
+fn on_render(ctx: &mut FillRenderContext, (cursor_x, cursor_y): (f64, f64)) {
     let backend = PlotSkiaBackend::new(
         ctx.canvas,
         ctx.font_collection,
@@ -591,7 +591,7 @@ fn app() -> impl IntoElement {
         }
     };
 
-    canvas(RenderCallback::new(move |context| {
+    rect().background(RenderCallback::new(move |context| {
         on_render(context, cursor_position().to_tuple());
     }))
     .expanded()

@@ -38,6 +38,7 @@ use crate::{
     prelude::*,
     style::{
         font_size::FontSize,
+        render_callback::RenderContext as FillRenderContext,
         scale::Scale,
         shadow::{
             Shadow,
@@ -493,7 +494,9 @@ impl ElementExt for RectElement {
         let mut paint = Paint::default();
         paint.set_anti_alias(true);
         paint.set_style(PaintStyle::Fill);
-        style.background.apply_to_paint(&mut paint, area);
+        if style.background.render_callback().is_none() {
+            style.background.apply_to_paint(&mut paint, area);
+        }
 
         // Container
         let rounded_rect = self.render_rect(&area, context.scale_factor as f32);
@@ -504,7 +507,24 @@ impl ElementExt for RectElement {
         }
 
         let mut path = path.detach();
-        context.canvas.draw_path(&path, &paint);
+        if let Some(callback) = style.background.render_callback() {
+            let layer = context.canvas.save();
+            context.canvas.clip_path(&path, ClipOp::Intersect, true);
+            context.canvas.translate((area.min_x(), area.min_y()));
+            context
+                .canvas
+                .scale((context.scale_factor as f32, context.scale_factor as f32));
+            callback.call(&mut FillRenderContext {
+                canvas: context.canvas,
+                font_collection: context.font_collection,
+                origin: area.origin / context.scale_factor as f32,
+                size: area.size / context.scale_factor as f32,
+                text_style_state: context.text_style_state,
+            });
+            context.canvas.restore_to_count(layer);
+        } else {
+            context.canvas.draw_path(&path, &paint);
+        }
 
         // Shadows
         for shadow in style.shadows.iter() {
