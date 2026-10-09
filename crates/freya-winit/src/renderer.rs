@@ -634,6 +634,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             UserEvent::SetCustomScaleFactor(custom_scale_factor) => {
                                 app.set_custom_scale_factor(custom_scale_factor);
                             }
+                            UserEvent::SetCursorVisible(visible) => {
+                                app.window.set_cursor_visible(visible);
+                            }
                             UserEvent::LoadFont { .. } => unreachable!(),
                             UserEvent::Erased(data) => {
                                 let action = data

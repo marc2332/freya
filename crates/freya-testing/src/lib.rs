@@ -206,6 +206,7 @@ impl TestingRunner {
                         UserEvent::RequestRedraw
                         | UserEvent::OpenUrl(_)
                         | UserEvent::SetCustomScaleFactor(_)
+                        | UserEvent::SetCursorVisible(_)
                         | UserEvent::Erased(_) => {
                             // Nothing
                         }

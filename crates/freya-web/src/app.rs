@@ -55,6 +55,7 @@ pub struct WebApp {
 
     background: Color,
     cursor: CursorIcon,
+    cursor_visible: bool,
     needs_render: bool,
     ime: WebIme,
 }
@@ -141,6 +142,7 @@ impl WebApp {
             ticker_sender,
             background: config.background,
             cursor: CursorIcon::Default,
+            cursor_visible: true,
             needs_render: true,
             ime: WebIme::new(),
         })
@@ -268,6 +270,15 @@ impl WebApp {
                     self.tree.text_cache.reset();
                     self.needs_render = true;
                 }
+                UserEvent::SetCursorVisible(visible) => {
+                    if visible != self.cursor_visible {
+                        self.cursor_visible = visible;
+                        run_script(&format!(
+                            "document.querySelector('#canvas').style.cursor = '{}';",
+                            if visible { self.cursor.name() } else { "none" }
+                        ));
+                    }
+                }
                 UserEvent::SetCustomScaleFactor(_) | UserEvent::Erased(_) => {}
             }
         }
@@ -309,10 +320,12 @@ impl WebApp {
         let cursor = self.tree.cursor_icon(&self.nodes_state);
         if cursor != self.cursor {
             self.cursor = cursor;
-            run_script(&format!(
-                "document.querySelector('#canvas').style.cursor = '{}';",
-                cursor.name()
-            ));
+            if self.cursor_visible {
+                run_script(&format!(
+                    "document.querySelector('#canvas').style.cursor = '{}';",
+                    cursor.name()
+                ));
+            }
         }
     }
 
