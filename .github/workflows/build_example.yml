@@ -41,7 +41,7 @@ jobs:
       - name: Install linux dependencies
         if: runner.os == 'Linux'
         run: |
-          sudo apt update && sudo apt install -y build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev libwebkit2gtk-4.1-dev libasound2-dev libxkbcommon-x11-0 xvfb xauth dbus-x11
+          sudo apt update && sudo apt install -y build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev libwebkit2gtk-4.1-dev libasound2-dev libxkbcommon-x11-0 xvfb xauth dbus-x11 xdotool imagemagick
 
       - name: Build example
         run: cargo build --locked --example "$EXAMPLE_NAME" --release
@@ -61,13 +61,16 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE: "1"
           RUST_BACKTRACE: "1"
         run: |
-          status=0
-          xvfb-run --auto-servernum dbus-run-session -- \
-            timeout --kill-after=5s 15s "./target/release/examples/$EXAMPLE_NAME" || status=$?
-          if [ "$status" -ne 124 ]; then
-            echo "::error::Example exited before the smoke-test deadline with status $status"
-            exit 1
-          fi
+          xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24" dbus-run-session -- \
+            timeout --kill-after=5s 45s bash .github/scripts/smoke-linux-example.sh
+
+      - name: Upload Linux screenshot
+        if: ${{ !cancelled() && runner.os == 'Linux' && hashFiles('artifacts/linux-smoke.png') != '' }}
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: linux-smoke-${{ matrix.os }}
+          path: artifacts/linux-smoke.png
+          if-no-files-found: error
 
       - name: Upload artifacts
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
