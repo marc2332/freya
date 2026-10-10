@@ -1,5 +1,6 @@
 use std::{
     borrow::Cow,
+    cell::Cell,
     path::PathBuf,
     rc::Rc,
     sync::Arc,
@@ -44,6 +45,7 @@ use winit::{
     dpi::{
         LogicalPosition,
         LogicalSize,
+        PhysicalSize,
     },
     event::ElementState,
     event_loop::{
@@ -59,11 +61,12 @@ use winit::{
     },
 };
 
+#[cfg(target_os = "android")]
+use crate::config::RendererPreference;
 use crate::{
     accessibility::AccessibilityTask,
     config::{
         OnCloseHook,
-        RendererPreference,
         WindowConfig,
     },
     drivers::{
@@ -115,6 +118,8 @@ pub struct AppWindow {
 
     pub(crate) process_layout_on_next_render: bool,
     pub(crate) send_mouse_move_on_next_layout: bool,
+    pub(crate) last_render_size: PhysicalSize<u32>,
+    ime_allowed: Cell<bool>,
 
     pub(crate) render_callbacks: Vec<RenderCallback>,
 
@@ -134,6 +139,7 @@ pub struct AppWindow {
 
     pub(crate) window_attributes: WindowAttributes,
 
+    #[cfg(target_os = "android")]
     pub(crate) renderer: RendererPreference,
 
     #[cfg(feature = "hotreload")]
@@ -148,6 +154,22 @@ fn clamp_custom_scale_factor(custom_scale_factor: f64) -> f64 {
 }
 
 impl AppWindow {
+    /// Returns the physical size used for layout and rendering, including the iOS safe-area insets.
+    pub(crate) fn drawable_size(window: &Window) -> PhysicalSize<u32> {
+        #[cfg(target_os = "ios")]
+        return window.outer_size();
+        #[cfg(not(target_os = "ios"))]
+        return window.inner_size();
+    }
+
+    /// Forward the IME state to winit only when it changes. On iOS every call moves the first
+    /// responder, which would steal the keyboard from views that manage text input themselves.
+    pub(crate) fn set_ime_allowed(&self, allowed: bool) {
+        if self.ime_allowed.replace(allowed) != allowed {
+            self.window.set_ime_allowed(allowed);
+        }
+    }
+
     pub(crate) fn process_accessibility_update(&mut self, mode: Option<NavigationMode>) {
         let title = self.window.title();
         let update =
@@ -159,8 +181,7 @@ impl AppWindow {
         let node_id = self.accessibility.focused_node_id().unwrap();
         let layout_node = self.tree.layout.get(&node_id).unwrap();
         let focused_node = AccessibilityTree::create_node(node_id, layout_node, &self.tree, &title);
-        self.window
-            .set_ime_allowed(is_ime_role(focused_node.role()));
+        self.set_ime_allowed(is_ime_role(focused_node.role()));
         self.platform
             .focused_accessibility_node
             .set_if_modified(focused_node);
@@ -212,8 +233,19 @@ impl AppWindow {
             .with_visible(false)
             .with_title(window_config.title)
             .with_decorations(window_config.decorations)
-            .with_transparent(window_config.transparent)
-            .with_inner_size(LogicalSize::<f64>::from(window_config.size));
+            .with_transparent(window_config.transparent);
+
+        // Let UIKit size the root view instead of applying desktop window dimensions.
+        #[cfg(not(any(
+            target_os = "ios",
+            target_os = "tvos",
+            target_os = "watchos",
+            target_os = "visionos",
+        )))]
+        {
+            window_attributes =
+                window_attributes.with_inner_size(LogicalSize::<f64>::from(window_config.size));
+        }
 
         if let Some(min_size) = window_config.min_size {
             window_attributes =
@@ -238,6 +270,14 @@ impl AppWindow {
             window_config.renderer,
             graphics_context,
         );
+        #[cfg(any(
+            target_os = "ios",
+            target_os = "tvos",
+            target_os = "watchos",
+            target_os = "visionos",
+        ))]
+        window.set_fullscreen(Some(winit::window::Fullscreen::Borderless(None)));
+        let initial_render_size = Self::drawable_size(&window);
 
         tracing::info!(
             "Using the {} graphics driver on {}, transparency is {}",
@@ -287,7 +327,7 @@ impl AppWindow {
 
         let mut tree = Tree::default();
 
-        let window_size = window.inner_size();
+        let window_size = Self::drawable_size(&window);
         let accent_color_preference = accent_color_preference();
         runner.provide_root_context(TargetPlatform::detect);
         let platform = runner.provide_root_context({
@@ -344,8 +384,8 @@ impl AppWindow {
         }
         tree.measure_layout(
             (
-                window.inner_size().width as f32,
-                window.inner_size().height as f32,
+                Self::drawable_size(&window).width as f32,
+                Self::drawable_size(&window).height as f32,
             )
                 .into(),
             font_collection,
@@ -431,6 +471,8 @@ impl AppWindow {
 
             process_layout_on_next_render: true,
             send_mouse_move_on_next_layout: false,
+            last_render_size: initial_render_size,
+            ime_allowed: Cell::new(false),
 
             render_callbacks: Vec::new(),
 
@@ -450,6 +492,7 @@ impl AppWindow {
 
             window_attributes,
 
+            #[cfg(target_os = "android")]
             renderer: window_config.renderer,
 
             #[cfg(feature = "hotreload")]

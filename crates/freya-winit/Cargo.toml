@@ -63,7 +63,7 @@ freya-clipboard = { workspace = true }
 # Opening urls
 open = { workspace = true }
 
-[target.'cfg(not(target_os = "android"))'.dependencies]
+[target.'cfg(not(any(target_os = "android", target_os = "ios", target_os = "tvos", target_os = "watchos", target_os = "visionos")))'.dependencies]
 # Crash handler
 rfd = { workspace = true }
 
@@ -98,14 +98,19 @@ glutin = { workspace = true, optional = true }
 glutin-winit = { workspace = true, optional = true }
 freya-engine = { workspace = true, features = ["gl"], optional = true }
 
-# Rendering Metal (macOS)
-[target.'cfg(target_os = "macos")'.dependencies]
+# Metal rendering
+[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
 objc2-core-foundation = { version = "0.3.2" }
 objc2 = { version = "0.6", optional = true }
 objc2-metal = { version = "0.3", optional = true }
 objc2-quartz-core = { version = "0.3", optional = true }
-objc2-app-kit = { version = "0.3", optional = true }
 freya-engine = { workspace = true, features = ["metal"], optional = true }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2-app-kit = { version = "0.3", optional = true }
+
+[target.'cfg(target_os = "ios")'.dependencies]
+objc2-ui-kit = { version = "0.3", optional = true }
 
 [dev-dependencies]
 freya = { path = "../freya" }
@@ -124,6 +129,7 @@ gpu = [
   "dep:objc2-metal",
   "dep:objc2-quartz-core",
   "dep:objc2-app-kit",
+  "dep:objc2-ui-kit",
 ]
 accessibility = ["dep:accesskit_winit"]
 hotpath = ["hotpath/hotpath"]

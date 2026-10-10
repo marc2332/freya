@@ -53,7 +53,16 @@ pub mod tray {
 /// If a custom event loop was provided via [`LaunchConfig::with_event_loop`], it will be used.
 /// Otherwise a default one is created.
 pub fn launch(launch_config: LaunchConfig) {
-    #[cfg(all(not(debug_assertions), not(target_os = "android")))]
+    #[cfg(all(
+        not(debug_assertions),
+        not(any(
+            target_os = "android",
+            target_os = "ios",
+            target_os = "tvos",
+            target_os = "watchos",
+            target_os = "visionos",
+        )),
+    ))]
     {
         let run_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             launch_inner(launch_config);
@@ -73,7 +82,14 @@ pub fn launch(launch_config: LaunchConfig) {
         }
     }
 
-    #[cfg(any(debug_assertions, target_os = "android"))]
+    #[cfg(any(
+        debug_assertions,
+        target_os = "android",
+        target_os = "ios",
+        target_os = "tvos",
+        target_os = "watchos",
+        target_os = "visionos",
+    ))]
     launch_inner(launch_config);
 }
 

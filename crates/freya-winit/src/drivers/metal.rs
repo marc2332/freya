@@ -11,6 +11,7 @@ use objc2::{
     rc::Retained,
     runtime::ProtocolObject,
 };
+#[cfg(target_os = "macos")]
 use objc2_app_kit::NSView;
 use objc2_core_foundation::CGSize;
 use objc2_metal::{
@@ -21,10 +22,14 @@ use objc2_metal::{
     MTLDrawable,
     MTLPixelFormat,
 };
+#[cfg(target_os = "ios")]
+use objc2_quartz_core::CAAutoresizingMask;
 use objc2_quartz_core::{
     CAMetalDrawable,
     CAMetalLayer,
 };
+#[cfg(target_os = "ios")]
+use objc2_ui_kit::UIView;
 use raw_window_handle::{
     HasWindowHandle,
     RawWindowHandle,
@@ -38,16 +43,32 @@ use winit::{
     },
 };
 
-use crate::drivers::surface::wrap_render_target;
+use crate::{
+    drivers::surface::wrap_render_target,
+    window::AppWindow,
+};
 
-/// Graphics driver using Metal (macOS native).
+/// Metal graphics driver for macOS and iOS.
 pub struct MetalDriver {
     metal_layer: Retained<CAMetalLayer>,
     command_queue: Retained<ProtocolObject<dyn MTLCommandQueue>>,
     gr_context: DirectContext,
+    #[cfg(target_os = "ios")]
+    view: Retained<UIView>,
 }
 
 impl MetalDriver {
+    #[cfg(target_os = "ios")]
+    fn sync_view_geometry(&self, scale: f64) {
+        let Some(window) = self.view.window() else {
+            return;
+        };
+        let bounds = window.bounds();
+        self.view.setFrame(bounds);
+        self.metal_layer.setFrame(self.view.bounds());
+        self.metal_layer.setContentsScale(scale);
+    }
+
     pub fn resource_cache_usage(&self) -> (usize, usize) {
         let usage = self.gr_context.resource_cache_usage();
         (usage.resource_bytes, self.gr_context.resource_cache_limit())
@@ -65,7 +86,7 @@ impl MetalDriver {
 
         let device = MTLCreateSystemDefaultDevice().expect("No Metal-capable device found");
 
-        let size = window.inner_size();
+        let size = AppWindow::drawable_size(&window);
 
         let metal_layer = {
             let layer = CAMetalLayer::new();
@@ -87,19 +108,43 @@ impl MetalDriver {
                 .expect("Could not get window handle")
                 .as_raw();
 
-            match raw_handle {
-                RawWindowHandle::AppKit(appkit) => {
-                    let view = unsafe { (appkit.ns_view.as_ptr() as *mut NSView).as_ref() }
-                        .expect("NSView pointer is null");
+            #[cfg(target_os = "macos")]
+            {
+                match raw_handle {
+                    RawWindowHandle::AppKit(appkit) => {
+                        let view = unsafe { (appkit.ns_view.as_ptr() as *mut NSView).as_ref() }
+                            .expect("NSView pointer is null");
 
-                    view.setWantsLayer(true);
-                    view.setLayer(Some(&layer));
+                        view.setWantsLayer(true);
+                        view.setLayer(Some(&layer));
+                    }
+                    _ => panic!("Metal driver only supports AppKit (macOS) windows"),
+                };
+                layer
+            }
+
+            #[cfg(target_os = "ios")]
+            {
+                let view = match raw_handle {
+                    RawWindowHandle::UiKit(uikit) => {
+                        unsafe { Retained::retain(uikit.ui_view.as_ptr() as *mut UIView) }
+                            .expect("UIView pointer is null")
+                    }
+                    _ => panic!("Metal driver only supports UIKit (iOS) windows"),
+                };
+                if let Some(window) = view.window() {
+                    view.setFrame(window.bounds());
                 }
-                _ => panic!("Metal driver only supports AppKit (macOS) windows"),
-            };
-
-            layer
+                layer.setAutoresizingMask(
+                    CAAutoresizingMask::LayerWidthSizable | CAAutoresizingMask::LayerHeightSizable,
+                );
+                view.layer().addSublayer(&layer);
+                (layer, view)
+            }
         };
+
+        #[cfg(target_os = "ios")]
+        let (metal_layer, view) = metal_layer;
 
         let command_queue = device
             .newCommandQueue()
@@ -121,17 +166,28 @@ impl MetalDriver {
             metal_layer,
             command_queue,
             gr_context,
+            #[cfg(target_os = "ios")]
+            view,
         };
 
         (driver, window)
     }
 
+    #[cfg_attr(not(target_os = "ios"), allow(unused_variables))]
     pub fn present(
         &mut self,
-        _size: PhysicalSize<u32>,
+        size: PhysicalSize<u32>,
         window: &Window,
         render: impl FnOnce(&mut SkiaSurface),
     ) {
+        #[cfg(target_os = "ios")]
+        {
+            let scale = window.scale_factor();
+            self.sync_view_geometry(scale);
+            self.metal_layer
+                .setDrawableSize(CGSize::new(size.width as f64, size.height as f64));
+        }
+
         let Some(drawable) = self.metal_layer.nextDrawable() else {
             // No drawable available, skip this frame
             return;
@@ -173,6 +229,16 @@ impl MetalDriver {
     }
 
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
+        #[cfg(target_os = "ios")]
+        {
+            let scale = self
+                .view
+                .window()
+                .map(|window| window.screen().scale())
+                .unwrap_or(1.0);
+            self.sync_view_geometry(scale);
+        }
+
         self.metal_layer
             .setDrawableSize(CGSize::new(size.width as f64, size.height as f64));
     }
