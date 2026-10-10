@@ -47,6 +47,11 @@ all-crossplatform = [
   "terminal",
   "terminal-pty",
   "query",
+  "persisted",
+  "persisted-fs",
+  "persisted-fs-watch",
+  "persisted-json",
+  "persisted-radio",
   "code-editor",
   "zoom-shortcuts",
 ]
@@ -83,6 +88,11 @@ all-tests = [
   "titlebar",
   "borderless",
   "query",
+  "persisted",
+  "persisted-fs",
+  "persisted-fs-watch",
+  "persisted-json",
+  "persisted-radio",
   "zoom-shortcuts",
 ]
 docs = ["all-debug"]
@@ -117,6 +127,11 @@ icons = ["dep:freya-icons"]
 icons-lucide = ["icons", "freya-icons/lucide"]
 radio = ["dep:freya-radio"]
 query = ["dep:freya-query"]
+persisted = ["dep:freya-persisted"]
+persisted-fs = ["persisted", "freya-persisted/fs"]
+persisted-fs-watch = ["persisted-fs", "freya-persisted/fs-watch"]
+persisted-json = ["persisted", "freya-persisted/json"]
+persisted-radio = ["persisted", "radio", "freya-persisted/radio"]
 html = ["dep:freya-html"]
 titlebar = ["freya-components/titlebar"]
 borderless = ["winit", "dep:freya-borderless-plugin"]
@@ -144,6 +159,7 @@ freya-router = { workspace = true, optional = true }
 freya-i18n = { workspace = true, optional = true }
 freya-radio = { workspace = true, optional = true }
 freya-query = { workspace = true, optional = true }
+freya-persisted = { workspace = true, optional = true }
 freya-html = { workspace = true, optional = true }
 freya-terminal = { workspace = true, optional = true }
 freya-code-editor = { workspace = true, optional = true }
