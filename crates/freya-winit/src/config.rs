@@ -93,6 +93,7 @@ pub type OnCloseHook = Box<dyn FnMut(crate::renderer::RendererContext, WindowId)
 pub struct WindowConfig {
     /// Root component for the window app.
     pub(crate) app: AppComponent,
+    pub(crate) root_context: Option<Box<dyn FnOnce()>>,
     /// Size of the Window.
     pub(crate) size: (f64, f64),
     /// Minimum size of the Window.
@@ -158,6 +159,7 @@ impl WindowConfig {
     fn new_with_defaults(app: impl Into<AppComponent>) -> Self {
         Self {
             app: app.into(),
+            root_context: None,
             size: (700.0, 500.0),
             min_size: None,
             max_size: None,
@@ -174,6 +176,14 @@ impl WindowConfig {
             window_handle_hook: None,
             on_close: None,
         }
+    }
+
+    /// Provide a context to the window's root before its first render.
+    pub fn with_root_context<T: Clone + 'static>(mut self, value: T) -> Self {
+        self.root_context = Some(Box::new(move || {
+            freya_core::prelude::provide_root_context(value);
+        }));
+        self
     }
 
     /// Specify a Window size.
@@ -466,7 +476,7 @@ impl LaunchConfig {
     /// fn main() {
     ///     launch(
     ///         LaunchConfig::new()
-    ///             .with_global(AppName("Freya".to_string()))
+    ///             .with_global_context(AppName("Freya".to_string()))
     ///             .with_window(WindowConfig::new(app)),
     ///     )
     /// }
@@ -477,7 +487,7 @@ impl LaunchConfig {
     ///     label().text(app_name.0)
     /// }
     /// ```
-    pub fn with_global<T: Clone + 'static>(mut self, value: T) -> Self {
+    pub fn with_global_context<T: Clone + 'static>(mut self, value: T) -> Self {
         self.globals.push(Box::new(move |global_contexts| {
             global_contexts.insert_context(value);
         }));

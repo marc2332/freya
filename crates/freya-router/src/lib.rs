@@ -145,7 +145,6 @@ pub mod prelude {
         components::{
             Outlet,
             Router,
-            use_share_router,
         },
         contexts::*,
         hooks::*,
