@@ -8,16 +8,14 @@ use freya_testing::prelude::*;
 fn virtual_scroll_view_auto_hide_scrollbars() {
     for auto_hide_scrollbars in [true, false] {
         let mut test = launch_test(move || {
-            VirtualScrollView::new(|item, _| {
-                rect().key(item.index).height(Size::px(50.)).into()
-            })
-            .length(30usize)
-            .item_size(50.)
-            .auto_hide_scrollbars(auto_hide_scrollbars)
-            .scrollbar(move |context: ScrollBarContext| {
-                assert_eq!(context.auto_hide_scrollbars, auto_hide_scrollbars);
-                ScrollBar::new(context).into()
-            })
+            VirtualScrollView::new(|item, _| rect().key(item.index).height(Size::px(50.)).into())
+                .length(30usize)
+                .item_size(50.)
+                .auto_hide_scrollbars(auto_hide_scrollbars)
+                .scrollbar(move |context: ScrollBarContext| {
+                    assert_eq!(context.auto_hide_scrollbars, auto_hide_scrollbars);
+                    ScrollBar::new(context).into()
+                })
         });
         test.sync_and_update();
         let scrollbars = test.find_many(|node, element| {
@@ -31,8 +29,14 @@ fn virtual_scroll_view_auto_hide_scrollbars() {
 
         test.poll(Duration::from_millis(20), Duration::from_millis(1000));
 
-        assert_eq!(scrollbars[0].layout().area.width() > 0., !auto_hide_scrollbars);
-        assert_eq!(scrollbars[0].layout().area.height() > 0., !auto_hide_scrollbars);
+        assert_eq!(
+            scrollbars[0].layout().area.width() > 0.,
+            !auto_hide_scrollbars
+        );
+        assert_eq!(
+            scrollbars[0].layout().area.height() > 0.,
+            !auto_hide_scrollbars
+        );
         assert_eq!(scrollbars[0].children().is_empty(), auto_hide_scrollbars);
     }
 }

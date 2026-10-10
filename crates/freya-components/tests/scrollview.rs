@@ -42,24 +42,19 @@ fn scroll_view_mixed_auto_hide_scrollbars() {
     fn app() -> impl IntoElement {
         rect()
             .child(
-                ScrollView::new()
-                    .height(Size::percent(50.))
-                    .child(rect().spacing(6.).children((0..30).map(|_| {
-                        rect().width(Size::fill()).height(Size::px(80.))
-                    }))),
+                ScrollView::new().height(Size::percent(50.)).child(
+                    rect().spacing(6.).children(
+                        (0..30).map(|_| rect().width(Size::fill()).height(Size::px(80.))),
+                    ),
+                ),
             )
             .child(
                 ScrollView::new()
                     .auto_hide_scrollbars(false)
                     .height(Size::percent(50.))
-                    .child(
-                        rect()
-                            .horizontal()
-                            .spacing(6.)
-                            .children((0..30).map(|_| {
-                                rect().width(Size::px(80.)).height(Size::fill())
-                            })),
-                    ),
+                    .child(rect().horizontal().spacing(6.).children(
+                        (0..30).map(|_| rect().width(Size::px(80.)).height(Size::fill())),
+                    )),
             )
     }
 
