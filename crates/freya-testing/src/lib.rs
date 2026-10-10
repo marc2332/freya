@@ -80,6 +80,7 @@ use ragnarok::{
     NodesState,
 };
 use torin::prelude::{
+    Area,
     LayoutNode,
     Size2D,
 };
@@ -116,6 +117,7 @@ pub struct TestingRunner {
 
     requested_focus_strategy: Rc<RefCell<Option<AccessibilityFocusStrategy>>>,
     pending_fonts: PendingFonts,
+    pending_invalidations: Rc<RefCell<Vec<Area>>>,
 
     font_provider: TypefaceFontProvider,
     font_manager: FontMgr,
@@ -128,6 +130,8 @@ pub struct TestingRunner {
 
     default_fonts: Vec<Cow<'static, str>>,
     scale_factor: f64,
+
+    force_full_render: bool,
 }
 
 impl TestingRunner {
@@ -175,11 +179,13 @@ impl TestingRunner {
         font_collection.paragraph_cache_mut().turn_on(false);
 
         let pending_fonts = Rc::new(RefCell::new(Vec::new()));
+        let pending_invalidations = Rc::new(RefCell::new(Vec::new()));
 
         runner.provide_root_context(TargetPlatform::detect);
         let platform = runner.provide_root_context({
             let requested_focus_strategy = requested_focus_strategy.clone();
             let pending_fonts = pending_fonts.clone();
+            let pending_invalidations = pending_invalidations.clone();
             || Platform {
                 focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
                 focused_accessibility_node: State::create(accesskit::Node::new(
@@ -202,6 +208,9 @@ impl TestingRunner {
                             font_data,
                         } => {
                             pending_fonts.borrow_mut().push((font_name, font_data));
+                        }
+                        UserEvent::InvalidateArea(area) => {
+                            pending_invalidations.borrow_mut().push(area);
                         }
                         UserEvent::RequestRedraw
                         | UserEvent::OpenUrl(_)
@@ -238,6 +247,7 @@ impl TestingRunner {
 
             requested_focus_strategy,
             pending_fonts,
+            pending_invalidations,
 
             font_provider: provider,
             font_manager,
@@ -248,6 +258,8 @@ impl TestingRunner {
 
             default_fonts: default_fonts(),
             scale_factor,
+
+            force_full_render: false,
         };
 
         runner.sync_and_update();
@@ -570,20 +582,46 @@ impl TestingRunner {
         &mut self.animation_clock
     }
 
-    /// Render into a persistent surface without encoding an image.
+    pub fn tree(&self) -> &Rc<RefCell<Tree>> {
+        &self.tree
+    }
+
+    /// Repaint the whole surface on every render instead of only the damaged regions.
+    pub fn set_force_full_render(&mut self, force_full_render: bool) {
+        self.force_full_render = force_full_render;
+    }
+
+    /// Resize the window, recreating the surface and relayouting everything.
+    pub fn resize(&mut self, size: Size2D) {
+        self.size = size;
+        self.surface = None;
+        self.tree.borrow_mut().layout.reset();
+        self.tree.borrow_mut().render_state.damage.mark_full();
+        self.sync_and_update();
+    }
+
+    /// Run the render pipeline over the persistent surface.
     pub fn render_to_surface(&mut self) {
-        let surface = self.surface.get_or_insert_with(|| {
-            raster_n32_premul((self.size.width as i32, self.size.height as i32))
-                .expect("Failed to create the surface.")
-        });
+        for area in self.pending_invalidations.take() {
+            self.tree.borrow_mut().render_state.invalidate_area(area);
+        }
+        if self.surface.is_none() {
+            self.surface = Some(
+                raster_n32_premul((self.size.width as i32, self.size.height as i32))
+                    .expect("Failed to create the surface."),
+            );
+            self.tree.borrow_mut().render_state.damage.mark_full();
+        }
+        let surface = self.surface.as_mut().expect("Surface was initialized.");
 
         let render_pipeline = RenderPipeline {
             font_collection: &mut self.font_collection,
             font_manager: &self.font_manager,
-            tree: &self.tree.borrow(),
+            tree: &mut self.tree.borrow_mut(),
             canvas: surface.canvas(),
             scale_factor: self.scale_factor,
             background: Color::WHITE,
+            force_full: self.force_full_render,
         };
         render_pipeline.render();
     }
@@ -596,6 +634,20 @@ impl TestingRunner {
         image
             .encode(context.as_mut(), EncodedImageFormat::PNG, None)
             .expect("Failed to encode the snapshot.")
+    }
+
+    /// Render the app and return the raw pixels of the surface.
+    pub fn render_pixels(&mut self) -> Vec<u8> {
+        self.render_to_surface();
+        let surface = self.surface.as_mut().unwrap();
+
+        let image_info = surface.image_info();
+        let row_bytes = image_info.min_row_bytes();
+        let mut pixels = vec![0u8; image_info.compute_byte_size(row_bytes)];
+        if !surface.read_pixels(&image_info, &mut pixels, row_bytes, (0, 0)) {
+            panic!("Failed to read the surface pixels.");
+        }
+        pixels
     }
 
     pub fn render_to_file(&mut self, path: impl Into<PathBuf>) {

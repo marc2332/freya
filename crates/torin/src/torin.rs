@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
     mem,
+    rc::Rc,
 };
 
 use itertools::Itertools;
@@ -100,6 +101,15 @@ pub enum DirtyReason {
     Reorder,
     /// The inner layout of the Node changed, e.g the offsets.
     InnerLayout,
+}
+
+/// A change to a Node's cached layout produced by a measure.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum LayoutChange<Key> {
+    /// The visible geometry changed.
+    Changed(Key),
+    /// Only the inner layout or data changed, e.g. a scrolled container.
+    ContentChanged(Key),
 }
 
 pub struct Torin<Key: NodeKey> {
@@ -365,7 +375,11 @@ impl<Key: NodeKey> Torin<Key> {
                     // Adjust the size of the area if needed
                     root_layout_node.area.adjust_size(root);
 
-                    measure_context.layout.cache_node(root_id, root_layout_node);
+                    measure_context.layout.cache_node(
+                        root_id,
+                        root_layout_node,
+                        measure_context.measurer,
+                    );
                 }
             })
             .expect("Root node does not exist");
@@ -384,8 +398,45 @@ impl<Key: NodeKey> Torin<Key> {
         self.results.get_mut(node_id)
     }
 
-    /// Cache a Node's [LayoutNode]
-    pub fn cache_node(&mut self, node_id: Key, layout_node: LayoutNode) {
+    /// Cache a Node's [LayoutNode] and notify the measurer of any change.
+    pub fn cache_node(
+        &mut self,
+        node_id: Key,
+        layout_node: LayoutNode,
+        measurer: &mut Option<impl LayoutMeasurer<Key>>,
+    ) {
+        if let Some(measurer) = measurer
+            && let Some(change) = self.diff_layout_node(node_id, &layout_node)
+        {
+            measurer.notify_layout_change(change);
+        }
         self.results.insert(node_id, layout_node);
+    }
+
+    fn diff_layout_node(
+        &self,
+        node_id: Key,
+        layout_node: &LayoutNode,
+    ) -> Option<LayoutChange<Key>> {
+        let Some(previous) = self.results.get(&node_id) else {
+            return Some(LayoutChange::Changed(node_id));
+        };
+
+        let data_eq = match (&previous.data, &layout_node.data) {
+            (None, None) => true,
+            (Some(previous_data), Some(data)) => Rc::ptr_eq(previous_data, data),
+            _ => false,
+        };
+
+        if data_eq && previous == layout_node {
+            None
+        } else if previous.area != layout_node.area
+            || previous.hidden != layout_node.hidden
+            || previous.margin != layout_node.margin
+        {
+            Some(LayoutChange::Changed(node_id))
+        } else {
+            Some(LayoutChange::ContentChanged(node_id))
+        }
     }
 }

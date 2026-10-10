@@ -31,6 +31,7 @@ use torin::{
     },
     torin::{
         DirtyReason,
+        LayoutChange,
         Torin,
     },
 };
@@ -68,6 +69,7 @@ use crate::{
     },
     layers::Layers,
     node_id::NodeId,
+    render_state::RenderState,
     runner::{
         MutationAdd,
         MutationModified,
@@ -107,6 +109,9 @@ pub struct Tree {
     pub layers: Layers,
     pub text_cache: TextCache,
 
+    /// State for incremental rendering
+    pub render_state: RenderState,
+
     // Accessibility
     pub accessibility_groups: AccessibilityGroups,
     pub accessibility_diff: AccessibilityDirtyNodes,
@@ -126,6 +131,14 @@ impl Tree {
     fn insert_element(&mut self, node_id: NodeId, element: Rc<dyn ElementExt>, scale_factor: f32) {
         self.layout_nodes
             .insert(node_id, Self::scaled_layout_node(&element, scale_factor));
+
+        let volatile = &mut self.render_state.volatile;
+        if element.is_render_volatile() {
+            volatile.insert(node_id);
+        } else {
+            volatile.remove(&node_id);
+        }
+
         self.elements.insert(node_id, element);
     }
 
@@ -261,6 +274,7 @@ impl Tree {
             self.insert_element(NodeId::ROOT, Rc::new(RectElement::default()), scale_factor);
             self.heights.insert(NodeId::ROOT, 0);
             dirty.push((NodeId::ROOT, DiffModifies::all()));
+            self.render_state.damage.mark_full();
         }
 
         hotpath::measure_block!("mutations run", {
@@ -331,6 +345,7 @@ impl Tree {
                     self.effect_state.remove(&node_id);
                     self.text_style_state.remove(&node_id);
                     self.text_cache.remove(&node_id);
+                    self.render_state.remove_node(node_id);
                 }
             }
 
@@ -464,6 +479,15 @@ impl Tree {
                     needs_render = true;
                 }
 
+                if flags.intersects(
+                    DiffModifies::STYLE
+                        | DiffModifies::LAYER
+                        | DiffModifies::EFFECT
+                        | DiffModifies::TEXT_STYLE,
+                ) {
+                    self.render_state.dirty.insert(node_id);
+                }
+
                 if !needs_accessibility && (flags.intersects(DiffModifies::ACCESSIBILITY)) {
                     needs_accessibility = true;
                 }
@@ -558,6 +582,7 @@ impl Tree {
                 buffer.push_front(&layer_root);
 
                 while let Some(node_id) = buffer.pop_front() {
+                    self.render_state.dirty.insert(*node_id);
                     let element = self.elements.get(node_id).unwrap();
                     if let Some(parent_node_id) = self.parents.get(node_id) {
                         let entries = self
@@ -594,6 +619,7 @@ impl Tree {
                 buffer.push_front(&effect_root);
 
                 while let Some(node_id) = buffer.pop_front() {
+                    self.render_state.dirty.insert(*node_id);
                     let element = self.elements.get(node_id).unwrap();
                     if let Some(parent_node_id) = self.parents.get(node_id) {
                         let entries = self.effect_state.get_disjoint_two_entries(
@@ -630,6 +656,7 @@ impl Tree {
                 buffer.push_front(&text_style_root);
 
                 while let Some(node_id) = buffer.pop_front() {
+                    self.render_state.dirty.insert(*node_id);
                     let element = self.elements.get(node_id).unwrap();
                     if let Some(parent_node_id) = self.parents.get(node_id) {
                         let entries = self
@@ -725,7 +752,9 @@ impl Tree {
             heights: &self.heights,
         };
 
+        let mut layout_changes = Vec::new();
         let layout_adapter = LayoutMeasurerAdapter {
+            layout_changes: &mut layout_changes,
             elements: &self.elements,
             text_style_state: &self.text_style_state,
             font_collection,
@@ -736,14 +765,43 @@ impl Tree {
             text_cache: &mut self.text_cache,
         };
 
-        self.layout.find_best_root(&tree_adapter);
-        self.layout.measure(
-            NodeId::ROOT,
-            Area::from_size(size),
-            &mut Some(layout_adapter),
-            &tree_adapter,
-        );
+        hotpath::measure_block!("layout measure", {
+            self.layout.find_best_root(&tree_adapter);
+            self.layout.measure(
+                NodeId::ROOT,
+                Area::from_size(size),
+                &mut Some(layout_adapter),
+                &tree_adapter,
+            );
+        });
+
+        hotpath::measure_block!("layout changes", {
+            let render_state = &mut self.render_state;
+            let mut changed_nodes = Vec::new();
+            for change in layout_changes {
+                match change {
+                    LayoutChange::Changed(node_id) => changed_nodes.push(node_id),
+                    LayoutChange::ContentChanged(node_id) => {
+                        render_state.dirty.insert(node_id);
+                    }
+                }
+            }
+
+            // A visible geometry change invalidates the recordings of the whole
+            // subtree, since descendants record their ancestors' clips
+            let mut visited = FxHashSet::default();
+            while let Some(node_id) = changed_nodes.pop() {
+                if visited.insert(node_id) {
+                    render_state.dirty.insert(node_id);
+                    if let Some(children) = self.children.get(&node_id) {
+                        changed_nodes.extend(children);
+                    }
+                }
+            }
+        });
+
         self.measure_visibility_events(nodes_state, scale_factor);
+
         events_sender
             .unbounded_send(EventsChunk::Batch(self.events.drain(..).collect()))
             .unwrap();
@@ -874,6 +932,7 @@ pub struct MutationsApplyResult {
 }
 
 pub struct LayoutMeasurerAdapter<'a> {
+    layout_changes: &'a mut Vec<LayoutChange<NodeId>>,
     pub font_collection: &'a mut FontCollection,
     pub font_manager: &'a FontMgr,
     elements: &'a FxHashMap<NodeId, Rc<dyn ElementExt>>,
@@ -945,6 +1004,10 @@ impl LayoutMeasurer<NodeId> for LayoutMeasurerAdapter<'_> {
                 fallback_fonts: self.fallback_fonts,
                 scale_factor: self.scale_factor,
             })
+    }
+
+    fn notify_layout_change(&mut self, change: LayoutChange<NodeId>) {
+        self.layout_changes.push(change);
     }
 
     fn notify_layout_references(
