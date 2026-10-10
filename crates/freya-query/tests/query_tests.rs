@@ -2,6 +2,12 @@ use std::{
     cell::Cell,
     rc::Rc,
 };
+#[cfg(debug_assertions)]
+use std::{
+    task::Waker,
+    thread::sleep,
+    time::Duration,
+};
 
 use freya::prelude::Size;
 #[cfg(debug_assertions)]
@@ -236,7 +242,7 @@ fn invalidate_all_from_the_test_runtime() {
     assert_eq!(calls.get(), 1);
 
     test.run_in(|| {
-        spawn_forever(async move {
+        spawn_global(async move {
             QueriesStorage::<CountCalls>::invalidate_all().await;
         });
     });
@@ -312,47 +318,42 @@ fn mocked_query() {
 
 #[test]
 #[cfg(debug_assertions)]
-fn mocked_async_query() {
+fn mocked_async_query_survives_window_close() {
     fn app() -> impl IntoElement {
         use_query(Query::new(0, GetUserName(Captured(FancyClient))));
         rect()
     }
 
-    let (mut test, _) = TestingRunner::new(
-        app,
-        (200., 200.).into(),
-        |runner| {
-            runner.run_in(|| {
-                GlobalContexts::get().insert_context(QueriesStorage::<GetUserName>::mocked_async(
-                    |keys| async move {
-                        timer(std::time::Duration::from_millis(20)).await;
-                        Ok(format!("Mocked {keys}"))
-                    },
-                ))
-            })
+    let global_contexts = GlobalContexts::register();
+    global_contexts.insert_context(GlobalTasks::new(Waker::noop().clone()));
+    global_contexts.insert_context(QueriesStorage::<GetUserName>::mocked_async(
+        |keys| async move {
+            timer(Duration::from_millis(20)).await;
+            Ok(format!("Mocked {keys}"))
         },
-        1.,
-    );
-
+    ));
+    let mut test = launch_test(app);
     test.sync_and_update();
 
-    assert!(test.run_in(|| {
+    GlobalTasks::get().poll();
+    assert!(
         QueriesStorage::<GetUserName>::peek_matching(0)[0]
             .state()
             .is_loading()
-    }));
-
-    test.poll(
-        std::time::Duration::from_millis(5),
-        std::time::Duration::from_millis(100),
     );
+    drop(test);
 
-    let name = test.run_in(|| {
-        QueriesStorage::<GetUserName>::peek_matching(0)[0]
-            .state()
-            .ok()
-            .cloned()
-    });
+    for _ in 0..20 {
+        GlobalTasks::get().poll();
+        sleep(Duration::from_millis(5));
+    }
+
+    let name = QueriesStorage::<GetUserName>::peek_matching(0)[0]
+        .state()
+        .ok()
+        .cloned();
 
     assert_eq!(name.as_deref(), Some("Mocked 0"));
+    GlobalTasks::get().clear();
+    global_contexts.unregister();
 }

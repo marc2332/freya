@@ -22,7 +22,7 @@ fn main() {
 
     launch(
         LaunchConfig::new()
-            .with_future(move |_| async move {
+            .with_task(move |_| async move {
                 // Run CPU intensive logic in a separate thread and use a channel to update the radio store
 
                 let (tx, mut rx) = futures_channel::mpsc::unbounded::<()>();

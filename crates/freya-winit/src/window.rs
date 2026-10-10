@@ -202,7 +202,6 @@ impl AppWindow {
         fallback_fonts: &[Cow<'static, str>],
         gpu_resource_cache_limit: usize,
         graphics_context: &mut GraphicsContext,
-        global_contexts: &GlobalContexts,
     ) -> Self {
         #[cfg(feature = "hotreload")]
         let hot_reload_pending = Arc::new(std::sync::atomic::AtomicBool::new(false));
@@ -266,8 +265,6 @@ impl AppWindow {
                 plugins.wrap_root(el)
             }
         });
-
-        runner.provide_root_context(|| global_contexts.clone());
 
         let screen_reader = ScreenReader::new();
         runner.provide_root_context(|| screen_reader.clone());
