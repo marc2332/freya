@@ -28,7 +28,10 @@ fn main() -> io::Result<()> {
     }
 
     let screenshot = std::env::var_os("FREYA_SMOKE_SCREENSHOT")
-        .ok_or_else(|| io::Error::other("FREYA_SMOKE_SCREENSHOT is not set"))?;
+        .map(PathBuf::from)
+        .unwrap_or_else(|| {
+            std::env::temp_dir().join(format!("freya-winit-smoke-{}.png", std::process::id()))
+        });
     let png = fs::read(screenshot)?;
     let image = ::image::load_from_memory_with_format(&png, ::image::ImageFormat::Png)
         .map_err(io::Error::other)?
@@ -38,7 +41,7 @@ fn main() -> io::Result<()> {
         green > red.saturating_add(40) && green > blue.saturating_add(20)
     }) {
         return Err(io::Error::other(
-            "screenshot does not contain the green rectangle",
+            "screenshot does not contain the green button",
         ));
     }
 
@@ -48,9 +51,11 @@ fn main() -> io::Result<()> {
 fn app() -> impl IntoElement {
     let platform = Platform::get();
     let window_id = Platform::window_id();
-    let screenshot = PathBuf::from(
-        std::env::var_os("FREYA_SMOKE_SCREENSHOT").expect("FREYA_SMOKE_SCREENSHOT is not set"),
-    );
+    let screenshot = std::env::var_os("FREYA_SMOKE_SCREENSHOT")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| {
+            std::env::temp_dir().join(format!("freya-winit-smoke-{}.png", std::process::id()))
+        });
 
     use_hook(move || {
         spawn(async move {
@@ -94,7 +99,7 @@ fn app() -> impl IntoElement {
         .child(
             paragraph()
                 .font_size(32.)
-                .span("Text, emoji, and color: 🦀 🔍 🌈"),
+                .span("Text, emoji, and color 🦀 🔍 🌈"),
         )
         .child(
             ImageViewer::new((
@@ -105,9 +110,11 @@ fn app() -> impl IntoElement {
             .height(Size::px(160.)),
         )
         .child(
-            rect()
+            Button::new()
                 .width(Size::px(240.))
-                .height(Size::px(32.))
-                .background((94, 193, 130)),
+                .height(Size::px(40.))
+                .background((94, 193, 130))
+                .hover_background((94, 193, 130))
+                .child("Smoke button"),
         )
 }

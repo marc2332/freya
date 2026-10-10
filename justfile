@@ -45,6 +45,9 @@ t:
     cargo test --doc --workspace --exclude web --exclude freya-web
     cargo nextest run --workspace --exclude examples --exclude web --exclude freya-web --features all-tests
 
+t-winit:
+    cargo test --package freya-winit --test smoke --features smoke-test --locked
+
 t-layout:
     cargo nextest run --package torin
 
