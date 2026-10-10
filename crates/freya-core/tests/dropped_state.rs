@@ -14,7 +14,7 @@ fn detached_task_writes_to_unmounted_state() {
             let mut value = use_state(|| 0);
 
             use_hook(move || {
-                spawn_forever(async move {
+                spawn_in_window(async move {
                     let mut next = 0;
                     loop {
                         futures_lite::future::yield_now().await;

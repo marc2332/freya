@@ -1,8 +1,6 @@
 use std::{
     borrow::Cow,
     fmt,
-    pin::Pin,
-    task::Waker,
 };
 
 #[cfg(feature = "accessibility")]
@@ -11,6 +9,7 @@ use freya_components::cache::AssetCacher;
 use freya_core::{
     integration::*,
     metrics::Metrics,
+    prelude::GlobalTasks,
 };
 use freya_engine::prelude::{
     FontCollection,
@@ -19,7 +18,6 @@ use freya_engine::prelude::{
     TypefaceFontProvider,
     register_font_typeface,
 };
-use futures_lite::future::FutureExt as _;
 use futures_util::{
     FutureExt as _,
     StreamExt,
@@ -102,11 +100,20 @@ pub struct WinitRenderer {
     pub font_provider: TypefaceFontProvider,
     pub font_manager: FontMgr,
     pub font_collection: FontCollection,
-    pub futures: Vec<Pin<Box<dyn std::future::Future<Output = ()>>>>,
-    pub waker: Waker,
     pub exit_on_close: bool,
     pub gpu_resource_cache_limit: usize,
     pub graphics_context: GraphicsContext,
+}
+
+impl Drop for WinitRenderer {
+    fn drop(&mut self) {
+        let tasks = self.global_contexts.get_context::<GlobalTasks>();
+        tasks.clear();
+        self.windows.clear();
+        // Cancel cleanup tasks spawned during window teardown.
+        tasks.clear();
+        self.global_contexts.unregister();
+    }
 }
 
 pub struct RendererContext<'a> {
@@ -134,7 +141,6 @@ impl RendererContext<'_> {
             self.fallback_fonts,
             self.gpu_resource_cache_limit,
             self.graphics_context,
-            self.global_contexts,
         );
 
         let window_id = app_window.window.id();
@@ -308,7 +314,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     &self.fallback_fonts,
                     self.gpu_resource_cache_limit,
                     &mut self.graphics_context,
-                    &self.global_contexts,
                 );
 
                 self.proxy
@@ -380,9 +385,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 (cb)(&mut renderer_context);
             }
             NativeEvent::Generic(NativeGenericEvent::PollFutures) => {
-                let mut cx = std::task::Context::from_waker(&self.waker);
-                self.futures
-                    .retain_mut(|fut| fut.poll(&mut cx).is_pending());
+                GlobalTasks::get().poll();
             }
             NativeEvent::Preferences(prefs) => {
                 for app in self.windows.values_mut() {
@@ -433,7 +436,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             &self.fallback_fonts,
                             self.gpu_resource_cache_limit,
                             &mut self.graphics_context,
-                            &self.global_contexts,
                         );
 
                         self.proxy
@@ -665,7 +667,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                             &self.fallback_fonts,
                                             self.gpu_resource_cache_limit,
                                             &mut self.graphics_context,
-                                            &self.global_contexts,
                                         );
 
                                         let window_id = app_window.window.id();

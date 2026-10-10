@@ -70,11 +70,12 @@ impl WebApp {
 
         let (events_sender, events_receiver) = futures_channel::mpsc::unbounded();
 
+        GlobalContexts::register();
+
         let app = config.app;
         let mut runner = Runner::new(move || integration(app.clone()).into_element());
 
         runner.provide_root_context(ScreenReader::new);
-        runner.provide_root_context(GlobalContexts::default);
 
         let (ticker_sender, ticker) = RenderingTicker::new();
         runner.provide_root_context(|| ticker);

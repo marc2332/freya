@@ -312,7 +312,7 @@ impl Component for SvgViewer {
                 if self.async_rasterization || self.source.is_remote() {
                     let source = self.source.clone();
                     let asset_config = asset_config.clone();
-                    spawn_forever(async move {
+                    spawn_in_window(async move {
                         let result = match source.bytes().await {
                             Ok(bytes) => {
                                 let _permit = RASTER_LIMIT.acquire().await;

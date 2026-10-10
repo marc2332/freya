@@ -491,11 +491,17 @@ impl LaunchConfig {
         self
     }
 
-    /// Register a single-thread launch task.
-    /// The task receives a [LaunchProxy] that can be used to get access to [RendererContext](crate::renderer::RendererContext).
-    /// The provided callback should return a `'static` future which will be scheduled on the renderer
-    /// thread and polled until completion.
-    pub fn with_future<F, Fut>(mut self, task: F) -> Self
+    /// Register an async task that starts on the app launch.
+    ///
+    /// ```rust,no_run
+    /// # use freya::prelude::*;
+    /// let config = LaunchConfig::new().with_task(|proxy| async move {
+    ///     let _ = proxy
+    ///         .post_callback(|renderer| renderer.launch_window(WindowConfig::new(|| "Hello!")))
+    ///         .await;
+    /// });
+    /// ```
+    pub fn with_task<F, Fut>(mut self, task: F) -> Self
     where
         F: FnOnce(LaunchProxy) -> Fut + 'static,
         Fut: Future<Output = ()> + 'static,
