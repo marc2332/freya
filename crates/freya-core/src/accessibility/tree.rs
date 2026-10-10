@@ -11,10 +11,7 @@ use accesskit::{
     TreeUpdate,
 };
 use ragnarok::ProcessedEvents;
-use rustc_hash::{
-    FxHashMap,
-    FxHashSet,
-};
+use rustc_hash::FxHashMap;
 use torin::prelude::{
     CursorPoint,
     LayoutNode,
@@ -170,16 +167,9 @@ impl AccessibilityTree {
         title: &str,
     ) -> TreeUpdate {
         let requested_focus = tree.accessibility_diff.requested_focus.take();
-        let removed_ids = tree
-            .accessibility_diff
-            .removed
-            .drain()
-            .collect::<FxHashMap<_, _>>();
-        let mut added_or_updated_ids = tree
-            .accessibility_diff
-            .added_or_updated
-            .drain()
-            .collect::<FxHashSet<_>>();
+        let removed_ids = std::mem::take(&mut tree.accessibility_diff.removed);
+        let mut added_or_updated_ids =
+            std::mem::take(&mut tree.accessibility_diff.added_or_updated);
 
         #[cfg(debug_assertions)]
         if !removed_ids.is_empty() || !added_or_updated_ids.is_empty() {
