@@ -3189,9 +3189,9 @@ dependencies = [
 
 [[package]]
 name = "freya-skia-bindings"
-version = "0.100.0-beta.1"
+version = "0.104.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab63f601c617af7bd05abdf71f504577f77760ef12b281f5ab06078d301a6636"
+checksum = "8b842f8c0e9b10134a4f6a9a12af88ac9502dac119a0c9340f0fcd833b51f34a"
 dependencies = [
  "bindgen 0.73.2",
  "cc",
@@ -3206,9 +3206,9 @@ dependencies = [
 
 [[package]]
 name = "freya-skia-safe"
-version = "0.100.0-beta.1"
+version = "0.104.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94035ce89b42c8c3b69a854904deea53b1a88d8e1654de270484767ba500cffc"
+checksum = "1ea5f92b1bb2850278a94883f3aca84dd28d49320b4cf44941a43cd40b595c54"
 dependencies = [
  "base64 0.23.1",
  "bitflags 2.13.1",
@@ -3219,9 +3219,9 @@ dependencies = [
 
 [[package]]
 name = "freya-skia-svg-macros"
-version = "0.100.0-beta.1"
+version = "0.104.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b32021e23aabcfb098ad578b547569ebe246bb6658e94b0ae472ca0d5a50977"
+checksum = "b066d6dcffdaccd60ce58a171ea4cb700d8e04b31564f071195df4702c0e494a"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -6616,6 +6616,7 @@ name = "ragnarok"
 version = "0.5.0-rc.9"
 dependencies = [
  "euclid",
+ "hashbrown 0.16.1",
  "hotpath",
  "itertools 0.14.0",
  "rustc-hash 2.1.3",

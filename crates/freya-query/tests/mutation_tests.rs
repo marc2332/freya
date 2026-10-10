@@ -196,15 +196,13 @@ fn mocked_mutation_records_the_calls() {
         (200., 200.).into(),
         {
             let calls = calls.clone();
-            move |runner| {
-                runner.run_in(move || {
-                    GlobalContexts::get().insert_context(MutationsStorage::<SetUserName>::mocked(
-                        move |keys| {
-                            calls.borrow_mut().push(keys);
-                            Ok(())
-                        },
-                    ))
-                })
+            move |_| {
+                GlobalContexts::get().insert_context(MutationsStorage::<SetUserName>::mocked(
+                    move |keys| {
+                        calls.borrow_mut().push(keys);
+                        Ok(())
+                    },
+                ))
             }
         },
         1.,

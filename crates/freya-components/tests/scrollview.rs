@@ -4,6 +4,95 @@ use freya::prelude::*;
 use freya_testing::prelude::*;
 
 #[test]
+fn scroll_view_auto_hide_scrollbars() {
+    for auto_hide_scrollbars in [true, false] {
+        let mut test = launch_test(move || {
+            ScrollView::new()
+                .auto_hide_scrollbars(auto_hide_scrollbars)
+                .scrollbar(move |context: ScrollBarContext| {
+                    assert_eq!(context.auto_hide_scrollbars, auto_hide_scrollbars);
+                    ScrollBar::new(context).into()
+                })
+                .child(rect().width(Size::px(1000.)).height(Size::px(1000.)))
+        });
+        test.sync_and_update();
+        let scrollbars = test.find_many(|node, element| {
+            Rect::try_downcast(element)
+                .filter(|rect| rect.relative_layer == 999.into())
+                .map(|_| node)
+        });
+        assert_eq!(scrollbars.len(), 2);
+        for scrollbar in &scrollbars {
+            assert!(scrollbar.layout().area.width() > 0.);
+            assert!(scrollbar.layout().area.height() > 0.);
+        }
+
+        test.poll(Duration::from_millis(20), Duration::from_millis(1000));
+
+        for scrollbar in &scrollbars {
+            assert_eq!(scrollbar.layout().area.width() > 0., !auto_hide_scrollbars);
+            assert_eq!(scrollbar.layout().area.height() > 0., !auto_hide_scrollbars);
+            assert_eq!(scrollbar.children().is_empty(), auto_hide_scrollbars);
+        }
+    }
+}
+
+#[test]
+fn scroll_view_mixed_auto_hide_scrollbars() {
+    fn app() -> impl IntoElement {
+        rect()
+            .child(
+                ScrollView::new().height(Size::percent(50.)).child(
+                    rect().spacing(6.).children(
+                        (0..30).map(|_| rect().width(Size::fill()).height(Size::px(80.))),
+                    ),
+                ),
+            )
+            .child(
+                ScrollView::new()
+                    .auto_hide_scrollbars(false)
+                    .height(Size::percent(50.))
+                    .child(rect().horizontal().spacing(6.).children(
+                        (0..30).map(|_| rect().width(Size::px(80.)).height(Size::fill())),
+                    )),
+            )
+    }
+
+    let mut test = launch_test(app);
+    test.sync_and_update();
+    let scrollbars = test.find_many(|node, element| {
+        Rect::try_downcast(element)
+            .filter(|rect| rect.relative_layer == 999.into())
+            .map(|_| node)
+    });
+    assert_eq!(scrollbars.len(), 2);
+    test.move_cursor((495., 20.));
+    test.sync_and_update();
+    test.poll(Duration::from_millis(20), Duration::from_secs(2));
+    for scrollbar in &scrollbars {
+        assert!(scrollbar.layout().area.width() > 0.);
+        assert!(!scrollbar.children().is_empty());
+    }
+
+    test.move_cursor((100., 100.));
+    test.sync_and_update();
+    test.poll(Duration::from_millis(20), Duration::from_secs(2));
+
+    let visible_scrollbars = scrollbars
+        .iter()
+        .filter(|scrollbar| scrollbar.layout().area.width() > 0.)
+        .collect::<Vec<_>>();
+    for scrollbar in &scrollbars {
+        if scrollbar.layout().area.width() == 0. {
+            assert!(scrollbar.children().is_empty());
+        }
+    }
+    assert_eq!(visible_scrollbars.len(), 1);
+    assert!(visible_scrollbars[0].layout().area.width() > 20.);
+    assert_eq!(visible_scrollbars[0].layout().area.height(), 20.);
+}
+
+#[test]
 pub fn scroll_view_wheel() {
     fn scroll_view_wheel_app() -> impl IntoElement {
         ScrollView::new()
@@ -169,8 +258,8 @@ pub fn scroll_view_scrollbar() {
     // Scroll up with arrows
     for _ in 0..5 {
         test.press_key(Key::Named(NamedKey::ArrowUp));
+        test.poll_n(Duration::from_millis(1), 5);
     }
-    test.poll(Duration::from_millis(1), Duration::from_millis(20));
 
     assert!(content[0].is_visible());
     assert!(content[1].is_visible());
@@ -179,7 +268,7 @@ pub fn scroll_view_scrollbar() {
 
     // Scroll to the bottom with arrows
     test.press_key(Key::Named(NamedKey::End));
-    test.poll(Duration::from_millis(1), Duration::from_millis(20));
+    test.poll_n(Duration::from_millis(1), 5);
 
     assert!(!content[0].is_visible());
     assert!(content[1].is_visible());

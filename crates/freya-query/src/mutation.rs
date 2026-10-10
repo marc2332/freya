@@ -208,8 +208,8 @@ impl<Q: MutationCapability> MutationsStorage<Q> {
         let mock: MutationMock<Q> = Rc::new(move |keys| Box::pin(mock(keys)));
 
         Self {
-            storage: State::create_in_scope(HashMap::default(), ScopeId::ROOT),
-            mock: State::create_in_scope(Some(mock), ScopeId::ROOT),
+            storage: State::create_global(HashMap::default()),
+            mock: State::create_global(Some(mock)),
         }
     }
 
@@ -238,7 +238,7 @@ impl<Q: MutationCapability> MutationsStorage<Q> {
 
         // Spawn clean up task if there no more reactive contexts
         if mutation_data.reactive_contexts.borrow().len() == 1 {
-            *mutation_data.clean_task.borrow_mut() = Some(spawn_forever(async move {
+            *mutation_data.clean_task.borrow_mut() = Some(spawn_in_window(async move {
                 // Wait as long as the stale time is configured
                 timer(mutation.clean_time).await;
 
@@ -416,7 +416,9 @@ impl<Q: MutationCapability> UseMutation<Q> {
         let mutation_data = storage.storage.peek().get(&mutation).cloned().unwrap();
 
         // Run the mutation
-        spawn_forever(async move { MutationsStorage::run(&mutation, &mutation_data, keys).await });
+        spawn_in_window(
+            async move { MutationsStorage::run(&mutation, &mutation_data, keys).await },
+        );
     }
 }
 

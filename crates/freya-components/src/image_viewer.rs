@@ -427,9 +427,10 @@ impl ImageViewer {
 
 impl Component for ImageViewer {
     fn render(&self) -> impl IntoElement {
-        let target = self
-            .decode_mode
-            .resolve(&self.layout, *Platform::get().scale_factor.read());
+        let target = self.decode_mode.resolve(
+            &self.layout,
+            *Platform::get().current_window().scale_factor.read(),
+        );
         let sampling_mode = self.image_data.sampling_mode.clone();
         let asset_config =
             AssetConfiguration::new((&self.source, target, &sampling_mode), self.asset_age);
@@ -454,7 +455,7 @@ impl Component for ImageViewer {
                     let asset_config = asset_config.clone();
                     let target = *target;
                     let sampling_mode = sampling_mode.clone();
-                    spawn_forever(async move {
+                    spawn_in_window(async move {
                         match source.load(target, sampling_mode).await {
                             Ok((image, bytes)) => {
                                 asset_cacher.update_asset(

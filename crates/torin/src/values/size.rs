@@ -1,7 +1,7 @@
 use std::{
     fmt::Debug,
     hash::Hash,
-    sync::Arc,
+    rc::Rc,
 };
 
 pub use euclid::Rect;
@@ -24,7 +24,7 @@ pub struct SizeFnContext {
 pub use serde::*;
 
 #[derive(Clone)]
-pub struct SizeFn(Arc<dyn Fn(SizeFnContext) -> Option<f32> + Sync + Send>, u64);
+pub struct SizeFn(Rc<dyn Fn(SizeFnContext) -> Option<f32>>, u64);
 
 #[cfg(feature = "serde")]
 impl Serialize for SizeFn {
@@ -57,7 +57,7 @@ impl<'de> Deserialize<'de> for SizeFn {
                 E: de::Error,
             {
                 if v == "Fn" {
-                    Ok(SizeFn(Arc::new(|_ctx| None), 0))
+                    Ok(SizeFn(Rc::new(|_ctx| None), 0))
                 } else {
                     Err(E::custom(format!("expected \"Fn\", got {v}")))
                 }
@@ -69,18 +69,18 @@ impl<'de> Deserialize<'de> for SizeFn {
 }
 
 impl SizeFn {
-    pub fn new(func: impl Fn(SizeFnContext) -> Option<f32> + 'static + Sync + Send) -> Self {
-        Self(Arc::new(func), 0)
+    pub fn new(func: impl Fn(SizeFnContext) -> Option<f32> + 'static) -> Self {
+        Self(Rc::new(func), 0)
     }
 
     pub fn new_data<D: Hash>(
-        func: impl Fn(SizeFnContext) -> Option<f32> + 'static + Sync + Send,
+        func: impl Fn(SizeFnContext) -> Option<f32> + 'static,
         data: &D,
     ) -> Self {
         use std::hash::Hasher;
         let mut hasher = std::hash::DefaultHasher::default();
         data.hash(&mut hasher);
-        Self(Arc::new(func), hasher.finish())
+        Self(Rc::new(func), hasher.finish())
     }
 
     pub fn call(&self, context: SizeFnContext) -> Option<f32> {
@@ -217,13 +217,13 @@ impl Size {
     }
 
     /// Use a dynamic [`Fn`](Size::Fn) size computed by the given closure.
-    pub fn func(func: impl Fn(SizeFnContext) -> Option<f32> + 'static + Sync + Send) -> Size {
+    pub fn func(func: impl Fn(SizeFnContext) -> Option<f32> + 'static) -> Size {
         Self::Fn(Box::new(SizeFn::new(func)))
     }
 
     /// Use a dynamic [`Fn`](Size::Fn) size with hashable data for equality checks.
     pub fn func_data<D: Hash>(
-        func: impl Fn(SizeFnContext) -> Option<f32> + 'static + Sync + Send,
+        func: impl Fn(SizeFnContext) -> Option<f32> + 'static,
         data: &D,
     ) -> Size {
         Self::Fn(Box::new(SizeFn::new_data(func, data)))

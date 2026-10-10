@@ -1,8 +1,7 @@
 use std::{
     borrow::Cow,
     fmt,
-    pin::Pin,
-    task::Waker,
+    rc::Rc,
 };
 
 #[cfg(feature = "accessibility")]
@@ -11,6 +10,7 @@ use freya_components::cache::AssetCacher;
 use freya_core::{
     integration::*,
     metrics::Metrics,
+    prelude::GlobalTasks,
 };
 use freya_engine::prelude::{
     FontCollection,
@@ -19,7 +19,6 @@ use freya_engine::prelude::{
     TypefaceFontProvider,
     register_font_typeface,
 };
-use futures_lite::future::FutureExt as _;
 use futures_util::{
     FutureExt as _,
     StreamExt,
@@ -102,11 +101,23 @@ pub struct WinitRenderer {
     pub font_provider: TypefaceFontProvider,
     pub font_manager: FontMgr,
     pub font_collection: FontCollection,
-    pub futures: Vec<Pin<Box<dyn std::future::Future<Output = ()>>>>,
-    pub waker: Waker,
     pub exit_on_close: bool,
     pub gpu_resource_cache_limit: usize,
     pub graphics_context: GraphicsContext,
+}
+
+impl Drop for WinitRenderer {
+    fn drop(&mut self) {
+        let tasks = self.global_contexts.get_context::<GlobalTasks>();
+        tasks.clear();
+        for window_id in self.windows.keys() {
+            Platform::get().unregister_window(*window_id);
+        }
+        self.windows.clear();
+        // Cancel cleanup tasks spawned during window teardown.
+        tasks.clear();
+        self.global_contexts.unregister();
+    }
 }
 
 pub struct RendererContext<'a> {
@@ -134,7 +145,6 @@ impl RendererContext<'_> {
             self.fallback_fonts,
             self.gpu_resource_cache_limit,
             self.graphics_context,
-            self.global_contexts,
         );
 
         let window_id = app_window.window.id();
@@ -188,8 +198,7 @@ impl LaunchProxy {
     /// through the returned oneshot [`Receiver`](futures_channel::oneshot::Receiver), which
     /// can be `.await`ed or dropped.
     ///
-    /// The callback runs outside any component scope, so you can't call `Platform::get` or
-    /// consume context from inside it. Use the [`RendererContext`] argument instead.
+    /// The callback runs outside a window context. Use explicit window IDs for window APIs.
     pub fn post_callback<F, T: 'static>(&self, f: F) -> futures_channel::oneshot::Receiver<T>
     where
         F: FnOnce(&mut RendererContext) -> T + 'static,
@@ -201,16 +210,18 @@ impl LaunchProxy {
         });
         let _ = self
             .0
-            .send_event(NativeEvent::Generic(NativeGenericEvent::RendererCallback(
-                cb,
+            .send_event(NativeEvent::Generic(NativeGenericEvent::User(
+                GlobalUserEvent::Erased(SingleThreadErasedEvent(Box::new(
+                    NativePlatformErasedEventAction::RendererCallback(cb),
+                ))),
             )));
         rx
     }
 }
 
-pub type RendererCallback = Box<dyn FnOnce(WindowId, &mut RendererContext) + 'static>;
+pub type RendererCallback = Box<dyn FnOnce(&mut RendererContext) + 'static>;
 
-pub enum NativeWindowErasedEventAction {
+pub enum NativePlatformErasedEventAction {
     LaunchWindow {
         window_config: Box<WindowConfig>,
         ack: futures_channel::oneshot::Sender<WindowId>,
@@ -241,14 +252,14 @@ pub struct NativeTrayEvent {
 
 pub enum NativeGenericEvent {
     PollFutures,
-    RendererCallback(Box<dyn FnOnce(&mut RendererContext) + 'static>),
+    User(GlobalUserEvent),
 }
 
 impl fmt::Debug for NativeGenericEvent {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             NativeGenericEvent::PollFutures => f.write_str("PollFutures"),
-            NativeGenericEvent::RendererCallback(_) => f.write_str("RendererCallback"),
+            NativeGenericEvent::User(event) => f.debug_tuple("User").field(event).finish(),
         }
     }
 }
@@ -308,7 +319,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     &self.fallback_fonts,
                     self.gpu_resource_cache_limit,
                     &mut self.graphics_context,
-                    &self.global_contexts,
                 );
 
                 self.proxy
@@ -331,7 +341,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
             // [Android] Recreate the GraphicsDriver when the app gets brought into the foreground after being suspended,
             // so we don't end up with a completely black surface with broken rendering.
             let old_windows: Vec<_> = self.windows.drain().collect();
-            for (_, mut app_window) in old_windows {
+            for (old_id, mut app_window) in old_windows {
                 let (new_driver, new_window) = GraphicsDriver::new(
                     active_event_loop,
                     app_window.window_attributes.clone(),
@@ -341,6 +351,21 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 );
 
                 let new_id = new_window.id();
+                Platform::get().unregister_window(old_id);
+                app_window.platform.id = new_id.into();
+                app_window.platform.sender = Rc::new({
+                    let proxy = self.proxy.clone();
+                    move |event| {
+                        let _ = proxy.send_event(NativeEvent::Window(NativeWindowEvent {
+                            window_id: new_id,
+                            action: NativeWindowEventAction::User(event),
+                        }));
+                    }
+                });
+                app_window
+                    .runner
+                    .provide_root_context(|| CurrentWindowId(app_window.platform.id));
+                Platform::get().register_window(app_window.platform.clone());
                 app_window.driver = new_driver;
                 app_window.window = new_window;
                 app_window.process_layout_on_next_render = true;
@@ -364,25 +389,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
         event: NativeEvent,
     ) {
         match event {
-            NativeEvent::Generic(NativeGenericEvent::RendererCallback(cb)) => {
-                let mut renderer_context = RendererContext {
-                    fallback_fonts: &mut self.fallback_fonts,
-                    active_event_loop,
-                    windows: &mut self.windows,
-                    proxy: &mut self.proxy,
-                    plugins: &mut self.plugins,
-                    font_manager: &mut self.font_manager,
-                    font_collection: &mut self.font_collection,
-                    gpu_resource_cache_limit: self.gpu_resource_cache_limit,
-                    graphics_context: &mut self.graphics_context,
-                    global_contexts: &self.global_contexts,
-                };
-                (cb)(&mut renderer_context);
-            }
             NativeEvent::Generic(NativeGenericEvent::PollFutures) => {
-                let mut cx = std::task::Context::from_waker(&self.waker);
-                self.futures
-                    .retain_mut(|fut| fut.poll(&mut cx).is_pending());
+                GlobalTasks::get().poll();
             }
             NativeEvent::Preferences(prefs) => {
                 for app in self.windows.values_mut() {
@@ -433,7 +441,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             &self.fallback_fonts,
                             self.gpu_resource_cache_limit,
                             &mut self.graphics_context,
-                            &self.global_contexts,
                         );
 
                         self.proxy
@@ -447,14 +454,10 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     }
                 }
             }
-            NativeEvent::Window(NativeWindowEvent {
-                action:
-                    NativeWindowEventAction::User(UserEvent::LoadFont {
-                        font_name,
-                        font_data,
-                    }),
-                ..
-            }) => {
+            NativeEvent::Generic(NativeGenericEvent::User(GlobalUserEvent::LoadFont {
+                font_name,
+                font_data,
+            })) => {
                 let Some(typeface) = FontMgr::custom_empty()
                     .unwrap_or_default()
                     .new_from_data(SkData::new_copy(&font_data), None)
@@ -473,6 +476,79 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     app.window.request_redraw();
                 }
             }
+            NativeEvent::Generic(NativeGenericEvent::User(event)) => match event {
+                GlobalUserEvent::OpenUrl(url) => {
+                    if let Err(error) = open::that(&url) {
+                        tracing::error!(%error, %url, "Failed to open URL");
+                    }
+                }
+                GlobalUserEvent::Exit => active_event_loop.exit(),
+                GlobalUserEvent::LoadFont { .. } => unreachable!(),
+                GlobalUserEvent::Erased(data) => {
+                    let action = data
+                        .0
+                        .downcast::<NativePlatformErasedEventAction>()
+                        .expect("Expected NativePlatformErasedEventAction");
+                    match *action {
+                        NativePlatformErasedEventAction::LaunchWindow { window_config, ack } => {
+                            let app_window = AppWindow::new(
+                                *window_config,
+                                active_event_loop,
+                                &self.proxy,
+                                &mut self.plugins,
+                                &mut self.font_collection,
+                                &self.font_manager,
+                                &self.fallback_fonts,
+                                self.gpu_resource_cache_limit,
+                                &mut self.graphics_context,
+                            );
+                            let window_id = app_window.window.id();
+                            let _ = self
+                                .proxy
+                                .send_event(NativeEvent::Window(NativeWindowEvent {
+                                    window_id,
+                                    action: NativeWindowEventAction::PollRunner,
+                                }));
+                            self.windows.insert(window_id, app_window);
+                            let _ = ack.send(window_id);
+                        }
+                        NativePlatformErasedEventAction::CloseWindow(window_id) => {
+                            Platform::get().unregister_window(window_id);
+                            if let Some(app) = self.windows.remove(&window_id) {
+                                self.plugins.send(
+                                    PluginEvent::WindowClosed {
+                                        window: &app.window,
+                                        tree: &app.tree,
+                                    },
+                                    PluginHandle::new(&self.proxy),
+                                );
+                            }
+                            #[cfg(feature = "tray")]
+                            let has_tray = self.tray.1.is_some();
+                            #[cfg(not(feature = "tray"))]
+                            let has_tray = false;
+                            if self.windows.is_empty() && !has_tray && self.exit_on_close {
+                                active_event_loop.exit();
+                            }
+                        }
+                        NativePlatformErasedEventAction::RendererCallback(callback) => {
+                            let mut renderer_context = RendererContext {
+                                fallback_fonts: &mut self.fallback_fonts,
+                                active_event_loop,
+                                windows: &mut self.windows,
+                                proxy: &mut self.proxy,
+                                plugins: &mut self.plugins,
+                                font_manager: &mut self.font_manager,
+                                font_collection: &mut self.font_collection,
+                                gpu_resource_cache_limit: self.gpu_resource_cache_limit,
+                                graphics_context: &mut self.graphics_context,
+                                global_contexts: &self.global_contexts,
+                            };
+                            callback(&mut renderer_context);
+                        }
+                    }
+                }
+            },
             NativeEvent::Window(NativeWindowEvent { action, window_id }) => {
                 if let Some(app) = &mut self.windows.get_mut(&window_id) {
                     match action {
@@ -596,8 +672,18 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         }
                         #[cfg(feature = "accessibility")]
                         NativeWindowEventAction::Accessibility(
-                            accesskit_winit::WindowEvent::ActionRequested(_),
-                        ) => {}
+                            accesskit_winit::WindowEvent::ActionRequested(request),
+                        ) => {
+                            if app.accessibility.handle_action(
+                                request,
+                                &mut app.tree,
+                                &app.events_sender,
+                            ) {
+                                app.accessibility_tasks_for_next_render |=
+                                    AccessibilityTask::ProcessUpdate { mode: None };
+                                app.window.request_redraw();
+                            }
+                        }
                         #[cfg(feature = "accessibility")]
                         NativeWindowEventAction::Accessibility(
                             accesskit_winit::WindowEvent::InitialTreeRequested,
@@ -626,96 +712,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 app.accessibility_tasks_for_next_render |= task;
                                 app.window.request_redraw();
                             }
-                            UserEvent::OpenUrl(url) => {
-                                if let Err(error) = open::that(&url) {
-                                    tracing::error!(%error, %url, "Failed to open URL");
-                                }
-                            }
                             UserEvent::SetCustomScaleFactor(custom_scale_factor) => {
                                 app.set_custom_scale_factor(custom_scale_factor);
-                            }
-                            UserEvent::LoadFont { .. } => unreachable!(),
-                            UserEvent::Erased(data) => {
-                                let action = data
-                                    .0
-                                    .downcast::<NativeWindowErasedEventAction>()
-                                    .expect("Expected NativeWindowErasedEventAction");
-                                match *action {
-                                    NativeWindowErasedEventAction::LaunchWindow {
-                                        window_config,
-                                        ack,
-                                    } => {
-                                        let app_window = AppWindow::new(
-                                            *window_config,
-                                            active_event_loop,
-                                            &self.proxy,
-                                            &mut self.plugins,
-                                            &mut self.font_collection,
-                                            &self.font_manager,
-                                            &self.fallback_fonts,
-                                            self.gpu_resource_cache_limit,
-                                            &mut self.graphics_context,
-                                            &self.global_contexts,
-                                        );
-
-                                        let window_id = app_window.window.id();
-
-                                        let _ = self.proxy.send_event(NativeEvent::Window(
-                                            NativeWindowEvent {
-                                                window_id,
-                                                action: NativeWindowEventAction::PollRunner,
-                                            },
-                                        ));
-
-                                        self.windows.insert(window_id, app_window);
-                                        let _ = ack.send(window_id);
-                                    }
-                                    NativeWindowErasedEventAction::CloseWindow(window_id) => {
-                                        // Its fine to ignore if the window doesnt exist anymore
-                                        if let Some(app) = self.windows.remove(&window_id) {
-                                            self.plugins.send(
-                                                PluginEvent::WindowClosed {
-                                                    window: &app.window,
-                                                    tree: &app.tree,
-                                                },
-                                                PluginHandle::new(&self.proxy),
-                                            );
-                                        }
-                                        let has_windows = !self.windows.is_empty();
-
-                                        let has_tray = {
-                                            #[cfg(feature = "tray")]
-                                            {
-                                                self.tray.1.is_some()
-                                            }
-                                            #[cfg(not(feature = "tray"))]
-                                            {
-                                                false
-                                            }
-                                        };
-
-                                        // Only exit when there is no window and no tray
-                                        if !has_windows && !has_tray && self.exit_on_close {
-                                            active_event_loop.exit();
-                                        }
-                                    }
-                                    NativeWindowErasedEventAction::RendererCallback(cb) => {
-                                        let window_id = app.window.id();
-                                        let mut renderer_context = RendererContext {
-                                            fallback_fonts: &mut self.fallback_fonts,
-                                            active_event_loop,
-                                            windows: &mut self.windows,
-                                            global_contexts: &self.global_contexts,
-                                            proxy: &mut self.proxy,
-                                            plugins: &mut self.plugins,
-                                            font_manager: &mut self.font_manager,
-                                            font_collection: &mut self.font_collection,
-                                            gpu_resource_cache_limit: self.gpu_resource_cache_limit,
-                                            graphics_context: &mut self.graphics_context,
-                                        };
-                                        (cb)(window_id, &mut renderer_context);
-                                    }
-                                }
                             }
                         },
                         NativeWindowEventAction::PlatformEvent(platform_event) => {
@@ -782,6 +780,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     }
 
                     if matches!(decision, CloseDecision::Close) {
+                        Platform::get().unregister_window(window_id);
                         if let Some(app) = self.windows.remove(&window_id) {
                             self.plugins.send(
                                 PluginEvent::WindowClosed {

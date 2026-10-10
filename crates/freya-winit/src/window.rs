@@ -85,9 +85,6 @@ use crate::{
 
 pub type RenderCallback = Box<dyn FnOnce(&mut SkiaSurface)>;
 
-#[derive(Clone, Copy)]
-pub struct CurrentWindowId(pub WindowId);
-
 pub struct AppWindow {
     pub(crate) runner: Runner,
     pub(crate) tree: Tree,
@@ -100,6 +97,7 @@ pub struct AppWindow {
     pub(crate) mouse_state: ElementState,
     pub(crate) modifiers_state: ModifiersState,
     pub(crate) cursor_icon: CursorIcon,
+    pub(crate) cursor_visible: bool,
     pub(crate) pressed_keys: Vec<(Key, Code)>,
 
     pub(crate) events_receiver: futures_channel::mpsc::UnboundedReceiver<EventsChunk>,
@@ -121,7 +119,7 @@ pub struct AppWindow {
 
     pub(crate) ticker_sender: RenderingTickerSender,
 
-    pub(crate) platform: Platform,
+    pub(crate) platform: PlatformWindow,
 
     pub(crate) animation_clock: AnimationClock,
 
@@ -201,7 +199,6 @@ impl AppWindow {
         fallback_fonts: &[Cow<'static, str>],
         gpu_resource_cache_limit: usize,
         graphics_context: &mut GraphicsContext,
-        global_contexts: &GlobalContexts,
     ) -> Self {
         #[cfg(feature = "hotreload")]
         let hot_reload_pending = Arc::new(std::sync::atomic::AtomicBool::new(false));
@@ -266,8 +263,6 @@ impl AppWindow {
             }
         });
 
-        runner.provide_root_context(|| global_contexts.clone());
-
         let screen_reader = ScreenReader::new();
         runner.provide_root_context(|| screen_reader.clone());
 
@@ -279,8 +274,6 @@ impl AppWindow {
 
         runner.provide_root_context(AssetCacher::create);
 
-        runner.provide_root_context(|| CurrentWindowId(window.id()));
-
         let custom_scale_factor = clamp_custom_scale_factor(window_config.custom_scale_factor);
         let scale_factor = window.scale_factor() * custom_scale_factor;
 
@@ -289,7 +282,7 @@ impl AppWindow {
         let window_size = window.inner_size();
         let accent_color_preference = accent_color_preference();
         runner.provide_root_context(TargetPlatform::detect);
-        let platform = runner.provide_root_context({
+        let platform = runner.run_in({
             let event_loop_proxy = event_loop_proxy.clone();
             let window_id = window.id();
             let theme = match window.theme() {
@@ -297,7 +290,8 @@ impl AppWindow {
                 _ => PreferredTheme::Light,
             };
             let is_app_focused = window.has_focus();
-            move || Platform {
+            move || PlatformWindow {
+                id: u64::from(window_id),
                 focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
                 focused_accessibility_node: State::create(accesskit::Node::new(
                     accesskit::Role::Window,
@@ -321,11 +315,15 @@ impl AppWindow {
             }
         });
 
-        runner.provide_root_context(|| tree.accessibility_generator.clone());
-
+        Platform::get().register_window(platform.clone());
+        runner.provide_root_context(|| CurrentWindowId(platform.id));
         runner.provide_root_context(|| tree.accessibility_generator.clone());
 
         runner.provide_root_context(|| font_collection.clone());
+
+        if let Some(root_context) = window_config.root_context {
+            runner.run_in(root_context);
+        }
 
         plugins.send(
             PluginEvent::RunnerCreated {
@@ -415,6 +413,7 @@ impl AppWindow {
             cursor_in_window: false,
             modifiers_state: ModifiersState::default(),
             cursor_icon: CursorIcon::default(),
+            cursor_visible: true,
             pressed_keys: Vec::new(),
 
             events_receiver,
@@ -465,6 +464,11 @@ impl AppWindow {
             self.cursor_icon = cursor_icon;
             self.window.set_cursor(cursor_icon);
         }
+        let cursor_visible = self.tree.cursor_visible(&self.nodes_state);
+        if cursor_visible != self.cursor_visible {
+            self.cursor_visible = cursor_visible;
+            self.window.set_cursor_visible(cursor_visible);
+        }
     }
 
     pub fn window(&self) -> &Window {
@@ -479,7 +483,7 @@ impl AppWindow {
         self.window.scale_factor() * *self.platform.custom_scale_factor.peek()
     }
 
-    /// Syncs the effective scale factor on [`Platform`] and invalidates layout.
+    /// Syncs the effective scale factor on [`PlatformWindow`] and invalidates layout.
     pub fn scale_factor_changed(&mut self) {
         self.platform
             .scale_factor

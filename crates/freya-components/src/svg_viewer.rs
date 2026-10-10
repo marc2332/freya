@@ -268,7 +268,7 @@ impl EventHandlersExt for SvgViewer {
 
 impl Component for SvgViewer {
     fn render(&self) -> impl IntoElement {
-        let scale_factor = *Platform::get().scale_factor.read();
+        let scale_factor = *Platform::get().current_window().scale_factor.read();
         let layout = self.layout.clone();
         let mut measured = use_state(|| match (&layout.width, &layout.height) {
             (Size::Pixels(width), Size::Pixels(height)) => {
@@ -312,7 +312,7 @@ impl Component for SvgViewer {
                 if self.async_rasterization || self.source.is_remote() {
                     let source = self.source.clone();
                     let asset_config = asset_config.clone();
-                    spawn_forever(async move {
+                    spawn_in_window(async move {
                         let result = match source.bytes().await {
                             Ok(bytes) => {
                                 let _permit = RASTER_LIMIT.acquire().await;
