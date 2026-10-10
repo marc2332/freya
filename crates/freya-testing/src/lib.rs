@@ -428,6 +428,12 @@ impl TestingRunner {
         self.tree.borrow().cursor_icon(&self.nodes_state)
     }
 
+    /// Queue an action requested by assistive technology for a supported target.
+    pub fn send_accessibility_action(&mut self, request: AccessibilityActionEventData) -> bool {
+        self.accessibility
+            .handle_action(request, &mut self.tree.borrow_mut(), &self.events_sender)
+    }
+
     /// Resolve cursor visibility for the currently hovered nodes.
     pub fn cursor_visible(&self) -> bool {
         self.tree.borrow().cursor_visible(&self.nodes_state)

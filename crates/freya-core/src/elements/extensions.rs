@@ -201,6 +201,14 @@ pub trait EventHandlersExt: Sized {
     }
 
     event_handlers! {
+        AccessibilityAction,
+        AccessibilityActionEventData;
+
+        /// Fires when assistive technology requests an action advertised through [`a11y_builder`](AccessibilityExt::a11y_builder).
+        accessibility_action => EventName::AccessibilityAction;
+    }
+
+    event_handlers! {
         Mouse,
         MouseEventData;
 
@@ -351,28 +359,41 @@ pub trait EventHandlersExt: Sized {
     /// - **Click**: There is a `MouseUp` event (Left button) with the in the same element that there had been a `MouseDown` just before
     /// - **Touched**: There is a `TouchEnd` event in the same element that there had been a `TouchStart` just before
     /// - **Activated**: The element is focused and there is a keydown event pressing the OS activation key (e.g Space, Enter)
-    fn on_press(self, on_press: impl Into<EventHandler<Event<PressEventData>>>) -> Self {
+    /// - **Accessibility**: Assistive technology requests the Click action
+    fn on_press(self, on_press: impl Into<EventHandler<Event<PressEventData>>>) -> Self
+    where
+        Self: AccessibilityExt,
+    {
         let on_press = on_press.into();
-        self.on_pointer_press({
-            let on_press = on_press.clone();
-            move |e: Event<PointerEventData>| {
-                let event = e.try_map(|d| match d {
-                    PointerEventData::Mouse(m) if m.button == Some(MouseButton::Left) => {
-                        Some(PressEventData::Mouse(m))
+        self.a11y_builder(|builder| builder.add_action(AccessibilityAction::Click))
+            .on_accessibility_action({
+                let on_press = on_press.clone();
+                move |event: Event<AccessibilityActionEventData>| {
+                    if event.action == AccessibilityAction::Click {
+                        on_press.call(event.map(PressEventData::Accessibility));
                     }
-                    PointerEventData::Touch(t) => Some(PressEventData::Touch(t)),
-                    _ => None,
-                });
-                if let Some(event) = event {
-                    on_press.call(event);
                 }
-            }
-        })
-        .on_key_down(move |e: Event<KeyboardEventData>| {
-            if e.is_press_event() {
-                on_press.call(e.map(PressEventData::Keyboard))
-            }
-        })
+            })
+            .on_pointer_press({
+                let on_press = on_press.clone();
+                move |e: Event<PointerEventData>| {
+                    let event = e.try_map(|d| match d {
+                        PointerEventData::Mouse(m) if m.button == Some(MouseButton::Left) => {
+                            Some(PressEventData::Mouse(m))
+                        }
+                        PointerEventData::Touch(t) => Some(PressEventData::Touch(t)),
+                        _ => None,
+                    });
+                    if let Some(event) = event {
+                        on_press.call(event);
+                    }
+                }
+            })
+            .on_key_down(move |e: Event<KeyboardEventData>| {
+                if e.is_press_event() {
+                    on_press.call(e.map(PressEventData::Keyboard))
+                }
+            })
     }
 
     /// Also called the context menu click in other platforms.
@@ -400,23 +421,36 @@ pub trait EventHandlersExt: Sized {
     /// - **Click**: There is a `MouseUp` event (Any button) with the in the same element that there had been a `MouseDown` just before
     /// - **Touched**: There is a `TouchEnd` event in the same element that there had been a `TouchStart` just before
     /// - **Activated**: The element is focused and there is a keydown event pressing the OS activation key (e.g Space, Enter)
-    fn on_all_press(self, on_press: impl Into<EventHandler<Event<PressEventData>>>) -> Self {
+    /// - **Accessibility**: Assistive technology requests the Click action
+    fn on_all_press(self, on_press: impl Into<EventHandler<Event<PressEventData>>>) -> Self
+    where
+        Self: AccessibilityExt,
+    {
         let on_press = on_press.into();
-        self.on_pointer_press({
-            let on_press = on_press.clone();
-            move |e: Event<PointerEventData>| {
-                let event = e.map(|d| match d {
-                    PointerEventData::Mouse(m) => PressEventData::Mouse(m),
-                    PointerEventData::Touch(t) => PressEventData::Touch(t),
-                });
-                on_press.call(event);
-            }
-        })
-        .on_key_down(move |e: Event<KeyboardEventData>| {
-            if e.is_press_event() {
-                on_press.call(e.map(PressEventData::Keyboard))
-            }
-        })
+        self.a11y_builder(|builder| builder.add_action(AccessibilityAction::Click))
+            .on_accessibility_action({
+                let on_press = on_press.clone();
+                move |event: Event<AccessibilityActionEventData>| {
+                    if event.action == AccessibilityAction::Click {
+                        on_press.call(event.map(PressEventData::Accessibility));
+                    }
+                }
+            })
+            .on_pointer_press({
+                let on_press = on_press.clone();
+                move |e: Event<PointerEventData>| {
+                    let event = e.map(|d| match d {
+                        PointerEventData::Mouse(m) => PressEventData::Mouse(m),
+                        PointerEventData::Touch(t) => PressEventData::Touch(t),
+                    });
+                    on_press.call(event);
+                }
+            })
+            .on_key_down(move |e: Event<KeyboardEventData>| {
+                if e.is_press_event() {
+                    on_press.call(e.map(PressEventData::Keyboard))
+                }
+            })
     }
     /// Gets triggered when:
     /// - **Started clicking**: There is a `MouseDown` event (Left button)
@@ -488,9 +522,10 @@ impl FocusPressEventData {
     }
 }
 
-/// Data delivered to [`on_press`](EventHandlersExt::on_press), which can originate from a mouse, the keyboard or a touch.
+/// Data delivered to [`on_press`](EventHandlersExt::on_press) from a mouse, keyboard, touch or assistive technology.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PressEventData {
+    Accessibility(AccessibilityActionEventData),
     Mouse(MouseEventData),
     Keyboard(KeyboardEventData),
     Touch(TouchEventData),
@@ -739,6 +774,17 @@ pub trait AccessibilityExt: Sized {
     /// Set an explicit accessibility id instead of an autogenerated one. See [`AccessibilityId`].
     fn a11y_id(mut self, a11y_id: impl Into<Option<AccessibilityId>>) -> Self {
         self.get_accessibility_data().a11y_id = a11y_id.into();
+        self
+    }
+
+    /// Set whether the element is enabled for assistive technology.
+    fn a11y_enabled(mut self, enabled: impl Into<bool>) -> Self {
+        let builder = &mut self.get_accessibility_data().builder;
+        if enabled.into() {
+            builder.clear_disabled();
+        } else {
+            builder.set_disabled();
+        }
         self
     }
 

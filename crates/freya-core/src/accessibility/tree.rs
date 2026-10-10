@@ -2,6 +2,7 @@ use std::any::Any;
 
 use accesskit::{
     Action,
+    ActionRequest,
     Affine,
     Node,
     Rect,
@@ -73,6 +74,59 @@ impl AccessibilityTree {
 
     pub fn focused_node_id(&self) -> Option<NodeId> {
         self.map.get(&self.focused_id).cloned()
+    }
+
+    /// Dispatch an action requested by assistive technology.
+    pub fn handle_action(
+        &self,
+        request: ActionRequest,
+        tree: &mut Tree,
+        events_sender: &futures_channel::mpsc::UnboundedSender<EventsChunk>,
+    ) -> bool {
+        if request.target_tree != TreeId::ROOT {
+            return false;
+        }
+        let Some(node_id) = self.map.get(&request.target_node).copied() else {
+            return false;
+        };
+        let Some(element) = tree.elements.get(&node_id) else {
+            return false;
+        };
+        let mut builder = element.accessibility().builder.clone();
+        element.finish_accessibility(&mut builder);
+        if builder.is_disabled() {
+            return false;
+        }
+        match request.action {
+            Action::Focus => {
+                if !element.accessibility().a11y_focusable.is_enabled() {
+                    return false;
+                }
+                tree.accessibility_diff
+                    .request_focus(AccessibilityFocusStrategy::Node(request.target_node));
+                true
+            }
+            Action::Blur => {
+                if self.focused_id == request.target_node {
+                    tree.accessibility_diff
+                        .request_focus(AccessibilityFocusStrategy::Node(ACCESSIBILITY_ROOT_ID));
+                }
+                true
+            }
+            Action::ScrollIntoView => {
+                self.scroll_to(node_id, tree, events_sender);
+                true
+            }
+            _ => events_sender
+                .unbounded_send(EventsChunk::Batch(vec![EmmitableEvent {
+                    name: EventName::AccessibilityAction,
+                    source_event: EventName::AccessibilityAction,
+                    node_id,
+                    data: EventType::AccessibilityAction(request),
+                    bubbles: true,
+                }]))
+                .is_ok(),
+        }
     }
 
     /// Initialize the Accessibility Tree
@@ -422,6 +476,7 @@ impl AccessibilityTree {
         // to focus the current element if it supports it.
         if accessibility_data.a11y_focusable.is_enabled() {
             accessibility_data.builder.add_action(Action::Focus);
+            accessibility_data.builder.add_action(Action::Blur);
         }
 
         let builder = &mut accessibility_data.builder;

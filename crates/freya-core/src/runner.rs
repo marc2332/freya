@@ -400,6 +400,19 @@ impl Runner {
                             },
                             || {
                                 match &event_type {
+                                    EventType::AccessibilityAction(data) => {
+                                        if let Some(event_handlers) = element.events_handlers()
+                                            && let Some(EventHandlerType::AccessibilityAction(
+                                                handler,
+                                            )) = event_handlers.get(&event_name)
+                                        {
+                                            handler.call(Event {
+                                                data: data.clone(),
+                                                propagate: propagate.clone(),
+                                                default: default.clone(),
+                                            });
+                                        }
+                                    }
                                     EventType::Mouse(data) => {
                                         let event_handlers = element.events_handlers();
                                         if let Some(event_handlers) = event_handlers {
