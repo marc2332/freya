@@ -42,6 +42,9 @@ jobs:
     - name: Build all --features
       run: just ba
 
+    - name: Build with devtools feature
+      run: cargo build --package freya --features devtools
+
   build-macos:
     runs-on: macos-latest
     concurrency:

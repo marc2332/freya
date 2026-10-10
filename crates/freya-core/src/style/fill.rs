@@ -58,8 +58,7 @@ pub enum Fill {
     ConicGradient(Box<ConicGradient>),
     /// Custom drawing for rect backgrounds and label or paragraph overlays.
     /// Span fills do not invoke callbacks.
-    #[cfg_attr(feature = "serde", serde(skip))]
-    Callback(RenderCallback),
+    Callback(#[cfg_attr(feature = "serde", serde(skip))] RenderCallback),
 }
 
 impl Fill {
