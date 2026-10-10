@@ -15,11 +15,16 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: rust-nightly-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   coverage:
+    name: smoke / coverage
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
