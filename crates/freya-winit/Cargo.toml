@@ -110,8 +110,15 @@ freya-engine = { workspace = true, features = ["metal"], optional = true }
 [dev-dependencies]
 freya = { path = "../freya" }
 
+[[test]]
+name = "smoke"
+path = "tests/smoke.rs"
+harness = false
+required-features = ["smoke-test"]
+
 [features]
 default = ["gpu", "accessibility"]
+smoke-test = []
 platform-text-gamma = []
 gpu = [
   "dep:freya-engine",

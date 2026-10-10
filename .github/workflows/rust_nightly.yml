@@ -1,0 +1,126 @@
+name: Rust nightly
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * *'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/rust_nightly.yml'
+  pull_request:
+    paths:
+      - '.github/workflows/rust_nightly.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rust-nightly-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  coverage:
+    name: smoke / coverage
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      RUSTFLAGS: -Cinstrument-coverage
+      RUSTDOCFLAGS: -Cinstrument-coverage
+      LLVM_PROFILE_FILE: cargo-test-%p-%m.profraw
+      FREYA_SMOKE_SCREENSHOT: ${{ github.workspace }}/artifacts/smoke.png
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 2
+          submodules: true
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1
+      - name: Set up cargo cache
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          shared-key: rust-coverage
+      - name: Install nextest
+        uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
+        with:
+          tool: nextest
+      - name: Install just
+        uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
+        with:
+          tool: just
+      - name: Install Linux dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev libwebkit2gtk-4.1-dev libasound2-dev ffmpeg xvfb xauth fonts-noto-color-emoji libxkbcommon-x11-0
+      - name: Remove unused programs
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+      - name: Run tests
+        run: just t
+      - name: Run window smoke
+        timeout-minutes: 3
+        run: xvfb-run -a env -u WAYLAND_DISPLAY just t-winit
+      - name: Generate coverage
+        run: |
+          rustup component add llvm-tools-preview
+          curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf -
+          ./grcov . --binary-path ./target/debug/deps -s . -t lcov --branch --ignore-not-existing --ignore "../*" --ignore "/*" -o cov.lcov
+      - uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Upload smoke screenshot
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: winit-smoke-ubuntu-24.04
+          path: artifacts/smoke.png
+          if-no-files-found: warn
+
+  smoke:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-26.04, windows-latest, macos-latest]
+    env:
+      FREYA_SMOKE_SCREENSHOT: ${{ github.workspace }}/artifacts/smoke.png
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: true
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1
+      - name: Set up cargo cache
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          shared-key: rust-winit-smoke-${{ matrix.os }}
+      - name: Install just
+        uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
+        with:
+          tool: just
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev libwebkit2gtk-4.1-dev libasound2-dev xvfb xauth fonts-noto-color-emoji libxkbcommon-x11-0
+      - name: Build smoke test
+        run: cargo test -p freya-winit --test smoke --features smoke-test --locked --no-run
+      - name: Run smoke test on Linux
+        if: runner.os == 'Linux'
+        timeout-minutes: 2
+        run: xvfb-run -a env -u WAYLAND_DISPLAY just t-winit
+      - name: Run smoke test on macOS and Windows
+        if: runner.os != 'Linux'
+        timeout-minutes: 2
+        run: just t-winit
+      - name: Upload screenshot
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: winit-smoke-${{ matrix.os }}
+          path: artifacts/smoke.png
+          if-no-files-found: warn
