@@ -4,6 +4,13 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 4 * * *'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/rust_nightly.yml'
+  pull_request:
+    paths:
+      - '.github/workflows/rust_nightly.yml'
 
 permissions:
   contents: read
@@ -56,6 +63,7 @@ jobs:
           curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf -
           ./grcov . --binary-path ./target/debug/deps -s . -t lcov --branch --ignore-not-existing --ignore "../*" --ignore "/*" -o cov.lcov
       - uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload smoke screenshot
