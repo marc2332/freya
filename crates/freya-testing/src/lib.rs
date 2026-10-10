@@ -433,7 +433,7 @@ impl TestingRunner {
         self.accessibility
             .handle_action(request, &mut self.tree.borrow_mut(), &self.events_sender)
     }
-  
+
     /// Resolve cursor visibility for the currently hovered nodes.
     pub fn cursor_visible(&self) -> bool {
         self.tree.borrow().cursor_visible(&self.nodes_state)
