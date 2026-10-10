@@ -174,6 +174,8 @@ pub struct Runner {
 
     pub(crate) dirty_scopes: FxHashSet<ScopeId>,
     pub(crate) dirty_tasks: VecDeque<TaskId>,
+    #[cfg(feature = "hotreload")]
+    pub(crate) reload_generation: u64,
 
     pub node_to_scope: FxHashMap<NodeId, ScopeId>,
 
@@ -251,6 +253,8 @@ impl Runner {
                     key: DiffKey::Root,
                     comp: Rc::new(move |_| root()),
                     props: Rc::new(()),
+                    #[cfg(feature = "hotreload")]
+                    reload_generation: 0,
                     element: None,
                     nodes: {
                         let mut map = PathGraph::new();
@@ -280,6 +284,8 @@ impl Runner {
 
             dirty_tasks: VecDeque::default(),
             dirty_scopes: FxHashSet::from_iter([ScopeId::ROOT]),
+            #[cfg(feature = "hotreload")]
+            reload_generation: 0,
 
             tasks: Rc::default(),
 
@@ -858,18 +864,33 @@ impl Runner {
                     // Colliding keys can pair components of different types, which requires a full reset
                     let type_changed = (existing_scope.props.as_ref() as &dyn Any).type_id()
                         != (props.as_ref() as &dyn Any).type_id();
-                    if key_changed || type_changed || existing_scope.props.changed(props.as_ref()) {
+                    #[cfg(feature = "hotreload")]
+                    let reloaded = existing_scope.reload_generation != self.reload_generation;
+                    #[cfg(not(feature = "hotreload"))]
+                    let reloaded = false;
+                    if reloaded
+                        || key_changed
+                        || type_changed
+                        || existing_scope.props.changed(props.as_ref())
+                    {
                         self.dirty_scopes.insert(assigned_scope_id);
                         existing_scope.props = props.clone();
 
-                        if key_changed || type_changed {
+                        if reloaded || key_changed || type_changed {
                             existing_scope.key = key.clone();
                             existing_scope.comp = comp.clone();
-                            self.scopes_storages
-                                .borrow_mut()
-                                .get_mut(&assigned_scope_id)
-                                .unwrap()
-                                .reset();
+                            #[cfg(feature = "hotreload")]
+                            {
+                                existing_scope.reload_generation = self.reload_generation;
+                            }
+
+                            if key_changed || type_changed {
+                                self.scopes_storages
+                                    .borrow_mut()
+                                    .get_mut(&assigned_scope_id)
+                                    .unwrap()
+                                    .reset();
+                            }
                         }
                     }
                 } else {
@@ -884,6 +905,8 @@ impl Runner {
                             key: key.clone(),
                             comp: comp.clone(),
                             props: props.clone(),
+                            #[cfg(feature = "hotreload")]
+                            reload_generation: self.reload_generation,
                             element: None,
                             nodes: PathGraph::default(),
                         })),
@@ -1479,11 +1502,13 @@ impl Runner {
         }
     }
 
-    /// Reloads the runner for a hot-reload: cancels tasks, reloads every scope's hooks
-    /// (contexts are preserved), and marks every scope dirty. Task cancellation must
+    /// Reloads the runner for a hot-reload, canceling tasks and reloading every scope's hooks
+    /// (contexts are preserved), and marks the root scope dirty. Task cancellation must
     /// happen first so stale wakers can't fire [`Message::PollTask`] against
     /// freshly-reloaded scopes.
+    #[cfg(feature = "hotreload")]
     pub fn reload(&mut self) {
+        self.reload_generation = self.reload_generation.wrapping_add(1);
         self.tasks.borrow_mut().clear();
         self.dirty_tasks.clear();
         while self.receiver.try_recv().is_ok() {}
@@ -1514,7 +1539,8 @@ impl Runner {
             );
         }
 
-        self.dirty_scopes.extend(self.scopes.keys());
+        self.dirty_scopes.clear();
+        self.dirty_scopes.insert(ScopeId::ROOT);
         let _ = self
             .sender
             .unbounded_send(Message::MarkScopeAsDirty(ScopeId::ROOT));
