@@ -101,7 +101,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create a persist with the local transport and json format
     let persisted = Persisted::new(transport, PersistedJson);
 
-    // Load the current persit data and migrate it if needed
+    // Load the current persist data and migrate it if needed
     let settings = persisted
         .load_migrated(Settings::migrate)?
         .unwrap_or_default();
