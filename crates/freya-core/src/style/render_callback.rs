@@ -43,6 +43,12 @@ impl RenderCallback {
     }
 }
 
+impl Default for RenderCallback {
+    fn default() -> Self {
+        Self::new(|_| {})
+    }
+}
+
 impl<F: FnMut(&mut RenderContext) + 'static> From<F> for RenderCallback {
     fn from(callback: F) -> Self {
         Self::new(callback)
