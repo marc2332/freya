@@ -27,12 +27,14 @@
 
 #[doc(hidden)]
 pub mod anyrender;
+mod cache;
 mod component;
 mod element;
 mod handle;
 mod net;
 mod state;
 
+pub use cache::ResourceCache;
 pub use component::HtmlViewer;
 pub use handle::{
     ElementHit,
@@ -43,6 +45,7 @@ pub use handle::{
 
 pub mod prelude {
     pub use crate::{
+        cache::ResourceCache,
         component::HtmlViewer,
         handle::{
             ElementHit,
