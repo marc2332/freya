@@ -97,6 +97,7 @@ These crates provide entrypoints, renderers, components, integrations and other 
 - `freya-devtools`: Devtools server and plugin for Freya.
 - `freya-devtools-app`: Standalone Freya app to debug or inspect your Freya apps, its powered by `freya-devtools`.
 - `freya-radio`: Global reactive state management based on Topics.
+- `freya-persisted`: State and Radio persistence with custom storage and formats, optional local files, JSON, migrations and file watching.
 - `freya-i18n`: Language translation library for Freya powered by the Fluent Project.
 - `freya-edit`: Text Editing capabilities to create from simple to complex text editors.
 - `freya-animation`: Animate numeric or color values for your components.

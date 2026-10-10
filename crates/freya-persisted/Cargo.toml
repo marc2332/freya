@@ -1,0 +1,38 @@
+[package]
+name = "freya-persisted"
+description = "Transport and format agnostic state persistence for Freya"
+version = "0.5.0-rc.9"
+edition = "2024"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["freya", "persisted", "state", "persistence"]
+categories = ["gui", "data-structures"]
+
+[lints]
+workspace = true
+
+[features]
+default = []
+fs = ["dep:dirs", "dep:tempfile"]
+fs-watch = ["fs", "dep:notify", "dep:async-channel"]
+json = ["dep:serde", "dep:serde_json"]
+radio = ["dep:freya-radio"]
+
+[dependencies]
+freya-core = { workspace = true }
+freya-radio = { workspace = true, optional = true }
+thiserror = { workspace = true }
+dirs = { workspace = true, optional = true }
+tempfile = { workspace = true, optional = true }
+serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+notify = { workspace = true, optional = true }
+async-channel = { workspace = true, optional = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+async-io = { workspace = true }
+futures-lite = { workspace = true }
