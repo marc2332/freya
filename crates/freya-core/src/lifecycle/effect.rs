@@ -3,11 +3,18 @@ use std::{
     rc::Rc,
 };
 
+use generational_box::{
+    AnyStorage,
+    UnsyncStorage,
+};
+
 use crate::{
     lifecycle::writable_utils::WritableUtils,
     prelude::{
         State,
+        TaskHandle,
         spawn,
+        spawn_global,
         use_hook,
         use_reactive,
     },
@@ -17,6 +24,38 @@ use crate::{
 pub struct Effect;
 
 impl Effect {
+    /// Runs asynchronously and reruns when reactive values read by the callback change.
+    /// Lives independently of components and windows.
+    ///
+    /// Stops when the application exits or the returned [`TaskHandle`] is cancelled.
+    ///
+    /// ```rust,no_run
+    /// # use freya::prelude::*;
+    /// # fn main() {
+    /// let count = State::create_global(0);
+    /// launch(
+    ///     LaunchConfig::new()
+    ///         .with_exit_on_close(false)
+    ///         .with_task(move |_| async move {
+    ///             Effect::create_global(move || {
+    ///                 println!("Count: {}", *count.read());
+    ///             });
+    ///         }),
+    /// );
+    /// # }
+    /// ```
+    pub fn create_global(mut callback: impl FnMut() + 'static) -> TaskHandle {
+        let owner = UnsyncStorage::owner();
+        let (notification, context) = ReactiveContext::new_for_async(&owner);
+        spawn_global(async move {
+            let _owner = owner;
+            loop {
+                ReactiveContext::run(context.clone(), &mut callback);
+                notification.notified().await;
+            }
+        })
+    }
+
     pub fn create(mut callback: impl FnMut() + 'static) {
         let (rx, rc) = ReactiveContext::new_for_task();
         spawn(async move {
