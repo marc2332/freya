@@ -1096,6 +1096,14 @@ pub trait EffectExt: Sized {
         self
     }
 
+    /// Show or hide the mouse cursor while the element is hovered.
+    ///
+    /// The topmost hovered element with an explicit visibility wins, defaulting to visible.
+    fn cursor_visible(mut self, visible: impl Into<Option<bool>>) -> Self {
+        self.get_effect().cursor_visible = visible.into();
+        self
+    }
+
     /// Replace all of the element's effect data at once. See [`EffectData`].
     fn effect(mut self, effect: EffectData) -> Self {
         *self.get_effect() = effect;
