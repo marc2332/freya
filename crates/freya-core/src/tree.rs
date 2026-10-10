@@ -202,6 +202,27 @@ impl Tree {
             .unwrap_or_default()
     }
 
+    /// Resolve cursor visibility from the topmost hovered element that defines it.
+    pub fn cursor_visible(&self, nodes_state: &ragnarok::NodesState<NodeId>) -> bool {
+        nodes_state
+            .hovered_nodes()
+            .sorted_by_key(|node_id| {
+                std::cmp::Reverse(
+                    self.layer_state
+                        .get(node_id)
+                        .map(|layer_state| layer_state.layer)
+                        .unwrap_or_default(),
+                )
+            })
+            .find_map(|node_id| {
+                self.elements
+                    .get(node_id)
+                    .and_then(|element| element.effect())
+                    .and_then(|effect| effect.cursor_visible)
+            })
+            .unwrap_or(true)
+    }
+
     pub fn traverse_depth_cancel(&self, mut then: impl FnMut(NodeId) -> bool) {
         let mut buffer = vec![NodeId::ROOT];
         while let Some(node_id) = buffer.pop() {

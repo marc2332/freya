@@ -24,6 +24,10 @@ jobs:
       with:
         fetch-depth: 2
         submodules: true
+    - name: Install linux dependencies
+      if: runner.os == 'Linux'
+      background: true
+      run: sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev libwebkit2gtk-4.1-dev libasound2-dev ffmpeg
     - name: Install Rust toolchain
       uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1
     - name: Install nextest
@@ -34,13 +38,12 @@ jobs:
       uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
       with:
         tool: just
-    - name: Install linux dependencies
-      if: runner.os == 'Linux'
-      run: sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev libwebkit2gtk-4.1-dev libasound2-dev ffmpeg
     - name: Remove unused programs in linux
       if: runner.os == 'Linux'
       run: |
         sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+    - name: Wait for setup
+      wait-all:
     - name: Run Linux tests
       if: runner.os == 'Linux'
       run: |

@@ -1,9 +1,6 @@
 #![allow(dead_code)]
 
-use std::collections::{
-    HashMap,
-    HashSet,
-};
+use std::collections::HashMap;
 
 use ragnarok::{
     Area,
@@ -16,6 +13,7 @@ use ragnarok::{
     NameOfEvent,
     NodesState,
     SourceEvent,
+    collections::HashSet,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
@@ -139,7 +137,7 @@ impl NameOfEvent for EventName {
     }
 
     fn get_derived_events(&self) -> HashSet<Self> {
-        let mut events = HashSet::new();
+        let mut events = HashSet::default();
         events.insert(*self);
         #[allow(clippy::single_match)]
         match self {
@@ -158,13 +156,13 @@ impl NameOfEvent for EventName {
 
     fn get_global_events(&self) -> HashSet<Self> {
         match self {
-            Self::MouseMove => HashSet::from([Self::CaptureGlobalMouseMove]),
-            _ => HashSet::new(),
+            Self::MouseMove => [Self::CaptureGlobalMouseMove].into_iter().collect(),
+            _ => HashSet::default(),
         }
     }
 
     fn get_cancellable_events(&self) -> HashSet<Self> {
-        let mut events = HashSet::new();
+        let mut events = HashSet::default();
         events.insert(*self);
         match self {
             Self::CaptureGlobalMouseMove => {

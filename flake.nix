@@ -22,6 +22,7 @@
     system = "x86_64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
     libraries = with pkgs; [
+      alsa-lib
       atk
       cairo
       fontconfig
