@@ -151,7 +151,7 @@ pub fn use_maximized() -> State<bool> {
     let mut maximized = use_state(|| false);
 
     use_side_effect(move || {
-        let _ = Platform::get().root_size.read();
+        let _ = Platform::get().current_window().root_size.read();
         Platform::get().with_window(Platform::window_id(), move |window| {
             if let Some(mut maximized) = maximized.try_write() {
                 *maximized = window.fullscreen().is_some() || window.is_maximized();
@@ -188,7 +188,7 @@ impl ResizeBands {
 impl Component for ResizeBands {
     fn render(&self) -> impl IntoElement {
         let maximized = use_maximized();
-        let size = *Platform::get().root_size.read();
+        let size = *Platform::get().current_window().root_size.read();
 
         rect()
             .layer(Layer::Overlay)

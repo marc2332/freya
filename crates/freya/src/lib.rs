@@ -124,6 +124,7 @@ pub mod prelude {
     pub use freya_winit::{
         WindowDragExt,
         WinitPlatformExt,
+        WinitPlatformWindowExt,
         config::{
             CloseDecision,
             GpuPreference,

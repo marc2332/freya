@@ -165,7 +165,10 @@ pub mod prelude {
             transform_origin::*,
             vertical_align::*,
         },
-        user_event::UserEvent,
+        user_event::{
+            GlobalUserEvent,
+            UserEvent,
+        },
     };
 }
 

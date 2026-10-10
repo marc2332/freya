@@ -47,10 +47,11 @@ pub struct WebApp {
     events_sender: futures_channel::mpsc::UnboundedSender<EventsChunk>,
 
     user_events: Rc<RefCell<Vec<UserEvent>>>,
+    global_events: Rc<RefCell<Vec<GlobalUserEvent>>>,
 
     fonts: Fonts,
 
-    platform: Platform,
+    platform: PlatformWindow,
     ticker_sender: RenderingTickerSender,
 
     background: Color,
@@ -84,10 +85,16 @@ impl WebApp {
         runner.provide_root_context(TargetPlatform::detect);
 
         let user_events = Rc::new(RefCell::new(Vec::new()));
+        let global_events = Rc::new(RefCell::new(Vec::new()));
+        GlobalContexts::get().insert_context(Platform::new({
+            let global_events = global_events.clone();
+            move |event| global_events.borrow_mut().push(event)
+        }));
 
-        let platform = runner.provide_root_context({
+        let platform = runner.run_in({
             let user_events = user_events.clone();
-            move || Platform {
+            move || PlatformWindow {
+                id: 0,
                 focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
                 focused_accessibility_node: State::create(accesskit::Node::new(
                     accesskit::Role::Window,
@@ -102,6 +109,9 @@ impl WebApp {
                 sender: Rc::new(move |user_event| user_events.borrow_mut().push(user_event)),
             }
         });
+
+        Platform::get().register_window(platform.clone());
+        runner.provide_root_context(|| CurrentWindowId(platform.id));
 
         let clipboard: Option<Box<dyn ClipboardProvider>> = Some(Box::new(WebClipboard));
         runner.provide_root_context(|| State::create(clipboard));
@@ -138,6 +148,7 @@ impl WebApp {
             events_receiver,
             events_sender,
             user_events,
+            global_events,
             fonts,
             platform,
             ticker_sender,
@@ -253,16 +264,12 @@ impl WebApp {
 
     /// Fulfills the requests made by the app and measures the layout.
     fn finish(&mut self) {
-        for user_event in self.user_events.borrow_mut().drain(..) {
-            match user_event {
-                UserEvent::FocusAccessibilityNode(strategy) => {
-                    self.tree.accessibility_diff.request_focus(strategy);
+        for event in self.global_events.borrow_mut().drain(..) {
+            match event {
+                GlobalUserEvent::OpenUrl(url) => {
+                    run_script(&format!("window.open({url:?}, '_blank');"))
                 }
-                UserEvent::OpenUrl(url) => {
-                    run_script(&format!("window.open({url:?}, '_blank');"));
-                }
-                UserEvent::RequestRedraw => self.needs_render = true,
-                UserEvent::LoadFont {
+                GlobalUserEvent::LoadFont {
                     font_name,
                     font_data,
                 } => {
@@ -271,7 +278,17 @@ impl WebApp {
                     self.tree.text_cache.reset();
                     self.needs_render = true;
                 }
-                UserEvent::SetCustomScaleFactor(_) | UserEvent::Erased(_) => {}
+                GlobalUserEvent::Exit => run_script("window.close();"),
+                GlobalUserEvent::Erased(_) => {}
+            }
+        }
+        for user_event in self.user_events.borrow_mut().drain(..) {
+            match user_event {
+                UserEvent::FocusAccessibilityNode(strategy) => {
+                    self.tree.accessibility_diff.request_focus(strategy);
+                }
+                UserEvent::RequestRedraw => self.needs_render = true,
+                UserEvent::SetCustomScaleFactor(_) => {}
             }
         }
 
