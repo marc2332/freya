@@ -428,6 +428,11 @@ impl TestingRunner {
         self.tree.borrow().cursor_icon(&self.nodes_state)
     }
 
+    /// Resolve cursor visibility for the currently hovered nodes.
+    pub fn cursor_visible(&self) -> bool {
+        self.tree.borrow().cursor_visible(&self.nodes_state)
+    }
+
     pub fn send_event(&mut self, platform_event: PlatformEvent) {
         let mut events_measurer_adapter = EventsMeasurerAdapter {
             tree: &mut self.tree.borrow_mut(),

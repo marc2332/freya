@@ -509,6 +509,63 @@ fn pointer_leave_with_mouse_move_and_enter_without_exit() {
 }
 
 #[test]
+fn cursor_visibility_property() {
+    fn app() -> Element {
+        let visible = use_consume::<State<Option<bool>>>();
+        rect()
+            .expanded()
+            .child(
+                rect()
+                    .width(Size::px(100.))
+                    .height(Size::px(100.))
+                    .cursor_visible(false)
+                    .child(
+                        rect()
+                            .width(Size::px(50.))
+                            .height(Size::px(50.))
+                            .cursor(CursorIcon::Pointer)
+                            .cursor_visible(*visible.read()),
+                    ),
+            )
+            .into()
+    }
+
+    let (mut test, mut visible) = TestingRunner::new(
+        app,
+        (500., 500.).into(),
+        |runner| runner.provide_root_context(|| State::create(None::<bool>)),
+        1.,
+    );
+    test.sync_and_update();
+    test.move_cursor((25., 25.));
+    test.sync_and_update();
+    assert!(!test.cursor_visible());
+    assert_eq!(test.cursor_icon(), CursorIcon::Pointer);
+
+    visible.set(Some(true));
+    test.sync_and_update();
+    assert!(test.cursor_visible());
+    assert_eq!(test.cursor_icon(), CursorIcon::Pointer);
+
+    visible.set(Some(false));
+    test.sync_and_update();
+    assert!(!test.cursor_visible());
+
+    test.move_cursor((150., 150.));
+    test.sync_and_update();
+    assert!(test.cursor_visible());
+    assert_eq!(test.cursor_icon(), CursorIcon::Default);
+
+    test.move_cursor((25., 25.));
+    test.sync_and_update();
+    assert!(!test.cursor_visible());
+
+    visible.set(None);
+    test.sync_and_update();
+    assert!(!test.cursor_visible());
+}
+
+#[test]
 fn cursor_property() {
     fn app() -> Element {
         rect()

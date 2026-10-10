@@ -85,6 +85,7 @@ impl DerefMut for LayoutData {
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct EffectData {
     pub cursor: Option<CursorIcon>,
+    pub cursor_visible: Option<bool>,
     pub overflow: Overflow,
     pub rotation: Option<f32>,
     pub scale: Option<Scale>,
