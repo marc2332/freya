@@ -203,6 +203,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
             std::thread::spawn(move || {
                 if !gtk::is_initialized() {
                     if gtk::init().is_ok() {
+                        gtk::disable_setlocale();
                         tracing::debug!("Tray: GTK initialized");
                     } else {
                         tracing::error!("Tray: Failed to initialize GTK");
