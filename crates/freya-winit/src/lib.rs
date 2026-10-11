@@ -202,8 +202,9 @@ fn launch_inner(mut launch_config: LaunchConfig) {
         if let Some(tray_icon) = renderer.tray.0.take() {
             std::thread::spawn(move || {
                 if !gtk::is_initialized() {
+                    gtk::disable_setlocale();
+
                     if gtk::init().is_ok() {
-                        gtk::disable_setlocale();
                         tracing::debug!("Tray: GTK initialized");
                     } else {
                         tracing::error!("Tray: Failed to initialize GTK");
