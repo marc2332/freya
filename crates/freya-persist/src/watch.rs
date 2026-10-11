@@ -13,18 +13,18 @@ use notify::{
     Watcher,
 };
 
-use crate::PersistedLocal;
+use crate::PersistLocal;
 
 /// File change notifications. Dropping this receiver stops watching.
-pub struct PersistedLocalWatcher {
+pub struct PersistLocalWatcher {
     events: async_channel::Receiver<notify::Result<()>>,
     _watcher: RecommendedWatcher,
 }
 
-impl PersistedLocal {
+impl PersistLocal {
     /// Watch the file's parent directory to detect creation, removal and atomic replacements.
     /// Creates missing parent directories without writing the file.
-    pub fn watch(&self) -> notify::Result<PersistedLocalWatcher> {
+    pub fn watch(&self) -> notify::Result<PersistLocalWatcher> {
         let file_name = self
             .path()
             .file_name()
@@ -38,20 +38,18 @@ impl PersistedLocal {
         let parent = fs::canonicalize(parent)?;
         let watched_path = parent.join(file_name);
         let (sender, events) = async_channel::bounded(1);
-        let mut watcher = notify::recommended_watcher(PersistedLocalWatcher::event_handler(
-            watched_path,
-            sender,
-        ))?;
+        let mut watcher =
+            notify::recommended_watcher(PersistLocalWatcher::event_handler(watched_path, sender))?;
         watcher.watch(&parent, RecursiveMode::NonRecursive)?;
 
-        Ok(PersistedLocalWatcher {
+        Ok(PersistLocalWatcher {
             events,
             _watcher: watcher,
         })
     }
 }
 
-impl PersistedLocalWatcher {
+impl PersistLocalWatcher {
     fn event_handler(
         watched_path: PathBuf,
         sender: async_channel::Sender<notify::Result<()>>,
@@ -94,8 +92,8 @@ mod tests {
     };
 
     use crate::{
-        PersistedLocal,
-        PersistedLocalWatcher,
+        PersistLocal,
+        PersistLocalWatcher,
         PersistenceTransport,
     };
 
@@ -103,7 +101,7 @@ mod tests {
     fn pending_changes_coalesce_without_hiding_errors() {
         let path = std::path::PathBuf::from("settings.json");
         let (sender, events) = async_channel::bounded(1);
-        let callback = PersistedLocalWatcher::event_handler(path.clone(), sender);
+        let callback = PersistLocalWatcher::event_handler(path.clone(), sender);
         let change = notify::Event::new(notify::EventKind::Create(notify::event::CreateKind::File))
             .add_path(path);
         callback(Ok(change.clone()));
@@ -130,7 +128,7 @@ mod tests {
     fn watcher_notifies_on_creation_and_atomic_replacements() {
         for existing in [false, true] {
             let directory = tempfile::tempdir_in(".").unwrap();
-            let transport = PersistedLocal::new(directory.path().join("nested/settings.bin"));
+            let transport = PersistLocal::new(directory.path().join("nested/settings.bin"));
             if existing {
                 transport.save(&[1]).unwrap();
             }

@@ -14,11 +14,11 @@ use std::{
 use crate::PersistenceTransport;
 
 #[derive(Clone, Debug)]
-pub struct PersistedLocal {
+pub struct PersistLocal {
     path: PathBuf,
 }
 
-impl PersistedLocal {
+impl PersistLocal {
     /// Use an explicit path, including project-specific state files.
     pub fn new(path: impl Into<PathBuf>) -> Self {
         Self { path: path.into() }
@@ -51,7 +51,7 @@ impl PersistedLocal {
     }
 }
 
-impl PersistenceTransport for PersistedLocal {
+impl PersistenceTransport for PersistLocal {
     type Error = io::Error;
 
     fn load(&self) -> io::Result<Option<Vec<u8>>> {

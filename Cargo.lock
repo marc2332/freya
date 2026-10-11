@@ -2832,7 +2832,7 @@ dependencies = [
  "freya-markdown",
  "freya-material-design",
  "freya-metrics-plugin",
- "freya-persisted",
+ "freya-persist",
  "freya-plotters-backend",
  "freya-query",
  "freya-radio",
@@ -3129,7 +3129,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "freya-persisted"
+name = "freya-persist"
 version = "0.5.0-rc.9"
 dependencies = [
  "async-channel",

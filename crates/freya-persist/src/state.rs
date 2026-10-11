@@ -1,13 +1,13 @@
 use freya_core::prelude::WritableUtils;
 
 use crate::{
-    Persisted,
+    Persist,
     PersistenceError,
     PersistenceFormat,
     PersistenceTransport,
 };
 
-pub trait PersistedStateExt<Value: 'static> {
+pub trait PersistStateExt<Value: 'static> {
     type TransportError: std::error::Error + 'static;
     type FormatError: std::error::Error + 'static;
 
@@ -24,7 +24,7 @@ pub trait PersistedStateExt<Value: 'static> {
     ) -> Result<(), PersistenceError<Self::TransportError, Self::FormatError>>;
 }
 
-impl<Value: 'static, Transport, Format> PersistedStateExt<Value> for Persisted<Transport, Format>
+impl<Value: 'static, Transport, Format> PersistStateExt<Value> for Persist<Transport, Format>
 where
     Transport: PersistenceTransport,
     Format: PersistenceFormat<Value>,

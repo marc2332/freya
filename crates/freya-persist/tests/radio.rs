@@ -9,7 +9,7 @@ use std::{
 };
 
 use freya_core::prelude::*;
-use freya_persisted::prelude::*;
+use freya_persist::prelude::*;
 use freya_radio::prelude::*;
 
 struct AppState {
@@ -47,7 +47,7 @@ impl RadioChannel<AppState> for Channel {
 fn projected_autosave_and_reload() {
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("settings.json");
-    let storage = Persisted::new(PersistedLocal::new(&path), PersistedJson);
+    let storage = Persist::new(PersistLocal::new(&path), PersistJson);
     let mut station = RadioStation::create_global(AppState { count: 0, step: 1 });
     assert_eq!(
         storage.reload_radio(station, AppState::apply_step).unwrap(),

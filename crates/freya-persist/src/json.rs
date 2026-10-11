@@ -6,9 +6,9 @@ use serde::{
 use crate::PersistenceFormat;
 
 #[derive(Clone, Copy, Debug, Default)]
-pub struct PersistedJson;
+pub struct PersistJson;
 
-impl<T: Serialize + DeserializeOwned> PersistenceFormat<T> for PersistedJson {
+impl<T: Serialize + DeserializeOwned> PersistenceFormat<T> for PersistJson {
     type Error = serde_json::Error;
     type Raw = serde_json::Value;
 

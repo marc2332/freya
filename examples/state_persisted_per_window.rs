@@ -4,7 +4,7 @@
 )]
 
 use freya::{
-    persisted::*,
+    persist::*,
     prelude::*,
     radio::*,
 };
@@ -82,17 +82,17 @@ impl RadioChannel<AppState> for SettingsChannel {
     }
 }
 
-struct PersistedWindow {
+struct PersistWindow {
     title: &'static str,
-    transport: PersistedLocal,
+    transport: PersistLocal,
     settings: Settings,
 }
 
-impl PersistedWindow {
+impl PersistWindow {
     fn open(title: &'static str, file_name: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let transport = PersistedLocal::for_app("freya-persisted-per-window", file_name)?;
+        let transport = PersistLocal::for_app("freya-persist-per-window", file_name)?;
         tracing::info!(window = title, path = %transport.path().display(), "Opening settings");
-        let settings = Persisted::new(transport.clone(), PersistedJson)
+        let settings = Persist::new(transport.clone(), PersistJson)
             .load_migrated(Settings::migrate)?
             .unwrap_or_default();
 
@@ -104,14 +104,14 @@ impl PersistedWindow {
     }
 }
 
-impl App for PersistedWindow {
+impl App for PersistWindow {
     fn render(&self) -> impl IntoElement {
         let title = self.title;
         let mut station = use_init_radio_station::<AppState, SettingsChannel>(|| AppState {
             settings: self.settings.clone(),
             count: 0,
         });
-        let persisted = use_hook(|| Persisted::new(self.transport.clone(), PersistedJson));
+        let persisted = use_hook(|| Persist::new(self.transport.clone(), PersistJson));
 
         use_side_effect({
             let persisted = persisted.clone();
@@ -193,11 +193,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     launch(
         LaunchConfig::new()
             .with_window(
-                WindowConfig::new_app(PersistedWindow::open("Window 1", "window-1.json")?)
+                WindowConfig::new_app(PersistWindow::open("Window 1", "window-1.json")?)
                     .with_title("Window 1"),
             )
             .with_window(
-                WindowConfig::new_app(PersistedWindow::open("Window 2", "window-2.json")?)
+                WindowConfig::new_app(PersistWindow::open("Window 2", "window-2.json")?)
                     .with_title("Window 2"),
             ),
     );

@@ -21,7 +21,7 @@ Important notes:
 - **Markdown**: Render Markdown documents with the `MarkdownViewer` component available in `freya-markdown`.
 - **Cross-platform**: Your app will render and behave the same in Windows, Linux and MacOS.
 - **Efficient Global State**: Efficiently manage a global state based on topics subscription using `freya-radio`.
-- **State Persistence**: Save and reload State and Radio data using `freya-persisted`, with custom storage and formats, optional local files, JSON, migrations and file watching.
+- **State Persistence**: Save and reload State and Radio data using `freya-persist`, with custom storage and formats, optional local files, JSON, migrations and file watching.
 - **Icons**: Easily add icons to your app using `freya-icons`, currently only supports Lucide.
 - **Devtools**: Inspect your app UI tree to to debug, or see performance state.
 - **Routing**: Manage your app UI in separate routes using `freya-router`.

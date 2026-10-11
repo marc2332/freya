@@ -4,14 +4,14 @@ use freya_radio::prelude::{
 };
 
 use crate::{
-    Persisted,
+    Persist,
     PersistenceError,
     PersistenceFormat,
     PersistenceMigrationError,
     PersistenceTransport,
 };
 
-pub trait PersistedRadioExt<Stored> {
+pub trait PersistRadioExt<Stored> {
     type TransportError: std::error::Error + 'static;
     type FormatError: std::error::Error + 'static;
     type Raw;
@@ -50,7 +50,7 @@ pub trait PersistedRadioExt<Stored> {
         MigrationError: std::error::Error + 'static;
 }
 
-impl<Stored, Transport, Format> PersistedRadioExt<Stored> for Persisted<Transport, Format>
+impl<Stored, Transport, Format> PersistRadioExt<Stored> for Persist<Transport, Format>
 where
     Transport: PersistenceTransport,
     Format: PersistenceFormat<Stored>,

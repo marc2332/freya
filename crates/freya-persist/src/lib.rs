@@ -1,14 +1,14 @@
 //! Synchronous state persistence with pluggable storage and encoding.
 //!
-//! [`Persisted`] combines a [`PersistenceTransport`] for bytes with a [`PersistenceFormat`]
+//! [`Persist`] combines a [`PersistenceTransport`] for bytes with a [`PersistenceFormat`]
 //! for values. Custom transports and formats work without filesystem access or Serde.
 //!
 //! # Features
 //!
-//! No features are enabled by default. Freya exposes them as `persisted-*` through `freya::persisted`.
+//! No features are enabled by default. Freya exposes them as `persist-*` through `freya::persist`.
 //!
-//! - `fs`: `PersistedLocal` stores files at an explicit path or in the OS config directory.
-//! - `json`: `PersistedJson` encodes types implementing Serde's serialize and deserialize traits.
+//! - `fs`: `PersistLocal` stores files at an explicit path or in the OS config directory.
+//! - `json`: `PersistJson` encodes types implementing Serde's serialize and deserialize traits.
 //! - `fs-watch`: file change notifications, including creation and atomic replacement.
 //! - `radio`: save selected Radio state and merge reloads with channel notifications.
 //!
@@ -17,16 +17,16 @@
 //! ```rust,no_run
 //! # #[cfg(all(feature = "fs", feature = "json"))]
 //! fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     use freya_persisted::prelude::*;
+//!     use freya_persist::prelude::*;
 //!
 //!     #[derive(Default, serde::Deserialize, serde::Serialize)]
 //!     struct Settings {
 //!         dark_mode: bool,
 //!     }
 //!
-//!     let persisted = Persisted::new(
-//!         PersistedLocal::for_app("my-app", "settings.json")?,
-//!         PersistedJson,
+//!     let persisted = Persist::new(
+//!         PersistLocal::for_app("my-app", "settings.json")?,
+//!         PersistJson,
 //!     );
 //!     let mut settings: Settings = persisted.load()?.unwrap_or_default();
 //!     settings.dark_mode = true;
@@ -38,14 +38,14 @@
 //! ```
 //!
 //! Missing data returns `None`. Storage and decoding failures return errors.
-//! Local writes create parent directories and atomically replace files. Use `PersistedLocal::new` for custom paths.
+//! Local writes create parent directories and atomically replace files. Use `PersistLocal::new` for custom paths.
 //!
-//! [`PersistedStateExt`] adds `save_state(&state)` and `reload_state(&mut state)` for `State<T>` and `Writable<T>`.
+//! [`PersistStateExt`] adds `save_state(&state)` and `reload_state(&mut state)` for `State<T>` and `Writable<T>`.
 //! `load_migrated` transforms raw data before decoding without writing it back. Save explicitly to persist a migration.
 //!
 //! # Radio and file watching
 //!
-//! With `radio`, `PersistedRadioExt::save_radio(station, to)` borrows selected data through `to`.
+//! With `radio`, `PersistRadioExt::save_radio(station, to)` borrows selected data through `to`.
 //! `reload_radio(station, from)` merges decoded data and returns the channel selected by `from`, or `None` for silence.
 //!
 //! Missing data returns `None`, and failed loads leave state unchanged. Use `reload_radio_migrated` for migrations.
@@ -54,7 +54,7 @@
 //! Change state through Radio. For autosaving, subscribe an effect to a dedicated save channel with `read_channel`.
 //! Use `derive_channel` to notify UI subscribers on reload without triggering another save.
 //!
-//! `PersistedLocal::watch` coalesces pending file notifications without loading data.
+//! `PersistLocal::watch` coalesces pending file notifications without loading data.
 //! Receive events and reload explicitly. Dropping the watcher stops watching.
 //!
 //! Examples: [application-wide persistence](https://github.com/marc2332/freya/blob/main/examples/state_persisted.rs)
@@ -62,22 +62,22 @@
 
 mod error;
 mod format;
-mod persisted;
+mod persist;
 mod state;
 mod transport;
 
 pub mod prelude {
     #[cfg(feature = "json")]
-    pub use crate::PersistedJson;
+    pub use crate::PersistJson;
     #[cfg(feature = "fs")]
-    pub use crate::PersistedLocal;
+    pub use crate::PersistLocal;
     #[cfg(feature = "fs-watch")]
-    pub use crate::PersistedLocalWatcher;
+    pub use crate::PersistLocalWatcher;
     #[cfg(feature = "radio")]
-    pub use crate::PersistedRadioExt;
+    pub use crate::PersistRadioExt;
     pub use crate::{
-        Persisted,
-        PersistedStateExt,
+        Persist,
+        PersistStateExt,
         PersistenceError,
         PersistenceFormat,
         PersistenceMigrationError,
@@ -91,27 +91,27 @@ pub use crate::{
         PersistenceMigrationError,
     },
     format::PersistenceFormat,
-    persisted::Persisted,
-    state::PersistedStateExt,
+    persist::Persist,
+    state::PersistStateExt,
     transport::PersistenceTransport,
 };
 
 #[cfg(feature = "fs")]
 mod fs;
 #[cfg(feature = "fs")]
-pub use crate::fs::PersistedLocal;
+pub use crate::fs::PersistLocal;
 
 #[cfg(feature = "json")]
 mod json;
 #[cfg(feature = "json")]
-pub use crate::json::PersistedJson;
+pub use crate::json::PersistJson;
 
 #[cfg(feature = "radio")]
 mod radio;
 #[cfg(feature = "radio")]
-pub use crate::radio::PersistedRadioExt;
+pub use crate::radio::PersistRadioExt;
 
 #[cfg(feature = "fs-watch")]
 mod watch;
 #[cfg(feature = "fs-watch")]
-pub use crate::watch::PersistedLocalWatcher;
+pub use crate::watch::PersistLocalWatcher;

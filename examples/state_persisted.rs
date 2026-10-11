@@ -4,7 +4,7 @@
 )]
 
 use freya::{
-    persisted::*,
+    persist::*,
     prelude::*,
     radio::*,
 };
@@ -94,12 +94,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .init();
 
     // Create a local persist transport
-    let transport = PersistedLocal::for_app("freya-persisted-example", "settings.json")?;
+    let transport = PersistLocal::for_app("freya-persist-example", "settings.json")?;
     tracing::info!(path = %transport.path().display(), "Opening configuration");
     let events = transport.watch()?;
 
     // Create a persist with the local transport and json format
-    let persisted = Persisted::new(transport, PersistedJson);
+    let persisted = Persist::new(transport, PersistJson);
 
     // Load the current persist data and migrate it if needed
     let settings = persisted

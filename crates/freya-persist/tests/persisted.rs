@@ -6,13 +6,13 @@ use std::{
 };
 
 use freya_core::prelude::*;
-use freya_persisted::prelude::*;
+use freya_persist::prelude::*;
 
 #[test]
 fn save_and_load() {
     let directory = tempfile::tempdir().unwrap();
-    let transport = PersistedLocal::new(directory.path().join("nested/settings.json"));
-    let persisted = Persisted::new(transport.clone(), PersistedJson);
+    let transport = PersistLocal::new(directory.path().join("nested/settings.json"));
+    let persisted = Persist::new(transport.clone(), PersistJson);
     assert_eq!(persisted.load::<u32>().unwrap(), None);
 
     persisted.save(&1u32).unwrap();
@@ -27,7 +27,7 @@ fn save_and_load() {
 fn save_and_reload_state() {
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("settings.json");
-    let persisted = Persisted::new(PersistedLocal::new(&path), PersistedJson);
+    let persisted = Persist::new(PersistLocal::new(&path), PersistJson);
     let mut state = State::create_global(1u32);
     assert!(!persisted.reload_state(&mut state).unwrap());
 
@@ -52,7 +52,7 @@ fn migration_decodes_legacy_data_without_overwriting_it() {
     let path = directory.path().join("settings.json");
     let legacy = br#"{"step":3}"#;
     fs::write(&path, legacy).unwrap();
-    let persisted = Persisted::new(PersistedLocal::new(&path), PersistedJson);
+    let persisted = Persist::new(PersistLocal::new(&path), PersistJson);
 
     assert!(persisted.load::<u32>().is_err());
     assert_eq!(

@@ -6,12 +6,12 @@ use crate::{
 };
 
 #[derive(Clone)]
-pub struct Persisted<Transport, Format> {
+pub struct Persist<Transport, Format> {
     transport: Transport,
     format: Format,
 }
 
-impl<Transport: PersistenceTransport, Format> Persisted<Transport, Format> {
+impl<Transport: PersistenceTransport, Format> Persist<Transport, Format> {
     pub fn new(transport: Transport, format: Format) -> Self {
         Self { transport, format }
     }
@@ -50,7 +50,7 @@ impl<Transport: PersistenceTransport, Format> Persisted<Transport, Format> {
             .decode_value(raw)
             .map(Some)
             .map_err(PersistenceError::Format)
-            .map_err(PersistenceMigrationError::Persisted)
+            .map_err(PersistenceMigrationError::Persist)
     }
 
     /// Encode and save a value without requiring reactive state.

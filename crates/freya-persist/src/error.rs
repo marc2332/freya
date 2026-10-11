@@ -9,7 +9,7 @@ pub enum PersistenceError<TransportError, FormatError> {
 #[derive(Debug, thiserror::Error)]
 pub enum PersistenceMigrationError<TransportError, FormatError, MigrationError> {
     #[error(transparent)]
-    Persisted(#[from] PersistenceError<TransportError, FormatError>),
+    Persist(#[from] PersistenceError<TransportError, FormatError>),
     #[error("persistence migration failed: {0}")]
     Migration(#[source] MigrationError),
 }
