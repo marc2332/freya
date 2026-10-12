@@ -6,7 +6,7 @@ use freya_engine::prelude::{
 use freya_testing::prelude::*;
 
 #[test]
-pub fn basic_render() {
+pub fn basic_painting() {
     fn app() -> impl IntoElement {
         let mut show_popup = use_state(|| true);
 
@@ -35,7 +35,7 @@ pub fn basic_render() {
     assert!(!data.is_empty());
 }
 
-fn render_filled_text(fill: Fill, left_padding: f32) -> SkImage {
+fn paint_filled_text(fill: Fill, left_padding: f32) -> SkImage {
     let mut test = launch_test(move || {
         rect()
             .width(Size::px(400.))
@@ -61,7 +61,7 @@ fn render_filled_text(fill: Fill, left_padding: f32) -> SkImage {
 #[test]
 pub fn gradient_text_is_not_clipped() {
     fn dark_column_bounds(fill: Fill) -> (i32, i32) {
-        let image = render_filled_text(fill, 0.);
+        let image = paint_filled_text(fill, 0.);
         let pixels = image.peek_pixels().unwrap();
         let dark: Vec<i32> = (0..pixels.width())
             .filter(|&x| (0..pixels.height()).any(|y| pixels.get_color((x, y)).r() < 128))
@@ -156,8 +156,8 @@ pub fn gradient_text_follows_the_paragraph() {
         .stop((Color::WHITE, 100.))
         .into();
 
-    let origin_image = render_filled_text(fill.clone(), 0.);
-    let moved_image = render_filled_text(fill, offset as f32);
+    let origin_image = paint_filled_text(fill.clone(), 0.);
+    let moved_image = paint_filled_text(fill, offset as f32);
     let origin = origin_image.peek_pixels().unwrap();
     let moved = moved_image.peek_pixels().unwrap();
 
@@ -179,7 +179,7 @@ pub fn gradient_text_follows_the_paragraph() {
             )
         })
         .max()
-        .expect("no text pixels rendered");
+        .expect("no text pixels painted");
 
     assert!(
         biggest_difference <= 4,
@@ -188,7 +188,7 @@ pub fn gradient_text_follows_the_paragraph() {
 }
 
 #[test]
-pub fn overlapping_same_layer_siblings_render_deterministically() {
+pub fn overlapping_same_layer_siblings_paint_deterministically() {
     fn app() -> impl IntoElement {
         rect()
             .child(

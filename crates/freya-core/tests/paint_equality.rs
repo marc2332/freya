@@ -33,7 +33,7 @@ impl EqualityTest {
             .count();
         assert!(
             differing == 0,
-            "Incremental and full renders diverged in {differing} pixels"
+            "Incremental and full painting diverged in {differing} pixels"
         );
     }
 }
