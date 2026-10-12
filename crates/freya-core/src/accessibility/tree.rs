@@ -153,7 +153,7 @@ impl AccessibilityTree {
         TreeUpdate {
             tree_id: TreeId::ROOT,
             nodes,
-            tree: Some(accesskit::Tree::new(ACCESSIBILITY_ROOT_ID)),
+            tree: Some(accesskit::TreeInfo::new(ACCESSIBILITY_ROOT_ID)),
             focus: self.focused_id,
         }
     }
@@ -232,7 +232,7 @@ impl AccessibilityTree {
         TreeUpdate {
             tree_id: TreeId::ROOT,
             nodes,
-            tree: Some(accesskit::Tree::new(ACCESSIBILITY_ROOT_ID)),
+            tree: Some(accesskit::TreeInfo::new(ACCESSIBILITY_ROOT_ID)),
             focus: self.focused_id,
         }
     }

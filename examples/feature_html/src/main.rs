@@ -43,6 +43,11 @@ const HTML: &str = r#"
       button:active, .button:active {
         background: #a02036;
       }
+      form {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
       input[type="text"] {
         padding: 10px;
         border: 1px solid #c5c5d2;
