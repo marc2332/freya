@@ -1,12 +1,27 @@
-use std::{
-    fmt::Debug,
-    hash::Hash,
+use alloc::{
+    boxed::Box,
+    format,
     rc::Rc,
+    string::{
+        String,
+        ToString,
+    },
+};
+use core::{
+    fmt::{
+        self,
+        Debug,
+    },
+    hash::{
+        Hash,
+        Hasher,
+    },
 };
 
 pub use euclid::Rect;
 
 use crate::{
+    collections::DefaultHasher,
     geometry::Length,
     measure::Phase,
     scaled::Scaled,
@@ -48,7 +63,7 @@ impl<'de> Deserialize<'de> for SizeFn {
         impl Visitor<'_> for FnVisitor {
             type Value = SizeFn;
 
-            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                 formatter.write_str("\"Fn\"")
             }
 
@@ -77,8 +92,7 @@ impl SizeFn {
         func: impl Fn(SizeFnContext) -> Option<f32> + 'static,
         data: &D,
     ) -> Self {
-        use std::hash::Hasher;
-        let mut hasher = std::hash::DefaultHasher::default();
+        let mut hasher = DefaultHasher::default();
         data.hash(&mut hasher);
         Self(Rc::new(func), hasher.finish())
     }
@@ -89,7 +103,7 @@ impl SizeFn {
 }
 
 impl Debug for SizeFn {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("SizeFn")
     }
 }
