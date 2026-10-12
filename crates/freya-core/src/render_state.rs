@@ -38,6 +38,7 @@ impl RenderState {
             return;
         }
         self.damage.push(area);
+        // Refresh intersecting recordings, including unbounded ones, without expanding damage to their full bounds.
         self.area_invalidated
             .extend(self.cache.iter().filter_map(|(node_id, recording)| {
                 recording

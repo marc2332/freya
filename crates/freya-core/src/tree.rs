@@ -132,11 +132,10 @@ impl Tree {
         self.layout_nodes
             .insert(node_id, Self::scaled_layout_node(&element, scale_factor));
 
-        let volatile = &mut self.render_state.volatile;
         if element.is_render_volatile() {
-            volatile.insert(node_id);
+            self.render_state.volatile.insert(node_id);
         } else {
-            volatile.remove(&node_id);
+            self.render_state.volatile.remove(&node_id);
         }
 
         self.elements.insert(node_id, element);
