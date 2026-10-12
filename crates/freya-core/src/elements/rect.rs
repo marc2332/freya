@@ -509,7 +509,9 @@ impl ElementExt for RectElement {
             let text_style_state = context.text_style_state.clone();
             let size = area.size / scale_factor;
             context.recorder.save();
-            context.recorder.clip_path(path.clone(), ClipOp::Intersect, true);
+            context
+                .recorder
+                .clip_path(path.clone(), ClipOp::Intersect, true);
             context.recorder.translate(area.min_x(), area.min_y());
             context.recorder.scale(scale_factor, scale_factor);
             context.recorder.custom(
