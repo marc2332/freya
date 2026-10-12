@@ -350,13 +350,13 @@ impl ImageViewer {
 }
 
 impl KeyExt for ImageViewer {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl LayoutExt for ImageViewer {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
@@ -366,25 +366,25 @@ impl ContainerWithContentExt for ImageViewer {}
 impl ContainerPositionExt for ImageViewer {}
 
 impl ImageExt for ImageViewer {
-    fn get_image_data(&mut self) -> &mut ImageData {
+    fn image_data_mut(&mut self) -> &mut ImageData {
         &mut self.image_data
     }
 }
 
 impl AccessibilityExt for ImageViewer {
-    fn get_accessibility_data(&mut self) -> &mut AccessibilityData {
+    fn accessibility_data_mut(&mut self) -> &mut AccessibilityData {
         &mut self.accessibility
     }
 }
 
 impl ChildrenExt for ImageViewer {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
 impl EffectExt for ImageViewer {
-    fn get_effect(&mut self) -> &mut EffectData {
+    fn effect_mut(&mut self) -> &mut EffectData {
         &mut self.effect
     }
 }
@@ -392,7 +392,7 @@ impl EffectExt for ImageViewer {
 impl DecorationExt for ImageViewer {}
 
 impl StyleExt for ImageViewer {
-    fn get_style(&mut self) -> &mut StyleState {
+    fn style_mut(&mut self) -> &mut StyleState {
         &mut self.style
     }
 }

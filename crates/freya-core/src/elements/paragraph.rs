@@ -954,13 +954,13 @@ impl ParagraphPaintExt for SkParagraph {
 }
 
 impl KeyExt for Paragraph {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl EventHandlersExt for Paragraph {
-    fn get_event_handlers(&mut self) -> &mut EventHandlers {
+    fn event_handlers_mut(&mut self) -> &mut EventHandlers {
         &mut self.element.event_handlers
     }
 }
@@ -968,7 +968,7 @@ impl EventHandlersExt for Paragraph {
 impl MaybeExt for Paragraph {}
 
 impl LayerExt for Paragraph {
-    fn get_layer(&mut self) -> &mut Layer {
+    fn layer_mut(&mut self) -> &mut Layer {
         &mut self.element.relative_layer
     }
 }
@@ -981,7 +981,7 @@ pub struct Paragraph {
 }
 
 impl LayoutExt for Paragraph {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.element.layout
     }
 }
@@ -991,7 +991,7 @@ impl ContainerExt for Paragraph {}
 /// Children added to a [Paragraph] flow inline at the point they were added, each laid out at
 /// its own measured size, so give them an explicit `width` and `height`.
 impl ChildrenExt for Paragraph {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 
@@ -1016,19 +1016,19 @@ impl ChildrenExt for Paragraph {
 }
 
 impl AccessibilityExt for Paragraph {
-    fn get_accessibility_data(&mut self) -> &mut AccessibilityData {
+    fn accessibility_data_mut(&mut self) -> &mut AccessibilityData {
         &mut self.element.accessibility
     }
 }
 
 impl TextStyleExt for Paragraph {
-    fn get_text_style_data(&mut self) -> &mut TextStyleData {
+    fn text_style_data_mut(&mut self) -> &mut TextStyleData {
         &mut self.element.text_style_data
     }
 }
 
 impl EffectExt for Paragraph {
-    fn get_effect(&mut self) -> &mut EffectData {
+    fn effect_mut(&mut self) -> &mut EffectData {
         self.element.effect.get_or_insert_with(EffectData::default)
     }
 }
@@ -1177,7 +1177,7 @@ impl<'a> Span<'a> {
 }
 
 impl<'a> TextStyleExt for Span<'a> {
-    fn get_text_style_data(&mut self) -> &mut TextStyleData {
+    fn text_style_data_mut(&mut self) -> &mut TextStyleData {
         &mut self.text_style_data
     }
 }

@@ -32,13 +32,13 @@ pub struct SelectableText {
 }
 
 impl KeyExt for SelectableText {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl LayoutExt for SelectableText {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
@@ -46,25 +46,25 @@ impl LayoutExt for SelectableText {
 impl ContainerExt for SelectableText {}
 
 impl AccessibilityExt for SelectableText {
-    fn get_accessibility_data(&mut self) -> &mut AccessibilityData {
+    fn accessibility_data_mut(&mut self) -> &mut AccessibilityData {
         &mut self.accessibility
     }
 }
 
 impl TextStyleExt for SelectableText {
-    fn get_text_style_data(&mut self) -> &mut TextStyleData {
+    fn text_style_data_mut(&mut self) -> &mut TextStyleData {
         &mut self.text_style_data
     }
 }
 
 impl EventHandlersExt for SelectableText {
-    fn get_event_handlers(&mut self) -> &mut EventHandlers {
+    fn event_handlers_mut(&mut self) -> &mut EventHandlers {
         &mut self.event_handlers
     }
 }
 
 impl LayerExt for SelectableText {
-    fn get_layer(&mut self) -> &mut Layer {
+    fn layer_mut(&mut self) -> &mut Layer {
         &mut self.layer
     }
 }
