@@ -38,9 +38,9 @@ pub type WindowHandleHook = Box<dyn FnOnce(&mut Window)>;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum GpuPreference {
     /// Prefer an integrated GPU.
-    #[default]
     PreferIntegrated,
     /// Prefer a discrete GPU.
+    #[default]
     PreferDiscrete,
 }
 

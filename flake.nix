@@ -61,7 +61,7 @@
       };
     nixGL = pkgs.lib.callPackageWith nixGLPkgs (nixgl.outPath + "/nixGL.nix") {};
     rust = rust-overlay.lib.mkRustBin {} pkgs;
-    stableRust = rust.stable."1.97.1".default.override {
+    stableRust = rust.stable."1.99.0".default.override {
       extensions = ["rust-src" "rust-analyzer"];
       targets = ["wasm32-unknown-emscripten"];
     };

@@ -50,6 +50,7 @@ fn main() -> io::Result<()> {
 
 fn app() -> impl IntoElement {
     let platform = Platform::get();
+    let window = platform.current_window();
     let window_id = Platform::window_id();
     let screenshot = std::env::var_os("FREYA_SMOKE_SCREENSHOT")
         .map(PathBuf::from)
@@ -61,7 +62,7 @@ fn app() -> impl IntoElement {
         spawn(async move {
             timer(Duration::from_secs(10)).await;
 
-            let screenshot = platform
+            let screenshot = window
                 .post_render_callback(move |surface| {
                     let png = surface
                         .image_snapshot()

@@ -1177,7 +1177,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     if !app.dropped_file_paths.is_empty() {
                         platform_events.push(PlatformEvent::File {
                             name: FileEventName::FileDrop,
-                            file_paths: app.dropped_file_paths.drain(..).collect(),
+                            file_paths: std::mem::take(&mut app.dropped_file_paths),
                             cursor: app.position,
                         });
                     }
