@@ -43,13 +43,13 @@ jobs:
           HOTPATH_OUTPUT_FORMAT: ${{ github.event_name == 'push' && 'none' || 'json' }}
           HOTPATH_OUTPUT_PATH: ${{ github.workspace }}/core.json
         run: just pc-ci
-      - name: Render benchmarks
+      - name: Painting benchmarks
         env:
-          HOTPATH_BENCHMARK: render
+          HOTPATH_BENCHMARK: painting
           HOTPATH_UPLOAD: ${{ github.event_name == 'push' && 'fail-on-error' || '0' }}
           HOTPATH_OUTPUT_FORMAT: ${{ github.event_name == 'push' && 'none' || 'json' }}
-          HOTPATH_OUTPUT_PATH: ${{ github.workspace }}/render.json
-        run: just pr-ci
+          HOTPATH_OUTPUT_PATH: ${{ github.workspace }}/painting.json
+        run: just pp-ci
       - name: Upload dev report
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
@@ -66,11 +66,11 @@ jobs:
           path: core.json
           retention-days: 1
           if-no-files-found: error
-      - name: Upload render report
+      - name: Upload painting report
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: hotpath-render
-          path: render.json
+          name: hotpath-painting
+          path: painting.json
           retention-days: 1
           if-no-files-found: error
