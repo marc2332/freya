@@ -153,6 +153,7 @@ pub mod prelude {
             render_callback::{
                 RenderCallback,
                 RenderContext as FillRenderContext,
+                RenderTarget,
             },
             scale::*,
             shader::*,
