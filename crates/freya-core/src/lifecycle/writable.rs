@@ -179,6 +179,12 @@ pub trait IntoWritable<T: 'static> {
     fn into_writable(self) -> Writable<T>;
 }
 
+impl<T: 'static> IntoWritable<T> for Writable<T> {
+    fn into_writable(self) -> Writable<T> {
+        self
+    }
+}
+
 impl<T: 'static> IntoWritable<T> for State<T> {
     fn into_writable(self) -> Writable<T> {
         Writable::from_state(self)

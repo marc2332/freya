@@ -214,6 +214,7 @@ impl Component for ButtonSegment {
 
         rect()
             .a11y_id(a11y_id)
+            .a11y_enabled(self.enabled)
             .a11y_focusable(self.enabled)
             .a11y_role(AccessibilityRole::Button)
             .maybe(self.enabled, |rect| rect.on_press(on_press))

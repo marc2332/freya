@@ -12,9 +12,10 @@ const formattedDate = new Date(frontmatter.date).toLocaleString().split(",")[0];
     url={`/posts/${frontmatter.slug}`}
     type="article"
     image={frontmatter.image}
+    stickyNavbar={false}
 >
     <div class="flex">
-        <article class="sm:w-3/4 sm:px-8 px-2 w-full">
+        <article class="sm:w-3/4 sm:px-8 px-2 w-full max-w-[78ch]">
             <h1>{frontmatter.title}</h1>
             <i>{formattedDate} - {frontmatter.author}</i>
             <slot />
@@ -66,8 +67,52 @@ const formattedDate = new Date(frontmatter.date).toLocaleString().split(",")[0];
         padding: 2px 4px;
     }
 
-    p {
-        margin: 16px 0px;
+    article p {
+        max-width: 72ch;
+        margin: 1.25rem 0;
+        line-height: 1.8;
+        color: rgb(214, 211, 209);
+    }
+
+    article a {
+        color: rgb(167, 139, 250);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+    }
+
+    article a:hover {
+        color: white;
+    }
+
+    article img {
+        max-width: 100%;
+        height: auto;
+        margin: 2rem auto;
+        border: 1px solid rgb(68, 64, 60);
+        border-radius: 0.75rem;
+    }
+
+    article blockquote {
+        margin: 1.5rem 0;
+        padding: 0.75rem 1.25rem;
+        color: rgb(168, 162, 158);
+        background: rgba(19, 19, 21, 0.7);
+    }
+
+    article ul,
+    article ol {
+        padding-left: 1.5rem;
+    }
+
+    article li {
+        margin: 0.5rem 0;
+    }
+
+    article pre {
+        overflow-x: auto;
+        margin: 1.5rem 0;
+        border: 1px solid rgb(68, 64, 60);
+        border-radius: 0.75rem;
     }
 
     h1 {
@@ -108,7 +153,7 @@ const formattedDate = new Date(frontmatter.date).toLocaleString().split(",")[0];
     img, video {
         margin: 0 auto;
     }
-    
+
     blockquote {
         padding: 10px;
         background: rgb(50, 50, 50);

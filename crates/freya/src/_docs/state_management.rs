@@ -224,45 +224,32 @@
 //! impl RadioChannel<AppState> for AppChannel {}
 //!
 //! fn main() {
-//!     let radio_station = RadioStation::create_global(AppState::default());
+//!     let radio_station =
+//!         RadioStation::<AppState, AppChannel>::create_global(AppState::default());
 //!
 //!     launch(
 //!         LaunchConfig::new()
-//!             .with_window(WindowConfig::new_app(Window1 { radio_station }))
-//!             .with_window(WindowConfig::new_app(Window2 { radio_station })),
+//!             .with_window(WindowConfig::new(window1).with_root_context(radio_station))
+//!             .with_window(WindowConfig::new(window2).with_root_context(radio_station)),
 //!     );
 //! }
 //!
-//! struct Window1 {
-//!     radio_station: RadioStation<AppState, AppChannel>,
+//! fn window1() -> impl IntoElement {
+//!     let mut radio = use_radio(AppChannel::Count);
+//!
+//!     rect()
+//!         .child(format!("Window 1: {}", radio.read().count))
+//!         .child(
+//!             Button::new()
+//!                 .on_press(move |_| radio.write().count += 1)
+//!                 .child("+"),
+//!         )
 //! }
 //!
-//! impl App for Window1 {
-//!     fn render(&self) -> impl IntoElement {
-//!         use_share_radio(move || self.radio_station);
-//!         let mut radio = use_radio(AppChannel::Count);
+//! fn window2() -> impl IntoElement {
+//!     let radio = use_radio(AppChannel::Count);
 //!
-//!         rect()
-//!             .child(format!("Window 1: {}", radio.read().count))
-//!             .child(
-//!                 Button::new()
-//!                     .on_press(move |_| radio.write().count += 1)
-//!                     .child("+"),
-//!             )
-//!     }
-//! }
-//!
-//! struct Window2 {
-//!     radio_station: RadioStation<AppState, AppChannel>,
-//! }
-//!
-//! impl App for Window2 {
-//!     fn render(&self) -> impl IntoElement {
-//!         use_share_radio(move || self.radio_station);
-//!         let radio = use_radio(AppChannel::Count);
-//!
-//!         rect().child(format!("Window 2: {}", radio.read().count))
-//!     }
+//!     rect().child(format!("Window 2: {}", radio.read().count))
 //! }
 //! ```
 //!

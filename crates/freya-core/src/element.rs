@@ -40,6 +40,7 @@ use crate::{
     event_handler::EventHandler,
     events::{
         data::{
+            AccessibilityActionEventData,
             Event,
             KeyboardEventData,
             MouseEventData,
@@ -485,6 +486,7 @@ pub type EventHandlers = FxHashMap<EventName, EventHandlerType>;
 
 #[derive(Clone, PartialEq)]
 pub enum EventHandlerType {
+    AccessibilityAction(EventHandler<Event<AccessibilityActionEventData>>),
     Mouse(EventHandler<Event<MouseEventData>>),
     Keyboard(EventHandler<Event<KeyboardEventData>>),
     Sized(EventHandler<Event<SizedEventData>>),

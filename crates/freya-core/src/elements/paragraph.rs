@@ -80,9 +80,12 @@ use crate::{
         TextStyleExt,
         VerticalAlign,
     },
-    style::cursor::{
-        CursorMode,
-        CursorStyle,
+    style::{
+        cursor::{
+            CursorMode,
+            CursorStyle,
+        },
+        render_callback::RenderContext as FillRenderContext,
     },
     text_cache::CachedParagraph,
     tree::DiffModifies,
@@ -565,10 +568,24 @@ impl ElementExt for ParagraphElement {
         }
 
         // Draw text
-        paragraph.paint_at(
-            context.canvas,
-            Point2D::new(inner_area.min_x(), inner_area.min_y() + vertical_offset).cast_unit(),
-        );
+        let origin = Point2D::new(inner_area.min_x(), inner_area.min_y() + vertical_offset);
+        paragraph.paint_at(context.canvas, origin.cast_unit());
+
+        if let Some(callback) = context.text_style_state.color.render_callback() {
+            let layer = context.canvas.save();
+            context.canvas.translate(origin.to_tuple());
+            context
+                .canvas
+                .scale((context.scale_factor as f32, context.scale_factor as f32));
+            callback.call(&mut FillRenderContext {
+                canvas: context.canvas,
+                font_collection: context.font_collection,
+                origin: origin / context.scale_factor as f32,
+                size: paragraph.fill_area().size / context.scale_factor as f32,
+                text_style_state: context.text_style_state,
+            });
+            context.canvas.restore_to_count(layer);
+        }
 
         // Draw cursor
         if let Some(cursor_index) = self.cursor_index

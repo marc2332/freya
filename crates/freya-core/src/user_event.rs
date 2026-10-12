@@ -9,25 +9,25 @@ use bytes::Bytes;
 use crate::prelude::AccessibilityFocusStrategy;
 
 #[derive(Debug)]
-pub enum UserEvent {
-    RequestRedraw,
-
-    /// Focus with the given strategy
-    FocusAccessibilityNode(AccessibilityFocusStrategy),
-
-    /// Open an url with whatever the platform uses to browse the web.
+pub enum GlobalUserEvent {
+    /// Open a URL with the system's default browser.
     OpenUrl(String),
-
-    /// Set a custom scale factor.
-    SetCustomScaleFactor(f64),
-
     /// Load a font at runtime.
     LoadFont {
         font_name: Cow<'static, str>,
         font_data: Bytes,
     },
-
+    Exit,
     Erased(SingleThreadErasedEvent),
+}
+
+#[derive(Debug)]
+pub enum UserEvent {
+    RequestRedraw,
+    /// Focus with the given strategy.
+    FocusAccessibilityNode(AccessibilityFocusStrategy),
+    /// Set a custom scale factor.
+    SetCustomScaleFactor(f64),
 }
 
 pub struct SingleThreadErasedEvent(pub Box<dyn Any>);

@@ -92,7 +92,7 @@
 //!
 //!     launch(
 //!         LaunchConfig::new()
-//!             .with_future(move |_| async move {
+//!             .with_task(move |_| async move {
 //!                 let mut interval = tokio::time::interval(Duration::from_secs(1));
 //!                 interval.tick().await;
 //!                 let mut i = 0;

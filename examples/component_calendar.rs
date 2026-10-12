@@ -11,19 +11,70 @@ fn main() {
 fn app() -> impl IntoElement {
     let mut selected = use_state(|| None::<CalendarDate>);
     let mut view_date = use_state(CalendarDate::now);
+    let month = CalendarMonth::new(view_date(), selected(), WeekStart::Monday);
 
     rect()
         .expanded()
         .center()
-        .child(
-            rect().height(Size::px(325.)).child(
-                Calendar::new()
-                    .selected(selected())
-                    .view_date(view_date())
-                    .on_change(move |date| selected.set(Some(date)))
-                    .on_view_change(move |date| view_date.set(date)),
-            ),
-        )
+        .map(month, |el, month| {
+            let title = format!("{:02}/{}", month.first_day.month, month.first_day.year);
+            let previous_month = month.previous_month;
+            let next_month = month.next_month;
+
+            el.child(
+                rect()
+                    .width(Size::px(250.))
+                    .child(
+                        rect()
+                            .horizontal()
+                            .content(Content::flex())
+                            .width(Size::fill())
+                            .child(
+                                Button::new()
+                                    .flat()
+                                    .on_press(move |_| view_date.set(previous_month))
+                                    .child("‹"),
+                            )
+                            .child(
+                                label()
+                                    .width(Size::flex(1.))
+                                    .text_align(TextAlign::Center)
+                                    .text(title),
+                            )
+                            .child(
+                                Button::new()
+                                    .flat()
+                                    .on_press(move |_| view_date.set(next_month))
+                                    .child("›"),
+                            ),
+                    )
+                    .child(
+                        rect().horizontal().content(Content::wrap()).children(
+                            ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+                                .into_iter()
+                                .map(|name| {
+                                    rect()
+                                        .width(Size::px(35.))
+                                        .height(Size::px(36.))
+                                        .center()
+                                        .child(name)
+                                }),
+                        ),
+                    )
+                    .child(CalendarGrid::new(month, move |day| {
+                        Button::new()
+                            .flat()
+                            .padding(0.)
+                            .enabled(day.in_month)
+                            .width(Size::px(35.))
+                            .height(Size::px(36.))
+                            .maybe(day.selected, |el| el.filled())
+                            .on_press(move |_| selected.set(Some(day.date)))
+                            .child(day.date.day.to_string())
+                            .into()
+                    })),
+            )
+        })
         .child(match selected() {
             Some(date) => format!("Selected: {}/{}/{}", date.day, date.month, date.year),
             None => "No date selected".to_string(),

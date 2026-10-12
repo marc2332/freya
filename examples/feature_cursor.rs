@@ -30,4 +30,12 @@ fn app() -> impl IntoElement {
                 .cursor(CursorIcon::Grab)
                 .child("Or me!"),
         )
+        .child(
+            rect()
+                .padding((8., 16.))
+                .corner_radius(8.)
+                .background((233, 233, 233))
+                .cursor_visible(false)
+                .child("Hover me to hide the cursor!"),
+        )
 }

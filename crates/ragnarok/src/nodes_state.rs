@@ -1,7 +1,4 @@
-use rustc_hash::{
-    FxHashMap,
-    FxHashSet,
-};
+use alloc::vec::Vec;
 
 use crate::{
     EmmitableEvent,
@@ -10,6 +7,10 @@ use crate::{
     NodeKey,
     PotentialEvent,
     SourceEvent,
+    collections::{
+        FxHashMap,
+        FxHashSet,
+    },
 };
 
 /// [`NodesState`] stores the nodes states given incoming events.

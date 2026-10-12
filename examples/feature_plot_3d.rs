@@ -32,7 +32,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn on_render(ctx: &mut CanvasContext, (cursor_x, cursor_y): (f64, f64)) {
+fn on_render(ctx: &mut FillRenderContext, (cursor_x, cursor_y): (f64, f64)) {
     let width = ctx.size.width as f64;
     let height = ctx.size.height as f64;
 
@@ -109,14 +109,15 @@ fn app() -> impl IntoElement {
         // Dont move when the cursor goes outside the window
         if e.global_location().to_tuple() != (-1., -1.) {
             cursor_position.set(e.global_location());
-            let platform = Platform::get();
+            let platform = Platform::get().current_window();
             platform.send(UserEvent::RequestRedraw);
         }
     };
 
-    canvas(RenderCallback::new(move |context| {
-        on_render(context, cursor_position().to_tuple());
-    }))
-    .expanded()
-    .on_global_pointer_move(on_global_pointer_move)
+    rect()
+        .background(RenderCallback::new(move |context| {
+            on_render(context, cursor_position().to_tuple());
+        }))
+        .expanded()
+        .on_global_pointer_move(on_global_pointer_move)
 }

@@ -9,7 +9,7 @@ use async_io::Timer;
 use freya::prelude::*;
 
 fn main() {
-    launch(LaunchConfig::new().with_future(move |proxy| async move {
+    launch(LaunchConfig::new().with_task(move |proxy| async move {
         loop {
             // Create the Window
             Timer::after(Duration::from_secs(1)).await;

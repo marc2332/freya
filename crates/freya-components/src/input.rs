@@ -730,6 +730,7 @@ impl Component for Input {
 
         rect()
             .a11y_id(a11y_id)
+            .a11y_enabled(self.enabled)
             .a11y_focusable(self.enabled)
             .a11y_auto_focus(self.auto_focus)
             .a11y_alt(a11y_text)

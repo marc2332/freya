@@ -1,6 +1,6 @@
 [package]
 name = "freya-winit"
-version = "0.5.0-rc.8"
+version = "0.5.0-rc.10"
 description = "Winit renderer for Freya"
 edition = "2024"
 license = "MIT"
@@ -110,8 +110,15 @@ freya-engine = { workspace = true, features = ["metal"], optional = true }
 [dev-dependencies]
 freya = { path = "../freya" }
 
+[[test]]
+name = "smoke"
+path = "tests/smoke.rs"
+harness = false
+required-features = ["smoke-test"]
+
 [features]
 default = ["gpu", "accessibility"]
+smoke-test = []
 platform-text-gamma = []
 gpu = [
   "dep:freya-engine",

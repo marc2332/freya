@@ -294,6 +294,7 @@ impl Component for Slider {
 
         rect()
             .a11y_id(a11y_id)
+            .a11y_enabled(self.enabled)
             .a11y_focusable(self.enabled)
             .a11y_role(AccessibilityRole::Slider)
             .on_sized(move |e: Event<SizedEventData>| size.set(e.area))

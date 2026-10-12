@@ -7,6 +7,7 @@ use freya_core::prelude::*;
 use futures_lite::StreamExt;
 
 use crate::{
+    cache::ResourceCache,
     element::Html,
     handle::HtmlHandle,
     net::FetchRequest,
@@ -64,17 +65,23 @@ impl ContainerExt for HtmlViewer {}
 
 impl Component for HtmlViewer {
     fn render(&self) -> impl IntoElement {
-        let platform = Platform::get();
+        let platform = Platform::get().current_window();
         let mut handle = self.handle;
         let fonts = self.fonts.clone();
 
         let state = use_hook(move || {
-            let platform = Platform::get();
+            let platform = Platform::get().current_window();
+            let resource_cache = ResourceCache::get();
             let (wake_tx, mut wake_rx) = futures_channel::mpsc::unbounded::<()>();
             let (nav_tx, mut nav_rx) = futures_channel::mpsc::unbounded::<String>();
             let (fetch_tx, mut fetch_rx) = futures_channel::mpsc::unbounded::<FetchRequest>();
+
             let state = Rc::new(RefCell::new(BlitzState::new(
-                wake_tx, nav_tx, fetch_tx, fonts,
+                wake_tx,
+                nav_tx,
+                fetch_tx,
+                resource_cache.clone(),
+                fonts,
             )));
             handle.attach(state.clone());
 
@@ -86,9 +93,15 @@ impl Component for HtmlViewer {
 
             spawn(async move {
                 while let Some((url, handler)) = fetch_rx.next().await {
+                    let resource_cache = resource_cache.clone();
+
                     spawn(async move {
                         match freya_components::http::fetch(url.clone()).await {
-                            Ok(bytes) => handler.bytes(url.to_string(), bytes),
+                            Ok(bytes) => {
+                                let resolved_url = url.to_string();
+                                resource_cache.set(url, bytes.clone());
+                                handler.bytes(resolved_url, bytes);
+                            }
                             Err(err) => tracing::warn!("Failed to fetch resource {url}: {err}"),
                         }
                     });

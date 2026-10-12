@@ -20,7 +20,7 @@ f-nix:
     alejandra flake.nix
 
 web-demo:
-    cd examples/web && cargo build --profile web-release --target wasm32-unknown-emscripten
+    cd examples/web && cargo build --profile web-release --target wasm32-unknown-emscripten --features freya/web
     mkdir -p website/public/demo
     cp "${CARGO_TARGET_DIR:-target}"/wasm32-unknown-emscripten/web-release/web_example.js website/public/demo/
     cp "${CARGO_TARGET_DIR:-target}"/wasm32-unknown-emscripten/web-release/web_example.wasm website/public/demo/
@@ -44,6 +44,9 @@ e example:
 t:
     cargo test --doc --workspace --exclude web --exclude freya-web
     cargo nextest run --workspace --exclude examples --exclude web --exclude freya-web --features all-tests
+
+t-winit:
+    cargo test --package freya-winit --test smoke --features smoke-test --locked
 
 t-layout:
     cargo nextest run --package torin

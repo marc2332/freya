@@ -32,7 +32,7 @@ impl Component for Counter {
     fn render(&self) -> impl IntoElement {
         let mut count = use_state(|| self.initial);
         label()
-            .on_mouse_up(move |_| *count.write() += 1)
+            .on_press(move |_| *count.write() += 1)
             .text(format!("Count: {}", count.read()))
     }
 }
@@ -262,7 +262,7 @@ Hooks are prefixed with `use_` (e.g. `use_state`, `use_animation`). Follow these
 ```rust
 let mut state = use_state(|| false);
 let on_click = move |_| state.set(true); // capture, not call inside handler
-rect().on_mouse_up(on_click)
+rect().on_press(on_click)
 ```
 
 ## State Management

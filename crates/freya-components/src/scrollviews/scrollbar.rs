@@ -61,6 +61,8 @@ pub struct ScrollBarContext {
     pub content_size: Size2D,
     pub scroll_controller: ScrollController,
     pub timeout: Timeout,
+    /// Whether idle scrollbars should hide when the timeout elapses.
+    pub auto_hide_scrollbars: bool,
     pub clicking_scrollbar: State<Option<(Axis, f64)>>,
     pub thumb_events: ScrollBarThumbEvents,
     pub thumb_offset: f32,
@@ -144,6 +146,7 @@ impl ComponentOwned for ScrollBar {
         let ScrollBarContext {
             axis,
             timeout,
+            auto_hide_scrollbars,
             clicking_scrollbar,
             thumb_events,
             thumb_offset,
@@ -152,8 +155,8 @@ impl ComponentOwned for ScrollBar {
             ..
         } = context;
         let mut hovering = use_state(|| false);
-        let is_hidden = timeout.elapsed() && clicking_scrollbar.read().is_none();
         let is_expanded = clicking_scrollbar.read().is_some() || *hovering.read();
+        let is_hidden = auto_hide_scrollbars && timeout.elapsed() && !is_expanded;
 
         let animation = use_animation_with_dependencies(&is_expanded, move |conf, is_expanded| {
             conf.on_creation(OnCreation::Finish);
@@ -248,7 +251,7 @@ impl ComponentOwned for ScrollBar {
             .on_pointer_down(|e: Event<PointerEventData>| {
                 e.stop_propagation();
             })
-            .child(
+            .maybe_child((!is_hidden).then(|| {
                 rect()
                     .width(Size::fill())
                     .height(Size::fill())
@@ -290,8 +293,8 @@ impl ComponentOwned for ScrollBar {
                                 cross_size,
                                 cross_gap,
                             }),
-                    ),
-            )
+                    )
+            }))
     }
 
     fn render_key(&self) -> DiffKey {

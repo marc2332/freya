@@ -316,6 +316,7 @@ impl Component for Button {
         rect()
             .overflow(Overflow::Clip)
             .a11y_id(a11y_id)
+            .a11y_enabled(self.enabled)
             .a11y_focusable(self.enabled && self.focusable)
             .a11y_role(AccessibilityRole::Button)
             .background(background.mul_if(!self.enabled, 0.9))
@@ -349,7 +350,9 @@ impl Component for Button {
                                     handler.call(e);
                                 }
                             }
-                            PressEventData::Touch(_) | PressEventData::Keyboard(_) => {
+                            PressEventData::Touch(_)
+                            | PressEventData::Keyboard(_)
+                            | PressEventData::Accessibility(_) => {
                                 if let Some(handler) = &on_press {
                                     handler.call(e);
                                 }

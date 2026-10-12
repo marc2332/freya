@@ -58,8 +58,9 @@ impl<T> Portal<T> {
         }
     }
 
-    pub fn function(mut self, function: Function) -> Self {
-        self.function = function;
+    /// Set the easing function. See `Function` for all the types.
+    pub fn function(mut self, function: impl Into<Function>) -> Self {
+        self.function = function.into();
         self
     }
 

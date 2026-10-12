@@ -1,62 +1,87 @@
 use std::{
-    cell::RefCell,
-    pin::Pin,
-    rc::Rc,
+    cell::{
+        Cell,
+        RefCell,
+    },
+    hash::{
+        Hash,
+        Hasher,
+    },
+    mem::take,
+    rc::{
+        Rc,
+        Weak,
+    },
     sync::{
         Arc,
         atomic::Ordering,
     },
+    task::{
+        Context,
+        Waker,
+    },
 };
+
+use futures_channel::mpsc::UnboundedSender;
+use futures_util::{
+    future::LocalBoxFuture,
+    task::{
+        ArcWake,
+        waker,
+    },
+};
+use rustc_hash::FxHashMap;
 
 use crate::{
     current_context::CurrentContext,
+    lifecycle::global_context::GlobalContexts,
     prelude::current_scope_id,
     runner::Message,
     scope_id::ScopeId,
 };
 
-/// Spawn a task attached to the root scope.
-///
-/// Unlike [`spawn`], this task keeps running when the component that started it
-/// unmounts. Use it for app-wide work like initializing a shared cache or a
-/// background synchronization loop. It runs until it finishes, the app exits, or
-/// its [`TaskHandle`] is cancelled.
-///
-/// Spawn it from a hook so rerenders do not create duplicates:
+/// Spawn an event-loop task with global context that survives window closure.
+/// It has no component context and must not retain window-owned state.
 ///
 /// ```rust,no_run
 /// # use freya::prelude::*;
-/// # async fn initialize_shared_cache() {}
+/// # async fn my_task() {}
 /// # fn app() -> impl IntoElement {
-/// let _cache_task = use_hook(|| {
-///     spawn_forever(async {
-///         initialize_shared_cache().await;
-///     })
-/// });
-///
+/// use_hook(|| spawn_global(my_task()));
 /// rect()
 /// # }
 /// ```
-pub fn spawn_forever(future: impl Future<Output = ()> + 'static) -> TaskHandle {
-    spawn_in_scope(future, ScopeId::ROOT)
+pub fn spawn_global(future: impl Future<Output = ()> + 'static) -> TaskHandle {
+    if let Some(tasks) = GlobalTasks::try_get() {
+        tasks.spawn(future)
+    } else {
+        spawn_in_window(future)
+    }
 }
 
-/// Spawn a task attached to the current component scope.
-///
-/// Use it for async work owned by a component, like handling an event, waiting
-/// for a timer or loading component-specific data. Freya cancels the task when
-/// that component unmounts. The returned [`TaskHandle`] lets you cancel it
-/// earlier.
+/// Spawn a task that survives its component but is cancelled when its window closes.
 ///
 /// ```rust,no_run
 /// # use freya::prelude::*;
-/// # async fn save_document() {}
-/// # fn save_button() -> impl IntoElement {
-/// Button::new().child("Save").on_press(|_| {
-///     spawn(async {
-///         save_document().await;
-///     });
-/// })
+/// # async fn my_task() {}
+/// # fn app() -> impl IntoElement {
+/// use_hook(|| spawn_in_window(my_task()));
+/// rect()
+/// # }
+/// ```
+pub fn spawn_in_window(future: impl Future<Output = ()> + 'static) -> TaskHandle {
+    spawn_in_scope(future, ScopeId::ROOT)
+}
+
+/// Spawn a task cancelled when its current component unmounts.
+/// The returned [`TaskHandle`] can cancel it earlier.
+///
+/// ```rust,no_run
+/// # use freya::prelude::*;
+/// # async fn load_data() {}
+/// # fn app() -> impl IntoElement {
+/// use_hook(|| spawn(load_data()));
+/// rect()
 /// # }
 /// ```
 pub fn spawn(future: impl Future<Output = ()> + 'static) -> TaskHandle {
@@ -76,7 +101,7 @@ pub fn spawn_in_scope(
             Rc::new(RefCell::new(Task {
                 scope_id,
                 future: Box::pin(future),
-                waker: futures_util::task::waker(Arc::new(TaskWaker {
+                waker: waker(Arc::new(TaskWaker {
                     task_id,
                     sender: context.sender.clone(),
                 })),
@@ -86,32 +111,55 @@ pub fn spawn_in_scope(
             .sender
             .unbounded_send(Message::PollTask(task_id))
             .unwrap();
-        task_id.into()
+        TaskHandle {
+            task_id,
+            owner: TaskOwner::Window,
+            global_tasks: Weak::new(),
+        }
     })
 }
 
-/// A non-owning handle used to cancel a spawned task manually.
-///
-/// Dropping this handle does not cancel the task. Call [`TaskHandle::cancel`]
-/// explicitly, or use [`TaskHandle::owned`] when the task should be cancelled as
-/// its owner is dropped.
-#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
-pub struct TaskHandle(TaskId);
+/// A non-owning task handle whose drop does not cancel the task.
+/// Use [`TaskHandle::owned`] for cancellation on drop.
+#[derive(Clone, Debug)]
+pub struct TaskHandle {
+    task_id: TaskId,
+    owner: TaskOwner,
+    global_tasks: Weak<InnerGlobalTasks>,
+}
 
-impl From<TaskId> for TaskHandle {
-    fn from(value: TaskId) -> Self {
-        TaskHandle(value)
+impl PartialEq for TaskHandle {
+    fn eq(&self, other: &Self) -> bool {
+        self.task_id == other.task_id
+            && self.owner == other.owner
+            && Weak::ptr_eq(&self.global_tasks, &other.global_tasks)
     }
 }
 
+impl Eq for TaskHandle {}
+
+impl Hash for TaskHandle {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.task_id.hash(state);
+        self.owner.hash(state);
+        self.global_tasks.as_ptr().hash(state);
+    }
+}
+
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
+enum TaskOwner {
+    Window,
+    Global,
+}
+
 impl TaskHandle {
-    /// Cancel the task.
-    ///
-    /// Use it when an event or state change makes an in-progress task no longer
-    /// necessary. This method must run within Freya's current context, use
-    /// [`TaskHandle::try_cancel`] for cleanup that may run outside it.
+    /// Cancel the task. Component and window tasks require Freya's current context.
     pub fn cancel(&self) {
-        CurrentContext::with(|context| context.tasks.borrow_mut().remove(&self.0));
+        if self.owner == TaskOwner::Window {
+            CurrentContext::with(|context| context.tasks.borrow_mut().remove(&self.task_id));
+        } else {
+            self.try_cancel();
+        }
     }
 
     /// Try to cancel the task if Freya's current context is available.
@@ -120,35 +168,28 @@ impl TaskHandle {
     /// Freya's context. Prefer it in destructors and other cleanup paths where a
     /// context might no longer exist.
     pub fn try_cancel(&self) {
-        CurrentContext::try_with(|context| context.tasks.borrow_mut().remove(&self.0));
+        if self.owner == TaskOwner::Window {
+            CurrentContext::try_with(|context| context.tasks.borrow_mut().remove(&self.task_id));
+        } else if let Some(tasks) = self.global_tasks.upgrade() {
+            tasks.cancel(self.task_id);
+        }
     }
 
     /// Check whether the task is no longer scheduled.
     pub fn is_finished(&self) -> bool {
-        CurrentContext::with(|context| !context.tasks.borrow().contains_key(&self.0))
+        if self.owner == TaskOwner::Window {
+            CurrentContext::with(|context| !context.tasks.borrow().contains_key(&self.task_id))
+        } else {
+            self.global_tasks
+                .upgrade()
+                .is_none_or(|tasks| !tasks.tasks.borrow().contains_key(&self.task_id))
+        }
     }
 
     /// Upgrade to an [`OwnedTaskHandle`] that cancels the task when its last
     /// clone is dropped.
-    ///
     /// Retain the returned handle for as long as the task should run. Useful for
-    /// a task owned by another long-lived value rather than by a component
-    /// scope:
-    ///
-    /// ```rust,no_run
-    /// # use freya::prelude::*;
-    /// # async fn forward_messages() {}
-    /// struct Worker {
-    ///     _task: OwnedTaskHandle,
-    /// }
-    ///
-    /// # fn start_worker() -> Worker {
-    /// let worker = Worker {
-    ///     _task: spawn_forever(forward_messages()).owned(),
-    /// };
-    /// # worker
-    /// # }
-    /// ```
+    /// a task owned by another long-lived value rather than by a component scope.
     pub fn owned(self) -> OwnedTaskHandle {
         OwnedTaskHandle(Rc::new(InnerOwnedTaskHandle(self)))
     }
@@ -163,9 +204,7 @@ impl Drop for InnerOwnedTaskHandle {
 }
 
 /// An owning handle that cancels its task when the last clone is dropped.
-///
-/// Use [`TaskHandle::owned`] to create one. Clones share ownership of the same
-/// task, so dropping one only cancels the task when no other clones remain.
+/// Created with [`TaskHandle::owned`].
 #[derive(Clone)]
 pub struct OwnedTaskHandle(Rc<InnerOwnedTaskHandle>);
 
@@ -176,17 +215,12 @@ impl PartialEq for OwnedTaskHandle {
 }
 
 impl OwnedTaskHandle {
-    /// Cancel the owned task immediately.
-    ///
-    /// This method has the same context requirement as [`TaskHandle::cancel`].
+    /// Cancel the owned task. Component and window tasks require Freya's current context.
     pub fn cancel(&self) {
         self.0.0.cancel();
     }
 
-    /// Try to cancel the owned task if Freya's current context is available.
-    ///
-    /// Use this instead of [`OwnedTaskHandle::cancel`] from cleanup code that
-    /// may run after Freya's context has been removed.
+    /// Try to cancel the task.
     pub fn try_cancel(&self) {
         self.0.0.try_cancel();
     }
@@ -196,25 +230,19 @@ impl OwnedTaskHandle {
         self.0.0.is_finished()
     }
 
-    /// Get a non-owning [`TaskHandle`] for the same task.
-    ///
-    /// The returned handle can cancel the task, but dropping it has no effect
-    /// on the [`OwnedTaskHandle`]'s ownership.
+    /// Get a non-owning handle.
     pub fn downgrade(&self) -> TaskHandle {
-        self.0.0
+        self.0.0.clone()
     }
 }
 
 /// Wakes a Freya task by asking the runner to poll it again.
-///
-/// This is a runtime implementation detail, application code normally uses
-/// [`spawn`] or [`spawn_forever`] instead.
 pub struct TaskWaker {
     task_id: TaskId,
-    sender: futures_channel::mpsc::UnboundedSender<Message>,
+    sender: UnboundedSender<Message>,
 }
 
-impl futures_util::task::ArcWake for TaskWaker {
+impl ArcWake for TaskWaker {
     fn wake_by_ref(arc_self: &Arc<Self>) {
         _ = arc_self
             .sender
@@ -222,17 +250,94 @@ impl futures_util::task::ArcWake for TaskWaker {
     }
 }
 
-/// A future scheduled by Freya's async runtime.
-///
-/// This is a runtime implementation detail stored by the runner. Application
-/// code should use [`TaskHandle`] to interact with spawned tasks.
+/// A component or window task scheduled by the runner.
 pub struct Task {
     pub scope_id: ScopeId,
-    pub future: Pin<Box<dyn Future<Output = ()>>>,
+    pub future: LocalBoxFuture<'static, ()>,
     /// Used to notify the runner that this task needs progress.
-    pub waker: futures_util::task::Waker,
+    pub waker: Waker,
 }
 
 /// The opaque identifier of a task scheduled by Freya's async runtime.
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
 pub struct TaskId(u64);
+
+/// Tasks owned by the event loop rather than a window runner.
+#[derive(Clone)]
+pub struct GlobalTasks {
+    inner: Rc<InnerGlobalTasks>,
+}
+
+struct InnerGlobalTasks {
+    tasks: RefCell<FxHashMap<TaskId, Rc<RefCell<LocalBoxFuture<'static, ()>>>>>,
+    next_id: Cell<u64>,
+    waker: Waker,
+}
+
+impl InnerGlobalTasks {
+    fn cancel(&self, task_id: TaskId) {
+        let _removed_task = self.tasks.borrow_mut().remove(&task_id);
+    }
+}
+
+impl GlobalTasks {
+    #[track_caller]
+    pub fn get() -> Self {
+        Self::try_get().expect("Global tasks are unavailable outside the event loop.")
+    }
+
+    pub fn try_get() -> Option<Self> {
+        GlobalContexts::try_get().and_then(|contexts| contexts.try_get_context::<Self>())
+    }
+
+    /// Create a task pool woken by the event loop.
+    pub fn new(waker: Waker) -> Self {
+        Self {
+            inner: Rc::new(InnerGlobalTasks {
+                tasks: RefCell::default(),
+                next_id: Cell::default(),
+                waker,
+            }),
+        }
+    }
+
+    /// Schedule a future on the event loop.
+    pub fn spawn(&self, future: impl Future<Output = ()> + 'static) -> TaskHandle {
+        let task_id = TaskId(self.inner.next_id.get());
+        self.inner.next_id.set(self.inner.next_id.get() + 1);
+
+        self.inner
+            .tasks
+            .borrow_mut()
+            .insert(task_id, Rc::new(RefCell::new(Box::pin(future))));
+        self.inner.waker.wake_by_ref();
+
+        TaskHandle {
+            task_id,
+            owner: TaskOwner::Global,
+            global_tasks: Rc::downgrade(&self.inner),
+        }
+    }
+
+    /// Cancel all tasks before the event loop is dropped.
+    pub fn clear(&self) {
+        let _removed_tasks = take(&mut *self.inner.tasks.borrow_mut());
+    }
+
+    /// Poll all event-loop tasks that were scheduled before this call.
+    pub fn poll(&self) {
+        let task_ids: Vec<_> = self.inner.tasks.borrow().keys().copied().collect();
+        let mut context = Context::from_waker(&self.inner.waker);
+
+        for task_id in task_ids {
+            let Some(future) = self.inner.tasks.borrow().get(&task_id).cloned() else {
+                continue;
+            };
+
+            let poll_result = future.borrow_mut().as_mut().poll(&mut context);
+            if poll_result.is_ready() {
+                self.inner.cancel(task_id);
+            }
+        }
+    }
+}

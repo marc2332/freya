@@ -237,7 +237,7 @@ impl ComponentOwned for MenuContainer {
             .offset_y(offset_y)
             .on_sized(move |e: Event<SizedEventData>| {
                 if measured.peek().is_none() {
-                    let root_size = *Platform::get().root_size.peek();
+                    let root_size = *Platform::get().current_window().root_size.peek();
                     measured.set(Some((e.area, root_size)));
                 }
             })
