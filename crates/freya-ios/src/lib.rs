@@ -75,11 +75,11 @@ impl Component for IosRoot {
         let keyboard = use_consume::<KeyboardSlot>();
 
         use_side_effect(move || {
-            let platform = Platform::get();
+            let window = Platform::get().current_window();
             // The focused id changes one frame before the focused node, so only the node is
             // subscribed to. Otherwise the keyboard would be configured with the previous role.
-            let role = platform.focused_accessibility_node.read().role();
-            let id = *platform.focused_accessibility_id.peek();
+            let role = window.focused_accessibility_node.read().role();
+            let id = *window.focused_accessibility_id.peek();
             if let Some(keyboard) = keyboard.0.borrow().as_ref() {
                 keyboard.update(id, role);
             }
