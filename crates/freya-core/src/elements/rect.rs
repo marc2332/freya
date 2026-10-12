@@ -561,31 +561,31 @@ pub struct Rect {
 }
 
 impl ChildrenExt for Rect {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.elements
     }
 }
 
 impl KeyExt for Rect {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl EventHandlersExt for Rect {
-    fn get_event_handlers(&mut self) -> &mut EventHandlers {
+    fn event_handlers_mut(&mut self) -> &mut EventHandlers {
         &mut self.element.event_handlers
     }
 }
 
 impl AccessibilityExt for Rect {
-    fn get_accessibility_data(&mut self) -> &mut AccessibilityData {
+    fn accessibility_data_mut(&mut self) -> &mut AccessibilityData {
         &mut self.element.accessibility
     }
 }
 
 impl TextStyleExt for Rect {
-    fn get_text_style_data(&mut self) -> &mut TextStyleData {
+    fn text_style_data_mut(&mut self) -> &mut TextStyleData {
         &mut self.element.text_style_data
     }
 }
@@ -594,7 +594,7 @@ impl BackgroundExt for Rect {}
 impl DecorationExt for Rect {}
 
 impl StyleExt for Rect {
-    fn get_style(&mut self) -> &mut StyleState {
+    fn style_mut(&mut self) -> &mut StyleState {
         &mut self.element.style
     }
 }
@@ -602,13 +602,13 @@ impl StyleExt for Rect {
 impl MaybeExt for Rect {}
 
 impl LayerExt for Rect {
-    fn get_layer(&mut self) -> &mut Layer {
+    fn layer_mut(&mut self) -> &mut Layer {
         &mut self.element.relative_layer
     }
 }
 
 impl LayoutExt for Rect {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.element.layout
     }
 }
@@ -618,7 +618,7 @@ impl ContainerExt for Rect {}
 impl ContainerWithContentExt for Rect {}
 
 impl ScrollableExt for Rect {
-    fn get_effect(&mut self) -> &mut EffectData {
+    fn effect_mut(&mut self) -> &mut EffectData {
         if self.element.effect.is_none() {
             self.element.effect = Some(EffectData::default())
         }
@@ -628,7 +628,7 @@ impl ScrollableExt for Rect {
 }
 
 impl InteractiveExt for Rect {
-    fn get_effect(&mut self) -> &mut EffectData {
+    fn effect_mut(&mut self) -> &mut EffectData {
         if self.element.effect.is_none() {
             self.element.effect = Some(EffectData::default())
         }
@@ -638,7 +638,7 @@ impl InteractiveExt for Rect {
 }
 
 impl EffectExt for Rect {
-    fn get_effect(&mut self) -> &mut EffectData {
+    fn effect_mut(&mut self) -> &mut EffectData {
         if self.element.effect.is_none() {
             self.element.effect = Some(EffectData::default())
         }

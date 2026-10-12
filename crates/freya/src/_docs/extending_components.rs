@@ -30,13 +30,13 @@
 //! }
 //!
 //! impl LayoutExt for Panel {
-//!     fn get_layout(&mut self) -> &mut LayoutData {
+//!     fn layout_mut(&mut self) -> &mut LayoutData {
 //!         &mut self.layout
 //!     }
 //! }
 //!
 //! impl ChildrenExt for Panel {
-//!     fn get_children(&mut self) -> &mut Vec<Element> {
+//!     fn children_mut(&mut self) -> &mut Vec<Element> {
 //!         &mut self.elements
 //!     }
 //! }

@@ -85,12 +85,12 @@ pub trait ChildrenExt: Sized {
     /// # Example
     /// ```ignore
     /// impl ChildrenExt for MyElement {
-    ///     fn get_children(&mut self) -> &mut Vec<Element> {
+    ///     fn children_mut(&mut self) -> &mut Vec<Element> {
     ///         &mut self.elements
     ///     }
     /// }
     /// ```
-    fn get_children(&mut self) -> &mut Vec<Element>;
+    fn children_mut(&mut self) -> &mut Vec<Element>;
 
     /// Extends the children with an iterable of anything that implements [`IntoElement`].
     ///
@@ -99,7 +99,7 @@ pub trait ChildrenExt: Sized {
     /// rect().children(["Hello", "World"].map(|t| label().text(t)))
     /// ```
     fn children(mut self, children: impl IntoIterator<Item = impl IntoElement>) -> Self {
-        self.get_children()
+        self.children_mut()
             .extend(children.into_iter().map(IntoElement::into_element));
         self
     }
@@ -112,7 +112,7 @@ pub trait ChildrenExt: Sized {
     /// ```
     fn maybe_child<C: IntoElement>(mut self, child: Option<C>) -> Self {
         if let Some(child) = child {
-            self.get_children().push(child.into_element());
+            self.children_mut().push(child.into_element());
         }
         self
     }
@@ -124,7 +124,7 @@ pub trait ChildrenExt: Sized {
     /// rect().child(label().text("Hello"))
     /// ```
     fn child<C: IntoElement>(mut self, child: C) -> Self {
-        self.get_children().push(child.into_element());
+        self.children_mut().push(child.into_element());
         self
     }
 }
@@ -132,7 +132,7 @@ pub trait ChildrenExt: Sized {
 /// Trait for giving an element a stable identity across renders.
 pub trait KeyExt: Sized {
     /// Returns a mutable reference to the element's diff key.
-    fn write_key(&mut self) -> &mut DiffKey;
+    fn key_mut(&mut self) -> &mut DiffKey;
 
     /// Assign a key derived from any hashable value, used to reconcile elements in dynamic lists.
     /// The key is scoped to the element's type, so the same value used
@@ -144,7 +144,7 @@ pub trait KeyExt: Sized {
         let mut hasher = FxHasher::default();
         std::any::TypeId::of::<Self>().hash(&mut hasher);
         key.hash(&mut hasher);
-        *self.write_key() = DiffKey::U64(hasher.finish());
+        *self.key_mut() = DiffKey::U64(hasher.finish());
         self
     }
 }
@@ -174,7 +174,7 @@ macro_rules! event_handlers {
             $(
                 $(#[$attr])*
                 fn [<on_$name>](mut self, [<on_$name>]: impl Into<EventHandler<Event<$event_data>>>) -> Self {
-                    self.get_event_handlers()
+                    self.event_handlers_mut()
                         .insert($event_variant, EventHandlerType::$handler_variant([<on_$name>].into()));
                     self
                 }
@@ -192,11 +192,11 @@ macro_rules! event_handlers {
 /// For high-level press handling, prefer [`on_press`](EventHandlersExt::on_press) over the raw mouse/pointer events.
 pub trait EventHandlersExt: Sized {
     /// Returns a mutable reference to the element's event handler map.
-    fn get_event_handlers(&mut self) -> &mut EventHandlers;
+    fn event_handlers_mut(&mut self) -> &mut EventHandlers;
 
     /// Replace all of this element's event handlers with the given map.
     fn event_handlers(mut self, event_handlers: EventHandlers) -> Self {
-        *self.get_event_handlers() = event_handlers;
+        *self.event_handlers_mut() = event_handlers;
         self
     }
 
@@ -320,15 +320,15 @@ pub trait EventHandlersExt: Sized {
     where
         Self: LayoutExt,
     {
-        self.get_event_handlers()
+        self.event_handlers_mut()
             .insert(EventName::Sized, EventHandlerType::Sized(on_sized.into()));
-        self.get_layout().layout.has_layout_references = true;
+        self.layout_mut().layout.has_layout_references = true;
         self
     }
 
     /// Fires when the element becomes visible, even partially, inside the viewports of its clipping ancestors.
     fn on_visible(mut self, on_visible: impl Into<EventHandler<Event<VisibleEventData>>>) -> Self {
-        self.get_event_handlers().insert(
+        self.event_handlers_mut().insert(
             EventName::Visible,
             EventHandlerType::Visible(on_visible.into()),
         );
@@ -337,7 +337,7 @@ pub trait EventHandlersExt: Sized {
 
     /// Fires when the element stops being visible inside the viewports of its clipping ancestors.
     fn on_hidden(mut self, on_hidden: impl Into<EventHandler<Event<VisibleEventData>>>) -> Self {
-        self.get_event_handlers().insert(
+        self.event_handlers_mut().insert(
             EventName::Hidden,
             EventHandlerType::Visible(on_hidden.into()),
         );
@@ -346,7 +346,7 @@ pub trait EventHandlersExt: Sized {
 
     /// Fires when the element's inherited text style is resolved or changes.
     fn on_styled(mut self, on_styled: impl Into<EventHandler<Event<StyledEventData>>>) -> Self {
-        self.get_event_handlers().insert(
+        self.event_handlers_mut().insert(
             EventName::Styled,
             EventHandlerType::Styled(on_styled.into()),
         );
@@ -538,61 +538,61 @@ where
 {
     /// Set the axis children are stacked along. See [`Direction`].
     fn direction(mut self, direction: Direction) -> Self {
-        self.get_layout().layout.direction = direction;
+        self.layout_mut().layout.direction = direction;
         self
     }
     /// Set how children are aligned along the direction axis. See [`Alignment`].
     fn main_align(mut self, main_align: impl Into<Alignment>) -> Self {
-        self.get_layout().layout.main_alignment = main_align.into();
+        self.layout_mut().layout.main_alignment = main_align.into();
         self
     }
 
     /// Set how children are aligned across the direction axis. See [`Alignment`].
     fn cross_align(mut self, cross_align: impl Into<Alignment>) -> Self {
-        self.get_layout().layout.cross_alignment = cross_align.into();
+        self.layout_mut().layout.cross_alignment = cross_align.into();
         self
     }
 
     /// Set the gap inserted between adjacent children, in pixels.
     fn spacing(mut self, spacing: f32) -> Self {
-        self.get_layout().layout.spacing = Length::new(spacing);
+        self.layout_mut().layout.spacing = Length::new(spacing);
         self
     }
 
     /// Set how children share the available space along the direction axis. See [`Content`].
     fn content(mut self, content: Content) -> Self {
-        self.get_layout().layout.content = content;
+        self.layout_mut().layout.content = content;
         self
     }
     /// Center children on both axes. Shorthand for [`main_align`](Self::main_align) and [`cross_align`](Self::cross_align) set to [`Alignment::Center`].
     fn center(mut self) -> Self {
-        self.get_layout().layout.main_alignment = Alignment::Center;
-        self.get_layout().layout.cross_alignment = Alignment::Center;
+        self.layout_mut().layout.main_alignment = Alignment::Center;
+        self.layout_mut().layout.cross_alignment = Alignment::Center;
 
         self
     }
 
     /// Shift the element's children horizontally by the given pixels.
     fn offset_x(mut self, offset_x: f32) -> Self {
-        self.get_layout().layout.offset_x = Length::new(offset_x);
+        self.layout_mut().layout.offset_x = Length::new(offset_x);
         self
     }
 
     /// Shift the element's children vertically by the given pixels.
     fn offset_y(mut self, offset_y: f32) -> Self {
-        self.get_layout().layout.offset_y = Length::new(offset_y);
+        self.layout_mut().layout.offset_y = Length::new(offset_y);
         self
     }
 
     /// Stack children vertically. Shorthand for [`direction`](Self::direction) set to [`Direction::Vertical`].
     fn vertical(mut self) -> Self {
-        self.get_layout().layout.direction = Direction::vertical();
+        self.layout_mut().layout.direction = Direction::vertical();
         self
     }
 
     /// Stack children horizontally. Shorthand for [`direction`](Self::direction) set to [`Direction::Horizontal`].
     fn horizontal(mut self) -> Self {
-        self.get_layout().layout.direction = Direction::horizontal();
+        self.layout_mut().layout.direction = Direction::horizontal();
         self
     }
 }
@@ -604,20 +604,20 @@ where
 {
     /// Set the element's width. See [`Size`].
     fn width(mut self, width: impl Into<Size>) -> Self {
-        self.get_layout().layout.width = width.into();
+        self.layout_mut().layout.width = width.into();
         self
     }
 
     /// Set the element's height. See [`Size`].
     fn height(mut self, height: impl Into<Size>) -> Self {
-        self.get_layout().layout.height = height.into();
+        self.layout_mut().layout.height = height.into();
         self
     }
 
     /// Expand both `width` and `height` using [Size::fill()].
     fn expanded(mut self) -> Self {
-        self.get_layout().layout.width = Size::fill();
-        self.get_layout().layout.height = Size::fill();
+        self.layout_mut().layout.width = Size::fill();
+        self.layout_mut().layout.height = Size::fill();
         self
     }
 }
@@ -631,13 +631,13 @@ where
 {
     /// Set how the element is placed relative to its parent or the window. See [`Position`].
     fn position(mut self, position: impl Into<Position>) -> Self {
-        self.get_layout().layout.position = position.into();
+        self.layout_mut().layout.position = position.into();
         self
     }
 
     /// Set the outer spacing between the element's edges and its surroundings. See [`Gaps`].
     fn margin(mut self, margin: impl Into<Gaps>) -> Self {
-        self.get_layout().layout.margin = margin.into();
+        self.layout_mut().layout.margin = margin.into();
         self
     }
 }
@@ -651,7 +651,7 @@ where
 {
     /// Set the inner spacing between the element's edges and its content. See [`Gaps`].
     fn padding(mut self, padding: impl Into<Gaps>) -> Self {
-        self.get_layout().layout.padding = padding.into();
+        self.layout_mut().layout.padding = padding.into();
         self
     }
 }
@@ -663,37 +663,37 @@ where
 {
     /// Set the minimum width the element can shrink to. See [`Size`].
     fn min_width(mut self, minimum_width: impl Into<Size>) -> Self {
-        self.get_layout().layout.minimum_width = minimum_width.into();
+        self.layout_mut().layout.minimum_width = minimum_width.into();
         self
     }
 
     /// Set the minimum height the element can shrink to. See [`Size`].
     fn min_height(mut self, minimum_height: impl Into<Size>) -> Self {
-        self.get_layout().layout.minimum_height = minimum_height.into();
+        self.layout_mut().layout.minimum_height = minimum_height.into();
         self
     }
 
     /// Set the maximum width the element can grow to. See [`Size`].
     fn max_width(mut self, maximum_width: impl Into<Size>) -> Self {
-        self.get_layout().layout.maximum_width = maximum_width.into();
+        self.layout_mut().layout.maximum_width = maximum_width.into();
         self
     }
 
     /// Set the maximum height the element can grow to. See [`Size`].
     fn max_height(mut self, maximum_height: impl Into<Size>) -> Self {
-        self.get_layout().layout.maximum_height = maximum_height.into();
+        self.layout_mut().layout.maximum_height = maximum_height.into();
         self
     }
 
     /// Set how much of the measured width is actually used in layout. See [`VisibleSize`].
     fn visible_width(mut self, visible_width: impl Into<VisibleSize>) -> Self {
-        self.get_layout().layout.visible_width = visible_width.into();
+        self.layout_mut().layout.visible_width = visible_width.into();
         self
     }
 
     /// Set how much of the measured height is actually used in layout. See [`VisibleSize`].
     fn visible_height(mut self, visible_height: impl Into<VisibleSize>) -> Self {
-        self.get_layout().layout.visible_height = visible_height.into();
+        self.layout_mut().layout.visible_height = visible_height.into();
         self
     }
 }
@@ -706,11 +706,11 @@ where
     Self: Sized,
 {
     /// Returns a mutable reference to the element's layout data.
-    fn get_layout(&mut self) -> &mut LayoutData;
+    fn layout_mut(&mut self) -> &mut LayoutData;
 
     /// Replace all of the element's layout data at once. See [`LayoutData`].
     fn layout(mut self, layout: LayoutData) -> Self {
-        *self.get_layout() = layout;
+        *self.layout_mut() = layout;
         self
     }
 }
@@ -721,41 +721,41 @@ where
     Self: LayoutExt,
 {
     /// Returns a mutable reference to the element's image data.
-    fn get_image_data(&mut self) -> &mut ImageData;
+    fn image_data_mut(&mut self) -> &mut ImageData;
 
     /// Replace all of the element's image data at once. See [`ImageData`].
     fn image_data(mut self, image_data: ImageData) -> Self {
-        *self.get_image_data() = image_data;
+        *self.image_data_mut() = image_data;
         self
     }
 
     /// Set the filtering used when the image is scaled. See [`SamplingMode`].
     fn sampling_mode(mut self, sampling_mode: SamplingMode) -> Self {
-        self.get_image_data().sampling_mode = sampling_mode;
+        self.image_data_mut().sampling_mode = sampling_mode;
         self
     }
 
     /// Set how the image is scaled to fit its bounds. See [`AspectRatio`].
     fn aspect_ratio(mut self, aspect_ratio: AspectRatio) -> Self {
-        self.get_image_data().aspect_ratio = aspect_ratio;
+        self.image_data_mut().aspect_ratio = aspect_ratio;
         self
     }
 
     /// Set how the image is positioned within its bounds. See [`ImageCover`].
     fn image_cover(mut self, image_cover: ImageCover) -> Self {
-        self.get_image_data().image_cover = image_cover;
+        self.image_data_mut().image_cover = image_cover;
         self
     }
 
     /// Snap the image to the pixels grid. Defaults to `false`, but `SvgViewer` enables it.
     fn snap_to_grid(mut self, snap_to_grid: bool) -> Self {
-        self.get_image_data().snap_to_grid = snap_to_grid;
+        self.image_data_mut().snap_to_grid = snap_to_grid;
         self
     }
 
     /// Apply a Gaussian blur of the given radius to the image.
     fn blur(mut self, blur: f32) -> Self {
-        self.get_image_data().blur = blur;
+        self.image_data_mut().blur = blur;
         self
     }
 }
@@ -763,23 +763,23 @@ where
 /// Methods for describing an element in the accessibility tree.
 pub trait AccessibilityExt: Sized {
     /// Returns a mutable reference to the element's accessibility data.
-    fn get_accessibility_data(&mut self) -> &mut AccessibilityData;
+    fn accessibility_data_mut(&mut self) -> &mut AccessibilityData;
 
     /// Replace all of the element's accessibility data at once. See [`AccessibilityData`].
     fn accessibility(mut self, accessibility: AccessibilityData) -> Self {
-        *self.get_accessibility_data() = accessibility;
+        *self.accessibility_data_mut() = accessibility;
         self
     }
 
     /// Set an explicit accessibility id instead of an autogenerated one. See [`AccessibilityId`].
     fn a11y_id(mut self, a11y_id: impl Into<Option<AccessibilityId>>) -> Self {
-        self.get_accessibility_data().a11y_id = a11y_id.into();
+        self.accessibility_data_mut().a11y_id = a11y_id.into();
         self
     }
 
     /// Set whether the element is enabled for assistive technology.
     fn a11y_enabled(mut self, enabled: impl Into<bool>) -> Self {
-        let builder = &mut self.get_accessibility_data().builder;
+        let builder = &mut self.accessibility_data_mut().builder;
         if enabled.into() {
             builder.clear_disabled();
         } else {
@@ -790,19 +790,19 @@ pub trait AccessibilityExt: Sized {
 
     /// Set whether the element can receive keyboard focus. See [`Focusable`].
     fn a11y_focusable(mut self, a11y_focusable: impl Into<Focusable>) -> Self {
-        self.get_accessibility_data().a11y_focusable = a11y_focusable.into();
+        self.accessibility_data_mut().a11y_focusable = a11y_focusable.into();
         self
     }
 
     /// Request that the element be focused automatically when it is mounted.
     fn a11y_auto_focus(mut self, a11y_auto_focus: impl Into<bool>) -> Self {
-        self.get_accessibility_data().a11y_auto_focus = a11y_auto_focus.into();
+        self.accessibility_data_mut().a11y_auto_focus = a11y_auto_focus.into();
         self
     }
 
     /// Mark the element as a member of the group identified by the given [`AccessibilityId`].
     fn a11y_member_of(mut self, a11y_member_of: impl Into<AccessibilityId>) -> Self {
-        self.get_accessibility_data()
+        self.accessibility_data_mut()
             .builder
             .set_member_of(a11y_member_of.into());
         self
@@ -810,7 +810,7 @@ pub trait AccessibilityExt: Sized {
 
     /// Set the accessibility role exposed in the accessibility tree. See [`AccessibilityRole`].
     fn a11y_role(mut self, a11y_role: impl Into<AccessibilityRole>) -> Self {
-        self.get_accessibility_data()
+        self.accessibility_data_mut()
             .builder
             .set_role(a11y_role.into());
         self
@@ -818,13 +818,13 @@ pub trait AccessibilityExt: Sized {
 
     /// Set the text label that describes the element in the accessibility tree.
     fn a11y_alt(mut self, value: impl Into<Box<str>>) -> Self {
-        self.get_accessibility_data().builder.set_label(value);
+        self.accessibility_data_mut().builder.set_label(value);
         self
     }
 
     /// Edit the underlying `accesskit` node directly for advanced accessibility properties.
     fn a11y_builder(mut self, with: impl FnOnce(&mut accesskit::Node)) -> Self {
-        with(&mut self.get_accessibility_data().builder);
+        with(&mut self.accessibility_data_mut().builder);
         self
     }
 }
@@ -835,41 +835,41 @@ where
     Self: Sized,
 {
     /// Returns a mutable reference to the element's text style data.
-    fn get_text_style_data(&mut self) -> &mut TextStyleData;
+    fn text_style_data_mut(&mut self) -> &mut TextStyleData;
 
     /// Replace all of the element's text style data at once. See [`TextStyleData`].
     fn text_style(mut self, data: TextStyleData) -> Self {
-        *self.get_text_style_data() = data;
+        *self.text_style_data_mut() = data;
         self
     }
 
     /// Paint the text with any [`Fill`]: a [`Color`], a gradient or a shader.
     fn color(mut self, color: impl Into<Fill>) -> Self {
-        self.get_text_style_data().color = Some(color.into());
+        self.text_style_data_mut().color = Some(color.into());
         self
     }
 
     /// Set the horizontal alignment of the text. See [`TextAlign`].
     fn text_align(mut self, text_align: impl Into<TextAlign>) -> Self {
-        self.get_text_style_data().text_align = Some(text_align.into());
+        self.text_style_data_mut().text_align = Some(text_align.into());
         self
     }
 
     /// Set the text size in pixels. See [`FontSize`].
     fn font_size(mut self, font_size: impl Into<FontSize>) -> Self {
-        self.get_text_style_data().font_size = Some(font_size.into());
+        self.text_style_data_mut().font_size = Some(font_size.into());
         self
     }
 
     /// Set the space between letters, in pixels. See [`LetterSpacing`].
     fn letter_spacing(mut self, letter_spacing: impl Into<LetterSpacing>) -> Self {
-        self.get_text_style_data().letter_spacing = Some(letter_spacing.into());
+        self.text_style_data_mut().letter_spacing = Some(letter_spacing.into());
         self
     }
 
     /// Add an OpenType font feature.
     fn font_feature(mut self, font_feature: impl Into<FontFeature>) -> Self {
-        self.get_text_style_data()
+        self.text_style_data_mut()
             .font_features
             .push(font_feature.into());
         self
@@ -902,7 +902,7 @@ where
 
     /// Add a font family to try, in order of preference.
     fn font_family(mut self, font_family: impl Into<Cow<'static, str>>) -> Self {
-        self.get_text_style_data()
+        self.text_style_data_mut()
             .font_families
             .push(font_family.into());
         self
@@ -910,37 +910,37 @@ where
 
     /// Set the slant (style) of the font. See [`FontSlant`].
     fn font_slant(mut self, font_slant: impl Into<FontSlant>) -> Self {
-        self.get_text_style_data().font_slant = Some(font_slant.into());
+        self.text_style_data_mut().font_slant = Some(font_slant.into());
         self
     }
 
     /// Set the thickness of the font. See [`FontWeight`].
     fn font_weight(mut self, font_weight: impl Into<FontWeight>) -> Self {
-        self.get_text_style_data().font_weight = Some(font_weight.into());
+        self.text_style_data_mut().font_weight = Some(font_weight.into());
         self
     }
 
     /// Set the horizontal width of the font. See [`FontWidth`].
     fn font_width(mut self, font_width: impl Into<FontWidth>) -> Self {
-        self.get_text_style_data().font_width = Some(font_width.into());
+        self.text_style_data_mut().font_width = Some(font_width.into());
         self
     }
 
     /// Set how the leading of the first and last lines is handled. See [`TextHeightBehavior`].
     fn text_height(mut self, text_height: impl Into<TextHeightBehavior>) -> Self {
-        self.get_text_style_data().text_height = Some(text_height.into());
+        self.text_style_data_mut().text_height = Some(text_height.into());
         self
     }
 
     /// Set how text that does not fit its bounds is truncated. See [`TextOverflow`].
     fn text_overflow(mut self, text_overflow: impl Into<TextOverflow>) -> Self {
-        self.get_text_style_data().text_overflow = Some(text_overflow.into());
+        self.text_style_data_mut().text_overflow = Some(text_overflow.into());
         self
     }
 
     /// Add a shadow cast behind the text. See [`TextShadow`].
     fn text_shadow(mut self, text_shadow: impl Into<TextShadow>) -> Self {
-        self.get_text_style_data()
+        self.text_style_data_mut()
             .text_shadows
             .push(text_shadow.into());
         self
@@ -948,7 +948,7 @@ where
 
     /// Set a line drawn through, under or over the text. See [`TextDecoration`].
     fn text_decoration(mut self, text_decoration: impl Into<TextDecoration>) -> Self {
-        self.get_text_style_data().text_decoration = Some(text_decoration.into());
+        self.text_style_data_mut().text_decoration = Some(text_decoration.into());
         self
     }
 }
@@ -957,7 +957,7 @@ where
 pub trait BackgroundExt: StyleExt {
     /// Paint the background with a color, gradient or shader. See [`Fill`].
     fn background(mut self, background: impl Into<Fill>) -> Self {
-        self.get_style().background = background.into();
+        self.style_mut().background = background.into();
         self
     }
 }
@@ -968,11 +968,11 @@ where
     Self: Sized,
 {
     /// Returns a mutable reference to the element's style data.
-    fn get_style(&mut self) -> &mut StyleState;
+    fn style_mut(&mut self) -> &mut StyleState;
 
     /// Replace all of the element's style data at once. See [`StyleState`].
     fn style(mut self, style: StyleState) -> Self {
-        *self.get_style() = style;
+        *self.style_mut() = style;
         self
     }
 }
@@ -982,27 +982,27 @@ pub trait DecorationExt: StyleExt {
     /// Add an outline around the element. See [`Border`].
     fn border(mut self, border: impl Into<Option<Border>>) -> Self {
         if let Some(border) = border.into() {
-            self.get_style().borders.push(border);
+            self.style_mut().borders.push(border);
         }
         self
     }
 
     /// Add a shadow cast by the element. See [`Shadow`].
     fn shadow(mut self, shadow: impl Into<Shadow>) -> Self {
-        self.get_style().shadows.push(shadow.into());
+        self.style_mut().shadows.push(shadow.into());
         self
     }
 
     /// Round the element's corners. See [`CornerRadius`].
     fn corner_radius(mut self, corner_radius: impl Into<CornerRadius>) -> Self {
-        self.get_style().corner_radius = corner_radius.into();
+        self.style_mut().corner_radius = corner_radius.into();
         self
     }
 }
 
 impl<T: DecorationExt> CornerRadiusExt for T {
     fn with_corner_radius(mut self, corner_radius: f32) -> Self {
-        self.get_style().corner_radius = CornerRadius::new_all(corner_radius);
+        self.style_mut().corner_radius = CornerRadius::new_all(corner_radius);
         self
     }
 }
@@ -1089,11 +1089,11 @@ where
     Self: Sized,
 {
     /// Returns a mutable reference to the element's layer.
-    fn get_layer(&mut self) -> &mut Layer;
+    fn layer_mut(&mut self) -> &mut Layer;
 
     /// Set the painting layer of the element. See [`Layer`].
     fn layer(mut self, layer: impl Into<Layer>) -> Self {
-        *self.get_layer() = layer.into();
+        *self.layer_mut() = layer.into();
         self
     }
 }
@@ -1103,12 +1103,12 @@ where
     Self: Sized,
 {
     /// Returns a mutable reference to the element's effect data.
-    fn get_effect(&mut self) -> &mut EffectData;
+    fn effect_mut(&mut self) -> &mut EffectData;
 
     /// Mark this element as scrollable.
     /// You are probably looking for the `ScrollView` component instead.
     fn scrollable(mut self, scrollable: impl Into<bool>) -> Self {
-        self.get_effect().scrollable = scrollable.into();
+        self.effect_mut().scrollable = scrollable.into();
         self
     }
 }
@@ -1119,11 +1119,11 @@ where
     Self: Sized,
 {
     /// Returns a mutable reference to the element's effect data.
-    fn get_effect(&mut self) -> &mut EffectData;
+    fn effect_mut(&mut self) -> &mut EffectData;
 
     /// Set whether the element receives pointer events. See [`Interactive`].
     fn interactive(mut self, interactive: impl Into<Interactive>) -> Self {
-        self.get_effect().interactive = interactive.into();
+        self.effect_mut().interactive = interactive.into();
         self
     }
 }
@@ -1131,14 +1131,14 @@ where
 /// Methods for visual effects applied to an element: clipping, backdrop blur, rotation, opacity and scale.
 pub trait EffectExt: Sized {
     /// Returns a mutable reference to the element's effect data.
-    fn get_effect(&mut self) -> &mut EffectData;
+    fn effect_mut(&mut self) -> &mut EffectData;
 
     /// Set the [`CursorIcon`] shown while the element is hovered.
     ///
     /// When multiple hovered elements define a cursor, the one painted on top wins.
     /// While a mouse button is pressed the cursor stays still.
     fn cursor(mut self, cursor: impl Into<Option<CursorIcon>>) -> Self {
-        self.get_effect().cursor = cursor.into();
+        self.effect_mut().cursor = cursor.into();
         self
     }
 
@@ -1146,43 +1146,43 @@ pub trait EffectExt: Sized {
     ///
     /// The topmost hovered element with an explicit visibility wins, defaulting to visible.
     fn cursor_visible(mut self, visible: impl Into<Option<bool>>) -> Self {
-        self.get_effect().cursor_visible = visible.into();
+        self.effect_mut().cursor_visible = visible.into();
         self
     }
 
     /// Replace all of the element's effect data at once. See [`EffectData`].
     fn effect(mut self, effect: EffectData) -> Self {
-        *self.get_effect() = effect;
+        *self.effect_mut() = effect;
         self
     }
 
     /// Set whether content overflowing the element's bounds is clipped. See [`Overflow`].
     fn overflow(mut self, overflow: impl Into<Overflow>) -> Self {
-        self.get_effect().overflow = overflow.into();
+        self.effect_mut().overflow = overflow.into();
         self
     }
 
     /// Apply a Gaussian blur of the given radius to the backdrop behind the element.
     fn backdrop_blur(mut self, blur: f32) -> Self {
-        self.get_effect().blur = Some(blur);
+        self.effect_mut().blur = Some(blur);
         self
     }
 
     /// Rotate the element by the given angle in degrees.
     fn rotation(mut self, rotation: f32) -> Self {
-        self.get_effect().rotation = Some(rotation);
+        self.effect_mut().rotation = Some(rotation);
         self
     }
 
     /// Set the element's opacity, from `0.0` (transparent) to `1.0` (opaque).
     fn opacity(mut self, opacity: f32) -> Self {
-        self.get_effect().opacity = Some(opacity);
+        self.effect_mut().opacity = Some(opacity);
         self
     }
 
     /// Scale the element. See [`Scale`].
     fn scale(mut self, scale: impl Into<Scale>) -> Self {
-        self.get_effect().scale = Some(scale.into());
+        self.effect_mut().scale = Some(scale.into());
         self
     }
 
@@ -1190,7 +1190,7 @@ pub trait EffectExt: Sized {
     ///
     /// Defaults to the element's center.
     fn transform_origin(mut self, transform_origin: impl Into<TransformOrigin>) -> Self {
-        self.get_effect().transform_origin = transform_origin.into();
+        self.effect_mut().transform_origin = transform_origin.into();
         self
     }
 }

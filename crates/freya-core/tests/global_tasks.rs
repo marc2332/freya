@@ -106,7 +106,7 @@ fn global_handles_cancel_on_unmount() {
     }
 
     impl KeyExt for Worker {
-        fn write_key(&mut self) -> &mut DiffKey {
+        fn key_mut(&mut self) -> &mut DiffKey {
             &mut self.key
         }
     }
