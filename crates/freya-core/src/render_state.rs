@@ -13,7 +13,7 @@ use crate::{
 /// Cached recordings and pending repaint regions.
 #[derive(Default)]
 pub struct RenderState {
-    /// Recorded render commands per node.
+    /// Recorded painting commands per node.
     pub cache: FxHashMap<NodeId, NodeRecording>,
 
     /// Nodes whose recording must be refreshed in the next frame.
@@ -22,13 +22,13 @@ pub struct RenderState {
     /// Nodes refreshed by area invalidation without damaging their entire bounds.
     pub area_invalidated: FxHashSet<NodeId>,
 
-    /// Nodes whose rendering can change without prop changes.
+    /// Nodes whose painting can change without prop changes.
     pub volatile: FxHashSet<NodeId>,
 
     /// Screen regions that must repaint in the next frame.
     pub damage: Damage,
 
-    /// The damage consumed by the last rendered frame.
+    /// The damage consumed by the last painted frame.
     pub last_damage: Damage,
 }
 

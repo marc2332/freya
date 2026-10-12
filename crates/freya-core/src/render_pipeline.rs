@@ -64,7 +64,7 @@ impl RenderPipeline<'_> {
 
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     pub fn render(mut self) {
-        // `FREYA_FULL_RENDER` disables incremental rendering as an escape hatch
+        // `FREYA_FULL_RENDER` disables incremental painting as an escape hatch
         if self.force_full || std::env::var_os("FREYA_FULL_RENDER").is_some() {
             self.tree.render_state.damage.mark_full();
         }

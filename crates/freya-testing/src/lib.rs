@@ -605,7 +605,7 @@ impl TestingRunner {
         &self.tree
     }
 
-    /// Repaint the whole surface on every render instead of only the damaged regions.
+    /// Paint the whole surface on every frame instead of only the damaged regions.
     pub fn set_force_full_render(&mut self, force_full_render: bool) {
         self.force_full_render = force_full_render;
     }
@@ -619,7 +619,7 @@ impl TestingRunner {
         self.sync_and_update();
     }
 
-    /// Run the render pipeline over the persistent surface.
+    /// Paint the app onto the persistent surface.
     pub fn render_to_surface(&mut self) {
         for area in self.pending_invalidations.take() {
             self.tree.borrow_mut().render_state.invalidate_area(area);
@@ -655,7 +655,7 @@ impl TestingRunner {
             .expect("Failed to encode the snapshot.")
     }
 
-    /// Render the app and return the raw pixels of the surface.
+    /// Paint the app and return the raw pixels of the surface.
     pub fn render_pixels(&mut self) -> Vec<u8> {
         self.render_to_surface();
         let surface = self.surface.as_mut().unwrap();
