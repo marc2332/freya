@@ -1,8 +1,11 @@
 #![allow(clippy::missing_panics_doc)]
 
-use std::collections::HashMap;
+use alloc::vec::Vec;
 
-use crate::prelude::*;
+use crate::{
+    collections::HashMap,
+    prelude::*,
+};
 
 #[derive(Default)]
 pub struct TestingTree {

@@ -1,7 +1,8 @@
-use std::{
-    any::Any,
+use alloc::{
     rc::Rc,
+    vec::Vec,
 };
+use core::any::Any;
 
 use crate::{
     geometry::Size2D,

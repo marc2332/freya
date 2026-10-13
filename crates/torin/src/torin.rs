@@ -1,12 +1,9 @@
-use std::{
-    collections::HashMap,
-    mem,
-};
+use core::mem;
 
 use itertools::Itertools;
-use rustc_hash::FxHashMap;
 
 use crate::{
+    collections::FxHashMap,
     custom_measurer::LayoutMeasurer,
     geometry::Area,
     measure::{
@@ -123,7 +120,7 @@ impl<Key: NodeKey> Torin<Key> {
     /// Create a new Layout
     pub fn new() -> Self {
         Self {
-            results: HashMap::default(),
+            results: FxHashMap::default(),
             dirty: FxHashMap::default(),
             root_node_candidate: RootNodeCandidate::None,
         }
