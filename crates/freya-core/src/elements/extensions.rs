@@ -817,7 +817,7 @@ pub trait AccessibilityExt: Sized {
     }
 
     /// Set the text label that describes the element in the accessibility tree.
-    fn a11y_alt(mut self, value: impl Into<Box<str>>) -> Self {
+    fn a11y_alt(mut self, value: impl Into<String>) -> Self {
         self.accessibility_data_mut().builder.set_label(value);
         self
     }
