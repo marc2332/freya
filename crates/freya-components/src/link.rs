@@ -56,13 +56,13 @@ pub struct Link {
 }
 
 impl ChildrenExt for Link {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
 impl KeyExt for Link {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -112,7 +112,7 @@ impl Component for Link {
                 // Open the url if there is any
                 // otherwise change the freya router route
                 if let Some(url) = &url {
-                    Platform::get().send(UserEvent::OpenUrl(url.clone()));
+                    Platform::get().open_url(url.clone());
                 } else {
                     let _ = RouterContext::get().push(to.clone());
                 }

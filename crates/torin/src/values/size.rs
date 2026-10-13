@@ -1,12 +1,27 @@
-use std::{
-    fmt::Debug,
-    hash::Hash,
-    sync::Arc,
+use alloc::{
+    boxed::Box,
+    format,
+    rc::Rc,
+    string::{
+        String,
+        ToString,
+    },
+};
+use core::{
+    fmt::{
+        self,
+        Debug,
+    },
+    hash::{
+        Hash,
+        Hasher,
+    },
 };
 
 pub use euclid::Rect;
 
 use crate::{
+    collections::DefaultHasher,
     geometry::Length,
     measure::Phase,
     scaled::Scaled,
@@ -24,7 +39,7 @@ pub struct SizeFnContext {
 pub use serde::*;
 
 #[derive(Clone)]
-pub struct SizeFn(Arc<dyn Fn(SizeFnContext) -> Option<f32> + Sync + Send>, u64);
+pub struct SizeFn(Rc<dyn Fn(SizeFnContext) -> Option<f32>>, u64);
 
 #[cfg(feature = "serde")]
 impl Serialize for SizeFn {
@@ -48,7 +63,7 @@ impl<'de> Deserialize<'de> for SizeFn {
         impl Visitor<'_> for FnVisitor {
             type Value = SizeFn;
 
-            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                 formatter.write_str("\"Fn\"")
             }
 
@@ -57,7 +72,7 @@ impl<'de> Deserialize<'de> for SizeFn {
                 E: de::Error,
             {
                 if v == "Fn" {
-                    Ok(SizeFn(Arc::new(|_ctx| None), 0))
+                    Ok(SizeFn(Rc::new(|_ctx| None), 0))
                 } else {
                     Err(E::custom(format!("expected \"Fn\", got {v}")))
                 }
@@ -69,18 +84,17 @@ impl<'de> Deserialize<'de> for SizeFn {
 }
 
 impl SizeFn {
-    pub fn new(func: impl Fn(SizeFnContext) -> Option<f32> + 'static + Sync + Send) -> Self {
-        Self(Arc::new(func), 0)
+    pub fn new(func: impl Fn(SizeFnContext) -> Option<f32> + 'static) -> Self {
+        Self(Rc::new(func), 0)
     }
 
     pub fn new_data<D: Hash>(
-        func: impl Fn(SizeFnContext) -> Option<f32> + 'static + Sync + Send,
+        func: impl Fn(SizeFnContext) -> Option<f32> + 'static,
         data: &D,
     ) -> Self {
-        use std::hash::Hasher;
-        let mut hasher = std::hash::DefaultHasher::default();
+        let mut hasher = DefaultHasher::default();
         data.hash(&mut hasher);
-        Self(Arc::new(func), hasher.finish())
+        Self(Rc::new(func), hasher.finish())
     }
 
     pub fn call(&self, context: SizeFnContext) -> Option<f32> {
@@ -89,7 +103,7 @@ impl SizeFn {
 }
 
 impl Debug for SizeFn {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("SizeFn")
     }
 }
@@ -217,13 +231,13 @@ impl Size {
     }
 
     /// Use a dynamic [`Fn`](Size::Fn) size computed by the given closure.
-    pub fn func(func: impl Fn(SizeFnContext) -> Option<f32> + 'static + Sync + Send) -> Size {
+    pub fn func(func: impl Fn(SizeFnContext) -> Option<f32> + 'static) -> Size {
         Self::Fn(Box::new(SizeFn::new(func)))
     }
 
     /// Use a dynamic [`Fn`](Size::Fn) size with hashable data for equality checks.
     pub fn func_data<D: Hash>(
-        func: impl Fn(SizeFnContext) -> Option<f32> + 'static + Sync + Send,
+        func: impl Fn(SizeFnContext) -> Option<f32> + 'static,
         data: &D,
     ) -> Size {
         Self::Fn(Box::new(SizeFn::new_data(func, data)))

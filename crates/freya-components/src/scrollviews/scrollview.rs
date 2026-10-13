@@ -59,6 +59,7 @@ pub struct ScrollView {
     children: Vec<Element>,
     layout: LayoutData,
     show_scrollbar: bool,
+    auto_hide_scrollbars: bool,
     scroll_with_arrows: bool,
     scroll_controller: Option<ScrollController>,
     invert_scroll_wheel: bool,
@@ -69,13 +70,13 @@ pub struct ScrollView {
 }
 
 impl ChildrenExt for ScrollView {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
 impl KeyExt for ScrollView {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -91,6 +92,7 @@ impl Default for ScrollView {
             }
             .into(),
             show_scrollbar: true,
+            auto_hide_scrollbars: true,
             scroll_with_arrows: true,
             scroll_controller: None,
             invert_scroll_wheel: false,
@@ -119,6 +121,13 @@ impl ScrollView {
     /// Toggles whether the scrollbars are shown when the content overflows.
     pub fn show_scrollbar(mut self, show_scrollbar: bool) -> Self {
         self.show_scrollbar = show_scrollbar;
+        self
+    }
+
+    /// Toggles hiding idle scrollbars, enabled by default.
+    /// When disabled, scrollbars remain visible while the content overflows.
+    pub fn auto_hide_scrollbars(mut self, auto_hide_scrollbars: bool) -> Self {
+        self.auto_hide_scrollbars = auto_hide_scrollbars;
         self
     }
 
@@ -178,7 +187,7 @@ impl ScrollView {
 }
 
 impl LayoutExt for ScrollView {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
@@ -510,6 +519,7 @@ impl Component for ScrollView {
                             content_size: size.read().inner_sizes,
                             scroll_controller,
                             timeout,
+                            auto_hide_scrollbars: self.auto_hide_scrollbars,
                             clicking_scrollbar,
                             thumb_events: ScrollBarThumbEvents::new(Axis::Y, clicking_scrollbar),
                             thumb_offset: scrollbar_y,
@@ -526,6 +536,7 @@ impl Component for ScrollView {
                     content_size: size.read().inner_sizes,
                     scroll_controller,
                     timeout,
+                    auto_hide_scrollbars: self.auto_hide_scrollbars,
                     clicking_scrollbar,
                     thumb_events: ScrollBarThumbEvents::new(Axis::X, clicking_scrollbar),
                     thumb_offset: scrollbar_x,

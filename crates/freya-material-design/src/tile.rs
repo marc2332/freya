@@ -50,14 +50,14 @@ pub struct RippleTile {
 }
 
 impl ChildrenExt for RippleTile {
-    fn get_children(&mut self) -> &mut Vec<Element> {
-        self.tile.get_children()
+    fn children_mut(&mut self) -> &mut Vec<Element> {
+        self.tile.children_mut()
     }
 }
 
 impl KeyExt for RippleTile {
-    fn write_key(&mut self) -> &mut DiffKey {
-        self.tile.write_key()
+    fn key_mut(&mut self) -> &mut DiffKey {
+        self.tile.key_mut()
     }
 }
 
@@ -86,8 +86,8 @@ impl Component for RippleTile {
         let tile = self.tile.clone();
 
         let mut ripple = self.ripple.clone();
-        ripple.get_children().clear();
-        ripple.get_children().push(tile.into());
+        ripple.children_mut().clear();
+        ripple.children_mut().push(tile.into());
         ripple.width(Size::fill())
     }
 

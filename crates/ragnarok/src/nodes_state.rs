@@ -1,7 +1,4 @@
-use rustc_hash::{
-    FxHashMap,
-    FxHashSet,
-};
+use alloc::vec::Vec;
 
 use crate::{
     EmmitableEvent,
@@ -10,6 +7,10 @@ use crate::{
     NodeKey,
     PotentialEvent,
     SourceEvent,
+    collections::{
+        FxHashMap,
+        FxHashSet,
+    },
 };
 
 /// [`NodesState`] stores the nodes states given incoming events.
@@ -121,6 +122,7 @@ impl<Key: NodeKey> NodesState<Key> {
             let new_deepest = emmitable_events
                 .iter()
                 .find(|e| e.name().is_exclusive_enter())
+                .or_else(|| emmitable_events.iter().rev().find(|e| e.name().is_moved()))
                 .map(|e| e.key());
 
             if let Some(old_entered) = self.entered_node {

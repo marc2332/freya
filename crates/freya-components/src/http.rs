@@ -24,7 +24,7 @@
 //!         .build()?;
 //!     launch(
 //!         LaunchConfig::new()
-//!             .with_global(client)
+//!             .with_global_context(client)
 //!             .with_window(WindowConfig::new(app)),
 //!     );
 //!     Ok(())

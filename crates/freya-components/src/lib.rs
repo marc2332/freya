@@ -8,7 +8,6 @@ pub mod button;
 pub mod cache;
 #[cfg(feature = "calendar")]
 pub mod calendar;
-pub mod canvas;
 pub mod card;
 pub mod checkbox;
 pub mod chip;

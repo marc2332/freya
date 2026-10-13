@@ -50,13 +50,3 @@ impl<R: Routable + Clone> Component for Router<R> {
         Outlet::<R>::new()
     }
 }
-
-/// Provides an existing router context to this component subtree.
-///
-/// Use this with a [`RouterContext::create_global`] context to share navigation
-/// state between windows. Call it at the window's root component.
-///
-/// See the [multi-window router example](https://github.com/marc2332/freya/blob/main/examples/feature_multi_window_router.rs).
-pub fn use_share_router(router: impl FnOnce() -> RouterContext) {
-    use_provide_context(router);
-}

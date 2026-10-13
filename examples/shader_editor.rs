@@ -200,7 +200,7 @@ impl Component for ShaderView {
 
         use_hook(|| {
             let ticker = RenderingTicker::get();
-            let platform = Platform::get();
+            let platform = Platform::get().current_window();
 
             spawn(async move {
                 loop {

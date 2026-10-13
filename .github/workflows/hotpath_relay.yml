@@ -26,3 +26,13 @@ jobs:
       benchmark: core
       artifact_name: hotpath-core
       report_file: core.json
+  painting:
+    uses: pawurb/hotpath-rs/.github/workflows/hotpath-relay.yml@v0.28.0
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    with:
+      benchmark: painting
+      artifact_name: hotpath-painting
+      report_file: painting.json

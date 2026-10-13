@@ -1,3 +1,8 @@
+use alloc::{
+    vec,
+    vec::Vec,
+};
+
 pub use euclid::Rect;
 
 use crate::{

@@ -44,7 +44,7 @@ pub struct FloatingTab {
 }
 
 impl KeyExt for FloatingTab {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -56,7 +56,7 @@ impl Default for FloatingTab {
 }
 
 impl ChildrenExt for FloatingTab {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }

@@ -7,7 +7,7 @@ use freya_core::{
 const ZOOM_STEP: f64 = 0.10;
 
 pub fn integration(app: AppComponent) -> impl IntoElement {
-    let platform = use_hook(Platform::get);
+    let platform = use_hook(|| Platform::get().current_window());
 
     let on_global_key_down = move |e: Event<KeyboardEventData>| match &e.key {
         Key::Named(NamedKey::Tab) if e.modifiers == Modifiers::SHIFT => {

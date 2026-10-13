@@ -221,24 +221,33 @@
 //!
 //! To expose the full set of element handlers on a component, implement
 //! [`EventHandlersExt`](freya_core::prelude::EventHandlersExt) and forward the stored handlers
-//! to the element returned by `render`:
+//! to the element returned by `render`. Press handlers also require
+//! [`AccessibilityExt`](freya_core::prelude::AccessibilityExt) to advertise the Click action:
 //!
 //! ```rust, no_run
 //! # use freya::prelude::*;
 //! #[derive(PartialEq)]
 //! struct Clickable {
 //!     event_handlers: EventHandlers,
+//!     accessibility: AccessibilityData,
 //! }
 //!
 //! impl EventHandlersExt for Clickable {
-//!     fn get_event_handlers(&mut self) -> &mut EventHandlers {
+//!     fn event_handlers_mut(&mut self) -> &mut EventHandlers {
 //!         &mut self.event_handlers
+//!     }
+//! }
+//!
+//! impl AccessibilityExt for Clickable {
+//!     fn accessibility_data_mut(&mut self) -> &mut AccessibilityData {
+//!         &mut self.accessibility
 //!     }
 //! }
 //!
 //! impl Component for Clickable {
 //!     fn render(&self) -> impl IntoElement {
 //!         rect()
+//!             .accessibility(self.accessibility.clone())
 //!             .event_handlers(self.event_handlers.clone())
 //!             .child("Press me")
 //!     }
@@ -247,6 +256,7 @@
 //! # fn app() -> impl IntoElement {
 //! Clickable {
 //!     event_handlers: EventHandlers::default(),
+//!     accessibility: AccessibilityData::default(),
 //! }
 //! .on_press(|_| println!("Pressed!"))
 //! # }

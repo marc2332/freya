@@ -181,7 +181,7 @@ impl AssetCacher {
         if spawn_clear_task {
             // Only clear the asset if a duration was specified
             if let AssetAge::Duration(duration) = asset_config.age {
-                let clear_task = spawn_forever({
+                let clear_task = spawn_in_window({
                     let asset_config = asset_config.clone();
                     async move {
                         timer(duration).await;
@@ -251,7 +251,7 @@ pub fn use_asset(asset_config: &AssetConfiguration) {
             return;
         };
         // Try to clean in the next async tick, when this scope will already be dropped
-        spawn_forever(async move {
+        spawn_in_window(async move {
             asset_cacher.try_clean(&asset_config);
         });
     });

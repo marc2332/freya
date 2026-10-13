@@ -85,7 +85,7 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
 /// A `RadioStation` holds the global state value and manages subscriptions to different channels.
 /// Components can subscribe to specific channels to receive notifications when the state changes.
 ///
-/// RadioStations can be shared across multiple windows or components using [`use_share_radio`].
+/// Share a station between windows with `WindowConfig::with_root_context`.
 ///
 /// # Examples
 ///
@@ -132,8 +132,8 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
 ///
 /// launch(
 ///     LaunchConfig::new()
-///         .with_window(WindowConfig::new(Window1 { radio_station }))
-///         .with_window(WindowConfig::new(Window2 { radio_station })),
+///         .with_window(WindowConfig::new(window1).with_root_context(radio_station))
+///         .with_window(WindowConfig::new(window2).with_root_context(radio_station)),
 /// );
 /// ```
 pub struct RadioStation<Value, Channel>
@@ -182,8 +182,8 @@ where
     ///
     /// launch(
     ///     LaunchConfig::new()
-    ///         .with_window(WindowConfig::new(Window1 { radio_station }))
-    ///         .with_window(WindowConfig::new(Window2 { radio_station })),
+    ///         .with_window(WindowConfig::new(window1).with_root_context(radio_station))
+    ///         .with_window(WindowConfig::new(window2).with_root_context(radio_station)),
     /// );
     /// ```
     pub fn create_global(init_value: Value) -> Self {
@@ -745,23 +745,12 @@ impl<Channel> ChannelSelection<Channel> {
     }
 }
 
-/// Provide an existing [`RadioStation`] to descendant components.
-/// This is useful for sharing the same global state across different parts of the component tree
-/// or across multiple windows.
-pub fn use_share_radio<Value, Channel>(radio: impl FnOnce() -> RadioStation<Value, Channel>)
-where
-    Channel: RadioChannel<Value>,
-    Value: 'static,
-{
-    use_provide_context(radio);
-}
-
 /// Subscribe to the global state for a specific channel.
 /// Returns a [`Radio`] handle that allows reading and writing the state.
 /// The current component will re-render whenever the specified channel is notified.
 ///
 /// This hook must be called within a component that has access to a [`RadioStation`]
-/// (either through [`use_init_radio_station`] or [`use_share_radio`]).
+/// (either through [`use_init_radio_station`] or the context API).
 ///
 /// # Example
 ///

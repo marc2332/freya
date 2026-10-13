@@ -1,6 +1,6 @@
 [package]
 name = "freya-html"
-version = "0.5.0-rc.8"
+version = "0.5.0-rc.10"
 description = "HTML + CSS rendering for Freya using Blitz"
 edition = "2024"
 license = "MIT"
@@ -24,15 +24,15 @@ smol_str = "0.3"
 
 futures-channel = { workspace = true }
 futures-lite = { workspace = true }
-parley = "0.11"
+parley = "0.12"
 
-blitz-dom = { version = "=0.3.0-beta.2", features = ["default", "floats"] }
-blitz-html = "=0.3.0-beta.2"
-blitz-paint = "=0.3.0-beta.2"
-blitz-traits = "=0.3.0-beta.2"
+blitz-dom = { version = "=0.3.0-beta.3", features = ["default", "floats"] }
+blitz-html = "=0.3.0-beta.3"
+blitz-paint = "=0.3.0-beta.3"
+blitz-traits = "=0.3.0-beta.3"
 atomic_refcell = "0.1"
 
-anyrender = "0.13"
+anyrender = "0.14"
 kurbo = "0.13.1"
 peniko = "0.6"
 hashbrown = "0.17.0"

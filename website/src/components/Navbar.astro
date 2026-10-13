@@ -1,56 +1,85 @@
 ---
+import { getCollection } from "astro:content";
+
 export interface Props {
   wide?: boolean;
+  sticky?: boolean;
 }
 
-const { wide = false } = Astro.props;
+const { wide = false, sticky = true } = Astro.props;
+const threeMonthsAgo = new Date();
+threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+const latestRecentPost = (await getCollection("blog"))
+  .filter((post) => post.data.date >= threeMonthsAgo)
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())[0];
 ---
 
-<div class="w-full pb-2 py-2 px-4 sm:py-10 bg-custom-dark-black">
+<div
+  class:list={[
+    "w-full pb-2 py-2 px-4 sm:py-6 bg-custom-dark-black",
+    sticky && "sticky top-0 z-50",
+  ]}
+>
   <div class:list={["mx-auto text-stone-300", wide ? "w-full" : "lg:w-content"]}>
     <div class="w-full flex justify-center items-center sm:hidden pb-2">
-      <a class="mx-4 hover:text-white" title="Freya Home Page" href="/">
-        <img src="/logo.svg" width="40" class="inline-block" />
-        <img src="/freya.svg" width="50" class="ml-4 inline-block" />
+      <a class="flex items-center hover:text-white" title="Freya Home Page" href="/">
+        <img src="/logo.svg" width="50" class="block" />
+        <img src="/freya.svg" width="65" class="ml-4 block" />
       </a>
     </div>
-    <div class="flex items-center h-[35px] sm:h-[40px] justify-center sm:justify-normal">
+    <div class="flex items-center min-h-[50px] justify-between">
       <a
-        class="mx-4 hover:text-white static top-0 hidden sm:inline-block"
+        class="flex items-center hover:text-white hidden sm:flex"
         title="Freya Home Page"
         href="/"
       >
-        <img src="/logo.svg" width="40" class="inline-block" />
-        <img src="/freya.svg" width="50" class="ml-4 inline-block" />
+        <img src="/logo.svg" width="50" class="block" />
+        <img src="/freya.svg" width="65" class="ml-4 block" />
       </a>
-      <a
-        class="inline-block mx-4 hover:text-white hover:underline"
-        title="Freya Demo"
-        href="/demo"
-      >
-        Demo
-      </a>
-      <a
-        class="inline-block mx-4 hover:text-white hover:underline"
-        title="Freya Blog"
-        href="/blog"
-      >
-        Blog
-      </a>
-      <a
-        class="inline-block mx-4 hover:text-white hover:underline"
-        title="Freya Docs"
-        href="https://docs.rs/freya/latest/freya/"
-      >
-        Docs
-      </a>
-      <a
-        class="inline-block mx-4 hover:text-white hover:underline"
-        title="Freya Discord"
-        href="https://discord.gg/sYejxCdewG"
-      >
-        Discord
-      </a>
+      <div class="flex items-center">
+        {
+          latestRecentPost && (
+            <a
+              class="hidden lg:flex items-center gap-2 mr-2 max-w-56 rounded-lg border border-stone-800 bg-custom-dark-black px-3 py-1 text-xs hover:border-custom-purple hover:bg-custom-dark-gray transition-colors"
+              href={`/posts/${latestRecentPost.data.slug}`}
+              title={latestRecentPost.data.title}
+            >
+              <span class="truncate text-white">{latestRecentPost.data.title}</span>
+              <time class="shrink-0 text-stone-400" datetime={latestRecentPost.data.date.toISOString()}>
+                {latestRecentPost.data.date.toLocaleDateString()}
+              </time>
+            </a>
+          )
+        }
+        <a
+          class="inline-block mx-4 hover:text-white hover:underline"
+          title="Freya Blog"
+          href="/blog"
+        >
+          Blog
+        </a>
+        <a
+          class="inline-block mx-4 hover:text-white hover:underline"
+          title="Freya Docs"
+          href="https://docs.rs/freya/latest/freya/"
+        >
+          Docs
+        </a>
+        <a
+          class="inline-block mx-4 hover:text-white hover:underline"
+          title="Freya support and contracting"
+          href="/support"
+        >
+          Support
+        </a>
+        <a
+          class="inline-block mx-4 hover:text-white hover:underline"
+          title="Freya Discord"
+          href="https://discord.gg/sYejxCdewG"
+        >
+          Discord
+        </a>
+      </div>
     </div>
   </div>
 </div>

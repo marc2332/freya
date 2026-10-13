@@ -1,3 +1,12 @@
+use alloc::{
+    boxed::Box,
+    format,
+    string::{
+        String,
+        ToString,
+    },
+};
+
 use crate::{
     prelude::{
         Area,

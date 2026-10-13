@@ -10,7 +10,7 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    let platform = Platform::get();
+    let platform = Platform::get().current_window();
 
     format!("{:?}", platform.root_size.read())
 }

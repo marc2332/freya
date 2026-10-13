@@ -131,8 +131,7 @@ impl RouterContext {
 
     /// Creates a router context that lives for the application lifetime.
     ///
-    /// This is useful for sharing router state across multiple windows. Provide it
-    /// to each window with [`use_share_router`](crate::components::use_share_router).
+    /// Provide it to each window with `WindowConfig::with_root_context`.
     ///
     /// This is **not** a hook, do not use it inside components like you would [`use_route`](crate::hooks::use_route).
     /// You would usually want to call this in your `main` function, not anywhere else.
@@ -148,7 +147,7 @@ impl RouterContext {
     ///
     ///     launch(
     ///         LaunchConfig::new()
-    ///             .with_window(WindowConfig::new_app(MyApp { router })),
+    ///             .with_window(WindowConfig::new(app).with_root_context(router)),
     ///     );
     /// }
     /// ```

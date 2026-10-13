@@ -221,13 +221,13 @@ impl SvgViewer {
 }
 
 impl KeyExt for SvgViewer {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl LayoutExt for SvgViewer {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
@@ -237,38 +237,38 @@ impl ContainerWithContentExt for SvgViewer {}
 impl ContainerPositionExt for SvgViewer {}
 
 impl ChildrenExt for SvgViewer {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
 impl ImageExt for SvgViewer {
-    fn get_image_data(&mut self) -> &mut ImageData {
+    fn image_data_mut(&mut self) -> &mut ImageData {
         &mut self.image_data
     }
 }
 
 impl AccessibilityExt for SvgViewer {
-    fn get_accessibility_data(&mut self) -> &mut AccessibilityData {
+    fn accessibility_data_mut(&mut self) -> &mut AccessibilityData {
         &mut self.accessibility
     }
 }
 
 impl EffectExt for SvgViewer {
-    fn get_effect(&mut self) -> &mut EffectData {
+    fn effect_mut(&mut self) -> &mut EffectData {
         &mut self.effect
     }
 }
 
 impl EventHandlersExt for SvgViewer {
-    fn get_event_handlers(&mut self) -> &mut EventHandlers {
+    fn event_handlers_mut(&mut self) -> &mut EventHandlers {
         &mut self.event_handlers
     }
 }
 
 impl Component for SvgViewer {
     fn render(&self) -> impl IntoElement {
-        let scale_factor = *Platform::get().scale_factor.read();
+        let scale_factor = *Platform::get().current_window().scale_factor.read();
         let layout = self.layout.clone();
         let mut measured = use_state(|| match (&layout.width, &layout.height) {
             (Size::Pixels(width), Size::Pixels(height)) => {
@@ -312,7 +312,7 @@ impl Component for SvgViewer {
                 if self.async_rasterization || self.source.is_remote() {
                     let source = self.source.clone();
                     let asset_config = asset_config.clone();
-                    spawn_forever(async move {
+                    spawn_in_window(async move {
                         let result = match source.bytes().await {
                             Ok(bytes) => {
                                 let _permit = RASTER_LIMIT.acquire().await;

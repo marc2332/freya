@@ -90,13 +90,13 @@ pub struct Menu {
 }
 
 impl ChildrenExt for Menu {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
 impl KeyExt for Menu {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -190,13 +190,13 @@ pub struct MenuContainer {
 }
 
 impl KeyExt for MenuContainer {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl ChildrenExt for MenuContainer {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
@@ -237,7 +237,7 @@ impl ComponentOwned for MenuContainer {
             .offset_y(offset_y)
             .on_sized(move |e: Event<SizedEventData>| {
                 if measured.peek().is_none() {
-                    let root_size = *Platform::get().root_size.peek();
+                    let root_size = *Platform::get().current_window().root_size.peek();
                     measured.set(Some((e.area, root_size)));
                 }
             })
@@ -307,7 +307,7 @@ impl Default for MenuItem {
 }
 
 impl KeyExt for MenuItem {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -362,7 +362,7 @@ impl MenuItem {
 }
 
 impl ChildrenExt for MenuItem {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
@@ -470,13 +470,13 @@ pub struct MenuButton {
 }
 
 impl ChildrenExt for MenuButton {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
 impl KeyExt for MenuButton {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -536,7 +536,7 @@ pub struct SubMenu {
 }
 
 impl KeyExt for SubMenu {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -559,7 +559,7 @@ impl SubMenu {
 }
 
 impl ChildrenExt for SubMenu {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.items
     }
 }

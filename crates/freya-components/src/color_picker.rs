@@ -68,7 +68,7 @@ pub struct ColorPicker {
 }
 
 impl KeyExt for ColorPicker {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -264,7 +264,7 @@ impl Component for ColorPicker {
 
         let (offset_x, offset_y, opacity) = match (preview_area(), popup_size()) {
             (Some(preview), Some(size)) => {
-                let window = Area::from_size(*Platform::get().root_size.peek());
+                let window = Area::from_size(*Platform::get().current_window().root_size.peek());
                 let popup = Area::new(Point2D::new(preview.max_x(), preview.min_y()), size);
 
                 let target = if popup.max_x() > window.max_x() && preview.min_x() >= size.width {

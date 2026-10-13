@@ -124,6 +124,7 @@ pub mod prelude {
             context::*,
             effect::*,
             future_task::*,
+            global_context::*,
             memo::*,
             reactive::*,
             readable::*,
@@ -149,6 +150,10 @@ pub mod prelude {
             font_width::*,
             gradient::*,
             letter_spacing::*,
+            render_callback::{
+                RenderCallback,
+                RenderContext as FillRenderContext,
+            },
             scale::*,
             shader::*,
             shadow::*,
@@ -160,7 +165,10 @@ pub mod prelude {
             transform_origin::*,
             vertical_align::*,
         },
-        user_event::UserEvent,
+        user_event::{
+            GlobalUserEvent,
+            UserEvent,
+        },
     };
 }
 
@@ -191,7 +199,7 @@ pub mod integration {
             platform::*,
         },
         lifecycle::{
-            context::GlobalContexts,
+            global_context::GlobalContexts,
             state::State,
             writable_utils::WritableUtils,
         },

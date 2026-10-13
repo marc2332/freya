@@ -8,7 +8,7 @@ fn app() -> impl IntoElement {
     let mut maximized = use_state(|| false);
 
     use_side_effect(move || {
-        let _ = Platform::get().root_size.read();
+        let _ = Platform::get().current_window().root_size.read();
         Platform::get().with_window(Platform::window_id(), move |window| {
             maximized.set(window.is_maximized())
         });

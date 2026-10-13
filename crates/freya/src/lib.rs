@@ -27,7 +27,7 @@
 //!         .background((35, 35, 35))
 //!         .color(Color::WHITE)
 //!         .padding(Gaps::new_all(12.))
-//!         .on_mouse_up(move |_| *count.write() += 1)
+//!         .on_press(move |_| *count.write() += 1)
 //!         .child(format!("Click to increase -> {}", count.read()))
 //! }
 //! ```
@@ -49,6 +49,7 @@
 //! - [Development Setup](self::_docs::development_setup)
 //! - [Extending Components](self::_docs::extending_components)
 //! - [Custom Elements](freya_core::element::ElementExt)
+//! - [Working with AI](self::_docs::ai)
 //!
 //! ### Learn
 //! - [Built-in Components](crate::components)
@@ -88,7 +89,7 @@
 //! - `video`: Reexport [freya_video] under [video].
 //! - `plot`: Reexport of plotters under [plot].
 //! - `material-design`: Reexport [freya_material_design] under [material_design].
-//! - `calendar`: Enables the [Calendar](components::Calendar) component.
+//! - `calendar`: Enables the Calendar components from `freya-components`.
 //! - `icons`: Reexport of [freya_icons] under [icons].
 //! - `icons-lucide`: Enables the Lucide icons from [freya_icons]. Implies `icons`.
 //! - `radio`: Reexport [freya_radio] under [radio].
@@ -123,8 +124,10 @@ pub mod prelude {
     pub use freya_winit::{
         WindowDragExt,
         WinitPlatformExt,
+        WinitPlatformWindowExt,
         config::{
             CloseDecision,
+            GpuPreference,
             GpuResourceCacheLimit,
             LaunchConfig,
             RendererPreference,
@@ -210,7 +213,6 @@ pub mod components {
         attached::*,
         button::*,
         cache::*,
-        canvas::*,
         card::*,
         checkbox::*,
         chip::*,
