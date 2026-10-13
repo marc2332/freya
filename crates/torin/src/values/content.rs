@@ -1,3 +1,8 @@
+use alloc::{
+    borrow::ToOwned,
+    string::String,
+};
+
 use crate::scaled::Scaled;
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
