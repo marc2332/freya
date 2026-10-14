@@ -186,3 +186,40 @@ pub fn gradient_text_follows_the_paragraph() {
         "the gradient did not follow the text, off by {biggest_difference} levels"
     );
 }
+
+#[test]
+pub fn stacked_solid_boxes_do_not_leak_color() {
+    // The fractional size guarantees a fractional right/bottom edge, which used to be
+    // anti-aliased once per stacked box, leaking the blue parent through the white child.
+    fn app() -> impl IntoElement {
+        rect().background(Color::from_rgb(0, 0, 255)).child(
+            rect()
+                .background(Color::WHITE)
+                .width(Size::px(10.3))
+                .height(Size::px(10.3)),
+        )
+    }
+
+    let mut test = launch_test(app);
+    test.sync_and_update();
+
+    let image = SkImage::from_encoded(test.render())
+        .and_then(|image| image.make_raster_image(None, None))
+        .unwrap();
+    let pixels = image.peek_pixels().unwrap();
+
+    let leaked: Vec<_> = (0..pixels.height())
+        .flat_map(|y| (0..pixels.width()).map(move |x| (x, y)))
+        .filter_map(|(x, y)| {
+            let color = pixels.get_color((x, y));
+            (i32::from(color.b()) > i32::from(color.r()) + 10
+                && i32::from(color.b()) > i32::from(color.g()) + 10)
+                .then_some((x, y, (color.r(), color.g(), color.b())))
+        })
+        .collect();
+
+    assert!(
+        leaked.is_empty(),
+        "the blue parent leaked through the white child at {leaked:?}"
+    );
+}

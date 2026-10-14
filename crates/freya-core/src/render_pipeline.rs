@@ -15,6 +15,7 @@ use crate::{
     element::{
         ClipContext,
         RenderContext,
+        snap,
     },
     node_id::NodeId,
     prelude::Color,
@@ -67,20 +68,21 @@ impl RenderPipeline<'_> {
 
                 let effect_state = self.tree.effect_state.get(node_id);
 
-                let mut visible_area = layout_node.visible_area();
+                let mut visible_area = snap(layout_node.visible_area());
 
                 if let Some(effect_state) = effect_state {
-                    visible_area = self.scale_transformed_area(visible_area, &effect_state.scales);
+                    visible_area =
+                        snap(self.scale_transformed_area(visible_area, &effect_state.scales));
 
                     // No need to render this element if it is completely clipped
                     for clip_node_id in effect_state.clips.iter() {
                         let clip_area = *clip_areas.entry(*clip_node_id).or_insert_with(|| {
                             let clip_layout_node = self.tree.layout.get(clip_node_id).unwrap();
                             let clip_effect = self.tree.effect_state.get(clip_node_id).unwrap();
-                            self.scale_transformed_area(
+                            snap(self.scale_transformed_area(
                                 clip_layout_node.visible_area(),
                                 &clip_effect.scales,
-                            )
+                            ))
                         });
 
                         if !visible_area.intersects(&clip_area) {

@@ -298,7 +298,7 @@ impl ElementExt for LabelElement {
         let layout_data = context.layout_node.data.as_ref().unwrap();
         let paragraph = layout_data.downcast_ref::<SkParagraph>().unwrap();
 
-        let origin = context.layout_node.inner_area.origin;
+        let origin = context.layout_node.inner_area.origin.round();
         paragraph.paint_at(context.canvas, origin.cast_unit());
         if let Some(callback) = context.text_style_state.color.render_callback() {
             let layer = context.canvas.save();

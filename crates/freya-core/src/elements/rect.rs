@@ -460,7 +460,7 @@ impl ElementExt for RectElement {
     /// Checks if the cursor point is inside the rounded rectangle of this element,
     /// using local coordinates relative to the element's visible area for improved precision with large absolute coordinates.
     fn is_point_inside(&self, context: EventMeasurementContext) -> bool {
-        let area = context.layout_node.visible_area();
+        let area = snap(context.layout_node.visible_area());
         let cursor = context.cursor.to_f32();
         let local_area = Area::new((0., 0.).into(), area.size);
         let rounded_rect = self.render_rect(&local_area, context.scale_factor as f32);
@@ -487,7 +487,7 @@ impl ElementExt for RectElement {
     fn render(&self, context: RenderContext) {
         let style = self.style();
 
-        let area = context.layout_node.visible_area();
+        let area = snap(context.layout_node.visible_area());
         let corner_radius = style.corner_radius.with_scale(context.scale_factor as f32);
 
         let mut path = PathBuilder::new();

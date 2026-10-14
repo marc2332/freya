@@ -79,6 +79,7 @@ use crate::{
         TextAlign,
         TextStyleExt,
         VerticalAlign,
+        snap,
     },
     style::{
         cursor::{
@@ -475,11 +476,11 @@ impl ElementExt for ParagraphElement {
     fn render(&self, context: RenderContext) {
         let paragraph = self.sk_paragraph.0.borrow();
         let ParagraphHolderInner { paragraph, .. } = paragraph.as_ref().unwrap();
-        let inner_area = context.layout_node.inner_area;
+        let inner_area = snap(context.layout_node.inner_area);
 
         let cursor_area = match self.cursor_mode {
             CursorMode::Fit => inner_area.cast_unit(),
-            CursorMode::Expanded => context.layout_node.area,
+            CursorMode::Expanded => snap(context.layout_node.area),
         };
 
         let paragraph_height = paragraph.height();
@@ -568,7 +569,7 @@ impl ElementExt for ParagraphElement {
         }
 
         // Draw text
-        let origin = Point2D::new(inner_area.min_x(), inner_area.min_y() + vertical_offset);
+        let origin = Point2D::new(inner_area.min_x(), inner_area.min_y() + vertical_offset).round();
         paragraph.paint_at(context.canvas, origin.cast_unit());
 
         if let Some(callback) = context.text_style_state.color.render_callback() {
