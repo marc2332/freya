@@ -6,10 +6,7 @@ use std::{
     },
 };
 
-use freya_core::{
-    fifo_cache::FifoCache,
-    prelude::Color,
-};
+use freya_core::prelude::Color;
 use freya_engine::prelude::{
     Canvas,
     Font,
@@ -24,6 +21,7 @@ use freya_engine::prelude::{
 };
 use rio_vt::selection::SelectionRange;
 use rustc_hash::FxHasher;
+use tiny_cache::FifoCache;
 use torin::prelude::Area;
 
 use crate::{
@@ -253,6 +251,10 @@ impl Renderer<'_> {
     /// when font fallback (emoji, wide chars) is needed.
     fn render_text_row(&mut self, row: &[TermCell], y: f32) {
         let mut hasher = FxHasher::default();
+        self.font.typeface().unique_id().hash(&mut hasher);
+        self.font_size.to_bits().hash(&mut hasher);
+        self.char_width.to_bits().hash(&mut hasher);
+        self.font_families.hash(&mut hasher);
         let mut needs_fallback = false;
         let mut text = String::new();
         for cell in row.iter() {

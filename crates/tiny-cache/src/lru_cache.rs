@@ -12,10 +12,11 @@ use rustc_hash::{
 };
 use smallvec::SmallVec;
 
-/// Cache of values shared between users, where each user keeps its last `USER_CAPACITY`
-/// used values alive. A value is dropped once no user uses it.
+/// Reuse costly results across users, such as text measurements shared by several labels.
+/// Each user keeps its last `USER_CAPACITY` results. Saved results leave when no user needs them.
 pub struct LRUCache<V, ID: Hash, const USER_CAPACITY: usize = 2> {
     map: FxHashMap<u64, (i32, Rc<V>)>,
+    /// Tracks which saved results each user still needs.
     pub users: FxHashMap<ID, SmallVec<[u64; 2]>>,
 }
 
@@ -35,8 +36,8 @@ impl<V, ID: Hash + Eq, const USER_CAPACITY: usize> LRUCache<V, ID, USER_CAPACITY
         hasher.finish()
     }
 
-    /// Marks `hash_value` as the last value used by `id` and returns it if cached.
-    /// When not cached it returns `None` and leaves a free slot for the [LRUCache::insert] that follows.
+    /// Reuses a saved result for this user and makes room by letting go of their oldest results.
+    /// If it returns `None`, create the result and save it with [`insert`](Self::insert).
     pub fn utilize<H: Hash>(&mut self, id: ID, hash_value: &H) -> Option<Rc<V>> {
         let hash = Self::hash_of(hash_value);
         let entry = self.map.get_mut(&hash);
@@ -78,7 +79,8 @@ impl<V, ID: Hash + Eq, const USER_CAPACITY: usize> LRUCache<V, ID, USER_CAPACITY
         cached_value
     }
 
-    /// Saves `value` for `hash_value` and marks it as used by `id`.
+    /// Saves a newly created result for this user so others can reuse it without repeating the work.
+    /// Call [`utilize`](Self::utilize) first to check for a saved result and make room for this one.
     pub fn insert<H: Hash>(&mut self, id: ID, hash_value: &H, value: V) -> Rc<V> {
         let hash = Self::hash_of(hash_value);
         let value = Rc::new(value);
@@ -94,18 +96,23 @@ impl<V, ID: Hash + Eq, const USER_CAPACITY: usize> LRUCache<V, ID, USER_CAPACITY
         value
     }
 
+    /// Counts saved results, counting a result shared by several users only once.
     pub fn len(&self) -> usize {
         self.map.len()
     }
 
+    /// Reports whether there are no saved results to reuse.
     pub fn is_empty(&self) -> bool {
         self.map.is_empty()
     }
 
+    /// Counts users being tracked, including those with no saved results yet.
     pub fn users_len(&self) -> usize {
         self.users.len()
     }
 
+    /// Stops keeping results for a user that has gone away, such as a label removed from the screen.
+    /// Results still needed by other users stay saved, and copies already handed out remain usable.
     pub fn remove(&mut self, id: &ID) {
         let Some(hashes) = self.users.remove(id) else {
             return;
@@ -124,6 +131,8 @@ impl<V, ID: Hash + Eq, const USER_CAPACITY: usize> LRUCache<V, ID, USER_CAPACITY
         }
     }
 
+    /// Forgets all saved results and users when old work is no longer useful.
+    /// Copies already handed out remain usable.
     pub fn reset(&mut self) {
         self.map.clear();
         self.users.clear();
