@@ -204,8 +204,8 @@ pub fn virtual_scroll_view_scrollbar() {
     // Scroll up with arrows
     for _ in 0..11 {
         test.press_key(Key::Named(NamedKey::ArrowUp));
+        test.poll_n(Duration::from_millis(1), 5);
     }
-    test.poll(Duration::from_millis(1), Duration::from_millis(20));
 
     let content = scrollview.children()[0].children()[0].children();
     assert_eq!(content.len(), 11);
@@ -220,7 +220,7 @@ pub fn virtual_scroll_view_scrollbar() {
 
     // Scroll to the bottom with arrows
     test.press_key(Key::Named(NamedKey::End));
-    test.poll(Duration::from_millis(1), Duration::from_millis(20));
+    test.poll_n(Duration::from_millis(1), 5);
 
     let content = scrollview.children()[0].children()[0].children();
     assert_eq!(content.len(), 10);
