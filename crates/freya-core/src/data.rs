@@ -244,31 +244,15 @@ pub struct LayerState {
 }
 
 impl LayerState {
-    pub fn create_for_root(node_id: NodeId, layers: &mut Layers) -> Self {
-        let layer = 0;
-
-        layers.insert_node_in_layer(node_id, layer);
-
-        Self { layer }
-    }
-
-    pub fn remove(self, node_id: NodeId, layers: &mut Layers) {
-        layers.remove_node_from_layer(&node_id, self.layer);
-    }
-
+    /// Update layer metadata and unregister the node when its layer changes.
     pub fn update(
         &mut self,
         parent_layer: &Self,
         node_id: NodeId,
-        element: &Rc<dyn ElementExt>,
+        relative_layer: Layer,
         layers: &mut Layers,
     ) {
-        let relative_layer = element.layer();
-
-        // Old
-        layers.remove_node_from_layer(&node_id, self.layer);
-
-        // New
+        let previous_layer = self.layer;
         self.layer = match relative_layer {
             Layer::Relative(relative_layer) => parent_layer
                 .layer
@@ -279,7 +263,10 @@ impl LayerState {
                 (overlay_level.max(1) as i16).saturating_mul(i16::MAX / 16)
             }
         };
-        layers.insert_node_in_layer(node_id, self.layer);
+
+        if previous_layer != self.layer {
+            layers.remove_node_from_layer(&node_id, previous_layer);
+        }
     }
 }
 
