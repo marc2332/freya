@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 use rustc_hash::FxHashMap;
 
-/// Reuse results that are expensive to create without letting saved results grow forever.
+/// A [First In, First Out (FIFO)](https://en.wikipedia.org/wiki/Cache_replacement_policies#First_in_first_out_(FIFO)) cache for reusing expensive results.
 /// Keeps up to your chosen limit and removes the oldest added result when full.
 ///
 /// # Example
@@ -27,8 +27,6 @@ pub struct FifoCache<K, V> {
 }
 
 impl<K, V> FifoCache<K, V> {
-    /// Choose how many results to keep so saved work fits your available memory.
-    /// A limit of zero keeps nothing.
     pub fn new(capacity: usize) -> Self {
         Self {
             map: FxHashMap::default(),
@@ -43,7 +41,6 @@ where
     K: Clone + Eq + std::hash::Hash,
 {
     /// Changes how many results to keep, removing the oldest added results if the limit shrinks.
-    /// Growing the limit keeps existing results, and a limit of zero removes everything.
     pub fn set_capacity(&mut self, capacity: usize) {
         self.capacity = capacity;
         while self.order.len() > capacity {
@@ -73,7 +70,6 @@ where
         }
     }
 
-    /// Looks for a saved result so the work only needs repeating when this returns `None`.
     pub fn get(&self, key: &K) -> Option<&V> {
         self.map.get(key)
     }
@@ -83,22 +79,18 @@ where
         self.map.get_mut(key)
     }
 
-    /// Returns the maximum number of results this cache keeps.
     pub fn capacity(&self) -> usize {
         self.capacity
     }
 
-    /// Counts the results currently saved.
     pub fn len(&self) -> usize {
         self.map.len()
     }
 
-    /// Reports whether there are no saved results to reuse.
     pub fn is_empty(&self) -> bool {
         self.map.is_empty()
     }
 
-    /// Forgets every saved result when old work is no longer useful.
     pub fn clear(&mut self) {
         self.map.clear();
         self.order.clear();

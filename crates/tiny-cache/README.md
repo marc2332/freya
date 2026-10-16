@@ -5,7 +5,7 @@ Avoid doing the same work again when you already have the result. Save results f
 - **`FifoCache`** keeps a chosen number of results, removing the oldest added result when full. You can change the limit as your needs change.
 - **`LRUCache`** lets several users share results they recently used. Once nobody needs a saved result, the cache lets it go.
 
-## Count once, reuse later
+## Example
 
 For example, if you count the words in the same text several times, save the count rather than read through the text every time.
 
@@ -29,8 +29,6 @@ assert_eq!(count_words(&mut saved, "Save results for later".into()), 4);
 
 saved.set_capacity(20);
 ```
-
-The first call does the counting. The second reuses the saved count. Lowering the limit keeps the newest added results and removes any that no longer fit.
 
 ## Share results between users
 

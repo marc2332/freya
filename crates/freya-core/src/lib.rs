@@ -35,7 +35,6 @@ pub use tiny_cache::{
     fifo_cache,
     lru_cache,
 };
-pub use tiny_notify as notify;
 
 #[cfg(feature = "hotreload")]
 pub mod hotreload {

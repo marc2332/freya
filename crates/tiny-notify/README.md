@@ -8,7 +8,7 @@ For example, background work can wake a screen that needs updating, or several p
 - **`ArcNotify`** does the same when the work runs on another thread.
 - **`BroadcastNotify`** wakes several callers waiting for the same change.
 
-## Wait until a result is ready
+## Example
 
 Keep the result somewhere shared, then notify the code waiting to use it.
 
@@ -38,11 +38,7 @@ fn main() {
 }
 ```
 
-The waiting code pauses until the result is ready. It does not need a loop that keeps asking whether the work has finished.
-
 A notification only says that something may need attention. It does not carry the result or count how many changes happened.
-
-This example uses `futures-lite` to run the waiting code. `tiny-notify` itself needs no extra libraries.
 
 ```sh
 cargo run -p tiny-notify --example notifications

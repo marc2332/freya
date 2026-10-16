@@ -101,7 +101,6 @@ impl<V, ID: Hash + Eq, const USER_CAPACITY: usize> LRUCache<V, ID, USER_CAPACITY
         self.map.len()
     }
 
-    /// Reports whether there are no saved results to reuse.
     pub fn is_empty(&self) -> bool {
         self.map.is_empty()
     }
@@ -131,8 +130,7 @@ impl<V, ID: Hash + Eq, const USER_CAPACITY: usize> LRUCache<V, ID, USER_CAPACITY
         }
     }
 
-    /// Forgets all saved results and users when old work is no longer useful.
-    /// Copies already handed out remain usable.
+    /// Clears saved results and user tracking.
     pub fn reset(&mut self) {
         self.map.clear();
         self.users.clear();

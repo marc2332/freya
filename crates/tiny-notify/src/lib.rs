@@ -35,7 +35,6 @@ struct State {
 }
 
 impl Notify {
-    /// Creates a new way to wait for work, with no wake-up saved yet.
     pub fn new() -> Self {
         Self {
             state: Rc::new(State {
@@ -56,7 +55,6 @@ impl Notify {
     }
 
     /// Waits for a wake-up, including one saved before this call.
-    /// After waking, check the work itself to find out what needs doing.
     pub fn notified(&self) -> Notified {
         Notified {
             state: self.state.clone(),
@@ -64,7 +62,6 @@ impl Notify {
     }
 }
 
-/// A wait returned by [`Notify::notified`]. Use `.await` to pause until notified.
 pub struct Notified {
     state: Rc<State>,
 }
@@ -96,7 +93,6 @@ struct StateArc {
 }
 
 impl ArcNotify {
-    /// Creates a new way for background work to wake a waiting caller.
     pub fn new() -> Self {
         Self::default()
     }
@@ -116,7 +112,6 @@ impl ArcNotify {
     }
 
     /// Waits for a wake-up, including one saved before this call.
-    /// After waking, check the work itself to find out what needs doing.
     pub fn notified(&self) -> NotifiedArc {
         NotifiedArc {
             state: self.state.clone(),
@@ -124,7 +119,6 @@ impl ArcNotify {
     }
 }
 
-/// A wait returned by [`ArcNotify::notified`]. Use `.await` to pause until notified.
 pub struct NotifiedArc {
     state: Arc<StateArc>,
 }
@@ -162,7 +156,6 @@ struct BroadcastState {
 }
 
 impl BroadcastNotify {
-    /// Creates a notification shared by several waiting callers.
     pub fn new() -> Self {
         Self::default()
     }
@@ -179,7 +172,6 @@ impl BroadcastNotify {
     }
 
     /// Waits for the next wake-up after this call, even if `.await` comes later.
-    /// Earlier wake-ups do not count, so create the wait before the change you want to wait for.
     pub fn notified(&self) -> NotifiedBroadcast {
         NotifiedBroadcast {
             state: self.state.clone(),
@@ -188,7 +180,6 @@ impl BroadcastNotify {
     }
 }
 
-/// A wait returned by [`BroadcastNotify::notified`] that completes independently of other callers.
 pub struct NotifiedBroadcast {
     state: Rc<BroadcastState>,
     version: u64,
