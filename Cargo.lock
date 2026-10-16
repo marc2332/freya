@@ -8487,7 +8487,7 @@ dependencies = [
 
 [[package]]
 name = "tiny-cache"
-version = "0.1.0"
+version = "0.5.0-rc.10"
 dependencies = [
  "rustc-hash 2.1.3",
  "smallvec",
@@ -8495,7 +8495,7 @@ dependencies = [
 
 [[package]]
 name = "tiny-notify"
-version = "0.1.0"
+version = "0.5.0-rc.10"
 dependencies = [
  "futures-lite",
 ]
