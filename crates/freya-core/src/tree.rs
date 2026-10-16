@@ -250,7 +250,7 @@ impl Tree {
             };
         }
 
-        let mut moved_roots = Vec::new();
+        let mut moved_nodes = Vec::new();
         let mut needs_render = !mutations.removed.is_empty();
         let mut needs_accessibility = !mutations.removed.is_empty();
         let mut dirty = Vec::<(NodeId, DiffModifies)>::default();
@@ -382,7 +382,7 @@ impl Tree {
                     let from = parent.iter().position(|id| *id == node_id).unwrap();
                     parent.remove(from);
                     parent.insert(to as usize, node_id);
-                    moved_roots.push(node_id);
+                    moved_nodes.push(node_id);
                 }
                 let mut diff = DiffModifies::empty();
                 diff.insert(DiffModifies::REORDER_LAYOUT);
@@ -586,7 +586,7 @@ impl Tree {
                 }
             }
 
-            while let Some(node_id) = moved_roots.pop() {
+            while let Some(node_id) = moved_nodes.pop() {
                 if placements.contains_key(&node_id) {
                     continue;
                 }
@@ -595,7 +595,7 @@ impl Tree {
                 };
                 placements.insert(node_id, layer.layer);
                 if let Some(children) = self.children.get(&node_id) {
-                    moved_roots.extend(children);
+                    moved_nodes.extend(children);
                 }
             }
 
