@@ -250,6 +250,7 @@ impl Tree {
             };
         }
 
+        let mut moved_roots = Vec::new();
         let mut needs_render = !mutations.removed.is_empty();
         let mut needs_accessibility = !mutations.removed.is_empty();
         let mut dirty = Vec::<(NodeId, DiffModifies)>::default();
@@ -313,9 +314,9 @@ impl Tree {
                         }
                     }
 
-                    // Remove from the layers
                     let layer_state = self.layer_state.remove(&node_id).unwrap();
-                    layer_state.remove(node_id, &mut self.layers);
+                    self.layers
+                        .remove_node_from_layer(&node_id, layer_state.layer);
 
                     // Remove from the accessibility
                     let accessibility_state = self.accessibility_state.remove(&node_id).unwrap();
@@ -381,11 +382,11 @@ impl Tree {
                     let from = parent.iter().position(|id| *id == node_id).unwrap();
                     parent.remove(from);
                     parent.insert(to as usize, node_id);
+                    moved_roots.push(node_id);
                 }
                 let mut diff = DiffModifies::empty();
                 diff.insert(DiffModifies::REORDER_LAYOUT);
                 diff.insert(DiffModifies::ACCESSIBILITY);
-                diff.insert(DiffModifies::STYLE);
                 dirty.push((parent_node_id, diff));
             }
 
@@ -551,14 +552,14 @@ impl Tree {
             }
         });
 
-        hotpath::measure_block!("layer cascade", {
-            // Run the layer state
+        hotpath::measure_block!("layer reconciliation", {
+            let mut placements = FxHashMap::default();
+
             for layer_root in layer_cascades {
                 let mut buffer = VecDeque::new();
                 buffer.push_front(&layer_root);
 
                 while let Some(node_id) = buffer.pop_front() {
-                    let element = self.elements.get(node_id).unwrap();
                     if let Some(parent_node_id) = self.parents.get(node_id) {
                         let entries = self
                             .layer_state
@@ -569,21 +570,38 @@ impl Tree {
                             layer_state.update(
                                 parent_layer_state,
                                 *node_id,
-                                element,
+                                self.elements[node_id].layer(),
                                 &mut self.layers,
                             );
                         }
                     } else {
                         assert_eq!(*node_id, NodeId::ROOT);
-                        self.layer_state.insert(
-                            NodeId::ROOT,
-                            LayerState::create_for_root(*node_id, &mut self.layers),
-                        );
+                        self.layer_state.insert(NodeId::ROOT, LayerState::default());
                     }
+
+                    placements.insert(*node_id, self.layer_state[node_id].layer);
                     if let Some(children) = self.children.get(node_id) {
                         buffer.extend(children);
                     }
                 }
+            }
+
+            while let Some(node_id) = moved_roots.pop() {
+                if placements.contains_key(&node_id) {
+                    continue;
+                }
+                let Some(layer) = self.layer_state.get(&node_id) else {
+                    continue;
+                };
+                placements.insert(node_id, layer.layer);
+                if let Some(children) = self.children.get(&node_id) {
+                    moved_roots.extend(children);
+                }
+            }
+
+            if !placements.is_empty() {
+                self.layers
+                    .update_order(&placements, &self.parents, &self.children);
             }
         });
 
