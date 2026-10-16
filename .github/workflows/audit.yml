@@ -6,10 +6,16 @@ on:
     paths:
       - '**/Cargo.toml'
       - '**/Cargo.lock'
+      - 'deny.toml'
+      - 'justfile'
+      - '.github/workflows/audit.yml'
   pull_request:
     paths:
       - '**/Cargo.toml'
       - '**/Cargo.lock'
+      - 'deny.toml'
+      - 'justfile'
+      - '.github/workflows/audit.yml'
   schedule:
     - cron: '0 6 * * *'
   workflow_dispatch:
@@ -30,9 +36,9 @@ jobs:
       uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
       with:
         tool: just
-    - name: Install cargo-audit
+    - name: Install cargo-audit and cargo-deny
       uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
       with:
-        tool: cargo-audit
+        tool: cargo-audit,cargo-deny
     - name: Audit
       run: just sa
