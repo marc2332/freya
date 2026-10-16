@@ -325,13 +325,14 @@ impl Component for ResizableContainer {
             .layout(self.layout.clone())
             .on_sized(move |e: Event<SizedEventData>| size.set(e.area))
             .children(self.panels.iter().enumerate().flat_map(|(i, e)| {
+                let mut panel = e.clone();
+                if panel.order.is_none() {
+                    panel.order = Some(i);
+                }
                 if i > 0 {
-                    vec![
-                        ResizableHandle::new(i).into_element(),
-                        e.clone().into_element(),
-                    ]
+                    vec![ResizableHandle::new(i).into_element(), panel.into_element()]
                 } else {
-                    vec![e.clone().into_element()]
+                    vec![panel.into_element()]
                 }
             }))
     }

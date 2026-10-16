@@ -502,3 +502,101 @@ pub fn resizable_container_two_pixel_panels() {
         right_width
     );
 }
+
+#[test]
+pub fn resizable_container_readded_panel_drag_direction() {
+    fn readded_panel_app() -> impl IntoElement {
+        let mut show_left = use_state(|| true);
+        let is_showing = *show_left.read();
+
+        rect()
+            .vertical()
+            .width(Size::fill())
+            .height(Size::fill())
+            .child(
+                Button::new()
+                    .on_press(move |_| {
+                        let next = !*show_left.read();
+                        show_left.set(next);
+                    })
+                    .child(if is_showing { "Hide left" } else { "Show left" }),
+            )
+            .child(
+                ResizableContainer::new()
+                    .direction(Direction::Horizontal)
+                    .width(Size::fill())
+                    .height(Size::fill())
+                    .panel(if is_showing {
+                        Some(
+                            ResizablePanel::new(PanelSize::px(280.))
+                                .key("left")
+                                .min_size(200.)
+                                .child(label().expanded().text("Left")),
+                        )
+                    } else {
+                        None
+                    })
+                    .panel(
+                        ResizablePanel::new(PanelSize::percent(100.))
+                            .key("middle")
+                            .child(label().expanded().text("Middle")),
+                    ),
+            )
+    }
+
+    let mut test = launch_test(readded_panel_app);
+    test.sync_and_update();
+
+    let left_width = |test: &TestingRunner| -> f32 {
+        let labels =
+            test.find_many(|node, element| Label::try_downcast(element).map(move |_| node));
+        labels
+            .iter()
+            .find(|n| Label::try_downcast(&*n.element()).unwrap().text == "Left")
+            .map(|n| n.layout().area.width())
+            .unwrap()
+    };
+
+    // Left starts at its 280px initial size.
+    let w0 = left_width(&test);
+    assert!((w0 - 280.0).abs() < 5.0, "initial left width {} ~280", w0);
+
+    // Hide the left panel, then show it again.
+    test.click_cursor((40.0, 20.0));
+    test.sync_and_update();
+    test.click_cursor((40.0, 20.0));
+    test.sync_and_update();
+
+    // Left is back at its 280px initial size.
+    let w1 = left_width(&test);
+    assert!((w1 - 280.0).abs() < 5.0, "re-shown left width {} ~280", w1);
+
+    // Grab the divider just to the right of the left panel and push it right.
+    let labels = test.find_many(|node, element| Label::try_downcast(element).map(move |_| node));
+    let left_area = labels
+        .iter()
+        .find(|n| Label::try_downcast(&*n.element()).unwrap().text == "Left")
+        .unwrap()
+        .layout()
+        .area;
+    let handle_x = left_area.max_x() as f64 + 2.0;
+    let handle_y = (left_area.min_y() + left_area.height() / 2.0) as f64;
+
+    test.move_cursor((handle_x, handle_y));
+    test.sync_and_update();
+    test.press_cursor((handle_x, handle_y));
+    test.sync_and_update();
+    test.move_cursor((handle_x + 120.0, handle_y));
+    test.sync_and_update();
+    test.release_cursor((handle_x + 120.0, handle_y));
+    test.sync_and_update();
+
+    // Pushing the divider to the right must GROW the left panel, not shrink it.
+    let w2 = left_width(&test);
+    assert!(
+        w2 > w1 + 50.0,
+        "left panel should grow when dragging right (was {}, now {})",
+        w1,
+        w2
+    );
+}
