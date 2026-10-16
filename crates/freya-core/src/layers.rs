@@ -1,12 +1,12 @@
-use std::ops::{
-    Deref,
-    DerefMut,
+use std::{
+    collections::BTreeSet,
+    ops::{
+        Deref,
+        DerefMut,
+    },
 };
 
-use rustc_hash::{
-    FxHashMap,
-    FxHashSet,
-};
+use rustc_hash::FxHashMap;
 
 use crate::node_id::NodeId;
 
@@ -38,73 +38,33 @@ impl From<i16> for Layer {
     }
 }
 
-/// Nodes in each layer follow the current tree order.
+/// Nodes in each layer are kept sorted by [NodeId] so that painting order
+/// within a layer is deterministic and follows creation order.
 #[derive(Default, Clone, Debug, PartialEq)]
-pub struct Layers(FxHashMap<i16, Vec<NodeId>>);
+pub struct Layers(FxHashMap<i16, BTreeSet<NodeId>>);
 
 impl Layers {
-    /// Remove the node and discard empty layers.
-    pub fn remove_node_from_layer(&mut self, node_id: &NodeId, layer_number: i16) {
-        if let Some(entries) = self.0.get_mut(&layer_number) {
-            entries.retain(|entry| entry != node_id);
-
-            if entries.is_empty() {
-                self.0.remove(&layer_number);
-            }
-        }
+    /// Insert the given [NodeId] in the given layer. Will create an entry for the layer if missing.
+    pub fn insert_node_in_layer(&mut self, node_id: NodeId, layer_n: i16) {
+        let layer = self.0.entry(layer_n).or_default();
+        layer.insert(node_id);
     }
 
-    /// Reinsert affected nodes without changing the relative order of other entries.
-    pub fn update_order(
-        &mut self,
-        nodes: &FxHashMap<NodeId, i16>,
-        parents: &FxHashMap<NodeId, NodeId>,
-        children: &FxHashMap<NodeId, Vec<NodeId>>,
-    ) {
-        let affected_layers: FxHashSet<_> = nodes.values().copied().collect();
-        for layer in affected_layers {
-            if let Some(entries) = self.0.get_mut(&layer) {
-                entries.retain(|node_id| !nodes.contains_key(node_id));
+    /// Remove the [NodeId] from the given layer. Will remove the entry of the layer if it becomes empty.
+    pub fn remove_node_from_layer(&mut self, node_id: &NodeId, layer_n: i16) {
+        let layer = self.0.get_mut(&layer_n);
+        if let Some(layer) = layer {
+            layer.remove(node_id);
+
+            if layer.is_empty() {
+                self.0.remove(&layer_n);
             }
         }
-
-        let mut sibling_positions = FxHashMap::default();
-        for (&node_id, &layer) in nodes {
-            let position = Self::tree_position(node_id, parents, children, &mut sibling_positions);
-            let entries = self.0.entry(layer).or_default();
-            let index = entries.partition_point(|other| {
-                Self::tree_position(*other, parents, children, &mut sibling_positions) < position
-            });
-            entries.insert(index, node_id);
-        }
-    }
-
-    fn tree_position(
-        mut node_id: NodeId,
-        parents: &FxHashMap<NodeId, NodeId>,
-        children: &FxHashMap<NodeId, Vec<NodeId>>,
-        sibling_positions: &mut FxHashMap<NodeId, usize>,
-    ) -> Vec<usize> {
-        let mut position = Vec::new();
-        while let Some(parent) = parents.get(&node_id) {
-            if !sibling_positions.contains_key(&node_id) {
-                sibling_positions.extend(
-                    children[parent]
-                        .iter()
-                        .enumerate()
-                        .map(|(index, child)| (*child, index)),
-                );
-            }
-            position.push(sibling_positions[&node_id]);
-            node_id = *parent;
-        }
-        position.reverse();
-        position
     }
 }
 
 impl Deref for Layers {
-    type Target = FxHashMap<i16, Vec<NodeId>>;
+    type Target = FxHashMap<i16, BTreeSet<NodeId>>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
