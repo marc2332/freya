@@ -119,6 +119,7 @@
             rustToolchain
             alejandra
             cargo-binstall
+            cargo-deny
             cargo-nextest
             clang
             cmake
