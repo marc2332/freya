@@ -3,7 +3,7 @@ use std::{
     rc::Rc,
 };
 
-use freya_core::prelude::*;
+use freya::prelude::*;
 use freya_terminal::{
     backends::{
         TerminalBackend,
@@ -43,7 +43,7 @@ fn launch_terminal(
         rect()
             .width(Size::px(400.))
             .height(Size::px(height))
-            .child(Terminal::new(handle).font_size(font_size).expanded())
+            .child(Terminal::new(handle).font_size(font_size))
     }
 
     let (runner, (settings, handle)) = TestingRunner::new(
