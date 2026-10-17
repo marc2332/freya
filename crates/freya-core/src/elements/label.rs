@@ -297,10 +297,16 @@ impl ElementExt for LabelElement {
         let layout_data = context.layout_node.data.as_ref().unwrap();
         let paragraph = layout_data.clone().downcast::<SkParagraph>().unwrap();
 
-        context.recorder.draw_styled_paragraph(
-            &paragraph,
+        context.recorder.draw_paragraph(
+            paragraph,
             context.layout_node.inner_area.origin.cast_unit(),
-            context.text_style_state,
+            context
+                .text_style_state
+                .text_shadows
+                .iter()
+                .copied()
+                .map(Into::into),
+            context.text_style_state.text_align.into(),
         );
     }
 }

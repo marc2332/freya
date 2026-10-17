@@ -24,7 +24,6 @@ pub mod notify;
 pub mod path_element;
 pub mod platform;
 pub mod reactive_context;
-pub mod render_commands;
 pub mod render_pipeline;
 pub mod render_state;
 pub mod rendering_ticker;
@@ -211,12 +210,6 @@ pub mod integration {
         },
         node_id::NodeId,
         platform::*,
-        render_commands::{
-            CustomRenderContext,
-            NodeRecording,
-            RenderCommand,
-            RenderRecorder,
-        },
         render_pipeline::RenderPipeline,
         rendering_ticker::*,
         runner::{

@@ -5,6 +5,8 @@ use freya_engine::prelude::{
     FontCollection,
     FontMgr,
     PathBuilder,
+    Recording,
+    RenderRecorder,
     SkMatrix,
     SkPoint,
     SkRect,
@@ -24,10 +26,6 @@ use crate::{
     },
     node_id::NodeId,
     prelude::Color,
-    render_commands::{
-        NodeRecording,
-        RenderRecorder,
-    },
     style::shadow::ShadowPosition,
     tree::Tree,
 };
@@ -268,7 +266,7 @@ impl RenderPipeline<'_> {
         scale_factor: f64,
         node_id: &NodeId,
         layout_node: &LayoutNode,
-    ) -> Option<NodeRecording> {
+    ) -> Option<Recording> {
         let element = tree.elements.get(node_id).unwrap();
         let text_style_state = tree.text_style_state.get(node_id).unwrap();
         let effect_state = tree.effect_state.get(node_id);

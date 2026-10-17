@@ -11,6 +11,7 @@ use std::{
 use freya_engine::prelude::{
     FontCollection,
     FontMgr,
+    RenderRecorder,
     SkRRect,
     SkRect,
 };
@@ -60,7 +61,6 @@ use crate::{
         ImePreeditEventData,
         MaybeExt,
     },
-    render_commands::RenderRecorder,
     style::fill::Fill,
     text_cache::TextCache,
     tree::{

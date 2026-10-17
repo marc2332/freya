@@ -11,6 +11,7 @@ use freya_engine::prelude::{
     Paint,
     PaintStyle,
     PathBuilder,
+    RenderRecorder,
     SkPath,
     SkPathFillType,
     SkPoint,
@@ -33,7 +34,6 @@ use crate::{
     },
     layers::Layer,
     prelude::*,
-    render_commands::RenderRecorder,
     style::{
         font_size::FontSize,
         render_callback::{

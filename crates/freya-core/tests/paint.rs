@@ -1,10 +1,6 @@
 use std::rc::Rc;
 
 use freya::prelude::*;
-use freya_core::render_commands::{
-    NodeRecording,
-    RenderRecorder,
-};
 use freya_engine::prelude::{
     FontCollection,
     FontMgr,
@@ -12,6 +8,8 @@ use freya_engine::prelude::{
     PaintStyle,
     ParagraphBuilder,
     ParagraphStyle,
+    Recording,
+    RenderRecorder,
     SkColor,
     SkImage,
     TextStyle as SkTextStyle,
@@ -290,7 +288,7 @@ pub fn recorded_bounds_cover_painted_pixels() {
     assert!(painted > 0);
 }
 
-fn assert_recording_bounds(recording: &NodeRecording, fonts: &mut FontCollection) -> usize {
+fn assert_recording_bounds(recording: &Recording, fonts: &mut FontCollection) -> usize {
     let bounds = recording
         .bounds
         .expect("Recording should have finite bounds");
@@ -338,8 +336,8 @@ fn text_recording_bounds_cover_native_shadows_and_foreground_strokes() {
     recorder.draw_paragraph(
         Rc::new(paragraph),
         (50., 50.).into(),
-        &[],
-        TextAlign::default(),
+        [],
+        TextAlign::default().into(),
     );
 
     assert!(assert_recording_bounds(&recorder.finish(), &mut fonts) > 0);
