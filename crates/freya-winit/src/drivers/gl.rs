@@ -318,8 +318,12 @@ impl OpenGLDriver {
             self.gl_context.make_current(&self.gl_surface).unwrap();
         }
 
+        // The offscreen copy only while a backdrop blur shows: it costs a full-screen copy.
         #[cfg(target_os = "android")]
-        if let Some(offscreen) = self.offscreen.as_mut() {
+        let blurring = freya_core::render_pipeline::BACKDROP_BLUR_RENDERED
+            .load(std::sync::atomic::Ordering::Relaxed);
+        #[cfg(target_os = "android")]
+        if let Some(offscreen) = self.offscreen.as_mut().filter(|_| blurring) {
             render(offscreen);
             offscreen.draw(
                 self.surface.canvas(),

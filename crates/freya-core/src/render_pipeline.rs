@@ -31,6 +31,12 @@ use crate::{
     tree::Tree,
 };
 
+/// Whether the last frame drew a backdrop blur. A driver whose window cannot be read back
+/// (OpenGL on Android) draws into an offscreen texture only while this is set, sparing the
+/// extra copy on every other frame.
+pub static BACKDROP_BLUR_RENDERED: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
 pub struct RenderPipeline<'a> {
     pub font_collection: &'a mut FontCollection,
     pub font_manager: &'a FontMgr,
@@ -55,6 +61,26 @@ impl RenderPipeline<'_> {
             area = area.translate(origin.to_vector());
         }
         area
+    }
+
+    /// Whether `area` reaches into the faded edges of `fade_id`, rather than lying wholly in
+    /// its opaque middle.
+    fn reaches_fade_edge(&self, fade_id: NodeId, area: &Area) -> bool {
+        let Some(fade) = self
+            .tree
+            .effect_state
+            .get(&fade_id)
+            .and_then(|effect| effect.fade)
+        else {
+            return false;
+        };
+        let bounds = self.tree.layout.get(&fade_id).unwrap().visible_area();
+        let scale_factor = self.scale_factor as f32;
+        let (start, end, from, to) = match fade.horizontal {
+            false => (bounds.min_y(), bounds.max_y(), area.min_y(), area.max_y()),
+            true => (bounds.min_x(), bounds.max_x(), area.min_x(), area.max_x()),
+        };
+        from < start + fade.start * scale_factor || to > end - fade.end * scale_factor
     }
 
     /// Masks what was drawn in the current layer with the fade of `fade_id`: transparent at
@@ -112,6 +138,7 @@ impl RenderPipeline<'_> {
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     pub fn render(self) {
         self.canvas.clear(self.background);
+        let mut backdrop_blur = false;
 
         // Clip areas are deterministic no matter what node inherits them
         let mut clip_areas: FxHashMap<NodeId, Area> = FxHashMap::default();
@@ -206,6 +233,7 @@ impl RenderPipeline<'_> {
 
                     // Composite the blur before the opacity layers so it samples the real content underneath.
                     if let Some(blur_radius) = effect_state.blur {
+                        backdrop_blur = true;
                         let style = element.style();
 
                         let image_filter = blur(
@@ -252,8 +280,17 @@ impl RenderPipeline<'_> {
 
                 // Under a fade, the element draws into a layer of its own that the fades' masks
                 // then cut into.
-                let fades = effect_state
-                    .map(|effect_state| effect_state.fades.clone())
+                // Only the fades whose edges this element reaches into: one wholly inside a
+                // fade's opaque middle needs no layer and no mask.
+                let fades: Vec<NodeId> = effect_state
+                    .map(|effect_state| {
+                        effect_state
+                            .fades
+                            .iter()
+                            .copied()
+                            .filter(|fade_id| self.reaches_fade_edge(*fade_id, &visible_area))
+                            .collect()
+                    })
                     .unwrap_or_default();
                 if !fades.is_empty() {
                     self.canvas.save_layer(&SaveLayerRec::default());
@@ -279,5 +316,7 @@ impl RenderPipeline<'_> {
                 self.canvas.restore_to_count(layer);
             }
         }
+
+        BACKDROP_BLUR_RENDERED.store(backdrop_blur, std::sync::atomic::Ordering::Relaxed);
     }
 }
