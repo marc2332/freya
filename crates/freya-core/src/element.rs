@@ -63,10 +63,7 @@ use crate::{
     },
     style::fill::Fill,
     text_cache::TextCache,
-    tree::{
-        DiffModifies,
-        Tree,
-    },
+    tree::DiffModifies,
 };
 
 /// Tells Freya how to lay out, handle events for, describe accessibility and draw an element.
@@ -227,7 +224,6 @@ pub struct RenderContext<'a> {
     pub recorder: &'a mut RenderRecorder,
     pub layout_node: &'a LayoutNode,
     pub text_style_state: &'a TextStyleState,
-    pub tree: &'a Tree,
     pub scale_factor: f64,
 }
 

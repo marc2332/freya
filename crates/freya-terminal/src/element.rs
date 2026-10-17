@@ -1,7 +1,6 @@
 use std::{
     any::Any,
     borrow::Cow,
-    cell::RefCell,
     rc::Rc,
 };
 
@@ -18,7 +17,6 @@ use freya_core::{
         LayoutContext,
         RenderContext,
     },
-    fifo_cache::FifoCache,
     prelude::*,
     style::default_fonts::default_monospace_fonts,
     tree::DiffModifies,
@@ -44,10 +42,7 @@ use crate::{
         snapshot_row,
     },
     handle::TerminalHandle,
-    rendering::{
-        CachedRow,
-        Renderer,
-    },
+    rendering::Renderer,
 };
 
 /// Cached layout measurements and font for text drawing.
@@ -58,7 +53,6 @@ struct TerminalMeasure {
     font: Font,
     font_families: Vec<Cow<'static, str>>,
     font_size: f32,
-    row_cache: RefCell<FifoCache<u64, CachedRow>>,
 }
 
 #[derive(Clone)]
@@ -275,7 +269,6 @@ impl ElementExt for Terminal {
                 font,
                 font_families: self.font_families.clone(),
                 font_size: scaled_font_size,
-                row_cache: RefCell::new(FifoCache::new()),
             }),
         ))
     }
@@ -303,7 +296,7 @@ impl ElementExt for Terminal {
                 paint: &mut paint,
                 font: &measure.font,
                 font_collection: custom.font_collection,
-                row_cache: &mut measure.row_cache.borrow_mut(),
+                row_cache: &mut element.handle.row_cache.borrow_mut(),
                 area,
                 char_width: measure.char_width,
                 line_height: measure.line_height,

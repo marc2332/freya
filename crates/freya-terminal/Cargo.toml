@@ -18,6 +18,8 @@ pty = ["dep:portable-pty"]
 
 [dependencies]
 freya-core = { workspace = true }
+tiny-cache = { workspace = true }
+tiny-notify = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
 rustc-hash = { workspace = true }
@@ -40,3 +42,4 @@ futures-channel = { workspace = true }
 
 [dev-dependencies]
 freya = { path = "../freya" }
+freya-testing = { workspace = true }

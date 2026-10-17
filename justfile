@@ -27,6 +27,7 @@ web-demo:
 
 sa:
     cargo audit
+    cargo deny check
 
 c:
     taplo check

@@ -380,7 +380,6 @@ impl RenderPipeline<'_> {
                 font_collection,
                 recorder: &mut recorder,
                 layout_node,
-                tree,
                 text_style_state,
                 scale_factor,
             });

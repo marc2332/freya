@@ -9,16 +9,13 @@ use std::{
 };
 
 use async_io::Timer;
-use freya_core::{
-    notify::ArcNotify,
-    prelude::{
-        Platform,
-        PlatformWindow,
-        TaskHandle,
-        UseId,
-        UserEvent,
-        spawn_in_window,
-    },
+use freya_core::prelude::{
+    Platform,
+    PlatformWindow,
+    TaskHandle,
+    UseId,
+    UserEvent,
+    spawn_in_window,
 };
 use futures_lite::{
     StreamExt,
@@ -54,6 +51,8 @@ use rio_vt::{
         SelectionType,
     },
 };
+use tiny_cache::FifoCache;
+use tiny_notify::ArcNotify;
 use torin::prelude::Area;
 
 use crate::{
@@ -69,6 +68,7 @@ use crate::{
         encode_mouse_release,
         encode_wheel_event,
     },
+    rendering::CachedRow,
     url::url_at,
 };
 
@@ -189,6 +189,8 @@ pub struct TerminalHandle {
     /// rio-vt's terminal model: grid, modes, scrollback. The renderer
     /// borrows this directly during paint, so there is no parallel snapshot.
     pub(crate) term: Rc<RefCell<Crosswords<EventProxy>>>,
+    /// Keeps row drawing results alive across layout measurements.
+    pub(crate) row_cache: Rc<RefCell<FifoCache<u64, CachedRow>>>,
     /// Program the terminal is attached to, `None` once it has closed.
     pub(crate) backend: SharedBackend,
     /// Handle-local state (input tracking).
@@ -253,6 +255,8 @@ impl TerminalHandle {
             scrollback_length.unwrap_or(1000),
         )));
 
+        let row_cache = Rc::new(RefCell::new(FifoCache::new(term.borrow().screen_lines())));
+
         let inner = Rc::new(RefCell::new(TerminalInner {
             last_write_time: Instant::now(),
             pressed_button: None,
@@ -311,6 +315,7 @@ impl TerminalHandle {
             }),
             id,
             term,
+            row_cache,
             backend,
             inner,
             title,
@@ -473,6 +478,7 @@ impl TerminalHandle {
         self.term
             .borrow_mut()
             .resize(CrosswordsSize::new(cols as usize, rows as usize));
+        self.row_cache.borrow_mut().set_capacity(rows as usize);
         self.invalidate();
     }
 

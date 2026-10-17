@@ -19,6 +19,8 @@ tracing = { workspace = true }
 rustc-hash = { workspace = true }
 bitflags = { workspace = true }
 pathgraph = { workspace = true }
+tiny-cache = { workspace = true }
+tiny-notify = { workspace = true }
 # Core/async
 futures-util = { workspace = true }
 futures-channel = { workspace = true }
