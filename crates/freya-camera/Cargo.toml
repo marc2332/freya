@@ -16,6 +16,7 @@ workspace = true
 
 [dependencies]
 freya-core = { workspace = true }
+tiny-notify = { workspace = true }
 freya-engine = { workspace = true }
 nokhwa = { version = "0.10", features = ["input-native"] }
 blocking = { workspace = true }

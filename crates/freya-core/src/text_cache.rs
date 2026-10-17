@@ -1,10 +1,10 @@
 use std::hash::Hash;
 
 use freya_engine::prelude::SkParagraph;
+use tiny_cache::LRUCache;
 
 use crate::{
     data::TextStyleState,
-    lru_cache::LRUCache,
     node_id::NodeId,
     prelude::Span,
 };
