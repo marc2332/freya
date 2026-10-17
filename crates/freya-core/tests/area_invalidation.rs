@@ -1,8 +1,8 @@
 use freya_core::{
     node_id::NodeId,
-    render_commands::NodeRecording,
     render_state::RenderState,
 };
+use freya_engine::prelude::Recording;
 use torin::prelude::{
     Area,
     Point2D,
@@ -20,7 +20,7 @@ fn invalidate_area_refreshes_intersections_without_expanding_damage() {
     ] {
         state.cache.insert(
             NodeId::from(node_id),
-            NodeRecording {
+            Recording {
                 commands: Vec::new(),
                 bounds: Some(bounds),
                 samples_backdrop: false,

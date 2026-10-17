@@ -571,10 +571,16 @@ impl ElementExt for ParagraphElement {
         }
 
         // Draw text
-        context.recorder.draw_styled_paragraph(
-            paragraph,
+        context.recorder.draw_paragraph(
+            paragraph.clone(),
             Point2D::new(inner_area.min_x(), inner_area.min_y() + vertical_offset).cast_unit(),
-            context.text_style_state,
+            context
+                .text_style_state
+                .text_shadows
+                .iter()
+                .copied()
+                .map(Into::into),
+            context.text_style_state.text_align.into(),
         );
 
         // Draw cursor

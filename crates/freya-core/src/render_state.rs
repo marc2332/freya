@@ -1,3 +1,4 @@
+use freya_engine::prelude::Recording;
 use rustc_hash::{
     FxHashMap,
     FxHashSet,
@@ -7,14 +8,13 @@ use torin::prelude::Area;
 use crate::{
     damage::Damage,
     node_id::NodeId,
-    render_commands::NodeRecording,
 };
 
 /// Cached recordings and pending repaint regions.
 #[derive(Default)]
 pub struct RenderState {
     /// Recorded painting commands per node.
-    pub cache: FxHashMap<NodeId, NodeRecording>,
+    pub cache: FxHashMap<NodeId, Recording>,
 
     /// Nodes whose recording must be refreshed in the next frame.
     pub dirty: FxHashSet<NodeId>,

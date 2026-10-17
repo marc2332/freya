@@ -321,8 +321,8 @@ impl ElementExt for Shader {
                 context.recorder.draw_paragraph(
                     paragraph,
                     context.layout_node.area.origin,
-                    &[],
-                    TextAlign::default(),
+                    [],
+                    TextAlign::default().into(),
                 );
             }
         }

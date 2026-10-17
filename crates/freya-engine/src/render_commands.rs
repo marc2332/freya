@@ -1,6 +1,12 @@
 use std::rc::Rc;
 
-use freya_engine::prelude::{
+use euclid::{
+    Point2D,
+    Rect,
+    Size2D,
+};
+
+use crate::prelude::{
     Canvas,
     ClipOp,
     FontCollection,
@@ -17,19 +23,8 @@ use freya_engine::prelude::{
     SkPath,
     SkRRect,
     SkRect,
-};
-use torin::prelude::{
-    Area,
-    Point2D,
-    Size2D,
-};
-
-use crate::{
-    data::TextStyleState,
-    style::{
-        text_align::TextAlign,
-        text_shadow::TextShadow,
-    },
+    SkTextAlign,
+    SkTextShadow,
 };
 
 /// Context given to [RenderCommand::Custom] draws when they are replayed.
@@ -59,7 +54,7 @@ pub enum RenderCommand {
     },
     Paragraph {
         paragraph: Rc<SkParagraph>,
-        origin: Point2D,
+        origin: Point2D<f32, ()>,
     },
     Image {
         image: SkImage,
@@ -108,17 +103,17 @@ pub enum RenderCommand {
     },
 }
 
-/// The recorded commands of a node plus the device-space bounds they paint.
-pub struct NodeRecording {
+/// Recorded drawing commands and their device-space painted bounds.
+pub struct Recording {
     pub commands: Vec<RenderCommand>,
     /// Painted bounds rounded out to the pixel grid, `None` when they could not
     /// be bounded reliably and must be treated as covering everything.
-    pub bounds: Option<Area>,
+    pub bounds: Option<Rect<f32, ()>>,
     /// Whether any command samples the pixels underneath it, like backdrop blurs.
     pub samples_backdrop: bool,
 }
 
-impl NodeRecording {
+impl Recording {
     /// Replay the recorded commands onto a canvas, isolated by an outer save.
     pub fn replay(&self, canvas: &Canvas, font_collection: &mut FontCollection) {
         let checkpoint = canvas.save();
@@ -433,8 +428,8 @@ impl RenderRecorder {
 
     /// Painted width of a paragraph. Aligned glyphs can sit anywhere inside
     /// the layout width, default-aligned ones never pass the longest line.
-    fn paragraph_width(paragraph: &SkParagraph, text_align: TextAlign) -> f32 {
-        if text_align == TextAlign::default() {
+    fn paragraph_width(paragraph: &SkParagraph, text_align: SkTextAlign) -> f32 {
+        if text_align == SkTextAlign::Left {
             paragraph.longest_line()
         } else {
             paragraph.max_width().max(paragraph.longest_line())
@@ -445,9 +440,9 @@ impl RenderRecorder {
     pub fn draw_paragraph(
         &mut self,
         paragraph: impl Into<Rc<SkParagraph>>,
-        origin: Point2D,
-        text_shadows: &[TextShadow],
-        text_align: TextAlign,
+        origin: Point2D<f32, ()>,
+        text_shadows: impl IntoIterator<Item = SkTextShadow>,
+        text_align: SkTextAlign,
     ) {
         let paragraph = paragraph.into();
         let width = Self::paragraph_width(&paragraph, text_align);
@@ -457,8 +452,8 @@ impl RenderRecorder {
         let mut local_bounds = base_bounds;
 
         for text_shadow in text_shadows {
-            let outset_x = text_shadow.offset.0.abs() + text_shadow.blur_sigma as f32 * 3.0;
-            let outset_y = text_shadow.offset.1.abs() + text_shadow.blur_sigma as f32 * 3.0;
+            let outset_x = text_shadow.offset.x.abs() + text_shadow.blur_sigma as f32 * 3.0;
+            let outset_y = text_shadow.offset.y.abs() + text_shadow.blur_sigma as f32 * 3.0;
             local_bounds = local_bounds.with_outset((outset_x, outset_y));
         }
 
@@ -482,21 +477,6 @@ impl RenderRecorder {
         }
         self.commands
             .push(RenderCommand::Paragraph { paragraph, origin });
-    }
-
-    /// Draw a styled paragraph with its text shadows included in the bounds.
-    pub fn draw_styled_paragraph(
-        &mut self,
-        paragraph: &Rc<SkParagraph>,
-        origin: Point2D,
-        text_style: &TextStyleState,
-    ) {
-        self.draw_paragraph(
-            paragraph.clone(),
-            origin,
-            &text_style.text_shadows,
-            text_style.text_align,
-        );
     }
 
     pub fn draw_image_rect(
@@ -546,12 +526,12 @@ impl RenderRecorder {
     }
 
     /// Finish the recording, rounding the painted bounds out to the pixel grid.
-    pub fn finish(self) -> NodeRecording {
+    pub fn finish(self) -> Recording {
         let bounds = if self.unbounded {
             None
         } else {
-            Some(self.bounds.map_or_else(Area::zero, |bounds| {
-                Area::new(
+            Some(self.bounds.map_or_else(Rect::zero, |bounds| {
+                Rect::new(
                     Point2D::new(bounds.left, bounds.top),
                     Size2D::new(bounds.width(), bounds.height()),
                 )
@@ -559,7 +539,7 @@ impl RenderRecorder {
             }))
         };
 
-        NodeRecording {
+        Recording {
             commands: self.commands,
             bounds,
             samples_backdrop: self.samples_backdrop,
