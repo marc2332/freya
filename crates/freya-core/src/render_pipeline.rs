@@ -31,12 +31,6 @@ use crate::{
     tree::Tree,
 };
 
-/// Whether the last frame drew a backdrop blur. A driver whose window cannot be read back
-/// (OpenGL on Android) draws into an offscreen texture only while this is set, sparing the
-/// extra copy on every other frame.
-pub static BACKDROP_BLUR_RENDERED: std::sync::atomic::AtomicBool =
-    std::sync::atomic::AtomicBool::new(false);
-
 /// Whether `element` is a rect that draws nothing of its own (no fill, border or shadow): a
 /// fade needs no layer for it, each layer being a render pass of its own on the GPU.
 fn paints_nothing(element: &dyn crate::element::ElementExt) -> bool {
@@ -160,7 +154,6 @@ impl RenderPipeline<'_> {
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     pub fn render(self) {
         self.canvas.clear(self.background);
-        let mut backdrop_blur = false;
 
         // Clip areas are deterministic no matter what node inherits them
         let mut clip_areas: FxHashMap<NodeId, Area> = FxHashMap::default();
@@ -255,7 +248,6 @@ impl RenderPipeline<'_> {
 
                     // Composite the blur before the opacity layers so it samples the real content underneath.
                     if let Some(blur_radius) = effect_state.blur {
-                        backdrop_blur = true;
                         let style = element.style();
 
                         let image_filter = blur(
@@ -339,7 +331,5 @@ impl RenderPipeline<'_> {
                 self.canvas.restore_to_count(layer);
             }
         }
-
-        BACKDROP_BLUR_RENDERED.store(backdrop_blur, std::sync::atomic::Ordering::Relaxed);
     }
 }
