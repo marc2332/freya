@@ -162,68 +162,71 @@ impl ResizableContext {
     /// Resizes panels around a divider at the given declaration index (1..panel count).
     pub fn apply_resize(
         &mut self,
-        panel_index: usize,
-        pixel_distance: f32,
+        divider_index: usize,
+        drag_delta: f32,
         container_size: f32,
     ) -> bool {
-        if panel_index == 0 || panel_index >= self.panels.len() {
+        if divider_index == 0 || divider_index >= self.panels.len() {
             return false;
         }
+
         let panels = &mut self.panels;
-        let mut changed_panels = false;
+        let mut sizes_changed = false;
 
-        // Precompute conversion factor between pixels and flex weight
         let handle_space = panels.len().saturating_sub(1) as f32 * Self::HANDLE_SIZE;
-        let (px_total, flex_total) =
-            panels
-                .iter()
-                .fold((0.0, 0.0), |(px, flex): (f32, f32), (_, p)| {
-                    match p.sizing {
-                        PanelSize::Pixels(_) => (px + p.size, flex),
-                        PanelSize::Percentage(_) => (px, flex + p.size),
-                    }
-                });
-        let flex_factor = flex_total / (container_size - px_total - handle_space).max(1.0);
+        let (total_fixed_size, total_flex_weight) = panels.iter().fold(
+            (0.0, 0.0),
+            |(fixed_size, flex_weight): (f32, f32), (_, panel)| match panel.sizing {
+                PanelSize::Pixels(_) => (fixed_size + panel.size, flex_weight),
+                PanelSize::Percentage(_) => (fixed_size, flex_weight + panel.size),
+            },
+        );
+        let flex_per_pixel =
+            total_flex_weight / (container_size - total_fixed_size - handle_space).max(1.0);
 
-        let abs_distance = pixel_distance.abs();
-        let (behind_range, forward_range) = if pixel_distance >= 0. {
-            (0..panel_index, panel_index..panels.len())
+        let shrink_amount = drag_delta.abs();
+        let (growing_index, mut shrinking_range) = if drag_delta >= 0. {
+            (divider_index - 1, divider_index..panels.len())
         } else {
-            (panel_index..panels.len(), 0..panel_index)
+            (divider_index, 0..divider_index)
         };
 
-        let mut acc_pixels = 0.0;
+        let mut freed_space = 0.0;
 
-        // Shrink forward panels
-        for (_, panel) in panels[forward_range].iter_mut() {
-            let old_size = panel.size;
-            let scale = panel.sizing.flex_scale(flex_factor);
-            let new_size =
-                (panel.size - abs_distance * scale).clamp(panel.min_size, panel.sizing.max_size());
-            changed_panels |= panel.size != new_size;
+        while let Some(index) = if drag_delta >= 0. {
+            shrinking_range.next()
+        } else {
+            shrinking_range.next_back()
+        } {
+            let (_, panel) = &mut panels[index];
+            let previous_size = panel.size;
+            let units_per_pixel = panel.sizing.flex_scale(flex_per_pixel);
+            let new_size = (panel.size - shrink_amount * units_per_pixel)
+                .clamp(panel.min_size, panel.sizing.max_size());
+            sizes_changed |= panel.size != new_size;
             panel.size = new_size;
-            acc_pixels -= (new_size - old_size) / scale.max(f32::MIN_POSITIVE);
+            freed_space -= (new_size - previous_size) / units_per_pixel.max(f32::MIN_POSITIVE);
 
-            if old_size > panel.min_size {
+            if previous_size > panel.min_size {
                 break;
             }
         }
 
-        // Grow behind panel
-        if let Some((_, panel)) = panels[behind_range].last_mut() {
-            let scale = panel.sizing.flex_scale(flex_factor);
-            let new_size =
-                (panel.size + acc_pixels * scale).clamp(panel.min_size, panel.sizing.max_size());
-            changed_panels |= panel.size != new_size;
-            panel.size = new_size;
-        }
+        let (_, panel) = &mut panels[growing_index];
+        let units_per_pixel = panel.sizing.flex_scale(flex_per_pixel);
+        let new_size = (panel.size + freed_space * units_per_pixel)
+            .clamp(panel.min_size, panel.sizing.max_size());
+        sizes_changed |= panel.size != new_size;
+        panel.size = new_size;
 
-        changed_panels
+        sizes_changed
     }
 
     pub fn reset(&mut self) {
         for (_, panel) in &mut self.panels {
-            panel.size = panel.initial_size;
+            panel.size = panel
+                .initial_size
+                .clamp(panel.min_size, panel.sizing.max_size());
         }
     }
 }
@@ -518,7 +521,7 @@ impl Component for ResizableHandle {
                     let container = container_size.read();
                     let mut context = controller.write();
 
-                    let (pixel_displacement, container_axis_size) = match context.direction {
+                    let (drag_delta, container_axis_size) = match context.direction {
                         Direction::Horizontal => {
                             (coords.x as f32 - handle.min_x(), container.width())
                         }
@@ -527,10 +530,10 @@ impl Component for ResizableHandle {
                         }
                     };
 
-                    let changed_panels =
-                        context.apply_resize(panel_index, pixel_displacement, container_axis_size);
+                    let sizes_changed =
+                        context.apply_resize(panel_index, drag_delta, container_axis_size);
 
-                    if changed_panels {
+                    if sizes_changed {
                         allow_resizing.set(false);
                     }
                 }

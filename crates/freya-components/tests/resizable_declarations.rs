@@ -313,6 +313,61 @@ fn changed_constraints_and_sizing_modes_follow_declarations() {
 }
 
 #[test]
+fn reset_respects_updated_minimum_sizes() {
+    let (mut test, mut configuration, mut controller) = launch(panels(&["A", "B"]));
+    test.sync_and_update();
+
+    configuration.write().panels[0] = panel("A", PanelSize::px(150.)).min_size(200.);
+    test.sync_and_update();
+    controller.write().reset();
+    test.sync_and_update();
+
+    assert_eq!(sizes(controller), vec![200., 150.]);
+    assert_eq!(
+        snapshot(&test),
+        vec![("A:0".into(), 200.), ("B:0".into(), 150.)]
+    );
+}
+
+#[test]
+fn three_panel_dividers_resize_their_neighbors_in_both_directions() {
+    for (divider, distance, expected) in [
+        (152., 20., vec![170., 130., 150.]),
+        (152., -20., vec![130., 170., 150.]),
+        (306., 20., vec![150., 170., 130.]),
+        (306., -20., vec![150., 130., 170.]),
+    ] {
+        let (mut test, _, controller) = launch(panels(&["A", "B", "C"]));
+        test.sync_and_update();
+        test.press_cursor((divider, 50.));
+        test.move_cursor((divider + distance, 50.));
+        test.release_cursor((divider + distance, 50.));
+        test.sync_and_update();
+
+        for (actual, expected) in sizes(controller).iter().zip(&expected) {
+            assert!((actual - expected).abs() < 3., "{actual} != {expected}");
+        }
+        for ((_, actual), expected) in snapshot(&test).iter().zip(&expected) {
+            assert!((actual - expected).abs() < 3., "{actual} != {expected}");
+        }
+    }
+}
+
+#[test]
+fn leftward_resize_skips_a_neighbor_at_its_minimum() {
+    let (mut test, _, mut controller) = launch(vec![
+        panel("A", PanelSize::px(150.)),
+        panel("B", PanelSize::px(150.)).min_size(150.),
+        panel("C", PanelSize::px(150.)),
+    ]);
+    test.sync_and_update();
+
+    assert!(controller.write().apply_resize(2, -20., 500.));
+    test.sync_and_update();
+    assert_eq!(sizes(controller), vec![130., 150., 170.]);
+}
+
+#[test]
 fn snapshots_cannot_modify_membership_or_sizes() {
     let (mut test, _, controller) = launch(panels(&["A"]));
     test.sync_and_update();
