@@ -347,7 +347,9 @@ impl OpenGLDriver {
 
     fn config_template(transparent: bool) -> ConfigTemplateBuilder {
         ConfigTemplateBuilder::new()
-            .with_alpha_size(if transparent { 8 } else { 0 })
+            // Always with alpha on Android: without it, Skia cannot read the window's
+            // framebuffer back there, and a backdrop blur silently draws nothing.
+            .with_alpha_size(if transparent || cfg!(target_os = "android") { 8 } else { 0 })
             .with_transparency(transparent)
     }
 
