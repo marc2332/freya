@@ -76,6 +76,8 @@ pub struct Panel {
 }
 
 impl Panel {
+    /// Rebalances percentage panel sizes when this panel is added or removed,
+    /// leaving fixed-size panels unchanged and respecting minimum sizes.
     fn redistribute<'a>(&self, panels: impl Iterator<Item = &'a mut Panel>, adding: bool) {
         if matches!(self.sizing, PanelSize::Pixels(_)) {
             return;
