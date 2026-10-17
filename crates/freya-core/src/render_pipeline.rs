@@ -1,5 +1,14 @@
 use freya_engine::prelude::{
+    BlendMode,
     Canvas,
+    Colors,
+    Gradient,
+    Interpolation,
+    SkColor4f,
+    Paint,
+    SkRect,
+    TileMode,
+    shaders,
     ClipOp,
     FontCollection,
     FontMgr,
@@ -46,6 +55,58 @@ impl RenderPipeline<'_> {
             area = area.translate(origin.to_vector());
         }
         area
+    }
+
+    /// Masks what was drawn in the current layer with the fade of `fade_id`: transparent at
+    /// its edges, opaque inside.
+    fn apply_fade(&self, fade_id: NodeId) {
+        let Some(fade) = self
+            .tree
+            .effect_state
+            .get(&fade_id)
+            .and_then(|effect| effect.fade)
+        else {
+            return;
+        };
+        let area = self.tree.layout.get(&fade_id).unwrap().visible_area();
+        let scale_factor = self.scale_factor as f32;
+        let (from, to, length) = match fade.horizontal {
+            false => (
+                SkPoint::new(area.min_x(), area.min_y()),
+                SkPoint::new(area.min_x(), area.max_y()),
+                area.height(),
+            ),
+            true => (
+                SkPoint::new(area.min_x(), area.min_y()),
+                SkPoint::new(area.max_x(), area.min_y()),
+                area.width(),
+            ),
+        };
+        if length <= 0. {
+            return;
+        }
+        let start = (fade.start * scale_factor / length).clamp(0., 0.5);
+        let end = (1. - fade.end * scale_factor / length).clamp(0.5, 1.);
+        let clear = SkColor4f::new(0., 0., 0., 0.);
+        let solid = SkColor4f::new(0., 0., 0., 1.);
+        let colors = [clear, solid, solid, clear];
+        let offsets = [0., start, end, 1.];
+        let gradient = Gradient::new(
+            Colors::new(&colors, Some(&offsets), TileMode::Clamp, None),
+            Interpolation::default(),
+        );
+        let Some(shader) = shaders::linear_gradient((from, to), &gradient, None) else {
+            return;
+        };
+        let mut paint = Paint::default();
+        paint.set_shader(shader);
+        paint.set_blend_mode(BlendMode::DstIn);
+        self.canvas.draw_rect(self.canvas.local_clip_bounds().unwrap_or(SkRect::new(
+            area.min_x(),
+            area.min_y(),
+            area.max_x(),
+            area.max_y(),
+        )), &paint);
     }
 
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
@@ -189,6 +250,15 @@ impl RenderPipeline<'_> {
                     }
                 }
 
+                // Under a fade, the element draws into a layer of its own that the fades' masks
+                // then cut into.
+                let fades = effect_state
+                    .map(|effect_state| effect_state.fades.clone())
+                    .unwrap_or_default();
+                if !fades.is_empty() {
+                    self.canvas.save_layer(&SaveLayerRec::default());
+                }
+
                 let render_context = RenderContext {
                     font_collection: self.font_collection,
                     canvas: self.canvas,
@@ -201,6 +271,10 @@ impl RenderPipeline<'_> {
                 hotpath::measure_block!("Element Render", {
                     element.render(render_context);
                 });
+
+                for fade_id in fades.iter() {
+                    self.apply_fade(*fade_id);
+                }
 
                 self.canvas.restore_to_count(layer);
             }
