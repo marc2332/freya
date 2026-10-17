@@ -128,6 +128,7 @@ impl AccessibilityTree {
 
     /// Initialize the Accessibility Tree
     pub fn init(&mut self, tree: &mut Tree, title: &str) -> TreeUpdate {
+        let requested_focus = tree.accessibility_diff.requested_focus.take();
         tree.accessibility_diff.clear();
 
         let mut nodes = vec![];
@@ -148,6 +149,10 @@ impl AccessibilityTree {
 
         if !self.map.contains_key(&self.focused_id) {
             self.focused_id = ACCESSIBILITY_ROOT_ID;
+        }
+
+        if let Some(requested_focus) = requested_focus {
+            self.focus_node_with_strategy(requested_focus, tree);
         }
 
         TreeUpdate {
