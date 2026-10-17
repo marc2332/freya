@@ -38,7 +38,10 @@ use crate::{
     prelude::*,
     style::{
         font_size::FontSize,
-        render_callback::RenderContext as FillRenderContext,
+        render_callback::{
+            RenderContext as FillRenderContext,
+            RenderTarget,
+        },
         scale::Scale,
         shadow::{
             Shadow,
@@ -515,8 +518,10 @@ impl ElementExt for RectElement {
                 .canvas
                 .scale((context.scale_factor as f32, context.scale_factor as f32));
             callback.call(&mut FillRenderContext {
-                canvas: context.canvas,
-                font_collection: context.font_collection,
+                target: RenderTarget::Background {
+                    canvas: context.canvas,
+                    font_collection: context.font_collection,
+                },
                 origin: area.origin / context.scale_factor as f32,
                 size: area.size / context.scale_factor as f32,
                 text_style_state: context.text_style_state,
