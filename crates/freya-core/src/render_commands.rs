@@ -285,8 +285,9 @@ impl RenderRecorder {
     fn push_draw_bounds(&mut self, mut local_bounds: SkRect, paint: &Paint, mask_sigma: f32) {
         match paint.style() {
             PaintStyle::Stroke | PaintStyle::StrokeAndFill => {
-                let stroke_width = paint.stroke_width().max(1.0);
-                local_bounds = local_bounds.with_outset((stroke_width, stroke_width));
+                let stroke_outset =
+                    paint.stroke_width().max(1.0) * paint.stroke_miter().max(2.0) / 2.0;
+                local_bounds = local_bounds.with_outset((stroke_outset, stroke_outset));
             }
             PaintStyle::Fill => {}
         }
@@ -313,6 +314,11 @@ impl RenderRecorder {
             device_bounds = device_bounds.with_outset((1.0, 1.0));
         }
         self.push_device_bounds(device_bounds);
+    }
+
+    /// The current transform from element coordinates to physical window coordinates.
+    pub fn transform(&self) -> &SkMatrix {
+        &self.state().matrix
     }
 
     pub fn save(&mut self) {
@@ -446,8 +452,9 @@ impl RenderRecorder {
         let paragraph = paragraph.into();
         let width = Self::paragraph_width(&paragraph, text_align);
         // Glyphs may slightly overflow the layout metrics
-        let mut local_bounds = SkRect::from_xywh(origin.x, origin.y, width, paragraph.height())
+        let base_bounds = SkRect::from_xywh(origin.x, origin.y, width, paragraph.height())
             .with_outset((2.0, 2.0));
+        let mut local_bounds = base_bounds;
 
         for text_shadow in text_shadows {
             let outset_x = text_shadow.offset.0.abs() + text_shadow.blur_sigma as f32 * 3.0;
@@ -456,6 +463,23 @@ impl RenderRecorder {
         }
 
         self.push_draw_bounds(local_bounds, &Paint::default(), 0.0);
+        for line in paragraph.get_line_metrics() {
+            for (_, metrics) in line.get_style_metrics(0..usize::MAX) {
+                let style = metrics.text_style;
+                let paint = if style.has_foreground() {
+                    style.foreground()
+                } else {
+                    Paint::default()
+                };
+                if style.has_foreground() {
+                    self.push_draw_bounds(base_bounds, &paint, 0.0);
+                }
+                for shadow in style.shadows() {
+                    let bounds = base_bounds.with_offset(shadow.offset);
+                    self.push_draw_bounds(bounds, &paint, shadow.blur_sigma as f32);
+                }
+            }
+        }
         self.commands
             .push(RenderCommand::Paragraph { paragraph, origin });
     }
