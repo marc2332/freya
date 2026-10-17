@@ -21,6 +21,7 @@ use torin::{
         Area,
         LayoutNode,
         PostMeasure,
+        Rect,
         Size2D,
     },
     scaled::Scaled,
@@ -211,6 +212,20 @@ pub struct LayoutContext<'a> {
     pub fallback_fonts: &'a [Cow<'static, str>],
     pub scale_factor: f64,
     pub text_cache: &'a mut TextCache,
+}
+
+/// Round a layout rectangle's edges to whole device pixels before painting it.
+///
+/// Layout is computed in fractional pixels, but the pixel grid cannot represent a
+/// fractional edge: the edge pixel must be anti-aliased. Two stacked opaque boxes that
+/// share a fractional edge are each anti-aliased at that pixel, so the box underneath
+/// bleeds through as a seam of the wrong color. Rounding both edges to whole pixels keeps
+/// shared edges identical and makes coverage all-or-nothing, without changing layout
+/// itself. Paint and hit-test geometry derived from a painted box should be snapped the
+/// same way so they stay in agreement.
+#[inline]
+pub fn snap<U>(rect: Rect<f32, U>) -> Rect<f32, U> {
+    rect.round()
 }
 
 #[allow(dead_code)]

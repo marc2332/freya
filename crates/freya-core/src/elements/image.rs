@@ -65,6 +65,7 @@ use crate::{
         LayoutExt,
         MaybeExt,
         StyleExt,
+        snap,
     },
     style::color::Color,
     tree::DiffModifies,
@@ -341,7 +342,7 @@ impl ElementExt for ImageElement {
             .downcast_ref::<Size2D>()
             .unwrap();
 
-        let mut area = context.layout_node.visible_area();
+        let mut area = snap(context.layout_node.visible_area());
 
         let mut rect = SkRect::new(
             area.min_x(),

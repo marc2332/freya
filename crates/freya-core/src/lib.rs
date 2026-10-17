@@ -76,6 +76,7 @@ pub mod prelude {
             EventHandlers,
             IntoElement,
             RenderContext,
+            snap,
         },
         elements::{
             extensions::*,
