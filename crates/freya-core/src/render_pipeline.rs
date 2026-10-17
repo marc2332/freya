@@ -37,6 +37,28 @@ use crate::{
 pub static BACKDROP_BLUR_RENDERED: std::sync::atomic::AtomicBool =
     std::sync::atomic::AtomicBool::new(false);
 
+/// Whether `element` is a rect that draws nothing of its own (no fill, border or shadow): a
+/// fade needs no layer for it, each layer being a render pass of its own on the GPU.
+fn paints_nothing(element: &dyn crate::element::ElementExt) -> bool {
+    use crate::style::fill::Fill;
+    let Some(rect) =
+        (element as &dyn std::any::Any).downcast_ref::<crate::elements::rect::RectElement>()
+    else {
+        return false;
+    };
+    let style = &rect.style;
+    style.background == Fill::Color(Color::TRANSPARENT)
+        && style.shadows.is_empty()
+        && style
+            .borders
+            .iter()
+            .all(|border| {
+                let width = border.width;
+                border.fill == Color::TRANSPARENT
+                    || width.top + width.right + width.bottom + width.left == 0.
+            })
+}
+
 pub struct RenderPipeline<'a> {
     pub font_collection: &'a mut FontCollection,
     pub font_manager: &'a FontMgr,
@@ -283,6 +305,7 @@ impl RenderPipeline<'_> {
                 // Only the fades whose edges this element reaches into: one wholly inside a
                 // fade's opaque middle needs no layer and no mask.
                 let fades: Vec<NodeId> = effect_state
+                    .filter(|_| !paints_nothing(element.as_ref()))
                     .map(|effect_state| {
                         effect_state
                             .fades
