@@ -392,6 +392,32 @@ impl ScrollController {
         task.write().replace(animation_task);
     }
 
+    pub(crate) fn scroll_gesture_phase(&mut self, phase: TouchPhase, delta: Vector2D) -> bool {
+        match phase {
+            TouchPhase::Started => {
+                self.stop();
+                self.drag.set(Drag::default());
+            }
+            TouchPhase::Moved => self.drag.write().track(-delta),
+            TouchPhase::Ended => {
+                let bounds = *self.bounds.peek();
+                if self.drag.peek().last_move.elapsed().as_millis() < 100
+                    && let Some((content, viewport)) = bounds
+                {
+                    self.release_drag(self.animated_position(self.position()), content, viewport);
+                }
+                self.drag.set(Drag::default());
+                return true;
+            }
+            TouchPhase::Cancelled => {
+                self.stop();
+                self.drag.set(Drag::default());
+                return true;
+            }
+        }
+        false
+    }
+
     /// Freezes the animation and starts a drag from the momentum it caught.
     pub fn begin_drag(&mut self) {
         let caught_velocity = self.stop();
