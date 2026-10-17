@@ -40,6 +40,7 @@ use crate::{
     event_handler::EventHandler,
     events::{
         data::{
+            AccessibilityActionEventData,
             Event,
             KeyboardEventData,
             MouseEventData,
@@ -47,6 +48,7 @@ use crate::{
             SizedEventData,
             StyledEventData,
             TouchEventData,
+            VisibleEventData,
             WheelEventData,
         },
         name::EventName,
@@ -67,7 +69,24 @@ use crate::{
     },
 };
 
+/// Tells Freya how to lay out, handle events for, describe accessibility and draw an element.
+///
+/// To make your own element, implement this trait and override what you need. For example,
+/// [`render`](Self::render) draws it, [`layout`](Self::layout) supplies its layout,
+/// [`measure`](Self::measure) gives it a custom size, and [`is_point_inside`](Self::is_point_inside)
+/// changes how pointer hits are detected. Everything has a default, so you can start with just
+/// the methods your element needs. Override [`changed`](Self::changed) and [`diff`](Self::diff)
+/// when changes to its data need to update the UI.
+///
+/// To put it in the UI tree, implement `From<YourElement> for Element` (or otherwise make it
+/// convertible into [`Element`]). You can also implement builder traits like `LayoutExt` to let
+/// callers set its properties. Freya stores elements as `Rc<dyn ElementExt>`, so they must be
+/// `'static` through the [`Any`].
+///
+/// See [`feature_element.rs`](https://github.com/marc2332/freya/blob/main/examples/feature_element.rs)
+/// for a full example.
 pub trait ElementExt: Any {
+    /// Converts this value into an [`Element`] if it implements `Into<Element>`.
     fn into_element(self) -> Element
     where
         Self: Sized + Into<Element>,
@@ -75,26 +94,32 @@ pub trait ElementExt: Any {
         self.into()
     }
 
+    /// Returns whether this element has changed compared to another one.
     fn changed(&self, _other: &Rc<dyn ElementExt>) -> bool {
         false
     }
 
+    /// Tells Freya what needs updating when this element changes.
     fn diff(&self, _other: &Rc<dyn ElementExt>) -> DiffModifies {
         DiffModifies::empty()
     }
 
+    /// Returns layout properties used to position and size this element.
     fn layout(&'_ self) -> Cow<'_, LayoutData> {
         Cow::Owned(Default::default())
     }
 
+    /// Returns accessibility properties for this element.
     fn accessibility(&'_ self) -> Cow<'_, AccessibilityData> {
         Cow::Owned(Default::default())
     }
 
+    /// Returns optional effect properties for this element.
     fn effect(&'_ self) -> Option<Cow<'_, EffectData>> {
         None
     }
 
+    /// Returns visual style properties for this element.
     fn style(&'_ self) -> Cow<'_, StyleState> {
         Cow::Owned(Default::default())
     }
@@ -105,26 +130,32 @@ pub trait ElementExt: Any {
         self.style().background == Fill::Color(Color::TRANSPARENT)
     }
 
+    /// Returns text styling inherited by text content in this element.
     fn text_style(&'_ self) -> Cow<'_, TextStyleData> {
         Cow::Owned(Default::default())
     }
 
+    /// Returns the drawing layer assigned to this element.
     fn layer(&self) -> Layer {
         Layer::default()
     }
 
+    /// Returns event handlers registered on this element.
     fn events_handlers(&'_ self) -> Option<Cow<'_, EventHandlers>> {
         None
     }
 
+    /// Measures the element and optionally returns measurement data for later layout stages.
     fn measure(&self, _context: LayoutContext) -> Option<(Size2D, Rc<dyn Any>)> {
         None
     }
 
+    /// Returns whether this element hooks into layout measurement.
     fn should_hook_measurement(&self) -> bool {
         false
     }
 
+    /// Returns whether to measure this element's children.
     fn should_measure_inner_children(&self) -> bool {
         true
     }
@@ -134,11 +165,12 @@ pub trait ElementExt: Any {
         false
     }
 
-    /// Runs after this node and its children are measured.
+    /// Runs after this element and its children are measured.
     fn post_measure(&self, _context: PostMeasureContext) -> PostMeasure<NodeId> {
         PostMeasure::default()
     }
 
+    /// Tests whether the pointer position is inside this element's hit area.
     fn is_point_inside(&self, context: EventMeasurementContext) -> bool {
         context
             .layout_node
@@ -146,10 +178,13 @@ pub trait ElementExt: Any {
             .contains(context.cursor.to_f32())
     }
 
+    /// Applies clipping for this element before it and its children are rendered.
     fn clip(&self, _context: ClipContext) {}
 
+    /// Renders this element using the supplied canvas and layout context.
     fn render(&self, _context: RenderContext) {}
 
+    /// Creates a rounded rectangle from an area using this element's corner radius.
     fn render_rect(&self, area: &Area, scale_factor: f32) -> SkRRect {
         let style = self.style();
         let corner_radius = style.corner_radius.with_scale(scale_factor);
@@ -163,6 +198,9 @@ pub trait ElementExt: Any {
             ],
         )
     }
+
+    /// Mutates the accessibility node immediately before it enters the accessibility tree.
+    fn finish_accessibility(&self, _builder: &mut accesskit::Node) {}
 }
 
 #[allow(dead_code)]
@@ -448,9 +486,11 @@ pub type EventHandlers = FxHashMap<EventName, EventHandlerType>;
 
 #[derive(Clone, PartialEq)]
 pub enum EventHandlerType {
+    AccessibilityAction(EventHandler<Event<AccessibilityActionEventData>>),
     Mouse(EventHandler<Event<MouseEventData>>),
     Keyboard(EventHandler<Event<KeyboardEventData>>),
     Sized(EventHandler<Event<SizedEventData>>),
+    Visible(EventHandler<Event<VisibleEventData>>),
     Styled(EventHandler<Event<StyledEventData>>),
     Wheel(EventHandler<Event<WheelEventData>>),
     Touch(EventHandler<Event<TouchEventData>>),

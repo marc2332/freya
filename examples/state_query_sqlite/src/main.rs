@@ -48,7 +48,7 @@ impl QueryCapability for GetTodos {
     type Keys = ();
 
     async fn run(&self, _keys: &Self::Keys) -> Result<Self::Ok, Self::Err> {
-        let db = consume_context::<Db>();
+        let db = consume_root_context::<Db>();
         blocking::unblock(move || {
             let conn = db.lock().map_err(|e| -> Error { e.to_string().into() })?;
             let mut stmt = conn.prepare("SELECT id, title, completed FROM todos")?;
@@ -76,7 +76,7 @@ impl MutationCapability for AddTodo {
     type Keys = String;
 
     async fn run(&self, title: &Self::Keys) -> Result<Self::Ok, Self::Err> {
-        let db = consume_context::<Db>();
+        let db = consume_root_context::<Db>();
         let title = title.clone();
         blocking::unblock(move || {
             let conn = db.lock().map_err(|e| -> Error { e.to_string().into() })?;
@@ -100,7 +100,7 @@ impl MutationCapability for ToggleTodo {
     type Keys = i64;
 
     async fn run(&self, _: &Self::Keys) -> Result<Self::Ok, Self::Err> {
-        let db = consume_context::<Db>();
+        let db = consume_root_context::<Db>();
         let id = self.0;
         blocking::unblock(move || {
             let conn = db.lock().map_err(|e| -> Error { e.to_string().into() })?;
@@ -127,7 +127,7 @@ impl MutationCapability for DeleteTodo {
     type Keys = i64;
 
     async fn run(&self, _: &Self::Keys) -> Result<Self::Ok, Self::Err> {
-        let db = consume_context::<Db>();
+        let db = consume_root_context::<Db>();
         let id = self.0;
         blocking::unblock(move || {
             let conn = db.lock().map_err(|e| -> Error { e.to_string().into() })?;
@@ -167,19 +167,15 @@ impl Component for TodoRow {
 
         TableRow::new()
             .child(
-                TableCell::new().child(
-                    Button::new()
-                        .on_press(move |_| toggle_mutation.mutate(id))
-                        .child(if self.completed { "✓" } else { "○" }),
-                ),
+                Button::new()
+                    .on_press(move |_| toggle_mutation.mutate(id))
+                    .child(if self.completed { "✓" } else { "○" }),
             )
-            .child(TableCell::new().child(self.title.clone()))
+            .child(self.title.clone())
             .child(
-                TableCell::new().child(
-                    Button::new()
-                        .on_press(move |_| delete_mutation.mutate(id))
-                        .child("Delete"),
-                ),
+                Button::new()
+                    .on_press(move |_| delete_mutation.mutate(id))
+                    .child("Delete"),
             )
     }
 
@@ -229,17 +225,12 @@ fn app() -> impl IntoElement {
                     Table::new()
                         .column_widths([Size::px(60.), Size::flex(1.), Size::px(130.)])
                         .child(
-                            TableHead::new().child(
-                                TableRow::new()
-                                    .child(TableCell::new().child("Status"))
-                                    .child(TableCell::new().child("Title"))
-                                    .child(TableCell::new().child("Actions")),
-                            ),
+                            TableRow::new()
+                                .child("Status")
+                                .child("Title")
+                                .child("Actions"),
                         )
-                        .child(
-                            TableBody::new()
-                                .child(ScrollView::new().children(todos.iter().map(TodoRow::new))),
-                        )
+                        .child(ScrollView::new().children(todos.iter().map(TodoRow::new)))
                         .into_element()
                 }
             }

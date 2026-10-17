@@ -32,7 +32,7 @@ impl Component for Counter {
     fn render(&self) -> impl IntoElement {
         let mut count = use_state(|| self.initial);
         label()
-            .on_mouse_up(move |_| *count.write() += 1)
+            .on_press(move |_| *count.write() += 1)
             .text(format!("Count: {}", count.read()))
     }
 }
@@ -178,15 +178,15 @@ Catalog (all prefixed `on_`):
 - **Touch**: `touch_start`, `touch_end`, `touch_move`, `touch_cancel`.
 - **File drop**: `file_drop`.
 - **Layout**: `sized` (measured size changed).
-- **Global** (no hit-test; use sparingly): `global_pointer_press`, `global_pointer_down`, `global_pointer_move`, `global_key_down`, `global_key_up`, `global_file_hover`, `global_file_hover_cancelled`.
-- **Capture** (run before regular handlers): `capture_global_pointer_press`, `capture_global_pointer_move`.
+- **Global** (no hit-test; use sparingly): `global_pointer_up`, `global_pointer_down`, `global_pointer_move`, `global_key_down`, `global_key_up`, `global_file_hover`, `global_file_hover_cancelled`.
+- **Capture** (run before regular handlers): `capture_global_pointer_up`, `capture_global_pointer_move`.
 
 **Prefer `on_press` over raw mouse/pointer events** for interactive elements: it covers click, tap, and keyboard activation, so accessibility comes free. Use `on_mouse_*` / `on_pointer_*` only when you need pointer-specific behavior (drag handles, canvas tools).
 
 `Event<T>` has two cancellation methods, plus `.map(...)` / `.try_map(...)` to transform inner data:
 
 - `.stop_propagation()`: don't bubble this event to ancestor handlers. No effect on events that don't bubble (move/enter/leave, capture, global).
-- `.prevent_default()`: don't fire the follow-up events this one triggers (e.g. in `on_mouse_up`, suppresses the `on_pointer_press` and `on_global_pointer_press` that would follow).
+- `.prevent_default()`: don't fire the follow-up events this one triggers (e.g. in `on_mouse_up`, suppresses the `on_pointer_press` and `on_global_pointer_up` that would follow).
 
 ### Callback props on custom components
 
@@ -262,7 +262,7 @@ Hooks are prefixed with `use_` (e.g. `use_state`, `use_animation`). Follow these
 ```rust
 let mut state = use_state(|| false);
 let on_click = move |_| state.set(true); // capture, not call inside handler
-rect().on_mouse_up(on_click)
+rect().on_press(on_click)
 ```
 
 ## State Management
@@ -717,7 +717,7 @@ impl Task {
 }
 
 impl KeyExt for Task {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -782,7 +782,7 @@ let mut i18n = I18n::get(); // retrieve from any descendant
 i18n.set_language(langid!("es-ES"));
 ```
 
-For multi-window apps, create with `I18n::create_global` in `main` and share with `use_share_i18n`.
+The instance lives in the root context shared by all windows, so calling `use_init_i18n` in each window reuses the same state.
 
 ## Animations
 
@@ -888,25 +888,31 @@ use freya::material_design::*;
 Button::new().ripple().child("Click me")
 ```
 
-## WebView
+## HTML
 
-Enable with `features = ["webview"]`. Embeds a browser view into your UI:
+Enable with `features = ["html"]`. Renders an HTML + CSS document with Blitz:
 
 ```rust
-use freya::webview::*;
-WebView::new("https://example.com").expanded()
+use freya::html::*;
+// The view is driven by a handle, which also exposes history navigation
+// (back/forward) and the current URL. Sources can be remote or inline.
+let mut handle = use_html(|| HtmlSource::url("https://example.com"));
+HtmlView::new(handle).expanded();
+handle.back();
+handle.navigate("https://freyaui.dev");
+use_html(|| HtmlSource::html("<h1>Hello</h1>"));
 ```
 
 ## Terminal
 
-Enable with `features = ["terminal"]`. Spawns a PTY process and renders it as a terminal:
+Enable with `features = ["terminal-pty"]`. Spawns a PTY process and renders it as a terminal:
 
 ```rust
 use freya::terminal::*;
 let mut cmd = CommandBuilder::new("bash");
 cmd.env("TERM", "xterm-256color");
-let handle = TerminalHandle::new(TerminalId::new(), cmd, None).ok();
-// Render with Terminal::new(handle) and forward keyboard events via handle.write_key()
+let handle = TerminalHandle::new(TerminalId::new(), PtyBackend::new(cmd), None).ok();
+// Render with Terminal::new(handle) and forward keyboard events via handle.key_mut()
 ```
 
 ## Camera
@@ -920,6 +926,25 @@ CameraViewer::new(camera)
 ```
 
 On macOS, call `freya::camera::init()` from `main` to request authorization before launching.
+
+## Borderless Windows
+
+Enable with `features = ["borderless"]`. For windows using `.with_decorations(false)`, register `BorderlessPlugin` (crate `freya-borderless-plugin`). Combine with `TitlebarButton` (`titlebar` feature) and `rect().window_drag()` for a custom titlebar.
+
+```rust
+use freya::borderless::BorderlessPlugin;
+
+launch(
+    LaunchConfig::new()
+        .with_plugin(BorderlessPlugin::new().with_corner_radius(12.))
+        .with_window(
+            WindowConfig::new(app)
+                .with_decorations(false)
+                .with_transparency(true)
+                .with_background(Color::TRANSPARENT),
+        ),
+)
+```
 
 ## Developer Tools
 
@@ -947,16 +972,18 @@ freya = { version = "...", features = ["router", "radio"] }
 | `markdown` | `Markdown` renderer component |
 | `icons` | SVG icon library via Lucide (`freya-icons`) |
 | `material-design` | Material Design theme (`freya-material-design`) |
-| `webview` | Embed a WebView (`freya-webview`) |
+| `html` | Render HTML + CSS via Blitz (`freya-html`) |
 | `terminal` | Terminal emulator (`freya-terminal`) |
+| `terminal-pty` | Built-in PTY backend for the terminal, implies `terminal` |
 | `code-editor` | Code editing APIs (`freya-code-editor`) |
 | `camera` | Webcam capture (`freya-camera`) |
 | `tray` | System tray support |
 | `titlebar` | Custom window titlebar component |
+| `borderless` | `BorderlessPlugin` helpers for undecorated windows (`freya-borderless-plugin`) |
 | `devtools` | Developer tools overlay |
-| `performance` | Performance monitoring plugin |
+| `metrics` | Metrics overlay plugin (`freya-metrics-plugin`) |
 | `hotpath` | Hot-path optimization |
-| `all` | All of the above (except devtools/performance/hotpath) |
+| `all` | All of the above (except devtools/metrics/hotpath) |
 
 ## Further Reference
 

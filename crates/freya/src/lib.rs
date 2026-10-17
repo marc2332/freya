@@ -27,7 +27,7 @@
 //!         .background((35, 35, 35))
 //!         .color(Color::WHITE)
 //!         .padding(Gaps::new_all(12.))
-//!         .on_mouse_up(move |_| *count.write() += 1)
+//!         .on_press(move |_| *count.write() += 1)
 //!         .child(format!("Click to increase -> {}", count.read()))
 //! }
 //! ```
@@ -39,10 +39,17 @@
 //! - [Hooks](self::_docs::hooks)
 //! - [State](self::_docs::state_management)
 //! - [Async](self::_docs::_async)
+//! - [Fonts](self::_docs::fonts)
 //! - [Layers](self::_docs::layers)
+//! - [Optimizing](self::_docs::optimizing)
+//! - [Platform Integration](freya_core::platform::Platform)
 //! - [Platforms](self::_docs::platforms)
+//! - [Android](https://github.com/marc2332/freya/tree/main/examples/android)
+//! - [Web](https://github.com/marc2332/freya/tree/main/examples/web)
 //! - [Development Setup](self::_docs::development_setup)
 //! - [Extending Components](self::_docs::extending_components)
+//! - [Custom Elements](freya_core::element::ElementExt)
+//! - [Working with AI](self::_docs::ai)
 //!
 //! ### Learn
 //! - [Built-in Components](crate::components)
@@ -55,22 +62,26 @@
 //! - [Material Design](freya_material_design)
 //! - [Plotters](freya_plotters_backend)
 //! - [Testing](freya_testing)
-//! - [WebView](freya_webview)
+//! - [HTML Viewer](freya_html)
 //! - [Terminal](freya_terminal)
 //! - [Camera](freya_camera)
 //! - [Video](freya_video)
 //! - [Freya Query](freya_query)
 //! - [Tokio Integration](self::_docs::tokio_integration)
+//! - [Borderless Windows](self::_docs::borderless)
 //! - [Devtools](self::_docs::devtools)
 //! - [Hot Reload](self::_docs::hot_reload)
+//! - [HTTP Requests](freya_components::http)
 //!
 //! ## Features flags
 //!
 //! - `all`: Enables all the features listed below
 //! - `winit`: Reexports [freya_winit] and enables the launch entrypoint. Enabled by default.
+//! - `gpu`: Enables GPU rendering support. Enabled by default.
+//! - `accessibility`: Enables the AccessKit accessibility backend for winit. Enabled by default.
 //! - `router`: Reexport [freya_router] under [router]
 //! - `i18n`: Reexport [freya_i18n] under [i18n]
-//! - `remote-asset`: Enables support for **HTTP** asset sources for [ImageViewer](components::ImageViewer) and [GifViewer](components::GifViewer) components.
+//! - `remote-asset`: Enables [HTTP requests](freya_components::http) and remote sources for [ImageViewer](components::ImageViewer) and [GifViewer](components::GifViewer).
 //! - `tray`: Enables tray support using the [tray_icon] crate.
 //! - `sdk`: Reexport [freya_sdk] under [sdk].
 //! - `sdk-tokio`: Enables the Tokio utilities from [freya_sdk]. Implies `sdk`.
@@ -78,22 +89,25 @@
 //! - `video`: Reexport [freya_video] under [video].
 //! - `plot`: Reexport of plotters under [plot].
 //! - `material-design`: Reexport [freya_material_design] under [material_design].
-//! - `calendar`: Enables the [Calendar](components::Calendar) component.
+//! - `calendar`: Enables the Calendar components from `freya-components`.
 //! - `icons`: Reexport of [freya_icons] under [icons].
 //! - `icons-lucide`: Enables the Lucide icons from [freya_icons]. Implies `icons`.
 //! - `radio`: Reexport [freya_radio] under [radio].
 //! - `query`: Reexport [freya_query] under [query].
 //! - `markdown`: Reexport [freya_markdown] under [markdown].
-//! - `webview`: Reexport [freya_webview] under [webview].
+//! - `html`: Reexport [freya_html] under [html].
 //! - `titlebar`: Enables the [TitlebarButton](components::TitlebarButton) component.
+//! - `borderless`: Reexport [freya_borderless_plugin] under [borderless]. See [Borderless Windows](self::_docs::borderless).
 //! - `terminal`: Reexport [freya_terminal] under [terminal].
+//! - `terminal-pty`: Enables the PTY backend from [freya_terminal]. Implies `terminal`.
 //! - `code-editor`: Reexport [freya_code_editor] under [code_editor].
 //! - `camera`: Reexport [freya_camera] under [camera].
+//! - `web`: Reexport [freya_web] under [web].
+//! - `platform-text-gamma`: Applies platform-specific text contrast and gamma on Linux and macOS. Enabled by default.
 //!
 //! ## Misc features
 //! - `devtools`: Enables devtools support.
-//! - `performance`: Reexports the performance overlay plugin. The plugin is auto-added in debug builds.
-//! - `vulkan`: Enables Vulkan rendering support.
+//! - `metrics`: Reexports the metrics plugin. The plugin is auto-added in debug builds.
 //! - `hotpath`: Enables Freya's internal usage of hotpath.
 //! - `hotreload`: Enables hot reload support via the `dx` CLI from `dioxus-cli`. See [Hot Reload](self::_docs::hot_reload).
 //! - `zoom-shortcuts`: Enables `Ctrl`/`Cmd` + `+`/`-`/`0` to zoom the app.
@@ -110,12 +124,17 @@ pub mod prelude {
     pub use freya_winit::{
         WindowDragExt,
         WinitPlatformExt,
+        WinitPlatformWindowExt,
         config::{
             CloseDecision,
+            GpuPreference,
+            GpuResourceCacheLimit,
             LaunchConfig,
+            RendererPreference,
             WindowConfig,
         },
         renderer::{
+            LaunchProxy,
             NativeEvent,
             RendererContext,
         },
@@ -132,8 +151,8 @@ pub mod prelude {
         #[cfg(feature = "devtools")]
         let launch_config = launch_config.with_plugin(freya_devtools::DevtoolsPlugin::default());
         #[cfg(debug_assertions)]
-        let launch_config = launch_config
-            .with_plugin(freya_performance_plugin::PerformanceOverlayPlugin::default());
+        let launch_config =
+            launch_config.with_plugin(freya_metrics_plugin::MetricsPlugin::default());
         freya_winit::launch(launch_config)
     }
 
@@ -149,12 +168,17 @@ pub mod prelude {
             Area,
             CursorPoint,
             Size2D,
+            Size2DFixed,
         },
         position::Position,
         size::Size,
         visible_size::VisibleSize,
     };
 }
+
+/// Reexport the Torin layout crate.
+pub use torin;
+
 /// Built-in elements like `rect`, `label` or `paragraph`.
 pub mod elements {
     pub use freya_core::elements::*;
@@ -189,13 +213,11 @@ pub mod components {
         attached::*,
         button::*,
         cache::*,
-        canvas::*,
         card::*,
         checkbox::*,
         chip::*,
         color_picker::*,
         context_menu::*,
-        cursor_area::*,
         define_theme,
         docking::*,
         drag_drop::*,
@@ -207,9 +229,11 @@ pub mod components {
         icons::{
             arrow::*,
             tick::*,
+            *,
         },
         image_viewer::*,
         input::*,
+        lazy::*,
         loader::*,
         menu::*,
         overflowed_content::*,
@@ -288,6 +312,13 @@ pub mod engine {
     pub use freya_engine::*;
 }
 
+/// Reexport `freya-web` when the `web` feature is enabled and the target is the browser.
+#[cfg_attr(feature = "docs", doc(cfg(feature = "web")))]
+#[cfg(all(feature = "web", any(doc, target_os = "emscripten")))]
+pub mod web {
+    pub use freya_web::*;
+}
+
 /// Reexport `winit` when the `winit` feature is enabled.
 #[cfg_attr(feature = "docs", doc(cfg(feature = "winit")))]
 #[cfg(feature = "winit")]
@@ -342,11 +373,11 @@ pub mod query {
     pub use freya_query::prelude::*;
 }
 
-/// Reexport `freya-webview` when the `webview` feature is enabled.
-#[cfg(feature = "webview")]
-#[cfg_attr(feature = "docs", doc(cfg(feature = "webview")))]
-pub mod webview {
-    pub use freya_webview::prelude::*;
+/// Reexport `freya-html` when the `html` feature is enabled.
+#[cfg(feature = "html")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "html")))]
+pub mod html {
+    pub use freya_html::prelude::*;
 }
 
 /// Reexport `freya-terminal` when the `terminal` feature is enabled.
@@ -381,11 +412,18 @@ pub mod video {
     pub use freya_video::*;
 }
 
-/// Reexport `freya-performance-plugin` when the `performance` feature is enabled.
-#[cfg(feature = "performance")]
-#[cfg_attr(feature = "docs", doc(cfg(feature = "performance")))]
-pub mod performance {
-    pub use freya_performance_plugin::*;
+/// Reexport `freya-metrics-plugin` when the `metrics` feature is enabled.
+#[cfg(feature = "metrics")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "metrics")))]
+pub mod metrics {
+    pub use freya_metrics_plugin::*;
+}
+
+/// Reexport `freya-borderless-plugin` when the `borderless` feature is enabled.
+#[cfg(feature = "borderless")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "borderless")))]
+pub mod borderless {
+    pub use freya_borderless_plugin::*;
 }
 
 /// Reexport `freya-markdown` when the `markdown` feature is enabled.

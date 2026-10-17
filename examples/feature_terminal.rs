@@ -15,7 +15,7 @@ fn app() -> impl IntoElement {
         cmd.env("TERM", "xterm-256color");
         cmd.env("COLORTERM", "truecolor");
         cmd.env("LANG", "en_GB.UTF-8");
-        TerminalHandle::new(TerminalId::new(), cmd, None).ok()
+        TerminalHandle::new(TerminalId::new(), PtyBackend::new(cmd), None).ok()
     });
 
     use_future(move || async move {
@@ -31,7 +31,7 @@ fn app() -> impl IntoElement {
                 }
                 _ = terminal_handle.title_changed().fuse() => {
                     if let Some(new_title) = terminal_handle.title() {
-                        Platform::get().with_window(None, move |window| {
+                        Platform::get().with_window(Platform::window_id(), move |window| {
                             window.set_title(&new_title);
                         });
                     }
@@ -51,7 +51,8 @@ fn app() -> impl IntoElement {
     let mut click_origin = use_state(|| None::<(usize, usize)>);
 
     use_side_effect(move || {
-        let focused = *Platform::get().is_app_focused.read() && focus().is_focused();
+        let focused =
+            *Platform::get().current_window().is_app_focused.read() && focus().is_focused();
         if let Some(handle) = handle.read().clone() {
             handle.focus_changed(focused);
         }
@@ -82,12 +83,12 @@ fn app() -> impl IntoElement {
                                     Some(MouseButton::Right) => TerminalMouseButton::Right,
                                     _ => TerminalMouseButton::Left,
                                 };
-                                let selection_type = match EventsCombos::pressed(e.element_location)
-                                {
-                                    PressEventType::Double => SelectionType::Semantic,
-                                    PressEventType::Triple => SelectionType::Lines,
-                                    _ => SelectionType::Simple,
-                                };
+                                let selection_type =
+                                    match EventsCombos::<()>::pressed(e.element_location) {
+                                        PressEventType::Double => SelectionType::Semantic,
+                                        PressEventType::Triple => SelectionType::Lines,
+                                        _ => SelectionType::Simple,
+                                    };
                                 handle.mouse_down(row, col, button, selection_type);
                             }
                         })
@@ -122,7 +123,7 @@ fn app() -> impl IntoElement {
                                 }
                             }
                         })
-                        .on_global_pointer_press({
+                        .on_global_pointer_up({
                             let handle = handle.clone();
                             move |_: Event<PointerEventData>| {
                                 handle.release();

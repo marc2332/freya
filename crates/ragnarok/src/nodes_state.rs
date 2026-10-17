@@ -1,7 +1,4 @@
-use rustc_hash::{
-    FxHashMap,
-    FxHashSet,
-};
+use alloc::vec::Vec;
 
 use crate::{
     EmmitableEvent,
@@ -10,12 +7,17 @@ use crate::{
     NodeKey,
     PotentialEvent,
     SourceEvent,
+    collections::{
+        FxHashMap,
+        FxHashSet,
+    },
 };
 
 /// [`NodesState`] stores the nodes states given incoming events.
 pub struct NodesState<Key: NodeKey> {
     pressed_nodes: FxHashSet<Key>,
     hovered_nodes: FxHashSet<Key>,
+    visible_nodes: FxHashSet<Key>,
     entered_node: Option<Key>,
 }
 
@@ -24,6 +26,7 @@ impl<Key: NodeKey> Default for NodesState<Key> {
         Self {
             pressed_nodes: FxHashSet::default(),
             hovered_nodes: FxHashSet::default(),
+            visible_nodes: FxHashSet::default(),
             entered_node: None,
         }
     }
@@ -72,7 +75,7 @@ impl<Key: NodeKey> NodesState<Key> {
 
         let source_movement_event = source_events
             .iter()
-            .find(|e| e.is_moved() || e.is_touch_released());
+            .find(|e| e.is_moved() || e.is_touch_released() || e.is_pointer_exit());
         let mut removed_from_hovered = FxHashSet::default();
 
         self.hovered_nodes.retain(|node_key| {
@@ -81,15 +84,18 @@ impl<Key: NodeKey> NodesState<Key> {
                 return false;
             };
 
-            let cursor_still_inside = source_movement_event
-                .and_then(|e| e.try_location())
-                .is_none_or(|cursor| events_measurer.is_point_inside(node_key, cursor));
+            let cursor_still_inside = source_movement_event.is_none_or(|event| {
+                !event.is_pointer_exit()
+                    && event
+                        .try_location()
+                        .is_none_or(|cursor| events_measurer.is_point_inside(node_key, cursor))
+            });
 
             if cursor_still_inside {
                 return true;
             }
 
-            // Cursor moved outside this node, emit leave events
+            // Emit leave events for nodes no longer hovered
             let source_event = source_movement_event.unwrap();
             for derived_event in Name::new_leave().get_derived_events() {
                 if events_measurer.is_listening_to(node_key, &derived_event) {
@@ -116,6 +122,7 @@ impl<Key: NodeKey> NodesState<Key> {
             let new_deepest = emmitable_events
                 .iter()
                 .find(|e| e.name().is_exclusive_enter())
+                .or_else(|| emmitable_events.iter().rev().find(|e| e.name().is_moved()))
                 .map(|e| e.key());
 
             if let Some(old_entered) = self.entered_node {
@@ -148,10 +155,11 @@ impl<Key: NodeKey> NodesState<Key> {
         &mut self,
         emmitable_events: &mut Vec<Emmitable>,
     ) {
+        // The exclusive enter event identifies the entered node
         let entered_node = emmitable_events
             .iter()
-            .rev()
-            .find(|e| e.name().is_moved() || e.name().is_exclusive_enter())
+            .find(|e| e.name().is_exclusive_enter())
+            .or_else(|| emmitable_events.iter().rev().find(|e| e.name().is_moved()))
             .map(|e| e.key());
 
         emmitable_events.retain(|ev| match ev.name() {
@@ -203,10 +211,14 @@ impl<Key: NodeKey> NodesState<Key> {
                         tracing::info!("Marked as hovered {:?}", node_key);
                     }
                     name if name.is_pressed() => {
+                        hovered_nodes.insert(*node_key);
                         pressed_nodes.insert(*node_key);
 
                         #[cfg(debug_assertions)]
-                        tracing::info!("Marked as pressed {:?}", node_key);
+                        {
+                            tracing::info!("Marked as hovered {:?}", node_key);
+                            tracing::info!("Marked as pressed {:?}", node_key);
+                        }
                     }
                     _ => {}
                 }
@@ -229,8 +241,22 @@ impl<Key: NodeKey> NodesState<Key> {
         self.hovered_nodes.contains(&key)
     }
 
+    /// Nodes currently under the cursor.
+    pub fn hovered_nodes(&self) -> impl Iterator<Item = &Key> {
+        self.hovered_nodes.iter()
+    }
+
     pub fn is_pressed(&self, key: Key) -> bool {
         self.pressed_nodes.contains(&key)
+    }
+
+    pub fn is_visible(&self, key: Key) -> bool {
+        self.visible_nodes.contains(&key)
+    }
+
+    /// Replace the visible nodes with the result of a new visibility pass.
+    pub fn set_visible_nodes(&mut self, visible_nodes: FxHashSet<Key>) {
+        self.visible_nodes = visible_nodes;
     }
 }
 

@@ -31,8 +31,50 @@ use crate::{
 };
 
 pub type WindowBuilderHook =
-    Box<dyn FnOnce(WindowAttributes, &ActiveEventLoop) -> WindowAttributes + Send + Sync>;
-pub type WindowHandleHook = Box<dyn FnOnce(&mut Window) + Send + Sync>;
+    Box<dyn FnOnce(WindowAttributes, &ActiveEventLoop) -> WindowAttributes>;
+pub type WindowHandleHook = Box<dyn FnOnce(&mut Window)>;
+
+/// Preferred GPU type, with fallback to other available hardware.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum GpuPreference {
+    /// Prefer an integrated GPU.
+    PreferIntegrated,
+    /// Prefer a discrete GPU.
+    #[default]
+    PreferDiscrete,
+}
+
+/// Graphics driver preference a window asks for.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum RendererPreference {
+    #[default]
+    Auto,
+    Software,
+    OpenGl,
+    Vulkan {
+        gpu_preference: GpuPreference,
+    },
+}
+
+impl RendererPreference {
+    /// Return the Vulkan GPU preference or the default for other renderers.
+    pub fn gpu_preference(self) -> GpuPreference {
+        match self {
+            Self::Vulkan { gpu_preference } => gpu_preference,
+            _ => GpuPreference::default(),
+        }
+    }
+
+    pub(crate) fn as_name(self) -> Option<&'static str> {
+        match self {
+            Self::Auto => None,
+            Self::Software => Some("software"),
+            Self::OpenGl => Some("opengl"),
+            Self::Vulkan { .. } => Some("vulkan"),
+        }
+    }
+}
+
 /// Decision returned by the `on_close` hook to determine whether a window should close.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum CloseDecision {
@@ -45,13 +87,13 @@ pub enum CloseDecision {
 
 /// Hook called when a window close is requested.
 /// Returns a [`CloseDecision`] to determine whether the window should actually close.
-pub type OnCloseHook =
-    Box<dyn FnMut(crate::renderer::RendererContext, WindowId) -> CloseDecision + Send>;
+pub type OnCloseHook = Box<dyn FnMut(crate::renderer::RendererContext, WindowId) -> CloseDecision>;
 
 /// Configuration for a Window.
 pub struct WindowConfig {
     /// Root component for the window app.
     pub(crate) app: AppComponent,
+    pub(crate) root_context: Option<Box<dyn FnOnce()>>,
     /// Size of the Window.
     pub(crate) size: (f64, f64),
     /// Minimum size of the Window.
@@ -74,6 +116,8 @@ pub struct WindowConfig {
     pub(crate) icon: Option<Icon>,
     /// Application ID for the Window.
     pub(crate) app_id: Option<String>,
+    /// Preferred graphics backend for the Window.
+    pub(crate) renderer: RendererPreference,
     /// Hook function called with the Window Attributes.
     pub(crate) window_attributes_hook: Option<WindowBuilderHook>,
     /// Hook function called with the Window.
@@ -96,6 +140,7 @@ impl Debug for WindowConfig {
             .field("custom_scale_factor", &self.custom_scale_factor)
             .field("icon", &self.icon)
             .field("app_id", &self.app_id)
+            .field("renderer", &self.renderer)
             .finish()
     }
 }
@@ -114,6 +159,7 @@ impl WindowConfig {
     fn new_with_defaults(app: impl Into<AppComponent>) -> Self {
         Self {
             app: app.into(),
+            root_context: None,
             size: (700.0, 500.0),
             min_size: None,
             max_size: None,
@@ -125,10 +171,19 @@ impl WindowConfig {
             custom_scale_factor: 1.0,
             icon: None,
             app_id: None,
+            renderer: RendererPreference::default(),
             window_attributes_hook: None,
             window_handle_hook: None,
             on_close: None,
         }
+    }
+
+    /// Provide a context to the window's root before its first render.
+    pub fn with_root_context<T: Clone + 'static>(mut self, value: T) -> Self {
+        self.root_context = Some(Box::new(move || {
+            freya_core::prelude::provide_root_context(value);
+        }));
+        self
     }
 
     /// Specify a Window size.
@@ -207,13 +262,17 @@ impl WindowConfig {
         self
     }
 
+    /// Prefer a graphics backend for this Window, overriding `FREYA_RENDERER`.
+    pub fn with_renderer(mut self, renderer: RendererPreference) -> Self {
+        self.renderer = renderer;
+        self
+    }
+
     /// Register a Window Attributes hook.
     pub fn with_window_attributes(
         mut self,
         window_attributes_hook: impl FnOnce(WindowAttributes, &ActiveEventLoop) -> WindowAttributes
-        + 'static
-        + Send
-        + Sync,
+        + 'static,
     ) -> Self {
         self.window_attributes_hook = Some(Box::new(window_attributes_hook));
         self
@@ -222,7 +281,7 @@ impl WindowConfig {
     /// Register a Window handle hook.
     pub fn with_window_handle(
         mut self,
-        window_handle_hook: impl FnOnce(&mut Window) + 'static + Send + Sync,
+        window_handle_hook: impl FnOnce(&mut Window) + 'static,
     ) -> Self {
         self.window_handle_hook = Some(Box::new(window_handle_hook));
         self
@@ -231,12 +290,47 @@ impl WindowConfig {
     /// Register an on-close hook that is called when the window is requested to close by the user.
     pub fn with_on_close(
         mut self,
-        on_close: impl FnMut(crate::renderer::RendererContext, WindowId) -> CloseDecision
-        + 'static
-        + Send,
+        on_close: impl FnMut(crate::renderer::RendererContext, WindowId) -> CloseDecision + 'static,
     ) -> Self {
         self.on_close = Some(Box::new(on_close));
         self
+    }
+}
+
+/// GPU resource cache limit used by the renderer.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum GpuResourceCacheLimit {
+    /// 128 MiB for applications with low graphics resource usage.
+    Small,
+    /// 256 MiB, matching Skia's default cache limit.
+    #[default]
+    Normal,
+    /// 1 GiB for applications with large graphics resource usage.
+    Large,
+    /// A custom limit in bytes.
+    Custom(usize),
+}
+
+impl From<usize> for GpuResourceCacheLimit {
+    fn from(bytes: usize) -> Self {
+        Self::Custom(bytes)
+    }
+}
+
+impl GpuResourceCacheLimit {
+    /// Creates a custom cache limit from a number of mebibytes.
+    pub const fn from_mb(megabytes: usize) -> Self {
+        Self::Custom(megabytes * 1024 * 1024)
+    }
+
+    /// Returns the cache limit in bytes.
+    pub const fn bytes(self) -> usize {
+        match self {
+            Self::Small => 128 * 1024 * 1024,
+            Self::Normal => 256 * 1024 * 1024,
+            Self::Large => 1024 * 1024 * 1024,
+            Self::Custom(bytes) => bytes,
+        }
     }
 }
 
@@ -250,6 +344,8 @@ pub type TrayHandler =
 pub type TaskHandler =
     Box<dyn FnOnce(crate::renderer::LaunchProxy) -> Pin<Box<dyn Future<Output = ()>>> + 'static>;
 
+pub type GlobalContextInserter = Box<dyn FnOnce(&GlobalContexts)>;
+
 /// Configuration for the initial state of the application.
 ///
 /// Use this to register windows, plugins, fonts, and other settings
@@ -262,6 +358,7 @@ pub struct LaunchConfig {
     pub(crate) embedded_fonts: EmbeddedFonts,
     pub(crate) fallback_fonts: Vec<Cow<'static, str>>,
     pub(crate) tasks: Vec<TaskHandler>,
+    pub(crate) globals: Vec<GlobalContextInserter>,
     pub(crate) exit_on_close: bool,
     pub(crate) event_loop: Option<winit::event_loop::EventLoop<crate::renderer::NativeEvent>>,
     pub(crate) gpu_resource_cache_limit: usize,
@@ -277,9 +374,10 @@ impl Default for LaunchConfig {
             embedded_fonts: Default::default(),
             fallback_fonts: default_fonts(),
             tasks: Vec::new(),
+            globals: Vec::new(),
             exit_on_close: true,
             event_loop: None,
-            gpu_resource_cache_limit: 1024 * 1024 * 1024,
+            gpu_resource_cache_limit: GpuResourceCacheLimit::default().bytes(),
         }
     }
 }
@@ -368,6 +466,34 @@ impl LaunchConfig {
         self
     }
 
+    /// Register a value in the [`GlobalContexts`], shared by all the windows.
+    ///
+    /// ```rust,no_run
+    /// # use freya::prelude::*;
+    /// #[derive(Clone)]
+    /// struct AppName(String);
+    ///
+    /// fn main() {
+    ///     launch(
+    ///         LaunchConfig::new()
+    ///             .with_global_context(AppName("Freya".to_string()))
+    ///             .with_window(WindowConfig::new(app)),
+    ///     )
+    /// }
+    ///
+    /// fn app() -> impl IntoElement {
+    ///     let app_name = GlobalContexts::get().get_context::<AppName>();
+    ///
+    ///     label().text(app_name.0)
+    /// }
+    /// ```
+    pub fn with_global_context<T: Clone + 'static>(mut self, value: T) -> Self {
+        self.globals.push(Box::new(move |global_contexts| {
+            global_contexts.insert_context(value);
+        }));
+        self
+    }
+
     /// Whether to exit the event loop when all windows are closed. Defaults to `true`.
     /// Set to `false` to keep the event loop alive even when no windows remain.
     pub fn with_exit_on_close(mut self, exit_on_close: bool) -> Self {
@@ -375,11 +501,17 @@ impl LaunchConfig {
         self
     }
 
-    /// Register a single-thread launch task.
-    /// The task receives a [LaunchProxy] that can be used to get access to [RendererContext](crate::renderer::RendererContext).
-    /// The provided callback should return a `'static` future which will be scheduled on the renderer
-    /// thread and polled until completion.
-    pub fn with_future<F, Fut>(mut self, task: F) -> Self
+    /// Register an async task that starts on the app launch.
+    ///
+    /// ```rust,no_run
+    /// # use freya::prelude::*;
+    /// let config = LaunchConfig::new().with_task(|proxy| async move {
+    ///     let _ = proxy
+    ///         .post_callback(|renderer| renderer.launch_window(WindowConfig::new(|| "Hello!")))
+    ///         .await;
+    /// });
+    /// ```
+    pub fn with_task<F, Fut>(mut self, task: F) -> Self
     where
         F: FnOnce(LaunchProxy) -> Fut + 'static,
         Fut: Future<Output = ()> + 'static,
@@ -399,9 +531,12 @@ impl LaunchConfig {
         self
     }
 
-    /// Set the Skia GPU resource cache limit, in bytes, applied to every window. Defaults to 1 GB.
-    pub fn with_gpu_resource_cache_limit(mut self, gpu_resource_cache_limit: usize) -> Self {
-        self.gpu_resource_cache_limit = gpu_resource_cache_limit;
+    /// Set the Skia GPU resource cache limit applied to every window. Defaults to [`GpuResourceCacheLimit::Normal`].
+    pub fn with_gpu_resource_cache_limit(
+        mut self,
+        gpu_resource_cache_limit: impl Into<GpuResourceCacheLimit>,
+    ) -> Self {
+        self.gpu_resource_cache_limit = gpu_resource_cache_limit.into().bytes();
         self
     }
 }

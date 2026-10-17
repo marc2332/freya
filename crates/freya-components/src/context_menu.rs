@@ -52,6 +52,7 @@ impl ContextMenu {
     /// # Panics
     ///
     /// Panics if no [`ContextMenuViewer`] is mounted in an ancestor scope.
+    #[track_caller]
     pub fn get() -> Self {
         try_consume_root_context()
             .expect("ContextMenu requires a `ContextMenuViewer` in an ancestor scope")
@@ -107,7 +108,7 @@ pub struct ContextMenuViewer {
 }
 
 impl KeyExt for ContextMenuViewer {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -133,7 +134,7 @@ impl ComponentOwned for ContextMenuViewer {
         });
 
         use_side_effect(move || {
-            if !*Platform::get().is_app_focused.read() {
+            if !*Platform::get().current_window().is_app_focused.read() {
                 context.menu.set(None);
             }
         });

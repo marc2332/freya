@@ -21,8 +21,6 @@ use tungstenite::protocol::Message;
 use crate::{
     DevtoolsPlugin,
     IncomingMessage,
-    OutgoingMessage,
-    OutgoingMessageAction,
     WindowState,
     incoming::IncomingMessageAction,
 };
@@ -39,13 +37,8 @@ async fn handle_connection(
     let (mut write, mut read) = ws_stream.split();
 
     let windows_snapshot = plugin.windows.lock().unwrap().clone();
-    for (window_id, WindowState { nodes, .. }) in windows_snapshot {
-        let message = Message::Text(
-            serde_json::to_string(&OutgoingMessage {
-                action: OutgoingMessageAction::Update { window_id, nodes },
-            })?
-            .into(),
-        );
+    for WindowState { snapshot, .. } in windows_snapshot.into_values() {
+        let message = Message::Text(snapshot.into());
 
         // Send nodes snapshot
         write.send(message).await?;
@@ -104,9 +97,9 @@ pub(crate) async fn run_server(
     plugin: DevtoolsPlugin,
     plugin_handle: PluginHandle,
 ) -> anyhow::Result<()> {
-    println!("Running the Devtools Server in [::1]:7354");
+    println!("Running the Devtools Server in 0.0.0.0:7354");
 
-    let listener = TcpListener::bind("[::1]:7354").await?;
+    let listener = TcpListener::bind("0.0.0.0:7354").await?;
     loop {
         let (stream, _) = listener.accept().await?;
         let plugin = plugin.clone();

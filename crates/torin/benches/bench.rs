@@ -38,13 +38,6 @@ impl TestingTree {
 }
 
 impl TreeAdapter<usize> for TestingTree {
-    fn children_of(&mut self, node_id: &usize) -> Vec<usize> {
-        self.mapper
-            .get(node_id)
-            .map(|c| c.1.clone())
-            .unwrap_or_default()
-    }
-
     fn parent_of(&self, node_id: &usize) -> Option<usize> {
         self.mapper.get(node_id).and_then(|c| c.0)
     }
@@ -53,8 +46,12 @@ impl TreeAdapter<usize> for TestingTree {
         self.mapper.get(node_id).map(|c| c.2)
     }
 
-    fn get_node(&self, node_id: &usize) -> Option<Node> {
-        self.mapper.get(node_id).map(|c| c.3.clone())
+    fn read_node<R>(
+        &self,
+        node_id: &usize,
+        reader: impl FnOnce(&Node, &[usize]) -> R,
+    ) -> Option<R> {
+        self.mapper.get(node_id).map(|c| reader(&c.3, &c.1))
     }
 
     fn root_id(&self) -> usize {
@@ -248,7 +245,7 @@ fn criterion_benchmark(c: &mut Criterion) {
 
         g.bench_function(name, |b| {
             let root_area = Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0));
-            b.iter_batched(
+            b.iter_batched_ref(
                 || {
                     let mut measurer = Some(NoopMeasurer);
                     let mut mocked_tree = TestingTree::default();
@@ -321,8 +318,8 @@ fn criterion_benchmark(c: &mut Criterion) {
                     let mut layout = Torin::<usize>::new();
 
                     if mode == BenchmarkMode::InvalidatedCache {
-                        layout.find_best_root(&mut mocked_tree);
-                        layout.measure(0, root_area, &mut measurer, &mut mocked_tree);
+                        layout.find_best_root(&mocked_tree);
+                        layout.measure(0, root_area, &mut measurer, &mocked_tree);
                         mocked_tree.set_node(
                             invalidate_node,
                             Node::from_size_and_direction(
@@ -336,11 +333,11 @@ fn criterion_benchmark(c: &mut Criterion) {
 
                     (mocked_tree, measurer, layout)
                 },
-                |(mut mocked_tree, mut measurer, mut layout)| {
-                    layout.find_best_root(&mut mocked_tree);
-                    layout.measure(0, root_area, &mut measurer, &mut mocked_tree)
+                |(mocked_tree, measurer, layout)| {
+                    layout.find_best_root(mocked_tree);
+                    layout.measure(0, root_area, measurer, mocked_tree)
                 },
-                criterion::BatchSize::SmallInput,
+                criterion::BatchSize::PerIteration,
             )
         });
     }

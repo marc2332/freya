@@ -5,7 +5,10 @@ use torin::prelude::*;
 use crate::{
     define_theme,
     get_theme,
-    icons::arrow::ArrowIcon,
+    icons::{
+        IconThemePartialExt,
+        arrow::ArrowIcon,
+    },
     menu::MenuGroup,
 };
 
@@ -57,36 +60,26 @@ pub enum SelectStatus {
 ///                 .child(val.to_string())
 ///         }))
 /// }
-///
-/// # use freya_testing::prelude::*;
-/// # use std::time::Duration;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_select.png").with_hook(|t| { t.move_cursor((125., 125.)); t.click_cursor((125., 125.)); t.poll(Duration::from_millis(1), Duration::from_millis(350)); }).with_scale_factor(1.).render();
 /// ```
 ///
-/// # Preview
-/// ![Select Preview][select]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("select", "images/gallery_select.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct Select {
     pub(crate) theme: Option<SelectThemePartial>,
     selected_item: Option<Element>,
     children: Vec<Element>,
-    cursor_icon: CursorIcon,
+    cursor_icon: Option<CursorIcon>,
     key: DiffKey,
 }
 
 impl ChildrenExt for Select {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
 impl KeyExt for Select {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -103,7 +96,7 @@ impl Select {
             theme: None,
             selected_item: None,
             children: Vec::new(),
-            cursor_icon: CursorIcon::default(),
+            cursor_icon: None,
             key: DiffKey::None,
         }
     }
@@ -119,7 +112,7 @@ impl Select {
     }
 
     /// Override the cursor icon shown when hovering over this component.
-    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+    pub fn cursor(mut self, cursor_icon: impl Into<Option<CursorIcon>>) -> Self {
         self.cursor_icon = cursor_icon.into();
         self
     }
@@ -136,60 +129,51 @@ impl Component for Select {
         let mut list_size = use_state(|| None::<Size2D>);
         use_provide_context(|| MenuGroup { group_id: a11y_id });
 
-        let animation = use_animation(move |conf| {
+        let focused = use_memo(move || {
+            a11y_id.is_focused()
+                || Platform::get()
+                    .current_window()
+                    .focused_accessibility_node
+                    .read()
+                    .member_of()
+                    == Some(a11y_id)
+        });
+        let visible = open() && focused();
+
+        let animation = use_animation_with_dependencies(&visible, move |conf, visible| {
             conf.on_change(OnChange::Rerun);
             conf.on_creation(OnCreation::Finish);
 
-            let scale = AnimNum::new(0.9, 1.)
-                .time(125)
-                .ease(Ease::Out)
-                .function(Function::Quart);
             let opacity = AnimNum::new(0., 1.)
-                .time(125)
+                .time(90)
                 .ease(Ease::Out)
-                .function(Function::Quart);
-            let offset_y = AnimNum::new(-8., 1.)
-                .time(125)
+                .function(Function::Quad);
+            let offset_y = AnimNum::new(-3., 1.)
+                .time(90)
                 .ease(Ease::Out)
-                .function(Function::Quart);
-            if open() {
-                (scale, opacity, offset_y)
+                .function(Function::Quad);
+            if *visible {
+                (opacity, offset_y)
             } else {
-                (
-                    scale.into_reversed(),
-                    opacity.into_reversed(),
-                    offset_y.into_reversed(),
-                )
+                (opacity.into_reversed(), offset_y.into_reversed())
             }
         });
 
-        let (scale, opacity, slide) = animation.read().value();
+        let (opacity, slide) = animation.read().value();
 
         // Clear the list size when the select dropdown is not rendered
-        if !open() && opacity == 0. && list_size().is_some() {
+        if !visible && opacity == 0. && list_size().is_some() {
             let _ = list_size.take();
+            open.set_if_modified(false);
         }
 
-        let cursor_icon = self.cursor_icon;
-        use_drop(move || {
-            if status() == SelectStatus::Hovering {
-                Cursor::set(CursorIcon::default());
-            }
-        });
-
-        // Close the select when the focus leaves it.
-        use_side_effect(move || {
-            let platform = Platform::get();
-            let focus_within =
-                platform.focused_accessibility_node.read().member_of() == Some(a11y_id);
-            if !focus_within && list_size.peek().is_some() {
-                open.set_if_modified(false);
-            }
-        });
-
         let on_press = move |e: Event<PressEventData>| {
-            a11y_id.request_focus();
-            open.toggle();
+            if a11y_id.is_focused() {
+                open.toggle();
+            } else {
+                a11y_id.request_focus();
+                open.set(true);
+            }
             // Prevent global mouse up
             e.prevent_default();
             e.stop_propagation();
@@ -197,16 +181,14 @@ impl Component for Select {
 
         let on_pointer_enter = move |_| {
             *status.write() = SelectStatus::Hovering;
-            Cursor::set(cursor_icon);
         };
 
         let on_pointer_leave = move |_| {
             *status.write() = SelectStatus::Idle;
-            Cursor::set(CursorIcon::default());
         };
 
         // Close the select if clicked anywhere
-        let on_global_pointer_press = move |_: Event<PointerEventData>| {
+        let on_global_pointer_up = move |_: Event<PointerEventData>| {
             open.set_if_modified(false);
         };
 
@@ -222,7 +204,7 @@ impl Component for Select {
 
         let offset_y = match (button_area(), list_size()) {
             (Some(button), Some(list)) => {
-                let root_height = Platform::get().root_size.peek().height;
+                let root_height = Platform::get().current_window().root_size.peek().height;
                 let space_below = root_height - button.max_y();
                 let space_above = button.min_y();
                 let flips = list.height > space_below && list.height <= space_above;
@@ -263,9 +245,10 @@ impl Component for Select {
                     .a11y_focusable(Focusable::Enabled)
                     .on_pointer_enter(on_pointer_enter)
                     .on_pointer_leave(on_pointer_leave)
+                    .cursor(self.cursor_icon)
                     .on_press(on_press)
                     .on_global_key_down(on_global_key_down)
-                    .on_global_pointer_press(on_global_pointer_press)
+                    .on_global_pointer_up(on_global_pointer_up)
                     .on_sized(move |e: Event<SizedEventData>| {
                         button_area.set_if_modified(Some(e.area));
                     })
@@ -286,7 +269,7 @@ impl Component for Select {
                             .fill(theme.arrow_fill),
                     ),
             )
-            .maybe_child((open() || opacity > 0.).then(|| {
+            .maybe_child((visible || opacity > 0.).then(|| {
                 rect().height(Size::px(0.)).width(Size::px(0.)).child(
                     rect()
                         .width(Size::window_percent(100.))
@@ -305,12 +288,11 @@ impl Component for Select {
                                         .alignment(BorderAlignment::Inner),
                                 )
                                 .overflow(Overflow::Clip)
-                                .corner_radius(8.)
+                                .corner_radius(10.)
                                 .background(theme.select_background)
-                                .padding(4.)
+                                .padding(6.)
                                 .content(Content::Fit)
                                 .opacity(opacity)
-                                .scale(scale)
                                 .children(self.children.clone()),
                         ),
                 )

@@ -182,12 +182,14 @@ impl Color {
         }
     }
 
+    /// Scale the alpha by `a / 255`.
     pub fn with_a(self, a: u8) -> Self {
+        let a = (a as u16 * self.a() as u16 / 255) as u8;
         let color: SkColor = self.into();
         color.with_a(a).into()
     }
 
-    /// Like [Color::with_a] but with the alpha as `f32` in `0.0..=1.0`.
+    /// Like [Color::with_a] but with the scale as `f32` in `0.0..=1.0`.
     pub fn with_af32(self, a: f32) -> Self {
         self.with_a((255. * a) as u8)
     }
@@ -369,5 +371,22 @@ mod test {
                 assert_eq!(translucent.is_light(), color.is_light());
             }
         }
+    }
+
+    #[test]
+    fn with_a_scales_existing_alpha() {
+        assert_eq!(
+            Color::from_rgb(10, 20, 30).with_a(160),
+            Color::from_argb(160, 10, 20, 30)
+        );
+        assert_eq!(
+            Color::from_argb(128, 10, 20, 30).with_a(255),
+            Color::from_argb(128, 10, 20, 30)
+        );
+        assert_eq!(
+            Color::from_argb(128, 10, 20, 30).with_a(128),
+            Color::from_argb(64, 10, 20, 30)
+        );
+        assert_eq!(Color::TRANSPARENT.with_a(255), Color::TRANSPARENT);
     }
 }

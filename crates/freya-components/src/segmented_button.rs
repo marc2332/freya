@@ -7,7 +7,10 @@ use torin::{
 use crate::{
     define_theme,
     get_theme,
-    icons::tick::TickIcon,
+    icons::{
+        IconThemePartialExt,
+        tick::TickIcon,
+    },
 };
 
 define_theme! {
@@ -79,7 +82,7 @@ pub struct ButtonSegment {
     on_press: Option<EventHandler<Event<PressEventData>>>,
     selected: bool,
     enabled: bool,
-    cursor_icon: CursorIcon,
+    cursor_icon: Option<CursorIcon>,
     key: DiffKey,
 }
 
@@ -97,7 +100,7 @@ impl ButtonSegment {
             on_press: None,
             selected: false,
             enabled: true,
-            cursor_icon: CursorIcon::default(),
+            cursor_icon: None,
             key: DiffKey::None,
         }
     }
@@ -134,20 +137,20 @@ impl ButtonSegment {
     }
 
     /// Override the cursor icon shown when hovering over this component while enabled.
-    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+    pub fn cursor(mut self, cursor_icon: impl Into<Option<CursorIcon>>) -> Self {
         self.cursor_icon = cursor_icon.into();
         self
     }
 }
 
 impl ChildrenExt for ButtonSegment {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
 impl KeyExt for ButtonSegment {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -173,14 +176,6 @@ impl Component for ButtonSegment {
             selected_icon_fill,
         } = theme;
 
-        let enabled = use_reactive(&self.enabled);
-        let cursor_icon = self.cursor_icon;
-        use_drop(move || {
-            if status() == ButtonSegmentStatus::Hovering && enabled() {
-                Cursor::set(CursorIcon::default());
-            }
-        });
-
         let on_press = self.on_press.clone();
         let on_press = move |e: Event<PressEventData>| {
             a11y_id.request_focus();
@@ -191,16 +186,10 @@ impl Component for ButtonSegment {
 
         let on_pointer_enter = move |_| {
             status.set(ButtonSegmentStatus::Hovering);
-            if enabled() {
-                Cursor::set(cursor_icon);
-            } else {
-                Cursor::set(CursorIcon::NotAllowed);
-            }
         };
 
         let on_pointer_leave = move |_| {
             if status() == ButtonSegmentStatus::Hovering {
-                Cursor::set(CursorIcon::default());
                 status.set(ButtonSegmentStatus::Idle);
             }
         };
@@ -225,11 +214,17 @@ impl Component for ButtonSegment {
 
         rect()
             .a11y_id(a11y_id)
+            .a11y_enabled(self.enabled)
             .a11y_focusable(self.enabled)
             .a11y_role(AccessibilityRole::Button)
             .maybe(self.enabled, |rect| rect.on_press(on_press))
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
+            .cursor(if self.enabled {
+                self.cursor_icon
+            } else {
+                CursorIcon::NotAllowed.into()
+            })
             .horizontal()
             .width(width)
             .height(height)
@@ -276,17 +271,9 @@ impl Component for ButtonSegment {
 ///             .child(format!("Option {i}"))
 ///     }))
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_segmented_button.png").render();
 /// ```
 ///
-/// # Preview
-/// ![SegmentedButton Preview][segmented_button]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("segmented_button", "images/gallery_segmented_button.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct SegmentedButton {
     pub(crate) theme: Option<SegmentedButtonThemePartial>,
@@ -316,13 +303,13 @@ impl SegmentedButton {
 }
 
 impl ChildrenExt for SegmentedButton {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
 impl KeyExt for SegmentedButton {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }

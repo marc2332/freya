@@ -15,9 +15,11 @@ cd freya
 
 > **Note:** The repository uses two toolchain files: [`rust-toolchain.toml`](./rust-toolchain.toml) for the stable toolchain and [`rust-toolchain-nightly.toml`](./rust-toolchain-nightly.toml) for the nightly toolchain required for formatting.
 
-#### Nix
+#### Nix development shell
 
-A [flake.nix](./flake.nix) is included in the repository. Run `nix develop` to enter a dev shell with all required tools and dependencies (stable toolchain). For the nightly toolchain, use `nix develop .#unstable` instead.
+The repository's [flake.nix](./flake.nix) provides the stable and nightly Rust toolchains, native dependencies, Emscripten and development tools on x86_64 Linux. Install [Nix](https://nixos.org/download/) with flakes enabled, [direnv](https://direnv.net/) and [nix-direnv](https://github.com/nix-community/nix-direnv). Run `direnv allow` once per worktree to automatically load the development environment when entering it. You can also use `nix develop` directly. The stable toolchain is pinned by `rust-toolchain.toml`, and the nightly toolchain is pinned by `rust-toolchain-nightly.toml`.
+
+For Android development, use `nix develop .#android` to include the Android SDK, NDK, Java, `cargo-ndk` and Android Rust targets. See the [Android example](./examples/android/README.md) for build instructions.
 
 #### Without Nix
 
@@ -72,15 +74,24 @@ Check the `justfile` for other commands.
 
 ## Architecture Overview
 
-Freya is split in various crates, each with it's own meaning and purpose, here is the list sorted by their importance:
+Freya is split into various crates, each with its own purpose.
 
-- `freya`: Entrypoint to the library used by end users, mainly reexports the other crates.
-- `freya-winit`: Window renderer for Freya.
-- `freya-testing`: Headless renderer for Freya, used for testing.
+### Core crates
+
+These crates are required for `freya-core` to function:
+
 - `freya-core`: Reactivity system, elements tree, hooks, etc.
 - `torin`: UI layout library specifically made for Freya, although it's agnostic.
 - `ragnarok`: UI events measurer (e.g what event to figure when the user clicks in a coordinate).
 - `pathgraph`: Map to store nested data structures based on the assumption that you always know its location.
+
+### Extra crates
+
+These crates provide entrypoints, renderers, components, integrations and other features beyond the core:
+
+- `freya`: Entrypoint to the library used by end users, mainly reexports the other crates.
+- `freya-winit`: Window renderer for Freya.
+- `freya-testing`: Headless renderer for Freya, used for testing.
 - `freya-components`: Collection of components ready to be used out of the box with in Freya apps (Button, Switch, Slider, Table, ScrollView, etc)
 - `freya-engine`: Simple re-export of all Skia APIs used in freya.
 - `freya-devtools`: Devtools server and plugin for Freya.
@@ -89,14 +100,14 @@ Freya is split in various crates, each with it's own meaning and purpose, here i
 - `freya-i18n`: Language translation library for Freya powered by the Fluent Project.
 - `freya-edit`: Text Editing capabilities to create from simple to complex text editors.
 - `freya-animation`: Animate numeric or color values for your components.
-- `freya-performance-plugin`: Renders a small overlay in the top left corner of your app showing different stats, like FPS, frame time, layout time, tree time, etc.
+- `freya-metrics-plugin`: Metrics plugin with performance and stats overlays, including FPS, frame timings, tasks, assets, scopes, and contexts.
 - `freya-clipboard`: Provides a os-backed clipboard for you to read from and write to.
 - `freya-router`: Fully typed router API to manage multiple pages in your app.
 - `freya-router-macro`: Macros for `freya-router`.
 - `freya-icons`: Provides lots of SVG icons as Freya components.
 - `freya-sdk`: Contains generic utility APIs for Freya, like integrations with Tokio.
 - `freya-query`: Fully-typed, async, reusable cached data management for Freya apps.
-- `freya-webview`: WebView support for Freya using WRY.
+- `freya-html`: HTML + CSS rendering for Freya using Blitz.
 - `freya-terminal`: Terminal emulator integration for embedding interactive terminals in Freya apps.
 - `freya-material-design`: Material Design Components for Freya apps.
 - `freya-plotters-backend`: Freya's skia-safe backend for plotters.

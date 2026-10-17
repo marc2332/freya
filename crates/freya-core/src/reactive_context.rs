@@ -8,7 +8,10 @@ use std::{
 };
 
 use futures_channel::mpsc::UnboundedSender;
-use generational_box::GenerationalBox;
+use generational_box::{
+    GenerationalBox,
+    Owner,
+};
 use rustc_hash::FxHashSet;
 
 use crate::{
@@ -79,36 +82,35 @@ impl ReactiveContext {
     }
 
     pub fn new_for_task() -> (Notify, Self) {
-        let notify = Notify::default();
-
-        let rc = CurrentContext::with(|ctx| {
-            let owner = ctx
+        CurrentContext::with(|context| {
+            let owner = context
                 .scopes_storages
                 .borrow()
-                .get(&ctx.scope_id)
-                .map(|s| s.owner.clone())
+                .get(&context.scope_id)
+                .map(|scope| scope.owner.clone())
                 .unwrap();
-            let notify = notify.clone();
-            Self {
-                inner: owner.insert(Inner {
-                    self_rc: None,
-                    update: Rc::new(move || {
-                        notify.notify();
-                    }),
-                    subscriptions: Vec::default(),
-                }),
-            }
-        });
+            Self::new_for_async(&owner)
+        })
+    }
 
-        rc.inner.write().self_rc = Some(rc.clone());
+    /// Create an async reactive context whose storage owner must remain alive while it is used.
+    pub fn new_for_async(owner: &Owner) -> (Notify, Self) {
+        let notification = Notify::default();
+        let update_notification = notification.clone();
+        let context = Self {
+            inner: owner.insert(Inner {
+                self_rc: None,
+                update: Rc::new(move || update_notification.notify()),
+                subscriptions: Vec::default(),
+            }),
+        };
+        context.inner.write().self_rc = Some(context.clone());
 
-        (notify, rc)
+        (notification, context)
     }
 
     pub fn run<T>(new_context: Self, run: impl FnOnce() -> T) -> T {
-        for subscription in new_context.inner.write().subscriptions.drain(..) {
-            subscription.borrow_mut().remove(&new_context);
-        }
+        new_context.clear_subscriptions();
         REACTIVE_CONTEXTS_STACK.with_borrow_mut(|context| context.push(new_context));
         let res = run();
         REACTIVE_CONTEXTS_STACK.with_borrow_mut(|context| context.pop());
@@ -136,6 +138,13 @@ impl ReactiveContext {
     pub fn subscribe(&mut self, subscribers: &Rc<RefCell<FxHashSet<ReactiveContext>>>) {
         subscribers.borrow_mut().insert(self.clone());
         self.inner.write().subscriptions.push(subscribers.clone())
+    }
+
+    /// Unsubscribe this reactive context from all its current subscriptions.
+    pub fn clear_subscriptions(&self) {
+        for subscription in self.inner.write().subscriptions.drain(..) {
+            subscription.borrow_mut().remove(self);
+        }
     }
 }
 

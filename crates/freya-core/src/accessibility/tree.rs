@@ -2,6 +2,7 @@ use std::any::Any;
 
 use accesskit::{
     Action,
+    ActionRequest,
     Affine,
     Node,
     Rect,
@@ -10,10 +11,7 @@ use accesskit::{
     TreeUpdate,
 };
 use ragnarok::ProcessedEvents;
-use rustc_hash::{
-    FxHashMap,
-    FxHashSet,
-};
+use rustc_hash::FxHashMap;
 use torin::prelude::{
     CursorPoint,
     LayoutNode,
@@ -75,6 +73,59 @@ impl AccessibilityTree {
         self.map.get(&self.focused_id).cloned()
     }
 
+    /// Dispatch an action requested by assistive technology.
+    pub fn handle_action(
+        &self,
+        request: ActionRequest,
+        tree: &mut Tree,
+        events_sender: &futures_channel::mpsc::UnboundedSender<EventsChunk>,
+    ) -> bool {
+        if request.target_tree != TreeId::ROOT {
+            return false;
+        }
+        let Some(node_id) = self.map.get(&request.target_node).copied() else {
+            return false;
+        };
+        let Some(element) = tree.elements.get(&node_id) else {
+            return false;
+        };
+        let mut builder = element.accessibility().builder.clone();
+        element.finish_accessibility(&mut builder);
+        if builder.is_disabled() {
+            return false;
+        }
+        match request.action {
+            Action::Focus => {
+                if !element.accessibility().a11y_focusable.is_enabled() {
+                    return false;
+                }
+                tree.accessibility_diff
+                    .request_focus(AccessibilityFocusStrategy::Node(request.target_node));
+                true
+            }
+            Action::Blur => {
+                if self.focused_id == request.target_node {
+                    tree.accessibility_diff
+                        .request_focus(AccessibilityFocusStrategy::Node(ACCESSIBILITY_ROOT_ID));
+                }
+                true
+            }
+            Action::ScrollIntoView => {
+                self.scroll_to(node_id, tree, events_sender);
+                true
+            }
+            _ => events_sender
+                .unbounded_send(EventsChunk::Batch(vec![EmmitableEvent {
+                    name: EventName::AccessibilityAction,
+                    source_event: EventName::AccessibilityAction,
+                    node_id,
+                    data: EventType::AccessibilityAction(request),
+                    bubbles: true,
+                }]))
+                .is_ok(),
+        }
+    }
+
     /// Initialize the Accessibility Tree
     pub fn init(&mut self, tree: &mut Tree, title: &str) -> TreeUpdate {
         tree.accessibility_diff.clear();
@@ -102,7 +153,7 @@ impl AccessibilityTree {
         TreeUpdate {
             tree_id: TreeId::ROOT,
             nodes,
-            tree: Some(accesskit::Tree::new(ACCESSIBILITY_ROOT_ID)),
+            tree: Some(accesskit::TreeInfo::new(ACCESSIBILITY_ROOT_ID)),
             focus: self.focused_id,
         }
     }
@@ -116,16 +167,9 @@ impl AccessibilityTree {
         title: &str,
     ) -> TreeUpdate {
         let requested_focus = tree.accessibility_diff.requested_focus.take();
-        let removed_ids = tree
-            .accessibility_diff
-            .removed
-            .drain()
-            .collect::<FxHashMap<_, _>>();
-        let mut added_or_updated_ids = tree
-            .accessibility_diff
-            .added_or_updated
-            .drain()
-            .collect::<FxHashSet<_>>();
+        let removed_ids = std::mem::take(&mut tree.accessibility_diff.removed);
+        let mut added_or_updated_ids =
+            std::mem::take(&mut tree.accessibility_diff.added_or_updated);
 
         #[cfg(debug_assertions)]
         if !removed_ids.is_empty() || !added_or_updated_ids.is_empty() {
@@ -188,7 +232,7 @@ impl AccessibilityTree {
         TreeUpdate {
             tree_id: TreeId::ROOT,
             nodes,
-            tree: Some(accesskit::Tree::new(ACCESSIBILITY_ROOT_ID)),
+            tree: Some(accesskit::TreeInfo::new(ACCESSIBILITY_ROOT_ID)),
             focus: self.focused_id,
         }
     }
@@ -365,6 +409,7 @@ impl AccessibilityTree {
     ) -> Node {
         let element = tree.elements.get(&node_id).unwrap();
         let mut accessibility_data = element.accessibility().into_owned();
+        element.finish_accessibility(&mut accessibility_data.builder);
 
         if node_id == NodeId::ROOT {
             accessibility_data.builder.set_role(Role::Window);
@@ -392,20 +437,27 @@ impl AccessibilityTree {
         });
 
         // Set inner text
-        if let Some(children) = tree.children.get(&node_id) {
-            for child in children {
-                let child_element = tree.elements.get(child).unwrap().as_ref() as &dyn Any;
-                if let Some(label) = child_element.downcast_ref::<LabelElement>() {
-                    accessibility_data.builder.set_label(label.text.as_ref());
-                } else if let Some(paragraph) = child_element.downcast_ref::<ParagraphElement>() {
-                    accessibility_data.builder.set_label(
-                        paragraph
-                            .spans
-                            .iter()
-                            .map(|span| span.text.as_ref())
-                            .collect::<String>(),
-                    );
-                }
+        let inner_text = accessibility_data
+            .builder
+            .value()
+            .map(String::from)
+            .or_else(|| {
+                tree.children.get(&node_id).and_then(|children| {
+                    children.iter().find_map(|child| {
+                        let child_element = tree.elements.get(child).unwrap();
+                        let mut child_builder = child_element.accessibility().builder.clone();
+                        child_element.finish_accessibility(&mut child_builder);
+                        child_builder.value().map(String::from)
+                    })
+                })
+            });
+
+        if let Some(inner_text) = inner_text {
+            // Accesskit derives the name of Role::Label nodes from the value, not the label
+            if accessibility_data.builder.role() == Role::Label {
+                accessibility_data.builder.set_value(inner_text);
+            } else {
+                accessibility_data.builder.set_label(inner_text);
             }
         }
 
@@ -414,6 +466,7 @@ impl AccessibilityTree {
         // to focus the current element if it supports it.
         if accessibility_data.a11y_focusable.is_enabled() {
             accessibility_data.builder.add_action(Action::Focus);
+            accessibility_data.builder.add_action(Action::Blur);
         }
 
         let builder = &mut accessibility_data.builder;

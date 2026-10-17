@@ -13,6 +13,7 @@ use std::{
 use freya_engine::prelude::{
     Paint,
     SkColor,
+    TextStyle,
 };
 use torin::prelude::Area;
 
@@ -24,6 +25,7 @@ use crate::{
             LinearGradient,
             RadialGradient,
         },
+        render_callback::RenderCallback,
         shader::ShaderFill,
     },
 };
@@ -54,15 +56,15 @@ pub enum Fill {
     RadialGradient(Box<RadialGradient>),
     /// A [`ConicGradient`].
     ConicGradient(Box<ConicGradient>),
+    /// Custom drawing for rect backgrounds and label or paragraph overlays.
+    /// Span fills do not invoke callbacks.
+    Callback(#[cfg_attr(feature = "serde", serde(skip))] RenderCallback),
 }
 
 impl Fill {
     pub fn set_a(&mut self, a: u8) {
         if let Fill::Color(color) = self {
-            // Only actually change the alpha if its non-transparent
-            if *color != Color::TRANSPARENT {
-                *color = color.with_a(a);
-            }
+            *color = color.with_a(a);
         }
     }
 
@@ -70,6 +72,26 @@ impl Fill {
     pub fn as_color(&self) -> Option<Color> {
         match self {
             Fill::Color(color) => Some(*color),
+            _ => None,
+        }
+    }
+
+    /// Applies this fill as a text color.
+    pub fn apply_to_text_style(&self, text_style: &mut TextStyle, area: Area) {
+        if let Some(color) = self.as_color() {
+            text_style.set_color(color);
+            return;
+        }
+
+        let mut paint = Paint::default();
+        paint.set_anti_alias(true);
+        self.apply_to_paint(&mut paint, area);
+        text_style.set_foreground_paint(&paint);
+    }
+
+    pub fn render_callback(&self) -> Option<&RenderCallback> {
+        match self {
+            Self::Callback(callback) => Some(callback),
             _ => None,
         }
     }
@@ -91,6 +113,9 @@ impl Fill {
             Fill::Shader(shader) => {
                 paint.set_shader(shader.prepare_shader(area));
             }
+            Fill::Callback(_) => {
+                paint.set_color(Color::TRANSPARENT);
+            }
         }
     }
 }
@@ -110,7 +135,14 @@ impl Hash for Fill {
             Fill::LinearGradient(gradient) => gradient.hash(state),
             Fill::RadialGradient(gradient) => gradient.hash(state),
             Fill::ConicGradient(gradient) => gradient.hash(state),
+            Fill::Callback(callback) => callback.hash(state),
         }
+    }
+}
+
+impl From<RenderCallback> for Fill {
+    fn from(callback: RenderCallback) -> Self {
+        Self::Callback(callback)
     }
 }
 
@@ -182,6 +214,7 @@ impl fmt::Display for Fill {
             Self::LinearGradient(gradient) => gradient.as_ref().fmt(f),
             Self::RadialGradient(gradient) => gradient.as_ref().fmt(f),
             Self::ConicGradient(gradient) => gradient.as_ref().fmt(f),
+            Self::Callback(callback) => callback.fmt(f),
         }
     }
 }

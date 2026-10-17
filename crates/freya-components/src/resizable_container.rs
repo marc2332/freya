@@ -2,6 +2,7 @@ use freya_core::prelude::*;
 use thiserror::Error;
 use torin::{
     content::Content,
+    node::Node,
     prelude::{
         Area,
         Direction,
@@ -234,24 +235,12 @@ impl ResizableContext {
 ///         .panel(ResizablePanel::new(PanelSize::percent(50.)).child("Panel 1"))
 ///         .panel(ResizablePanel::new(PanelSize::percent(50.)).child("Panel 2"))
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(
-/// #       ResizableContainer::new()
-/// #           .panel(ResizablePanel::new(PanelSize::percent(50.)).child("Panel 1"))
-/// #           .panel(ResizablePanel::new(PanelSize::percent(50.)).child("Panel 2"))
-/// #   )
-/// # }, "./images/gallery_resizable_container.png").render();
 /// ```
 ///
-/// # Preview
-/// ![ResizableContainer Preview][resizable_container]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("resizable_container", "images/gallery_resizable_container.png"),
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(PartialEq, Clone)]
 pub struct ResizableContainer {
-    direction: Direction,
+    layout: LayoutData,
     panels: Vec<ResizablePanel>,
     controller: Option<Writable<ResizableContext>>,
 }
@@ -262,17 +251,31 @@ impl Default for ResizableContainer {
     }
 }
 
+impl LayoutExt for ResizableContainer {
+    fn layout_mut(&mut self) -> &mut LayoutData {
+        &mut self.layout
+    }
+}
+
+impl ContainerExt for ResizableContainer {}
+
 impl ResizableContainer {
     pub fn new() -> Self {
         Self {
-            direction: Direction::Vertical,
+            layout: Node {
+                width: Size::fill(),
+                height: Size::fill(),
+                content: Content::flex(),
+                ..Default::default()
+            }
+            .into(),
             panels: vec![],
             controller: None,
         }
     }
 
     pub fn direction(mut self, direction: Direction) -> Self {
-        self.direction = direction;
+        self.layout.direction = direction;
         self
     }
 
@@ -299,11 +302,11 @@ impl Component for ResizableContainer {
         let mut size = use_state(Area::default);
         use_provide_context(|| size);
 
-        let direction = use_reactive(&self.direction);
+        let direction = use_reactive(&self.layout.direction);
         use_provide_context(|| {
             self.controller.clone().unwrap_or_else(|| {
                 let mut state = State::create(ResizableContext {
-                    direction: self.direction,
+                    direction: self.layout.direction,
                     ..Default::default()
                 });
 
@@ -319,10 +322,8 @@ impl Component for ResizableContainer {
         });
 
         rect()
-            .direction(self.direction)
+            .layout(self.layout.clone())
             .on_sized(move |e: Event<SizedEventData>| size.set(e.area))
-            .expanded()
-            .content(Content::flex())
             .children(self.panels.iter().enumerate().flat_map(|(i, e)| {
                 if i > 0 {
                     vec![
@@ -343,16 +344,17 @@ pub struct ResizablePanel {
     min_size: Option<f32>,
     children: Vec<Element>,
     order: Option<usize>,
+    overflow: Overflow,
 }
 
 impl KeyExt for ResizablePanel {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl ChildrenExt for ResizablePanel {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
@@ -365,6 +367,7 @@ impl ResizablePanel {
             min_size: None,
             children: vec![],
             order: None,
+            overflow: Overflow::Clip,
         }
     }
 
@@ -381,6 +384,12 @@ impl ResizablePanel {
 
     pub fn order(mut self, order: impl Into<usize>) -> Self {
         self.order = Some(order.into());
+        self
+    }
+
+    /// Sets how content is clipped inside the panel bounds.
+    pub fn overflow(mut self, overflow: impl Into<Overflow>) -> Self {
+        self.overflow = overflow.into();
         self
     }
 }
@@ -432,7 +441,7 @@ impl Component for ResizablePanel {
             .a11y_role(AccessibilityRole::Pane)
             .width(width)
             .height(height)
-            .overflow(Overflow::Clip)
+            .overflow(self.overflow)
             .children(self.children.clone())
     }
 
@@ -488,12 +497,6 @@ impl Component for ResizableHandle {
         let panel_index = self.panel_index;
         let direction = registry.read().direction;
 
-        use_drop(move || {
-            if *status.peek() == HandleStatus::Hovering {
-                Cursor::set(CursorIcon::default());
-            }
-        });
-
         let cursor = match direction {
             Direction::Horizontal => CursorIcon::ColResize,
             _ => CursorIcon::RowResize,
@@ -501,14 +504,10 @@ impl Component for ResizableHandle {
 
         let on_pointer_leave = move |_| {
             *status.write() = HandleStatus::Idle;
-            if !clicking() {
-                Cursor::set(CursorIcon::default());
-            }
         };
 
         let on_pointer_enter = move |_| {
             *status.write() = HandleStatus::Hovering;
-            Cursor::set(cursor);
         };
 
         let on_capture_global_pointer_move = {
@@ -554,13 +553,8 @@ impl Component for ResizableHandle {
             clicking.set(true);
         };
 
-        let on_global_pointer_press = move |_: Event<PointerEventData>| {
-            if *clicking.read() {
-                if *status.peek() != HandleStatus::Hovering {
-                    Cursor::set(CursorIcon::default());
-                }
-                clicking.set(false);
-            }
+        let on_global_pointer_up = move |_: Event<PointerEventData>| {
+            clicking.set_if_modified(false);
         };
 
         let handle_size = Size::px(ResizableContext::HANDLE_SIZE);
@@ -579,12 +573,13 @@ impl Component for ResizableHandle {
             .height(height)
             .background(background)
             .corner_radius(corner_radius)
+            .cursor(cursor)
             .on_sized(move |e: Event<SizedEventData>| {
                 size.set(e.area);
                 allow_resizing.set(true);
             })
             .on_pointer_down(on_pointer_down)
-            .on_global_pointer_press(on_global_pointer_press)
+            .on_global_pointer_up(on_global_pointer_up)
             .on_pointer_enter(on_pointer_enter)
             .on_capture_global_pointer_move(on_capture_global_pointer_move)
             .on_pointer_leave(on_pointer_leave)

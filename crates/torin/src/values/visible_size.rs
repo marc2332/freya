@@ -1,3 +1,11 @@
+use alloc::{
+    format,
+    string::{
+        String,
+        ToString,
+    },
+};
+
 use crate::prelude::Length;
 
 /// Controls the percentage of the measured size that will actually be used in layout,
@@ -14,12 +22,12 @@ pub enum VisibleSize {
 
 impl VisibleSize {
     /// Use a [`Full`](VisibleSize::Full) visible size.
-    pub fn full() -> VisibleSize {
+    pub const fn full() -> VisibleSize {
         VisibleSize::Full
     }
 
     /// Use an [`InnerPercentage`](VisibleSize::InnerPercentage) visible size.
-    pub fn inner_percent(value: f32) -> VisibleSize {
+    pub const fn inner_percent(value: f32) -> VisibleSize {
         VisibleSize::InnerPercentage(Length::new(value))
     }
 

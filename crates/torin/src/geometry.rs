@@ -1,6 +1,8 @@
-use std::f32::consts::PI;
+use alloc::vec::Vec;
+use core::f32::consts::PI;
 
 use crate::{
+    math::sin_cos,
     node::Node,
     prelude::{
         Direction,
@@ -12,7 +14,9 @@ use crate::{
 pub type AreaOf<T> = euclid::Rect<f32, T>;
 
 pub type Size2D = euclid::Size2D<f32, ()>;
+pub type Size2DFixed = euclid::Size2D<i32, ()>;
 pub type Point2D = euclid::Point2D<f32, ()>;
+pub type Vector2D = euclid::Vector2D<f32, ()>;
 pub type CursorPoint = euclid::Point2D<f64, ()>;
 pub type Length = euclid::Length<f32, ()>;
 
@@ -169,8 +173,7 @@ pub enum AlignAxis {
 }
 
 fn rotate_point_around_center(point: Point2D, center: Point2D, angle_radians: f32) -> Point2D {
-    let sin_theta = angle_radians.sin();
-    let cos_theta = angle_radians.cos();
+    let (sin_theta, cos_theta) = sin_cos(angle_radians);
 
     let x_shifted = point.x - center.x;
     let y_shifted = point.y - center.y;
@@ -219,7 +222,7 @@ fn calculate_extreme_corners(area: &Area, center: Point2D) -> (Point2D, Point2D)
 }
 
 impl AlignAxis {
-    pub fn new(direction: &Direction, alignment_direction: AlignmentDirection) -> Self {
+    pub const fn new(direction: &Direction, alignment_direction: AlignmentDirection) -> Self {
         match direction {
             Direction::Vertical => match alignment_direction {
                 AlignmentDirection::Main => AlignAxis::Height,

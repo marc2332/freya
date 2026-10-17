@@ -5,11 +5,7 @@ use std::{
     },
     cell::RefCell,
     cmp::Ordering,
-    collections::{
-        HashMap,
-        HashSet,
-        VecDeque,
-    },
+    collections::VecDeque,
     fmt::Debug,
     rc::Rc,
     sync::atomic::AtomicU64,
@@ -119,7 +115,16 @@ pub struct Mutations {
     pub added: Vec<MutationAdd>,
     pub modified: Vec<MutationModified>,
     pub removed: Vec<MutationRemove>,
-    pub moved: HashMap<NodeId, Vec<MutationMove>>,
+    pub moved: FxHashMap<NodeId, Vec<MutationMove>>,
+}
+
+impl Mutations {
+    pub fn is_empty(&self) -> bool {
+        self.added.is_empty()
+            && self.modified.is_empty()
+            && self.removed.is_empty()
+            && self.moved.is_empty()
+    }
 }
 
 impl Debug for Mutations {
@@ -160,6 +165,9 @@ pub enum TasksPollStage {
     Finished,
 }
 
+/// Parents receiving additions, keyed by new tree path, with their lazily found current path.
+type AdditionParents = FxHashMap<Box<[u32]>, (NodeId, Option<Vec<u32>>)>;
+
 pub struct Runner {
     pub scopes: FxHashMap<ScopeId, Rc<RefCell<Scope>>>,
     pub scopes_storages: Rc<RefCell<FxHashMap<ScopeId, ScopeStorage>>>,
@@ -194,36 +202,27 @@ impl Debug for Runner {
 
 impl Drop for Runner {
     fn drop(&mut self) {
-        // Graceful shutdown of scopes based on their height, starting from the deepest
+        // Drop scopes from deepest to shallowest.
         for (scope_id, _scope) in self
             .scopes
             .drain()
             .sorted_by_key(|s| s.1.borrow().height)
             .rev()
         {
-            CurrentContext::run_with_reactive(
-                CurrentContext {
-                    scope_id,
-                    scopes_storages: self.scopes_storages.clone(),
-                    tasks: self.tasks.clone(),
-                    task_id_counter: self.task_id_counter.clone(),
-                    sender: self.sender.clone(),
-                },
-                || {
-                    let mut _removed_tasks = Vec::new();
+            CurrentContext::run_with_reactive(self.create_context(scope_id), || {
+                let mut removed_tasks = Vec::new();
 
-                    self.tasks.borrow_mut().retain(|task_id, task| {
-                        if task.borrow().scope_id == scope_id {
-                            _removed_tasks.push((*task_id, task.clone()));
-                            false
-                        } else {
-                            true
-                        }
-                    });
-                    drop(_removed_tasks);
-                    let _scope = self.scopes_storages.borrow_mut().remove(&scope_id);
-                },
-            );
+                self.tasks.borrow_mut().retain(|task_id, task| {
+                    if task.borrow().scope_id == scope_id {
+                        removed_tasks.push((*task_id, task.clone()));
+                        false
+                    } else {
+                        true
+                    }
+                });
+                drop(removed_tasks);
+                let _scope = self.scopes_storages.borrow_mut().remove(&scope_id);
+            });
         }
     }
 }
@@ -305,26 +304,31 @@ impl Runner {
         assert_eq!(size, visited.len())
     }
 
-    pub fn provide_root_context<T: 'static + Clone>(&mut self, context: impl FnOnce() -> T) -> T {
-        CurrentContext::run(
-            CurrentContext {
-                scope_id: ScopeId::ROOT,
-                scopes_storages: self.scopes_storages.clone(),
-                tasks: self.tasks.clone(),
-                task_id_counter: self.task_id_counter.clone(),
-                sender: self.sender.clone(),
-            },
-            move || {
-                let context = context();
-                let mut scopes_storages = self.scopes_storages.borrow_mut();
-                let root_scope_storage = scopes_storages.get_mut(&ScopeId::ROOT).unwrap();
-                root_scope_storage
-                    .contexts
-                    .insert(TypeId::of::<T>(), Rc::new(context.clone()));
+    fn create_context(&self, scope_id: ScopeId) -> CurrentContext {
+        CurrentContext {
+            scope_id,
+            scopes_storages: self.scopes_storages.clone(),
+            tasks: self.tasks.clone(),
+            task_id_counter: self.task_id_counter.clone(),
+            sender: self.sender.clone(),
+        }
+    }
 
-                context
-            },
-        )
+    pub fn with_root_context<T>(&self, run: impl FnOnce() -> T) -> T {
+        self.run_in(run)
+    }
+
+    pub fn provide_root_context<T: 'static + Clone>(&mut self, context: impl FnOnce() -> T) -> T {
+        self.run_in(|| {
+            let context = context();
+            let mut scopes_storages = self.scopes_storages.borrow_mut();
+            let root_scope_storage = scopes_storages.get_mut(&ScopeId::ROOT).unwrap();
+            root_scope_storage
+                .contexts
+                .insert(TypeId::of::<T>(), Rc::new(context.clone()));
+
+            context
+        })
     }
 
     pub fn handle_event(
@@ -369,201 +373,217 @@ impl Runner {
                         unreachable!()
                     }
                     PathElement::Element { element, .. } => {
-                        CurrentContext::run(
-                            CurrentContext {
-                                scope_id,
-                                scopes_storages: self.scopes_storages.clone(),
-                                tasks: self.tasks.clone(),
-                                task_id_counter: self.task_id_counter.clone(),
-                                sender: self.sender.clone(),
-                            },
-                            || {
-                                match &event_type {
-                                    EventType::Mouse(data) => {
-                                        let event_handlers = element.events_handlers();
-                                        if let Some(event_handlers) = event_handlers {
-                                            match event_handlers.get(&event_name) {
-                                                Some(EventHandlerType::Mouse(handler)) => {
-                                                    handler.call(Event {
-                                                        data: data.clone(),
-                                                        propagate: propagate.clone(),
-                                                        default: default.clone(),
-                                                    });
-                                                }
-                                                Some(_) => unreachable!(),
-                                                _ => {}
-                                            }
-                                        }
+                        CurrentContext::run(self.create_context(scope_id), || {
+                            match &event_type {
+                                EventType::AccessibilityAction(data) => {
+                                    if let Some(event_handlers) = element.events_handlers()
+                                        && let Some(EventHandlerType::AccessibilityAction(handler)) =
+                                            event_handlers.get(&event_name)
+                                    {
+                                        handler.call(Event {
+                                            data: data.clone(),
+                                            propagate: propagate.clone(),
+                                            default: default.clone(),
+                                        });
                                     }
-                                    EventType::Keyboard(data) => {
-                                        let event_handlers = element.events_handlers();
-                                        if let Some(event_handlers) = event_handlers {
-                                            match event_handlers.get(&event_name) {
-                                                Some(EventHandlerType::Keyboard(handler)) => {
-                                                    handler.call(Event {
-                                                        data: data.clone(),
-                                                        propagate: propagate.clone(),
-                                                        default: default.clone(),
-                                                    });
-                                                }
-                                                Some(_) => unreachable!(),
-                                                _ => {}
+                                }
+                                EventType::Mouse(data) => {
+                                    let event_handlers = element.events_handlers();
+                                    if let Some(event_handlers) = event_handlers {
+                                        match event_handlers.get(&event_name) {
+                                            Some(EventHandlerType::Mouse(handler)) => {
+                                                handler.call(Event {
+                                                    data: data.clone(),
+                                                    propagate: propagate.clone(),
+                                                    default: default.clone(),
+                                                });
                                             }
-                                        }
-                                    }
-                                    EventType::Sized(data) => {
-                                        let event_handlers = element.events_handlers();
-                                        if let Some(event_handlers) = event_handlers {
-                                            match event_handlers.get(&event_name) {
-                                                Some(EventHandlerType::Sized(handler)) => {
-                                                    handler.call(Event {
-                                                        data: data.clone(),
-                                                        propagate: propagate.clone(),
-                                                        default: default.clone(),
-                                                    });
-                                                }
-                                                Some(_) => unreachable!(),
-                                                _ => {}
-                                            }
-                                        }
-                                    }
-                                    EventType::Styled(data) => {
-                                        let event_handlers = element.events_handlers();
-                                        if let Some(event_handlers) = event_handlers {
-                                            match event_handlers.get(&event_name) {
-                                                Some(EventHandlerType::Styled(handler)) => {
-                                                    handler.call(Event {
-                                                        data: data.clone(),
-                                                        propagate: propagate.clone(),
-                                                        default: default.clone(),
-                                                    });
-                                                }
-                                                Some(_) => unreachable!(),
-                                                _ => {}
-                                            }
-                                        }
-                                    }
-                                    EventType::Wheel(data) => {
-                                        let event_handlers = element.events_handlers();
-                                        if let Some(event_handlers) = event_handlers {
-                                            match event_handlers.get(&event_name) {
-                                                Some(EventHandlerType::Wheel(handler)) => {
-                                                    handler.call(Event {
-                                                        data: data.clone(),
-                                                        propagate: propagate.clone(),
-                                                        default: default.clone(),
-                                                    });
-                                                }
-                                                Some(_) => unreachable!(),
-                                                _ => {}
-                                            }
-                                        }
-                                    }
-                                    EventType::Touch(data) => {
-                                        let event_handlers = element.events_handlers();
-                                        if let Some(event_handlers) = event_handlers {
-                                            match event_handlers.get(&event_name) {
-                                                Some(EventHandlerType::Touch(handler)) => {
-                                                    handler.call(Event {
-                                                        data: data.clone(),
-                                                        propagate: propagate.clone(),
-                                                        default: default.clone(),
-                                                    });
-                                                }
-                                                Some(_) => unreachable!(),
-                                                _ => {}
-                                            }
-                                        }
-                                    }
-                                    EventType::Pointer(data) => {
-                                        let event_handlers = element.events_handlers();
-                                        if let Some(event_handlers) = event_handlers {
-                                            match event_handlers.get(&event_name) {
-                                                Some(EventHandlerType::Pointer(handler)) => {
-                                                    handler.call(Event {
-                                                        data: data.clone(),
-                                                        propagate: propagate.clone(),
-                                                        default: default.clone(),
-                                                    });
-                                                }
-                                                Some(_) => unreachable!(),
-                                                _ => {}
-                                            }
-                                        }
-                                    }
-                                    EventType::File(data) => {
-                                        let event_handlers = element.events_handlers();
-                                        if let Some(event_handlers) = event_handlers {
-                                            match event_handlers.get(&event_name) {
-                                                Some(EventHandlerType::File(handler)) => {
-                                                    handler.call(Event {
-                                                        data: data.clone(),
-                                                        propagate: propagate.clone(),
-                                                        default: default.clone(),
-                                                    });
-                                                }
-                                                Some(_) => unreachable!(),
-                                                _ => {}
-                                            }
-                                        }
-                                    }
-                                    EventType::ImePreedit(data) => {
-                                        let event_handlers = element.events_handlers();
-                                        if let Some(event_handlers) = event_handlers {
-                                            match event_handlers.get(&event_name) {
-                                                Some(EventHandlerType::ImePreedit(handler)) => {
-                                                    handler.call(Event {
-                                                        data: data.clone(),
-                                                        propagate: propagate.clone(),
-                                                        default: default.clone(),
-                                                    });
-                                                }
-                                                Some(_) => unreachable!(),
-                                                _ => {}
-                                            }
+                                            Some(_) => unreachable!(),
+                                            _ => {}
                                         }
                                     }
                                 }
+                                EventType::Keyboard(data) => {
+                                    let event_handlers = element.events_handlers();
+                                    if let Some(event_handlers) = event_handlers {
+                                        match event_handlers.get(&event_name) {
+                                            Some(EventHandlerType::Keyboard(handler)) => {
+                                                handler.call(Event {
+                                                    data: data.clone(),
+                                                    propagate: propagate.clone(),
+                                                    default: default.clone(),
+                                                });
+                                            }
+                                            Some(_) => unreachable!(),
+                                            _ => {}
+                                        }
+                                    }
+                                }
+                                EventType::Sized(data) => {
+                                    let event_handlers = element.events_handlers();
+                                    if let Some(event_handlers) = event_handlers {
+                                        match event_handlers.get(&event_name) {
+                                            Some(EventHandlerType::Sized(handler)) => {
+                                                handler.call(Event {
+                                                    data: data.clone(),
+                                                    propagate: propagate.clone(),
+                                                    default: default.clone(),
+                                                });
+                                            }
+                                            Some(_) => unreachable!(),
+                                            _ => {}
+                                        }
+                                    }
+                                }
+                                EventType::Visible(data) => {
+                                    let event_handlers = element.events_handlers();
+                                    if let Some(event_handlers) = event_handlers {
+                                        match event_handlers.get(&event_name) {
+                                            Some(EventHandlerType::Visible(handler)) => {
+                                                handler.call(Event {
+                                                    data: data.clone(),
+                                                    propagate: propagate.clone(),
+                                                    default: default.clone(),
+                                                });
+                                            }
+                                            Some(_) => unreachable!(),
+                                            _ => {}
+                                        }
+                                    }
+                                }
+                                EventType::Styled(data) => {
+                                    let event_handlers = element.events_handlers();
+                                    if let Some(event_handlers) = event_handlers {
+                                        match event_handlers.get(&event_name) {
+                                            Some(EventHandlerType::Styled(handler)) => {
+                                                handler.call(Event {
+                                                    data: data.clone(),
+                                                    propagate: propagate.clone(),
+                                                    default: default.clone(),
+                                                });
+                                            }
+                                            Some(_) => unreachable!(),
+                                            _ => {}
+                                        }
+                                    }
+                                }
+                                EventType::Wheel(data) => {
+                                    let event_handlers = element.events_handlers();
+                                    if let Some(event_handlers) = event_handlers {
+                                        match event_handlers.get(&event_name) {
+                                            Some(EventHandlerType::Wheel(handler)) => {
+                                                handler.call(Event {
+                                                    data: data.clone(),
+                                                    propagate: propagate.clone(),
+                                                    default: default.clone(),
+                                                });
+                                            }
+                                            Some(_) => unreachable!(),
+                                            _ => {}
+                                        }
+                                    }
+                                }
+                                EventType::Touch(data) => {
+                                    let event_handlers = element.events_handlers();
+                                    if let Some(event_handlers) = event_handlers {
+                                        match event_handlers.get(&event_name) {
+                                            Some(EventHandlerType::Touch(handler)) => {
+                                                handler.call(Event {
+                                                    data: data.clone(),
+                                                    propagate: propagate.clone(),
+                                                    default: default.clone(),
+                                                });
+                                            }
+                                            Some(_) => unreachable!(),
+                                            _ => {}
+                                        }
+                                    }
+                                }
+                                EventType::Pointer(data) => {
+                                    let event_handlers = element.events_handlers();
+                                    if let Some(event_handlers) = event_handlers {
+                                        match event_handlers.get(&event_name) {
+                                            Some(EventHandlerType::Pointer(handler)) => {
+                                                handler.call(Event {
+                                                    data: data.clone(),
+                                                    propagate: propagate.clone(),
+                                                    default: default.clone(),
+                                                });
+                                            }
+                                            Some(_) => unreachable!(),
+                                            _ => {}
+                                        }
+                                    }
+                                }
+                                EventType::File(data) => {
+                                    let event_handlers = element.events_handlers();
+                                    if let Some(event_handlers) = event_handlers {
+                                        match event_handlers.get(&event_name) {
+                                            Some(EventHandlerType::File(handler)) => {
+                                                handler.call(Event {
+                                                    data: data.clone(),
+                                                    propagate: propagate.clone(),
+                                                    default: default.clone(),
+                                                });
+                                            }
+                                            Some(_) => unreachable!(),
+                                            _ => {}
+                                        }
+                                    }
+                                }
+                                EventType::ImePreedit(data) => {
+                                    let event_handlers = element.events_handlers();
+                                    if let Some(event_handlers) = event_handlers {
+                                        match event_handlers.get(&event_name) {
+                                            Some(EventHandlerType::ImePreedit(handler)) => {
+                                                handler.call(Event {
+                                                    data: data.clone(),
+                                                    propagate: propagate.clone(),
+                                                    default: default.clone(),
+                                                });
+                                            }
+                                            Some(_) => unreachable!(),
+                                            _ => {}
+                                        }
+                                    }
+                                }
+                            }
 
-                                // Bubble up if desired
-                                if *propagate.borrow() {
-                                    if path.len() > 1 {
-                                        // Change the target to this element parent (still in the same Scope)
-                                        current_target
-                                            .replace((path[..path.len() - 1].to_vec(), scope_id));
-                                    } else {
-                                        let mut parent_scope_id = scope.borrow().parent_id;
-                                        // Otherwise change the target to this element parent in the parent Scope
-                                        loop {
-                                            if let Some(parent_id) = parent_scope_id.take() {
-                                                let parent_scope =
-                                                    self.scopes.get(&parent_id).unwrap();
-                                                let path = parent_scope.borrow().nodes.find_path(
-                                                    |value| {
-                                                        value
-                                                            == Some(&PathNode {
-                                                                node_id: scope
-                                                                    .borrow()
-                                                                    .parent_node_id_in_parent,
-                                                                scope_id: None,
-                                                            })
-                                                    },
-                                                );
-                                                if let Some(path) = path {
-                                                    current_target.replace((path, parent_id));
-                                                    break;
-                                                } else {
-                                                    parent_scope_id =
-                                                        parent_scope.borrow().parent_id;
-                                                }
+                            // Bubble up if desired
+                            if *propagate.borrow() {
+                                if path.len() > 1 {
+                                    // Change the target to this element parent (still in the same Scope)
+                                    current_target
+                                        .replace((path[..path.len() - 1].to_vec(), scope_id));
+                                } else {
+                                    let mut parent_scope_id = scope.borrow().parent_id;
+                                    // Otherwise change the target to this element parent in the parent Scope
+                                    loop {
+                                        if let Some(parent_id) = parent_scope_id.take() {
+                                            let parent_scope = self.scopes.get(&parent_id).unwrap();
+                                            let path =
+                                                parent_scope.borrow().nodes.find_path(|value| {
+                                                    value
+                                                        == Some(&PathNode {
+                                                            node_id: scope
+                                                                .borrow()
+                                                                .parent_node_id_in_parent,
+                                                            scope_id: None,
+                                                        })
+                                                });
+                                            if let Some(path) = path {
+                                                current_target.replace((path, parent_id));
+                                                break;
                                             } else {
-                                                return;
+                                                parent_scope_id = parent_scope.borrow().parent_id;
                                             }
+                                        } else {
+                                            return;
                                         }
                                     }
                                 }
-                            },
-                        )
+                            }
+                        })
                     }
                 }
             });
@@ -614,7 +634,7 @@ impl Runner {
         }
     }
 
-    /// Useful for freya-testing
+    /// Like [Self::handle_events], but returns instead of waiting for more work.
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     pub fn handle_events_immediately(&mut self) {
         self.handle_events_immediately_with(&mut |_| {})
@@ -622,6 +642,9 @@ impl Runner {
 
     /// Like [Self::handle_events_immediately], notifying the observer around every tasks polling
     /// batch.
+    ///
+    /// Tasks are polled even when there are dirty scopes, otherwise a constant flow of events
+    /// would starve them.
     pub fn handle_events_immediately_with(&mut self, observer: &mut dyn FnMut(TasksPollStage)) {
         while let Ok(msg) = self.receiver.try_recv() {
             match msg {
@@ -632,10 +655,6 @@ impl Runner {
                     self.dirty_tasks.push_back(task_id);
                 }
             }
-        }
-
-        if !self.dirty_scopes.is_empty() {
-            return;
         }
 
         self.poll_dirty_tasks(observer);
@@ -663,13 +682,7 @@ impl Runner {
                     let Some(scope) = self.scopes.get(&task.scope_id) else {
                         continue;
                     };
-                    CurrentContext {
-                        scope_id: scope.borrow().id,
-                        scopes_storages: self.scopes_storages.clone(),
-                        tasks: self.tasks.clone(),
-                        task_id_counter: self.task_id_counter.clone(),
-                        sender: self.sender.clone(),
-                    }
+                    self.create_context(scope.borrow().id)
                 },
                 || {
                     let poll_result = task.future.poll(&mut cx);
@@ -687,6 +700,11 @@ impl Runner {
     pub fn sync_and_update(&mut self) -> Mutations {
         self.handle_events_immediately();
         use itertools::Itertools;
+
+        // No need to check anything
+        if self.dirty_scopes.is_empty() {
+            return Mutations::default();
+        }
 
         #[cfg(all(debug_assertions, feature = "debug-integrity"))]
         self.verify_scopes_integrity();
@@ -715,26 +733,17 @@ impl Runner {
 
             let scope_id = scope_rc.borrow().id;
 
-            let element = CurrentContext::run_with_reactive(
-                CurrentContext {
-                    scope_id,
-                    scopes_storages: self.scopes_storages.clone(),
-                    tasks: self.tasks.clone(),
-                    task_id_counter: self.task_id_counter.clone(),
-                    sender: self.sender.clone(),
-                },
-                || {
-                    let scope = scope_rc.borrow();
-                    #[cfg(feature = "hotreload")]
-                    {
-                        subsecond::call(|| (scope.comp)(scope.props.clone()))
-                    }
-                    #[cfg(not(feature = "hotreload"))]
-                    {
-                        (scope.comp)(scope.props.clone())
-                    }
-                },
-            );
+            let element = CurrentContext::run_with_reactive(self.create_context(scope_id), || {
+                let scope = scope_rc.borrow();
+                #[cfg(feature = "hotreload")]
+                {
+                    subsecond::call(|| (scope.comp)(scope.props.clone()))
+                }
+                #[cfg(not(feature = "hotreload"))]
+                {
+                    (scope.comp)(scope.props.clone())
+                }
+            });
 
             let path_element = PathElement::from_element(vec![0], element);
             let mut diff = Diff::default();
@@ -761,16 +770,7 @@ impl Runner {
     }
 
     pub fn run_in<T>(&self, run: impl FnOnce() -> T) -> T {
-        CurrentContext::run(
-            CurrentContext {
-                scope_id: ScopeId::ROOT,
-                scopes_storages: self.scopes_storages.clone(),
-                tasks: self.tasks.clone(),
-                task_id_counter: self.task_id_counter.clone(),
-                sender: self.sender.clone(),
-            },
-            run,
-        )
+        CurrentContext::run(self.create_context(ScopeId::ROOT), run)
     }
 
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
@@ -871,13 +871,7 @@ impl Runner {
 
                 let element = hotpath::measure_block!("Scope Rendering", {
                     CurrentContext::run_with_reactive(
-                        CurrentContext {
-                            scope_id: assigned_scope_id,
-                            scopes_storages: self.scopes_storages.clone(),
-                            tasks: self.tasks.clone(),
-                            task_id_counter: self.task_id_counter.clone(),
-                            sender: self.sender.clone(),
-                        },
+                        self.create_context(assigned_scope_id),
                         || {
                             let scope = scope_rc.borrow();
                             #[cfg(feature = "hotreload")]
@@ -988,6 +982,8 @@ impl Runner {
         }
     }
 
+    /// Inserts an added node in `scope.nodes` and emits the matching mutation. Parents are
+    /// resolved by identity because paths in `scope.nodes` shift while a diff is applied.
     fn process_addition(
         &mut self,
         scope: &Rc<RefCell<Scope>>,
@@ -995,58 +991,78 @@ impl Runner {
         path_element: &PathElement,
         mutations: &mut Mutations,
         parents_to_resync_scopes: &mut FxHashSet<Box<[u32]>>,
+        addition_parents: &mut AdditionParents,
     ) {
-        let (parent_node_id, index_inside_parent) = if added == [0] {
+        let (parent_node_id, index_inside_parent, insertion_path) = if added == [0] {
             let parent_id = scope.borrow().parent_id;
             let scope_id = scope.borrow().id;
             let parent_node_id = scope.borrow().parent_node_id_in_parent;
-            self.find_scope_root_parent_info(parent_id, parent_node_id, scope_id)
+            let (parent_node_id, index_inside_parent) =
+                self.find_scope_root_parent_info(parent_id, parent_node_id, scope_id);
+            (parent_node_id, index_inside_parent, vec![0])
         } else {
-            parents_to_resync_scopes.insert(Box::from(&added[..added.len() - 1]));
-            (
-                scope
-                    .borrow()
-                    .nodes
-                    .get(&added[..added.len() - 1])
-                    .unwrap()
-                    .node_id,
-                added[added.len() - 1],
-            )
+            let parent_path = &added[..added.len() - 1];
+            parents_to_resync_scopes.insert(Box::from(parent_path));
+
+            let (parent_node_id, cached_path) = addition_parents.get_mut(parent_path).unwrap();
+            let parent_node_id = *parent_node_id;
+
+            // Pre existing parents are found once and cached, added parents get cached on insertion
+            let mut insertion_path = cached_path
+                .get_or_insert_with(|| {
+                    // The parent usually already sits at its new path, search only if it shifted
+                    let is_at_new_path = scope
+                        .borrow()
+                        .nodes
+                        .get(parent_path)
+                        .is_some_and(|node| node.node_id == parent_node_id);
+                    if is_at_new_path {
+                        parent_path.to_vec()
+                    } else {
+                        scope
+                            .borrow()
+                            .nodes
+                            .find_path(|v| v.is_some_and(|node| node.node_id == parent_node_id))
+                            .unwrap()
+                    }
+                })
+                .clone();
+            insertion_path.push(added[added.len() - 1]);
+            (parent_node_id, added[added.len() - 1], insertion_path)
         };
 
         self.node_id_counter += 1;
 
-        path_element.with_element(added, |element| match element {
-            PathElement::Component { .. } => {
-                self.scope_id_counter += 1;
-                let scope_id = self.scope_id_counter;
-
-                scope.borrow_mut().nodes.insert(
-                    added,
-                    PathNode {
+        path_element.with_element(added, |element| {
+            let scope_id = match element {
+                PathElement::Component { .. } => {
+                    self.scope_id_counter += 1;
+                    Some(self.scope_id_counter)
+                }
+                PathElement::Element { element, .. } => {
+                    mutations.added.push(MutationAdd {
                         node_id: self.node_id_counter,
-                        scope_id: Some(scope_id),
-                    },
-                );
-            }
-            PathElement::Element { element, .. } => {
-                mutations.added.push(MutationAdd {
+                        parent_id: parent_node_id,
+                        index: index_inside_parent,
+                        element: element.clone(),
+                    });
+                    self.node_to_scope
+                        .insert(self.node_id_counter, scope.borrow().id);
+                    None
+                }
+            };
+
+            scope.borrow_mut().nodes.insert(
+                &insertion_path,
+                PathNode {
                     node_id: self.node_id_counter,
-                    parent_id: parent_node_id,
-                    index: index_inside_parent,
-                    element: element.clone(),
-                });
-
-                self.node_to_scope
-                    .insert(self.node_id_counter, scope.borrow().id);
-                scope.borrow_mut().nodes.insert(
-                    added,
-                    PathNode {
-                        node_id: self.node_id_counter,
-                        scope_id: None,
-                    },
-                );
-            }
+                    scope_id,
+                },
+            );
+            addition_parents.insert(
+                Box::from(added),
+                (self.node_id_counter, Some(insertion_path)),
+            );
         });
     }
 
@@ -1084,8 +1100,24 @@ impl Runner {
             }
         }
 
+        // Capture the identity of addition parents while their old tree paths are still valid
+        let mut addition_parents = FxHashMap::default();
+        for added in &diff.added {
+            if added.len() <= 1 {
+                continue;
+            }
+            let parent = &added[..added.len() - 1];
+            if addition_parents.contains_key(parent) {
+                continue;
+            }
+            let old_parent = resolve_old_path(parent, &diff.moved);
+            if let Some(node) = scope.borrow().nodes.get(&old_parent) {
+                addition_parents.insert(Box::from(parent), (node.node_id, None));
+            }
+        }
+
         // Collect a set of branches to remove in cascade
-        let mut selected_roots: HashMap<&[u32], HashSet<&[u32]>> = HashMap::default();
+        let mut selected_roots: FxHashMap<&[u32], FxHashSet<&[u32]>> = FxHashMap::default();
         let mut scope_removal_buffer = vec![];
 
         // Given some removals like:
@@ -1222,31 +1254,22 @@ impl Runner {
             self.scopes.remove(&scope.id);
 
             // Dropped hooks might e.g spawn forever tasks, so they need access to the context
-            CurrentContext::run_with_reactive(
-                CurrentContext {
-                    scope_id: scope.id,
-                    scopes_storages: self.scopes_storages.clone(),
-                    tasks: self.tasks.clone(),
-                    task_id_counter: self.task_id_counter.clone(),
-                    sender: self.sender.clone(),
-                },
-                || {
-                    // TODO: Scopes could also maintain its own registry of assigned tasks
-                    let mut _removed_tasks = Vec::new();
+            CurrentContext::run_with_reactive(self.create_context(scope.id), || {
+                // TODO: Scopes could also maintain its own registry of assigned tasks
+                let mut _removed_tasks = Vec::new();
 
-                    self.tasks.borrow_mut().retain(|task_id, task| {
-                        if task.borrow().scope_id == scope.id {
-                            _removed_tasks.push((*task_id, task.clone()));
-                            false
-                        } else {
-                            true
-                        }
-                    });
-                    drop(_removed_tasks);
-                    // This is very important, the scope storage must be dropped after the borrow in `scopes_storages` has been released
-                    let _scope = self.scopes_storages.borrow_mut().remove(&scope.id);
-                },
-            );
+                self.tasks.borrow_mut().retain(|task_id, task| {
+                    if task.borrow().scope_id == scope.id {
+                        _removed_tasks.push((*task_id, task.clone()));
+                        false
+                    } else {
+                        true
+                    }
+                });
+                drop(_removed_tasks);
+                // This is very important, the scope storage must be dropped after the borrow in `scopes_storages` has been released
+                let _scope = self.scopes_storages.borrow_mut().remove(&scope.id);
+            });
         }
 
         // Given some additions like:
@@ -1268,11 +1291,6 @@ impl Runner {
         // ]
         //
         // This way, no addition offsets the next additions in line.
-        // Additions whose parent is a move destination must be deferred until
-        // after moves are applied, because the nodes graph still has old-tree
-        // layout and the parent element hasn't been repositioned yet.
-        let mut deferred_adds = Vec::new();
-
         for added in diff
             .added
             .iter()
@@ -1287,19 +1305,13 @@ impl Runner {
             })
             .rev()
         {
-            let parent = &added[..added.len() - 1];
-            let has_moved_ancestor = resolve_old_path(parent, &diff.moved) != *parent;
-            if has_moved_ancestor {
-                deferred_adds.push(added.clone());
-                continue;
-            }
-
             self.process_addition(
                 scope,
                 added,
                 path_element,
                 mutations,
                 &mut parents_to_resync_scopes,
+                &mut addition_parents,
             );
         }
 
@@ -1362,17 +1374,6 @@ impl Runner {
                         .push(MutationMove { index: to, node_id });
                 }
             }
-        }
-
-        // Process deferred additions now that moves have repositioned parents
-        for added in &deferred_adds {
-            self.process_addition(
-                scope,
-                added,
-                path_element,
-                mutations,
-                &mut parents_to_resync_scopes,
-            );
         }
 
         for (modified, flags) in diff.modified {
@@ -1439,22 +1440,13 @@ impl Runner {
             .collect::<Vec<_>>();
 
         for scope_id in scopes {
-            CurrentContext::run(
-                CurrentContext {
-                    scope_id,
-                    scopes_storages: self.scopes_storages.clone(),
-                    tasks: self.tasks.clone(),
-                    task_id_counter: self.task_id_counter.clone(),
-                    sender: self.sender.clone(),
-                },
-                || {
-                    let _hooks = self
-                        .scopes_storages
-                        .borrow_mut()
-                        .get_mut(&scope_id)
-                        .map(|storage| storage.reset_hooks());
-                },
-            );
+            CurrentContext::run(self.create_context(scope_id), || {
+                let _hooks = self
+                    .scopes_storages
+                    .borrow_mut()
+                    .get_mut(&scope_id)
+                    .map(|storage| storage.reset_hooks());
+            });
         }
 
         self.dirty_scopes.extend(self.scopes.keys());
@@ -1472,14 +1464,14 @@ pub struct Diff {
 
     pub removed: Vec<Box<[u32]>>,
 
-    pub moved: HashMap<Box<[u32]>, Vec<(u32, u32)>>,
+    pub moved: FxHashMap<Box<[u32]>, Vec<(u32, u32)>>,
 }
 
 /// Converts a new-tree path to its corresponding old-tree path by checking, for each
 /// segment, whether that position was the destination of a movement in `moved`. If so,
 /// the original (`from`) index is substituted so the result can be used to look up nodes
 /// in the pre-diff nodes tree.
-fn resolve_old_path(new_path: &[u32], moved: &HashMap<Box<[u32]>, Vec<(u32, u32)>>) -> Vec<u32> {
+fn resolve_old_path(new_path: &[u32], moved: &FxHashMap<Box<[u32]>, Vec<(u32, u32)>>) -> Vec<u32> {
     let mut old_path = Vec::with_capacity(new_path.len());
     for i in 0..new_path.len() {
         let new_parent = &new_path[..i];

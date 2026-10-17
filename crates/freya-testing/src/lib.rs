@@ -14,7 +14,7 @@
 //!
 //! fn app() -> impl IntoElement {
 //!     let mut state = use_consume::<State<i32>>();
-//!     rect().on_mouse_up(move |_| *state.write() += 1)
+//!     rect().on_press(move |_| *state.write() += 1)
 //! }
 //!
 //! fn main() {
@@ -47,9 +47,13 @@ use std::{
     },
 };
 
-use freya_clipboard::copypasta::{
-    ClipboardContext,
-    ClipboardProvider,
+use accesskit::TreeUpdate;
+use freya_clipboard::{
+    copypasta::{
+        ClipboardContext,
+        ClipboardProvider,
+    },
+    prelude::Clipboard,
 };
 use freya_components::{
     cache::AssetCacher,
@@ -64,8 +68,10 @@ use freya_engine::prelude::{
     FontCollection,
     FontMgr,
     SkData,
+    SkSurface,
     TypefaceFontProvider,
     raster_n32_premul,
+    register_font_typeface,
 };
 use ragnarok::{
     CursorPoint,
@@ -85,62 +91,12 @@ pub mod prelude {
     };
 
     pub use crate::{
-        DocRunner,
         TestingRunner,
-        launch_doc,
         launch_test,
     };
 }
 
-type DocRunnerHook = Box<dyn FnOnce(&mut TestingRunner)>;
-
-pub struct DocRunner {
-    app: AppComponent,
-    size: Size2D,
-    scale_factor: f64,
-    hook: Option<DocRunnerHook>,
-    image_path: PathBuf,
-}
-
-impl DocRunner {
-    pub fn render(self) {
-        let (mut test, _) = TestingRunner::new(self.app, self.size, |_| {}, self.scale_factor);
-        if let Some(hook) = self.hook {
-            (hook)(&mut test);
-        }
-        test.render_to_file(self.image_path);
-    }
-
-    pub fn with_hook(mut self, hook: impl FnOnce(&mut TestingRunner) + 'static) -> Self {
-        self.hook = Some(Box::new(hook));
-        self
-    }
-
-    pub fn with_image_path(mut self, image_path: PathBuf) -> Self {
-        self.image_path = image_path;
-        self
-    }
-
-    pub fn with_scale_factor(mut self, scale_factor: f64) -> Self {
-        self.scale_factor = scale_factor;
-        self
-    }
-
-    pub fn with_size(mut self, size: Size2D) -> Self {
-        self.size = size;
-        self
-    }
-}
-
-pub fn launch_doc(app: impl Into<AppComponent>, path: impl Into<PathBuf>) -> DocRunner {
-    DocRunner {
-        app: app.into(),
-        size: Size2D::new(250., 250.),
-        scale_factor: 1.0,
-        hook: None,
-        image_path: path.into(),
-    }
-}
+type PendingFonts = Rc<RefCell<Vec<(Cow<'static, str>, Bytes)>>>;
 
 pub fn launch_test(app: impl Into<AppComponent>) -> TestingRunner {
     TestingRunner::new(app, Size2D::new(500., 500.), |_| {}, 1.0).0
@@ -151,6 +107,7 @@ pub struct TestingRunner {
     runner: Runner,
     tree: Rc<RefCell<Tree>>,
     size: Size2D,
+    surface: Option<SkSurface>,
 
     accessibility: AccessibilityTree,
 
@@ -158,17 +115,29 @@ pub struct TestingRunner {
     events_sender: futures_channel::mpsc::UnboundedSender<EventsChunk>,
 
     requested_focus_strategy: Rc<RefCell<Option<AccessibilityFocusStrategy>>>,
+    pending_fonts: PendingFonts,
 
+    font_provider: TypefaceFontProvider,
     font_manager: FontMgr,
     font_collection: FontCollection,
 
-    platform: Platform,
+    platform: PlatformWindow,
 
     animation_clock: AnimationClock,
     ticker_sender: RenderingTickerSender,
 
     default_fonts: Vec<Cow<'static, str>>,
     scale_factor: f64,
+}
+
+impl Drop for TestingRunner {
+    fn drop(&mut self) {
+        if let Some(contexts) = GlobalContexts::try_get()
+            && let Some(platform) = contexts.try_get_context::<Platform>()
+        {
+            platform.unregister_window(self.platform.id);
+        }
+    }
 }
 
 impl TestingRunner {
@@ -178,9 +147,17 @@ impl TestingRunner {
         hook: impl FnOnce(&mut Runner) -> T,
         scale_factor: f64,
     ) -> (Self, T) {
+        GlobalContexts::register();
+
         let (events_sender, events_receiver) = futures_channel::mpsc::unbounded();
         let app = app.into();
         let mut runner = Runner::new(move || integration(app.clone()).into_element());
+
+        GlobalContexts::get().insert_context(Clipboard::create(
+            ClipboardContext::new()
+                .ok()
+                .map(|clipboard| Box::new(clipboard) as Box<dyn ClipboardProvider>),
+        ));
 
         runner.provide_root_context(ScreenReader::new);
 
@@ -197,9 +174,33 @@ impl TestingRunner {
         let requested_focus_strategy: Rc<RefCell<Option<AccessibilityFocusStrategy>>> =
             Rc::new(RefCell::new(None));
 
-        let platform = runner.provide_root_context({
+        let mut font_collection = FontCollection::new();
+        let def_mgr = FontMgr::default();
+        let provider = TypefaceFontProvider::new();
+        let font_manager: FontMgr = provider.clone().into();
+        font_collection.set_default_font_manager(def_mgr, None);
+        font_collection.set_dynamic_font_manager(font_manager.clone());
+        font_collection.paragraph_cache_mut().turn_on(false);
+
+        let pending_fonts = Rc::new(RefCell::new(Vec::new()));
+        GlobalContexts::get().insert_context(Platform::new({
+            let pending_fonts = pending_fonts.clone();
+            move |event| {
+                if let GlobalUserEvent::LoadFont {
+                    font_name,
+                    font_data,
+                } = event
+                {
+                    pending_fonts.borrow_mut().push((font_name, font_data));
+                }
+            }
+        }));
+
+        runner.provide_root_context(TargetPlatform::detect);
+        let platform = runner.run_in({
             let requested_focus_strategy = requested_focus_strategy.clone();
-            || Platform {
+            || PlatformWindow {
+                id: 0,
                 focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
                 focused_accessibility_node: State::create(accesskit::Node::new(
                     accesskit::Role::Window,
@@ -216,10 +217,7 @@ impl TestingRunner {
                         UserEvent::FocusAccessibilityNode(strategy) => {
                             requested_focus_strategy.borrow_mut().replace(strategy);
                         }
-                        UserEvent::RequestRedraw
-                        | UserEvent::SetCursorIcon(_)
-                        | UserEvent::SetCustomScaleFactor(_)
-                        | UserEvent::Erased(_) => {
+                        UserEvent::RequestRedraw | UserEvent::SetCustomScaleFactor(_) => {
                             // Nothing
                         }
                     }
@@ -227,25 +225,11 @@ impl TestingRunner {
             }
         });
 
-        runner.provide_root_context(|| {
-            let clipboard: Option<Box<dyn ClipboardProvider>> = ClipboardContext::new()
-                .ok()
-                .map(|c| Box::new(c) as Box<dyn ClipboardProvider>);
-
-            State::create(clipboard)
-        });
-
+        Platform::get().register_window(platform.clone());
+        runner.provide_root_context(|| CurrentWindowId(platform.id));
         runner.provide_root_context(|| tree.borrow().accessibility_generator.clone());
 
         let hook_result = hook(&mut runner);
-
-        let mut font_collection = FontCollection::new();
-        let def_mgr = FontMgr::default();
-        let provider = TypefaceFontProvider::new();
-        let font_manager: FontMgr = provider.into();
-        font_collection.set_default_font_manager(def_mgr, None);
-        font_collection.set_dynamic_font_manager(font_manager.clone());
-        font_collection.paragraph_cache_mut().turn_on(false);
 
         runner.provide_root_context(|| font_collection.clone());
 
@@ -256,6 +240,7 @@ impl TestingRunner {
             runner,
             tree,
             size,
+            surface: None,
 
             accessibility,
             platform,
@@ -265,7 +250,9 @@ impl TestingRunner {
             events_sender,
 
             requested_focus_strategy,
+            pending_fonts,
 
+            font_provider: provider,
             font_manager,
             font_collection,
 
@@ -282,31 +269,39 @@ impl TestingRunner {
     }
 
     pub fn set_fonts(&mut self, fonts: HashMap<&str, &[u8]>) {
-        let mut provider = TypefaceFontProvider::new();
         for (font_name, font_data) in fonts {
-            let ft_type = self
-                .font_collection
-                .fallback_manager()
-                .unwrap()
-                .new_from_data(font_data, None)
-                .unwrap_or_else(|| panic!("Failed to load font {font_name}."));
-            provider.register_typeface(ft_type, Some(font_name));
+            self.register_font(font_name, font_data);
         }
-        let font_manager: FontMgr = provider.into();
-        self.font_manager = font_manager.clone();
-        self.font_collection.set_dynamic_font_manager(font_manager);
+        self.invalidate_text_layout();
+    }
+
+    fn register_font(&mut self, font_name: &str, font_data: &[u8]) {
+        let typeface = self
+            .font_collection
+            .fallback_manager()
+            .unwrap()
+            .new_from_data(SkData::new_copy(font_data), None)
+            .unwrap_or_else(|| panic!("Failed to load font {font_name}."));
+        register_font_typeface(&mut self.font_provider, font_name, typeface);
+    }
+
+    fn invalidate_text_layout(&mut self) {
+        self.font_collection.clear_caches();
+        let mut tree = self.tree.borrow_mut();
+        tree.layout.reset();
+        tree.text_cache.reset();
     }
 
     pub fn set_default_fonts(&mut self, fonts: &[Cow<'static, str>]) {
         self.default_fonts.clear();
         self.default_fonts.extend_from_slice(fonts);
-        self.tree.borrow_mut().layout.reset();
-        self.tree.borrow_mut().text_cache.reset();
+        self.invalidate_text_layout();
         self.tree.borrow_mut().measure_layout(
             self.size,
             &mut self.font_collection,
             &self.font_manager,
             &self.events_sender,
+            &mut self.nodes_state,
             self.scale_factor,
             &self.default_fonts,
         );
@@ -314,6 +309,11 @@ impl TestingRunner {
         self.accessibility.focused_id = ACCESSIBILITY_ROOT_ID;
         self.accessibility.init(&mut self.tree.borrow_mut(), "");
         self.sync_and_update();
+    }
+
+    /// Run a closure inside the app runtime.
+    pub fn run_in<T>(&self, run: impl FnOnce() -> T) -> T {
+        self.runner.run_in(run)
     }
 
     pub async fn handle_events(&mut self) {
@@ -324,14 +324,16 @@ impl TestingRunner {
         self.runner.handle_events_immediately()
     }
 
-    pub fn sync_and_update(&mut self) {
+    pub fn process_focus_strategy(&mut self) {
         if let Some(strategy) = self.requested_focus_strategy.borrow_mut().take() {
             self.tree
                 .borrow_mut()
                 .accessibility_diff
                 .request_focus(strategy);
         }
+    }
 
+    pub fn process_events_and_layout(&mut self) {
         while let Ok(events_chunk) = self.events_receiver.try_recv() {
             match events_chunk {
                 EventsChunk::Processed(processed_events) => {
@@ -354,21 +356,33 @@ impl TestingRunner {
         }
 
         let mutations = self.runner.sync_and_update();
-        let result = self
-            .runner
-            .run_in(|| self.tree.borrow_mut().apply_mutations(mutations));
+        let result = self.runner.run_in(|| {
+            self.tree
+                .borrow_mut()
+                .apply_mutations(mutations, self.scale_factor as f32)
+        });
         if let Some(strategy) = result.auto_focus {
             self.requested_focus_strategy.borrow_mut().replace(strategy);
+        }
+        let pending_fonts = self.pending_fonts.take();
+        if !pending_fonts.is_empty() {
+            for (font_name, font_data) in pending_fonts {
+                self.register_font(&font_name, &font_data);
+            }
+            self.invalidate_text_layout();
         }
         self.tree.borrow_mut().measure_layout(
             self.size,
             &mut self.font_collection,
             &self.font_manager,
             &self.events_sender,
+            &mut self.nodes_state,
             self.scale_factor,
             &self.default_fonts,
         );
+    }
 
+    pub fn commit_accessibility(&mut self) -> TreeUpdate {
         let accessibility_update = self.accessibility.process_updates(
             &mut self.tree.borrow_mut(),
             &self.events_sender,
@@ -389,6 +403,14 @@ impl TestingRunner {
                 &tree,
                 "",
             ));
+
+        accessibility_update
+    }
+
+    pub fn sync_and_update(&mut self) -> TreeUpdate {
+        self.process_focus_strategy();
+        self.process_events_and_layout();
+        self.commit_accessibility()
     }
 
     /// Poll async tasks and events every `step` time for a total time of `duration`.
@@ -414,6 +436,22 @@ impl TestingRunner {
         }
     }
 
+    /// Resolve the [CursorIcon] for the currently hovered nodes.
+    pub fn cursor_icon(&self) -> CursorIcon {
+        self.tree.borrow().cursor_icon(&self.nodes_state)
+    }
+
+    /// Queue an action requested by assistive technology for a supported target.
+    pub fn send_accessibility_action(&mut self, request: AccessibilityActionEventData) -> bool {
+        self.accessibility
+            .handle_action(request, &mut self.tree.borrow_mut(), &self.events_sender)
+    }
+
+    /// Resolve cursor visibility for the currently hovered nodes.
+    pub fn cursor_visible(&self) -> bool {
+        self.tree.borrow().cursor_visible(&self.nodes_state)
+    }
+
     pub fn send_event(&mut self, platform_event: PlatformEvent) {
         let mut events_measurer_adapter = EventsMeasurerAdapter {
             tree: &mut self.tree.borrow_mut(),
@@ -434,7 +472,8 @@ impl TestingRunner {
             name: MouseEventName::MouseMove,
             cursor: cursor.into(),
             button: Some(MouseButton::Left),
-        })
+        });
+        self.sync_and_update();
     }
 
     pub fn write_text(&mut self, text: impl ToString) {
@@ -534,7 +573,14 @@ impl TestingRunner {
             name: WheelEventName::Wheel,
             scroll,
             cursor,
-            source: WheelSource::Device,
+            source: WheelSource::Pixel,
+        });
+        self.sync_and_update();
+        // Refresh hover states after the scroll
+        self.send_event(PlatformEvent::Mouse {
+            name: MouseEventName::MouseMove,
+            cursor,
+            button: None,
         });
         self.sync_and_update();
     }
@@ -543,9 +589,12 @@ impl TestingRunner {
         &mut self.animation_clock
     }
 
-    pub fn render(&mut self) -> SkData {
-        let mut surface = raster_n32_premul((self.size.width as i32, self.size.height as i32))
-            .expect("Failed to create the surface.");
+    /// Render into a persistent surface without encoding an image.
+    pub fn render_to_surface(&mut self) {
+        let surface = self.surface.get_or_insert_with(|| {
+            raster_n32_premul((self.size.width as i32, self.size.height as i32))
+                .expect("Failed to create the surface.")
+        });
 
         let render_pipeline = RenderPipeline {
             font_collection: &mut self.font_collection,
@@ -556,7 +605,11 @@ impl TestingRunner {
             background: Color::WHITE,
         };
         render_pipeline.render();
+    }
 
+    pub fn render(&mut self) -> SkData {
+        self.render_to_surface();
+        let surface = self.surface.as_mut().expect("Surface was initialized.");
         let image = surface.image_snapshot();
         let mut context = surface.direct_context();
         image

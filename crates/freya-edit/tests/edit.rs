@@ -7,6 +7,7 @@ use freya::{
     helpers::*,
     prelude::*,
 };
+use freya_core::events::modifiers::ModifiersExt;
 use freya_edit::*;
 use freya_testing::prelude::*;
 
@@ -32,6 +33,8 @@ fn multiple_lines_single_editor() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -142,6 +145,8 @@ fn single_line_multiple_editors() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -238,6 +243,8 @@ fn highlight_multiple_lines_single_editor() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -287,6 +294,76 @@ fn highlight_multiple_lines_single_editor() {
 }
 
 #[test]
+fn drag_after_drag_is_not_a_multi_press() {
+    let mut utils = launch_test(|| {
+        let mut editable = use_editable(|| "Hello Rustaceans".to_string(), EditableConfig::new);
+        let holder = use_state(ParagraphHolder::default);
+        let editor = editable.editor().read();
+
+        paragraph()
+            .holder(holder.read().clone())
+            .width(Size::fill())
+            .height(Size::fill())
+            .highlights(
+                editor
+                    .get_visible_selection(EditorLine::SingleParagraph)
+                    .map(|h| vec![h]),
+            )
+            .on_mouse_down(move |e: Event<MouseEventData>| {
+                editable.process_event(EditableEvent::Down {
+                    location: e.element_location,
+                    editor_line: EditorLine::SingleParagraph,
+                    holder: &holder.read(),
+                });
+            })
+            .on_mouse_move(move |e: Event<MouseEventData>| {
+                editable.process_event(EditableEvent::Move {
+                    location: e.element_location,
+                    editor_line: EditorLine::SingleParagraph,
+                    holder: &holder.read(),
+                });
+            })
+            .on_mouse_up(move |_: Event<MouseEventData>| {
+                editable.process_event(EditableEvent::Release);
+            })
+            .span(Span::new(editor.to_string()))
+    });
+    utils.set_fonts(HashMap::from_iter([(
+        "NotoSans",
+        include_bytes!("./NotoSans-Regular.ttf").as_slice(),
+    )]));
+    utils.set_default_fonts(&["NotoSans".into()]);
+
+    utils.send_event(PlatformEvent::Mouse {
+        name: MouseEventName::MouseDown,
+        cursor: (35.0, 3.0).into(),
+        button: Some(MouseButton::Left),
+    });
+    utils.sync_and_update();
+    utils.move_cursor((80.0, 3.0));
+    utils.send_event(PlatformEvent::Mouse {
+        name: MouseEventName::MouseUp,
+        cursor: (80.0, 3.0).into(),
+        button: Some(MouseButton::Left),
+    });
+    utils.sync_and_update();
+
+    let highlights = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.highlights.clone()));
+    assert_eq!(highlights, Some(vec![(5, 10)]));
+
+    utils.move_cursor((35.0, 3.0));
+    utils.send_event(PlatformEvent::Mouse {
+        name: MouseEventName::MouseDown,
+        cursor: (35.0, 3.0).into(),
+        button: Some(MouseButton::Left),
+    });
+    utils.sync_and_update();
+
+    let highlights = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.highlights.clone()));
+    assert_eq!(highlights, Some(vec![]));
+}
+
+#[test]
 fn highlights_single_line_multiple_editors() {
     let mut utils = launch_test(|| {
         let mut editable = use_editable(
@@ -300,6 +377,8 @@ fn highlights_single_line_multiple_editors() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -403,6 +482,8 @@ fn special_text_editing() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -462,6 +543,8 @@ fn backspace_remove() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -538,6 +621,8 @@ fn highlight_shift_click_multiple_lines_single_editor() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -605,6 +690,8 @@ fn highlights_shift_click_single_line_multiple_editors() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -724,6 +811,8 @@ fn double_click_select_word() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -794,6 +883,8 @@ fn triple_click_select_line() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -865,6 +956,8 @@ fn quadruple_click_select_all() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -928,6 +1021,8 @@ fn double_click_select_word_single_line_multiple_editors() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -1015,6 +1110,8 @@ fn triple_click_select_line_single_line_multiple_editors() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -1125,6 +1222,8 @@ fn highlight_all_text() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -1167,11 +1266,7 @@ fn highlight_all_text() {
         name: KeyboardEventName::KeyDown,
         key: Key::Character("a".to_string()),
         code: Code::KeyA,
-        modifiers: if cfg!(target_os = "macos") {
-            Modifiers::META
-        } else {
-            Modifiers::CONTROL
-        },
+        modifiers: Modifiers::ctrl_or_meta(),
     });
 
     utils.sync_and_update();
@@ -1218,6 +1313,8 @@ fn replace_text() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -1294,6 +1391,8 @@ fn navigate_empty_lines() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -1350,6 +1449,8 @@ fn cursor_word_navigation() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -1383,11 +1484,7 @@ fn cursor_word_navigation() {
     )]));
     utils.set_default_fonts(&["NotoSans".into()]);
 
-    let word_modifier = if cfg!(target_os = "macos") {
-        Modifiers::ALT
-    } else {
-        Modifiers::CONTROL
-    };
+    let word_modifier = Modifiers::ctrl_or_alt();
 
     utils.send_event(PlatformEvent::Keyboard {
         name: KeyboardEventName::KeyDown,
@@ -1502,6 +1599,8 @@ fn cursor_word_navigation_with_selection() {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -1534,11 +1633,7 @@ fn cursor_word_navigation_with_selection() {
     )]));
     utils.set_default_fonts(&["NotoSans".into()]);
 
-    let shift_word_modifier = if cfg!(target_os = "macos") {
-        Modifiers::ALT | Modifiers::SHIFT
-    } else {
-        Modifiers::CONTROL | Modifiers::SHIFT
-    };
+    let shift_word_modifier = Modifiers::ctrl_or_alt() | Modifiers::SHIFT;
 
     utils.send_event(PlatformEvent::Keyboard {
         name: KeyboardEventName::KeyDown,
@@ -1572,6 +1667,124 @@ fn cursor_word_navigation_with_selection() {
 }
 
 #[test]
+fn word_deletion() {
+    fn app() -> impl IntoElement {
+        let mut editable = use_editable(|| "Hello\nFoo bar\nbaz".to_string(), EditableConfig::new);
+        let holder = use_state(ParagraphHolder::default);
+        let editor = editable.editor().read();
+        let cursor_pos = editor.cursor_pos();
+
+        let on_global_key_down = move |e: Event<KeyboardEventData>| {
+            editable.process_event(EditableEvent::KeyDown {
+                key: &e.key,
+                modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
+            });
+        };
+
+        rect()
+            .font_family("NotoSans")
+            .width(Size::fill())
+            .height(Size::fill())
+            .background((255, 255, 255))
+            .child(
+                paragraph()
+                    .holder(holder.read().clone())
+                    .height(Size::percent(50.0))
+                    .width(Size::fill())
+                    .cursor_index(cursor_pos)
+                    .cursor_color((0, 0, 0))
+                    .on_global_key_down(on_global_key_down)
+                    .span(Span::new(editor.to_string())),
+            )
+            .child(
+                label()
+                    .color((0, 0, 0))
+                    .height(Size::percent(50.0))
+                    .text(format!("{}:{}", editor.cursor_row(), editor.cursor_col())),
+            )
+    }
+
+    let mut utils = launch_test(app);
+    utils.set_fonts(HashMap::from_iter([(
+        "NotoSans",
+        include_bytes!("./NotoSans-Regular.ttf").as_slice(),
+    )]));
+    utils.set_default_fonts(&["NotoSans".into()]);
+
+    let word_modifier = Modifiers::ctrl_or_alt();
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::ArrowRight),
+        code: Code::Unidentified,
+        modifiers: word_modifier,
+    });
+    utils.sync_and_update();
+    let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
+    assert_eq!(cursor.as_deref(), Some("0:5"));
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::Delete),
+        code: Code::Unidentified,
+        modifiers: word_modifier,
+    });
+    utils.sync_and_update();
+    let content = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.to_string()));
+    let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
+    assert_eq!(content.as_deref(), Some("Hello bar\nbaz"));
+    assert_eq!(cursor.as_deref(), Some("0:5"));
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::Delete),
+        code: Code::Unidentified,
+        modifiers: word_modifier,
+    });
+    utils.sync_and_update();
+    let content = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.to_string()));
+    let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
+    assert_eq!(content.as_deref(), Some("Hello\nbaz"));
+    assert_eq!(cursor.as_deref(), Some("0:5"));
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::ArrowRight),
+        code: Code::Unidentified,
+        modifiers: word_modifier,
+    });
+    utils.sync_and_update();
+    let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
+    assert_eq!(cursor.as_deref(), Some("1:3"));
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::Backspace),
+        code: Code::Unidentified,
+        modifiers: word_modifier,
+    });
+    utils.sync_and_update();
+    let content = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.to_string()));
+    let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
+    assert_eq!(content.as_deref(), Some("Hello\n"));
+    assert_eq!(cursor.as_deref(), Some("1:0"));
+
+    utils.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyDown,
+        key: Key::Named(NamedKey::Backspace),
+        code: Code::Unidentified,
+        modifiers: word_modifier,
+    });
+    utils.sync_and_update();
+    let content = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.to_string()));
+    let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
+    assert_eq!(content.as_deref(), Some(""));
+    assert_eq!(cursor.as_deref(), Some("0:0"));
+}
+
+#[test]
 fn arrow_down_clamps_to_last_line_end() {
     let mut editor = RopeEditor::new(
         "Hello! Rustaceans\nHello".to_string(),
@@ -1580,12 +1793,12 @@ fn arrow_down_clamps_to_last_line_end() {
         EditorHistory::new(Duration::from_millis(10)),
     );
 
-    editor.cursor_down();
+    editor.cursor_down(None, None);
 
     assert_eq!(editor.cursor_row(), 1);
     assert_eq!(editor.cursor_col(), 5);
 
-    editor.cursor_up();
+    editor.cursor_up(None, None);
 
     assert_eq!(editor.cursor_row(), 0);
     assert_eq!(editor.cursor_col(), 5);
@@ -1597,7 +1810,7 @@ fn arrow_down_clamps_to_last_line_end() {
         EditorHistory::new(Duration::from_millis(10)),
     );
 
-    editor.cursor_down();
+    editor.cursor_down(None, None);
 
     assert_eq!(editor.cursor_row(), 1);
     assert_eq!(editor.cursor_col(), 2);
@@ -1613,7 +1826,16 @@ fn home_end_navigation() {
     );
 
     let press = |editor: &mut RopeEditor, key: NamedKey, modifiers: Modifiers| {
-        editor.process_key(&Key::Named(key), &modifiers, false, true, true, true);
+        editor.process_key(
+            &Key::Named(key),
+            &modifiers,
+            None,
+            None,
+            false,
+            true,
+            true,
+            true,
+        );
     };
 
     press(&mut editor, NamedKey::End, Modifiers::empty());

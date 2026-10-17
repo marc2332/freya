@@ -57,13 +57,6 @@ impl DemoTree {
 }
 
 impl TreeAdapter<usize> for DemoTree {
-    fn children_of(&mut self, node_id: &usize) -> Vec<usize> {
-        self.nodes
-            .get(node_id)
-            .map(|c| c.children.clone())
-            .unwrap_or_default()
-    }
-
     fn parent_of(&self, node_id: &usize) -> Option<usize> {
         self.nodes.get(node_id).and_then(|c| c.parent)
     }
@@ -72,8 +65,14 @@ impl TreeAdapter<usize> for DemoTree {
         self.nodes.get(node_id).map(|c| c.height)
     }
 
-    fn get_node(&self, node_id: &usize) -> Option<Node> {
-        self.nodes.get(node_id).map(|c| c.node.clone())
+    fn read_node<R>(
+        &self,
+        node_id: &usize,
+        reader: impl FnOnce(&Node, &[usize]) -> R,
+    ) -> Option<R> {
+        self.nodes
+            .get(node_id)
+            .map(|c| reader(&c.node, &c.children))
     }
 
     fn root_id(&self) -> usize {
@@ -129,7 +128,7 @@ fn main() {
         0,                                                              // Root ID
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)), // Available Area
         &mut None::<NoopMeasurer>,
-        &mut demo_tree,
+        &demo_tree,
     );
 
     // Mutate the Node B
@@ -149,14 +148,14 @@ fn main() {
     }
 
     // Make Torin calculate from what Node it is the most efficiente to start measuringg again
-    layout.find_best_root(&mut demo_tree);
+    layout.find_best_root(&demo_tree);
 
     // If Torin wasn't able to find a Root candidate, it will just use the ID we pass as fist argument
     layout.measure(
         0,                                                              // Fallback Root ID
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)), // Available Area
         &mut None::<NoopMeasurer>,
-        &mut demo_tree,
+        &demo_tree,
     );
 
     println!("\nSecond measurement");

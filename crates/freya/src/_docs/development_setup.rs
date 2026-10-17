@@ -31,15 +31,19 @@
 //! sudo dnf install openssl-devel clang-devel systemd-devel gtk3-devel @development-tools -y
 //! ```
 //!
-//! #### Nix
-//!
-//! A [flake.nix](https://github.com/marc2332/freya/blob/main/flake.nix) is included in the repository. Run `nix develop` to enter a dev shell with all required dependencies.
-//!
-//! Don't hesitate to contribute so other distros can be added here.
-//!
 //! ### MacOS
 //!
 //! No setup required. But feel free to add more if we miss something.
+//!
+//! ### Android
+//!
+//! Requires the Android SDK, the NDK and `cargo-ndk`. See the
+//! [`android`](https://github.com/marc2332/freya/blob/main/examples/android/README.md) example README.
+//!
+//! ### Web
+//!
+//! Requires the `wasm32-unknown-emscripten` target and Emscripten. See the
+//! [`web`](https://github.com/marc2332/freya/blob/main/examples/web/README.md) example README.
 //!
 //! ## Custom Linkers
 //!

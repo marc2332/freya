@@ -1,7 +1,7 @@
 [package]
 name = "freya"
-version = "0.5.0-rc.1"
-description = "Cross-platform and non-web GUI Library powered by Skia."
+version = "0.5.0-rc.10"
+description = "Cross-platform and native GUI Library powered by Skia."
 edition = "2024"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
@@ -19,11 +19,14 @@ features = ["all-publish"]
 no-default-features = true
 
 [features]
-default = ["winit"]
+default = ["winit", "gpu", "accessibility", "platform-text-gamma"]
 # Shortcuts
-all = ["all-crossplatform", "tray", "webview", "camera", "video"]
+all = ["all-crossplatform", "tray", "html", "camera", "video"]
 all-crossplatform = [
   "winit",
+  "gpu",
+  "accessibility",
+  "platform-text-gamma",
   "router",
   "i18n",
   "remote-asset",
@@ -40,7 +43,9 @@ all-crossplatform = [
   "icons-lucide",
   "radio",
   "titlebar",
+  "borderless",
   "terminal",
+  "terminal-pty",
   "query",
   "code-editor",
   "zoom-shortcuts",
@@ -56,10 +61,14 @@ all-debug = [
   "all",
   "dep:freya-testing",
   "dep:freya-plotters-backend",
-  "performance",
+  "metrics",
+  "web",
 ]
 all-tests = [
   "winit",
+  "gpu",
+  "accessibility",
+  "platform-text-gamma",
   "router",
   "i18n",
   "remote-asset",
@@ -70,14 +79,18 @@ all-tests = [
   "calendar",
   "markdown",
   "radio",
-  "webview",
+  "html",
   "titlebar",
+  "borderless",
   "query",
   "zoom-shortcuts",
 ]
 docs = ["all-debug"]
 # Features
-winit = ["dep:freya-winit"]
+winit = ["dep:freya-winit", "dep:freya-metrics-plugin"]
+gpu = ["freya-winit?/gpu"]
+platform-text-gamma = ["freya-winit?/platform-text-gamma"]
+accessibility = ["freya-winit?/accessibility"]
 router = [
   "dep:freya-router",
   "freya-components/router",
@@ -87,7 +100,7 @@ remote-asset = ["freya-components/remote-asset", "freya-markdown?/remote-asset"]
 i18n = ["dep:freya-i18n"]
 engine = []
 devtools = ["dep:freya-devtools", "freya-core/devtools"]
-performance = []
+metrics = ["winit"]
 plot = ["dep:plotters", "dep:freya-plotters-backend"]
 hotreload = ["winit", "freya-core/hotreload", "freya-winit/hotreload"]
 gif = ["freya-components/gif"]
@@ -104,16 +117,19 @@ icons = ["dep:freya-icons"]
 icons-lucide = ["icons", "freya-icons/lucide"]
 radio = ["dep:freya-radio"]
 query = ["dep:freya-query"]
-webview = ["dep:freya-webview"]
+html = ["dep:freya-html"]
 titlebar = ["freya-components/titlebar"]
+borderless = ["winit", "dep:freya-borderless-plugin"]
 terminal = ["dep:freya-terminal"]
+terminal-pty = ["terminal", "freya-terminal/pty"]
 code-editor = ["dep:freya-code-editor"]
 camera = ["dep:freya-camera"]
+web = ["dep:freya-web"]
 zoom-shortcuts = ["freya-components/zoom-shortcuts"]
 
 [dependencies]
 freya-core = { workspace = true }
-freya-winit = { workspace = true, optional = true }
+freya-winit = { workspace = true, optional = true, default-features = false }
 torin = { workspace = true }
 freya-edit = { workspace = true }
 freya-clipboard = { workspace = true }
@@ -128,14 +144,16 @@ freya-router = { workspace = true, optional = true }
 freya-i18n = { workspace = true, optional = true }
 freya-radio = { workspace = true, optional = true }
 freya-query = { workspace = true, optional = true }
-freya-webview = { workspace = true, optional = true }
+freya-html = { workspace = true, optional = true }
 freya-terminal = { workspace = true, optional = true }
 freya-code-editor = { workspace = true, optional = true }
 freya-video = { workspace = true, optional = true }
 freya-camera = { workspace = true, optional = true }
+freya-borderless-plugin = { workspace = true, optional = true }
+freya-web = { workspace = true, optional = true }
 
 # Performance
-freya-performance-plugin = { workspace = true }
+freya-metrics-plugin = { workspace = true, optional = true }
 freya-material-design = { workspace = true, optional = true }
 freya-testing = { workspace = true, optional = true }
 

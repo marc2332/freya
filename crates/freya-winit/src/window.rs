@@ -6,22 +6,23 @@ use std::{
     task::Waker,
 };
 
+#[cfg(feature = "accessibility")]
 use accesskit_winit::Adapter;
-use freya_clipboard::copypasta::{
-    ClipboardContext,
-    ClipboardProvider,
-};
 use freya_components::{
     cache::AssetCacher,
     integration::integration,
 };
 use freya_core::{
     integration::*,
-    prelude::Color,
+    prelude::{
+        Color,
+        CursorIcon,
+    },
 };
 use freya_engine::prelude::{
     FontCollection,
     FontMgr,
+    Surface as SkiaSurface,
 };
 use futures_util::task::{
     ArcWake,
@@ -31,10 +32,10 @@ use keyboard_types::{
     Code,
     Key,
 };
-use ragnarok::NodesState;
-use raw_window_handle::HasDisplayHandle;
-#[cfg(target_os = "linux")]
-use raw_window_handle::RawDisplayHandle;
+use ragnarok::{
+    EventsMeasurerRunner,
+    NodesState,
+};
 use torin::prelude::{
     CursorPoint,
     Size2D,
@@ -62,9 +63,13 @@ use crate::{
     accessibility::AccessibilityTask,
     config::{
         OnCloseHook,
+        RendererPreference,
         WindowConfig,
     },
-    drivers::GraphicsDriver,
+    drivers::{
+        GraphicsContext,
+        GraphicsDriver,
+    },
     integration::is_ime_role,
     plugins::{
         PluginEvent,
@@ -78,6 +83,8 @@ use crate::{
     },
 };
 
+pub type RenderCallback = Box<dyn FnOnce(&mut SkiaSurface)>;
+
 pub struct AppWindow {
     pub(crate) runner: Runner,
     pub(crate) tree: Tree,
@@ -86,25 +93,33 @@ pub struct AppWindow {
     pub(crate) nodes_state: NodesState<NodeId>,
 
     pub(crate) position: CursorPoint,
+    pub(crate) cursor_in_window: bool,
     pub(crate) mouse_state: ElementState,
     pub(crate) modifiers_state: ModifiersState,
+    pub(crate) cursor_icon: CursorIcon,
+    pub(crate) cursor_visible: bool,
     pub(crate) pressed_keys: Vec<(Key, Code)>,
 
     pub(crate) events_receiver: futures_channel::mpsc::UnboundedReceiver<EventsChunk>,
     pub(crate) events_sender: futures_channel::mpsc::UnboundedSender<EventsChunk>,
 
     pub(crate) accessibility: AccessibilityTree,
+    #[cfg(feature = "accessibility")]
     pub(crate) accessibility_adapter: accesskit_winit::Adapter,
     pub(crate) accessibility_tasks_for_next_render: AccessibilityTask,
+    #[cfg(feature = "accessibility")]
     pub(crate) screen_reader: ScreenReader,
 
     pub(crate) process_layout_on_next_render: bool,
+    pub(crate) send_mouse_move_on_next_layout: bool,
+
+    pub(crate) render_callbacks: Vec<RenderCallback>,
 
     pub(crate) waker: Waker,
 
     pub(crate) ticker_sender: RenderingTickerSender,
 
-    pub(crate) platform: Platform,
+    pub(crate) platform: PlatformWindow,
 
     pub(crate) animation_clock: AnimationClock,
 
@@ -115,6 +130,8 @@ pub struct AppWindow {
     pub(crate) on_close: Option<OnCloseHook>,
 
     pub(crate) window_attributes: WindowAttributes,
+
+    pub(crate) renderer: RendererPreference,
 
     #[cfg(feature = "hotreload")]
     pub(crate) hot_reload_pending: Arc<std::sync::atomic::AtomicBool>,
@@ -154,6 +171,7 @@ impl AppWindow {
             LogicalSize::new(area.width(), area.height()),
         );
 
+        #[cfg(feature = "accessibility")]
         if self.screen_reader.is_on() {
             self.accessibility_adapter.update_if_active(|| update);
         }
@@ -180,6 +198,7 @@ impl AppWindow {
         font_manager: &FontMgr,
         fallback_fonts: &[Cow<'static, str>],
         gpu_resource_cache_limit: usize,
+        graphics_context: &mut GraphicsContext,
     ) -> Self {
         #[cfg(feature = "hotreload")]
         let hot_reload_pending = Arc::new(std::sync::atomic::AtomicBool::new(false));
@@ -212,6 +231,19 @@ impl AppWindow {
             active_event_loop,
             window_attributes.clone(),
             gpu_resource_cache_limit,
+            window_config.renderer,
+            graphics_context,
+        );
+
+        tracing::info!(
+            "Using the {} graphics driver on {}, transparency is {}",
+            driver.name(),
+            driver.gpu_name().unwrap_or("an unknown GPU"),
+            if window_attributes.transparent {
+                "enabled"
+            } else {
+                "disabled"
+            }
         );
 
         if let Some(window_handle_hook) = window_config.window_handle_hook.take() {
@@ -241,14 +273,16 @@ impl AppWindow {
         runner.provide_root_context(|| animation_clock.clone());
 
         runner.provide_root_context(AssetCacher::create);
-        let mut tree = Tree::default();
 
         let custom_scale_factor = clamp_custom_scale_factor(window_config.custom_scale_factor);
         let scale_factor = window.scale_factor() * custom_scale_factor;
 
+        let mut tree = Tree::default();
+
         let window_size = window.inner_size();
         let accent_color_preference = accent_color_preference();
-        let platform = runner.provide_root_context({
+        runner.provide_root_context(TargetPlatform::detect);
+        let platform = runner.run_in({
             let event_loop_proxy = event_loop_proxy.clone();
             let window_id = window.id();
             let theme = match window.theme() {
@@ -256,7 +290,8 @@ impl AppWindow {
                 _ => PreferredTheme::Light,
             };
             let is_app_focused = window.has_focus();
-            move || Platform {
+            move || PlatformWindow {
+                id: u64::from(window_id),
                 focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
                 focused_accessibility_node: State::create(accesskit::Node::new(
                     accesskit::Role::Window,
@@ -280,39 +315,15 @@ impl AppWindow {
             }
         });
 
-        let clipboard = {
-            if let Ok(handle) = window.display_handle() {
-                #[allow(clippy::match_single_binding)]
-                match handle.as_raw() {
-                    #[cfg(target_os = "linux")]
-                    RawDisplayHandle::Wayland(handle) => {
-                        let (_primary, clipboard) = unsafe {
-                            use freya_clipboard::copypasta::wayland_clipboard;
-
-                            wayland_clipboard::create_clipboards_from_external(
-                                handle.display.as_ptr(),
-                            )
-                        };
-                        let clipboard: Box<dyn ClipboardProvider> = Box::new(clipboard);
-                        Some(clipboard)
-                    }
-                    _ => ClipboardContext::new().ok().map(|c| {
-                        let clipboard: Box<dyn ClipboardProvider> = Box::new(c);
-                        clipboard
-                    }),
-                }
-            } else {
-                None
-            }
-        };
-
-        runner.provide_root_context(|| State::create(clipboard));
-
-        runner.provide_root_context(|| tree.accessibility_generator.clone());
-
+        Platform::get().register_window(platform.clone());
+        runner.provide_root_context(|| CurrentWindowId(platform.id));
         runner.provide_root_context(|| tree.accessibility_generator.clone());
 
         runner.provide_root_context(|| font_collection.clone());
+
+        if let Some(root_context) = window_config.root_context {
+            runner.run_in(root_context);
+        }
 
         plugins.send(
             PluginEvent::RunnerCreated {
@@ -321,8 +332,10 @@ impl AppWindow {
             PluginHandle::new(event_loop_proxy),
         );
 
+        let mut nodes_state = NodesState::default();
+
         let mutations = runner.sync_and_update();
-        let result = tree.apply_mutations(mutations);
+        let result = tree.apply_mutations(mutations, scale_factor as f32);
         if let Some(strategy) = result.auto_focus {
             tree.accessibility_diff.request_focus(strategy);
         }
@@ -335,12 +348,12 @@ impl AppWindow {
             font_collection,
             font_manager,
             &events_sender,
+            &mut nodes_state,
             scale_factor,
             fallback_fonts,
         );
 
-        let nodes_state = NodesState::default();
-
+        #[cfg(feature = "accessibility")]
         let accessibility_adapter =
             Adapter::with_event_loop_proxy(active_event_loop, &window, event_loop_proxy.clone());
 
@@ -397,18 +410,26 @@ impl AppWindow {
 
             mouse_state: ElementState::Released,
             position: CursorPoint::default(),
+            cursor_in_window: false,
             modifiers_state: ModifiersState::default(),
+            cursor_icon: CursorIcon::default(),
+            cursor_visible: true,
             pressed_keys: Vec::new(),
 
             events_receiver,
             events_sender,
 
             accessibility: AccessibilityTree::default(),
+            #[cfg(feature = "accessibility")]
             accessibility_adapter,
             accessibility_tasks_for_next_render: AccessibilityTask::ProcessUpdate { mode: None },
+            #[cfg(feature = "accessibility")]
             screen_reader,
 
             process_layout_on_next_render: true,
+            send_mouse_move_on_next_layout: false,
+
+            render_callbacks: Vec::new(),
 
             waker,
 
@@ -426,8 +447,27 @@ impl AppWindow {
 
             window_attributes,
 
+            renderer: window_config.renderer,
+
             #[cfg(feature = "hotreload")]
             hot_reload_pending,
+        }
+    }
+
+    /// Resolve the cursor icon from the hovered nodes and update the window cursor if it changed.
+    pub(crate) fn update_cursor_icon(&mut self) {
+        if !self.cursor_in_window {
+            return;
+        }
+        let cursor_icon = self.tree.cursor_icon(&self.nodes_state);
+        if cursor_icon != self.cursor_icon {
+            self.cursor_icon = cursor_icon;
+            self.window.set_cursor(cursor_icon);
+        }
+        let cursor_visible = self.tree.cursor_visible(&self.nodes_state);
+        if cursor_visible != self.cursor_visible {
+            self.cursor_visible = cursor_visible;
+            self.window.set_cursor_visible(cursor_visible);
         }
     }
 
@@ -443,15 +483,62 @@ impl AppWindow {
         self.window.scale_factor() * *self.platform.custom_scale_factor.peek()
     }
 
-    /// Syncs the effective scale factor on [`Platform`] and invalidates layout.
+    /// Syncs the effective scale factor on [`PlatformWindow`] and invalidates layout.
     pub fn scale_factor_changed(&mut self) {
         self.platform
             .scale_factor
             .set(self.effective_scale_factor());
         self.process_layout_on_next_render = true;
+        self.tree
+            .set_scale_factor(self.effective_scale_factor() as f32);
         self.tree.layout.reset();
         self.tree.text_cache.reset();
         self.window.request_redraw();
+    }
+
+    /// Measures the given platform events and emits the results.
+    /// Wheel events schedule a mouse move to refresh hover states.
+    pub(crate) fn process_platform_events(
+        &mut self,
+        mut platform_events: Vec<PlatformEvent>,
+        plugins: &mut PluginsManager,
+        handle: PluginHandle,
+    ) {
+        plugins.send(
+            PluginEvent::StartedMeasuringEvents {
+                window: &self.window,
+                tree: &self.tree,
+            },
+            handle.clone(),
+        );
+
+        if platform_events
+            .iter()
+            .any(|platform_event| matches!(platform_event, PlatformEvent::Wheel { .. }))
+        {
+            self.send_mouse_move_on_next_layout = true;
+        }
+
+        let mut events_measurer_adapter = EventsMeasurerAdapter {
+            scale_factor: self.effective_scale_factor(),
+            tree: &mut self.tree,
+        };
+        let processed_events = events_measurer_adapter.run(
+            &mut platform_events,
+            &mut self.nodes_state,
+            self.accessibility.focused_node_id(),
+        );
+        self.events_sender
+            .unbounded_send(EventsChunk::Processed(processed_events))
+            .unwrap();
+
+        plugins.send(
+            PluginEvent::FinishedMeasuringEvents {
+                window: &self.window,
+                tree: &self.tree,
+            },
+            handle,
+        );
     }
 
     /// Sets the custom scale factor, clamped to a reasonable range.

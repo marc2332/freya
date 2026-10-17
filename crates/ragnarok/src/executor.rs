@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 use crate::{
     EmmitableEvent,
     NameOfEvent,
@@ -34,7 +36,7 @@ impl<Key: NodeKey, Name: NameOfEvent, Emmitable: EmmitableEvent, Source: SourceE
 
 pub trait EventsExecutor
 where
-    Self: std::marker::Sized,
+    Self: core::marker::Sized,
 {
     type Name: NameOfEvent;
     type Key: NodeKey;
@@ -112,7 +114,7 @@ impl<T: EventsExecutor + private::Sealed> EventsExecutorRunner for T {
 
 pub trait EventsExecutorRunner: private::Sealed
 where
-    Self: std::marker::Sized,
+    Self: core::marker::Sized,
 {
     type Name: NameOfEvent;
     type Key: NodeKey;

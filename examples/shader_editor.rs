@@ -67,7 +67,7 @@ impl Component for ShaderEditor {
     fn render(&self) -> impl IntoElement {
         let mut editable = self.0;
 
-        let on_global_pointer_press = move |_: Event<PointerEventData>| {
+        let on_global_pointer_up = move |_: Event<PointerEventData>| {
             editable.process_event(EditableEvent::Release);
         };
 
@@ -75,6 +75,8 @@ impl Component for ShaderEditor {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: None,
+                holder: None,
             });
         };
 
@@ -83,7 +85,7 @@ impl Component for ShaderEditor {
         };
 
         rect()
-            .on_global_pointer_press(on_global_pointer_press)
+            .on_global_pointer_up(on_global_pointer_up)
             .on_global_key_down(on_global_key_down)
             .on_global_key_up(on_global_key_up)
             .width(Size::percent(50.))
@@ -198,7 +200,7 @@ impl Component for ShaderView {
 
         use_hook(|| {
             let ticker = RenderingTicker::get();
-            let platform = Platform::get();
+            let platform = Platform::get().current_window();
 
             spawn(async move {
                 loop {

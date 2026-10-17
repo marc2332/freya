@@ -50,14 +50,14 @@ pub struct RippleFloatingTab {
 }
 
 impl ChildrenExt for RippleFloatingTab {
-    fn get_children(&mut self) -> &mut Vec<Element> {
-        self.ripple.get_children()
+    fn children_mut(&mut self) -> &mut Vec<Element> {
+        self.ripple.children_mut()
     }
 }
 
 impl KeyExt for RippleFloatingTab {
-    fn write_key(&mut self) -> &mut DiffKey {
-        self.tab.write_key()
+    fn key_mut(&mut self) -> &mut DiffKey {
+        self.tab.key_mut()
     }
 }
 
@@ -85,8 +85,8 @@ impl Component for RippleFloatingTab {
 
         let theme_override = tab.get_theme().cloned().unwrap_or_default().padding(0.);
 
-        tab.get_children().clear();
-        tab.get_children().push(ripple.into());
+        tab.children_mut().clear();
+        tab.children_mut().push(ripple.into());
         tab.theme(theme_override)
     }
 

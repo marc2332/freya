@@ -1,7 +1,6 @@
 pub mod accessibility;
 pub mod animation_clock;
 pub mod current_context;
-pub mod cursor;
 pub mod data;
 pub mod debug;
 pub mod diff_key;
@@ -14,9 +13,11 @@ pub mod extended_hashmap;
 pub mod fifo_cache;
 pub mod helpers;
 pub mod hooks;
+pub mod io;
 pub mod layers;
 pub mod lifecycle;
 pub mod lru_cache;
+pub mod metrics;
 pub mod node_id;
 pub mod notify;
 pub mod path_element;
@@ -61,7 +62,6 @@ pub mod prelude {
             screen_reader::*,
         },
         animation_clock::AnimationClock,
-        cursor::*,
         data::*,
         debug::*,
         diff_key::DiffKey,
@@ -114,12 +114,17 @@ pub mod prelude {
             previous_and_current::*,
             use_id::*,
         },
+        io::{
+            thread::thread,
+            timer::timer,
+        },
         layers::Layer,
         lifecycle::{
             base::*,
             context::*,
             effect::*,
             future_task::*,
+            global_context::*,
             memo::*,
             reactive::*,
             readable::*,
@@ -138,11 +143,17 @@ pub mod prelude {
             corner_radius::*,
             cursor::*,
             fill::*,
+            font_feature::*,
             font_size::*,
             font_slant::*,
             font_weight::*,
             font_width::*,
             gradient::*,
+            letter_spacing::*,
+            render_callback::{
+                RenderCallback,
+                RenderContext as FillRenderContext,
+            },
             scale::*,
             shader::*,
             shadow::*,
@@ -154,12 +165,16 @@ pub mod prelude {
             transform_origin::*,
             vertical_align::*,
         },
-        user_event::UserEvent,
+        user_event::{
+            GlobalUserEvent,
+            UserEvent,
+        },
     };
 }
 
 /// Used by renderers such as freya-testing, freya-winit or just integration crates.
 pub mod integration {
+    pub use ragnarok::NodesState;
     pub use rustc_hash::*;
 
     pub use crate::{
@@ -167,6 +182,7 @@ pub mod integration {
             dirty_nodes::*,
             focus_strategy::*,
             id::*,
+            ime::*,
             screen_reader::*,
             tree::*,
         },
@@ -183,6 +199,7 @@ pub mod integration {
             platform::*,
         },
         lifecycle::{
+            global_context::GlobalContexts,
             state::State,
             writable_utils::WritableUtils,
         },

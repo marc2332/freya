@@ -4,5 +4,6 @@ pub mod focus_strategy;
 pub mod focusable;
 pub mod groups;
 pub mod id;
+pub mod ime;
 pub mod screen_reader;
 pub mod tree;

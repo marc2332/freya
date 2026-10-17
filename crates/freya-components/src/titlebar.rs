@@ -37,7 +37,7 @@ pub struct TitlebarButton {
 }
 
 impl KeyExt for TitlebarButton {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -81,7 +81,7 @@ impl Component for TitlebarButton {
                 </svg>"#
             }
             TitlebarAction::Close => {
-                r#"<svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>"#
+                r#"<svg viewBox="0 0 12 12"><path d="M3 3l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M9 3l-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>"#
             }
         };
 

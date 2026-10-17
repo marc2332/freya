@@ -13,12 +13,13 @@ pub fn provide_context<T: Clone + 'static>(value: T) {
     provide_context_for_scope_id(value, None)
 }
 
-/// Store the given value in the root scope.
+/// Store the given value in the root scope of the current window. If a value of the same
+/// type already exists, it is replaced.
 ///
-/// Only needed for specific cases like values consumed by queries or mutations, which run in
-/// the root scope. Prefer [provide_context] otherwise.
-pub fn provide_root_context<T: Clone + 'static>(value: T) {
-    provide_context_for_scope_id(value, Some(ScopeId::ROOT))
+/// For state shared across all windows use [GlobalContexts](crate::prelude::GlobalContexts) instead.
+pub fn provide_root_context<T: Clone + 'static>(value: T) -> T {
+    provide_context_for_scope_id(value.clone(), Some(ScopeId::ROOT));
+    value
 }
 
 pub fn provide_context_for_scope_id<T: Clone + 'static>(
@@ -33,10 +34,6 @@ pub fn provide_context_for_scope_id<T: Clone + 'static>(
         let type_id = TypeId::of::<T>();
         scopes_storage.contexts.insert(type_id, Rc::new(value));
     })
-}
-
-pub fn try_consume_context<T: Clone + 'static>() -> Option<T> {
-    try_consume_context_from_scope_id(None)
 }
 
 /// Try to get a context value stored only in the current scope, without walking up to ancestors.
@@ -57,18 +54,27 @@ pub fn try_consume_root_context<T: Clone + 'static>() -> Option<T> {
     try_consume_context_from_scope_id(Some(ScopeId::ROOT))
 }
 
-pub fn consume_context<T: Clone + 'static>() -> T {
+pub fn try_consume_context<T: Clone + 'static>() -> Option<T> {
     try_consume_context_from_scope_id(None)
-        .unwrap_or_else(|| panic!("Context <{}> was not found.", std::any::type_name::<T>()))
 }
 
+#[track_caller]
+pub fn consume_context<T: Clone + 'static>() -> T {
+    match try_consume_context_from_scope_id(None) {
+        Some(context) => context,
+        None => panic!("Context <{}> was not found.", std::any::type_name::<T>()),
+    }
+}
+
+#[track_caller]
 pub fn consume_root_context<T: Clone + 'static>() -> T {
-    try_consume_context_from_scope_id(Some(ScopeId::ROOT)).unwrap_or_else(|| {
-        panic!(
+    match try_consume_root_context() {
+        Some(context) => context,
+        None => panic!(
             "Root context <{}> was not found.",
             std::any::type_name::<T>()
-        )
-    })
+        ),
+    }
 }
 
 pub fn try_consume_context_from_scope_id<T: Clone + 'static>(
@@ -105,21 +111,24 @@ pub fn use_provide_context<T: Clone + 'static>(init: impl FnOnce() -> T) -> T {
     })
 }
 
-/// Store the given value in the root scope.
+/// Store the given value in the root scope of the current window. If a value of the same
+/// type already exists, that one is returned and `init` is not called.
 ///
-/// Only needed for specific cases like values consumed by queries or mutations, which run in
-/// the root scope. Prefer [use_provide_context] otherwise.
+/// For state shared across all windows use [GlobalContexts](crate::prelude::GlobalContexts) instead.
 pub fn use_provide_root_context<T: Clone + 'static>(init: impl FnOnce() -> T) -> T {
-    use_hook(|| {
-        let ctx = init();
-        provide_root_context(ctx.clone());
-        ctx
+    use_hook(|| match try_consume_root_context::<T>() {
+        Some(context) => context,
+        None => provide_root_context(init()),
     })
 }
 
 /// Get access to a value stored in this component instance or some ancestor.
+#[track_caller]
 pub fn use_consume<T: Clone + 'static>() -> T {
-    use_hook(|| consume_context())
+    match use_hook(|| try_consume_context()) {
+        Some(context) => context,
+        None => panic!("Context <{}> was not found.", std::any::type_name::<T>()),
+    }
 }
 
 /// Try to get access to a value stored in this component instance or some ancestor.

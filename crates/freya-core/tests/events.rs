@@ -62,7 +62,7 @@ fn event_propagate() {
     assert!(!mutations.added.is_empty());
     assert!(mutations.modified.is_empty());
     assert!(mutations.removed.is_empty());
-    tree.apply_mutations(mutations);
+    tree.apply_mutations(mutations, 1.0);
     assert_eq!(
         tree.children,
         convert_ids(FxHashMap::from_iter([
@@ -78,7 +78,7 @@ fn event_propagate() {
     assert!(mutations.added.is_empty());
     assert!(mutations.modified.is_empty());
     assert!(mutations.removed.is_empty());
-    tree.apply_mutations(mutations);
+    tree.apply_mutations(mutations, 1.0);
     assert_eq!(
         tree.children,
         convert_ids(FxHashMap::from_iter([
@@ -100,7 +100,7 @@ fn event_propagate() {
     assert!(mutations.added.is_empty());
     assert!(!mutations.modified.is_empty());
     assert!(mutations.removed.is_empty());
-    tree.apply_mutations(mutations);
+    tree.apply_mutations(mutations, 1.0);
     assert_eq!(
         tree.children,
         convert_ids(FxHashMap::from_iter([
@@ -433,4 +433,179 @@ fn file_drop_with_multiple_files() {
         *state.peek(),
         vec![PathBuf::from("first.txt"), PathBuf::from("second.txt")]
     );
+}
+
+fn check_pointer_leave_without_exit(with_move: bool, with_enter: bool) {
+    let mut events = State::create_global(Vec::new());
+    let (mut test, _) = TestingRunner::new(
+        move || {
+            rect().padding(25.).child(
+                rect()
+                    .background((15, 163, 242))
+                    .expanded()
+                    .on_pointer_leave(move |_| events.write().push("leave"))
+                    .maybe(with_move, |el| {
+                        el.on_mouse_move(move |_| events.write().push("move"))
+                    })
+                    .maybe(with_enter, |el| {
+                        el.on_pointer_enter(move |_| events.write().push("enter"))
+                    }),
+            )
+        },
+        (500., 450.).into(),
+        |_| {},
+        1.,
+    );
+    test.sync_and_update();
+
+    for index in 0..8 {
+        test.move_cursor((100. + index as f64 * 15., 100.));
+        test.sync_and_update();
+    }
+
+    assert_eq!(
+        events
+            .peek()
+            .iter()
+            .filter(|name| **name == "leave")
+            .count(),
+        0,
+        "unexpected events while the pointer stayed inside: {:?}",
+        events.peek()
+    );
+    assert_eq!(
+        events.peek().iter().filter(|name| **name == "move").count(),
+        if with_move { 8 } else { 0 }
+    );
+    assert_eq!(
+        events
+            .peek()
+            .iter()
+            .filter(|name| **name == "enter")
+            .count(),
+        usize::from(with_enter)
+    );
+
+    let mut expected_events = events.peek().clone();
+    expected_events.push("leave");
+    test.move_cursor((10., 10.));
+    test.sync_and_update();
+    assert_eq!(*events.peek(), expected_events);
+}
+
+#[test]
+fn pointer_leave_only_without_exit() {
+    check_pointer_leave_without_exit(false, false);
+}
+
+#[test]
+fn pointer_leave_with_mouse_move_without_exit() {
+    check_pointer_leave_without_exit(true, false);
+}
+
+#[test]
+fn pointer_leave_with_mouse_move_and_enter_without_exit() {
+    check_pointer_leave_without_exit(true, true);
+}
+
+#[test]
+fn cursor_visibility_property() {
+    fn app() -> Element {
+        let visible = use_consume::<State<Option<bool>>>();
+        rect()
+            .expanded()
+            .child(
+                rect()
+                    .width(Size::px(100.))
+                    .height(Size::px(100.))
+                    .cursor_visible(false)
+                    .child(
+                        rect()
+                            .width(Size::px(50.))
+                            .height(Size::px(50.))
+                            .cursor(CursorIcon::Pointer)
+                            .cursor_visible(*visible.read()),
+                    ),
+            )
+            .into()
+    }
+
+    let (mut test, mut visible) = TestingRunner::new(
+        app,
+        (500., 500.).into(),
+        |runner| runner.provide_root_context(|| State::create(None::<bool>)),
+        1.,
+    );
+    test.sync_and_update();
+    test.move_cursor((25., 25.));
+    test.sync_and_update();
+    assert!(!test.cursor_visible());
+    assert_eq!(test.cursor_icon(), CursorIcon::Pointer);
+
+    visible.set(Some(true));
+    test.sync_and_update();
+    assert!(test.cursor_visible());
+    assert_eq!(test.cursor_icon(), CursorIcon::Pointer);
+
+    visible.set(Some(false));
+    test.sync_and_update();
+    assert!(!test.cursor_visible());
+
+    test.move_cursor((150., 150.));
+    test.sync_and_update();
+    assert!(test.cursor_visible());
+    assert_eq!(test.cursor_icon(), CursorIcon::Default);
+
+    test.move_cursor((25., 25.));
+    test.sync_and_update();
+    assert!(!test.cursor_visible());
+
+    visible.set(None);
+    test.sync_and_update();
+    assert!(!test.cursor_visible());
+}
+
+#[test]
+fn cursor_property() {
+    fn app() -> Element {
+        rect()
+            .expanded()
+            .children([
+                rect()
+                    .width(Size::px(100.))
+                    .height(Size::px(100.))
+                    .background((0, 0, 0))
+                    .cursor(CursorIcon::Text)
+                    .child(
+                        rect()
+                            .width(Size::px(50.))
+                            .height(Size::px(50.))
+                            .background((10, 10, 10))
+                            .cursor(CursorIcon::Grab),
+                    ),
+                rect()
+                    .width(Size::px(100.))
+                    .height(Size::px(100.))
+                    .background((20, 20, 20)),
+            ])
+            .into()
+    }
+
+    let (mut test, _) = TestingRunner::new(app, (500., 500.).into(), |_| {}, 1.);
+    test.sync_and_update();
+
+    // The inner child cursor wins over its parent's
+    test.move_cursor((25., 25.));
+    test.sync_and_update();
+    assert_eq!(test.cursor_icon(), CursorIcon::Grab);
+
+    // Outside the inner child the parent cursor applies
+    test.move_cursor((75., 75.));
+    test.sync_and_update();
+    assert_eq!(test.cursor_icon(), CursorIcon::Text);
+
+    // No hovered node defines a cursor
+    test.move_cursor((50., 150.));
+    test.sync_and_update();
+    assert_eq!(test.cursor_icon(), CursorIcon::default());
 }

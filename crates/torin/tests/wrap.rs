@@ -53,7 +53,7 @@ pub fn content_wrap_horizontal() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -114,7 +114,7 @@ pub fn content_wrap_vertical() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(
@@ -179,7 +179,7 @@ pub fn content_wrap_horizontal_with_spacing() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     assert_eq!(

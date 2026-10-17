@@ -16,8 +16,6 @@ use std::{
 };
 
 use anyhow::Context;
-use async_io::Timer;
-use blocking::unblock;
 use bytes::Bytes;
 use freya_core::{
     elements::image::{
@@ -48,12 +46,10 @@ use freya_engine::prelude::{
     raster_n32_premul,
 };
 use gif::DisposalMethod;
-#[cfg(feature = "remote-asset")]
-use reqwest::Url;
 use torin::prelude::Size2D;
-
 #[cfg(feature = "remote-asset")]
-use crate::http::Http;
+use url::Url;
+
 use crate::{
     cache::*,
     loader::CircularLoader,
@@ -163,19 +159,12 @@ impl Hash for GifSource {
 
 impl GifSource {
     pub async fn bytes(&self) -> anyhow::Result<Bytes> {
-        let source = self.clone();
-        #[cfg(feature = "remote-asset")]
-        let client = Http::get();
-        blocking::unblock(move || {
-            let bytes = match source {
-                #[cfg(feature = "remote-asset")]
-                Self::Uri(uri) => client.get(uri).send()?.error_for_status()?.bytes()?,
-                Self::Path(path) => fs::read(path).map(Bytes::from)?,
-                Self::Bytes(_, bytes) => bytes,
-            };
-            Ok(bytes)
-        })
-        .await
+        match self.clone() {
+            #[cfg(feature = "remote-asset")]
+            Self::Uri(uri) => crate::http::fetch(uri).await,
+            Self::Path(path) => thread(move || anyhow::Ok(Bytes::from(fs::read(path)?))).await,
+            Self::Bytes(_, bytes) => Ok(bytes),
+        }
     }
 }
 
@@ -192,19 +181,9 @@ impl GifSource {
 ///
 ///     GifViewer::new(source)
 /// }
-///
-/// # use freya_testing::prelude::*;
-/// # use std::path::PathBuf;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(GifViewer::new(("frog-typing", include_bytes!("../../../examples/frog_typing.gif"))))
-/// # }, "./images/gallery_gif_viewer.png").with_hook(|t| { t.poll(std::time::Duration::from_millis(1), std::time::Duration::from_millis(1500)); t.sync_and_update(); }).with_scale_factor(1.).render();
 /// ```
 ///
-/// # Preview
-/// ![Gif Preview][gif_viewer]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("gif_viewer", "images/gallery_gif_viewer.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(PartialEq)]
 pub struct GifViewer {
     source: GifSource,
@@ -239,13 +218,13 @@ impl GifViewer {
 }
 
 impl KeyExt for GifViewer {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl LayoutExt for GifViewer {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
@@ -254,13 +233,13 @@ impl ContainerSizeExt for GifViewer {}
 impl ContainerPositionExt for GifViewer {}
 
 impl ImageExt for GifViewer {
-    fn get_image_data(&mut self) -> &mut ImageData {
+    fn image_data_mut(&mut self) -> &mut ImageData {
         &mut self.image_data
     }
 }
 
 impl AccessibilityExt for GifViewer {
-    fn get_accessibility_data(&mut self) -> &mut AccessibilityData {
+    fn accessibility_data_mut(&mut self) -> &mut AccessibilityData {
         &mut self.accessibility
     }
 }
@@ -282,7 +261,7 @@ impl Component for GifViewer {
 
         let mut stream_gif = async move |bytes: Bytes| -> anyhow::Result<()> {
             // Decode and pre-composite all frames upfront
-            let frames_data = unblock(move || -> anyhow::Result<Vec<CachedFrame>> {
+            let frames_data = thread(move || -> anyhow::Result<Vec<CachedFrame>> {
                 let mut decoder_options = gif::DecodeOptions::new();
                 decoder_options.set_color_output(gif::ColorOutput::RGBA);
                 let cursor = std::io::Cursor::new(&bytes);
@@ -359,7 +338,7 @@ impl Component for GifViewer {
             loop {
                 for (i, frame) in frames.frames.iter().enumerate() {
                     *status.write() = Status::Playing(i);
-                    Timer::after(frame.delay).await;
+                    timer(frame.delay).await;
                 }
             }
         };
@@ -497,7 +476,7 @@ fn gif(frames: Rc<CachedGifFrames>, frame_idx: usize) -> Gif {
 }
 
 impl LayoutExt for Gif {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.element.layout
     }
 }
@@ -505,25 +484,25 @@ impl LayoutExt for Gif {
 impl ContainerExt for Gif {}
 
 impl ImageExt for Gif {
-    fn get_image_data(&mut self) -> &mut ImageData {
+    fn image_data_mut(&mut self) -> &mut ImageData {
         &mut self.element.image_data
     }
 }
 
 impl KeyExt for Gif {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl EventHandlersExt for Gif {
-    fn get_event_handlers(&mut self) -> &mut EventHandlers {
+    fn event_handlers_mut(&mut self) -> &mut EventHandlers {
         &mut self.element.event_handlers
     }
 }
 
 impl AccessibilityExt for Gif {
-    fn get_accessibility_data(&mut self) -> &mut AccessibilityData {
+    fn accessibility_data_mut(&mut self) -> &mut AccessibilityData {
         &mut self.element.accessibility
     }
 }

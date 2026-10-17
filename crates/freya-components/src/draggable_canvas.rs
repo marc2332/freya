@@ -30,7 +30,7 @@ pub struct DraggableCanvas {
 }
 
 impl KeyExt for DraggableCanvas {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -52,7 +52,7 @@ impl DraggableCanvas {
 }
 
 impl LayoutExt for DraggableCanvas {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
@@ -60,7 +60,7 @@ impl LayoutExt for DraggableCanvas {
 impl ContainerExt for DraggableCanvas {}
 
 impl ChildrenExt for DraggableCanvas {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
@@ -88,7 +88,7 @@ impl Component for DraggableCanvas {
             e.stop_propagation();
         };
 
-        let on_global_pointer_press = move |e: Event<PointerEventData>| {
+        let on_global_pointer_up = move |e: Event<PointerEventData>| {
             if dragging_position.read().is_some() {
                 e.stop_propagation();
                 e.prevent_default();
@@ -109,7 +109,7 @@ impl Component for DraggableCanvas {
             .on_sized(move |e: Event<SizedEventData>| layout.set(e.visible_area))
             .on_mouse_move(on_mouse_move)
             .on_pointer_down(on_pointer_down)
-            .on_global_pointer_press(on_global_pointer_press)
+            .on_global_pointer_up(on_global_pointer_up)
             .on_wheel(on_wheel)
             .offset_x(offset_x as f32)
             .offset_y(offset_y as f32)
@@ -157,13 +157,13 @@ impl Draggable {
 }
 
 impl KeyExt for Draggable {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl ChildrenExt for Draggable {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
@@ -201,7 +201,7 @@ impl Component for Draggable {
             registry.insert(0, id);
         };
 
-        let on_capture_global_pointer_press = move |e: Event<PointerEventData>| {
+        let on_capture_global_pointer_up = move |e: Event<PointerEventData>| {
             if dragging_position.read().is_some() {
                 e.stop_propagation();
                 e.prevent_default();
@@ -222,7 +222,7 @@ impl Component for Draggable {
         rect()
             .on_global_pointer_move(on_global_pointer_move)
             .on_pointer_down(on_pointer_down)
-            .on_capture_global_pointer_press(on_capture_global_pointer_press)
+            .on_capture_global_pointer_up(on_capture_global_pointer_up)
             .position(Position::new_absolute().left(left).top(top))
             .layer(layer as i16)
             .children(self.children.clone())
@@ -270,13 +270,13 @@ impl ResizableDraggable {
 }
 
 impl KeyExt for ResizableDraggable {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl ChildrenExt for ResizableDraggable {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
@@ -340,7 +340,7 @@ impl Component for ResizableDraggable {
             registry_write.insert(0, id);
         };
 
-        let on_capture_global_pointer_press = move |e: Event<PointerEventData>| {
+        let on_capture_global_pointer_up = move |e: Event<PointerEventData>| {
             if dragging_position.read().is_some() {
                 e.stop_propagation();
                 e.prevent_default();
@@ -350,7 +350,6 @@ impl Component for ResizableDraggable {
                 e.stop_propagation();
                 e.prevent_default();
                 resizing.set(None);
-                Cursor::set(CursorIcon::default());
             }
         };
 
@@ -374,14 +373,7 @@ impl Component for ResizableDraggable {
             .position(Position::new_absolute().right(-handle).top(0.))
             .background(Color::WHITE)
             .opacity(0.)
-            .on_pointer_enter(move |_: Event<PointerEventData>| {
-                Cursor::set(CursorIcon::ColResize);
-            })
-            .on_pointer_leave(move |_: Event<PointerEventData>| {
-                if resizing().is_none() {
-                    Cursor::set(CursorIcon::default());
-                }
-            })
+            .cursor(CursorIcon::ColResize)
             .on_pointer_down(move |e: Event<PointerEventData>| {
                 if !e.data().is_primary() {
                     return;
@@ -399,14 +391,7 @@ impl Component for ResizableDraggable {
             .position(Position::new_absolute().left(0.).bottom(-handle))
             .background(Color::WHITE)
             .opacity(0.)
-            .on_pointer_enter(move |_: Event<PointerEventData>| {
-                Cursor::set(CursorIcon::RowResize);
-            })
-            .on_pointer_leave(move |_: Event<PointerEventData>| {
-                if resizing().is_none() {
-                    Cursor::set(CursorIcon::default());
-                }
-            })
+            .cursor(CursorIcon::RowResize)
             .on_pointer_down(move |e: Event<PointerEventData>| {
                 if !e.data().is_primary() {
                     return;
@@ -424,14 +409,7 @@ impl Component for ResizableDraggable {
             .position(Position::new_absolute().right(-handle).bottom(-handle))
             .background(Color::WHITE)
             .opacity(0.)
-            .on_pointer_enter(move |_: Event<PointerEventData>| {
-                Cursor::set(CursorIcon::SeResize);
-            })
-            .on_pointer_leave(move |_: Event<PointerEventData>| {
-                if resizing().is_none() {
-                    Cursor::set(CursorIcon::default());
-                }
-            })
+            .cursor(CursorIcon::SeResize)
             .on_pointer_down(move |e: Event<PointerEventData>| {
                 if !e.data().is_primary() {
                     return;
@@ -446,7 +424,7 @@ impl Component for ResizableDraggable {
         rect()
             .on_global_pointer_move(on_global_pointer_move)
             .on_pointer_down(on_pointer_down)
-            .on_capture_global_pointer_press(on_capture_global_pointer_press)
+            .on_capture_global_pointer_up(on_capture_global_pointer_up)
             .position(Position::new_absolute().left(left).top(top))
             .width(Size::px(width))
             .height(Size::px(height))

@@ -116,12 +116,12 @@ impl<T: 'static + PartialEq> Memo<T> {
     }
 
     #[track_caller]
-    pub fn read(&self) -> ReadRef<'static, T> {
+    pub fn read(&self) -> ReadRef<'_, T> {
         self.state.read()
     }
 
     #[track_caller]
-    pub fn peek(&self) -> ReadRef<'static, T> {
+    pub fn peek(&self) -> ReadRef<'_, T> {
         self.state.peek()
     }
 }

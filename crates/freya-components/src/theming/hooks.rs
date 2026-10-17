@@ -35,6 +35,7 @@ pub fn use_provide_theme(theme_cb: impl FnOnce() -> Theme) -> State<Theme> {
 }
 
 /// Subscribe to [`Theme`] changes.
+#[track_caller]
 pub fn use_theme() -> State<Theme> {
     use_consume::<State<Theme>>()
 }

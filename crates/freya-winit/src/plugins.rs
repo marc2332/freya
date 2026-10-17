@@ -4,7 +4,10 @@ use std::{
     rc::Rc,
 };
 
-use freya_core::integration::*;
+use freya_core::{
+    integration::*,
+    metrics::Metrics,
+};
 use freya_engine::prelude::{
     Canvas,
     FontCollection,
@@ -167,6 +170,7 @@ pub enum PluginEvent<'a> {
         font_collection: &'a FontCollection,
         tree: &'a Tree,
         animation_clock: &'a AnimationClock,
+        metrics: Metrics,
     },
 
     /// Before starting to measure the layout.

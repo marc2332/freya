@@ -6,7 +6,6 @@ use freya_engine::prelude::{
     backend_render_targets,
     direct_contexts,
     mtl,
-    wrap_backend_render_target,
 };
 use objc2::{
     rc::Retained,
@@ -39,6 +38,8 @@ use winit::{
     },
 };
 
+use crate::drivers::surface::wrap_render_target;
+
 /// Graphics driver using Metal (macOS native).
 pub struct MetalDriver {
     metal_layer: Retained<CAMetalLayer>,
@@ -47,6 +48,11 @@ pub struct MetalDriver {
 }
 
 impl MetalDriver {
+    pub fn resource_cache_usage(&self) -> (usize, usize) {
+        let usage = self.gr_context.resource_cache_usage();
+        (usage.resource_bytes, self.gr_context.resource_cache_limit())
+    }
+
     pub fn new(
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
@@ -142,13 +148,11 @@ impl MetalDriver {
         let backend_render_target =
             backend_render_targets::make_mtl((drawable_width, drawable_height), &texture_info);
 
-        let mut surface = wrap_backend_render_target(
+        let mut surface = wrap_render_target(
             &mut self.gr_context,
             &backend_render_target,
             SurfaceOrigin::TopLeft,
             ColorType::BGRA8888,
-            None,
-            None,
         )
         .expect("Could not create Skia surface from Metal texture");
 

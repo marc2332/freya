@@ -1,3 +1,8 @@
+#[cfg(target_os = "windows")]
+use std::time::{
+    Duration,
+    Instant,
+};
 use std::{
     ffi::{
         CStr,
@@ -16,7 +21,6 @@ use freya_engine::prelude::{
     SurfaceOrigin,
     backend_render_targets,
     direct_contexts,
-    wrap_backend_render_target,
 };
 use gl::{
     types::*,
@@ -64,6 +68,8 @@ use winit::{
     },
 };
 
+use crate::drivers::surface::wrap_render_target;
+
 /// Graphics driver using OpenGL.
 pub struct OpenGLDriver {
     pub(crate) gr_context: DirectContext,
@@ -74,24 +80,35 @@ pub struct OpenGLDriver {
     pub(crate) stencil_size: usize,
     pub(crate) surface: SkiaSurface,
     pub(crate) gpu_name: Option<String>,
+    #[cfg(target_os = "windows")]
+    last_present: Option<Instant>,
 }
 
 impl Drop for OpenGLDriver {
     fn drop(&mut self) {
-        self.gr_context.abandon();
+        if !self.gl_context.is_current() && self.gl_context.make_current(&self.gl_surface).is_err()
+        {
+            self.gr_context.abandon();
+            return;
+        }
+
+        self.gr_context.release_resources_and_abandon();
     }
 }
 
 impl OpenGLDriver {
+    pub fn resource_cache_usage(&self) -> (usize, usize) {
+        let usage = self.gr_context.resource_cache_usage();
+        (usage.resource_bytes, self.gr_context.resource_cache_limit())
+    }
+
     pub fn new(
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
         gpu_resource_cache_limit: usize,
     ) -> Result<(Self, Window), Box<dyn std::error::Error>> {
         let transparent = window_attributes.transparent;
-        let template = ConfigTemplateBuilder::new()
-            .with_alpha_size(8)
-            .with_transparency(transparent);
+        let template = Self::config_template(transparent);
 
         let build_with_preference =
             |preference| -> Result<(Self, Window), Box<dyn std::error::Error>> {
@@ -124,9 +141,7 @@ impl OpenGLDriver {
         gpu_resource_cache_limit: usize,
         transparent: bool,
     ) -> Result<Self, Box<dyn std::error::Error>> {
-        let template = ConfigTemplateBuilder::new()
-            .with_alpha_size(8)
-            .with_transparency(transparent)
+        let template = Self::config_template(transparent)
             .compatible_with_native_window(window.window_handle()?.as_raw());
 
         let build_with_preference = |preference| -> Result<Self, Box<dyn std::error::Error>> {
@@ -194,10 +209,11 @@ impl OpenGLDriver {
 
         let gl_context = not_current_gl_context.make_current(&gl_surface)?;
 
-        // Try setting vsync.
-        gl_surface
-            .set_swap_interval(&gl_context, SwapInterval::Wait(NonZeroU32::new(1).unwrap()))
-            .ok();
+        if let Err(error) =
+            gl_surface.set_swap_interval(&gl_context, SwapInterval::Wait(NonZeroU32::MIN))
+        {
+            tracing::warn!("Failed to enable OpenGL vsync: {error}");
+        }
 
         load_with(|s| {
             gl_config
@@ -246,13 +262,11 @@ impl OpenGLDriver {
             stencil_size,
             fb_info,
         );
-        let surface = wrap_backend_render_target(
+        let surface = wrap_render_target(
             &mut gr_context,
             &render_target,
             SurfaceOrigin::BottomLeft,
             ColorType::RGBA8888,
-            None,
-            None,
         )
         .ok_or("could not create OpenGL skia surface")?;
 
@@ -265,9 +279,29 @@ impl OpenGLDriver {
             fb_info,
             surface,
             gpu_name,
+            #[cfg(target_os = "windows")]
+            last_present: None,
         };
 
         Ok(driver)
+    }
+
+    #[cfg(target_os = "windows")]
+    fn wait_for_display(&mut self, window: &Window) {
+        let refresh_rate = window
+            .current_monitor()
+            .and_then(|monitor| monitor.refresh_rate_millihertz())
+            .filter(|refresh_rate| *refresh_rate > 1_000)
+            .unwrap_or(60_000);
+        let frame_interval = Duration::from_secs_f64(1000.0 / refresh_rate as f64);
+
+        if let Some(last_present) = self.last_present
+            && let Some(remaining) = frame_interval.checked_sub(last_present.elapsed())
+        {
+            std::thread::sleep(remaining);
+        }
+
+        self.last_present = Some(Instant::now());
     }
 
     pub fn present(&mut self, window: &Window, render: impl FnOnce(&mut SkiaSurface)) {
@@ -282,6 +316,9 @@ impl OpenGLDriver {
         if let Err(error) = self.gl_surface.swap_buffers(&self.gl_context) {
             tracing::error!("Failed to swap buffers: {:?}", error);
         }
+
+        #[cfg(target_os = "windows")]
+        self.wait_for_display(window);
     }
 
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
@@ -291,13 +328,11 @@ impl OpenGLDriver {
             self.stencil_size,
             self.fb_info,
         );
-        let surface = wrap_backend_render_target(
+        let surface = wrap_render_target(
             &mut self.gr_context,
             &render_target,
             SurfaceOrigin::BottomLeft,
             ColorType::RGBA8888,
-            None,
-            None,
         )
         .expect("Could not create skia surface");
 
@@ -310,19 +345,24 @@ impl OpenGLDriver {
         self.surface = surface;
     }
 
-    /// Pick the OpenGL config, preferring transparency then fewer samples.
+    fn config_template(transparent: bool) -> ConfigTemplateBuilder {
+        ConfigTemplateBuilder::new()
+            .with_alpha_size(if transparent { 8 } else { 0 })
+            .with_transparency(transparent)
+    }
+
+    /// Pick the OpenGL config.
     fn pick_config(configs: Box<dyn Iterator<Item = Config> + '_>, transparent: bool) -> Config {
         configs
-            .reduce(|accum, config| {
-                let transparency_check = transparent
-                    && config.supports_transparency().unwrap_or(false)
-                    && !accum.supports_transparency().unwrap_or(false);
+            .max_by_key(|config| {
+                let supports_transparency =
+                    transparent && config.supports_transparency().unwrap_or(false);
 
-                if transparency_check || config.num_samples() < accum.num_samples() {
-                    config
-                } else {
-                    accum
-                }
+                (
+                    config.hardware_accelerated(),
+                    supports_transparency,
+                    -(config.num_samples() as i32),
+                )
             })
             .expect("at least one OpenGL config")
     }

@@ -8,14 +8,16 @@ use std::{
 
 use freya_engine::prelude::{
     ClipOp,
-    FontStyle,
     ParagraphBuilder,
     ParagraphStyle,
     SkParagraph,
     SkRect,
-    TextStyle,
 };
-use torin::prelude::Size2D;
+use torin::prelude::{
+    Area,
+    Size2D,
+    SizeModel,
+};
 
 use crate::{
     data::{
@@ -34,12 +36,12 @@ use crate::{
         LayoutContext,
         RenderContext,
     },
-    elements::paragraph::paint_paragraph_with_fill,
+    elements::paragraph::ParagraphPaintExt,
     layers::Layer,
     prelude::{
         AccessibilityExt,
-        Color,
         ContainerExt,
+        EffectExt,
         EventHandlersExt,
         KeyExt,
         LayerExt,
@@ -49,6 +51,7 @@ use crate::{
         TextAlign,
         TextStyleExt,
     },
+    style::render_callback::RenderContext as FillRenderContext,
     text_cache::CachedParagraph,
     tree::DiffModifies,
 };
@@ -97,6 +100,7 @@ pub struct LabelElement {
     pub max_lines: Option<usize>,
     pub line_height: Option<f32>,
     pub relative_layer: Layer,
+    pub effect: Option<EffectData>,
 }
 
 impl Default for LabelElement {
@@ -112,6 +116,7 @@ impl Default for LabelElement {
             max_lines: None,
             line_height: None,
             relative_layer: Layer::default(),
+            effect: None,
         }
     }
 }
@@ -134,6 +139,7 @@ impl ElementExt for LabelElement {
         if self.text != label.text {
             diff.insert(DiffModifies::STYLE);
             diff.insert(DiffModifies::LAYOUT);
+            diff.insert(DiffModifies::ACCESSIBILITY);
         }
 
         if self.accessibility != label.accessibility {
@@ -142,6 +148,10 @@ impl ElementExt for LabelElement {
 
         if self.relative_layer != label.relative_layer {
             diff.insert(DiffModifies::LAYER);
+        }
+
+        if self.effect != label.effect {
+            diff.insert(DiffModifies::EFFECT);
         }
 
         if self.text_style_data != label.text_style_data
@@ -167,7 +177,7 @@ impl ElementExt for LabelElement {
     }
 
     fn effect(&'_ self) -> Option<Cow<'_, EffectData>> {
-        None
+        self.effect.as_ref().map(Cow::Borrowed)
     }
 
     fn style(&'_ self) -> Cow<'_, StyleState> {
@@ -186,6 +196,10 @@ impl ElementExt for LabelElement {
         Cow::Borrowed(&self.accessibility)
     }
 
+    fn finish_accessibility(&self, builder: &mut accesskit::Node) {
+        builder.set_value(self.text.clone());
+    }
+
     fn layer(&self) -> Layer {
         self.relative_layer
     }
@@ -195,84 +209,70 @@ impl ElementExt for LabelElement {
     }
 
     fn measure(&self, context: LayoutContext) -> Option<(Size2D, Rc<dyn Any>)> {
+        let content_area_size =
+            (*context.area_size - context.torin_node.padding.into()).max(Size2D::zero());
         let cached_paragraph = CachedParagraph {
             text_style_state: context.text_style_state,
             spans: &[Span::new(&*self.text)],
-            max_lines: None,
-            line_height: None,
-            width: context.area_size.width,
+            max_lines: self.max_lines,
+            line_height: self.line_height,
+            width: content_area_size.width,
         };
         let paragraph = context
             .text_cache
             .utilize(context.node_id, &cached_paragraph)
             .unwrap_or_else(|| {
-                let mut paragraph_style = ParagraphStyle::default();
-                let mut text_style = TextStyle::default();
+                let build = |fill_area: Area| {
+                    let mut paragraph_style = ParagraphStyle::default();
 
-                let mut font_families = context.text_style_state.font_families.clone();
-                font_families.extend_from_slice(context.fallback_fonts);
+                    if let Some(ellipsis) = context.text_style_state.text_overflow.get_ellipsis() {
+                        paragraph_style.set_ellipsis(ellipsis);
+                    }
 
-                text_style.set_color(
-                    context
-                        .text_style_state
-                        .color
-                        .as_color()
-                        .unwrap_or(Color::WHITE),
-                );
-                text_style.set_font_size(
-                    f32::from(context.text_style_state.font_size) * context.scale_factor as f32,
-                );
-                text_style.set_font_families(&font_families);
-                text_style.set_font_style(FontStyle::new(
-                    context.text_style_state.font_weight.into(),
-                    context.text_style_state.font_width.into(),
-                    context.text_style_state.font_slant.into(),
-                ));
+                    let text_style = context.text_style_state.to_text_style(
+                        context.fallback_fonts,
+                        context.scale_factor,
+                        self.line_height,
+                        fill_area,
+                    );
+                    paragraph_style.set_text_style(&text_style);
+                    paragraph_style.set_max_lines(self.max_lines);
+                    paragraph_style.set_text_align(context.text_style_state.text_align.into());
 
-                if context.text_style_state.text_height.needs_custom_height() {
-                    text_style.set_height_override(true);
-                    text_style.set_half_leading(true);
+                    let mut paragraph_builder =
+                        ParagraphBuilder::new(&paragraph_style, &*context.font_collection);
+
+                    paragraph_builder.push_style(&text_style);
+                    paragraph_builder.add_text(&self.text);
+
+                    let mut paragraph = paragraph_builder.build();
+                    paragraph.layout(
+                        if self.max_lines == Some(1)
+                            && context.text_style_state.text_align == TextAlign::default()
+                            && !paragraph_style.ellipsized()
+                        {
+                            f32::MAX
+                        } else {
+                            content_area_size.width + 1.0
+                        },
+                    );
+                    paragraph
+                };
+
+                let mut paragraph = build(Area::default());
+
+                if context.text_style_state.color.as_color().is_none() {
+                    paragraph = build(paragraph.fill_area());
                 }
-
-                if let Some(line_height) = self.line_height {
-                    text_style.set_height_override(true).set_height(line_height);
-                }
-
-                for text_shadow in context.text_style_state.text_shadows.iter() {
-                    text_style.add_shadow((*text_shadow).into());
-                }
-
-                if let Some(ellipsis) = context.text_style_state.text_overflow.get_ellipsis() {
-                    paragraph_style.set_ellipsis(ellipsis);
-                }
-
-                paragraph_style.set_text_style(&text_style);
-                paragraph_style.set_max_lines(self.max_lines);
-                paragraph_style.set_text_align(context.text_style_state.text_align.into());
-
-                let mut paragraph_builder =
-                    ParagraphBuilder::new(&paragraph_style, &*context.font_collection);
-
-                paragraph_builder.add_text(&self.text);
-
-                let mut paragraph = paragraph_builder.build();
-                paragraph.layout(
-                    if self.max_lines == Some(1)
-                        && context.text_style_state.text_align == TextAlign::default()
-                        && !paragraph_style.ellipsized()
-                    {
-                        f32::MAX
-                    } else {
-                        context.area_size.width + 1.0
-                    },
-                );
 
                 context
                     .text_cache
                     .insert(context.node_id, &cached_paragraph, paragraph)
             });
 
-        let size = Size2D::new(paragraph.longest_line(), paragraph.height()).max(Size2D::zero());
+        let size = Size2D::new(paragraph.longest_line(), paragraph.height())
+            .max(Size2D::zero())
+            .with_gaps(&context.torin_node.padding);
 
         Some((size, paragraph))
     }
@@ -298,12 +298,23 @@ impl ElementExt for LabelElement {
         let layout_data = context.layout_node.data.as_ref().unwrap();
         let paragraph = layout_data.downcast_ref::<SkParagraph>().unwrap();
 
-        paint_paragraph_with_fill(
-            paragraph,
-            context.canvas,
-            context.layout_node.visible_area().origin,
-            &context.text_style_state.color,
-        );
+        let origin = context.layout_node.inner_area.origin;
+        paragraph.paint_at(context.canvas, origin.cast_unit());
+        if let Some(callback) = context.text_style_state.color.render_callback() {
+            let layer = context.canvas.save();
+            context.canvas.translate(origin.to_tuple());
+            context
+                .canvas
+                .scale((context.scale_factor as f32, context.scale_factor as f32));
+            callback.call(&mut FillRenderContext {
+                canvas: context.canvas,
+                font_collection: context.font_collection,
+                origin: (origin / context.scale_factor as f32).cast_unit(),
+                size: paragraph.fill_area().size / context.scale_factor as f32,
+                text_style_state: context.text_style_state,
+            });
+            context.canvas.restore_to_count(layer);
+        }
     }
 }
 
@@ -318,38 +329,44 @@ impl From<Label> for Element {
 }
 
 impl KeyExt for Label {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl EventHandlersExt for Label {
-    fn get_event_handlers(&mut self) -> &mut EventHandlers {
+    fn event_handlers_mut(&mut self) -> &mut EventHandlers {
         &mut self.element.event_handlers
     }
 }
 
 impl AccessibilityExt for Label {
-    fn get_accessibility_data(&mut self) -> &mut AccessibilityData {
+    fn accessibility_data_mut(&mut self) -> &mut AccessibilityData {
         &mut self.element.accessibility
     }
 }
 
 impl TextStyleExt for Label {
-    fn get_text_style_data(&mut self) -> &mut TextStyleData {
+    fn text_style_data_mut(&mut self) -> &mut TextStyleData {
         &mut self.element.text_style_data
     }
 }
 
+impl EffectExt for Label {
+    fn effect_mut(&mut self) -> &mut EffectData {
+        self.element.effect.get_or_insert_with(EffectData::default)
+    }
+}
+
 impl LayerExt for Label {
-    fn get_layer(&mut self) -> &mut Layer {
+    fn layer_mut(&mut self) -> &mut Layer {
         &mut self.element.relative_layer
     }
 }
 
 impl MaybeExt for Label {}
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Label {
     key: DiffKey,
     element: LabelElement,
@@ -383,7 +400,7 @@ impl Label {
 }
 
 impl LayoutExt for Label {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.element.layout
     }
 }

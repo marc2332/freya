@@ -32,13 +32,13 @@ pub struct SelectableText {
 }
 
 impl KeyExt for SelectableText {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl LayoutExt for SelectableText {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
@@ -46,25 +46,25 @@ impl LayoutExt for SelectableText {
 impl ContainerExt for SelectableText {}
 
 impl AccessibilityExt for SelectableText {
-    fn get_accessibility_data(&mut self) -> &mut AccessibilityData {
+    fn accessibility_data_mut(&mut self) -> &mut AccessibilityData {
         &mut self.accessibility
     }
 }
 
 impl TextStyleExt for SelectableText {
-    fn get_text_style_data(&mut self) -> &mut TextStyleData {
+    fn text_style_data_mut(&mut self) -> &mut TextStyleData {
         &mut self.text_style_data
     }
 }
 
 impl EventHandlersExt for SelectableText {
-    fn get_event_handlers(&mut self) -> &mut EventHandlers {
+    fn event_handlers_mut(&mut self) -> &mut EventHandlers {
         &mut self.event_handlers
     }
 }
 
 impl LayerExt for SelectableText {
-    fn get_layer(&mut self) -> &mut Layer {
+    fn layer_mut(&mut self) -> &mut Layer {
         &mut self.layer
     }
 }
@@ -140,7 +140,7 @@ impl Component for SelectableText {
 
         if value.as_str() != editable.editor().read().rope() {
             editable.editor_mut().write().set(value.as_str());
-            editable.editor_mut().write().editor_history().clear();
+            editable.editor_mut().write().editor_history_mut().clear();
         }
 
         let highlights = editable
@@ -199,6 +199,8 @@ impl Component for SelectableText {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 modifiers: e.modifiers,
+                editor_line: Some(EditorLine::SingleParagraph),
+                holder: Some(&holder.read()),
             });
         };
 
@@ -206,7 +208,7 @@ impl Component for SelectableText {
             editable.process_event(EditableEvent::KeyUp { key: &e.key });
         };
 
-        let on_global_pointer_press = move |_: Event<PointerEventData>| {
+        let on_global_pointer_up = move |_: Event<PointerEventData>| {
             match *status.read() {
                 SelectableTextStatus::Idle if a11y_id.is_focused() => {
                     editable.process_event(EditableEvent::Release);
@@ -235,6 +237,7 @@ impl Component for SelectableText {
             .a11y_id(a11y_id)
             .a11y_focusable(true)
             .holder(holder.read().clone())
+            .cursor(CursorIcon::Text)
             .cursor_color(Color::BLACK)
             .highlights(highlights.map(|h| vec![h]))
             .on_mouse_up(on_mouse_up)
@@ -243,7 +246,7 @@ impl Component for SelectableText {
             .on_pointer_down(on_pointer_down)
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
-            .on_global_pointer_press(on_global_pointer_press)
+            .on_global_pointer_up(on_global_pointer_up)
             .on_key_down(on_key_down)
             .on_key_up(on_key_up);
 

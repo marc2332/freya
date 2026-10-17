@@ -38,7 +38,7 @@ pub struct Portal<T> {
 }
 
 impl<T> ChildrenExt for Portal<T> {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
@@ -58,8 +58,9 @@ impl<T> Portal<T> {
         }
     }
 
-    pub fn function(mut self, function: Function) -> Self {
-        self.function = function;
+    /// Set the easing function. See `Function` for all the types.
+    pub fn function(mut self, function: impl Into<Function>) -> Self {
+        self.function = function.into();
         self
     }
 
@@ -88,7 +89,7 @@ impl<T> Portal<T> {
 }
 
 impl<T> LayoutExt for Portal<T> {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
@@ -96,7 +97,7 @@ impl<T> LayoutExt for Portal<T> {
 impl<T> ContainerSizeExt for Portal<T> {}
 
 impl<T> KeyExt for Portal<T> {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -130,13 +131,17 @@ impl<T: Clone + Eq + Hash + Debug + 'static> Component for Portal<T> {
         let mut should_animate = use_state(|| false);
 
         let mut animation = use_animation_with_dependencies(
-            &(self.function, self.duration, self.ease),
-            move |conf, (function, duration, ease)| {
+            &(
+                self.function,
+                self.duration,
+                self.ease,
+                previous_size(),
+                current_size(),
+            ),
+            move |conf, (function, duration, ease, previous_size, current_size)| {
                 conf.on_change(OnChange::Nothing);
-                let from_size = previous_size
-                    .read()
-                    .unwrap_or(init_size.unwrap_or_default());
-                let to_size = current_size.read().unwrap_or_default();
+                let from_size = previous_size.or(init_size).unwrap_or_default();
+                let to_size = current_size.unwrap_or_default();
                 (
                     AnimNum::new(from_size.origin.x, to_size.origin.x)
                         .duration(*duration)

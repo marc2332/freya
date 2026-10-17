@@ -167,10 +167,21 @@ impl NodeState {
                 "text_decoration",
                 AttributeType::TextDecoration(self.text_style.text_decoration),
             ),
+            (
+                "letter_spacing",
+                AttributeType::Measure(f32::from(self.text_style.letter_spacing)),
+            ),
         ];
 
         for shadow in self.style.shadows.iter() {
             attributes.push(("shadow", AttributeType::Shadow(shadow)));
+        }
+
+        for font_feature in self.text_style.font_features.iter() {
+            attributes.push((
+                "font_feature",
+                AttributeType::Text(format!("{} {}", font_feature.name, font_feature.value)),
+            ));
         }
 
         for text_shadow in self.text_style.text_shadows.iter() {

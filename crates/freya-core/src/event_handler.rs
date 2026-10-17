@@ -3,6 +3,12 @@ use std::{
     rc::Rc,
 };
 
+use crate::{
+    current_context::CurrentContext,
+    prelude::current_scope_id,
+    scope_id::ScopeId,
+};
+
 pub struct Callback<A, R>(Rc<RefCell<dyn FnMut(A) -> R>>);
 
 impl<A, R> Callback<A, R> {
@@ -18,6 +24,17 @@ impl<A, R> Callback<A, R> {
 impl<A, R> Clone for Callback<A, R> {
     fn clone(&self) -> Self {
         Self(self.0.clone())
+    }
+}
+
+impl<A, R> std::fmt::Debug for Callback<A, R> {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            formatter,
+            "Callback<{}, {}>",
+            std::any::type_name::<A>(),
+            std::any::type_name::<R>()
+        )
     }
 }
 
@@ -52,6 +69,12 @@ impl<R> Clone for NoArgCallback<R> {
     }
 }
 
+impl<R> std::fmt::Debug for NoArgCallback<R> {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "NoArgCallback<{}>", std::any::type_name::<R>())
+    }
+}
+
 impl<R> PartialEq for NoArgCallback<R> {
     fn eq(&self, _other: &Self) -> bool {
         true
@@ -71,6 +94,36 @@ impl<T> EventHandler<T> {
         Self(Rc::new(RefCell::new(handler)))
     }
 
+    /// Create an event handler that runs under the given scope.
+    ///
+    /// APIs that rely on the current scope, like [`spawn`](crate::prelude::spawn), will use
+    /// `scope_id` instead of the scope of the element that received the event.
+    pub fn new_scoped(scope_id: ScopeId, mut handler: impl FnMut(T) + 'static) -> Self {
+        Self::new(move |data| CurrentContext::run_in_scope(scope_id, || handler(data)))
+    }
+
+    /// Create an event handler that runs under the scope creating it.
+    ///
+    /// Shortcut for [`EventHandler::new_scoped`] with the current scope, so e.g tasks spawned in
+    /// the handler are cancelled once the component creating it unmounts.
+    ///
+    /// ```rust,no_run
+    /// # use freya::prelude::*;
+    /// # async fn save_document() {}
+    /// # fn save_button() -> impl IntoElement {
+    /// let on_press = EventHandler::new_current(|_| {
+    ///     spawn(async {
+    ///         save_document().await;
+    ///     });
+    /// });
+    ///
+    /// Button::new().child("Save").on_press(on_press)
+    /// # }
+    /// ```
+    pub fn new_current(handler: impl FnMut(T) + 'static) -> Self {
+        Self::new_scoped(current_scope_id(), handler)
+    }
+
     pub fn call(&self, data: T) {
         (self.0.borrow_mut())(data);
     }
@@ -79,6 +132,12 @@ impl<T> EventHandler<T> {
 impl<T> Clone for EventHandler<T> {
     fn clone(&self) -> Self {
         Self(self.0.clone())
+    }
+}
+
+impl<T> std::fmt::Debug for EventHandler<T> {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "EventHandler<{}>", std::any::type_name::<T>())
     }
 }
 

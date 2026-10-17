@@ -24,6 +24,71 @@ fn find_label_area(test: &TestingRunner, text: &str) -> Option<Area> {
 }
 
 #[test]
+fn spans_inherit_paragraph_fonts_and_override_them() {
+    fn app() -> impl IntoElement {
+        rect()
+            .child(
+                paragraph()
+                    .font_family("NotoSans")
+                    .span("plain")
+                    .span(Span::new("code").font_family("Samuel Morse")),
+            )
+            .child(
+                paragraph()
+                    .font_family("Samuel Morse")
+                    .span("plain")
+                    .span(Span::new("code").font_family("NotoSans")),
+            )
+    }
+
+    let mut test = launch_test(app);
+    test.set_fonts(HashMap::from_iter([
+        (
+            "NotoSans",
+            include_bytes!("../../freya-edit/tests/NotoSans-Regular.ttf").as_slice(),
+        ),
+        (
+            "Samuel Morse",
+            include_bytes!("../../../examples/SamuelMorse.otf").as_slice(),
+        ),
+    ]));
+    test.set_default_fonts(&["NotoSans".into()]);
+    test.sync_and_update();
+
+    for (paragraph_font, rendered_paragraph_font, rendered_span_font) in [
+        ("NotoSans", "Noto Sans", "Samuel Morse"),
+        ("Samuel Morse", "Samuel Morse", "Noto Sans"),
+    ] {
+        let holder = test
+            .find(|_, element| {
+                Paragraph::try_downcast(element)
+                    .filter(|paragraph| {
+                        paragraph.text_style_data.font_families[0] == paragraph_font
+                    })
+                    .map(|paragraph| paragraph.sk_paragraph)
+            })
+            .expect("paragraph should be in the tree");
+        let holder_data = holder.0.borrow();
+        let sk_paragraph = &holder_data
+            .as_ref()
+            .expect("paragraph should be laid out")
+            .paragraph;
+
+        assert_eq!(
+            sk_paragraph.get_font_at(0).typeface().family_name(),
+            rendered_paragraph_font
+        );
+        assert_eq!(
+            sk_paragraph
+                .get_font_at("plain".len())
+                .typeface()
+                .family_name(),
+            rendered_span_font
+        );
+    }
+}
+
+#[test]
 fn inline_element_in_text_receives_events() {
     fn app() -> impl IntoElement {
         let mut clicked = use_state(|| false);

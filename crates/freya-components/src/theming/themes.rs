@@ -8,8 +8,6 @@ use torin::{
     size::Size,
 };
 
-#[cfg(feature = "calendar")]
-use crate::calendar::CalendarThemePreference;
 #[cfg(feature = "router")]
 use crate::link::LinkThemePreference;
 #[cfg(feature = "titlebar")]
@@ -28,6 +26,7 @@ use crate::{
     chip::ChipThemePreference,
     color_picker::ColorPickerThemePreference,
     floating_tab::FloatingTabThemePreference,
+    icons::IconThemePreference,
     input::{
         InputColorsThemePreference,
         InputLayoutThemePreference,
@@ -319,11 +318,16 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "scrollbar",
         ScrollBarThemePreference {
-            background: Preference::Reference("surface_primary"),
+            background: Preference::Reference("border"),
             thumb_background: Preference::Reference("surface_inverse"),
             hover_thumb_background: Preference::Reference("surface_inverse_secondary"),
             active_thumb_background: Preference::Reference("surface_inverse_tertiary"),
-            size: Preference::Specific(15.),
+            thumb_cross_size: Preference::Specific(5.),
+            expanded_thumb_cross_size: Preference::Specific(8.),
+            opacity: Preference::Specific(0.),
+            expanded_opacity: Preference::Specific(220.),
+            cross_gap: Preference::Specific(0.),
+            expanded_cross_gap: Preference::Specific(3.),
         },
     );
     theme.set(
@@ -374,21 +378,21 @@ fn register_base_component_themes(theme: &mut Theme) {
         "input_layout",
         InputLayoutThemePreference {
             corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
-            inner_margin: Preference::Specific(Gaps::new(8., 8., 8., 8.)),
+            padding: Preference::Specific(Gaps::new(8., 8., 8., 8.)),
         },
     );
     theme.set(
         "compact_input_layout",
         InputLayoutThemePreference {
             corner_radius: Preference::Specific(CornerRadius::new_all(4.)),
-            inner_margin: Preference::Specific(Gaps::new(4., 6., 4., 6.)),
+            padding: Preference::Specific(Gaps::new(4., 6., 4., 6.)),
         },
     );
     theme.set(
         "expanded_input_layout",
         InputLayoutThemePreference {
             corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
-            inner_margin: Preference::Specific(Gaps::new(12., 12., 12., 12.)),
+            padding: Preference::Specific(Gaps::new(12., 12., 12., 12.)),
         },
     );
     theme.set(
@@ -499,15 +503,24 @@ fn register_base_component_themes(theme: &mut Theme) {
             color: Preference::Reference("text_primary"),
             width: Preference::Specific(Size::px(500.)),
             height: Preference::Specific(Size::auto()),
+            min_width: Preference::Specific(Size::px(100.)),
+            min_height: Preference::Specific(Size::auto()),
+            max_width: Preference::Specific(Size::window_percent(90.)),
+            max_height: Preference::Specific(Size::window_percent(90.)),
             padding: Preference::Specific(Gaps::new_all(8.)),
             spacing: Preference::Specific(4.),
+        },
+    );
+    theme.set(
+        "icon",
+        IconThemePreference {
+            fill: Preference::Reference("text_primary"),
         },
     );
     theme.set(
         "table",
         TableThemePreference {
             background: Preference::Reference("background"),
-            arrow_fill: Preference::Reference("text_primary"),
             row_background: Preference::Specific(Color::TRANSPARENT),
             hover_row_background: Preference::Reference("surface_secondary"),
             divider_fill: Preference::Reference("surface_primary"),
@@ -542,11 +555,12 @@ fn register_base_component_themes(theme: &mut Theme) {
         MenuItemThemePreference {
             background: Preference::Specific(Color::TRANSPARENT),
             hover_background: Preference::Reference("surface_secondary"),
-            select_background: Preference::Reference("surface_secondary"),
+            select_background: Preference::Reference("surface_primary"),
             border_fill: Preference::Specific(Color::TRANSPARENT),
-            select_border_fill: Preference::Reference("border_focus"),
-            corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
+            focus_border_fill: Preference::Reference("border_focus"),
+            corner_radius: Preference::Specific(CornerRadius::new_all(10.)),
             color: Preference::Reference("text_primary"),
+            select_color: Preference::Reference("text_primary"),
         },
     );
     theme.set(
@@ -581,23 +595,6 @@ fn register_base_component_themes(theme: &mut Theme) {
             background: Preference::Reference("surface_tertiary"),
             border_fill: Preference::Reference("border"),
             corner_radius: Preference::Specific(CornerRadius::new_all(99.)),
-        },
-    );
-    #[cfg(feature = "calendar")]
-    theme.set(
-        "calendar",
-        CalendarThemePreference {
-            background: Preference::Reference("surface_tertiary"),
-            day_background: Preference::Specific(Color::TRANSPARENT),
-            day_hover_background: Preference::Reference("surface_secondary"),
-            day_selected_background: Preference::Reference("surface_primary"),
-            color: Preference::Reference("text_primary"),
-            day_other_month_color: Preference::Reference("text_placeholder"),
-            header_color: Preference::Reference("text_primary"),
-            corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
-            padding: Preference::Specific(Gaps::new_all(12.)),
-            day_corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
-            nav_button_hover_background: Preference::Reference("surface_secondary"),
         },
     );
     #[cfg(feature = "titlebar")]
@@ -654,7 +651,8 @@ fn build_theme(name: &'static str, mut colors: ColorsSheet) -> Theme {
 }
 
 fn current_accent_color() -> Option<Color> {
-    let platform: Platform = try_consume_root_context()?;
+    let window_id: CurrentWindowId = try_consume_root_context()?;
+    let platform = Platform::get().try_window(window_id.0)?;
     let accent = platform.accent_color.read().0?;
     let [r, g, b, _] = accent.to_u8_array();
     Some(Color::from_rgb(r, g, b))

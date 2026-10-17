@@ -67,30 +67,8 @@ pub enum SwitchLayoutVariant {
 ///         .toggled(toggled())
 ///         .on_toggle(move |_| toggled.toggle())
 /// }
-/// # // TOGGLED
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(Switch::new().toggled(true))
-/// # }, "./images/gallery_toggled_switch.png").render();
-/// #
-/// # // NOT TOGGLED
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(Switch::new().toggled(false))
-/// # }, "./images/gallery_not_toggled_switch.png").render();
 /// ```
-/// # Preview
-///
-/// | Toggled       | Not Toggled   |
-/// | ------------- | ------------- |
-/// | ![Switch Toggled Demo][gallery_toggled_switch] | ![Switch Not Toggled Demo][gallery_not_toggled_switch] |
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!(
-        "gallery_toggled_switch",
-        "images/gallery_toggled_switch.png"
-    ),
-    doc = embed_doc_image::embed_image!("gallery_not_toggled_switch", "images/gallery_not_toggled_switch.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct Switch {
     pub(crate) theme_colors: Option<SwitchColorsThemePartial>,
@@ -99,12 +77,12 @@ pub struct Switch {
     toggled: Readable<bool>,
     on_toggle: Option<EventHandler<()>>,
     enabled: bool,
-    cursor_icon: CursorIcon,
+    cursor_icon: Option<CursorIcon>,
     key: DiffKey,
 }
 
 impl KeyExt for Switch {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -124,7 +102,7 @@ impl Switch {
             theme_layout: None,
             layout_variant: SwitchLayoutVariant::Normal,
             enabled: true,
-            cursor_icon: CursorIcon::default(),
+            cursor_icon: None,
             key: DiffKey::None,
         }
     }
@@ -165,7 +143,7 @@ impl Switch {
     }
 
     /// Override the cursor icon shown when hovering over this component while enabled.
-    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+    pub fn cursor(mut self, cursor_icon: impl Into<Option<CursorIcon>>) -> Self {
         self.cursor_icon = cursor_icon.into();
         self
     }
@@ -187,7 +165,6 @@ impl Component for Switch {
             ),
         };
 
-        let mut hovering = use_state(|| false);
         let mut pressing = use_state(|| false);
         let a11y_id = use_a11y();
         let focus = use_focus(a11y_id);
@@ -248,14 +225,6 @@ impl Component for Switch {
         });
         let press_size = anim_press.get().value();
 
-        let enabled = use_reactive(&self.enabled);
-        let cursor_icon = self.cursor_icon;
-        use_drop(move || {
-            if hovering() && enabled() {
-                Cursor::set(CursorIcon::default());
-            }
-        });
-
         let border = if focus() == Focus::Keyboard {
             Border::new()
                 .width(2.)
@@ -268,6 +237,7 @@ impl Component for Switch {
 
         rect()
             .a11y_id(a11y_id)
+            .a11y_enabled(self.enabled)
             .a11y_focusable(self.enabled)
             .a11y_role(AccessibilityRole::Switch)
             .a11y_builder(|builder| builder.set_toggled(Toggled::from(toggled)))
@@ -282,8 +252,9 @@ impl Component for Switch {
             .maybe(self.enabled, |rect| {
                 rect.on_press({
                     let on_toggle = self.on_toggle.clone();
-                    move |_| {
+                    move |event: Event<PressEventData>| {
                         if let Some(on_toggle) = &on_toggle {
+                            event.stop_propagation();
                             on_toggle.call(())
                         }
                         a11y_id.request_focus();
@@ -295,21 +266,12 @@ impl Component for Switch {
                     }
                 })
             })
-            .on_global_pointer_press(move |_| pressing.set_if_modified(false))
-            .on_pointer_enter(move |_| {
-                hovering.set(true);
-                if enabled() {
-                    Cursor::set(cursor_icon);
-                } else {
-                    Cursor::set(CursorIcon::NotAllowed);
-                }
-            })
-            .on_pointer_leave(move |_| {
-                if hovering() {
-                    Cursor::set(CursorIcon::default());
-                    hovering.set(false);
-                }
-                pressing.set_if_modified(false);
+            .on_global_pointer_up(move |_| pressing.set_if_modified(false))
+            .on_pointer_leave(move |_| pressing.set_if_modified(false))
+            .cursor(if self.enabled {
+                self.cursor_icon
+            } else {
+                CursorIcon::NotAllowed.into()
             })
             .child(
                 rect()

@@ -11,7 +11,7 @@
 //! freya = { version = "...", features = ["query"] }
 //! ```
 //!
-//! Freya's built-in async primitives (`spawn`, `spawn_forever`, `use_future`)
+//! Freya's built-in async primitives (`spawn`, `spawn_in_window`, `spawn_global`, `use_future`)
 //! are great for *individual* async operations, but they don't share results
 //! between components, deduplicate concurrent calls, or invalidate stale data.
 //! Freya Query builds on top of those primitives and adds caching, background
@@ -110,7 +110,7 @@
 //! ### Query configuration
 //!
 //! [`Query`](crate::query::Query) supports builder methods to control caching behavior.
-//! See its docs for the full list of options (`stale_time`, `clean_time`, `interval_time`, `enable`).
+//! See its docs for the full list of options (`stale_time`, `clean_time`, `interval_time`).
 //!
 //! ```rust,no_run
 //! # use freya::prelude::*;
@@ -132,9 +132,38 @@
 //!     Query::new(1, FetchUser)
 //!         .stale_time(Duration::from_secs(300))
 //!         .clean_time(Duration::from_secs(600))
-//!         .interval_time(Duration::from_secs(30))
-//!         .enable(true),
+//!         .interval_time(Duration::from_secs(30)),
 //! );
+//! # rect()
+//! #     }
+//! # }
+//! ```
+//!
+//! ### Disabled queries
+//!
+//! [`Query::new`](crate::query::Query::new) accepts the keys as `impl Into<Option<Keys>>`.
+//! Passing [`None`] disables the query so it will not run, which is useful when the keys
+//! depend on data that is not available yet:
+//!
+//! ```rust,no_run
+//! # use freya::prelude::*;
+//! # use freya::query::*;
+//! # #[derive(Clone, PartialEq, Hash, Eq)]
+//! # struct FetchUser;
+//! # impl QueryCapability for FetchUser {
+//! #     type Ok = String;
+//! #     type Err = String;
+//! #     type Keys = u32;
+//! #     async fn run(&self, _: &Self::Keys) -> Result<Self::Ok, Self::Err> { Ok(String::new()) }
+//! # }
+//! # #[derive(PartialEq)]
+//! # struct Example;
+//! # impl Component for Example {
+//! #     fn render(&self) -> impl IntoElement {
+//! let selected_user = use_state::<Option<u32>>(|| None);
+//!
+//! // Stays Pending until `selected_user` contains an id
+//! let user = use_query(Query::new(selected_user(), FetchUser));
 //! # rect()
 //! #     }
 //! # }

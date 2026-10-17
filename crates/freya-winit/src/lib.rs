@@ -4,8 +4,17 @@ pub mod reexports {
 
 use std::sync::Arc;
 
+use freya_core::{
+    integration::GlobalContexts,
+    prelude::{
+        GlobalTasks,
+        Platform,
+    },
+};
+
 use crate::{
     config::LaunchConfig,
+    drivers::GraphicsContext,
     renderer::{
         LaunchProxy,
         NativeEvent,
@@ -14,6 +23,7 @@ use crate::{
     },
 };
 mod accessibility;
+mod clipboard;
 pub mod config;
 mod drivers;
 pub mod extensions;
@@ -79,7 +89,9 @@ fn launch_inner(mut launch_config: LaunchConfig) {
     use freya_engine::prelude::{
         FontCollection,
         FontMgr,
+        SkData,
         TypefaceFontProvider,
+        register_font_typeface,
     };
     use winit::event_loop::EventLoop;
 
@@ -95,13 +107,13 @@ fn launch_inner(mut launch_config: LaunchConfig) {
     let def_mgr = FontMgr::default();
     let font_mgr = FontMgr::custom_empty().unwrap_or_default();
     let mut provider = TypefaceFontProvider::new();
-    for (font_name, font_data) in launch_config.embedded_fonts {
+    for (font_name, font_data) in &launch_config.embedded_fonts {
         let typeface = font_mgr
-            .new_from_data(&font_data, None)
+            .new_from_data(SkData::new_copy(font_data), None)
             .unwrap_or_else(|| panic!("Failed to load font {font_name}."));
-        provider.register_typeface(typeface, Some(font_name.as_ref()));
+        register_font_typeface(&mut provider, font_name.as_ref(), typeface);
     }
-    let font_mgr: FontMgr = provider.into();
+    let font_mgr: FontMgr = provider.clone().into();
     font_collection.set_default_font_manager(def_mgr, None);
     font_collection.set_dynamic_font_manager(font_mgr.clone());
     font_collection.paragraph_cache_mut().turn_on(false);
@@ -121,27 +133,43 @@ fn launch_inner(mut launch_config: LaunchConfig) {
     #[cfg(feature = "hotreload")]
     freya_core::hotreload::connect_subsecond();
 
+    let global_contexts = GlobalContexts::register();
+    global_contexts.insert_context(Platform::new({
+        let proxy = proxy.clone();
+        move |event| {
+            let _ = proxy.send_event(NativeEvent::Generic(NativeGenericEvent::User(event)));
+        }
+    }));
+    global_contexts.insert_context(crate::clipboard::create_clipboard(
+        event_loop.owned_display_handle(),
+    ));
+    for insert_global in launch_config.globals {
+        insert_global(&global_contexts);
+    }
+
+    let global_tasks = global_contexts.insert_context(GlobalTasks::new(waker));
+    for task in launch_config.tasks {
+        global_tasks.spawn(task(LaunchProxy(proxy.clone())));
+    }
+
     let mut renderer = WinitRenderer {
         windows: HashMap::default(),
+        global_contexts,
         #[cfg(feature = "tray")]
         tray: launch_config.tray,
         #[cfg(all(feature = "tray", not(target_os = "linux")))]
         tray_icon: None,
         resumed: false,
-        futures: launch_config
-            .tasks
-            .into_iter()
-            .map(|task| task(LaunchProxy(proxy.clone())))
-            .collect::<Vec<_>>(),
         proxy,
+        font_provider: provider,
         font_manager: font_mgr,
         font_collection,
         windows_configs: launch_config.windows_configs,
         plugins: launch_config.plugins,
         fallback_fonts: launch_config.fallback_fonts,
-        waker,
         exit_on_close: launch_config.exit_on_close,
         gpu_resource_cache_limit: launch_config.gpu_resource_cache_limit,
+        graphics_context: GraphicsContext::default(),
     };
 
     #[cfg(feature = "tray")]
@@ -174,6 +202,8 @@ fn launch_inner(mut launch_config: LaunchConfig) {
         if let Some(tray_icon) = renderer.tray.0.take() {
             std::thread::spawn(move || {
                 if !gtk::is_initialized() {
+                    gtk::disable_setlocale();
+
                     if gtk::init().is_ok() {
                         tracing::debug!("Tray: GTK initialized");
                     } else {

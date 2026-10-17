@@ -10,7 +10,7 @@ pub fn svg_viewer_rasterizes_and_renders() {
         SvgViewer::new(("ferris", include_bytes!("../../../examples/ferris.svg")))
             .width(Size::px(100.))
             .height(Size::px(100.))
-            .parallel(true)
+            .async_rasterization(true)
     }
 
     let mut test = launch_test(app);
@@ -38,12 +38,11 @@ pub fn svg_viewer_rasterizes_synchronously_by_default() {
 
     let mut test = launch_test(app);
     test.sync_and_update();
-    test.sync_and_update();
 
     assert!(
         test.find(|_, element| Image::try_downcast(element))
             .is_some(),
-        "SVG should be rasterized without polling async tasks"
+        "SVG without an explicit color should rasterize on the first pass"
     );
 }
 

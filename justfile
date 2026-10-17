@@ -1,5 +1,6 @@
 toolchain := `sed -nr 's/channel = "(.*)"/\1/p' rust-toolchain.toml`
 nightly_toolchain := `sed -nr 's/channel = "(.*)"/\1/p' rust-toolchain-nightly.toml`
+nightly_cargo := env_var_or_default("FREYA_NIGHTLY_CARGO", "rustup run " + nightly_toolchain + " cargo")
 
 rv:
     @echo '{{toolchain}}'
@@ -9,14 +10,24 @@ rv-nightly:
 
 f:
     taplo fmt
-    RUSTUP_TOOLCHAIN={{nightly_toolchain}} cargo fmt --all -- --error-on-unformatted --unstable-features
+    RUSTFMT="${FREYA_NIGHTLY_RUSTFMT:-$(rustup which --toolchain {{nightly_toolchain}} rustfmt)}" {{nightly_cargo}} fmt --all -- --error-on-unformatted --unstable-features
 
 f-check:
     taplo fmt --check
-    RUSTUP_TOOLCHAIN={{nightly_toolchain}} cargo fmt --all --check -- --error-on-unformatted --unstable-features
+    RUSTFMT="${FREYA_NIGHTLY_RUSTFMT:-$(rustup which --toolchain {{nightly_toolchain}} rustfmt)}" {{nightly_cargo}} fmt --all --check -- --error-on-unformatted --unstable-features
 
 f-nix:
     alejandra flake.nix
+
+web-demo:
+    cd examples/web && cargo build --profile web-release --target wasm32-unknown-emscripten --features freya/web
+    mkdir -p website/public/demo
+    cp "${CARGO_TARGET_DIR:-target}"/wasm32-unknown-emscripten/web-release/web_example.js website/public/demo/
+    cp "${CARGO_TARGET_DIR:-target}"/wasm32-unknown-emscripten/web-release/web_example.wasm website/public/demo/
+
+sa:
+    cargo audit
+    cargo deny check
 
 c:
     taplo check
@@ -32,17 +43,20 @@ e example:
     cargo run --example {{example}}
 
 t:
-    cargo test --doc --workspace
-    cargo nextest run --workspace --exclude examples --features all-tests
+    cargo test --doc --workspace --exclude web --exclude freya-web
+    cargo nextest run --workspace --exclude examples --exclude web --exclude freya-web --features all-tests
+
+t-winit:
+    cargo test --package freya-winit --test smoke --features smoke-test --locked
 
 t-layout:
     cargo nextest run --package torin
 
 d:
-    RUSTDOCFLAGS="--cfg docsrs" RUSTUP_TOOLCHAIN={{nightly_toolchain}} cargo doc --no-deps --workspace --features "all, docs" --open
+    RUSTDOCFLAGS="--cfg docsrs" {{nightly_cargo}} doc --no-deps --workspace --features "all, docs" --open
 
 tc:
-    cargo nextest run --workspace --exclude examples --features all-tests
+    cargo nextest run --workspace --exclude examples --exclude web --exclude freya-web --features all-tests
 
 t-components:
     cargo nextest run --package freya-components --features freya/gif,freya/markdown
@@ -51,25 +65,44 @@ t-core:
    cargo nextest run --package freya-core --package ragnarok
 
 pe:
-    cargo run --example dev_perf --release
+    cargo bench --package freya-core --bench dev_perf
 
 hr:
     dx serve --hot-patch --example animation_router --verbose --features "hotreload"
 
 ps:
-    cargo run --example dev_perf --features "hotpath" --release
+    cargo bench --package freya-core --bench dev_perf --features "hotpath"
 
 pa:
-    cargo run --example dev_perf --features "hotpath, hotpath-alloc" --release
+    cargo bench --package freya-core --bench dev_perf --features "hotpath, hotpath-alloc"
 
-ps-ci:
-    cargo run --example dev_perf --features "hotpath" --release
+pd-ci:
+    cargo bench --package freya-core --bench dev_perf --features "hotpath, hotpath-alloc, hotpath-cloud"
 
-pa-ci:
-    cargo run --example dev_perf --features "hotpath, hotpath-alloc" --release
+pc:
+    cargo bench --package freya-core --bench core_perf --features "hotpath, hotpath-alloc"
+
+pc-ci:
+    cargo bench --package freya-core --bench core_perf --features "hotpath, hotpath-alloc, hotpath-cloud"
+
+pp workload="painting_suite":
+    HOTPATH_FOCUS="${HOTPATH_FOCUS:-/[/](frame|update|painting)$/}" HOTPATH_EXCLUDE_WRAPPER="${HOTPATH_EXCLUDE_WRAPPER:-1}" cargo test --package freya-core --test paint_performance --release --features "hotpath" "{{workload}}" -- --ignored --exact --nocapture --test-threads=1
+
+pp-ci:
+    HOTPATH_FOCUS="${HOTPATH_FOCUS:-/[/](frame|update|painting)$/}" HOTPATH_EXCLUDE_WRAPPER="${HOTPATH_EXCLUDE_WRAPPER:-1}" cargo test --package freya-core --test paint_performance --release --features "hotpath, hotpath-alloc, hotpath-cloud" painting_suite -- --ignored --exact --nocapture --test-threads=1
 
 ba:
     cargo build --all-targets --workspace -F freya/all-debug
+
+bd:
+    cargo build --package freya
+
+deps:
+    cargo tree --package freya --depth 0 --format "{p} [{f}]"
+    cargo tree --package freya
+
+deps-count:
+    @cargo tree --package freya --prefix none | sed -E 's/ \(\*\)$//; s/ \(proc-macro\)//' | sort -u | wc -l | tr -d ' '
 
 dev-app:
     cargo run --package freya-devtools-app
