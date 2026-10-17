@@ -1,6 +1,7 @@
 pub mod accessibility;
 pub mod animation_clock;
 pub mod current_context;
+pub mod damage;
 pub mod data;
 pub mod debug;
 pub mod diff_key;
@@ -21,6 +22,7 @@ pub mod path_element;
 pub mod platform;
 pub mod reactive_context;
 pub mod render_pipeline;
+pub mod render_state;
 pub mod rendering_ticker;
 pub mod runner;
 pub mod scope;
@@ -64,6 +66,7 @@ pub mod prelude {
             screen_reader::*,
         },
         animation_clock::AnimationClock,
+        damage::Damage,
         data::*,
         debug::*,
         diff_key::DiffKey,
@@ -190,6 +193,7 @@ pub mod integration {
             tree::*,
         },
         animation_clock::AnimationClock,
+        damage::Damage,
         data::*,
         element::*,
         elements::extensions::*,

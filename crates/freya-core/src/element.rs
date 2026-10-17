@@ -9,9 +9,9 @@ use std::{
 };
 
 use freya_engine::prelude::{
-    Canvas,
     FontCollection,
     FontMgr,
+    RenderRecorder,
     SkRRect,
     SkRect,
 };
@@ -181,6 +181,11 @@ pub trait ElementExt: Any {
     /// Renders this element using the supplied canvas and layout context.
     fn render(&self, _context: RenderContext) {}
 
+    /// Whether this element must be re-recorded and repainted on every frame.
+    fn is_render_volatile(&self) -> bool {
+        false
+    }
+
     /// Creates a rounded rectangle from an area using this element's corner radius.
     fn render_rect(&self, area: &Area, scale_factor: f32) -> SkRRect {
         let style = self.style();
@@ -216,7 +221,7 @@ pub struct LayoutContext<'a> {
 #[allow(dead_code)]
 pub struct RenderContext<'a> {
     pub font_collection: &'a mut FontCollection,
-    pub canvas: &'a Canvas,
+    pub recorder: &'a mut RenderRecorder,
     pub layout_node: &'a LayoutNode,
     pub text_style_state: &'a TextStyleState,
     pub scale_factor: f64,
@@ -239,7 +244,7 @@ pub struct PostMeasureContext<'a> {
 }
 
 pub struct ClipContext<'a> {
-    pub canvas: &'a Canvas,
+    pub recorder: &'a mut RenderRecorder,
     pub visible_area: &'a Area,
     pub scale_factor: f64,
 }

@@ -627,7 +627,7 @@ impl ElementExt for GifElement {
 
     fn clip(&self, context: ClipContext) {
         let area = context.visible_area;
-        context.canvas.clip_rect(
+        context.recorder.clip_rect(
             SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
             ClipOp::Intersect,
             true,
@@ -653,13 +653,9 @@ impl ElementExt for GifElement {
         let current_frame = &self.frames.frames[self.frame_idx];
 
         // Simply render the pre-composed frame image directly
-        context.canvas.draw_image_rect_with_sampling_options(
-            &current_frame.image,
-            None,
-            rect,
-            sampling,
-            &paint,
-        );
+        context
+            .recorder
+            .draw_image_rect(current_frame.image.clone(), rect, sampling, paint);
     }
 }
 

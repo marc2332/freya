@@ -247,7 +247,7 @@ impl ElementExt for ImageElement {
             diff.insert(DiffModifies::STYLE);
         }
 
-        if self.effect != image.effect {
+        if self.effect != image.effect || self.style.corner_radius != image.style.corner_radius {
             diff.insert(DiffModifies::EFFECT);
         }
 
@@ -329,7 +329,7 @@ impl ElementExt for ImageElement {
 
     fn clip(&self, context: ClipContext) {
         let rrect = self.render_rect(context.visible_area, context.scale_factor as f32);
-        context.canvas.clip_rrect(rrect, ClipOp::Intersect, true);
+        context.recorder.clip_rrect(rrect, ClipOp::Intersect, true);
     }
 
     fn render(&self, context: RenderContext) {
@@ -369,10 +369,10 @@ impl ElementExt for ImageElement {
             area = area.round();
         }
 
-        context.canvas.save();
+        context.recorder.save();
         let clip_rrect = self.render_rect(&area, context.scale_factor as f32);
         context
-            .canvas
+            .recorder
             .clip_rrect(clip_rrect, ClipOp::Intersect, true);
 
         let sampling = self.image_data.sampling_mode.sampling_options();
@@ -391,15 +391,11 @@ impl ElementExt for ImageElement {
             ));
         }
 
-        context.canvas.draw_image_rect_with_sampling_options(
-            &self.image_handle.image,
-            None,
-            rect,
-            sampling,
-            &paint,
-        );
+        context
+            .recorder
+            .draw_image_rect(self.image_handle.image.clone(), rect, sampling, paint);
 
-        context.canvas.restore();
+        context.recorder.restore();
 
         let corner_radius = self
             .style
@@ -411,14 +407,14 @@ impl ElementExt for ImageElement {
         } else {
             path.add_rrect(clip_rrect, None, None);
         }
-        let mut path = path.detach();
+        let path = path.detach();
 
         for shadow in &self.style.shadows {
             if shadow.color != Color::TRANSPARENT {
                 let shadow = shadow.with_scale(context.scale_factor as f32);
                 RectElement::render_shadow(
-                    context.canvas,
-                    &mut path,
+                    context.recorder,
+                    &path,
                     clip_rrect,
                     area,
                     &shadow,
@@ -431,7 +427,7 @@ impl ElementExt for ImageElement {
             if border.is_visible() {
                 let border = border.with_scale(context.scale_factor as f32);
                 RectElement::render_border(
-                    context.canvas,
+                    context.recorder,
                     *clip_rrect.rect(),
                     &border,
                     &corner_radius,

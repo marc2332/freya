@@ -1,8 +1,17 @@
 mod font;
+pub mod render_commands;
 mod skia;
 
 pub mod prelude {
-    pub use crate::font::register_font_typeface;
+    pub use crate::{
+        font::register_font_typeface,
+        render_commands::{
+            CustomRenderContext,
+            Recording,
+            RenderCommand,
+            RenderRecorder,
+        },
+    };
 
     mod source {
         pub use crate::skia::*;

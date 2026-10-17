@@ -23,3 +23,4 @@ wayland = ["freya-skia-safe/wayland"]
 
 [dependencies]
 freya-skia-safe = { workspace = true }
+euclid = { workspace = true }

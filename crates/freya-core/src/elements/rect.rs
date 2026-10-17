@@ -7,13 +7,11 @@ use std::{
 };
 
 use freya_engine::prelude::{
-    Canvas,
     ClipOp,
     Paint,
     PaintStyle,
     PathBuilder,
-    SkBlurStyle,
-    SkMaskFilter,
+    RenderRecorder,
     SkPath,
     SkPathFillType,
     SkPoint,
@@ -99,8 +97,8 @@ impl Default for RectElement {
 
 impl RectElement {
     pub fn render_shadow(
-        canvas: &Canvas,
-        path: &mut SkPath,
+        recorder: &mut RenderRecorder,
+        path: &SkPath,
         rounded_rect: SkRRect,
         _area: Area,
         shadow: &Shadow,
@@ -126,15 +124,6 @@ impl RectElement {
             }
         };
 
-        // Apply gassuan blur to the copied path.
-        if shadow.blur > 0.0 {
-            shadow_paint.set_mask_filter(SkMaskFilter::blur(
-                SkBlurStyle::Normal,
-                shadow.blur / 2.0,
-                false,
-            ));
-        }
-
         // Add either the RRect or smoothed path based on whether smoothing is used.
         if corner_radius.smoothing() > 0.0 {
             shadow_path.add_path(
@@ -149,9 +138,9 @@ impl RectElement {
         shadow_path.offset((shadow.x, shadow.y));
 
         // Exclude the original path bounds from the shadow using a clip, then draw the shadow.
-        canvas.save();
-        canvas.clip_path(
-            path,
+        recorder.save();
+        recorder.clip_path(
+            path.clone(),
             match shadow.position {
                 ShadowPosition::Normal => ClipOp::Difference,
                 ShadowPosition::Inset => ClipOp::Intersect,
@@ -159,12 +148,16 @@ impl RectElement {
             true,
         );
         let shadow_path = shadow_path.detach();
-        canvas.draw_path(&shadow_path, &shadow_paint);
-        canvas.restore();
+        if shadow.blur > 0.0 {
+            recorder.draw_path_blurred(shadow_path, &shadow_paint, shadow.blur / 2.0);
+        } else {
+            recorder.draw_path(shadow_path, shadow_paint);
+        }
+        recorder.restore();
     }
 
     pub fn render_border(
-        canvas: &Canvas,
+        recorder: &mut RenderRecorder,
         rect: SkRect,
         border: &Border,
         corner_radius: &CornerRadius,
@@ -176,10 +169,10 @@ impl RectElement {
 
         match Self::border_shape(rect, corner_radius, border) {
             BorderShape::DRRect(outer, inner) => {
-                canvas.draw_drrect(outer, inner, &border_paint);
+                recorder.draw_drrect(outer, inner, border_paint);
             }
             BorderShape::Path(path) => {
-                canvas.draw_path(&path, &border_paint);
+                recorder.draw_path(path, border_paint);
             }
         }
     }
@@ -399,7 +392,7 @@ impl ElementExt for RectElement {
             diff.insert(DiffModifies::STYLE);
         }
 
-        if self.effect != rect.effect {
+        if self.effect != rect.effect || self.style.corner_radius != rect.style.corner_radius {
             diff.insert(DiffModifies::EFFECT);
         }
 
@@ -483,7 +476,7 @@ impl ElementExt for RectElement {
         let rounded_rect = self.render_rect(area, context.scale_factor as f32);
 
         context
-            .canvas
+            .recorder
             .clip_rrect(rounded_rect, ClipOp::Intersect, true);
     }
 
@@ -509,26 +502,35 @@ impl ElementExt for RectElement {
             path.add_rrect(rounded_rect, None, None);
         }
 
-        let mut path = path.detach();
+        let path = path.detach();
         if let Some(callback) = style.background.render_callback() {
-            let layer = context.canvas.save();
-            context.canvas.clip_path(&path, ClipOp::Intersect, true);
-            context.canvas.translate((area.min_x(), area.min_y()));
+            let callback = callback.clone();
+            let scale_factor = context.scale_factor as f32;
+            let text_style_state = context.text_style_state.clone();
+            let size = area.size / scale_factor;
+            context.recorder.save();
             context
-                .canvas
-                .scale((context.scale_factor as f32, context.scale_factor as f32));
-            callback.call(&mut FillRenderContext {
-                target: RenderTarget::Background {
-                    canvas: context.canvas,
-                    font_collection: context.font_collection,
+                .recorder
+                .clip_path(path.clone(), ClipOp::Intersect, true);
+            context.recorder.translate(area.min_x(), area.min_y());
+            context.recorder.scale(scale_factor, scale_factor);
+            context.recorder.custom(
+                SkRect::from_xywh(0., 0., size.width, size.height),
+                move |custom| {
+                    callback.call(&mut FillRenderContext {
+                        target: RenderTarget::Background {
+                            canvas: custom.canvas,
+                            font_collection: custom.font_collection,
+                        },
+                        origin: area.origin / scale_factor,
+                        size,
+                        text_style_state: &text_style_state,
+                    });
                 },
-                origin: area.origin / context.scale_factor as f32,
-                size: area.size / context.scale_factor as f32,
-                text_style_state: context.text_style_state,
-            });
-            context.canvas.restore_to_count(layer);
+            );
+            context.recorder.restore();
         } else {
-            context.canvas.draw_path(&path, &paint);
+            context.recorder.draw_path(path.clone(), paint);
         }
 
         // Shadows
@@ -537,8 +539,8 @@ impl ElementExt for RectElement {
                 let shadow = shadow.with_scale(context.scale_factor as f32);
 
                 Self::render_shadow(
-                    context.canvas,
-                    &mut path,
+                    context.recorder,
+                    &path,
                     rounded_rect,
                     area,
                     &shadow,
@@ -552,7 +554,7 @@ impl ElementExt for RectElement {
             if border.is_visible() {
                 let border = border.with_scale(context.scale_factor as f32);
                 let rect = *rounded_rect.rect();
-                Self::render_border(context.canvas, rect, &border, &corner_radius);
+                Self::render_border(context.recorder, rect, &border, &corner_radius);
             }
         }
     }

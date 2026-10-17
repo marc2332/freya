@@ -32,6 +32,7 @@ unicode-segmentation = "1.11"
 
 # Layout
 torin = { workspace = true }
+smallvec = { version = "1.15.1", features = ["const_generics"] }
 
 # OS preferences
 mundy = { workspace = true }
