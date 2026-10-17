@@ -13,6 +13,8 @@ use freya_engine::prelude::{
 use torin::prelude::{
     Area,
     LayoutNode,
+    Point2D,
+    Size2D,
 };
 
 use crate::{
@@ -86,6 +88,7 @@ impl RenderPipeline<'_> {
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     fn render_full(&mut self) {
         self.canvas.clear(self.background);
+        let refresh_all = self.force_full || std::env::var_os("FREYA_FULL_RENDER").is_some();
         let tree = &mut *self.tree;
 
         for layer in itertools::sorted(tree.layers.keys()) {
@@ -98,7 +101,8 @@ impl RenderPipeline<'_> {
                     continue;
                 }
 
-                if !tree.render_state.dirty.contains(node_id)
+                if !refresh_all
+                    && !tree.render_state.dirty.contains(node_id)
                     && !tree.render_state.volatile.contains(node_id)
                     && !tree.render_state.area_invalidated.contains(node_id)
                     && let Some(recording) = tree.render_state.cache.get(node_id)
@@ -186,20 +190,27 @@ impl RenderPipeline<'_> {
                 .collect();
             backdrop_nodes.sort_unstable();
 
-            // Any damage touching a backdrop-sampling node damages its whole bounds.
-            for (_, node_id) in backdrop_nodes {
-                match render_state.cache[&node_id].bounds {
-                    Some(bounds) => {
-                        if render_state.damage.intersects(&bounds)
-                            && !render_state.damage.contains(&bounds)
-                        {
-                            render_state.damage.push(bounds);
+            // Expand until overlapping backdrop sampling regions stop growing the damage.
+            loop {
+                let mut expanded = false;
+                for (_, node_id) in &backdrop_nodes {
+                    match render_state.cache[node_id].bounds {
+                        Some(bounds) => {
+                            if render_state.damage.intersects(&bounds)
+                                && !render_state.damage.contains(&bounds)
+                            {
+                                render_state.damage.push(bounds);
+                                expanded = true;
+                            }
+                        }
+                        None => {
+                            render_state.damage.mark_full();
+                            return;
                         }
                     }
-                    None => {
-                        render_state.damage.mark_full();
-                        return;
-                    }
+                }
+                if !expanded {
+                    break;
                 }
             }
         });
@@ -364,6 +375,8 @@ impl RenderPipeline<'_> {
             }
         }
 
+        let area = layout_node.visible_area();
+        let layout_bounds = recorder.transform().map_rect(Self::damage_rect(&area)).0;
         hotpath::measure_block!("Element Render", {
             element.render(RenderContext {
                 font_collection,
@@ -375,6 +388,16 @@ impl RenderPipeline<'_> {
             });
         });
 
-        Some(recorder.finish())
+        let mut recording = recorder.finish();
+        if recording.bounds.is_some_and(|bounds| bounds.is_empty()) {
+            recording.bounds = Some(
+                Area::new(
+                    Point2D::new(layout_bounds.left, layout_bounds.top),
+                    Size2D::new(layout_bounds.width(), layout_bounds.height()),
+                )
+                .round_out(),
+            );
+        }
+        Some(recording)
     }
 }

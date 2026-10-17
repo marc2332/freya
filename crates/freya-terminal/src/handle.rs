@@ -324,6 +324,7 @@ impl TerminalHandle {
 
     /// Set the logical window area for rendering invalidation from an `on_sized` callback.
     pub fn set_area(&self, area: Area) {
+        // TODO(marc2332): Support transform effects in terminal
         let scale_factor = *self.platform.scale_factor.peek() as f32;
         self.inner.borrow_mut().area = Some(area.scale(scale_factor, scale_factor).round_out());
     }

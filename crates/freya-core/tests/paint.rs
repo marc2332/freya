@@ -1,7 +1,21 @@
+use std::rc::Rc;
+
 use freya::prelude::*;
+use freya_core::render_commands::{
+    NodeRecording,
+    RenderRecorder,
+};
 use freya_engine::prelude::{
+    FontCollection,
+    FontMgr,
+    Paint,
+    PaintStyle,
+    ParagraphBuilder,
+    ParagraphStyle,
     SkColor,
     SkImage,
+    TextStyle as SkTextStyle,
+    raster_n32_premul,
 };
 use freya_testing::prelude::*;
 
@@ -262,31 +276,71 @@ pub fn recorded_bounds_cover_painted_pixels() {
     let mut test = launch_test(app);
     test.sync_and_update();
 
-    let pixels = test.render_pixels();
+    test.render_to_surface();
 
     let tree = test.tree().borrow();
-    let render_state = &tree.render_state;
-    assert!(!render_state.cache.is_empty());
-
-    let bounds: Vec<Area> = render_state
+    assert!(!tree.render_state.cache.is_empty());
+    let mut fonts = FontCollection::new();
+    let painted: usize = tree
+        .render_state
         .cache
         .values()
-        .map(|recording| recording.bounds.expect("Recording should be bounded"))
-        .collect();
+        .map(|recording| assert_recording_bounds(recording, &mut fonts))
+        .sum();
+    assert!(painted > 0);
+}
 
-    let white = [255u8; 4];
-    for y in 0..500 {
-        for x in 0..500 {
-            let offset = (y * 500 + x) * 4;
-            let pixel: [u8; 4] = pixels[offset..offset + 4].try_into().unwrap();
-            if pixel == white {
-                continue;
+fn assert_recording_bounds(recording: &NodeRecording, fonts: &mut FontCollection) -> usize {
+    let bounds = recording
+        .bounds
+        .expect("Recording should have finite bounds");
+    let mut surface = raster_n32_premul((500, 500)).unwrap();
+    surface.canvas().clear(SkColor::WHITE);
+    recording.replay(surface.canvas(), fonts);
+    let image = surface.image_snapshot();
+    let pixels = image.peek_pixels().unwrap();
+    let mut painted = 0;
+
+    for vertical in 0..pixels.height() {
+        for horizontal in 0..pixels.width() {
+            if pixels.get_color((horizontal, vertical)) != SkColor::WHITE {
+                painted += 1;
+                let point = (horizontal as f32 + 0.5, vertical as f32 + 0.5).into();
+                assert!(
+                    bounds.contains(point),
+                    "Painted pixel at ({horizontal}, {vertical}) is outside recording bounds {bounds:?}"
+                );
             }
-            let point = (x as f32 + 0.5, y as f32 + 0.5).into();
-            assert!(
-                bounds.iter().any(|area| area.contains(point)),
-                "Painted pixel at ({x}, {y}) is outside every recorded bounds"
-            );
         }
     }
+    painted
+}
+
+#[test]
+fn text_recording_bounds_cover_native_shadows_and_foreground_strokes() {
+    let mut fonts = FontCollection::new();
+    fonts.set_default_font_manager(FontMgr::default(), None);
+    let mut style = SkTextStyle::new();
+    style.set_font_size(32.);
+    style.add_shadow(TextShadow::new(Color::BLACK, (120., 60.), 10.).into());
+    let mut paint = Paint::default();
+    paint.set_anti_alias(true);
+    paint.set_color(SkColor::BLACK);
+    paint.set_style(PaintStyle::Stroke);
+    paint.set_stroke_width(20.);
+    style.set_foreground_paint(&paint);
+    let mut builder = ParagraphBuilder::new(&ParagraphStyle::default(), fonts.clone());
+    builder.push_style(&style);
+    builder.add_text("Shadow");
+    let mut paragraph = builder.build();
+    paragraph.layout(200.);
+    let mut recorder = RenderRecorder::default();
+    recorder.draw_paragraph(
+        Rc::new(paragraph),
+        (50., 50.).into(),
+        &[],
+        TextAlign::default(),
+    );
+
+    assert!(assert_recording_bounds(&recorder.finish(), &mut fonts) > 0);
 }

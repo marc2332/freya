@@ -1,9 +1,24 @@
-use std::rc::Rc;
+use std::{
+    borrow::Cow,
+    cell::Cell,
+    rc::Rc,
+};
 
 use freya::prelude::*;
 use freya_core::{
-    element::AppComponent,
+    data::LayoutData,
+    diff_key::DiffKey,
+    element::{
+        AppComponent,
+        ElementExt,
+        RenderContext,
+    },
     node_id::NodeId,
+};
+use freya_engine::prelude::{
+    Paint,
+    SkColor,
+    SkRect,
 };
 use freya_testing::prelude::*;
 use torin::prelude::Size2D;
@@ -36,6 +51,67 @@ impl EqualityTest {
             "Incremental and full painting diverged in {differing} pixels"
         );
     }
+}
+
+#[test]
+fn full_paint_rebuilds_recordings() {
+    let mut runner = launch_test(|| rect().expanded().background(Color::BLUE));
+    runner.sync_and_update();
+    let expected = runner.render_pixels();
+    for recording in runner.tree().borrow_mut().render_state.cache.values_mut() {
+        recording.commands.clear();
+    }
+    runner.set_force_full_render(true);
+    assert_eq!(expected, runner.render_pixels());
+}
+
+struct ConditionalDrawing(Rc<Cell<bool>>);
+
+impl ElementExt for ConditionalDrawing {
+    fn layout(&self) -> Cow<'_, LayoutData> {
+        let mut layout = LayoutData::default();
+        layout.width = Size::px(60.);
+        layout.height = Size::px(60.);
+        layout.position = Position::new_global().top(200.).left(200.);
+        Cow::Owned(layout)
+    }
+
+    fn render(&self, context: RenderContext) {
+        if self.0.get() {
+            let area = context.layout_node.visible_area();
+            let mut paint = Paint::default();
+            paint.set_color(SkColor::RED);
+            context.recorder.draw_rect(
+                SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
+                paint,
+            );
+        }
+    }
+}
+
+#[test]
+fn area_invalidation_refreshes_previously_empty_drawing() {
+    let visible = Rc::new(Cell::new(false));
+    let mut runner = launch_test({
+        let visible = visible.clone();
+        move || Element::Element {
+            key: DiffKey::None,
+            element: Rc::new(ConditionalDrawing(visible.clone())),
+            elements: Vec::new(),
+        }
+    });
+    runner.sync_and_update();
+    let empty = runner.render_pixels();
+    visible.set(true);
+    runner.run_in(|| {
+        Platform::get()
+            .current_window()
+            .send(UserEvent::InvalidateArea(Area::new(
+                (200., 200.).into(),
+                (60., 60.).into(),
+            )));
+    });
+    assert_ne!(empty, runner.render_pixels());
 }
 
 #[test]
