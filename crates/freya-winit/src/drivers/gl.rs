@@ -79,6 +79,10 @@ pub struct OpenGLDriver {
     pub(crate) num_samples: usize,
     pub(crate) stencil_size: usize,
     pub(crate) surface: SkiaSurface,
+    /// On Android the frame is drawn here first, a texture, then onto the window: the
+    /// window's framebuffer cannot be read back, and a backdrop blur needs to read it.
+    #[cfg(target_os = "android")]
+    pub(crate) offscreen: Option<SkiaSurface>,
     pub(crate) gpu_name: Option<String>,
     #[cfg(target_os = "windows")]
     last_present: Option<Instant>,
@@ -270,10 +274,15 @@ impl OpenGLDriver {
         )
         .ok_or("could not create OpenGL skia surface")?;
 
+        #[cfg(target_os = "android")]
+        let offscreen = offscreen_surface(&mut gr_context, size.width, size.height);
+
         let driver = OpenGLDriver {
             gl_context,
             gl_surface,
             gr_context,
+            #[cfg(target_os = "android")]
+            offscreen,
             num_samples,
             stencil_size,
             fb_info,
@@ -309,6 +318,19 @@ impl OpenGLDriver {
             self.gl_context.make_current(&self.gl_surface).unwrap();
         }
 
+        #[cfg(target_os = "android")]
+        if let Some(offscreen) = self.offscreen.as_mut() {
+            render(offscreen);
+            offscreen.draw(
+                self.surface.canvas(),
+                (0, 0),
+                freya_engine::prelude::SamplingOptions::default(),
+                None,
+            );
+        } else {
+            render(&mut self.surface);
+        }
+        #[cfg(not(target_os = "android"))]
         render(&mut self.surface);
 
         window.pre_present_notify();
@@ -343,6 +365,10 @@ impl OpenGLDriver {
         );
 
         self.surface = surface;
+        #[cfg(target_os = "android")]
+        {
+            self.offscreen = offscreen_surface(&mut self.gr_context, size.width, size.height);
+        }
     }
 
     fn config_template(transparent: bool) -> ConfigTemplateBuilder {
@@ -366,4 +392,37 @@ impl OpenGLDriver {
             })
             .expect("at least one OpenGL config")
     }
+}
+
+/// A texture-backed surface the size of the window, for the frame to be drawn into before it
+/// goes onto the window's framebuffer.
+#[cfg(target_os = "android")]
+fn offscreen_surface(gr_context: &mut DirectContext, width: u32, height: u32) -> Option<SkiaSurface> {
+    use freya_engine::prelude::{
+        AlphaType,
+        Budgeted,
+        ImageInfo,
+        render_target,
+    };
+
+    let info = ImageInfo::new(
+        (width.max(1) as i32, height.max(1) as i32),
+        ColorType::RGBA8888,
+        AlphaType::Premul,
+        None,
+    );
+    let surface = render_target(
+        gr_context,
+        Budgeted::Yes,
+        &info,
+        None,
+        SurfaceOrigin::BottomLeft,
+        None,
+        false,
+        None,
+    );
+    if surface.is_none() {
+        tracing::warn!("OpenGL: no offscreen surface, backdrop blurs will not show");
+    }
+    surface
 }
