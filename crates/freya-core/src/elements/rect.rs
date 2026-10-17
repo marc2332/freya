@@ -721,6 +721,15 @@ impl Rect {
         self
     }
 
+    /// Fade the rect's content out towards two opposite edges. See [`Fade`].
+    pub fn fade(mut self, fade: impl Into<Option<crate::style::fade::Fade>>) -> Self {
+        self.element
+            .effect
+            .get_or_insert_with(Default::default)
+            .fade = fade.into();
+        self
+    }
+
     /// Apply a Gaussian blur of the given radius to the backdrop behind the rect.
     pub fn backdrop_blur(mut self, blur: f32) -> Self {
         self.element

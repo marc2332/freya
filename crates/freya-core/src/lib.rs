@@ -155,6 +155,7 @@ pub mod prelude {
                 RenderContext as FillRenderContext,
             },
             scale::*,
+            fade::*,
             shader::*,
             shadow::*,
             text_align::*,

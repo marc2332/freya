@@ -1168,6 +1168,12 @@ pub trait EffectExt: Sized {
         self
     }
 
+    /// Fade the element's content out towards two opposite edges. See [`Fade`].
+    fn fade(mut self, fade: impl Into<Option<Fade>>) -> Self {
+        self.effect_mut().fade = fade.into();
+        self
+    }
+
     /// Rotate the element by the given angle in degrees.
     fn rotation(mut self, rotation: f32) -> Self {
         self.effect_mut().rotation = Some(rotation);

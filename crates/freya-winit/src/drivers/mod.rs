@@ -3,7 +3,7 @@
     feature = "gpu"
 ))]
 mod gl;
-#[cfg(all(target_os = "macos", feature = "gpu"))]
+#[cfg(all(any(target_os = "macos", target_os = "ios"), feature = "gpu"))]
 mod metal;
 mod software;
 mod surface;
@@ -48,7 +48,7 @@ pub enum GraphicsDriver {
         feature = "gpu"
     ))]
     OpenGl(gl::OpenGLDriver),
-    #[cfg(all(target_os = "macos", feature = "gpu"))]
+    #[cfg(all(any(target_os = "macos", target_os = "ios"), feature = "gpu"))]
     Metal(metal::MetalDriver),
     #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
     Vulkan(vulkan::VulkanDriver),
@@ -81,8 +81,7 @@ impl GraphicsDriver {
             }
         }
 
-        // Metal (macOS)
-        #[cfg(all(target_os = "macos", feature = "gpu"))]
+        #[cfg(all(any(target_os = "macos", target_os = "ios"), feature = "gpu"))]
         {
             let (driver, window) =
                 metal::MetalDriver::new(event_loop, window_attributes, gpu_resource_cache_limit);
@@ -163,7 +162,7 @@ impl GraphicsDriver {
 
     /// Rebuild the driver on the existing window, skipping Vulkan.
     #[cfg_attr(
-        any(target_os = "macos", not(feature = "gpu")),
+        any(target_os = "macos", target_os = "ios", not(feature = "gpu")),
         allow(unused_variables)
     )]
     pub fn recover_reusing_window(
@@ -208,7 +207,7 @@ impl GraphicsDriver {
                 gl.present(window, render);
                 Ok(())
             }
-            #[cfg(all(target_os = "macos", feature = "gpu"))]
+            #[cfg(all(any(target_os = "macos", target_os = "ios"), feature = "gpu"))]
             Self::Metal(mtl) => {
                 mtl.present(size, window, render);
                 Ok(())
@@ -229,7 +228,7 @@ impl GraphicsDriver {
                 feature = "gpu"
             ))]
             Self::OpenGl(driver) => Some(driver.resource_cache_usage()),
-            #[cfg(all(target_os = "macos", feature = "gpu"))]
+            #[cfg(all(any(target_os = "macos", target_os = "ios"), feature = "gpu"))]
             Self::Metal(driver) => Some(driver.resource_cache_usage()),
             #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
             Self::Vulkan(driver) => Some(driver.resource_cache_usage()),
@@ -245,7 +244,7 @@ impl GraphicsDriver {
                 feature = "gpu"
             ))]
             Self::OpenGl(_) => "OpenGL",
-            #[cfg(all(target_os = "macos", feature = "gpu"))]
+            #[cfg(all(any(target_os = "macos", target_os = "ios"), feature = "gpu"))]
             Self::Metal(_) => "Metal",
             #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
             Self::Vulkan(_) => "Vulkan",
@@ -277,7 +276,7 @@ impl GraphicsDriver {
                 gl.resize(size);
                 Ok(())
             }
-            #[cfg(all(target_os = "macos", feature = "gpu"))]
+            #[cfg(all(any(target_os = "macos", target_os = "ios"), feature = "gpu"))]
             Self::Metal(mtl) => {
                 mtl.resize(size);
                 Ok(())

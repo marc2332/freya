@@ -1,0 +1,42 @@
+name: Rust iOS Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  ios:
+    runs-on: macos-latest
+    concurrency:
+      group: rust-ios-${{ github.ref_name }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 2
+          submodules: true
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1
+        with:
+          target: aarch64-apple-ios, aarch64-apple-ios-sim
+          components: clippy
+      - name: Lint for iOS
+        run: cargo clippy -p freya-winit -p freya-ios -p ios --target aarch64-apple-ios -- -D warnings
+      - name: Build iOS example for devices
+        run: cargo build -p ios --target aarch64-apple-ios
+      - name: Smoke test iOS example on the simulator
+        env:
+          SCREENSHOT: ${{ github.workspace }}/ios-smoke-test.png
+        run: ./examples/ios/smoke-test.sh
+      - name: Upload simulator screenshot
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: ios-smoke-test
+          path: ios-smoke-test.png
+          if-no-files-found: ignore

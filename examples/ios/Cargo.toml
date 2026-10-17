@@ -1,0 +1,22 @@
+[package]
+name = "ios"
+publish = false
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+freya = { workspace = true, features = [
+  "metrics",
+  "router",
+  "material-design",
+  "code-editor",
+  "markdown",
+  "icons-lucide",
+  "remote-asset",
+] }
+tree-sitter-rust = "0.24"
+env_logger = "0.11.9"
+
+[[bin]]
+path = "src/main.rs"
+name = "ios_example"
