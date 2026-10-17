@@ -342,14 +342,16 @@ impl Component for ResizableContainer {
             })
             .collect();
         controller.write_if(|mut context| context.reconcile(declarations, self.layout.direction));
-        let mut drag_controller = controller.clone();
         let context = controller.read();
 
         rect()
             .layout(self.layout.clone())
             .on_sized(move |e: Event<SizedEventData>| size.set(e.area))
-            .on_global_pointer_up(move |_: Event<PointerEventData>| {
-                drag_controller.write_if(|mut context| context.dragging.take().is_some());
+            .on_global_pointer_up({
+                let mut controller = controller.clone();
+                move |_: Event<PointerEventData>| {
+                    controller.write_if(|mut context| context.dragging.take().is_some());
+                }
             })
             .children(
                 context
