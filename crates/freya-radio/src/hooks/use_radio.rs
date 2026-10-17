@@ -240,6 +240,19 @@ where
         self.value.read()
     }
 
+    /// Read current state and subscribe only to the selected channel.
+    /// Works in components and reactive effects, including global effects.
+    #[track_caller]
+    pub fn read_channel(&self, channel: Channel) -> ReadRef<'_, Value> {
+        if let Some(context) = ReactiveContext::try_current()
+            && !self.is_listening(&channel, &context)
+        {
+            self.listen(channel, context);
+        }
+
+        self.peek()
+    }
+
     #[track_caller]
     pub fn peek_unchecked(&self) -> ReadRef<'static, Value> {
         self.value.peek_unchecked()
@@ -309,6 +322,37 @@ where
             station: *self,
             value,
         }
+    }
+
+    /// Mutate state and select one channel, deriving its notifications from the updated value.
+    pub fn write_with_channel(
+        &mut self,
+        update: impl FnOnce(&mut Value) -> Option<Channel>,
+    ) -> Option<Channel> {
+        let mut selected = None;
+        let mut channels = Vec::new();
+
+        self.value.into_writable().write_if(|mut value| {
+            selected = update(&mut value);
+            if let Some(channel) = selected.clone() {
+                let mut notified = FxHashSet::default();
+                for channel in channel.derive_channel(&value) {
+                    if notified.insert(channel.clone()) {
+                        channels.push(channel);
+                    }
+                }
+            }
+            !channels.is_empty()
+        });
+
+        for channel in &channels {
+            self.notify_listeners(channel);
+        }
+        if !channels.is_empty() {
+            self.cleanup();
+        }
+
+        selected
     }
 }
 
