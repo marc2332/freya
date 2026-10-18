@@ -2244,7 +2244,6 @@ fn stationary_component_root_replacement_preserves_reordered_sibling_order() {
     replay_component_root_reorder(0, [0, 2, 1]);
 }
 
-/// A keyed reorder that also inserts a new sibling among the moved ones in the same frame.
 #[test]
 fn reorder_with_insertion_among_moved_siblings() {
     replay_nested_keyed_layouts(&[
