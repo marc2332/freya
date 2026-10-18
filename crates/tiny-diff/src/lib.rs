@@ -85,9 +85,11 @@ fn diff_inner<Node: DiffNode>(
     // Add new nodes and their descendants in preorder.
     let Some(previous) = previous else {
         diff.added.push(current.path().into());
+
         for child in current.children() {
             diff_inner(child, None, diff, false);
         }
+
         return;
     };
 
@@ -107,6 +109,7 @@ fn diff_inner<Node: DiffNode>(
         if let Some(modifications) = current.modifications(previous) {
             diff.modified.push((current.path().into(), modifications));
         }
+
         // Record index changes under the new parent path, independently of modifications.
         if let (Some((&new_index, parent)), Some(&old_index)) =
             (current.path().split_last(), previous.path().last())
@@ -121,14 +124,17 @@ fn diff_inner<Node: DiffNode>(
 
     #[cfg(debug_assertions)]
     current.validate_children();
+
     let current_children = current.children();
     let previous_children = previous.children();
+
     // Match the common prefix positionally without building a key map.
     let mut start = 0;
     while start < current_children.len() && start < previous_children.len() {
         if current_children[start].key() != previous_children[start].key() {
             break;
         }
+
         diff_inner(
             &current_children[start],
             Some(&previous_children[start]),
@@ -147,6 +153,7 @@ fn diff_inner<Node: DiffNode>(
                 .or_default()
                 .push_back(index);
         }
+
         // Reuse the earliest unmatched old sibling or add the new node and its descendants.
         for child in &current_children[start..] {
             if let Some(old_index) = previous_keys
@@ -163,6 +170,7 @@ fn diff_inner<Node: DiffNode>(
                 diff_inner(child, None, diff, false);
             }
         }
+
         // Remove unmatched branch roots, leaving descendant cleanup to the caller.
         for indices in previous_keys.values() {
             for index in indices {
