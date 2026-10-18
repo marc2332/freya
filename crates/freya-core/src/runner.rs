@@ -119,6 +119,40 @@ pub struct Mutations {
 }
 
 impl Mutations {
+    fn finalize_moves(&mut self) {
+        if self.moved.is_empty() {
+            return;
+        }
+
+        let removed = self
+            .removed
+            .iter()
+            .map(MutationRemove::node_id)
+            .collect::<FxHashSet<_>>();
+        let additions = self
+            .added
+            .iter()
+            .filter(|addition| self.moved.contains_key(&addition.parent_id))
+            .sorted_by_key(|addition| addition.index)
+            .map(|addition| (addition.parent_id, addition.index))
+            .into_group_map();
+
+        // Convert final destinations to survivor-only indices after all scopes render.
+        self.moved.retain(|parent_node_id, movements| {
+            if removed.contains(parent_node_id) {
+                return false;
+            }
+            movements.retain(|movement| !removed.contains(&movement.node_id));
+            if let Some(indexes) = additions.get(parent_node_id) {
+                for movement in movements.iter_mut() {
+                    movement.index -=
+                        indexes.partition_point(|index| *index <= movement.index) as u32;
+                }
+            }
+            !movements.is_empty()
+        });
+    }
+
     pub fn is_empty(&self) -> bool {
         self.added.is_empty()
             && self.modified.is_empty()
@@ -798,6 +832,7 @@ impl Runner {
             scope_rc.borrow_mut().element = Some(path_element);
         }
 
+        mutations.finalize_moves();
         mutations
     }
 
@@ -1397,14 +1432,12 @@ impl Runner {
             });
 
             // Walk the final order, move only what is out of place
-            let mut added_before = 0;
             for to in 0..child_count {
                 let mut to_path = parent.to_vec();
                 to_path.push(to);
 
                 let is_added = added.contains(to_path.as_slice());
                 let node_id = if is_added {
-                    added_before += 1;
                     addition_parents.get(to_path.as_slice()).unwrap().0
                 } else {
                     // Unmoved children keep their index
@@ -1431,11 +1464,9 @@ impl Runner {
                 let path_entry = scope.borrow_mut().nodes.remove(&current_path).unwrap();
                 scope.borrow_mut().nodes.insert_entry(&to_path, path_entry);
 
-                // The tree applies moves before this frame's additions
                 if is_added {
                     continue;
                 }
-                let to = to - added_before;
 
                 let scope_id = scope.borrow().nodes.get(&to_path).unwrap().scope_id;
                 if let Some(scope_id) = scope_id {
