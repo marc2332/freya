@@ -1,3 +1,5 @@
+#![cfg(feature = "incremental-painting")]
+
 use freya::prelude::*;
 use freya_testing::prelude::*;
 use torin::prelude::{

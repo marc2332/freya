@@ -1,20 +1,27 @@
 use freya_engine::prelude::{
-    BlendMode,
     Canvas,
     ClipOp,
     FontCollection,
     FontMgr,
-    PathBuilder,
     Recording,
-    RenderRecorder,
+    RenderCanvas,
     SkMatrix,
     SkPoint,
-    SkRect,
     blur,
+};
+#[cfg(feature = "incremental-painting")]
+use freya_engine::prelude::{
+    BlendMode,
+    PathBuilder,
+    RenderRecorder,
+    SkRect,
 };
 use torin::prelude::{
     Area,
     LayoutNode,
+};
+#[cfg(feature = "incremental-painting")]
+use torin::prelude::{
     Point2D,
     Size2D,
 };
@@ -41,6 +48,8 @@ pub struct RenderPipeline<'a> {
 }
 
 impl RenderPipeline<'_> {
+    pub const INCREMENTAL_PAINTING: bool = cfg!(feature = "incremental-painting");
+
     /// Transform an area with the accumulated scale effects of the given nodes.
     fn scale_transformed_area(tree: &Tree, mut area: Area, scale_node_ids: &[NodeId]) -> Area {
         for node_id in scale_node_ids {
@@ -57,13 +66,39 @@ impl RenderPipeline<'_> {
         area
     }
 
+    #[cfg(feature = "incremental-painting")]
     fn damage_rect(area: &Area) -> SkRect {
         let area = area.round_out();
         SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y())
     }
 
+    #[cfg(not(feature = "incremental-painting"))]
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
-    pub fn render(mut self) {
+    pub fn paint(self) {
+        self.canvas.clear(self.background);
+        for layer in itertools::sorted(self.tree.layers.keys()) {
+            for node_id in &self.tree.layers[layer] {
+                let layout_node = self.tree.layout.get(node_id).unwrap();
+                if layout_node.hidden {
+                    continue;
+                }
+                let checkpoint = self.canvas.save();
+                Self::paint_node(
+                    self.tree,
+                    self.font_collection,
+                    self.scale_factor,
+                    node_id,
+                    layout_node,
+                    RenderCanvas::Direct(self.canvas),
+                );
+                self.canvas.restore_to_count(checkpoint);
+            }
+        }
+    }
+
+    #[cfg(feature = "incremental-painting")]
+    #[cfg_attr(feature = "hotpath", hotpath::measure)]
+    pub fn paint(mut self) {
         // `FREYA_FULL_RENDER` disables incremental painting as an escape hatch
         if self.force_full || std::env::var_os("FREYA_FULL_RENDER").is_some() {
             self.tree.render_state.damage.mark_full();
@@ -74,7 +109,7 @@ impl RenderPipeline<'_> {
         }
 
         if self.tree.render_state.damage.is_full() {
-            self.render_full();
+            self.paint_full();
         } else if !self.tree.render_state.damage.is_empty() {
             self.paint_partial();
         }
@@ -84,7 +119,8 @@ impl RenderPipeline<'_> {
 
     /// Repaint everything, re-recording only the dirty and volatile nodes.
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
-    fn render_full(&mut self) {
+    #[cfg(feature = "incremental-painting")]
+    fn paint_full(&mut self) {
         self.canvas.clear(self.background);
         let refresh_all = self.force_full || std::env::var_os("FREYA_FULL_RENDER").is_some();
         let tree = &mut *self.tree;
@@ -110,12 +146,13 @@ impl RenderPipeline<'_> {
                 }
 
                 tree.render_state.cache.remove(node_id);
-                if let Some(recording) = Self::record_node(
+                if let Some(recording) = Self::paint_node(
                     tree,
                     self.font_collection,
                     self.scale_factor,
                     node_id,
                     layout_node,
+                    RenderCanvas::Recording(RenderRecorder::default()),
                 ) {
                     recording.replay(self.canvas, self.font_collection);
                     tree.render_state.cache.insert(*node_id, recording);
@@ -126,6 +163,7 @@ impl RenderPipeline<'_> {
 
     /// Refresh invalid recordings and collect repaint regions.
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
+    #[cfg(feature = "incremental-painting")]
     fn pre_pass(&mut self) {
         let tree = &mut *self.tree;
         let dirty = &tree.render_state.dirty;
@@ -156,12 +194,13 @@ impl RenderPipeline<'_> {
             }
 
             if !layout_node.hidden
-                && let Some(recording) = Self::record_node(
+                && let Some(recording) = Self::paint_node(
                     tree,
                     self.font_collection,
                     self.scale_factor,
                     node_id,
                     layout_node,
+                    RenderCanvas::Recording(RenderRecorder::default()),
                 )
             {
                 if damage_bounds {
@@ -216,6 +255,7 @@ impl RenderPipeline<'_> {
 
     /// Repaint only the damaged regions, replaying cached recordings.
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
+    #[cfg(feature = "incremental-painting")]
     fn paint_partial(&mut self) {
         let render_state = &self.tree.render_state;
         let damage = &render_state.damage;
@@ -259,18 +299,18 @@ impl RenderPipeline<'_> {
         self.canvas.restore_to_count(checkpoint);
     }
 
-    /// Record a node and its inherited effects unless it is fully clipped.
-    fn record_node(
+    /// Paint a node and its inherited effects unless it is fully clipped.
+    fn paint_node(
         tree: &Tree,
         font_collection: &mut FontCollection,
         scale_factor: f64,
         node_id: &NodeId,
         layout_node: &LayoutNode,
+        mut recorder: RenderCanvas<'_>,
     ) -> Option<Recording> {
         let element = tree.elements.get(node_id).unwrap();
         let text_style_state = tree.text_style_state.get(node_id).unwrap();
         let effect_state = tree.effect_state.get(node_id);
-        let mut recorder = RenderRecorder::default();
 
         if let Some(effect_state) = effect_state {
             let visible_area = Self::scale_transformed_area(
@@ -373,8 +413,13 @@ impl RenderPipeline<'_> {
             }
         }
 
-        let area = layout_node.visible_area();
-        let layout_bounds = recorder.transform().map_rect(Self::damage_rect(&area)).0;
+        #[cfg(feature = "incremental-painting")]
+        let layout_bounds = match &recorder {
+            RenderCanvas::Recording(recorder) => Some(
+                recorder.transform().map_rect(Self::damage_rect(&layout_node.visible_area())).0,
+            ),
+            RenderCanvas::Direct(_) => None,
+        };
         hotpath::measure_block!("Element Render", {
             element.render(RenderContext {
                 font_collection,
@@ -385,16 +430,22 @@ impl RenderPipeline<'_> {
             });
         });
 
-        let mut recording = recorder.finish();
-        if recording.bounds.is_some_and(|bounds| bounds.is_empty()) {
-            recording.bounds = Some(
-                Area::new(
-                    Point2D::new(layout_bounds.left, layout_bounds.top),
-                    Size2D::new(layout_bounds.width(), layout_bounds.height()),
-                )
-                .round_out(),
-            );
+        #[cfg(feature = "incremental-painting")]
+        if let RenderCanvas::Recording(recorder) = recorder {
+            let mut recording = recorder.finish();
+            if recording.bounds.is_some_and(|bounds| bounds.is_empty())
+                && let Some(layout_bounds) = layout_bounds
+            {
+                recording.bounds = Some(
+                    Area::new(
+                        Point2D::new(layout_bounds.left, layout_bounds.top),
+                        Size2D::new(layout_bounds.width(), layout_bounds.height()),
+                    )
+                    .round_out(),
+                );
+            }
+            return Some(recording);
         }
-        Some(recording)
+        None
     }
 }

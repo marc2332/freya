@@ -140,7 +140,7 @@ impl EmbeddedFreya {
             background: Color::WHITE,
             force_full: true,
         }
-        .render();
+        .paint();
 
         let image = surface.image_snapshot();
         let mut context = surface.direct_context();

@@ -11,7 +11,7 @@ use std::{
 use freya_engine::prelude::{
     FontCollection,
     FontMgr,
-    RenderRecorder,
+    RenderCanvas,
     SkRRect,
     SkRect,
 };
@@ -219,9 +219,9 @@ pub struct LayoutContext<'a> {
 }
 
 #[allow(dead_code)]
-pub struct RenderContext<'a> {
+pub struct RenderContext<'a, 'canvas> {
     pub font_collection: &'a mut FontCollection,
-    pub recorder: &'a mut RenderRecorder,
+    pub recorder: &'a mut RenderCanvas<'canvas>,
     pub layout_node: &'a LayoutNode,
     pub text_style_state: &'a TextStyleState,
     pub scale_factor: f64,
@@ -243,8 +243,8 @@ pub struct PostMeasureContext<'a> {
     pub scale_factor: f64,
 }
 
-pub struct ClipContext<'a> {
-    pub recorder: &'a mut RenderRecorder,
+pub struct ClipContext<'a, 'canvas> {
+    pub recorder: &'a mut RenderCanvas<'canvas>,
     pub visible_area: &'a Area,
     pub scale_factor: f64,
 }

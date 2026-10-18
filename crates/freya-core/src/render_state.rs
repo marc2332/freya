@@ -34,6 +34,9 @@ pub struct RenderState {
 
 impl RenderState {
     pub fn invalidate_area(&mut self, area: Area) {
+        if !cfg!(feature = "incremental-painting") {
+            return;
+        }
         if area.width() <= 0.0 || area.height() <= 0.0 {
             return;
         }
@@ -49,6 +52,9 @@ impl RenderState {
     }
 
     pub fn remove_node(&mut self, node_id: NodeId) {
+        if !cfg!(feature = "incremental-painting") {
+            return;
+        }
         self.dirty.remove(&node_id);
         self.area_invalidated.remove(&node_id);
         self.volatile.remove(&node_id);

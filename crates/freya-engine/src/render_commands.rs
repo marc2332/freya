@@ -106,8 +106,7 @@ pub enum RenderCommand {
 /// Recorded drawing commands and their device-space painted bounds.
 pub struct Recording {
     pub commands: Vec<RenderCommand>,
-    /// Painted bounds rounded out to the pixel grid, `None` when they could not
-    /// be bounded reliably and must be treated as covering everything.
+    /// Painted area, or `None` if it could cover everything.
     pub bounds: Option<Rect<f32, ()>>,
     /// Whether any command samples the pixels underneath it, like backdrop blurs.
     pub samples_backdrop: bool,

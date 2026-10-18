@@ -1,10 +1,12 @@
 mod font;
+pub mod render_canvas;
 pub mod render_commands;
 mod skia;
 
 pub mod prelude {
     pub use crate::{
         font::register_font_typeface,
+        render_canvas::RenderCanvas,
         render_commands::{
             CustomRenderContext,
             Recording,

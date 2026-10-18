@@ -279,7 +279,7 @@ impl ElementExt for Terminal {
         let layout_data = context.layout_node.data.clone().unwrap();
 
         let bounds = SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
-        context.recorder.custom(bounds, move |custom| {
+        context.recorder.custom(bounds, context.font_collection, move |custom| {
             let measure = layout_data.downcast_ref::<TerminalMeasure>().unwrap();
 
             let term = element.handle.term();

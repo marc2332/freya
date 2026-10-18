@@ -944,7 +944,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                         offscreen.width() != surface.width()
                                             || offscreen.height() != surface.height()
                                     });
-                                if stale_offscreen {
+                                if RenderPipeline::INCREMENTAL_PAINTING && stale_offscreen {
                                     *offscreen_surface = surface.new_surface(&surface.image_info());
                                     app.tree.render_state.damage.mark_full();
                                 }
@@ -963,7 +963,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                     background: app.background,
                                     force_full,
                                 }
-                                .render();
+                                .paint();
 
                                 if let Some(offscreen) = offscreen_surface.as_mut() {
                                     offscreen.draw(

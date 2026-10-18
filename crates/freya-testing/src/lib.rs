@@ -642,7 +642,7 @@ impl TestingRunner {
             background: Color::WHITE,
             force_full: self.force_full_render,
         };
-        render_pipeline.render();
+        render_pipeline.paint();
     }
 
     pub fn render(&mut self) -> SkData {

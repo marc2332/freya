@@ -1,3 +1,5 @@
+#![cfg(feature = "incremental-painting")]
+
 use std::{
     borrow::Cow,
     cell::Cell,

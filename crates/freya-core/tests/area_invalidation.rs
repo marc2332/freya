@@ -1,3 +1,5 @@
+#![cfg(feature = "incremental-painting")]
+
 use freya_core::{
     node_id::NodeId,
     render_state::RenderState,

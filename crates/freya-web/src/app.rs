@@ -357,7 +357,7 @@ impl WebApp {
             background: self.background,
             force_full: true,
         };
-        render_pipeline.render();
+        render_pipeline.paint();
 
         self.surface.present();
     }

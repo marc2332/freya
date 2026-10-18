@@ -11,7 +11,7 @@ use freya_engine::prelude::{
     Paint,
     PaintStyle,
     PathBuilder,
-    RenderRecorder,
+    RenderCanvas,
     SkPath,
     SkPathFillType,
     SkPoint,
@@ -97,7 +97,7 @@ impl Default for RectElement {
 
 impl RectElement {
     pub fn render_shadow(
-        recorder: &mut RenderRecorder,
+        recorder: &mut RenderCanvas,
         path: &SkPath,
         rounded_rect: SkRRect,
         _area: Area,
@@ -157,7 +157,7 @@ impl RectElement {
     }
 
     pub fn render_border(
-        recorder: &mut RenderRecorder,
+        recorder: &mut RenderCanvas,
         rect: SkRect,
         border: &Border,
         corner_radius: &CornerRadius,
@@ -516,6 +516,7 @@ impl ElementExt for RectElement {
             context.recorder.scale(scale_factor, scale_factor);
             context.recorder.custom(
                 SkRect::from_xywh(0., 0., size.width, size.height),
+                context.font_collection,
                 move |custom| {
                     callback.call(&mut FillRenderContext {
                         target: RenderTarget::Background {

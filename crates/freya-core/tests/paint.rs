@@ -239,6 +239,7 @@ pub fn overlapping_same_layer_siblings_paint_deterministically() {
     assert_eq!(overlap, blue_only);
 }
 
+#[cfg(feature = "incremental-painting")]
 #[test]
 pub fn recorded_bounds_cover_painted_pixels() {
     fn app() -> impl IntoElement {

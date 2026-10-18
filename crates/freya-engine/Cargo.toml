@@ -15,6 +15,7 @@ categories = ["gui"]
 workspace = true
 
 [features]
+incremental-painting = []
 gl = ["freya-skia-safe/gl"]
 vulkan = ["freya-skia-safe/ganesh", "freya-skia-safe/vulkan"]
 metal = ["freya-skia-safe/ganesh", "freya-skia-safe/metal"]
