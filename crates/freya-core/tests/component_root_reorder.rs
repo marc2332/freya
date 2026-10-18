@@ -35,13 +35,9 @@ fn replay_component_root_reorder(component_key: u8, reordered_keys: [u8; 3]) {
     runner.provide_root_context(|| (component_key, reordered_keys));
     let mut reordered = runner.provide_root_context(|| State::create(false));
     tree.apply_mutations(runner.sync_and_update(), 1.0);
-    let parent_node_id = runner.scopes[&ScopeId::ROOT]
-        .borrow()
-        .nodes
-        .get(&[0])
-        .unwrap()
-        .node_id;
-    let component_scope_id = runner.scopes[&ScopeId::ROOT]
+    let root_scope = runner.scopes[&ScopeId::ROOT].clone();
+    let parent_node_id = root_scope.borrow().nodes.get(&[0]).unwrap().node_id;
+    let component_scope_id = root_scope
         .borrow()
         .nodes
         .get(&[0, component_key as u32])
@@ -56,7 +52,7 @@ fn replay_component_root_reorder(component_key: u8, reordered_keys: [u8; 3]) {
         tree.verify_tree_integrity();
         assert_eq!(tree.elements.len(), runner.node_to_scope.len());
         assert_eq!(
-            runner.scopes[&ScopeId::ROOT]
+            root_scope
                 .borrow()
                 .nodes
                 .get(&[0, component_key as u32])

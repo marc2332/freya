@@ -703,7 +703,7 @@ fn element_diffing7() {
     assert!(mutations.modified.is_empty());
     assert_eq!(mutations.removed.len(), 2);
     assert_eq!(mutations.moved.len(), 1);
-    assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 1);
+    assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 3);
     tree.apply_mutations(mutations, 1.0);
 }
 
@@ -742,7 +742,7 @@ fn element_diffing8() {
     assert!(mutations.modified.is_empty());
     assert_eq!(mutations.removed.len(), 2);
     assert_eq!(mutations.moved.len(), 1);
-    assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 1);
+    assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 3);
     tree.apply_mutations(mutations, 1.0);
     assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 
@@ -757,7 +757,7 @@ fn element_diffing8() {
     assert!(mutations.modified.is_empty());
     assert_eq!(mutations.removed.len(), 1);
     assert_eq!(mutations.moved.len(), 1);
-    assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 1);
+    assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 4);
     tree.apply_mutations(mutations, 1.0);
     assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 }
@@ -785,7 +785,7 @@ fn element_diffing9() {
     assert_eq!(mutations.added.len(), 1);
     assert!(mutations.modified.is_empty());
     assert!(mutations.removed.is_empty());
-    assert!(mutations.moved.is_empty());
+    assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 3);
     tree.apply_mutations(mutations, 1.0);
     assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 }
@@ -824,8 +824,7 @@ fn element_diffing10() {
     assert!(mutations.modified.is_empty());
     assert!(mutations.removed.is_empty());
     assert_eq!(mutations.moved.len(), 1);
-    assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 1);
-    assert_eq!(mutations.moved.iter().next().unwrap().1[0].index, 0);
+    assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 2);
     tree.apply_mutations(mutations, 1.0);
 }
 
@@ -869,7 +868,7 @@ fn element_diffing11() {
         mutations.removed,
         vec![MutationRemove::Scope { id: 5.into() }]
     );
-    assert!(mutations.moved.is_empty());
+    assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 1);
     tree.apply_mutations(mutations, 1.0);
 }
 
@@ -2071,6 +2070,32 @@ fn replay_nested_keyed_layouts(history: &[NestedLayout]) {
                 "scope {:?} nodes diverged from its element tree after {step:?}",
                 scope.id,
             );
+            scope.nodes.traverse(&[], |path, parent| {
+                if parent.scope_id.is_some() {
+                    return;
+                }
+                let mut expected_children = Vec::new();
+                scope.nodes.traverse_1_level(path, |_, child| {
+                    let mut node = child.clone();
+                    while let Some(scope_id) = node.scope_id {
+                        node = runner.scopes[&scope_id]
+                            .borrow()
+                            .nodes
+                            .get(&[0])
+                            .unwrap()
+                            .clone();
+                    }
+                    expected_children.push(node.node_id);
+                });
+                assert_eq!(
+                    tree.children
+                        .get(&parent.node_id)
+                        .cloned()
+                        .unwrap_or_default(),
+                    expected_children,
+                    "child order diverged at {path:?} after {step:?}",
+                );
+            });
         }
     }
 }
@@ -2116,6 +2141,73 @@ fn grandchild_addition_under_parent_shifted_by_removal() {
         vec![(0, vec![]), (2, vec![(1, 0, false)]), (3, vec![])],
         vec![(3, vec![]), (2, vec![(1, 2, false)])],
     ]);
+}
+
+#[test]
+fn mixed_reorder_emits_final_child_order() {
+    fn app() -> Element {
+        let keys = use_consume::<State<Vec<u8>>>();
+        rect()
+            .children(keys.read().iter().map(|key| rect().key(*key)))
+            .into()
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+    let mut keys = runner.provide_root_context(|| State::create(vec![0u8, 1, 2, 3]));
+    tree.apply_mutations(runner.sync_and_update(), 1.0);
+    let parent_node_id = runner.scopes[&ScopeId::ROOT]
+        .borrow()
+        .nodes
+        .get(&[0])
+        .unwrap()
+        .node_id;
+    let previous_children = tree.children[&parent_node_id].clone();
+
+    let mut expected = vec![
+        previous_children[3],
+        previous_children[1],
+        previous_children[0],
+    ];
+    for (next_keys, added_index) in [(vec![3, 4, 1, 0], 1), (vec![5, 3, 4, 1, 0], 0)] {
+        keys.set(next_keys);
+        let mutations = runner.sync_and_update();
+        assert_eq!(mutations.added.len(), 1);
+        assert_eq!(mutations.added[0].index, added_index);
+        expected.insert(added_index as usize, mutations.added[0].node_id);
+        assert_eq!(mutations.moved[&parent_node_id], expected);
+
+        tree.apply_mutations(mutations, 1.0);
+        tree.verify_tree_integrity();
+        assert_eq!(tree.children[&parent_node_id], expected);
+    }
+}
+
+#[test]
+fn mixed_nested_reconciliation_sequences() {
+    let mut seed = 42u64;
+    let mut next = || {
+        seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1);
+        (seed >> 32) as u32
+    };
+    let mut history = Vec::new();
+    for _ in 0..1000 {
+        let mut outer_keys = (0..5u8).map(|key| (next(), key)).collect::<Vec<_>>();
+        outer_keys.sort_unstable();
+        let mut layout = Vec::new();
+        for (_, key) in outer_keys.into_iter().take((next() % 6) as usize) {
+            let mut child_keys = (0..5u8).map(|key| (next(), key)).collect::<Vec<_>>();
+            child_keys.sort_unstable();
+            let children = child_keys
+                .into_iter()
+                .take((next() % 6) as usize)
+                .map(|(_, child_key)| (child_key, (next() % 3) as u8, next() % 2 == 0))
+                .collect();
+            layout.push((key, children));
+        }
+        history.push(layout);
+    }
+    replay_nested_keyed_layouts(&history);
 }
 
 /// A keyed reorder that also inserts a new sibling among the moved ones in the same frame.
