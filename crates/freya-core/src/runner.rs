@@ -104,55 +104,16 @@ pub struct MutationModified {
     pub flags: DiffModifies,
 }
 
-#[derive(Debug)]
-pub struct MutationMove {
-    pub index: u32,
-    pub node_id: NodeId,
-}
-
 #[derive(Default)]
 pub struct Mutations {
     pub added: Vec<MutationAdd>,
     pub modified: Vec<MutationModified>,
     pub removed: Vec<MutationRemove>,
-    pub moved: FxHashMap<NodeId, Vec<MutationMove>>,
+    /// Final child order for reordered parents, applied after removals and additions.
+    pub moved: FxHashMap<NodeId, Vec<NodeId>>,
 }
 
 impl Mutations {
-    fn finalize_moves(&mut self) {
-        if self.moved.is_empty() {
-            return;
-        }
-
-        let removed = self
-            .removed
-            .iter()
-            .map(MutationRemove::node_id)
-            .collect::<FxHashSet<_>>();
-        let additions = self
-            .added
-            .iter()
-            .filter(|addition| self.moved.contains_key(&addition.parent_id))
-            .sorted_by_key(|addition| addition.index)
-            .map(|addition| (addition.parent_id, addition.index))
-            .into_group_map();
-
-        // Convert final destinations to survivor-only indices after all scopes render.
-        self.moved.retain(|parent_node_id, movements| {
-            if removed.contains(parent_node_id) {
-                return false;
-            }
-            movements.retain(|movement| !removed.contains(&movement.node_id));
-            if let Some(indexes) = additions.get(parent_node_id) {
-                for movement in movements.iter_mut() {
-                    movement.index -=
-                        indexes.partition_point(|index| *index <= movement.index) as u32;
-                }
-            }
-            !movements.is_empty()
-        });
-    }
-
     pub fn is_empty(&self) -> bool {
         self.added.is_empty()
             && self.modified.is_empty()
@@ -172,17 +133,6 @@ impl Debug for Mutations {
             self.modified.iter().map(|m| m.node_id).collect::<Vec<_>>(),
             self.removed,
             self.moved
-                .iter()
-                .map(|(parent_id, moves)| {
-                    (
-                        parent_id,
-                        moves
-                            .iter()
-                            .map(|m| (m.index, m.node_id))
-                            .collect::<Vec<_>>(),
-                    )
-                })
-                .collect::<Vec<_>>()
         ))
     }
 }
@@ -201,6 +151,8 @@ pub enum TasksPollStage {
 
 /// Parents receiving additions, keyed by new tree path, with their lazily found current path.
 type AdditionParents = FxHashMap<Box<[u32]>, (NodeId, Option<Vec<u32>>)>;
+
+type ReorderedParents = FxHashMap<NodeId, Box<[u32]>>;
 
 pub struct Runner {
     pub scopes: FxHashMap<ScopeId, Rc<RefCell<Scope>>>,
@@ -744,6 +696,7 @@ impl Runner {
         self.verify_scopes_integrity();
 
         let mut mutations = Mutations::default();
+        let mut pending_reorders = FxHashMap::default();
 
         let dirty_scopes = self
             .dirty_scopes
@@ -783,13 +736,20 @@ impl Runner {
             let mut diff = Diff::default();
             path_element.diff(scope_rc.borrow().element.as_ref(), &mut diff);
 
-            self.apply_diff(&scope_rc, diff, &mut mutations, &path_element);
+            self.apply_diff(
+                &scope_rc,
+                diff,
+                &mut mutations,
+                &path_element,
+                &mut pending_reorders,
+            );
 
             self.run_scope(
                 &scope_rc,
                 &path_element,
                 &mut mutations,
                 &mut visited_scopes,
+                &mut pending_reorders,
             );
 
             let mut scopes_storages = self.scopes_storages.borrow_mut();
@@ -800,7 +760,22 @@ impl Runner {
             scope_rc.borrow_mut().element = Some(path_element);
         }
 
-        mutations.finalize_moves();
+        // Collect final child orders after all scopes render, including replaced component roots.
+        for (parent_node_id, path) in pending_reorders {
+            let Some(scope_id) = self.node_to_scope.get(&parent_node_id) else {
+                continue;
+            };
+            let scope = self.scopes[scope_id].borrow();
+            let mut children = Vec::with_capacity(scope.nodes.len(&path).unwrap_or_default());
+            scope.nodes.traverse_1_level(&path, |_, node| {
+                children.push(match node.scope_id {
+                    Some(scope_id) => self.find_scope_root_node_id(scope_id),
+                    None => node.node_id,
+                });
+            });
+            mutations.moved.insert(parent_node_id, children);
+        }
+
         mutations
     }
 
@@ -815,6 +790,7 @@ impl Runner {
         element: &PathElement,
         mutations: &mut Mutations,
         visited_scopes: &mut FxHashSet<ScopeId>,
+        pending_reorders: &mut ReorderedParents,
     ) {
         visited_scopes.insert(scope.borrow().id);
         match element {
@@ -925,9 +901,15 @@ impl Runner {
                 let mut diff = Diff::default();
                 path_element.diff(scope_rc.borrow().element.as_ref(), &mut diff);
 
-                self.apply_diff(&scope_rc, diff, mutations, &path_element);
+                self.apply_diff(&scope_rc, diff, mutations, &path_element, pending_reorders);
 
-                self.run_scope(&scope_rc, &path_element, mutations, visited_scopes);
+                self.run_scope(
+                    &scope_rc,
+                    &path_element,
+                    mutations,
+                    visited_scopes,
+                    pending_reorders,
+                );
                 let mut scopes_storages = self.scopes_storages.borrow_mut();
                 let scope_storage = scopes_storages.get_mut(&assigned_scope_id).unwrap();
                 scope_storage.current_value = 0;
@@ -937,7 +919,7 @@ impl Runner {
             }
             PathElement::Element { elements, .. } => {
                 for element in elements.iter() {
-                    self.run_scope(scope, element, mutations, visited_scopes);
+                    self.run_scope(scope, element, mutations, visited_scopes, pending_reorders);
                 }
             }
         }
@@ -1108,9 +1090,9 @@ impl Runner {
         diff: Diff,
         mutations: &mut Mutations,
         path_element: &PathElement,
+        pending_reorders: &mut ReorderedParents,
     ) {
-        let mut moved_nodes =
-            FxHashMap::<Box<[u32]>, (NodeId, FxHashMap<u32, PathNode>)>::default();
+        let mut moved_nodes = FxHashMap::<Box<[u32]>, Vec<Option<NodeId>>>::default();
         let mut parents_to_resync_scopes = FxHashSet::default();
 
         // Children of each reordered parent, by old index
@@ -1120,14 +1102,16 @@ impl Runner {
             // old nodes tree will differ, so resolve it before any lookup.
             let old_parent = resolve_old_path(parent, &diff.moved);
             let parent_node_id = scope.borrow().nodes.get(&old_parent).unwrap().node_id;
-            let mut children = FxHashMap::default();
+            let mut children =
+                vec![None; scope.borrow().nodes.len(&old_parent).unwrap_or_default()];
             scope
                 .borrow()
                 .nodes
                 .traverse_1_level(&old_parent, |path, node| {
-                    children.insert(path[path.len() - 1], node.clone());
+                    children[path[path.len() - 1] as usize] = Some(node.node_id);
                 });
-            moved_nodes.insert(parent.clone(), (parent_node_id, children));
+            pending_reorders.insert(parent_node_id, parent.clone());
+            moved_nodes.insert(parent.clone(), children);
         }
 
         // Capture the identity of addition parents while their old tree paths are still valid
@@ -1353,7 +1337,7 @@ impl Runner {
             }
             a.len().cmp(&b.len())
         }) {
-            let (parent_node_id, old_children) = moved_nodes.remove(&parent).unwrap();
+            let old_children = moved_nodes.remove(&parent).unwrap();
             // New index to old index
             let sources = movements
                 .into_iter()
@@ -1368,10 +1352,13 @@ impl Runner {
                 }
             });
 
+            let mut to_path = Vec::with_capacity(parent.len() + 1);
+            to_path.extend_from_slice(&parent);
+            to_path.push(0);
+
             // Walk the final order, move only what is out of place
             for to in 0..child_count {
-                let mut to_path = parent.to_vec();
-                to_path.push(to);
+                to_path[parent.len()] = to;
 
                 let is_added = added.contains(to_path.as_slice());
                 let node_id = if is_added {
@@ -1379,7 +1366,7 @@ impl Runner {
                 } else {
                     // Unmoved children keep their index
                     let from = sources.get(&to).copied().unwrap_or(to);
-                    old_children.get(&from).unwrap().node_id
+                    old_children[from as usize].expect("surviving child must have an old node")
                 };
 
                 if scope
@@ -1400,34 +1387,6 @@ impl Runner {
                 // Everything before `to` is already final
                 let path_entry = scope.borrow_mut().nodes.remove(&current_path).unwrap();
                 scope.borrow_mut().nodes.insert_entry(&to_path, path_entry);
-
-                if is_added {
-                    continue;
-                }
-
-                let scope_id = scope.borrow().nodes.get(&to_path).unwrap().scope_id;
-                if let Some(scope_id) = scope_id {
-                    let scope_root_node_id = self.find_scope_root_node_id(scope_id);
-                    let scope_rc = self.scopes.get(&scope_id).cloned().unwrap();
-                    let scope = scope_rc.borrow();
-
-                    // Mark the scope root node id as moved
-                    mutations
-                        .moved
-                        .entry(scope.parent_node_id_in_parent)
-                        .or_default()
-                        .push(MutationMove {
-                            index: to,
-                            node_id: scope_root_node_id,
-                        });
-                } else {
-                    // Mark the element as moved
-                    mutations
-                        .moved
-                        .entry(parent_node_id)
-                        .or_default()
-                        .push(MutationMove { index: to, node_id });
-                }
             }
         }
 

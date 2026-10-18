@@ -456,7 +456,6 @@ mod tests {
         assert_eq!(graph.len(&[0]), Some(3));
     }
 
-    /// Removing an index past the end of a children list must not touch any sibling.
     #[test]
     fn remove_out_of_range_index_removes_nothing() {
         let mut graph = PathGraph::<u32>::new();
