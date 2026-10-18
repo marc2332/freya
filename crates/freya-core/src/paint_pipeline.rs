@@ -125,9 +125,9 @@ impl PaintPipeline<'_> {
                 }
 
                 if !self.force_full
-                    && !tree.paint_state.dirty.contains(node_id)
-                    && !tree.paint_state.volatile.contains(node_id)
-                    && !tree.paint_state.area_invalidated.contains(node_id)
+                    && !tree.paint_state.dirty_changed.contains(node_id)
+                    && !tree.paint_state.dirty_always.contains(node_id)
+                    && !tree.paint_state.dirty_invalidated.contains(node_id)
                     && let Some(recording) = tree.paint_state.cache.get(node_id)
                 {
                     recording.replay(self.canvas, self.font_collection);
@@ -155,20 +155,24 @@ impl PaintPipeline<'_> {
     #[cfg(feature = "incremental-painting")]
     fn pre_pass(&mut self) {
         let tree = &mut *self.tree;
-        let dirty = &tree.paint_state.dirty;
-        let volatile_nodes = tree
-            .paint_state
-            .volatile
-            .iter()
-            .filter(|node_id| !dirty.contains(node_id));
 
-        let area_invalidated = tree.paint_state.area_invalidated.iter().filter(|node_id| {
-            !dirty.contains(node_id) && !tree.paint_state.volatile.contains(node_id)
+        let dirty_changed = &tree.paint_state.dirty_changed;
+        let dirty_always = tree
+            .paint_state
+            .dirty_always
+            .iter()
+            .filter(|node_id| !dirty_changed.contains(node_id));
+        let dirty_invalidated = tree.paint_state.dirty_invalidated.iter().filter(|node_id| {
+            !dirty_changed.contains(node_id) && !tree.paint_state.dirty_always.contains(node_id)
         });
 
-        for node_id in dirty.iter().chain(volatile_nodes).chain(area_invalidated) {
+        for node_id in dirty_changed
+            .iter()
+            .chain(dirty_always)
+            .chain(dirty_invalidated)
+        {
             let damage_bounds =
-                dirty.contains(node_id) || tree.paint_state.volatile.contains(node_id);
+                dirty_changed.contains(node_id) || tree.paint_state.dirty_always.contains(node_id);
             let Some(layout_node) = tree.layout.get(node_id) else {
                 continue;
             };

@@ -32,9 +32,9 @@ fn invalidate_area_refreshes_intersections_without_expanding_damage() {
 
     state.invalidate_area(area);
 
-    assert_eq!(state.area_invalidated.len(), 2);
-    assert!(state.area_invalidated.contains(&NodeId::from(1)));
-    assert!(state.area_invalidated.contains(&NodeId::from(2)));
+    assert_eq!(state.dirty_invalidated.len(), 2);
+    assert!(state.dirty_invalidated.contains(&NodeId::from(1)));
+    assert!(state.dirty_invalidated.contains(&NodeId::from(2)));
     assert_eq!(state.damage.rects(), &[area]);
     assert!(!state.damage.is_full());
 }

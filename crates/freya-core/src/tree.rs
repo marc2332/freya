@@ -135,9 +135,9 @@ impl Tree {
 
         #[cfg(feature = "incremental-painting")]
         if element.is_render_volatile() {
-            self.paint_state.volatile.insert(node_id);
+            self.paint_state.dirty_always.insert(node_id);
         } else {
-            self.paint_state.volatile.remove(&node_id);
+            self.paint_state.dirty_always.remove(&node_id);
         }
 
         self.elements.insert(node_id, element);
@@ -487,7 +487,7 @@ impl Tree {
                         | DiffModifies::EFFECT
                         | DiffModifies::TEXT_STYLE,
                 ) {
-                    self.paint_state.dirty.insert(node_id);
+                    self.paint_state.dirty_changed.insert(node_id);
                 }
 
                 if !needs_accessibility && (flags.intersects(DiffModifies::ACCESSIBILITY)) {
@@ -585,7 +585,7 @@ impl Tree {
 
                 while let Some(node_id) = buffer.pop_front() {
                     #[cfg(feature = "incremental-painting")]
-                    self.paint_state.dirty.insert(*node_id);
+                    self.paint_state.dirty_changed.insert(*node_id);
                     let element = self.elements.get(node_id).unwrap();
                     if let Some(parent_node_id) = self.parents.get(node_id) {
                         let entries = self
@@ -623,7 +623,7 @@ impl Tree {
 
                 while let Some(node_id) = buffer.pop_front() {
                     #[cfg(feature = "incremental-painting")]
-                    self.paint_state.dirty.insert(*node_id);
+                    self.paint_state.dirty_changed.insert(*node_id);
                     let element = self.elements.get(node_id).unwrap();
                     if let Some(parent_node_id) = self.parents.get(node_id) {
                         let entries = self.effect_state.get_disjoint_two_entries(
@@ -661,7 +661,7 @@ impl Tree {
 
                 while let Some(node_id) = buffer.pop_front() {
                     #[cfg(feature = "incremental-painting")]
-                    self.paint_state.dirty.insert(*node_id);
+                    self.paint_state.dirty_changed.insert(*node_id);
                     let element = self.elements.get(node_id).unwrap();
                     if let Some(parent_node_id) = self.parents.get(node_id) {
                         let entries = self
@@ -790,17 +790,16 @@ impl Tree {
                 match change {
                     LayoutChange::Changed(node_id) => changed_nodes.push(node_id),
                     LayoutChange::ContentChanged(node_id) => {
-                        paint_state.dirty.insert(node_id);
+                        paint_state.dirty_changed.insert(node_id);
                     }
                 }
             }
 
-            // A visible geometry change invalidates the recordings of the whole
-            // subtree, since descendants record their ancestors' clips
+            // A layout change invalidates the recordings of the node and its descendants
             let mut visited = FxHashSet::default();
             while let Some(node_id) = changed_nodes.pop() {
                 if visited.insert(node_id) {
-                    paint_state.dirty.insert(node_id);
+                    paint_state.dirty_changed.insert(node_id);
                     if let Some(children) = self.children.get(&node_id) {
                         changed_nodes.extend(children);
                     }

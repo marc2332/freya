@@ -154,7 +154,7 @@ fn unchanged_paragraphs_reuse_measurement_data() {
         for (node_id, previous) in &paragraphs {
             let current = tree.layout.get(node_id).unwrap().data.as_ref().unwrap();
             assert!(Rc::ptr_eq(previous, current));
-            assert!(!paint_state.dirty.contains(node_id));
+            assert!(!paint_state.dirty_changed.contains(node_id));
         }
     }
     assert_eq!(initial_pixels, test.render_pixels());
@@ -170,7 +170,7 @@ fn unchanged_paragraphs_reuse_measurement_data() {
             let changed = paragraph.spans[0].text.starts_with("Revision ");
             let current = tree.layout.get(node_id).unwrap().data.as_ref().unwrap();
             assert_eq!(!Rc::ptr_eq(previous, current), changed);
-            assert_eq!(paint_state.dirty.contains(node_id), changed);
+            assert_eq!(paint_state.dirty_changed.contains(node_id), changed);
         }
     }
     assert_ne!(initial_pixels, test.render_pixels());

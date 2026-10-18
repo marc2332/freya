@@ -16,14 +16,14 @@ pub struct PaintState {
     /// Recorded painting commands per node.
     pub cache: FxHashMap<NodeId, Recording>,
 
-    /// Nodes whose recording must be refreshed in the next frame.
-    pub dirty: FxHashSet<NodeId>,
+    /// Changed nodes whose recordings and full painted bounds must be refreshed.
+    pub dirty_changed: FxHashSet<NodeId>,
 
     /// Nodes refreshed by area invalidation without damaging their entire bounds.
-    pub area_invalidated: FxHashSet<NodeId>,
+    pub dirty_invalidated: FxHashSet<NodeId>,
 
-    /// Nodes whose painting can change without prop changes.
-    pub volatile: FxHashSet<NodeId>,
+    /// Nodes refreshed and damaged on every requested frame.
+    pub dirty_always: FxHashSet<NodeId>,
 
     /// Screen regions that must repaint in the next frame.
     pub damage: Damage,
@@ -42,8 +42,9 @@ impl PaintState {
             return;
         }
         self.damage.push(area);
+
         // Refresh intersecting recordings, including unbounded ones, without expanding damage to their full bounds.
-        self.area_invalidated
+        self.dirty_invalidated
             .extend(self.cache.iter().filter_map(|(node_id, recording)| {
                 recording
                     .bounds
@@ -57,9 +58,9 @@ impl PaintState {
         if !cfg!(feature = "incremental-painting") {
             return;
         }
-        self.dirty.remove(&node_id);
-        self.area_invalidated.remove(&node_id);
-        self.volatile.remove(&node_id);
+        self.dirty_changed.remove(&node_id);
+        self.dirty_invalidated.remove(&node_id);
+        self.dirty_always.remove(&node_id);
         if let Some(recording) = self.cache.remove(&node_id) {
             self.damage.push_bounds(recording.bounds);
         }
@@ -67,8 +68,8 @@ impl PaintState {
 
     /// Clear pending invalidations and retain the damage from the completed frame.
     pub fn finish_paint(&mut self) {
-        self.dirty.clear();
-        self.area_invalidated.clear();
+        self.dirty_changed.clear();
+        self.dirty_invalidated.clear();
         self.last_damage = self.damage.take();
     }
 }
