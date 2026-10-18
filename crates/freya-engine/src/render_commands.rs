@@ -228,10 +228,15 @@ impl Default for RecordState {
 /// Records canvas-like operations and accumulates conservative device bounds,
 /// marking the recording unbounded when an operation cannot be bounded.
 pub struct RenderRecorder {
+    /// Drawing operations to replay.
     commands: Vec<RenderCommand>,
+    /// Transform and clip stack used by save and restore.
     states: Vec<RecordState>,
+    /// Combined painted area of the recorded operations.
     bounds: Option<SkRect>,
+    /// Whether any operation has an unknown painted extent.
     unbounded: bool,
+    /// Whether any operation reads pixels painted beneath it.
     samples_backdrop: bool,
 }
 
@@ -290,6 +295,7 @@ impl RenderRecorder {
             let outset = mask_sigma * 3.0;
             local_bounds = local_bounds.with_outset((outset, outset));
         } else if paint.mask_filter().is_some() {
+            // The mask filter's painted extent is unknown without its blur sigma.
             self.push_unbounded();
             return;
         }
@@ -298,6 +304,7 @@ impl RenderRecorder {
             if image_filter.can_compute_fast_bounds() {
                 local_bounds = image_filter.compute_fast_bounds(local_bounds);
             } else {
+                // This image filter cannot provide reliable painted bounds.
                 self.push_unbounded();
                 return;
             }
@@ -403,7 +410,6 @@ impl RenderRecorder {
     }
 
     /// Draw a path blurred by a gaussian mask filter of the given sigma.
-    /// The filter is created here so the painted bounds account for it.
     pub fn draw_path_blurred(&mut self, path: SkPath, paint: &Paint, blur_sigma: f32) {
         let mut paint = paint.clone();
         paint.set_mask_filter(SkMaskFilter::blur(SkBlurStyle::Normal, blur_sigma, false));

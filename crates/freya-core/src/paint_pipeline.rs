@@ -90,8 +90,7 @@ impl PaintPipeline<'_> {
     #[cfg(feature = "incremental-painting")]
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     pub fn paint(mut self) {
-        // `FREYA_FULL_RENDER` disables incremental painting as an escape hatch
-        if self.force_full || std::env::var_os("FREYA_FULL_RENDER").is_some() {
+        if self.force_full {
             self.tree.paint_state.damage.mark_full();
         }
 
@@ -113,7 +112,6 @@ impl PaintPipeline<'_> {
     #[cfg(feature = "incremental-painting")]
     fn paint_full(&mut self) {
         self.canvas.clear(self.background);
-        let refresh_all = self.force_full || std::env::var_os("FREYA_FULL_RENDER").is_some();
         let tree = &mut *self.tree;
 
         for layer in itertools::sorted(tree.layers.keys()) {
@@ -126,7 +124,7 @@ impl PaintPipeline<'_> {
                     continue;
                 }
 
-                if !refresh_all
+                if !self.force_full
                     && !tree.paint_state.dirty.contains(node_id)
                     && !tree.paint_state.volatile.contains(node_id)
                     && !tree.paint_state.area_invalidated.contains(node_id)

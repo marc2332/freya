@@ -33,6 +33,7 @@ pub struct PaintState {
 }
 
 impl PaintState {
+    /// Mark an area for repainting and refresh recordings that intersect it.
     pub fn invalidate_area(&mut self, area: Area) {
         if !cfg!(feature = "incremental-painting") {
             return;
@@ -51,6 +52,7 @@ impl PaintState {
             }));
     }
 
+    /// Remove a node's recording and repaint the area it previously covered.
     pub fn remove_node(&mut self, node_id: NodeId) {
         if !cfg!(feature = "incremental-painting") {
             return;
@@ -63,6 +65,7 @@ impl PaintState {
         }
     }
 
+    /// Clear pending invalidations and retain the damage from the completed frame.
     pub fn finish_paint(&mut self) {
         self.dirty.clear();
         self.area_invalidated.clear();
