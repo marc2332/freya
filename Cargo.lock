@@ -2852,7 +2852,6 @@ dependencies = [
  "plotters",
  "tokio",
  "torin",
- "tray-icon",
 ]
 
 [[package]]
@@ -3345,7 +3344,6 @@ dependencies = [
  "freya-core",
  "freya-engine",
  "futures-channel",
- "futures-lite",
  "futures-util",
  "gl",
  "glutin",
