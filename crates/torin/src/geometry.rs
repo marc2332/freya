@@ -1,6 +1,8 @@
-use std::f32::consts::PI;
+use alloc::vec::Vec;
+use core::f32::consts::PI;
 
 use crate::{
+    math::sin_cos,
     node::Node,
     prelude::{
         Direction,
@@ -171,8 +173,7 @@ pub enum AlignAxis {
 }
 
 fn rotate_point_around_center(point: Point2D, center: Point2D, angle_radians: f32) -> Point2D {
-    let sin_theta = angle_radians.sin();
-    let cos_theta = angle_radians.cos();
+    let (sin_theta, cos_theta) = sin_cos(angle_radians);
 
     let x_shifted = point.x - center.x;
     let y_shifted = point.y - center.y;
@@ -221,7 +222,7 @@ fn calculate_extreme_corners(area: &Area, center: Point2D) -> (Point2D, Point2D)
 }
 
 impl AlignAxis {
-    pub fn new(direction: &Direction, alignment_direction: AlignmentDirection) -> Self {
+    pub const fn new(direction: &Direction, alignment_direction: AlignmentDirection) -> Self {
         match direction {
             Direction::Vertical => match alignment_direction {
                 AlignmentDirection::Main => AlignAxis::Height,

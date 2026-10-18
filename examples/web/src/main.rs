@@ -3,7 +3,6 @@
 mod app;
 mod showcases;
 
-#[cfg(target_os = "emscripten")]
 const NOTO_SANS: &[u8] = include_bytes!("../../../crates/freya-edit/tests/NotoSans-Regular.ttf");
 
 fn main() {

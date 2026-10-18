@@ -47,7 +47,7 @@ pub struct Slider {
 }
 
 impl KeyExt for Slider {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -184,7 +184,7 @@ impl Component for Slider {
             }
         };
 
-        let on_global_pointer_press = move |_: Event<PointerEventData>| {
+        let on_global_pointer_up = move |_: Event<PointerEventData>| {
             clicking.set(false);
         };
 
@@ -294,6 +294,7 @@ impl Component for Slider {
 
         rect()
             .a11y_id(a11y_id)
+            .a11y_enabled(self.enabled)
             .a11y_focusable(self.enabled)
             .a11y_role(AccessibilityRole::Slider)
             .on_sized(move |e: Event<SizedEventData>| size.set(e.area))
@@ -301,7 +302,7 @@ impl Component for Slider {
                 rect.on_key_down(on_key_down)
                     .on_pointer_down(on_pointer_down)
                     .on_capture_global_pointer_move(on_capture_global_pointer_move)
-                    .on_global_pointer_press(on_global_pointer_press)
+                    .on_global_pointer_up(on_global_pointer_up)
                     .maybe(self.scroll_enabled, |el| el.on_wheel(on_wheel))
             })
             .cursor(if self.enabled {

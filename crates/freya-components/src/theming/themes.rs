@@ -8,8 +8,6 @@ use torin::{
     size::Size,
 };
 
-#[cfg(feature = "calendar")]
-use crate::calendar::CalendarThemePreference;
 #[cfg(feature = "router")]
 use crate::link::LinkThemePreference;
 #[cfg(feature = "titlebar")]
@@ -320,11 +318,16 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "scrollbar",
         ScrollBarThemePreference {
-            background: Preference::Reference("surface_primary"),
+            background: Preference::Reference("border"),
             thumb_background: Preference::Reference("surface_inverse"),
             hover_thumb_background: Preference::Reference("surface_inverse_secondary"),
             active_thumb_background: Preference::Reference("surface_inverse_tertiary"),
-            size: Preference::Specific(15.),
+            thumb_cross_size: Preference::Specific(5.),
+            expanded_thumb_cross_size: Preference::Specific(8.),
+            opacity: Preference::Specific(0.),
+            expanded_opacity: Preference::Specific(220.),
+            cross_gap: Preference::Specific(0.),
+            expanded_cross_gap: Preference::Specific(3.),
         },
     );
     theme.set(
@@ -594,23 +597,6 @@ fn register_base_component_themes(theme: &mut Theme) {
             corner_radius: Preference::Specific(CornerRadius::new_all(99.)),
         },
     );
-    #[cfg(feature = "calendar")]
-    theme.set(
-        "calendar",
-        CalendarThemePreference {
-            background: Preference::Reference("surface_tertiary"),
-            day_background: Preference::Specific(Color::TRANSPARENT),
-            day_hover_background: Preference::Reference("surface_secondary"),
-            day_selected_background: Preference::Reference("surface_primary"),
-            color: Preference::Reference("text_primary"),
-            day_other_month_color: Preference::Reference("text_placeholder"),
-            header_color: Preference::Reference("text_primary"),
-            corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
-            padding: Preference::Specific(Gaps::new_all(12.)),
-            day_corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
-            nav_button_hover_background: Preference::Reference("surface_secondary"),
-        },
-    );
     #[cfg(feature = "titlebar")]
     theme.set(
         "titlebar_button",
@@ -665,7 +651,8 @@ fn build_theme(name: &'static str, mut colors: ColorsSheet) -> Theme {
 }
 
 fn current_accent_color() -> Option<Color> {
-    let platform: Platform = try_consume_root_context()?;
+    let window_id: CurrentWindowId = try_consume_root_context()?;
+    let platform = Platform::get().try_window(window_id.0)?;
     let accent = platform.accent_color.read().0?;
     let [r, g, b, _] = accent.to_u8_array();
     Some(Color::from_rgb(r, g, b))

@@ -6,15 +6,18 @@ on:
     branches:
       - main
     paths:
+      - "README.md"
       - "website/**"
+      - "Cargo.lock"
       - "crates/**"
       - "examples/web/**"
       - ".github/workflows/website.yml"
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
+      - "README.md"
       - "website/**"
-      - "crates/**"
-      - "examples/web/**"
+      - "Cargo.lock"
       - ".github/workflows/website.yml"
 
 permissions:
@@ -27,7 +30,7 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name != 'pull_request' || (!github.event.pull_request.draft && github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
 
     steps:
@@ -50,7 +53,7 @@ jobs:
       - name: Install emsdk
         uses: mymindstorm/setup-emsdk@6ab9eb1bda2574c4ddb79809fc9247783eaf9021 # v14
         with:
-          version: 4.0.0
+          version: 5.0.0
           actions-cache-folder: emsdk-cache
 
       - name: Install just
@@ -58,6 +61,20 @@ jobs:
 
       - name: Build the demo
         run: just web-demo
+
+      - name: Generate website sponsor data
+        run: |
+          while IFS= read -r entry; do
+            href=${entry#*href=\"}
+            href=${href%%\"*}
+            avatar=${entry#*src=\"}
+            avatar=${avatar%%\"*}
+            avatar=${avatar//&#x2F;/\/}
+            name=${entry#*alt=\"}
+            name=${name%%\"*}
+            jq -nc --arg href "$href" --arg avatar "$avatar" --arg name "$name" \
+              '{href: $href, avatar: $avatar, name: (if $name == "" then "Freya sponsor" else $name end)}'
+          done < <(sed -n '/<!-- sponsors -->/p' README.md | grep -oE '<a href="[^"]+"><img src="[^"]+"[^>]*alt="[^"]*"') | jq -s . > website/public/sponsors.json
 
       - name: Deploy
         uses: amondnet/vercel-action@de09aeac2ace6599ec9b11ef87558759a496bac4 # v42.3.0

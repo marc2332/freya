@@ -82,7 +82,7 @@ pub struct Switch {
 }
 
 impl KeyExt for Switch {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -237,6 +237,7 @@ impl Component for Switch {
 
         rect()
             .a11y_id(a11y_id)
+            .a11y_enabled(self.enabled)
             .a11y_focusable(self.enabled)
             .a11y_role(AccessibilityRole::Switch)
             .a11y_builder(|builder| builder.set_toggled(Toggled::from(toggled)))
@@ -265,7 +266,7 @@ impl Component for Switch {
                     }
                 })
             })
-            .on_global_pointer_press(move |_| pressing.set_if_modified(false))
+            .on_global_pointer_up(move |_| pressing.set_if_modified(false))
             .on_pointer_leave(move |_| pressing.set_if_modified(false))
             .cursor(if self.enabled {
                 self.cursor_icon

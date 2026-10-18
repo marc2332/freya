@@ -102,5 +102,5 @@
 //! `Nearest` and `Bilinear` use less rendering work than `Mitchell` and `CatmullRom`.
 //!
 //! [`crate::components::SvgViewer`] rasterizes SVGs at their layout size. Set
-//! [`crate::components::SvgViewer::parallel`] to `true` to rasterize local SVGs in a background
-//! thread. Remote SVGs already rasterize in the background.
+//! [`crate::components::SvgViewer::async_rasterization`] to `true` to rasterize local SVGs in a
+//! background thread. Remote SVGs already rasterize in the background.

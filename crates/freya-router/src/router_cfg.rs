@@ -1,8 +1,10 @@
 use crate::prelude::Routable;
 
-/// Global configuration options for the router.
+/// Configuration used when a [`Router`](crate::components::Router) is created.
 ///
-/// This implements [`Default`] and follows the builder pattern, so you can use it like this:
+/// By default, the router starts at `/`.
+/// Use [`Self::with_initial_path`] to change the initial route.
+///
 /// ```rust,no_run
 /// # use freya_router::prelude::*;
 /// # use freya_core::prelude::*;
@@ -32,6 +34,7 @@ impl<R: Routable> Default for RouterConfig<R> {
 }
 
 impl<R: Routable> RouterConfig<R> {
+    /// Sets the route displayed when the router is first created.
     pub fn with_initial_path(mut self, initial_path: R) -> Self {
         self.initial_path = Some(initial_path);
         self

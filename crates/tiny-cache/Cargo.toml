@@ -1,0 +1,18 @@
+[package]
+name = "tiny-cache"
+version = "0.5.0-rc.10"
+description = "FIFO and per-user LRU caches with shared values"
+edition = "2024"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "README.md"
+repository = "https://github.com/marc2332/freya"
+keywords = ["cache", "fifo", "lru"]
+categories = ["caching", "data-structures"]
+
+[lints]
+workspace = true
+
+[dependencies]
+rustc-hash = { workspace = true }
+smallvec = "1.15.1"

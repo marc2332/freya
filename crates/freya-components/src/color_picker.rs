@@ -68,7 +68,7 @@ pub struct ColorPicker {
 }
 
 impl KeyExt for ColorPicker {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -232,7 +232,7 @@ impl Component for ColorPicker {
             DragTarget::None => {}
         };
 
-        let on_global_pointer_press = move |_| {
+        let on_global_pointer_up = move |_| {
             // Only close the popup if it wasnt being dragged and it is open
             if is_open && dragging() == DragTarget::None {
                 open.set(false);
@@ -264,7 +264,7 @@ impl Component for ColorPicker {
 
         let (offset_x, offset_y, opacity) = match (preview_area(), popup_size()) {
             (Some(preview), Some(size)) => {
-                let window = Area::from_size(*Platform::get().root_size.peek());
+                let window = Area::from_size(*Platform::get().current_window().root_size.peek());
                 let popup = Area::new(Point2D::new(preview.max_x(), preview.min_y()), size);
 
                 let target = if popup.max_x() > window.max_x() && preview.min_x() >= size.width {
@@ -283,7 +283,7 @@ impl Component for ColorPicker {
 
         let popup = rect()
             .on_global_pointer_move(on_global_pointer_move)
-            .on_global_pointer_press(on_global_pointer_press)
+            .on_global_pointer_up(on_global_pointer_up)
             .width(self.width.clone())
             .padding(8.)
             .corner_radius(6.)

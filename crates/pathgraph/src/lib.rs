@@ -1,3 +1,11 @@
+#![no_std]
+
+extern crate alloc;
+
+use alloc::{
+    vec,
+    vec::Vec,
+};
 use core::fmt;
 
 pub struct PathGraphEntry<V> {

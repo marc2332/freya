@@ -9,7 +9,7 @@ use freya::{
 };
 
 fn main() {
-    launch(LaunchConfig::new().with_future(|proxy| async move {
+    launch(LaunchConfig::new().with_task(|proxy| async move {
         let monitors: Vec<MonitorHandle> = proxy
             .post_callback(|ctx| ctx.active_event_loop.available_monitors().collect())
             .await

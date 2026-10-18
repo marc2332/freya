@@ -179,6 +179,47 @@ pub fn input_multiline_test() {
 }
 
 #[test]
+pub fn input_multiline_fixed_height_follows_cursor_test() {
+    fn multiline_app() -> impl IntoElement {
+        let value = use_state(String::new);
+
+        rect().child(
+            Input::new(value)
+                .multiline(true)
+                .width(Size::px(300.))
+                .height(Size::px(60.)),
+        )
+    }
+
+    let mut test = launch_test(multiline_app);
+    test.click_cursor((15.0, 15.0));
+
+    for line in 1..=6 {
+        test.write_text("A line of text");
+        test.press_key(Key::Named(NamedKey::Enter));
+        test.sync_and_update();
+        test.sync_and_update();
+
+        if line >= 5 {
+            let (paragraph_y, paragraph_height) = test
+                .find(|node, element| {
+                    Paragraph::try_downcast(element)
+                        .map(|_| (node.layout().area.min_y(), node.layout().area.height()))
+                })
+                .expect("input paragraph should be present");
+            assert!(
+                paragraph_y < 0.0,
+                "paragraph should scroll when text overflows"
+            );
+            assert!(
+                paragraph_y + paragraph_height - 8.0 <= 61.0,
+                "cursor line should remain visible, paragraph_y={paragraph_y} paragraph_height={paragraph_height}"
+            );
+        }
+    }
+}
+
+#[test]
 pub fn input_multiline_scrollbar_press_test() {
     fn scrollbar_app() -> impl IntoElement {
         let value = use_state(|| "One\nTwo\nThree\nFour\nFive\nSix\nSeven".to_string());

@@ -12,6 +12,7 @@ fn main() {
 fn app() -> impl IntoElement {
     rect().expanded().center().child(
         SvgViewer::new(include_bytes!("./ferris.svg"))
+            .async_rasterization(true)
             .width(Size::px(300.))
             .height(Size::px(300.))
             .color(Color::BLACK),

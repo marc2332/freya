@@ -868,6 +868,14 @@ pub trait TextEditor {
 
     fn get_indentation(&self) -> u8;
 
+    /// Find the UTF-16 boundaries of the logical line containing a position.
+    fn find_line_boundaries(&self, position: usize) -> (usize, usize) {
+        let line_index = self.char_to_line(self.utf16_cu_to_char(position));
+        let start = self.char_to_utf16_cu(self.line_to_char(line_index));
+        let length = self.line(line_index).map_or(0, |line| line.utf16_len());
+        (start, start + length)
+    }
+
     fn find_word_boundaries(&self, pos: usize) -> (usize, usize) {
         let pos_char = self.utf16_cu_to_char(pos);
         let len_chars = self.len_chars();

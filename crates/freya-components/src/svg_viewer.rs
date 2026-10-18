@@ -106,7 +106,10 @@ fn store_raster(
 
 /// SVG viewer component.
 ///
-/// Rasterizes the SVG synchronously or asynchronously and caches the result.
+/// Rasterizes the SVG at its layout size and caches the result.
+/// Local SVGs rasterize synchronously by default. Enable [`Self::async_rasterization`]
+/// for non-blocking rasterization or when using inherited text colors with `currentColor`.
+/// Remote SVGs always rasterize asynchronously.
 /// See [`ImageSource`] for all supported sources.
 ///
 /// Snaps to the pixels grid by default, opt out with `.snap_to_grid(false)`.
@@ -133,7 +136,7 @@ pub struct SvgViewer {
     event_handlers: EventHandlers,
     style: SvgStyle,
     show_loader: bool,
-    parallel: bool,
+    async_rasterization: bool,
 
     children: Vec<Element>,
     error_renderer: Option<Callback<String, Element>>,
@@ -159,7 +162,7 @@ impl SvgViewer {
             event_handlers: EventHandlers::default(),
             style: SvgStyle::default(),
             show_loader: true,
-            parallel: false,
+            async_rasterization: false,
             children: Vec::new(),
             error_renderer: None,
             key: DiffKey::None,
@@ -172,10 +175,10 @@ impl SvgViewer {
         self
     }
 
-    /// Whether to fetch and rasterize the SVG in a background thread. Defaults to `false`,
-    /// remote sources always do.
-    pub fn parallel(mut self, parallel: bool) -> Self {
-        self.parallel = parallel;
+    /// Whether to fetch and rasterize the SVG in a background thread. Defaults to `false`.
+    /// Remote sources always do.
+    pub fn async_rasterization(mut self, async_rasterization: bool) -> Self {
+        self.async_rasterization = async_rasterization;
         self
     }
 
@@ -218,13 +221,13 @@ impl SvgViewer {
 }
 
 impl KeyExt for SvgViewer {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl LayoutExt for SvgViewer {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
@@ -234,38 +237,38 @@ impl ContainerWithContentExt for SvgViewer {}
 impl ContainerPositionExt for SvgViewer {}
 
 impl ChildrenExt for SvgViewer {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
 impl ImageExt for SvgViewer {
-    fn get_image_data(&mut self) -> &mut ImageData {
+    fn image_data_mut(&mut self) -> &mut ImageData {
         &mut self.image_data
     }
 }
 
 impl AccessibilityExt for SvgViewer {
-    fn get_accessibility_data(&mut self) -> &mut AccessibilityData {
+    fn accessibility_data_mut(&mut self) -> &mut AccessibilityData {
         &mut self.accessibility
     }
 }
 
 impl EffectExt for SvgViewer {
-    fn get_effect(&mut self) -> &mut EffectData {
+    fn effect_mut(&mut self) -> &mut EffectData {
         &mut self.effect
     }
 }
 
 impl EventHandlersExt for SvgViewer {
-    fn get_event_handlers(&mut self) -> &mut EventHandlers {
+    fn event_handlers_mut(&mut self) -> &mut EventHandlers {
         &mut self.event_handlers
     }
 }
 
 impl Component for SvgViewer {
     fn render(&self) -> impl IntoElement {
-        let scale_factor = *Platform::get().scale_factor.read();
+        let scale_factor = *Platform::get().current_window().scale_factor.read();
         let layout = self.layout.clone();
         let mut measured = use_state(|| match (&layout.width, &layout.height) {
             (Size::Pixels(width), Size::Pixels(height)) => {
@@ -292,13 +295,13 @@ impl Component for SvgViewer {
             AssetConfiguration::new((&self.source, target, style.as_key()), self.asset_age);
         use_asset(&asset_config);
 
-        // Rasterize whenever the source, size, style or parallel flag change.
+        // Rasterize whenever the source, size, style or async rasterization flag change.
         let mut previous_configuration = use_state(|| None);
-        if *previous_configuration.peek() != Some((asset_config.clone(), self.parallel)) {
-            previous_configuration.set(Some((asset_config.clone(), self.parallel)));
+        if *previous_configuration.peek() != Some((asset_config.clone(), self.async_rasterization))
+        {
+            previous_configuration.set(Some((asset_config.clone(), self.async_rasterization)));
 
             if let Some(target) = target
-                && style.color.is_some()
                 && matches!(
                     asset_cacher.read_asset(&asset_config),
                     Some(Asset::Pending) | Some(Asset::Error(_))
@@ -306,10 +309,10 @@ impl Component for SvgViewer {
             {
                 asset_cacher.update_asset(asset_config.clone(), Asset::Loading);
 
-                if self.parallel || self.source.is_remote() {
+                if self.async_rasterization || self.source.is_remote() {
                     let source = self.source.clone();
                     let asset_config = asset_config.clone();
-                    spawn_forever(async move {
+                    spawn_in_window(async move {
                         let result = match source.bytes().await {
                             Ok(bytes) => {
                                 let _permit = RASTER_LIMIT.acquire().await;

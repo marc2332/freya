@@ -361,7 +361,7 @@ impl ScrollController {
         }
 
         let ticker = RenderingTicker::get();
-        let platform = Platform::get();
+        let platform = Platform::get().current_window();
         let animation_clock = AnimationClock::get();
         let scroll_controller = *self;
         let mut damp = self.damp;

@@ -60,7 +60,7 @@ fn app() -> impl IntoElement {
             loop {
                 // Continuously render the app so that the shader updates on live
                 ticket.tick().await;
-                Platform::get().send(UserEvent::RequestRedraw);
+                Platform::get().current_window().request_redraw();
             }
         }
     });

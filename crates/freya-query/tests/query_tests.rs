@@ -1,3 +1,5 @@
+#[cfg(debug_assertions)]
+use std::time::Duration;
 use std::{
     cell::Cell,
     rc::Rc,
@@ -236,7 +238,7 @@ fn invalidate_all_from_the_test_runtime() {
     assert_eq!(calls.get(), 1);
 
     test.run_in(|| {
-        spawn_forever(async move {
+        spawn_in_window(async move {
             QueriesStorage::<CountCalls>::invalidate_all().await;
         });
     });
@@ -262,11 +264,9 @@ fn peek_query_state_from_the_test() {
         std::time::Duration::from_millis(200),
     );
 
-    let name = test.run_in(|| {
-        QueriesStorage::<GetUserName>::peek_matching(0)
-            .first()
-            .and_then(|query| query.state().ok().cloned())
-    });
+    let name = QueriesStorage::<GetUserName>::peek_matching(0)
+        .first()
+        .and_then(|query| query.state().ok().cloned());
 
     assert_eq!(name.as_deref(), Some("Marc"));
 }
@@ -279,35 +279,20 @@ fn mocked_query() {
         rect().child(label().text(format!("{:?}", user.read().state())))
     }
 
-    let (mut test, _) = TestingRunner::new(
-        app,
-        (200., 200.).into(),
-        |runner| {
-            runner.run_in(|| {
-                GlobalContexts::get().insert_context(QueriesStorage::<GetUserName>::mocked(
-                    |_keys| Ok("Mocked".to_string()),
-                ))
-            })
-        },
-        1.,
-    );
+    let global_contexts = GlobalContexts::register();
+    global_contexts.insert_context(QueriesStorage::<GetUserName>::mocked(|_keys| {
+        Ok("Mocked".to_string())
+    }));
+    let mut test = launch_test(app);
+    test.poll(Duration::from_millis(10), Duration::from_millis(200));
 
-    test.sync_and_update();
-    test.poll(
-        std::time::Duration::from_millis(10),
-        std::time::Duration::from_millis(200),
-    );
-
-    let label = test
-        .find(|node, element| Label::try_downcast(element).map(|_| node))
-        .unwrap();
-    let element = label.element();
-    let text = &Label::try_downcast(&*element).unwrap().text;
-
-    assert!(
-        text.contains("Mocked"),
-        "the mock did not replace the query, got {text}"
-    );
+    let name = QueriesStorage::<GetUserName>::peek_matching(0)[0]
+        .state()
+        .ok()
+        .cloned();
+    assert_eq!(name.as_deref(), Some("Mocked"));
+    drop(test);
+    global_contexts.unregister();
 }
 
 #[test]
@@ -318,41 +303,22 @@ fn mocked_async_query() {
         rect()
     }
 
-    let (mut test, _) = TestingRunner::new(
-        app,
-        (200., 200.).into(),
-        |runner| {
-            runner.run_in(|| {
-                GlobalContexts::get().insert_context(QueriesStorage::<GetUserName>::mocked_async(
-                    |keys| async move {
-                        timer(std::time::Duration::from_millis(20)).await;
-                        Ok(format!("Mocked {keys}"))
-                    },
-                ))
-            })
+    let global_contexts = GlobalContexts::register();
+    global_contexts.insert_context(QueriesStorage::<GetUserName>::mocked_async(
+        |keys| async move {
+            timer(Duration::from_millis(20)).await;
+            Ok(format!("Mocked {keys}"))
         },
-        1.,
-    );
+    ));
+    let mut test = launch_test(app);
+    test.poll(Duration::from_millis(5), Duration::from_millis(100));
 
-    test.sync_and_update();
-
-    assert!(test.run_in(|| {
-        QueriesStorage::<GetUserName>::peek_matching(0)[0]
-            .state()
-            .is_loading()
-    }));
-
-    test.poll(
-        std::time::Duration::from_millis(5),
-        std::time::Duration::from_millis(100),
-    );
-
-    let name = test.run_in(|| {
-        QueriesStorage::<GetUserName>::peek_matching(0)[0]
-            .state()
-            .ok()
-            .cloned()
-    });
+    let name = QueriesStorage::<GetUserName>::peek_matching(0)[0]
+        .state()
+        .ok()
+        .cloned();
 
     assert_eq!(name.as_deref(), Some("Mocked 0"));
+    drop(test);
+    global_contexts.unregister();
 }

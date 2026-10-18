@@ -82,7 +82,6 @@ use freya_engine::prelude::{
     direct_contexts,
     gpu::ContextOptions,
     vk,
-    wrap_backend_render_target,
 };
 use raw_window_handle::{
     HasDisplayHandle,
@@ -98,15 +97,22 @@ use winit::{
     },
 };
 
-use crate::drivers::DriverError;
+use crate::{
+    config::GpuPreference,
+    drivers::{
+        DriverError,
+        surface::wrap_render_target,
+    },
+};
 
 /// Vulkan device extensions used by Skia.
 const DEVICE_EXTENSIONS: &[&CStr] = &[KHR_SWAPCHAIN_NAME];
 
-/// Weak reference to the shared Vulkan context.
+/// Weak references to Vulkan contexts shared by GPU preference.
 #[derive(Default)]
 pub struct SharedVulkan {
-    context: Weak<VulkanInner>,
+    integrated_context: Weak<VulkanInner>,
+    discrete_context: Weak<VulkanInner>,
 }
 
 impl SharedVulkan {
@@ -115,14 +121,22 @@ impl SharedVulkan {
         &mut self,
         window: &Window,
         gpu_resource_cache_limit: usize,
+        gpu_preference: GpuPreference,
     ) -> Result<(Rc<VulkanInner>, SurfaceKHR), Box<dyn std::error::Error>> {
-        if let Some(inner) = self.context.upgrade() {
+        let prefer_integrated = gpu_preference == GpuPreference::PreferIntegrated;
+        let context = if prefer_integrated {
+            &mut self.integrated_context
+        } else {
+            &mut self.discrete_context
+        };
+        if let Some(inner) = context.upgrade() {
             let surface = inner.create_presentable_surface(window)?;
             return Ok((inner, surface));
         }
 
-        let (inner, surface) = VulkanInner::new(window, gpu_resource_cache_limit)?;
-        self.context = Rc::downgrade(&inner);
+        let (inner, surface) =
+            VulkanInner::new(window, gpu_resource_cache_limit, prefer_integrated)?;
+        *context = Rc::downgrade(&inner);
 
         Ok((inner, surface))
     }
@@ -159,6 +173,7 @@ impl VulkanInner {
     fn new(
         window: &Window,
         gpu_resource_cache_limit: usize,
+        prefer_integrated: bool,
     ) -> Result<(Rc<Self>, SurfaceKHR), Box<dyn std::error::Error>> {
         let entry = unsafe { Entry::load()? };
 
@@ -180,7 +195,7 @@ impl VulkanInner {
         };
 
         let (physical_device, queue_family_index, gpu_name) =
-            pick_physical_device(&instance, &surface_fns, surface)?;
+            pick_physical_device(&instance, &surface_fns, surface, prefer_integrated)?;
 
         let (device, queue) =
             create_logical_device(&instance, physical_device, queue_family_index)?;
@@ -297,12 +312,14 @@ impl VulkanDriver {
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
         gpu_resource_cache_limit: usize,
+        gpu_preference: GpuPreference,
         shared_context: &mut SharedVulkan,
     ) -> Result<(Self, Window), Box<dyn std::error::Error>> {
         let transparent = window_attributes.transparent;
         let window = event_loop.create_window(window_attributes)?;
 
-        let (shared, surface) = shared_context.acquire(&window, gpu_resource_cache_limit)?;
+        let (shared, surface) =
+            shared_context.acquire(&window, gpu_resource_cache_limit, gpu_preference)?;
         let wayland = matches!(
             window.display_handle()?.as_raw(),
             RawDisplayHandle::Wayland(_)
@@ -476,13 +493,11 @@ impl VulkanDriver {
             &sk_image_info,
         );
 
-        let mut surface = wrap_backend_render_target(
+        let mut surface = wrap_render_target(
             &mut self.shared.gr_context.borrow_mut(),
             &render_target,
             SurfaceOrigin::TopLeft,
             ColorType::BGRA8888,
-            None,
-            None,
         )
         .ok_or(DriverError::DeviceLost)?;
 
@@ -659,11 +674,11 @@ fn create_instance(
     Ok(unsafe { entry.create_instance(&create_info, None)? })
 }
 
-/// Rank hardware Vulkan device types.
-fn device_type_rank(device_type: PhysicalDeviceType) -> Option<u32> {
+/// Rank Vulkan GPU types using the requested preference.
+fn device_type_rank(device_type: PhysicalDeviceType, prefer_integrated: bool) -> Option<u32> {
     match device_type {
-        PhysicalDeviceType::DISCRETE_GPU => Some(0),
-        PhysicalDeviceType::INTEGRATED_GPU => Some(1),
+        PhysicalDeviceType::DISCRETE_GPU => Some(if prefer_integrated { 1 } else { 0 }),
+        PhysicalDeviceType::INTEGRATED_GPU => Some(if prefer_integrated { 0 } else { 1 }),
         PhysicalDeviceType::VIRTUAL_GPU => Some(2),
         PhysicalDeviceType::OTHER => Some(3),
         _ => None,
@@ -674,13 +689,14 @@ fn pick_physical_device(
     instance: &Instance,
     surface_fns: &InstanceSurfaceFns,
     surface: SurfaceKHR,
+    prefer_integrated: bool,
 ) -> Result<(PhysicalDevice, u32, String), Box<dyn std::error::Error>> {
     let devices = unsafe { instance.enumerate_physical_devices()? };
     devices
         .into_iter()
         .filter_map(|physical_device| {
             let properties = unsafe { instance.get_physical_device_properties(physical_device) };
-            let rank = device_type_rank(properties.device_type)?;
+            let rank = device_type_rank(properties.device_type, prefer_integrated)?;
             let queue_family_index = unsafe {
                 instance
                     .get_physical_device_queue_family_properties(physical_device)

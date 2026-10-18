@@ -1,12 +1,27 @@
-use std::{
-    fmt::Debug,
-    hash::Hash,
-    sync::Arc,
+use alloc::{
+    boxed::Box,
+    format,
+    rc::Rc,
+    string::{
+        String,
+        ToString,
+    },
+};
+use core::{
+    fmt::{
+        self,
+        Debug,
+    },
+    hash::{
+        Hash,
+        Hasher,
+    },
 };
 
 pub use euclid::Rect;
 
 use crate::{
+    collections::DefaultHasher,
     geometry::Length,
     measure::Phase,
     scaled::Scaled,
@@ -24,7 +39,7 @@ pub struct SizeFnContext {
 pub use serde::*;
 
 #[derive(Clone)]
-pub struct SizeFn(Arc<dyn Fn(SizeFnContext) -> Option<f32> + Sync + Send>, u64);
+pub struct SizeFn(Rc<dyn Fn(SizeFnContext) -> Option<f32>>, u64);
 
 #[cfg(feature = "serde")]
 impl Serialize for SizeFn {
@@ -48,7 +63,7 @@ impl<'de> Deserialize<'de> for SizeFn {
         impl Visitor<'_> for FnVisitor {
             type Value = SizeFn;
 
-            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                 formatter.write_str("\"Fn\"")
             }
 
@@ -57,7 +72,7 @@ impl<'de> Deserialize<'de> for SizeFn {
                 E: de::Error,
             {
                 if v == "Fn" {
-                    Ok(SizeFn(Arc::new(|_ctx| None), 0))
+                    Ok(SizeFn(Rc::new(|_ctx| None), 0))
                 } else {
                     Err(E::custom(format!("expected \"Fn\", got {v}")))
                 }
@@ -69,18 +84,17 @@ impl<'de> Deserialize<'de> for SizeFn {
 }
 
 impl SizeFn {
-    pub fn new(func: impl Fn(SizeFnContext) -> Option<f32> + 'static + Sync + Send) -> Self {
-        Self(Arc::new(func), 0)
+    pub fn new(func: impl Fn(SizeFnContext) -> Option<f32> + 'static) -> Self {
+        Self(Rc::new(func), 0)
     }
 
     pub fn new_data<D: Hash>(
-        func: impl Fn(SizeFnContext) -> Option<f32> + 'static + Sync + Send,
+        func: impl Fn(SizeFnContext) -> Option<f32> + 'static,
         data: &D,
     ) -> Self {
-        use std::hash::Hasher;
-        let mut hasher = std::hash::DefaultHasher::default();
+        let mut hasher = DefaultHasher::default();
         data.hash(&mut hasher);
-        Self(Arc::new(func), hasher.finish())
+        Self(Rc::new(func), hasher.finish())
     }
 
     pub fn call(&self, context: SizeFnContext) -> Option<f32> {
@@ -89,7 +103,7 @@ impl SizeFn {
 }
 
 impl Debug for SizeFn {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("SizeFn")
     }
 }
@@ -182,65 +196,65 @@ pub enum Size {
 
 impl Size {
     /// Use an [`Inner`](Size::Inner) size.
-    pub fn auto() -> Size {
+    pub const fn auto() -> Size {
         Size::Inner
     }
 
     /// Use a [`Fill`](Size::Fill) size.
-    pub fn fill() -> Size {
+    pub const fn fill() -> Size {
         Size::Fill
     }
 
     /// Use a [`FillMinimum`](Size::FillMinimum) size.
-    pub fn fill_minimum() -> Size {
+    pub const fn fill_minimum() -> Size {
         Size::FillMinimum
     }
 
     /// Use a [`Percentage`](Size::Percentage) size.
-    pub fn percent(percent: f32) -> Size {
+    pub const fn percent(percent: f32) -> Size {
         Size::Percentage(Length::new(percent))
     }
 
     /// Use a [`Pixels`](Size::Pixels) size.
-    pub fn px(px: f32) -> Size {
+    pub const fn px(px: f32) -> Size {
         Size::Pixels(Length::new(px))
     }
 
     /// Use a [`RootPercentage`](Size::RootPercentage) size.
-    pub fn window_percent(percent: f32) -> Size {
+    pub const fn window_percent(percent: f32) -> Size {
         Size::RootPercentage(Length::new(percent))
     }
 
     /// Use a [`Flex`](Size::Flex) size.
-    pub fn flex(flex: f32) -> Size {
+    pub const fn flex(flex: f32) -> Size {
         Size::Flex(Length::new(flex))
     }
 
     /// Use a dynamic [`Fn`](Size::Fn) size computed by the given closure.
-    pub fn func(func: impl Fn(SizeFnContext) -> Option<f32> + 'static + Sync + Send) -> Size {
+    pub fn func(func: impl Fn(SizeFnContext) -> Option<f32> + 'static) -> Size {
         Self::Fn(Box::new(SizeFn::new(func)))
     }
 
     /// Use a dynamic [`Fn`](Size::Fn) size with hashable data for equality checks.
     pub fn func_data<D: Hash>(
-        func: impl Fn(SizeFnContext) -> Option<f32> + 'static + Sync + Send,
+        func: impl Fn(SizeFnContext) -> Option<f32> + 'static,
         data: &D,
     ) -> Size {
         Self::Fn(Box::new(SizeFn::new_data(func, data)))
     }
 
-    pub(crate) fn flex_grow(&self) -> Option<Length> {
+    pub(crate) const fn flex_grow(&self) -> Option<Length> {
         match self {
             Self::Flex(f) => Some(*f),
             _ => None,
         }
     }
 
-    pub(crate) fn is_flex(&self) -> bool {
+    pub(crate) const fn is_flex(&self) -> bool {
         matches!(self, Self::Flex(_))
     }
 
-    pub(crate) fn inner_sized(&self) -> bool {
+    pub(crate) const fn inner_sized(&self) -> bool {
         matches!(self, Self::Inner | Self::FillMinimum)
     }
 
@@ -339,7 +353,11 @@ impl Size {
         final_value
     }
 
-    pub(crate) fn most_fitting_size<'a>(&self, size: &'a f32, available_size: &'a f32) -> &'a f32 {
+    pub(crate) const fn most_fitting_size<'a>(
+        &self,
+        size: &'a f32,
+        available_size: &'a f32,
+    ) -> &'a f32 {
         match self {
             Self::Inner => available_size,
             _ => size,

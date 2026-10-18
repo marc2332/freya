@@ -19,7 +19,7 @@ fn main() {
 
     launch(
         LaunchConfig::new()
-            .with_global(i18n)
+            .with_global_context(i18n)
             .with_window(WindowConfig::new(app))
             .with_window(WindowConfig::new(app)),
     )
