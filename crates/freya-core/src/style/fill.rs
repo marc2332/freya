@@ -18,6 +18,7 @@ use freya_engine::prelude::{
 use torin::prelude::Area;
 
 use crate::{
+    data::TextStyleState,
     prelude::Color,
     style::{
         gradient::{
@@ -25,7 +26,11 @@ use crate::{
             LinearGradient,
             RadialGradient,
         },
-        render_callback::RenderCallback,
+        render_callback::{
+            RenderCallback,
+            RenderContext,
+            RenderTarget,
+        },
         shader::ShaderFill,
     },
 };
@@ -56,8 +61,7 @@ pub enum Fill {
     RadialGradient(Box<RadialGradient>),
     /// A [`ConicGradient`].
     ConicGradient(Box<ConicGradient>),
-    /// Custom drawing for rect backgrounds and label or paragraph overlays.
-    /// Span fills do not invoke callbacks.
+    /// Custom background or text paint.
     Callback(#[cfg_attr(feature = "serde", serde(skip))] RenderCallback),
 }
 
@@ -77,16 +81,32 @@ impl Fill {
     }
 
     /// Applies this fill as a text color.
-    pub fn apply_to_text_style(&self, text_style: &mut TextStyle, area: Area) {
-        if let Some(color) = self.as_color() {
-            text_style.set_color(color);
-            return;
+    pub fn apply_to_text_style(
+        &self,
+        text_style: &mut TextStyle,
+        area: Area,
+        text_style_state: &TextStyleState,
+    ) {
+        match self {
+            Self::Color(color) => {
+                text_style.set_color(*color);
+            }
+            Self::Callback(callback) => {
+                text_style.set_color(Color::TRANSPARENT);
+                callback.call(&mut RenderContext {
+                    target: RenderTarget::TextStyle(text_style),
+                    origin: area.origin,
+                    size: area.size,
+                    text_style_state,
+                });
+            }
+            _ => {
+                let mut paint = Paint::default();
+                paint.set_anti_alias(true);
+                self.apply_to_paint(&mut paint, area);
+                text_style.set_foreground_paint(&paint);
+            }
         }
-
-        let mut paint = Paint::default();
-        paint.set_anti_alias(true);
-        self.apply_to_paint(&mut paint, area);
-        text_style.set_foreground_paint(&paint);
     }
 
     pub fn render_callback(&self) -> Option<&RenderCallback> {
@@ -97,7 +117,7 @@ impl Fill {
     }
 
     pub fn apply_to_paint(&self, paint: &mut Paint, area: Area) {
-        match &self {
+        match self {
             Fill::Color(color) => {
                 paint.set_color(*color);
             }

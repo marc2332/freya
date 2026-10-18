@@ -1,6 +1,53 @@
 use accesskit::TreeId;
 use freya::prelude::*;
+use freya_core::integration::{
+    AccessibilityTree,
+    NodesState,
+    Runner,
+    Tree,
+};
+use freya_engine::prelude::{
+    FontCollection,
+    FontMgr,
+};
 use freya_testing::prelude::*;
+
+#[test]
+fn initialization_preserves_pending_focus() {
+    let input_id = AccessibilityId(100);
+    let mut runner = Runner::new(move || {
+        rect()
+            .expanded()
+            .child(
+                rect()
+                    .a11y_id(input_id)
+                    .a11y_focusable(true)
+                    .a11y_role(AccessibilityRole::TextInput),
+            )
+            .into_element()
+    });
+    let mut tree = Tree::default();
+    tree.apply_mutations(runner.sync_and_update(), 1.0);
+    let (events_sender, _events_receiver) = futures_channel::mpsc::unbounded();
+    tree.measure_layout(
+        (300.0, 300.0).into(),
+        &mut FontCollection::new(),
+        &FontMgr::default(),
+        &events_sender,
+        &mut NodesState::default(),
+        1.0,
+        &[],
+    );
+    tree.accessibility_diff
+        .request_focus(AccessibilityFocusStrategy::Node(input_id));
+    let mut accessibility = AccessibilityTree::default();
+
+    let update = accessibility.init(&mut tree, "");
+
+    assert_eq!(update.focus, input_id);
+    assert_eq!(accessibility.focused_id, input_id);
+    assert!(tree.accessibility_diff.requested_focus.is_none());
+}
 
 #[test]
 fn moving_an_a11y_id_between_siblings() {

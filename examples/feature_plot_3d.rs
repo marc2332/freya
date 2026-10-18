@@ -36,9 +36,16 @@ fn on_render(ctx: &mut FillRenderContext, (cursor_x, cursor_y): (f64, f64)) {
     let width = ctx.size.width as f64;
     let height = ctx.size.height as f64;
 
+    let RenderTarget::Background {
+        canvas,
+        font_collection,
+    } = &mut ctx.target
+    else {
+        return;
+    };
     let backend = PlotSkiaBackend::new(
-        ctx.canvas,
-        ctx.font_collection,
+        canvas,
+        font_collection,
         (ctx.size.width as i32, ctx.size.height as i32),
     )
     .into_drawing_area();

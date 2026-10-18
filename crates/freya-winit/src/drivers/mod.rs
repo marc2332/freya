@@ -22,6 +22,44 @@ use winit::{
 
 use crate::config::RendererPreference;
 
+#[cfg(any(target_os = "linux", target_os = "windows"))]
+fn wait_for_display(window: &Window, last_present: &mut Option<std::time::Instant>) {
+    use std::time::{
+        Duration,
+        Instant,
+    };
+
+    #[cfg(target_os = "linux")]
+    {
+        use raw_window_handle::{
+            HasDisplayHandle,
+            RawDisplayHandle,
+        };
+
+        if !matches!(
+            window.display_handle().map(|handle| handle.as_raw()),
+            Ok(RawDisplayHandle::Xlib(_) | RawDisplayHandle::Xcb(_))
+        ) {
+            return;
+        }
+    }
+
+    let refresh_rate = window
+        .current_monitor()
+        .and_then(|monitor| monitor.refresh_rate_millihertz())
+        .filter(|refresh_rate| *refresh_rate > 1_000)
+        .unwrap_or(60_000);
+    let frame_interval = Duration::from_secs_f64(1000.0 / refresh_rate as f64);
+
+    if let Some(last_present) = last_present
+        && let Some(remaining) = frame_interval.checked_sub(last_present.elapsed())
+    {
+        std::thread::sleep(remaining);
+    }
+
+    *last_present = Some(Instant::now());
+}
+
 /// Unrecoverable graphics error requiring a driver rebuild.
 #[derive(Debug)]
 // Used by the Vulkan driver.
