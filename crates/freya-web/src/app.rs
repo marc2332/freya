@@ -289,7 +289,7 @@ impl WebApp {
                 }
                 UserEvent::RequestRedraw => self.needs_render = true,
                 UserEvent::InvalidateArea(area) => {
-                    self.tree.render_state.invalidate_area(area);
+                    self.tree.paint_state.invalidate_area(area);
                     self.needs_render = true;
                 }
                 UserEvent::SetCustomScaleFactor(_) => {}
@@ -348,7 +348,7 @@ impl WebApp {
 
     fn render(&mut self) {
         let scale_factor = self.scale_factor();
-        let render_pipeline = RenderPipeline {
+        let paint_pipeline = PaintPipeline {
             font_collection: &mut self.fonts.collection,
             font_manager: &self.fonts.manager,
             tree: &mut self.tree,
@@ -357,7 +357,7 @@ impl WebApp {
             background: self.background,
             force_full: true,
         };
-        render_pipeline.paint();
+        paint_pipeline.paint();
 
         self.surface.present();
     }

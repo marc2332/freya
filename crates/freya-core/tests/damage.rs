@@ -31,12 +31,12 @@ fn assert_damage_covers_diff(before: &[u8], after: &[u8], damage: &Damage) {
 fn check_interaction(test: &mut TestingRunner, interact: impl FnOnce(&mut TestingRunner)) {
     test.sync_and_update();
     let before = test.render_pixels();
-    test.tree().borrow_mut().render_state.last_damage.take();
+    test.tree().borrow_mut().paint_state.last_damage.take();
 
     interact(test);
 
     let after = test.render_pixels();
-    let damage = test.tree().borrow_mut().render_state.last_damage.take();
+    let damage = test.tree().borrow_mut().paint_state.last_damage.take();
     assert_ne!(before, after, "The interaction should change some pixels");
     assert_damage_covers_diff(&before, &after, &damage);
 }

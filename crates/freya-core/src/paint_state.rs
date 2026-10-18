@@ -12,7 +12,7 @@ use crate::{
 
 /// Cached recordings and pending repaint regions.
 #[derive(Default)]
-pub struct RenderState {
+pub struct PaintState {
     /// Recorded painting commands per node.
     pub cache: FxHashMap<NodeId, Recording>,
 
@@ -32,7 +32,7 @@ pub struct RenderState {
     pub last_damage: Damage,
 }
 
-impl RenderState {
+impl PaintState {
     pub fn invalidate_area(&mut self, area: Area) {
         if !cfg!(feature = "incremental-painting") {
             return;
@@ -63,7 +63,7 @@ impl RenderState {
         }
     }
 
-    pub fn finish_render(&mut self) {
+    pub fn finish_paint(&mut self) {
         self.dirty.clear();
         self.area_invalidated.clear();
         self.last_damage = self.damage.take();

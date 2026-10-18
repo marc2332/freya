@@ -295,10 +295,9 @@ impl ElementExt for Shader {
                 paint.set_color(Color::WHITE);
                 paint.set_shader(shader);
 
-                context.recorder.draw_rect(
-                    context.layout_node.area.to_skia(),
-                    paint,
-                );
+                context
+                    .recorder
+                    .draw_rect(context.layout_node.area.to_skia(), paint);
             }
             Err(err) => {
                 let mut text_paint = Paint::default();

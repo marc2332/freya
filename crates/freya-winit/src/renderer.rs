@@ -725,7 +725,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 app.window.request_redraw();
                             }
                             UserEvent::InvalidateArea(area) => {
-                                app.tree.render_state.invalidate_area(area);
+                                app.tree.paint_state.invalidate_area(area);
                                 app.window.request_redraw();
                             }
                             UserEvent::FocusAccessibilityNode(strategy) => {
@@ -942,7 +942,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                     });
                                 if cfg!(feature = "incremental-painting") && stale_offscreen {
                                     *offscreen_surface = surface.new_surface(&surface.image_info());
-                                    app.tree.render_state.damage.mark_full();
+                                    app.tree.paint_state.damage.mark_full();
                                 }
 
                                 let (canvas, force_full) = match offscreen_surface.as_mut() {
@@ -950,7 +950,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                     None => (surface.canvas(), true),
                                 };
 
-                                RenderPipeline {
+                                PaintPipeline {
                                     font_collection: &mut self.font_collection,
                                     font_manager: &self.font_manager,
                                     tree: &mut app.tree,
@@ -972,7 +972,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
 
                                 Self::draw_damage_overlay(
                                     surface.canvas(),
-                                    &app.tree.render_state.last_damage,
+                                    &app.tree.paint_state.last_damage,
                                 );
 
                                 let cached_assets = app.runner.with_root_context(|| {
@@ -1335,7 +1335,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
         // Rebuild on the same window.
         if needs_recovery && let Some(mut app) = self.windows.remove(&window_id) {
             app.offscreen_surface = None;
-            app.tree.render_state.damage.mark_full();
+            app.tree.paint_state.damage.mark_full();
             // Drop the lost driver first to release its GPU surface.
             drop(app.driver);
             app.driver = GraphicsDriver::recover_reusing_window(

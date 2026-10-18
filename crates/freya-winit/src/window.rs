@@ -496,7 +496,7 @@ impl AppWindow {
             .set_scale_factor(self.effective_scale_factor() as f32);
         self.tree.layout.reset();
         self.tree.text_cache.reset();
-        self.tree.render_state.damage.mark_full();
+        self.tree.paint_state.damage.mark_full();
         self.window.request_redraw();
     }
 

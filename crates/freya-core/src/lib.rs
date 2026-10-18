@@ -19,11 +19,11 @@ pub mod layers;
 pub mod lifecycle;
 pub mod metrics;
 pub mod node_id;
+pub mod paint_pipeline;
+pub mod paint_state;
 pub mod path_element;
 pub mod platform;
 pub mod reactive_context;
-pub mod render_pipeline;
-pub mod render_state;
 pub mod rendering_ticker;
 pub mod runner;
 pub mod scope;
@@ -214,8 +214,8 @@ pub mod integration {
             writable_utils::WritableUtils,
         },
         node_id::NodeId,
+        paint_pipeline::PaintPipeline,
         platform::*,
-        render_pipeline::RenderPipeline,
         rendering_ticker::*,
         runner::{
             Runner,

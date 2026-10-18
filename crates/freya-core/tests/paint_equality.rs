@@ -59,7 +59,7 @@ fn full_paint_rebuilds_recordings() {
     let mut runner = launch_test(|| rect().expanded().background(Color::BLUE));
     runner.sync_and_update();
     let expected = runner.render_pixels();
-    for recording in runner.tree().borrow_mut().render_state.cache.values_mut() {
+    for recording in runner.tree().borrow_mut().paint_state.cache.values_mut() {
         recording.commands.clear();
     }
     runner.set_force_full_render(true);
@@ -82,10 +82,7 @@ impl ElementExt for ConditionalDrawing {
             let area = context.layout_node.visible_area();
             let mut paint = Paint::default();
             paint.set_color(SkColor::RED);
-            context.recorder.draw_rect(
-                area.to_skia(),
-                paint,
-            );
+            context.recorder.draw_rect(area.to_skia(), paint);
         }
     }
 }
@@ -153,11 +150,11 @@ fn unchanged_paragraphs_reuse_measurement_data() {
     test.sync_and_update();
     {
         let tree = test.tree().borrow();
-        let render_state = &tree.render_state;
+        let paint_state = &tree.paint_state;
         for (node_id, previous) in &paragraphs {
             let current = tree.layout.get(node_id).unwrap().data.as_ref().unwrap();
             assert!(Rc::ptr_eq(previous, current));
-            assert!(!render_state.dirty.contains(node_id));
+            assert!(!paint_state.dirty.contains(node_id));
         }
     }
     assert_eq!(initial_pixels, test.render_pixels());
@@ -166,14 +163,14 @@ fn unchanged_paragraphs_reuse_measurement_data() {
     test.sync_and_update();
     {
         let tree = test.tree().borrow();
-        let render_state = &tree.render_state;
+        let paint_state = &tree.paint_state;
         for (node_id, previous) in &paragraphs {
             let paragraph =
                 Paragraph::try_downcast(&**tree.elements.get(node_id).unwrap()).unwrap();
             let changed = paragraph.spans[0].text.starts_with("Revision ");
             let current = tree.layout.get(node_id).unwrap().data.as_ref().unwrap();
             assert_eq!(!Rc::ptr_eq(previous, current), changed);
-            assert_eq!(render_state.dirty.contains(node_id), changed);
+            assert_eq!(paint_state.dirty.contains(node_id), changed);
         }
     }
     assert_ne!(initial_pixels, test.render_pixels());

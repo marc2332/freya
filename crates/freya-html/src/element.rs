@@ -99,16 +99,20 @@ impl ElementExt for HtmlElement {
         context
             .recorder
             .clip_rrect(render_rect, ClipOp::Intersect, true);
-        context.recorder.custom(*render_rect.rect(), context.font_collection, move |custom| {
-            state.borrow_mut().paint(
-                custom.canvas,
-                area.min_x(),
-                area.min_y(),
-                area.width().round() as u32,
-                area.height().round() as u32,
-                scale,
-            );
-        });
+        context.recorder.custom(
+            *render_rect.rect(),
+            context.font_collection,
+            move |custom| {
+                state.borrow_mut().paint(
+                    custom.canvas,
+                    area.min_x(),
+                    area.min_y(),
+                    area.width().round() as u32,
+                    area.height().round() as u32,
+                    scale,
+                );
+            },
+        );
         context.recorder.restore();
     }
 }

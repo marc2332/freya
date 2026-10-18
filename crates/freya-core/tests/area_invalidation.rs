@@ -2,7 +2,7 @@
 
 use freya_core::{
     node_id::NodeId,
-    render_state::RenderState,
+    paint_state::PaintState,
 };
 use freya_engine::prelude::Recording;
 use torin::prelude::{
@@ -13,7 +13,7 @@ use torin::prelude::{
 
 #[test]
 fn invalidate_area_refreshes_intersections_without_expanding_damage() {
-    let mut state = RenderState::default();
+    let mut state = PaintState::default();
     let area = Area::new(Point2D::new(0., 0.), Size2D::new(40., 40.));
     for (node_id, bounds) in [
         (1, Area::new(Point2D::new(0., 0.), Size2D::new(500., 500.))),

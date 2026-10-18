@@ -131,7 +131,7 @@ impl EmbeddedFreya {
         let mut surface = raster_n32_premul((self.size.width as i32, self.size.height as i32))
             .expect("Failed to create the raster surface.");
 
-        RenderPipeline {
+        PaintPipeline {
             font_collection: &mut self.font_collection,
             font_manager: &self.font_manager,
             tree: &mut self.tree,

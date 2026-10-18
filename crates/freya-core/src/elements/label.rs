@@ -286,11 +286,9 @@ impl ElementExt for LabelElement {
 
     fn clip(&self, context: ClipContext) {
         let area = context.visible_area;
-        context.recorder.clip_rect(
-            area.to_skia(),
-            ClipOp::Intersect,
-            true,
-        );
+        context
+            .recorder
+            .clip_rect(area.to_skia(), ClipOp::Intersect, true);
     }
 
     fn render(&self, context: RenderContext) {

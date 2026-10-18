@@ -61,11 +61,7 @@ impl ElementExt for CoolElement {
         paint.set_color(self.color);
         let corner_radius = 12.;
         context.recorder.draw_rrect(
-            SkRRect::new_rect_xy(
-                area.to_skia(),
-                corner_radius,
-                corner_radius,
-            ),
+            SkRRect::new_rect_xy(area.to_skia(), corner_radius, corner_radius),
             paint,
         );
     }

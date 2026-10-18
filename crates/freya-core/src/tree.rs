@@ -19,6 +19,8 @@ use rustc_hash::{
     FxHashMap,
     FxHashSet,
 };
+#[cfg(feature = "incremental-painting")]
+use torin::torin::LayoutChange;
 use torin::{
     node::Node,
     prelude::{
@@ -34,9 +36,6 @@ use torin::{
         Torin,
     },
 };
-
-#[cfg(feature = "incremental-painting")]
-use torin::torin::LayoutChange;
 
 use crate::{
     accessibility::groups::AccessibilityGroups,
@@ -71,7 +70,7 @@ use crate::{
     },
     layers::Layers,
     node_id::NodeId,
-    render_state::RenderState,
+    paint_state::PaintState,
     runner::{
         MutationAdd,
         MutationModified,
@@ -112,7 +111,7 @@ pub struct Tree {
     pub text_cache: TextCache,
 
     /// State for incremental rendering
-    pub render_state: RenderState,
+    pub paint_state: PaintState,
 
     // Accessibility
     pub accessibility_groups: AccessibilityGroups,
@@ -136,9 +135,9 @@ impl Tree {
 
         #[cfg(feature = "incremental-painting")]
         if element.is_render_volatile() {
-            self.render_state.volatile.insert(node_id);
+            self.paint_state.volatile.insert(node_id);
         } else {
-            self.render_state.volatile.remove(&node_id);
+            self.paint_state.volatile.remove(&node_id);
         }
 
         self.elements.insert(node_id, element);
@@ -276,7 +275,7 @@ impl Tree {
             self.insert_element(NodeId::ROOT, Rc::new(RectElement::default()), scale_factor);
             self.heights.insert(NodeId::ROOT, 0);
             dirty.push((NodeId::ROOT, DiffModifies::all()));
-            self.render_state.damage.mark_full();
+            self.paint_state.damage.mark_full();
         }
 
         hotpath::measure_block!("mutations run", {
@@ -347,7 +346,7 @@ impl Tree {
                     self.effect_state.remove(&node_id);
                     self.text_style_state.remove(&node_id);
                     self.text_cache.remove(&node_id);
-                    self.render_state.remove_node(node_id);
+                    self.paint_state.remove_node(node_id);
                 }
             }
 
@@ -488,7 +487,7 @@ impl Tree {
                         | DiffModifies::EFFECT
                         | DiffModifies::TEXT_STYLE,
                 ) {
-                    self.render_state.dirty.insert(node_id);
+                    self.paint_state.dirty.insert(node_id);
                 }
 
                 if !needs_accessibility && (flags.intersects(DiffModifies::ACCESSIBILITY)) {
@@ -586,7 +585,7 @@ impl Tree {
 
                 while let Some(node_id) = buffer.pop_front() {
                     #[cfg(feature = "incremental-painting")]
-                    self.render_state.dirty.insert(*node_id);
+                    self.paint_state.dirty.insert(*node_id);
                     let element = self.elements.get(node_id).unwrap();
                     if let Some(parent_node_id) = self.parents.get(node_id) {
                         let entries = self
@@ -624,7 +623,7 @@ impl Tree {
 
                 while let Some(node_id) = buffer.pop_front() {
                     #[cfg(feature = "incremental-painting")]
-                    self.render_state.dirty.insert(*node_id);
+                    self.paint_state.dirty.insert(*node_id);
                     let element = self.elements.get(node_id).unwrap();
                     if let Some(parent_node_id) = self.parents.get(node_id) {
                         let entries = self.effect_state.get_disjoint_two_entries(
@@ -662,7 +661,7 @@ impl Tree {
 
                 while let Some(node_id) = buffer.pop_front() {
                     #[cfg(feature = "incremental-painting")]
-                    self.render_state.dirty.insert(*node_id);
+                    self.paint_state.dirty.insert(*node_id);
                     let element = self.elements.get(node_id).unwrap();
                     if let Some(parent_node_id) = self.parents.get(node_id) {
                         let entries = self
@@ -785,13 +784,13 @@ impl Tree {
 
         #[cfg(feature = "incremental-painting")]
         hotpath::measure_block!("layout changes", {
-            let render_state = &mut self.render_state;
+            let paint_state = &mut self.paint_state;
             let mut changed_nodes = Vec::new();
             for change in layout_changes {
                 match change {
                     LayoutChange::Changed(node_id) => changed_nodes.push(node_id),
                     LayoutChange::ContentChanged(node_id) => {
-                        render_state.dirty.insert(node_id);
+                        paint_state.dirty.insert(node_id);
                     }
                 }
             }
@@ -801,7 +800,7 @@ impl Tree {
             let mut visited = FxHashSet::default();
             while let Some(node_id) = changed_nodes.pop() {
                 if visited.insert(node_id) {
-                    render_state.dirty.insert(node_id);
+                    paint_state.dirty.insert(node_id);
                     if let Some(children) = self.children.get(&node_id) {
                         changed_nodes.extend(children);
                     }

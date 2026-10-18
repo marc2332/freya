@@ -615,25 +615,25 @@ impl TestingRunner {
         self.size = size;
         self.surface = None;
         self.tree.borrow_mut().layout.reset();
-        self.tree.borrow_mut().render_state.damage.mark_full();
+        self.tree.borrow_mut().paint_state.damage.mark_full();
         self.sync_and_update();
     }
 
     /// Paint the app onto the persistent surface.
     pub fn render_to_surface(&mut self) {
         for area in self.pending_invalidations.take() {
-            self.tree.borrow_mut().render_state.invalidate_area(area);
+            self.tree.borrow_mut().paint_state.invalidate_area(area);
         }
         if self.surface.is_none() {
             self.surface = Some(
                 raster_n32_premul((self.size.width as i32, self.size.height as i32))
                     .expect("Failed to create the surface."),
             );
-            self.tree.borrow_mut().render_state.damage.mark_full();
+            self.tree.borrow_mut().paint_state.damage.mark_full();
         }
         let surface = self.surface.as_mut().expect("Surface was initialized.");
 
-        let render_pipeline = RenderPipeline {
+        let paint_pipeline = PaintPipeline {
             font_collection: &mut self.font_collection,
             font_manager: &self.font_manager,
             tree: &mut self.tree.borrow_mut(),
@@ -642,7 +642,7 @@ impl TestingRunner {
             background: Color::WHITE,
             force_full: self.force_full_render,
         };
-        render_pipeline.paint();
+        paint_pipeline.paint();
     }
 
     pub fn render(&mut self) -> SkData {

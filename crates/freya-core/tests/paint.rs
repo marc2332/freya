@@ -278,10 +278,10 @@ pub fn recorded_bounds_cover_painted_pixels() {
     test.render_to_surface();
 
     let tree = test.tree().borrow();
-    assert!(!tree.render_state.cache.is_empty());
+    assert!(!tree.paint_state.cache.is_empty());
     let mut fonts = FontCollection::new();
     let painted: usize = tree
-        .render_state
+        .paint_state
         .cache
         .values()
         .map(|recording| assert_recording_bounds(recording, &mut fonts))

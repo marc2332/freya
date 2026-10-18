@@ -5,6 +5,8 @@ use std::{
 
 use euclid::Point2D;
 
+#[cfg(feature = "incremental-painting")]
+use crate::prelude::RenderRecorder;
 use crate::prelude::{
     Canvas,
     ClipOp,
@@ -25,9 +27,6 @@ use crate::prelude::{
     SkTextAlign,
     SkTextShadow,
 };
-
-#[cfg(feature = "incremental-painting")]
-use crate::prelude::RenderRecorder;
 
 /// Draw directly onto a canvas or record operations for later replay.
 pub enum RenderCanvas<'a> {
