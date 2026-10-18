@@ -20,7 +20,6 @@ use freya_core::{
 use freya_engine::prelude::{
     Paint,
     SkColor,
-    SkRect,
 };
 use freya_testing::prelude::*;
 use torin::prelude::Size2D;
@@ -84,7 +83,7 @@ impl ElementExt for ConditionalDrawing {
             let mut paint = Paint::default();
             paint.set_color(SkColor::RED);
             context.recorder.draw_rect(
-                SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
+                area.to_skia(),
                 paint,
             );
         }

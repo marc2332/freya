@@ -14,16 +14,16 @@ use freya_engine::prelude::{
     BlendMode,
     PathBuilder,
     RenderRecorder,
-    SkRect,
 };
 use torin::prelude::{
     Area,
     LayoutNode,
 };
+
 #[cfg(feature = "incremental-painting")]
-use torin::prelude::{
-    Point2D,
-    Size2D,
+use crate::geometry::{
+    AreaExt,
+    SkRectExt,
 };
 
 use crate::{
@@ -48,8 +48,6 @@ pub struct RenderPipeline<'a> {
 }
 
 impl RenderPipeline<'_> {
-    pub const INCREMENTAL_PAINTING: bool = cfg!(feature = "incremental-painting");
-
     /// Transform an area with the accumulated scale effects of the given nodes.
     fn scale_transformed_area(tree: &Tree, mut area: Area, scale_node_ids: &[NodeId]) -> Area {
         for node_id in scale_node_ids {
@@ -64,12 +62,6 @@ impl RenderPipeline<'_> {
             area = area.translate(origin.to_vector());
         }
         area
-    }
-
-    #[cfg(feature = "incremental-painting")]
-    fn damage_rect(area: &Area) -> SkRect {
-        let area = area.round_out();
-        SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y())
     }
 
     #[cfg(not(feature = "incremental-painting"))]
@@ -263,11 +255,11 @@ impl RenderPipeline<'_> {
 
         if let [single_rect] = damage.rects() {
             self.canvas
-                .clip_rect(Self::damage_rect(single_rect), ClipOp::Intersect, false);
+                .clip_rect(single_rect.round_out().to_skia(), ClipOp::Intersect, false);
         } else {
             let mut damage_path = PathBuilder::new();
             for rect in damage.rects() {
-                damage_path.add_rect(Self::damage_rect(rect), None, None);
+                damage_path.add_rect(rect.round_out().to_skia(), None, None);
             }
             self.canvas
                 .clip_path(&damage_path.detach(), ClipOp::Intersect, false);
@@ -416,7 +408,7 @@ impl RenderPipeline<'_> {
         #[cfg(feature = "incremental-painting")]
         let layout_bounds = match &recorder {
             RenderCanvas::Recording(recorder) => Some(
-                recorder.transform().map_rect(Self::damage_rect(&layout_node.visible_area())).0,
+                recorder.transform().map_rect(layout_node.visible_area().round_out().to_skia()).0,
             ),
             RenderCanvas::Direct(_) => None,
         };
@@ -436,13 +428,7 @@ impl RenderPipeline<'_> {
             if recording.bounds.is_some_and(|bounds| bounds.is_empty())
                 && let Some(layout_bounds) = layout_bounds
             {
-                recording.bounds = Some(
-                    Area::new(
-                        Point2D::new(layout_bounds.left, layout_bounds.top),
-                        Size2D::new(layout_bounds.width(), layout_bounds.height()),
-                    )
-                    .round_out(),
-                );
+                recording.bounds = Some(layout_bounds.to_torin().round_out());
             }
             return Some(recording);
         }

@@ -116,6 +116,7 @@ harness = false
 required-features = ["smoke-test"]
 
 [features]
+incremental-painting = ["freya-core/incremental-painting"]
 default = ["gpu", "accessibility"]
 smoke-test = []
 platform-text-gamma = []

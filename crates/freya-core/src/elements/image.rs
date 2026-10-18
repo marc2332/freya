@@ -28,7 +28,10 @@ use freya_engine::prelude::{
     raster_from_data,
 };
 use torin::{
-    prelude::Size2D,
+    prelude::{
+        Area,
+        Size2D,
+    },
     scaled::Scaled,
 };
 
@@ -50,6 +53,7 @@ use crate::{
         RenderContext,
     },
     elements::rect::RectElement,
+    geometry::AreaExt,
     layers::Layer,
     prelude::{
         AccessibilityExt,
@@ -343,12 +347,7 @@ impl ElementExt for ImageElement {
 
         let mut area = context.layout_node.visible_area();
 
-        let mut rect = SkRect::new(
-            area.min_x(),
-            area.min_y(),
-            area.min_x() + size.width,
-            area.min_y() + size.height,
-        );
+        let mut rect = Area::new(area.origin, *size).to_skia();
         if self.image_data.image_cover == ImageCover::Center {
             let width_offset = (size.width - area.width()) / 2.;
             let height_offset = (size.height - area.height()) / 2.;

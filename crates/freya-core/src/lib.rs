@@ -11,6 +11,7 @@ pub mod event_handler;
 pub mod events;
 pub mod events_combos;
 pub mod extended_hashmap;
+pub mod geometry;
 pub mod helpers;
 pub mod hooks;
 pub mod io;
@@ -115,6 +116,7 @@ pub mod prelude {
             *,
         },
         events_combos::*,
+        geometry::*,
         hooks::{
             previous_and_current::*,
             use_id::*,
@@ -205,6 +207,7 @@ pub mod integration {
             name::*,
             platform::*,
         },
+        geometry::*,
         lifecycle::{
             global_context::GlobalContexts,
             state::State,

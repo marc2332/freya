@@ -30,7 +30,6 @@ use freya_engine::prelude::{
     PaintStyle,
     ParagraphBuilder,
     ParagraphStyle,
-    SkRect,
     TextStyle,
 };
 use rio_vt::ansi::CursorShape;
@@ -278,7 +277,7 @@ impl ElementExt for Terminal {
         let element = self.clone();
         let layout_data = context.layout_node.data.clone().unwrap();
 
-        let bounds = SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
+        let bounds = area.to_skia();
         context.recorder.custom(bounds, context.font_collection, move |custom| {
             let measure = layout_data.downcast_ref::<TerminalMeasure>().unwrap();
 

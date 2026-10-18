@@ -13,7 +13,6 @@ use freya_engine::prelude::{
     FontMgr,
     RenderCanvas,
     SkRRect,
-    SkRect,
 };
 use rustc_hash::FxHashMap;
 use torin::{
@@ -53,6 +52,7 @@ use crate::{
         },
         name::EventName,
     },
+    geometry::AreaExt,
     layers::Layer,
     node_id::NodeId,
     prelude::{
@@ -191,7 +191,7 @@ pub trait ElementExt: Any {
         let style = self.style();
         let corner_radius = style.corner_radius.with_scale(scale_factor);
         SkRRect::new_rect_radii(
-            SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
+            area.to_skia(),
             &[
                 (corner_radius.top_left(), corner_radius.top_left()).into(),
                 (corner_radius.top_right(), corner_radius.top_right()).into(),

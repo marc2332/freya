@@ -41,7 +41,6 @@ use freya_engine::prelude::{
     Rect,
     SamplingOptions,
     SkImage,
-    SkRect,
     raster_from_data,
     raster_n32_premul,
 };
@@ -628,7 +627,7 @@ impl ElementExt for GifElement {
     fn clip(&self, context: ClipContext) {
         let area = context.visible_area;
         context.recorder.clip_rect(
-            SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
+            area.to_skia(),
             ClipOp::Intersect,
             true,
         );
@@ -648,7 +647,7 @@ impl ElementExt for GifElement {
 
         let area = context.layout_node.visible_area();
 
-        let rect = SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
+        let rect = area.to_skia();
 
         let current_frame = &self.frames.frames[self.frame_idx];
 

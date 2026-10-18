@@ -22,7 +22,6 @@ use freya_core::integration::{
 use skia_safe::{
     Data,
     Paint,
-    Rect,
     RuntimeEffect,
     textlayout::{
         ParagraphBuilder,
@@ -297,12 +296,7 @@ impl ElementExt for Shader {
                 paint.set_shader(shader);
 
                 context.recorder.draw_rect(
-                    Rect::new(
-                        context.layout_node.area.min_x(),
-                        context.layout_node.area.min_y(),
-                        context.layout_node.area.max_x(),
-                        context.layout_node.area.max_y(),
-                    ),
+                    context.layout_node.area.to_skia(),
                     paint,
                 );
             }

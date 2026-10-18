@@ -22,7 +22,6 @@ use freya_engine::prelude::{
     PaintStyle,
     SamplingOptions,
     SkData,
-    SkRect,
     TypefaceFontProvider,
     register_font_typeface,
 };
@@ -314,10 +313,7 @@ impl WinitRenderer {
         for rect in damage.rects() {
             let rect = rect.round_out();
             overlay_paint.set_anti_alias(false);
-            canvas.draw_rect(
-                SkRect::new(rect.min_x(), rect.min_y(), rect.max_x(), rect.max_y()),
-                &overlay_paint,
-            );
+            canvas.draw_rect(rect.to_skia(), &overlay_paint);
         }
     }
 }
@@ -944,7 +940,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                         offscreen.width() != surface.width()
                                             || offscreen.height() != surface.height()
                                     });
-                                if RenderPipeline::INCREMENTAL_PAINTING && stale_offscreen {
+                                if cfg!(feature = "incremental-painting") && stale_offscreen {
                                     *offscreen_surface = surface.new_surface(&surface.image_info());
                                     app.tree.render_state.damage.mark_full();
                                 }
