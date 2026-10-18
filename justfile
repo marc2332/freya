@@ -86,10 +86,10 @@ pc-ci:
     cargo bench --package freya-core --bench core_perf --features "hotpath, hotpath-alloc, hotpath-cloud"
 
 pp workload="painting_suite":
-    HOTPATH_FOCUS="${HOTPATH_FOCUS:-/[/](frame|update|painting)$/}" HOTPATH_EXCLUDE_WRAPPER="${HOTPATH_EXCLUDE_WRAPPER:-1}" cargo test --package freya-core --test paint_performance --release --features "hotpath" "{{workload}}" -- --ignored --exact --nocapture --test-threads=1
+    HOTPATH_FOCUS="${HOTPATH_FOCUS:-/[/](frame|update|painting)$/}" HOTPATH_EXCLUDE_WRAPPER="${HOTPATH_EXCLUDE_WRAPPER:-1}" cargo test --package freya-core --test paint_performance --release --features "hotpath, incremental-painting" "{{workload}}" -- --ignored --exact --nocapture --test-threads=1
 
 pp-ci:
-    HOTPATH_FOCUS="${HOTPATH_FOCUS:-/[/](frame|update|painting)$/}" HOTPATH_EXCLUDE_WRAPPER="${HOTPATH_EXCLUDE_WRAPPER:-1}" cargo test --package freya-core --test paint_performance --release --features "hotpath, hotpath-alloc, hotpath-cloud" painting_suite -- --ignored --exact --nocapture --test-threads=1
+    HOTPATH_FOCUS="${HOTPATH_FOCUS:-/[/](frame|update|painting)$/}" HOTPATH_EXCLUDE_WRAPPER="${HOTPATH_EXCLUDE_WRAPPER:-1}" cargo test --package freya-core --test paint_performance --release --features "hotpath, hotpath-alloc, hotpath-cloud, incremental-painting" painting_suite -- --ignored --exact --nocapture --test-threads=1
 
 ba:
     cargo build --all-targets --workspace -F freya/all-debug

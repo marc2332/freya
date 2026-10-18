@@ -32,6 +32,7 @@ unicode-segmentation = "1.11"
 
 # Layout
 torin = { workspace = true }
+smallvec = { version = "1.15.1", features = ["const_generics"] }
 
 # OS preferences
 mundy = { workspace = true }
@@ -74,6 +75,7 @@ tracing-subscriber = { workspace = true }
 tree-sitter-rust = "0.24"
 
 [features]
+incremental-painting = ["freya-engine/incremental-painting"]
 hotpath = ["hotpath/hotpath", "ragnarok/hotpath"]
 hotpath-alloc = ["hotpath/hotpath-alloc"]
 hotpath-cloud = ["hotpath/hotpath-cloud"]

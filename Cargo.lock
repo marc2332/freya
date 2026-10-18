@@ -2981,6 +2981,7 @@ dependencies = [
  "ragnarok",
  "rustc-hash 2.1.3",
  "serde",
+ "smallvec",
  "subsecond",
  "tiny-cache",
  "tiny-notify",
@@ -3047,6 +3048,7 @@ dependencies = [
 name = "freya-engine"
 version = "0.5.0-rc.10"
 dependencies = [
+ "euclid",
  "freya-skia-safe",
 ]
 

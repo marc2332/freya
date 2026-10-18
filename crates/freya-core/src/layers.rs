@@ -1,12 +1,12 @@
-use std::ops::{
-    Deref,
-    DerefMut,
+use std::{
+    collections::BTreeSet,
+    ops::{
+        Deref,
+        DerefMut,
+    },
 };
 
-use rustc_hash::{
-    FxHashMap,
-    FxHashSet,
-};
+use rustc_hash::FxHashMap;
 
 use crate::node_id::NodeId;
 
@@ -38,8 +38,10 @@ impl From<i16> for Layer {
     }
 }
 
+/// Nodes in each layer are kept sorted by [NodeId] so that painting order
+/// within a layer is deterministic and follows creation order.
 #[derive(Default, Clone, Debug, PartialEq)]
-pub struct Layers(FxHashMap<i16, FxHashSet<NodeId>>);
+pub struct Layers(FxHashMap<i16, BTreeSet<NodeId>>);
 
 impl Layers {
     /// Insert the given [NodeId] in the given layer. Will create an entry for the layer if missing.
@@ -62,7 +64,7 @@ impl Layers {
 }
 
 impl Deref for Layers {
-    type Target = FxHashMap<i16, FxHashSet<NodeId>>;
+    type Target = FxHashMap<i16, BTreeSet<NodeId>>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
