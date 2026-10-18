@@ -673,93 +673,47 @@ fn element_diffing6() {
 }
 
 #[test]
-fn element_diffing7() {
-    fn app() -> Element {
-        let state = use_consume::<State<bool>>();
-
-        if state() {
-            rect()
-                .child(rect().key(4))
-                .child(rect().key(1))
-                .child(rect().key(5))
-                .child(rect().key(0))
-                .into()
-        } else {
-            rect()
-                .child(rect().key(3))
-                .child(rect().key(0))
-                .child(rect().key(1))
-                .into()
-        }
-    }
-    let mut runner = Runner::new(app);
-    let mut tree = Tree::default();
-    let mut state = runner.provide_root_context(|| State::create(true));
-    let mutations = runner.sync_and_update();
-    tree.apply_mutations(mutations, 1.0);
-    state.set(false);
-    let mutations = runner.sync_and_update();
-    assert_eq!(mutations.added.len(), 1);
-    assert!(mutations.modified.is_empty());
-    assert_eq!(mutations.removed.len(), 2);
-    assert_eq!(mutations.moved.len(), 1);
-    assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 3);
-    tree.apply_mutations(mutations, 1.0);
-}
-
-#[test]
-fn element_diffing8() {
+fn mixed_keyed_additions_removals_and_reorders() {
     fn container(_: &()) -> Element {
         rect().into()
     }
 
     fn app() -> Element {
         let state = use_consume::<State<bool>>();
+        let use_component = consume_context::<bool>();
+        let keys: &[u8] = if state() { &[4, 1, 5, 0] } else { &[3, 0, 1] };
+        rect()
+            .children(keys.iter().map(|key| {
+                if use_component && *key == 1 {
+                    from_fn_standalone_borrowed_keyed(*key, (), container)
+                } else {
+                    rect().key(*key).into()
+                }
+            }))
+            .into()
+    }
 
-        if state() {
-            rect()
-                .child(rect().key(4))
-                .child(from_fn_standalone_borrowed_keyed(1, (), container))
-                .child(rect().key(5))
-                .child(rect().key(0))
-                .into()
-        } else {
-            rect()
-                .child(rect().key(3))
-                .child(rect().key(0))
-                .child(from_fn_standalone_borrowed_keyed(1, (), container))
-                .into()
+    for use_component in [false, true] {
+        for (initial, added, removed, children) in [(true, 1, 2, 3), (false, 2, 1, 4)] {
+            let mut runner = Runner::new(app);
+            let mut tree = Tree::default();
+            runner.provide_root_context(|| use_component);
+            let mut state = runner.provide_root_context(|| State::create(initial));
+            tree.apply_mutations(runner.sync_and_update(), 1.0);
+
+            state.set(!initial);
+            let mutations = runner.sync_and_update();
+            assert_eq!(mutations.added.len(), added);
+            assert!(mutations.modified.is_empty());
+            assert_eq!(mutations.removed.len(), removed);
+            assert_eq!(mutations.moved.len(), 1);
+            assert_eq!(mutations.moved.values().next().unwrap().len(), children);
+
+            tree.apply_mutations(mutations, 1.0);
+            tree.verify_tree_integrity();
+            assert_eq!(tree.elements.len(), runner.node_to_scope.len());
         }
     }
-    let mut runner = Runner::new(app);
-    let mut tree = Tree::default();
-    let mut state = runner.provide_root_context(|| State::create(true));
-    let mutations = runner.sync_and_update();
-    tree.apply_mutations(mutations, 1.0);
-    state.set(false);
-    let mutations = runner.sync_and_update();
-    assert_eq!(mutations.added.len(), 1);
-    assert!(mutations.modified.is_empty());
-    assert_eq!(mutations.removed.len(), 2);
-    assert_eq!(mutations.moved.len(), 1);
-    assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 3);
-    tree.apply_mutations(mutations, 1.0);
-    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
-
-    let mut runner = Runner::new(app);
-    let mut tree = Tree::default();
-    let mut state = runner.provide_root_context(|| State::create(false));
-    let mutations = runner.sync_and_update();
-    tree.apply_mutations(mutations, 1.0);
-    state.set(true);
-    let mutations = runner.sync_and_update();
-    assert_eq!(mutations.added.len(), 2);
-    assert!(mutations.modified.is_empty());
-    assert_eq!(mutations.removed.len(), 1);
-    assert_eq!(mutations.moved.len(), 1);
-    assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 4);
-    tree.apply_mutations(mutations, 1.0);
-    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 }
 
 #[test]
@@ -2055,22 +2009,12 @@ fn replay_nested_keyed_layouts(history: &[NestedLayout]) {
             if let Some(element) = scope.element.as_ref() {
                 collect_element_paths(element, &mut element_paths);
             }
-            element_paths.sort();
 
             let mut node_paths = Vec::new();
-            scope.nodes.traverse(&[], |path, _| {
+            scope.nodes.traverse(&[], |path, parent| {
                 if !path.is_empty() {
                     node_paths.push(path.to_vec());
                 }
-            });
-            node_paths.sort();
-
-            assert_eq!(
-                element_paths, node_paths,
-                "scope {:?} nodes diverged from its element tree after {step:?}",
-                scope.id,
-            );
-            scope.nodes.traverse(&[], |path, parent| {
                 if parent.scope_id.is_some() {
                     return;
                 }
@@ -2096,6 +2040,11 @@ fn replay_nested_keyed_layouts(history: &[NestedLayout]) {
                     "child order diverged at {path:?} after {step:?}",
                 );
             });
+            assert_eq!(
+                element_paths, node_paths,
+                "scope {:?} nodes diverged from its element tree after {step:?}",
+                scope.id,
+            );
         }
     }
 }
@@ -2208,6 +2157,91 @@ fn mixed_nested_reconciliation_sequences() {
         history.push(layout);
     }
     replay_nested_keyed_layouts(&history);
+}
+
+fn replay_component_root_reorder(component_key: u8, reordered_keys: [u8; 3]) {
+    fn changing_root(reordered: &bool) -> Element {
+        let initial_value = use_state(|| *reordered);
+        assert!(!initial_value());
+        rect().key(*reordered).into()
+    }
+
+    fn app() -> Element {
+        let reordered = use_consume::<State<bool>>();
+        let (component_key, reordered_keys) = consume_context::<(u8, [u8; 3])>();
+        let keys = if reordered() {
+            reordered_keys
+        } else {
+            [0, 1, 2]
+        };
+        rect()
+            .children(keys.into_iter().map(|key| {
+                if key == component_key {
+                    from_fn(key, reordered(), changing_root)
+                } else {
+                    rect().key(key).into()
+                }
+            }))
+            .into()
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+    runner.provide_root_context(|| (component_key, reordered_keys));
+    let mut reordered = runner.provide_root_context(|| State::create(false));
+    tree.apply_mutations(runner.sync_and_update(), 1.0);
+    let root_scope = runner.scopes[&ScopeId::ROOT].clone();
+    let parent_node_id = root_scope.borrow().nodes.get(&[0]).unwrap().node_id;
+    let component_scope_id = root_scope
+        .borrow()
+        .nodes
+        .get(&[0, component_key as u32])
+        .unwrap()
+        .scope_id
+        .unwrap();
+    let old_children = tree.children[&parent_node_id].clone();
+
+    for next in [true, false, true] {
+        reordered.set(next);
+        tree.apply_mutations(runner.sync_and_update(), 1.0);
+        tree.verify_tree_integrity();
+        assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+        assert_eq!(
+            root_scope
+                .borrow()
+                .nodes
+                .get(&[0, component_key as u32])
+                .unwrap()
+                .scope_id,
+            Some(component_scope_id),
+        );
+
+        let root_node_id = runner.scopes[&component_scope_id]
+            .borrow()
+            .nodes
+            .get(&[0])
+            .unwrap()
+            .node_id;
+        let keys = if next { reordered_keys } else { [0, 1, 2] };
+        let expected = keys.map(|key| {
+            if key == component_key {
+                root_node_id
+            } else {
+                old_children[key as usize]
+            }
+        });
+        assert_eq!(tree.children[&parent_node_id], expected);
+    }
+}
+
+#[test]
+fn unchanged_middle_component_replaces_root_during_sibling_reorder() {
+    replay_component_root_reorder(1, [2, 1, 0]);
+}
+
+#[test]
+fn stationary_component_root_replacement_preserves_reordered_sibling_order() {
+    replay_component_root_reorder(0, [0, 2, 1]);
 }
 
 /// A keyed reorder that also inserts a new sibling among the moved ones in the same frame.
