@@ -1,9 +1,8 @@
-use std::{
-    collections::VecDeque,
-    rc::Rc,
-};
+use std::rc::Rc;
 
+#[cfg(debug_assertions)]
 use rustc_hash::FxHashMap;
+use tiny_diff::DiffNode;
 
 use crate::{
     diff_key::DiffKey,
@@ -13,6 +12,7 @@ use crate::{
         ElementExt,
     },
     runner::Diff,
+    tree::DiffModifies,
 };
 
 pub enum PathElement {
@@ -105,160 +105,73 @@ impl PathElement {
         }
     }
 
+    #[cfg_attr(feature = "hotpath", hotpath::measure)]
+    pub fn diff(&self, previous: Option<&Self>, diff: &mut Diff) {
+        tiny_diff::diff(self, previous, diff);
+    }
+}
+
+impl DiffNode for PathElement {
+    type Key = DiffKey;
+    type Modifications = DiffModifies;
+
     fn key(&self) -> &DiffKey {
         let (Self::Element { key, .. } | Self::Component { key, .. }) = self;
         key
     }
 
-    #[cfg_attr(feature = "hotpath", hotpath::measure)]
-    pub fn diff(&self, previous: Option<&Self>, diff: &mut Diff) {
-        self.diff_inner(previous, diff, false)
+    fn path(&self) -> &[u32] {
+        let (Self::Element { path, .. } | Self::Component { path, .. }) = self;
+        path
     }
 
-    #[cfg_attr(feature = "hotpath", hotpath::measure)]
-    fn diff_inner(&self, previous: Option<&Self>, diff: &mut Diff, parent_removed: bool) {
-        match previous {
-            None => {
-                match self {
-                    PathElement::Component { path, .. } => {
-                        diff.added.push(path.clone());
-                    }
-                    PathElement::Element { path, elements, .. } => {
-                        diff.added.push(path.clone());
+    fn children(&self) -> &[Self] {
+        match self {
+            Self::Element { elements, .. } => elements,
+            Self::Component { .. } => &[],
+        }
+    }
 
-                        // For Elements, recurse into children to mark them as added if needed
-                        for element in elements {
-                            element.diff_inner(None, diff, false);
-                        }
-                    }
-                }
+    fn compatible(&self, previous: &Self) -> bool {
+        matches!(
+            (self, previous),
+            (Self::Element { .. }, Self::Element { .. })
+                | (Self::Component { .. }, Self::Component { .. })
+        )
+    }
+
+    fn modifications(&self, previous: &Self) -> Option<DiffModifies> {
+        match (self, previous) {
+            (
+                Self::Element { element, .. },
+                Self::Element {
+                    element: previous, ..
+                },
+            ) => {
+                let flags = element.diff(previous);
+                (!flags.is_empty()).then_some(flags)
             }
-            Some(previous) => match (self, previous) {
-                (
-                    PathElement::Component { key: k1, path, .. },
-                    PathElement::Component {
-                        key: k2,
-                        path: path2,
-                        ..
-                    },
-                ) => {
-                    if k1 != k2 || parent_removed {
-                        diff.added.push(path.clone());
-                        diff.removed.push(path2.clone());
-                    } else if !path.is_empty() && path[path.len() - 1] != path2[path2.len() - 1] {
-                        diff.moved
-                            .entry(Box::from(&path[..path.len() - 1]))
-                            .or_default()
-                            .push((*path2.last().unwrap(), *path.last().unwrap()));
-                    }
-                }
-                (
-                    PathElement::Element {
-                        elements: e1,
-                        element: element1,
-                        path,
-                        key: k1,
-                        ..
-                    },
-                    PathElement::Element {
-                        elements: e2,
-                        element: element2,
-                        path: path2,
-                        key: k2,
-                        ..
-                    },
-                ) => {
-                    let removed_here = k1 != k2 || parent_removed;
-                    if removed_here {
-                        diff.added.push(path.clone());
-                        diff.removed.push(path2.clone());
-                    } else {
-                        let diff_flags = element1.diff(element2);
-                        if !diff_flags.is_empty() {
-                            diff.modified.push((path.clone(), diff_flags));
-                        }
-                        if !path.is_empty() && path[path.len() - 1] != path2[path2.len() - 1] {
-                            diff.moved
-                                .entry(Box::from(&path[..path.len() - 1]))
-                                .or_default()
-                                .push((*path2.last().unwrap(), *path.last().unwrap()));
-                        }
-                    }
+            _ => None,
+        }
+    }
 
-                    #[cfg(debug_assertions)]
-                    {
-                        let mut seen = FxHashMap::<&DiffKey, &[u32]>::default();
-                        for child in e1 {
-                            let (PathElement::Element {
-                                key,
-                                path: child_path,
-                                ..
-                            }
-                            | PathElement::Component {
-                                key,
-                                path: child_path,
-                                ..
-                            }) = child;
-                            if matches!(key, DiffKey::None | DiffKey::DefaultU64(_)) {
-                                continue;
-                            }
-                            if let Some(prev) = seen.insert(key, child_path) {
-                                panic!(
-                                    "freya diff: duplicate sibling key {:?} under parent {:?} \
-                                     (paths {:?} and {:?})",
-                                    key, path, prev, child_path,
-                                );
-                            }
-                        }
-                    }
-
-                    // Pair children positionally while their keys match
-                    let mut start = 0;
-                    while start < e1.len() && start < e2.len() {
-                        if e1[start].key() != e2[start].key() {
-                            break;
-                        }
-                        e1[start].diff_inner(Some(&e2[start]), diff, removed_here);
-                        start += 1;
-                    }
-
-                    if start < e1.len() || start < e2.len() {
-                        let mut previous_keys = FxHashMap::<&DiffKey, VecDeque<usize>>::default();
-
-                        for (i, e) in e2.iter().enumerate().skip(start) {
-                            previous_keys.entry(e.key()).or_default().push_back(i)
-                        }
-
-                        for e in &e1[start..] {
-                            if let Some(old_i) =
-                                previous_keys.get_mut(e.key()).and_then(VecDeque::pop_front)
-                            {
-                                e.diff_inner(Some(&e2[old_i]), diff, removed_here);
-                            } else {
-                                e.diff_inner(None, diff, false);
-                            }
-                        }
-
-                        for indexes in previous_keys.values() {
-                            for i in indexes {
-                                let (PathElement::Element { path, .. }
-                                | PathElement::Component { path, .. }) = &e2[*i];
-                                diff.removed.push(path.clone());
-                                // No need to remove recursively here because scope and tree diff handling already runs recursively
-                            }
-                        }
-                    }
-                }
-                (s, o) => {
-                    // Removed old
-                    let (PathElement::Element { path, .. } | PathElement::Component { path, .. }) =
-                        o;
-                    diff.removed.push(path.clone());
-
-                    // Add new recursively
-                    s.diff_inner(None, diff, false);
-                }
-            },
+    #[cfg(debug_assertions)]
+    fn validate_children(&self) {
+        let mut seen = FxHashMap::<&DiffKey, &[u32]>::default();
+        for child in self.children() {
+            let key = child.key();
+            if matches!(key, DiffKey::None | DiffKey::DefaultU64(_)) {
+                continue;
+            }
+            if let Some(previous) = seen.insert(key, child.path()) {
+                panic!(
+                    "freya diff: duplicate sibling key {:?} under parent {:?} (paths {:?} and {:?})",
+                    key,
+                    self.path(),
+                    previous,
+                    child.path(),
+                );
+            }
         }
     }
 }

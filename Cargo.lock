@@ -2983,6 +2983,7 @@ dependencies = [
  "serde",
  "smallvec",
  "subsecond",
+ "tiny-diff",
  "torin",
  "tracing",
  "tracing-subscriber",
@@ -8477,6 +8478,14 @@ checksum = "7e689342a48d2ea927c87ea50cabf8594854bf940e9310208848d680d668ed85"
 dependencies = [
  "num-conv",
  "time-core",
+]
+
+[[package]]
+name = "tiny-diff"
+version = "0.5.0-rc.10"
+dependencies = [
+ "hashbrown 0.16.1",
+ "rustc-hash 2.1.3",
 ]
 
 [[package]]

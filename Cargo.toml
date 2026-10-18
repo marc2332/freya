@@ -19,6 +19,7 @@ plot = ["freya/plot"]
 members = [
   "./crates/freya",
   "./crates/freya-core",
+  "./crates/tiny-diff",
   "./crates/torin",
   "./crates/ragnarok",
   "./crates/freya-clipboard",
@@ -68,6 +69,7 @@ rate-limit.existing-packages = 40
 [workspace.dependencies]
 freya = { path = "./crates/freya", version = "0.5.0-rc.10" }
 freya-core = { path = "./crates/freya-core", version = "0.5.0-rc.10" }
+tiny-diff = { path = "./crates/tiny-diff", version = "0.5.0-rc.10" }
 torin = { path = "./crates/torin", version = "0.5.0-rc.10" }
 ragnarok = { path = "./crates/ragnarok", version = "0.5.0-rc.10" }
 freya-clipboard = { path = "./crates/freya-clipboard", version = "0.5.0-rc.10" }
