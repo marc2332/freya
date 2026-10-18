@@ -83,7 +83,7 @@
 //! - `router`: Reexport [freya_router] under [router]
 //! - `i18n`: Reexport [freya_i18n] under [i18n]
 //! - `remote-asset`: Enables [HTTP requests](freya_components::http) and remote sources for [ImageViewer](components::ImageViewer) and [GifViewer](components::GifViewer).
-//! - `tray`: Enables tray support using the [tray_icon] crate.
+//! - `tray`: Enables system tray support through the [tray] module.
 //! - `sdk`: Reexport [freya_sdk] under [sdk].
 //! - `sdk-tokio`: Enables the Tokio utilities from [freya_sdk]. Implies `sdk`.
 //! - `gif`: Enables the [GifViewer](components::GifViewer) component.

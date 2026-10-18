@@ -233,13 +233,13 @@
 //! }
 //!
 //! impl EventHandlersExt for Clickable {
-//!     fn get_event_handlers(&mut self) -> &mut EventHandlers {
+//!     fn event_handlers_mut(&mut self) -> &mut EventHandlers {
 //!         &mut self.event_handlers
 //!     }
 //! }
 //!
 //! impl AccessibilityExt for Clickable {
-//!     fn get_accessibility_data(&mut self) -> &mut AccessibilityData {
+//!     fn accessibility_data_mut(&mut self) -> &mut AccessibilityData {
 //!         &mut self.accessibility
 //!     }
 //! }

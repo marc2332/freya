@@ -1,3 +1,4 @@
+#![cfg_attr(not(feature = "std"), no_std)]
 #![warn(clippy::pedantic, clippy::perf, clippy::missing_const_for_fn)]
 #![allow(
     clippy::must_use_candidate,
@@ -8,8 +9,12 @@
     clippy::option_option
 )]
 
+extern crate alloc;
+
+pub mod collections;
 pub mod custom_measurer;
 pub mod geometry;
+mod math;
 pub mod measure;
 pub mod node;
 pub mod scaled;

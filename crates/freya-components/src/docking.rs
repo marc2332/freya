@@ -343,7 +343,7 @@ impl<M: DockingModel> PartialEq for DockingArea<M> {
 }
 
 impl<M: DockingModel> KeyExt for DockingArea<M> {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -459,7 +459,7 @@ impl<M: DockingModel> PartialEq for DockPanelView<M> {
 }
 
 impl<M: DockingModel> KeyExt for DockPanelView<M> {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }

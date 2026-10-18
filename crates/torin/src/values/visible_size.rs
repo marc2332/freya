@@ -1,3 +1,11 @@
+use alloc::{
+    format,
+    string::{
+        String,
+        ToString,
+    },
+};
+
 use crate::prelude::Length;
 
 /// Controls the percentage of the measured size that will actually be used in layout,

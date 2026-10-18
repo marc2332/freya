@@ -47,7 +47,7 @@ pub struct Slider {
 }
 
 impl KeyExt for Slider {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }

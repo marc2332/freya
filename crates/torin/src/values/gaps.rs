@@ -1,3 +1,8 @@
+use alloc::{
+    format,
+    string::String,
+};
+
 pub use euclid::Rect;
 
 use crate::{

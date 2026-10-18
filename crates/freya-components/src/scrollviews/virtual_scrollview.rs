@@ -208,7 +208,7 @@ pub struct VirtualScrollView<D, B: Fn(VirtualItem, &D) -> Element> {
 }
 
 impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> LayoutExt for VirtualScrollView<D, B> {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
@@ -216,7 +216,7 @@ impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> LayoutExt for VirtualScrol
 impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> ContainerSizeExt for VirtualScrollView<D, B> {}
 
 impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> KeyExt for VirtualScrollView<D, B> {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }

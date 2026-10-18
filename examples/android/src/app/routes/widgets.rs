@@ -249,6 +249,32 @@ impl Component for WidgetsDemo {
                             .child(ColorPicker::new(move |c| color.set(c)).value(color())),
                     )
                     .child(
+                        rect()
+                            .width(Size::fill())
+                            .spacing(8.)
+                            .child("Backdrop Blur")
+                            .child(
+                                ImageViewer::new((
+                                    "blur-demo",
+                                    include_bytes!("../../../../rust_logo.png"),
+                                ))
+                                .width(Size::fill())
+                                .height(Size::px(180.))
+                                .image_cover(ImageCover::Center)
+                                .horizontal()
+                                .main_align(Alignment::end())
+                                .child(
+                                    rect()
+                                        .width(Size::percent(50.))
+                                        .height(Size::fill())
+                                        .center()
+                                        .background((255, 255, 255, 0.30))
+                                        .color((0, 0, 0))
+                                        .backdrop_blur(12.),
+                                ),
+                            ),
+                    )
+                    .child(
                         rect().spacing(8.).child("Remote Image").child(
                             ImageViewer::new("https://picsum.photos/500/1000")
                                 .width(Size::fill())

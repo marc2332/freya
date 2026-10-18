@@ -149,7 +149,7 @@ impl CalendarGrid {
 }
 
 impl LayoutExt for CalendarGrid {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
@@ -157,7 +157,7 @@ impl LayoutExt for CalendarGrid {
 impl ContainerExt for CalendarGrid {}
 
 impl KeyExt for CalendarGrid {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }

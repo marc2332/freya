@@ -40,7 +40,7 @@ struct ControlPanel {
 }
 
 impl KeyExt for ControlPanel {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -82,7 +82,7 @@ struct TextBlock {
 }
 
 impl KeyExt for TextBlock {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -125,7 +125,7 @@ struct ImageTile {
 }
 
 impl KeyExt for ImageTile {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -170,7 +170,7 @@ struct StatefulSwitch {
 }
 
 impl KeyExt for StatefulSwitch {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -318,11 +318,11 @@ macro_rules! timings {
     };
 }
 
-struct RenderWorkload {
+struct PaintingWorkload {
     runner: TestingRunner,
 }
 
-impl RenderWorkload {
+impl PaintingWorkload {
     fn run(&mut self, names: TimingNames, action: impl FnMut(&mut TestingRunner, usize)) {
         let initial = self.runner.render();
         self.run_with_interval(names, Duration::ZERO, action);
@@ -372,7 +372,7 @@ impl RenderWorkload {
     }
 }
 
-fn mount(app: impl Into<AppComponent>) -> (RenderWorkload, Rc<Cell<usize>>) {
+fn mount(app: impl Into<AppComponent>) -> (PaintingWorkload, Rc<Cell<usize>>) {
     let (mut runner, count) = TestingRunner::new(
         app,
         (900., 600.).into(),
@@ -381,7 +381,7 @@ fn mount(app: impl Into<AppComponent>) -> (RenderWorkload, Rc<Cell<usize>>) {
     );
     runner.animation_clock().disable();
     runner.render_to_surface();
-    (RenderWorkload { runner }, count)
+    (PaintingWorkload { runner }, count)
 }
 
 fn small_ui() {
@@ -415,7 +415,7 @@ fn large_switches() {
     );
     runner.animation_clock().disable();
     runner.render_to_surface();
-    let mut workload = RenderWorkload { runner };
+    let mut workload = PaintingWorkload { runner };
 
     workload.run(timings!("large-switches"), |runner, iteration| {
         let index = 1 + iteration * 17 % (COLUMNS * ROWS - 1);
@@ -443,7 +443,7 @@ fn images_medium() {
     runner.move_cursor((-10., -10.));
     runner.render_to_surface();
     count.set(0);
-    let mut workload = RenderWorkload { runner };
+    let mut workload = PaintingWorkload { runner };
 
     workload.run(timings!("images-medium"), |runner, iteration| {
         let index = iteration % 10;
@@ -509,7 +509,7 @@ fn medium_code_editor_typing() {
     runner.sync_and_update();
     runner.press_key(Key::Named(NamedKey::End));
     runner.render_to_surface();
-    let mut workload = RenderWorkload { runner };
+    let mut workload = PaintingWorkload { runner };
 
     workload.run(timings!("medium-code-editor-typing"), |runner, _| {
         runner.write_text("x")
@@ -548,7 +548,7 @@ fn medium_animation() {
         1.,
     );
     runner.render_to_surface();
-    let mut workload = RenderWorkload { runner };
+    let mut workload = PaintingWorkload { runner };
 
     workload.run_with_interval(
         timings!("medium-animation"),
@@ -568,15 +568,15 @@ fn profile(workloads: &[fn()]) {
 macro_rules! profiling_tests {
     ($($workload:ident),+ $(,)?) => {
         #[test]
-        #[ignore = "Render profiling workload"]
-        fn render_suite() {
+        #[ignore = "Painting profiling workload"]
+        fn painting_suite() {
             profile(&[$($workload),+]);
         }
 
         mod individual {
             $(
                 #[test]
-                #[ignore = "Render profiling workload"]
+                #[ignore = "Painting profiling workload"]
                 fn $workload() {
                     crate::profile(&[crate::$workload]);
                 }

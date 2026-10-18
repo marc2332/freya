@@ -38,7 +38,7 @@ pub struct Portal<T> {
 }
 
 impl<T> ChildrenExt for Portal<T> {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
@@ -89,7 +89,7 @@ impl<T> Portal<T> {
 }
 
 impl<T> LayoutExt for Portal<T> {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
@@ -97,7 +97,7 @@ impl<T> LayoutExt for Portal<T> {
 impl<T> ContainerSizeExt for Portal<T> {}
 
 impl<T> KeyExt for Portal<T> {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }

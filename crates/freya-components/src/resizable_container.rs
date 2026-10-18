@@ -252,7 +252,7 @@ impl Default for ResizableContainer {
 }
 
 impl LayoutExt for ResizableContainer {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
@@ -348,13 +348,13 @@ pub struct ResizablePanel {
 }
 
 impl KeyExt for ResizablePanel {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl ChildrenExt for ResizablePanel {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }

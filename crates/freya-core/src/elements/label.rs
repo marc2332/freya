@@ -51,7 +51,6 @@ use crate::{
         TextAlign,
         TextStyleExt,
     },
-    style::render_callback::RenderContext as FillRenderContext,
     text_cache::CachedParagraph,
     tree::DiffModifies,
 };
@@ -300,21 +299,6 @@ impl ElementExt for LabelElement {
 
         let origin = context.layout_node.inner_area.origin;
         paragraph.paint_at(context.canvas, origin.cast_unit());
-        if let Some(callback) = context.text_style_state.color.render_callback() {
-            let layer = context.canvas.save();
-            context.canvas.translate(origin.to_tuple());
-            context
-                .canvas
-                .scale((context.scale_factor as f32, context.scale_factor as f32));
-            callback.call(&mut FillRenderContext {
-                canvas: context.canvas,
-                font_collection: context.font_collection,
-                origin: (origin / context.scale_factor as f32).cast_unit(),
-                size: paragraph.fill_area().size / context.scale_factor as f32,
-                text_style_state: context.text_style_state,
-            });
-            context.canvas.restore_to_count(layer);
-        }
     }
 }
 
@@ -329,37 +313,37 @@ impl From<Label> for Element {
 }
 
 impl KeyExt for Label {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl EventHandlersExt for Label {
-    fn get_event_handlers(&mut self) -> &mut EventHandlers {
+    fn event_handlers_mut(&mut self) -> &mut EventHandlers {
         &mut self.element.event_handlers
     }
 }
 
 impl AccessibilityExt for Label {
-    fn get_accessibility_data(&mut self) -> &mut AccessibilityData {
+    fn accessibility_data_mut(&mut self) -> &mut AccessibilityData {
         &mut self.element.accessibility
     }
 }
 
 impl TextStyleExt for Label {
-    fn get_text_style_data(&mut self) -> &mut TextStyleData {
+    fn text_style_data_mut(&mut self) -> &mut TextStyleData {
         &mut self.element.text_style_data
     }
 }
 
 impl EffectExt for Label {
-    fn get_effect(&mut self) -> &mut EffectData {
+    fn effect_mut(&mut self) -> &mut EffectData {
         self.element.effect.get_or_insert_with(EffectData::default)
     }
 }
 
 impl LayerExt for Label {
-    fn get_layer(&mut self) -> &mut Layer {
+    fn layer_mut(&mut self) -> &mut Layer {
         &mut self.element.relative_layer
     }
 }
@@ -400,7 +384,7 @@ impl Label {
 }
 
 impl LayoutExt for Label {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.element.layout
     }
 }
