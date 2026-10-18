@@ -2850,7 +2850,6 @@ dependencies = [
  "plotters",
  "tokio",
  "torin",
- "tray-icon",
 ]
 
 [[package]]
@@ -2895,6 +2894,7 @@ dependencies = [
  "freya-core",
  "freya-engine",
  "nokhwa",
+ "tiny-notify",
  "tracing",
 ]
 
@@ -2981,9 +2981,10 @@ dependencies = [
  "ragnarok",
  "rustc-hash 2.1.3",
  "serde",
- "smallvec",
  "subsecond",
+ "tiny-cache",
  "tiny-diff",
+ "tiny-notify",
  "torin",
  "tracing",
  "tracing-subscriber",
@@ -3243,6 +3244,7 @@ dependencies = [
  "freya",
  "freya-core",
  "freya-engine",
+ "freya-testing",
  "futures-channel",
  "futures-lite",
  "keyboard-types 0.8.3",
@@ -3251,6 +3253,8 @@ dependencies = [
  "rio-vt",
  "rustc-hash 2.1.3",
  "thiserror 2.0.19",
+ "tiny-cache",
+ "tiny-notify",
  "torin",
 ]
 
@@ -3284,6 +3288,7 @@ dependencies = [
  "freya-engine",
  "freya-testing",
  "rodio",
+ "tiny-notify",
  "torin",
  "tracing",
  "ureq",
@@ -3321,7 +3326,6 @@ dependencies = [
  "freya-core",
  "freya-engine",
  "futures-channel",
- "futures-lite",
  "futures-util",
  "gl",
  "glutin",
@@ -8481,11 +8485,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "tiny-cache"
+version = "0.5.0-rc.10"
+dependencies = [
+ "rustc-hash 2.1.3",
+ "smallvec",
+]
+
+[[package]]
 name = "tiny-diff"
 version = "0.5.0-rc.10"
 dependencies = [
  "hashbrown 0.16.1",
  "rustc-hash 2.1.3",
+]
+
+[[package]]
+name = "tiny-notify"
+version = "0.5.0-rc.10"
+dependencies = [
+ "futures-lite",
 ]
 
 [[package]]

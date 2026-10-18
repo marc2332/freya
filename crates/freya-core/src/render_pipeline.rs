@@ -193,7 +193,6 @@ impl RenderPipeline<'_> {
                     font_collection: self.font_collection,
                     canvas: self.canvas,
                     layout_node,
-                    tree: self.tree,
                     text_style_state,
                     scale_factor: self.scale_factor,
                 };

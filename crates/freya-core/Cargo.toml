@@ -20,6 +20,8 @@ tracing = { workspace = true }
 rustc-hash = { workspace = true }
 bitflags = { workspace = true }
 pathgraph = { workspace = true }
+tiny-cache = { workspace = true }
+tiny-notify = { workspace = true }
 # Core/async
 futures-util = { workspace = true }
 futures-channel = { workspace = true }
@@ -31,7 +33,6 @@ unicode-segmentation = "1.11"
 
 # Layout
 torin = { workspace = true }
-smallvec = "1.15.1"
 
 # OS preferences
 mundy = { workspace = true }

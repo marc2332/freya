@@ -1,3 +1,6 @@
+//! Wait until work is ready or something changes, without repeatedly checking.
+//! Choose `Notify` or `ArcNotify` for one waiting caller, or `BroadcastNotify` for several.
+
 use std::{
     cell::{
         Cell,
@@ -18,6 +21,8 @@ use std::{
     },
 };
 
+/// Wait for work without repeatedly asking whether it is ready, such as waiting for a new frame.
+/// Only one caller should wait at a time. For a wake-up from background work, use [`ArcNotify`].
 #[derive(Clone, Default)]
 pub struct Notify {
     state: Rc<State>,
@@ -39,6 +44,8 @@ impl Notify {
         }
     }
 
+    /// Wakes the waiting caller, or saves one wake-up for later if nobody is waiting.
+    /// Repeated calls count as one until the wake-up is received, so this does not count work items.
     pub fn notify(&self) {
         self.state.flag.set(true);
 
@@ -47,6 +54,7 @@ impl Notify {
         }
     }
 
+    /// Waits for a wake-up, including one saved before this call.
     pub fn notified(&self) -> Notified {
         Notified {
             state: self.state.clone(),
@@ -71,6 +79,8 @@ impl Future for Notified {
     }
 }
 
+/// Let background work wake the part of your program that needs its results.
+/// Only one caller should wait at a time. Store the results separately from the wake-up.
 #[derive(Clone, Default)]
 pub struct ArcNotify {
     state: Arc<StateArc>,
@@ -87,6 +97,8 @@ impl ArcNotify {
         Self::default()
     }
 
+    /// Wakes the waiting caller, or saves one wake-up for later if nobody is waiting.
+    /// Repeated calls count as one until the wake-up is received, so this does not count work items.
     pub fn notify(&self) {
         self.state
             .flag
@@ -99,6 +111,7 @@ impl ArcNotify {
         }
     }
 
+    /// Waits for a wake-up, including one saved before this call.
     pub fn notified(&self) -> NotifiedArc {
         NotifiedArc {
             state: self.state.clone(),
@@ -129,7 +142,8 @@ impl Future for NotifiedArc {
     }
 }
 
-/// Like [Notify] but wakes every waiter, notifications are observed rather than consumed.
+/// Wake several parts of your program for the same change, such as the start of a new frame.
+/// Unlike [`Notify`], each notification can wake all waiting callers, not just one.
 #[derive(Clone, Default)]
 pub struct BroadcastNotify {
     state: Rc<BroadcastState>,
@@ -146,6 +160,8 @@ impl BroadcastNotify {
         Self::default()
     }
 
+    /// Wakes every caller whose wait was created before this call.
+    /// Callers that start waiting afterward will wait for the next wake-up instead.
     pub fn notify(&self) {
         self.state
             .version
@@ -155,7 +171,7 @@ impl BroadcastNotify {
         }
     }
 
-    /// Completes on the first [BroadcastNotify::notify] made after this call.
+    /// Waits for the next wake-up after this call, even if `.await` comes later.
     pub fn notified(&self) -> NotifiedBroadcast {
         NotifiedBroadcast {
             state: self.state.clone(),
@@ -195,7 +211,7 @@ mod test {
         poll_once,
     };
 
-    use crate::notify::BroadcastNotify;
+    use crate::BroadcastNotify;
 
     #[test]
     fn broadcast_notify() {
