@@ -6,9 +6,6 @@
 //! paths, while movement pairs contain old and new child indices. Removals use old
 //! paths, additions and modifications use new paths. Removal order is unspecified.
 //! The caller applies the resulting diff and owns node lifetimes.
-//!
-//! Requires `alloc`. The optional `std` feature selects standard-library maps for
-//! interoperability. Maps use Fx hashing, which is not intended for adversarial keys.
 
 extern crate alloc;
 #[cfg(feature = "std")]
