@@ -18,8 +18,8 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    let cols = 60;
-    let rows = 60;
+    let cols = 30;
+    let rows = 30;
 
     rect().children((0..rows).map(|row| {
         rect()
