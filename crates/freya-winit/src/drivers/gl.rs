@@ -1,8 +1,5 @@
 #[cfg(target_os = "windows")]
-use std::time::{
-    Duration,
-    Instant,
-};
+use std::time::Instant;
 use std::{
     ffi::{
         CStr,
@@ -286,24 +283,6 @@ impl OpenGLDriver {
         Ok(driver)
     }
 
-    #[cfg(target_os = "windows")]
-    fn wait_for_display(&mut self, window: &Window) {
-        let refresh_rate = window
-            .current_monitor()
-            .and_then(|monitor| monitor.refresh_rate_millihertz())
-            .filter(|refresh_rate| *refresh_rate > 1_000)
-            .unwrap_or(60_000);
-        let frame_interval = Duration::from_secs_f64(1000.0 / refresh_rate as f64);
-
-        if let Some(last_present) = self.last_present
-            && let Some(remaining) = frame_interval.checked_sub(last_present.elapsed())
-        {
-            std::thread::sleep(remaining);
-        }
-
-        self.last_present = Some(Instant::now());
-    }
-
     pub fn present(&mut self, window: &Window, render: impl FnOnce(&mut SkiaSurface)) {
         if !self.gl_context.is_current() {
             self.gl_context.make_current(&self.gl_surface).unwrap();
@@ -318,7 +297,7 @@ impl OpenGLDriver {
         }
 
         #[cfg(target_os = "windows")]
-        self.wait_for_display(window);
+        crate::drivers::wait_for_display(window, &mut self.last_present);
     }
 
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
@@ -347,7 +326,13 @@ impl OpenGLDriver {
 
     fn config_template(transparent: bool) -> ConfigTemplateBuilder {
         ConfigTemplateBuilder::new()
-            .with_alpha_size(if transparent { 8 } else { 0 })
+            // Always with alpha on Android, without it, Skia cannot read the window's
+            // framebuffer back there, and a backdrop blur silently draws nothing.
+            .with_alpha_size(if transparent || cfg!(target_os = "android") {
+                8
+            } else {
+                0
+            })
             .with_transparency(transparent)
     }
 
