@@ -66,7 +66,7 @@ impl PanelSize {
     }
 }
 
-/// A snapshot of a panel's size and constraints.
+/// A panel's size and constraints.
 #[derive(Clone, Copy, Debug)]
 pub struct Panel {
     pub size: f32,
@@ -110,7 +110,7 @@ impl ResizableContext {
         self.direction
     }
 
-    /// Returns a snapshot of the panels in declaration order.
+    /// Returns the panels in declaration order.
     pub fn panels(&self) -> Vec<Panel> {
         self.panels.iter().map(|(_, panel)| *panel).collect()
     }
