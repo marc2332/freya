@@ -17,7 +17,7 @@
 //! ## Renderer preference
 //!
 //! See [`Platforms`](crate::_docs::platforms) for the renderer used by each operating system.
-//! Choose a renderer with [`crate::prelude::WindowConfig::with_renderer`]. `Auto` is the default
+//! Choose a renderer with [`WindowConfig::with_renderer`](crate::prelude::WindowConfig::with_renderer). `Auto` is the default
 //! and respects `FREYA_RENDERER` before applying the platform defaults. Other options are
 //! `Software`, `OpenGl`, and `Vulkan`.
 //!
@@ -37,8 +37,8 @@
 //! ## GPU cache
 //!
 //! Set the Skia GPU resource cache limit with
-//! [`crate::prelude::LaunchConfig::with_gpu_resource_cache_limit`]. It applies to every window
-//! and defaults to [`crate::prelude::GpuResourceCacheLimit::Normal`] (256 MiB).
+//! [`LaunchConfig::with_gpu_resource_cache_limit`](crate::prelude::LaunchConfig::with_gpu_resource_cache_limit). It applies to every window
+//! and defaults to [`GpuResourceCacheLimit::Normal`](crate::prelude::GpuResourceCacheLimit::Normal) (256 MiB).
 //!
 //! ```rust,no_run
 //! # use freya::prelude::*;
@@ -56,7 +56,7 @@
 //!
 //! ## MetricsPlugin
 //!
-//! Enable the `metrics` feature to use [`crate::metrics::MetricsPlugin`] while profiling. It
+//! Enable the `metrics` feature to use [`MetricsPlugin`](crate::metrics::MetricsPlugin) while profiling. It
 //! displays performance information without changing your application code. The performance
 //! overlay is hidden by default and can be enabled with `with_visible_performance(true)`.
 //!
@@ -85,10 +85,10 @@
 //! ## Image and SVG viewers
 //!
 //! Avoid decoding images larger than their display size with
-//! [`crate::components::ImageViewer::decode_mode`]. [`crate::components::DecodeMode::FromLayout`]
+//! [`ImageViewer::decode_mode`](crate::components::ImageViewer::decode_mode). [`DecodeMode::FromLayout`](crate::components::DecodeMode::FromLayout)
 //! is the default and uses the pixel-sized layout when both dimensions are fixed. Use
-//! [`crate::components::DecodeMode::Custom`] to cap the decoded size, or
-//! [`crate::components::DecodeMode::Source`] to keep the source size.
+//! [`DecodeMode::Custom`](crate::components::DecodeMode::Custom) to cap the decoded size, or
+//! [`DecodeMode::Source`](crate::components::DecodeMode::Source) to keep the source size.
 //!
 //! ```rust,no_run
 //! # use freya::prelude::*;
@@ -98,9 +98,9 @@
 //!     .sampling_mode(SamplingMode::Bilinear);
 //! ```
 //!
-//! Set [`crate::prelude::SamplingMode`] with `sampling_mode` to choose the image scaling filter.
+//! Set [`SamplingMode`](crate::prelude::SamplingMode) with `sampling_mode` to choose the image scaling filter.
 //! `Nearest` and `Bilinear` use less rendering work than `Mitchell` and `CatmullRom`.
 //!
-//! [`crate::components::SvgViewer`] rasterizes SVGs at their layout size. Set
-//! [`crate::components::SvgViewer::async_rasterization`] to `true` to rasterize local SVGs in a
+//! [`SvgViewer`](crate::components::SvgViewer) rasterizes SVGs at their layout size. Set
+//! [`SvgViewer::async_rasterization`](crate::components::SvgViewer::async_rasterization) to `true` to rasterize local SVGs in a
 //! background thread. Remote SVGs already rasterize in the background.
