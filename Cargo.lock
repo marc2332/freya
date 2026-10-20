@@ -2947,7 +2947,6 @@ dependencies = [
  "gif 0.13.3",
  "paste",
  "reqwest 0.12.28",
- "thiserror 2.0.19",
  "torin",
  "tracing",
  "url",
