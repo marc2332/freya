@@ -522,6 +522,7 @@ impl ElementExt for RectElement {
                     canvas: context.canvas,
                     font_collection: context.font_collection,
                 },
+                scale_factor: context.scale_factor,
                 origin: area.origin / context.scale_factor as f32,
                 size: area.size / context.scale_factor as f32,
                 text_style_state: context.text_style_state,
