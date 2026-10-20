@@ -822,7 +822,7 @@ impl TextStyleState {
         font_families.extend_from_slice(fallback_fonts);
 
         self.color
-            .apply_to_text_style(&mut text_style, fill_area, self);
+            .apply_to_text_style(&mut text_style, fill_area, self, scale_factor);
         text_style.set_font_size(f32::from(self.font_size) * scale_factor as f32);
         text_style.set_font_families(&font_families);
         text_style.set_font_style(FontStyle::new(
@@ -873,7 +873,7 @@ impl Span<'_> {
 
         span_style
             .color
-            .apply_to_text_style(&mut text_style, fill_area, &span_style);
+            .apply_to_text_style(&mut text_style, fill_area, &span_style, scale_factor);
         text_style.set_font_size(f32::from(span_style.font_size) * scale_factor as f32);
         text_style.set_font_families(&font_families);
         text_style.set_font_style(FontStyle::new(
