@@ -188,13 +188,11 @@
 //!     let mut radio = use_radio(AppChannel::Count);
 //!     let count = radio.read().count;
 //!
-//!     rect()
-//!         .child(format!("Count: {count}"))
-//!         .child(
-//!             Button::new()
-//!                 .on_press(move |_| radio.write().count += 1)
-//!                 .child("+"),
-//!         )
+//!     rect().child(format!("Count: {count}")).child(
+//!         Button::new()
+//!             .on_press(move |_| radio.write().count += 1)
+//!             .child("+"),
+//!     )
 //! }
 //! ```
 //!
