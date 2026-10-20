@@ -1,6 +1,6 @@
 [package]
 name = "freya-components"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 edition = "2024"
 description = "Components for Freya apps"
 license = "MIT"
@@ -57,7 +57,6 @@ cfg-if = "1.0"
 
 # Errors
 anyhow = { workspace = true }
-thiserror = { workspace = true }
 
 # GIF
 gif = { version = "0.13.3", optional = true }
