@@ -106,8 +106,11 @@ pub struct MutationModified {
 
 #[derive(Default)]
 pub struct Mutations {
+    /// New elements and their final sibling indices, inserted after removals.
     pub added: Vec<MutationAdd>,
+    /// Updated elements and the flags identifying which states need refreshing.
     pub modified: Vec<MutationModified>,
+    /// Elements and scope roots to remove before additions and reordering.
     pub removed: Vec<MutationRemove>,
     /// Final child order for reordered parents, applied after removals and additions.
     pub moved: FxHashMap<NodeId, Vec<NodeId>>,
