@@ -38,6 +38,8 @@ pub enum RenderTarget<'a> {
 /// Context for drawing a background or configuring text paint.
 pub struct RenderContext<'a> {
     pub target: RenderTarget<'a>,
+    /// Display scale factor for converting logical coordinates to physical pixels.
+    pub scale_factor: f64,
     /// Background position in logical coordinates or text fill position within the paragraph.
     pub origin: Point2D,
     /// Background size in logical coordinates or text fill size in physical coordinates.
