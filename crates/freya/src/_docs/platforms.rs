@@ -18,12 +18,14 @@
 //!
 //! ### Vulkan (Linux, Windows)
 //!
-//! The default and preferred rendering backend on Linux and Windows. Vulkan provides modern, high-performance
-//! GPU-accelerated rendering. Freya will use Vulkan when available.
+//! On Wayland, auto mode first tries Vulkan on the compositor's preferred GPU from DMA-BUF feedback.
+//! If that GPU cannot be matched or initialized, Freya tries OpenGL with the platform's GPU selection.
+//! If OpenGL also fails, Freya falls back to software rendering.
+//! On other Linux desktops and Windows, auto mode prefers an integrated Vulkan GPU when available.
 //!
 //! ### OpenGL (Linux, Windows)
 //!
-//! Used as a fallback on Linux and Windows when Vulkan is not available or not supported by the hardware.
+//! Used as a fallback on Linux and Windows when the preferred Vulkan GPU cannot initialize.
 //! For debugging purposes, you can force OpenGL by setting the `FREYA_RENDERER` environment variable:
 //!
 //! ```sh
