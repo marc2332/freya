@@ -3,6 +3,7 @@ all-features = true
 
 [advisories]
 unmaintained = "none"
+ignore = ["RUSTSEC-2026-0367", "RUSTSEC-2026-0368", "RUSTSEC-2026-0369"]
 
 [licenses]
 allow = [
