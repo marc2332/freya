@@ -64,7 +64,6 @@ fn system_font_context() -> blitz_dom::FontContext {
 }
 
 struct CachedTypeface {
-    /// Keeps the source blob available across document lifetimes.
     font: peniko::FontData,
     normalized_coords: Vec<i16>,
     typeface: Typeface,
@@ -76,14 +75,14 @@ pub(crate) struct TypefaceCache {
 }
 
 impl TypefaceCache {
-    pub(crate) fn global() -> Self {
+    pub(crate) fn get() -> Self {
         match GlobalContexts::try_get() {
             Some(contexts) => contexts.get_context_or_insert(Self::default),
             None => Self::default(),
         }
     }
 
-    pub(crate) fn get(
+    pub(crate) fn read(
         &self,
         font: &peniko::FontData,
         normalized_coords: &[i16],

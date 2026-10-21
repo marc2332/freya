@@ -96,7 +96,7 @@ impl Default for SkiaSceneCache {
             #[cfg(any(target_os = "macos", target_os = "ios"))]
             extracted_font_data: GenerationalCache::new(10),
             typeface: GenerationalCache::new(1),
-            shared_typefaces: TypefaceCache::global(),
+            shared_typefaces: TypefaceCache::get(),
             normalized_typeface: GenerationalCache::new(1),
             image_shader: GenerationalCache::new(1),
             font: GenerationalCache::new(10),
@@ -350,7 +350,7 @@ impl SkiaScenePainter<'_> {
             typeface_index: font.index,
             normalized_coords: normalized_coords.to_vec(),
         };
-        if let Some(typeface) = self.cache.shared_typefaces.get(font, normalized_coords) {
+        if let Some(typeface) = self.cache.shared_typefaces.read(font, normalized_coords) {
             self.cache
                 .normalized_typeface
                 .insert(cache_key, typeface.clone());
@@ -412,7 +412,7 @@ impl SkiaScenePainter<'_> {
         if let Some(cached) = self.cache.typeface.hit(&cache_key) {
             return Some(cached.clone());
         }
-        if let Some(typeface) = self.cache.shared_typefaces.get(font, &[]) {
+        if let Some(typeface) = self.cache.shared_typefaces.read(font, &[]) {
             self.cache.typeface.insert(cache_key, typeface.clone());
             return Some(typeface);
         }

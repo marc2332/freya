@@ -28,7 +28,7 @@ impl CachedResources {
     }
 }
 
-/// Shared LRU cache with a 32 MiB default body budget, excluding metadata and document-owned copies.
+/// Shared LRU cache with a 32 MiB default body budget.
 #[derive(Clone)]
 pub struct ResourceCache {
     resources: Arc<Mutex<CachedResources>>,
@@ -43,7 +43,14 @@ impl Default for ResourceCache {
 
 impl ResourceCache {
     /// Limits cached bodies to `max_bytes`, with zero disabling caching.
-    /// Insert into `GlobalContexts` before creating viewers to override the application default.
+    ///
+    /// ```no_run
+    /// use freya_core::prelude::GlobalContexts;
+    /// use freya_html::ResourceCache;
+    ///
+    /// // Configure before creating HTML viewers.
+    /// GlobalContexts::get().insert_context(ResourceCache::new(64 * 1024 * 1024));
+    /// ```
     pub fn new(max_bytes: usize) -> Self {
         Self {
             resources: Arc::new(Mutex::new(CachedResources::default())),
