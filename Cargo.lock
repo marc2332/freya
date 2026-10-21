@@ -3063,6 +3063,8 @@ dependencies = [
  "freya-components",
  "freya-core",
  "freya-engine",
+ "freya-skia-safe",
+ "freya-testing",
  "futures-channel",
  "futures-lite",
  "hashbrown 0.17.1",

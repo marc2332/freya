@@ -1,38 +1,95 @@
-use std::sync::{
-    Arc,
-    Mutex,
+use std::{
+    collections::VecDeque,
+    sync::{
+        Arc,
+        Mutex,
+    },
 };
 
 use blitz_traits::net::Bytes;
 use freya_core::prelude::GlobalContexts;
-use rustc_hash::FxHashMap;
 use url::Url;
 
-/// Shared cache for resources downloaded by HTML viewers.
-#[derive(Clone, Default)]
+#[derive(Default)]
+struct CachedResources {
+    entries: VecDeque<(Url, Bytes)>,
+    bytes: usize,
+}
+
+impl CachedResources {
+    fn remove(&mut self, url: &Url) -> Option<(Url, Bytes)> {
+        let index = self
+            .entries
+            .iter()
+            .position(|(cached_url, _)| cached_url == url)?;
+        let entry = self.entries.remove(index)?;
+        self.bytes -= entry.1.len();
+        Some(entry)
+    }
+}
+
+/// Shared LRU cache with a 32 MiB default body budget, excluding metadata and document-owned copies.
+#[derive(Clone)]
 pub struct ResourceCache {
-    resources: Arc<Mutex<FxHashMap<Url, Bytes>>>,
+    resources: Arc<Mutex<CachedResources>>,
+    max_bytes: usize,
+}
+
+impl Default for ResourceCache {
+    fn default() -> Self {
+        Self::new(32 * 1024 * 1024)
+    }
 }
 
 impl ResourceCache {
+    /// Limits cached bodies to `max_bytes`, with zero disabling caching.
+    /// Insert into `GlobalContexts` before creating viewers to override the application default.
+    pub fn new(max_bytes: usize) -> Self {
+        Self {
+            resources: Arc::new(Mutex::new(CachedResources::default())),
+            max_bytes,
+        }
+    }
+
     /// Retrieves or initializes the shared cache in the current app context.
     pub fn get() -> Self {
         GlobalContexts::get().get_context_or_insert(Self::default)
     }
 
+    /// Returns cached bytes and marks the resource as recently used.
     pub fn read(&self, url: &Url) -> Option<Bytes> {
-        self.resources
+        let mut resources = self
+            .resources
             .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .get(url)
-            .cloned()
+            .unwrap_or_else(|error| error.into_inner());
+        let index = resources
+            .entries
+            .iter()
+            .position(|(cached_url, _)| cached_url == url)?;
+        let entry = resources.entries.remove(index)?;
+        let bytes = entry.1.clone();
+        resources.entries.push_back(entry);
+        Some(bytes)
     }
 
+    /// Stores resource bytes by URL, evicting least recently used entries to fit the budget.
     pub fn set(&self, url: Url, bytes: Bytes) {
-        self.resources
+        let mut resources = self
+            .resources
             .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .insert(url, bytes);
+            .unwrap_or_else(|error| error.into_inner());
+        resources.remove(&url);
+        if bytes.is_empty() || bytes.len() > self.max_bytes {
+            return;
+        }
+
+        while resources.bytes > self.max_bytes - bytes.len()
+            && let Some((_, evicted)) = resources.entries.pop_front()
+        {
+            resources.bytes -= evicted.len();
+        }
+        resources.bytes += bytes.len();
+        resources.entries.push_back((url, bytes));
     }
 
     pub fn invalidate(&self, url: &Url) {
@@ -43,9 +100,9 @@ impl ResourceCache {
     }
 
     pub fn clear(&self) {
-        self.resources
+        *self
+            .resources
             .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .clear();
+            .unwrap_or_else(|error| error.into_inner()) = CachedResources::default();
     }
 }

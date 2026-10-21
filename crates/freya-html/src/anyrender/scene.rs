@@ -44,15 +44,18 @@ use freya_engine::prelude::{
 };
 use peniko::color::AlphaColor;
 
-use crate::anyrender::{
-    cache::{
-        FontCacheKey,
-        FontCacheKeyBorrowed,
-        GenerationalCache,
-        NormalizedTypefaceCacheKey,
-        NormalizedTypefaceCacheKeyBorrowed,
+use crate::{
+    anyrender::{
+        cache::{
+            FontCacheKey,
+            FontCacheKeyBorrowed,
+            GenerationalCache,
+            NormalizedTypefaceCacheKey,
+            NormalizedTypefaceCacheKeyBorrowed,
+        },
+        scene::sk_peniko::color4f_from_alpha_color,
     },
-    scene::sk_peniko::color4f_from_alpha_color,
+    fonts::TypefaceCache,
 };
 
 pub struct SkiaSceneCache {
@@ -61,6 +64,7 @@ pub struct SkiaSceneCache {
     #[cfg(any(target_os = "macos", target_os = "ios"))]
     extracted_font_data: GenerationalCache<(u64, u32), peniko::FontData>,
     typeface: GenerationalCache<(u64, u32), Typeface>,
+    shared_typefaces: TypefaceCache,
     normalized_typeface: GenerationalCache<NormalizedTypefaceCacheKey, Typeface>,
     image_shader: GenerationalCache<u64, Shader>,
     font: GenerationalCache<FontCacheKey, Font>,
@@ -92,6 +96,7 @@ impl Default for SkiaSceneCache {
             #[cfg(any(target_os = "macos", target_os = "ios"))]
             extracted_font_data: GenerationalCache::new(10),
             typeface: GenerationalCache::new(1),
+            shared_typefaces: TypefaceCache::global(),
             normalized_typeface: GenerationalCache::new(1),
             image_shader: GenerationalCache::new(1),
             font: GenerationalCache::new(10),
@@ -340,6 +345,18 @@ impl SkiaScenePainter<'_> {
             return Some(cached.clone());
         }
 
+        let cache_key = NormalizedTypefaceCacheKey {
+            typeface_id: font.data.id(),
+            typeface_index: font.index,
+            normalized_coords: normalized_coords.to_vec(),
+        };
+        if let Some(typeface) = self.cache.shared_typefaces.get(font, normalized_coords) {
+            self.cache
+                .normalized_typeface
+                .insert(cache_key, typeface.clone());
+            return Some(typeface);
+        }
+
         let typeface = self.get_or_cache_typeface(font)?;
 
         let axes = typeface.variation_design_parameters().unwrap_or_default();
@@ -375,14 +392,14 @@ impl SkiaScenePainter<'_> {
             )
             .unwrap();
 
-        self.cache.normalized_typeface.insert(
-            NormalizedTypefaceCacheKey {
-                typeface_id: font.data.id(),
-                typeface_index: font.index,
-                normalized_coords: normalized_coords.to_vec(),
-            },
+        self.cache.shared_typefaces.insert(
+            font.clone(),
+            normalized_coords,
             normalized_typeface.clone(),
         );
+        self.cache
+            .normalized_typeface
+            .insert(cache_key, normalized_typeface.clone());
 
         Some(normalized_typeface)
     }
@@ -392,6 +409,14 @@ impl SkiaScenePainter<'_> {
         #[allow(unused_mut)] mut font: &'a peniko::FontData,
     ) -> Option<Typeface> {
         let cache_key = (font.data.id(), font.index);
+        if let Some(cached) = self.cache.typeface.hit(&cache_key) {
+            return Some(cached.clone());
+        }
+        if let Some(typeface) = self.cache.shared_typefaces.get(font, &[]) {
+            self.cache.typeface.insert(cache_key, typeface.clone());
+            return Some(typeface);
+        }
+        let source_font = font.clone();
 
         #[cfg(any(target_os = "macos", target_os = "ios"))]
         #[allow(clippy::map_entry, reason = "Cannot early-return with entry API")]
@@ -418,10 +443,6 @@ impl SkiaScenePainter<'_> {
             }
         }
 
-        if let Some(cached) = self.cache.typeface.hit(&cache_key) {
-            return Some(cached.clone());
-        }
-
         let Some(typeface) = self
             .cache
             .font_mgr
@@ -431,6 +452,9 @@ impl SkiaScenePainter<'_> {
             return None;
         };
 
+        self.cache
+            .shared_typefaces
+            .insert(source_font, &[], typeface.clone());
         self.cache.typeface.insert(cache_key, typeface.clone());
 
         Some(typeface)
