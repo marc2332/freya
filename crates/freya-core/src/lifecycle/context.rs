@@ -1,3 +1,59 @@
+//! # Context
+//!
+//! Context passes a value down to descendant components without passing it through
+//! every component's props. Values are identified by type and must implement `Clone + 'static`.
+//!
+//! ## Component context
+//!
+//! [`use_provide_context`] stores a value in the component and makes it available to
+//! descendants. [`use_consume`] looks in the current component, then its parents,
+//! using the first value of that type it finds.
+//! The stored value is dropped when the component is dropped.
+//!
+//! ```rust,no_run
+//! use freya_core::prelude::*;
+//!
+//! #[derive(Clone)]
+//! struct Greeting(&'static str);
+//!
+//! fn app() -> impl IntoElement {
+//!     use_provide_context(|| Greeting("Hello"));
+//!     rect().child(Message)
+//! }
+//!
+//! #[derive(PartialEq)]
+//! struct Message;
+//!
+//! impl Component for Message {
+//!     fn render(&self) -> impl IntoElement {
+//!         let greeting = use_consume::<Greeting>();
+//!         label().text(greeting.0)
+//!     }
+//! }
+//! ```
+//!
+//! ## Root context
+//!
+//! [`use_provide_root_context`] stores a value in the window's root, reusing any
+//! existing value of that type. It stays there until replaced or the root is dropped,
+//! even if the component that provided it is dropped.
+//!
+//! [`consume_root_context`] reads only from the root, not from the current component
+//! or its parents. You can also provide root values with `WindowConfig::with_root_context`.
+//!
+//! ```rust,no_run
+//! use freya_core::prelude::*;
+//!
+//! #[derive(Clone)]
+//! struct WindowName(&'static str);
+//!
+//! fn app() -> impl IntoElement {
+//!     use_provide_root_context(|| WindowName("Editor"));
+//!     let name = consume_root_context::<WindowName>();
+//!     label().text(name.0)
+//! }
+//! ```
+
 use std::{
     any::TypeId,
     rc::Rc,
@@ -9,19 +65,43 @@ use crate::{
     scope_id::ScopeId,
 };
 
+/// Store a value in the current component, replacing any value of the same type.
+///
+/// ```rust,no_run
+/// # use freya_core::prelude::*;
+/// # fn render() {
+/// provide_context(String::from("Hello"));
+/// assert_eq!(consume_context::<String>(), "Hello");
+/// # }
+/// ```
 pub fn provide_context<T: Clone + 'static>(value: T) {
     provide_context_for_scope_id(value, None)
 }
 
-/// Store the given value in the root scope of the current window. If a value of the same
-/// type already exists, it is replaced.
+/// Store a value in the window's root, replacing any value of the same type.
+/// To share across windows, use [`GlobalContexts`](crate::prelude::GlobalContexts).
 ///
-/// For state shared across all windows use [GlobalContexts](crate::prelude::GlobalContexts) instead.
+/// ```rust,no_run
+/// # use freya_core::prelude::*;
+/// # fn render() {
+/// provide_root_context(String::from("Editor"));
+/// assert_eq!(consume_root_context::<String>(), "Editor");
+/// # }
+/// ```
 pub fn provide_root_context<T: Clone + 'static>(value: T) -> T {
     provide_context_for_scope_id(value.clone(), Some(ScopeId::ROOT));
     value
 }
 
+/// Store a value in the given scope, replacing any value of the same type. `None` uses the current scope.
+/// The target scope must exist in the current window.
+///
+/// ```rust,no_run
+/// # use freya_core::prelude::*;
+/// # fn render() {
+/// provide_context_for_scope_id(String::from("Editor"), ScopeId::ROOT);
+/// # }
+/// ```
 pub fn provide_context_for_scope_id<T: Clone + 'static>(
     value: T,
     scope_id: impl Into<Option<ScopeId>>,
@@ -36,7 +116,14 @@ pub fn provide_context_for_scope_id<T: Clone + 'static>(
     })
 }
 
-/// Try to get a context value stored only in the current scope, without walking up to ancestors.
+/// Get a value from the current component only, or `None` if not found.
+///
+/// ```rust,no_run
+/// # use freya_core::prelude::*;
+/// # fn render() {
+/// let local_name = try_consume_own_context::<String>();
+/// # }
+/// ```
 pub fn try_consume_own_context<T: Clone + 'static>() -> Option<T> {
     CurrentContext::with(|context| {
         let scopes_storages = context.scopes_storages.borrow();
@@ -50,14 +137,39 @@ pub fn try_consume_own_context<T: Clone + 'static>() -> Option<T> {
     })
 }
 
+/// Get a value from the window's root only, or `None` if not found.
+///
+/// ```rust,no_run
+/// # use freya_core::prelude::*;
+/// # fn render() {
+/// let window_name = try_consume_root_context::<String>();
+/// # }
+/// ```
 pub fn try_consume_root_context<T: Clone + 'static>() -> Option<T> {
     try_consume_context_from_scope_id(Some(ScopeId::ROOT))
 }
 
+/// Look for a value in the current component, then its parents. Returns `None` if not found.
+///
+/// ```rust,no_run
+/// # use freya_core::prelude::*;
+/// # fn render() {
+/// let name = try_consume_context::<String>().unwrap_or_default();
+/// # }
+/// ```
 pub fn try_consume_context<T: Clone + 'static>() -> Option<T> {
     try_consume_context_from_scope_id(None)
 }
 
+/// Look for a value in the current component, then its parents. Panics if not found.
+///
+/// ```rust,no_run
+/// # use freya_core::prelude::*;
+/// # fn render() {
+/// provide_context(String::from("Hello"));
+/// let greeting = consume_context::<String>();
+/// # }
+/// ```
 #[track_caller]
 pub fn consume_context<T: Clone + 'static>() -> T {
     match try_consume_context_from_scope_id(None) {
@@ -66,6 +178,15 @@ pub fn consume_context<T: Clone + 'static>() -> T {
     }
 }
 
+/// Get a value from the window's root only. Panics if not found.
+///
+/// ```rust,no_run
+/// # use freya_core::prelude::*;
+/// # fn render() {
+/// provide_root_context(String::from("Editor"));
+/// let window_name = consume_root_context::<String>();
+/// # }
+/// ```
 #[track_caller]
 pub fn consume_root_context<T: Clone + 'static>() -> T {
     match try_consume_root_context() {
@@ -77,6 +198,15 @@ pub fn consume_root_context<T: Clone + 'static>() -> T {
     }
 }
 
+/// Look for a value in the given scope, then its parents. Returns `None` if not found.
+/// Pass `None` to start at the current scope.
+///
+/// ```rust,no_run
+/// # use freya_core::prelude::*;
+/// # fn render() {
+/// let window_name = try_consume_context_from_scope_id::<String>(Some(ScopeId::ROOT));
+/// # }
+/// ```
 pub fn try_consume_context_from_scope_id<T: Clone + 'static>(
     scope_id: Option<ScopeId>,
 ) -> Option<T> {
@@ -101,8 +231,15 @@ pub fn try_consume_context_from_scope_id<T: Clone + 'static>(
     })
 }
 
-/// Store the given value in this component instance.
-/// Any descendant component of this component calling [use_consume] or [consume_context] will have access to it.
+/// Create a value once in this component and make it available to descendants.
+/// Returns the same value on later renders.
+///
+/// ```rust,no_run
+/// # use freya_core::prelude::*;
+/// # fn render() {
+/// let greeting = use_provide_context(|| String::from("Hello"));
+/// # }
+/// ```
 pub fn use_provide_context<T: Clone + 'static>(init: impl FnOnce() -> T) -> T {
     use_hook(|| {
         let ctx = init();
@@ -111,10 +248,16 @@ pub fn use_provide_context<T: Clone + 'static>(init: impl FnOnce() -> T) -> T {
     })
 }
 
-/// Store the given value in the root scope of the current window. If a value of the same
-/// type already exists, that one is returned and `init` is not called.
+/// Reuse a value from the window's root, or call `init` to create it if missing.
+/// Returns the same value on later renders. The value is stored in the root, not this component.
+/// To share across windows, use [`GlobalContexts`](crate::prelude::GlobalContexts).
 ///
-/// For state shared across all windows use [GlobalContexts](crate::prelude::GlobalContexts) instead.
+/// ```rust,no_run
+/// # use freya_core::prelude::*;
+/// # fn render() {
+/// let window_name = use_provide_root_context(|| String::from("Editor"));
+/// # }
+/// ```
 pub fn use_provide_root_context<T: Clone + 'static>(init: impl FnOnce() -> T) -> T {
     use_hook(|| match try_consume_root_context::<T>() {
         Some(context) => context,
@@ -122,7 +265,16 @@ pub fn use_provide_root_context<T: Clone + 'static>(init: impl FnOnce() -> T) ->
     })
 }
 
-/// Get access to a value stored in this component instance or some ancestor.
+/// Look for a value in this component, then its parents. Panics if not found.
+/// Returns the same value on later renders.
+///
+/// ```rust,no_run
+/// # use freya_core::prelude::*;
+/// # fn render() {
+/// use_provide_context(|| String::from("Hello"));
+/// let greeting = use_consume::<String>();
+/// # }
+/// ```
 #[track_caller]
 pub fn use_consume<T: Clone + 'static>() -> T {
     match use_hook(|| try_consume_context()) {
@@ -131,7 +283,15 @@ pub fn use_consume<T: Clone + 'static>() -> T {
     }
 }
 
-/// Try to get access to a value stored in this component instance or some ancestor.
+/// Look for a value in this component, then its parents. Returns `None` if not found.
+/// Returns the same result on later renders.
+///
+/// ```rust,no_run
+/// # use freya_core::prelude::*;
+/// # fn render() {
+/// let greeting = use_try_consume::<String>().unwrap_or_default();
+/// # }
+/// ```
 pub fn use_try_consume<T: Clone + 'static>() -> Option<T> {
     use_hook(|| try_consume_context())
 }
