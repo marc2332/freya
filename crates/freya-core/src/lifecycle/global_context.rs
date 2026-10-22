@@ -6,7 +6,7 @@
 //!
 //! ## Providing and consuming
 //!
-//! Provide values with [`LaunchConfig::with_global_context`](freya::prelude::LaunchConfig::with_global_context), then access them through
+//! Provide values with `LaunchConfig::with_global_context`, then access them through
 //! [`GlobalContexts::get`] in components, event handlers, or Freya tasks.
 //! Values must implement `Clone + 'static` and are cloned when read.
 //!
