@@ -392,6 +392,7 @@ impl ScrollController {
         task.write().replace(animation_task);
     }
 
+    /// Returns whether the gesture ended or was cancelled, so callers skip applying the scroll delta.
     pub(crate) fn scroll_gesture_phase(&mut self, phase: TouchPhase, delta: Vector2D) -> bool {
         match phase {
             TouchPhase::Started => {
