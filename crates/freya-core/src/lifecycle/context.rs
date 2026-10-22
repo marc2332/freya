@@ -11,7 +11,7 @@
 //! The stored value is dropped when the component is dropped.
 //!
 //! ```rust,no_run
-//! use freya_core::prelude::*;
+//! # use freya::prelude::*;
 //!
 //! #[derive(Clone)]
 //! struct Greeting(&'static str);
@@ -42,7 +42,7 @@
 //! or its parents. You can also provide root values with `WindowConfig::with_root_context`.
 //!
 //! ```rust,no_run
-//! use freya_core::prelude::*;
+//! # use freya::prelude::*;
 //!
 //! #[derive(Clone)]
 //! struct WindowName(&'static str);
@@ -68,7 +68,7 @@ use crate::{
 /// Store a value in the current component, replacing any value of the same type.
 ///
 /// ```rust,no_run
-/// # use freya_core::prelude::*;
+/// # use freya::prelude::*;
 /// # fn render() {
 /// provide_context(String::from("Hello"));
 /// assert_eq!(consume_context::<String>(), "Hello");
@@ -82,7 +82,7 @@ pub fn provide_context<T: Clone + 'static>(value: T) {
 /// To share across windows, use [`GlobalContexts`](crate::prelude::GlobalContexts).
 ///
 /// ```rust,no_run
-/// # use freya_core::prelude::*;
+/// # use freya::prelude::*;
 /// # fn render() {
 /// provide_root_context(String::from("Editor"));
 /// assert_eq!(consume_root_context::<String>(), "Editor");
@@ -97,7 +97,7 @@ pub fn provide_root_context<T: Clone + 'static>(value: T) -> T {
 /// The target scope must exist in the current window.
 ///
 /// ```rust,no_run
-/// # use freya_core::prelude::*;
+/// # use freya::prelude::*;
 /// # fn render() {
 /// provide_context_for_scope_id(String::from("Editor"), ScopeId::ROOT);
 /// # }
@@ -119,7 +119,7 @@ pub fn provide_context_for_scope_id<T: Clone + 'static>(
 /// Get a value from the current component only, or `None` if not found.
 ///
 /// ```rust,no_run
-/// # use freya_core::prelude::*;
+/// # use freya::prelude::*;
 /// # fn render() {
 /// let local_name = try_consume_own_context::<String>();
 /// # }
@@ -140,7 +140,7 @@ pub fn try_consume_own_context<T: Clone + 'static>() -> Option<T> {
 /// Get a value from the window's root only, or `None` if not found.
 ///
 /// ```rust,no_run
-/// # use freya_core::prelude::*;
+/// # use freya::prelude::*;
 /// # fn render() {
 /// let window_name = try_consume_root_context::<String>();
 /// # }
@@ -152,7 +152,7 @@ pub fn try_consume_root_context<T: Clone + 'static>() -> Option<T> {
 /// Look for a value in the current component, then its parents. Returns `None` if not found.
 ///
 /// ```rust,no_run
-/// # use freya_core::prelude::*;
+/// # use freya::prelude::*;
 /// # fn render() {
 /// let name = try_consume_context::<String>().unwrap_or_default();
 /// # }
@@ -164,7 +164,7 @@ pub fn try_consume_context<T: Clone + 'static>() -> Option<T> {
 /// Look for a value in the current component, then its parents. Panics if not found.
 ///
 /// ```rust,no_run
-/// # use freya_core::prelude::*;
+/// # use freya::prelude::*;
 /// # fn render() {
 /// provide_context(String::from("Hello"));
 /// let greeting = consume_context::<String>();
@@ -181,7 +181,7 @@ pub fn consume_context<T: Clone + 'static>() -> T {
 /// Get a value from the window's root only. Panics if not found.
 ///
 /// ```rust,no_run
-/// # use freya_core::prelude::*;
+/// # use freya::prelude::*;
 /// # fn render() {
 /// provide_root_context(String::from("Editor"));
 /// let window_name = consume_root_context::<String>();
@@ -202,7 +202,7 @@ pub fn consume_root_context<T: Clone + 'static>() -> T {
 /// Pass `None` to start at the current scope.
 ///
 /// ```rust,no_run
-/// # use freya_core::prelude::*;
+/// # use freya::prelude::*;
 /// # fn render() {
 /// let window_name = try_consume_context_from_scope_id::<String>(Some(ScopeId::ROOT));
 /// # }
@@ -235,7 +235,7 @@ pub fn try_consume_context_from_scope_id<T: Clone + 'static>(
 /// Returns the same value on later renders.
 ///
 /// ```rust,no_run
-/// # use freya_core::prelude::*;
+/// # use freya::prelude::*;
 /// # fn render() {
 /// let greeting = use_provide_context(|| String::from("Hello"));
 /// # }
@@ -253,7 +253,7 @@ pub fn use_provide_context<T: Clone + 'static>(init: impl FnOnce() -> T) -> T {
 /// To share across windows, use [`GlobalContexts`](crate::prelude::GlobalContexts).
 ///
 /// ```rust,no_run
-/// # use freya_core::prelude::*;
+/// # use freya::prelude::*;
 /// # fn render() {
 /// let window_name = use_provide_root_context(|| String::from("Editor"));
 /// # }
@@ -269,7 +269,7 @@ pub fn use_provide_root_context<T: Clone + 'static>(init: impl FnOnce() -> T) ->
 /// Returns the same value on later renders.
 ///
 /// ```rust,no_run
-/// # use freya_core::prelude::*;
+/// # use freya::prelude::*;
 /// # fn render() {
 /// use_provide_context(|| String::from("Hello"));
 /// let greeting = use_consume::<String>();
@@ -287,7 +287,7 @@ pub fn use_consume<T: Clone + 'static>() -> T {
 /// Returns the same result on later renders.
 ///
 /// ```rust,no_run
-/// # use freya_core::prelude::*;
+/// # use freya::prelude::*;
 /// # fn render() {
 /// let greeting = use_try_consume::<String>().unwrap_or_default();
 /// # }

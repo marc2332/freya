@@ -6,12 +6,12 @@
 //!
 //! ## Providing and consuming
 //!
-//! Provide values with `LaunchConfig::with_global_context`, then access them through
+//! Provide values with [`LaunchConfig::with_global_context`](freya::prelude::LaunchConfig::with_global_context), then access them through
 //! [`GlobalContexts::get`] in components, event handlers, or Freya tasks.
 //! Values must implement `Clone + 'static` and are cloned when read.
 //!
 //! ```rust,no_run
-//! use freya::prelude::*;
+//! # use freya::prelude::*;
 //!
 //! #[derive(Clone)]
 //! struct AppName(&'static str);
@@ -37,7 +37,7 @@
 //! [`GlobalContexts::get_context`] panics.
 //!
 //! ```rust,no_run
-//! use freya_core::prelude::*;
+//! # use freya::prelude::*;
 //!
 //! fn app() -> impl IntoElement {
 //!     let globals = GlobalContexts::get();
@@ -66,7 +66,7 @@ impl GlobalContexts {
     /// Get the current thread's global contexts. Panics if none are registered.
     ///
     /// ```rust,no_run
-    /// # use freya_core::prelude::*;
+    /// # use freya::prelude::*;
     /// let globals = GlobalContexts::get();
     /// ```
     #[track_caller]
@@ -77,7 +77,7 @@ impl GlobalContexts {
     /// Get the current thread's global contexts, or `None` if none are registered.
     ///
     /// ```rust
-    /// # use freya_core::prelude::*;
+    /// # use freya::prelude::*;
     /// let globals = GlobalContexts::try_get();
     /// ```
     pub fn try_get() -> Option<Self> {
@@ -87,7 +87,7 @@ impl GlobalContexts {
     /// Set up global contexts on the current thread, or reuse the existing ones. Freya does this automatically.
     ///
     /// ```rust
-    /// # use freya_core::prelude::*;
+    /// # use freya::prelude::*;
     /// let globals = GlobalContexts::register();
     /// globals.unregister();
     /// ```
@@ -100,7 +100,7 @@ impl GlobalContexts {
     /// Freya does this automatically when the application exits.
     ///
     /// ```rust
-    /// # use freya_core::prelude::*;
+    /// # use freya::prelude::*;
     /// let globals = GlobalContexts::register();
     /// globals.unregister();
     /// assert!(GlobalContexts::try_get().is_none());
@@ -121,7 +121,7 @@ impl GlobalContexts {
     /// Store and return a value, replacing any value of the same type.
     ///
     /// ```rust
-    /// # use freya_core::prelude::*;
+    /// # use freya::prelude::*;
     /// let globals = GlobalContexts::default();
     /// globals.insert_context(String::from("Editor"));
     /// ```
@@ -134,7 +134,7 @@ impl GlobalContexts {
     /// Get a clone of the stored value. Panics if not found.
     ///
     /// ```rust
-    /// # use freya_core::prelude::*;
+    /// # use freya::prelude::*;
     /// let globals = GlobalContexts::default();
     /// globals.insert_context(String::from("Editor"));
     /// assert_eq!(globals.get_context::<String>(), "Editor");
@@ -153,7 +153,7 @@ impl GlobalContexts {
     /// Get a clone of the stored value, or `None` if not found.
     ///
     /// ```rust
-    /// # use freya_core::prelude::*;
+    /// # use freya::prelude::*;
     /// let globals = GlobalContexts::default();
     /// assert!(globals.try_get_context::<String>().is_none());
     /// ```
@@ -168,7 +168,7 @@ impl GlobalContexts {
     /// Get a clone of the stored value, or call `insert` to create and store it if missing.
     ///
     /// ```rust
-    /// # use freya_core::prelude::*;
+    /// # use freya::prelude::*;
     /// let globals = GlobalContexts::default();
     /// let name = globals.get_context_or_insert(|| String::from("Editor"));
     /// assert_eq!(name, "Editor");
