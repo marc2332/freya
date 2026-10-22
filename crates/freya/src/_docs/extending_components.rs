@@ -1,29 +1,35 @@
 //! # Extending Components
 //!
 //! A custom [`Component`](freya_core::prelude::Component) usually wraps a built-in
-//! element like `rect()`. By default, callers cannot tweak that inner element's
-//! layout, accessibility, styling, etc.
+//! element like [`rect()`](freya_core::prelude::rect). By default, callers cannot
+//! tweak that inner element's layout, accessibility, styling, etc.
 //!
-//! The most common case is accepting children via [`ChildrenExt`](freya_core::elements::extensions::ChildrenExt),
-//! so callers can use `.child(..)` / `.children(..)` on your component. Going beyond
-//! that is not super common, but when you want your component to feel like a
-//! built-in element, Freya provides **Data** types like [`LayoutData`](freya_core::data::LayoutData)
-//! or [`AccessibilityData`](freya_core::data::AccessibilityData), and their matching
-//! **extension traits** like [`LayoutExt`](freya_core::elements::extensions::LayoutExt)
-//! or [`AccessibilityExt`](freya_core::elements::extensions::AccessibilityExt).
+//! The most common case is accepting children via [`ChildrenExt`], so callers can
+//! use `.child(..)` / `.children(..)` on your component. To expose more builders,
+//! Freya provides data types like [`LayoutData`] or [`AccessibilityData`], and
+//! matching extension traits like [`LayoutExt`] or [`AccessibilityExt`].
 //!
-//! Store the Data on your component, implement the trait, and forward it to the
-//! inner element at render time. The trait gives your component the same builder
-//! methods that built-in elements expose, for free.
+//! Store the data on your component, implement the matching trait, and forward
+//! the data to the inner element at render time. Some builders require additional
+//! traits that opt your component into specific capabilities.
 //!
-//! The built-in [`Card`](crate::components::Card) component already does this with
-//! `LayoutData` + `LayoutExt`, `AccessibilityData` + `AccessibilityExt`, and more.
+//! For example, the built-in [`Card`](crate::components::Card) component uses
+//! [`LayoutData`] + [`LayoutExt`] and [`AccessibilityData`] + [`AccessibilityExt`]
+//! to expose its inner element's layout and accessibility settings.
 //!
-//! ## Example: a `Panel` with `LayoutData`
+//! For example, [`LayoutData`] stores layout settings, while [`LayoutExt`] gives
+//! access to that data. To expose builders like `.width(...)` and `.padding(...)`,
+//! also implement [`ContainerExt`]. This automatically provides [`ContainerSizeExt`],
+//! [`ContainerPositionExt`], and [`ContainerConstraintsExt`], which can instead be
+//! implemented individually if you do not need padding. Implement
+//! [`ContainerWithContentExt`] separately for child layout methods like
+//! `.spacing(...)` and `.center()`.
 //!
-//! ```rust, ignore
+//! ## Example: a `Panel` with layout builders
+//!
+//! ```rust
 //! # use freya::prelude::*;
-//! #[derive(Clone, PartialEq)]
+//! #[derive(Default, PartialEq)]
 //! pub struct Panel {
 //!     layout: LayoutData,
 //!     elements: Vec<Element>,
@@ -34,6 +40,10 @@
 //!         &mut self.layout
 //!     }
 //! }
+//!
+//! impl ContainerExt for Panel {}
+//!
+//! impl ContainerWithContentExt for Panel {}
 //!
 //! impl ChildrenExt for Panel {
 //!     fn children_mut(&mut self) -> &mut Vec<Element> {
@@ -48,24 +58,14 @@
 //!             .children(self.elements.clone())
 //!     }
 //! }
+//!
+//! fn app() -> impl IntoElement {
+//!     Panel::default()
+//!         .width(Size::percent(75.))
+//!         .padding(8.)
+//!         .spacing(4.)
+//!         .center()
+//!         .child("Hello, World!")
+//! }
 //! ```
 //!
-//! Callers can now use any layout builder method directly on `Panel`:
-//!
-//! ```rust, ignore
-//! # use freya::prelude::*;
-//! Panel::new()
-//!     .width(Size::percent(75.))
-//!     .padding(8.)
-//!     .child("Hello, World!")
-//! ```
-//!
-//! ## Pattern
-//!
-//! 1. Add a `*Data` field to your component.
-//! 2. Implement the matching `*Ext` trait returning `&mut` to that field.
-//! 3. Forward the Data into the inner element in `render`.
-//!
-//! Mix as many as you need: `LayoutData` + `LayoutExt`, `AccessibilityData` +
-//! `AccessibilityExt`, `Vec<Element>` + [`ChildrenExt`](freya_core::elements::extensions::ChildrenExt),
-//! and so on.
