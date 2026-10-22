@@ -58,7 +58,11 @@ impl ContextMenu {
     /// fn app() -> impl IntoElement {
     ///     rect()
     ///         .child(ContextMenuViewer::new())
-    ///         .child(if ContextMenu::is_open() { "Menu open" } else { "Menu closed" })
+    ///         .child(if ContextMenu::is_open() {
+    ///             "Menu open"
+    ///         } else {
+    ///             "Menu closed"
+    ///         })
     /// }
     /// ```
     pub fn is_open() -> bool {
@@ -72,11 +76,11 @@ impl ContextMenu {
     /// ```rust
     /// # use freya::prelude::*;
     /// fn app() -> impl IntoElement {
-    ///     rect().child(ContextMenuViewer::new()).child(
-    ///         Button::new().child("Open menu").on_press(|_| {
+    ///     rect()
+    ///         .child(ContextMenuViewer::new())
+    ///         .child(Button::new().child("Open menu").on_press(|_| {
     ///             ContextMenu::open(Menu::new().child(MenuButton::new().child("Copy")));
-    ///         }),
-    ///     )
+    ///         }))
     /// }
     /// ```
     pub fn open(menu: Menu) {
@@ -117,7 +121,9 @@ impl ContextMenu {
     /// # use freya::prelude::*;
     /// fn app() -> impl IntoElement {
     ///     rect().child(ContextMenuViewer::new()).child(
-    ///         Button::new().child("Close menu").on_press(|_| ContextMenu::close()),
+    ///         Button::new()
+    ///             .child("Close menu")
+    ///             .on_press(|_| ContextMenu::close()),
     ///     )
     /// }
     /// ```
