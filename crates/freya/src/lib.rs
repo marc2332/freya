@@ -10,7 +10,8 @@
 //! #### Example
 //!
 //! ```rust, no_run
-//! # use freya::prelude::*;
+//! use freya::prelude::*;
+//!
 //! fn main() {
 //!     // *Start* your app with a window and its root component
 //!     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
