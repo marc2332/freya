@@ -1,7 +1,6 @@
 use tiny_diff::{
     Diff,
     DiffNode,
-    diff,
 };
 
 #[derive(Clone)]
@@ -74,7 +73,7 @@ fn compare(mut current: Node, mut previous: Node) -> Diff<(usize, usize)> {
     assign_paths(&mut current, Vec::new());
     assign_paths(&mut previous, Vec::new());
     let mut changes = Diff::default();
-    diff(&current, Some(&previous), &mut changes);
+    current.diff(Some(&previous), &mut changes);
     changes
 }
 
@@ -104,7 +103,7 @@ fn mounting_adds_descendants_in_preorder() {
     let mut current = branch(0, vec![branch(1, vec![leaf(2)]), leaf(3)]);
     assign_paths(&mut current, Vec::new());
     let mut changes = Diff::default();
-    diff(&current, None, &mut changes);
+    current.diff(None, &mut changes);
     assert_eq!(
         changes.added,
         vec![
@@ -196,7 +195,7 @@ fn diff_appends_movements_to_an_existing_parent_entry() {
     let current = tree(&[2, 1]);
     let mut changes = Diff::default();
     changes.moved.insert(Box::from([]), vec![(10, 11)]);
-    diff(&current, Some(&previous), &mut changes);
+    current.diff(Some(&previous), &mut changes);
     assert_eq!(
         changes.moved.get(&[][..]),
         Some(&vec![(10, 11), (1, 0), (0, 1)])

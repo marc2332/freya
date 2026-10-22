@@ -1,7 +1,6 @@
 use tiny_diff::{
     Diff,
     DiffNode,
-    diff,
 };
 
 struct Node {
@@ -67,7 +66,7 @@ fn main() {
     ]);
 
     let mut changes = Diff::default();
-    diff(&current, Some(&previous), &mut changes);
+    current.diff(Some(&previous), &mut changes);
 
     println!("Added at new paths: {:?}", changes.added);
     println!("Removed at old paths: {:?}", changes.removed);

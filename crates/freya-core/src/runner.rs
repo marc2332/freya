@@ -21,6 +21,7 @@ use rustc_hash::{
     FxHashMap,
     FxHashSet,
 };
+use tiny_diff::DiffNode;
 
 use crate::{
     current_context::CurrentContext,

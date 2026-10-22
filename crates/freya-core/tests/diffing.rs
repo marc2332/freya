@@ -17,6 +17,7 @@ use freya_core::{
     },
 };
 use rustc_hash::FxHashMap;
+use tiny_diff::DiffNode;
 use torin::size::Size;
 
 struct RawIdMap(FxHashMap<u64, Vec<u64>>);

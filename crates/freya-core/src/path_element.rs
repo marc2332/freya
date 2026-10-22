@@ -11,7 +11,6 @@ use crate::{
         Element,
         ElementExt,
     },
-    runner::Diff,
     tree::DiffModifies,
 };
 
@@ -103,11 +102,6 @@ impl PathElement {
                 key,
             },
         }
-    }
-
-    #[cfg_attr(feature = "hotpath", hotpath::measure)]
-    pub fn diff(&self, previous: Option<&Self>, diff: &mut Diff) {
-        tiny_diff::diff(self, previous, diff);
     }
 }
 

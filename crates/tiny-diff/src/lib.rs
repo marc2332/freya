@@ -28,6 +28,13 @@ pub trait DiffNode: Sized {
     type Key: Eq + Hash;
     type Modifications;
 
+    /// Appends changes from `previous` to `self` into `diff`.
+    /// Matching roots must have paths of equal depth and corresponding parents.
+    #[cfg_attr(feature = "hotpath", hotpath::measure)]
+    fn diff(&self, previous: Option<&Self>, diff: &mut Diff<Self::Modifications>) {
+        diff_inner(self, previous, diff, false);
+    }
+
     fn key(&self) -> &Self::Key;
     fn path(&self) -> &[u32];
     fn children(&self) -> &[Self];
@@ -61,16 +68,6 @@ impl<Modifications> Default for Diff<Modifications> {
             moved: HashMap::default(),
         }
     }
-}
-
-/// Appends changes from `previous` to `current` into `diff`.
-/// Matching roots must have paths of equal depth and corresponding parents.
-pub fn diff<Node: DiffNode>(
-    current: &Node,
-    previous: Option<&Node>,
-    diff: &mut Diff<Node::Modifications>,
-) {
-    diff_inner(current, previous, diff, false);
 }
 
 fn diff_inner<Node: DiffNode>(

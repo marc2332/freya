@@ -12,7 +12,9 @@ workspace = true
 [features]
 default = []
 std = ["rustc-hash/std"]
+hotpath = ["std", "dep:hotpath", "hotpath/hotpath"]
 
 [dependencies]
+hotpath = { workspace = true, optional = true }
 hashbrown = { version = "0.16", default-features = false }
 rustc-hash = { version = "2.1.1", default-features = false }
