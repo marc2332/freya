@@ -86,6 +86,7 @@ impl Fill {
         text_style: &mut TextStyle,
         area: Area,
         text_style_state: &TextStyleState,
+        scale_factor: f64,
     ) {
         match self {
             Self::Color(color) => {
@@ -95,6 +96,7 @@ impl Fill {
                 text_style.set_color(Color::TRANSPARENT);
                 callback.call(&mut RenderContext {
                     target: RenderTarget::TextStyle(text_style),
+                    scale_factor,
                     origin: area.origin,
                     size: area.size,
                     text_style_state,
