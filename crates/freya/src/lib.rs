@@ -39,6 +39,8 @@
 //! - [Events](self::_docs::events)
 //! - [Hooks](self::_docs::hooks)
 //! - [State](self::_docs::state_management)
+//! - [Context](self::_docs::context)
+//! - [Global Contexts](self::_docs::global_context)
 //! - [Async](self::_docs::_async)
 //! - [Fonts](self::_docs::fonts)
 //! - [Layers](self::_docs::layers)
