@@ -861,7 +861,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 scale_factor,
                                 &self.fallback_fonts,
                             );
-                            app.platform.root_size.set_if_modified(size);
+                            app.platform
+                                .root_size
+                                .set_if_modified(size / scale_factor as f32);
                             app.process_layout_on_next_render = false;
                             self.plugins.send(
                                 PluginEvent::FinishedMeasuringLayout {
