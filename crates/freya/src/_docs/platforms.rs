@@ -9,7 +9,7 @@
 //! | Platform | Graphics Backend |
 //! |----------|-----------------|
 //! | Linux | Vulkan (preferred), OpenGL (fallback), Software (fallback) |
-//! | Windows | Vulkan (preferred), OpenGL (fallback), Software (fallback) |
+//! | Windows | OpenGL (default), Software (fallback), Vulkan (opt-in) |
 //! | macOS | Metal, Software (fallback) |
 //! | Android (experimental) | OpenGL, Software (fallback) |
 //! | Web (experimental) | WebGL |
@@ -21,11 +21,12 @@
 //! On Wayland, auto mode first tries Vulkan on the compositor's preferred GPU from DMA-BUF feedback.
 //! If that GPU cannot be matched or initialized, Freya tries OpenGL with the platform's GPU selection.
 //! If OpenGL also fails, Freya falls back to software rendering.
-//! On other Linux desktops and Windows, auto mode prefers an integrated Vulkan GPU when available.
+//! On other Linux desktops, auto mode prefers an integrated Vulkan GPU when available.
+//! On Windows, Vulkan is opt-in via `RendererPreference::Vulkan` or `FREYA_RENDERER=vulkan`.
 //!
 //! ### OpenGL (Linux, Windows)
 //!
-//! Used as a fallback on Linux and Windows when the preferred Vulkan GPU cannot initialize.
+//! The default renderer on Windows and a fallback when Vulkan initialization fails on Linux or Windows.
 //! For debugging purposes, you can force OpenGL by setting the `FREYA_RENDERER` environment variable:
 //!
 //! ```sh

@@ -22,12 +22,12 @@
 //                                               |    Platform    |
 //                                               +----------------+
 //                                                        |
-//                    ,-----------------------.-----------+------.-----------------.
-//                    |                       |                  |                 |
-//              Linux Wayland           Linux X11 /            macOS            Android
-//                    |                   Windows                |                 |
-//                    v                       v                  v                 v
-//                   [A]                     [B]                [C]               [D]
+//                    ,-----------------------.-----------+------.-----------------.-----------------.
+//                    |                       |                  |                 |                 |
+//              Linux Wayland             Linux X11            macOS            Android           Windows
+//                    |                       |                  |                 |                 |
+//                    v                       v                  v                 v                 v
+//                   [A]                     [B]                [C]               [D]               [F]
 //
 // [A] LINUX WAYLAND
 //                                        |
@@ -72,7 +72,7 @@
 //                             |       Software      |
 //                             +---------------------+
 //
-// [B] LINUX X11 / WINDOWS
+// [B] LINUX X11
 //                                        |
 //                                        v
 //                             +---------------------+
@@ -110,6 +110,42 @@
 //                             +---------------------+
 //                                        | failure
 //                                        |
+//                                        v
+//                             +---------------------+
+//                             |       Software      |
+//                             +---------------------+
+//
+// [F] WINDOWS
+//                                        |
+//                                        v
+//                             +---------------------+
+//                             |  Resolved renderer  |
+//                             +---------------------+
+//                                        |
+//           Vulkan                       |                      Auto [default] / OpenGl
+//              ,-------------------------+-------------------------------------------.
+//              v                                                                     |
+//   +---------------------+                                                          |
+//   |    GPU preference   |                                                          |
+//   +---------------------+                                                          |
+//              |                                                                     |
+//              +---------------------------------------------------.                 |
+//              |                                                   |                 |
+//       Auto [default]                                         Discrete              |
+//        / Integrated                                              |                 |
+//              v                                                   v                 |
+//   +---------------------+                             +---------------------+      |
+//   |        Vulkan       |                             |        Vulkan       |      |
+//   |    iGPU preferred   |                             |    dGPU preferred   |      |
+//   +---------------------+                             +---------------------+      |
+//              | failure                                           | failure         |
+//              `-------------------------+-------------------------'                 |
+//                                        +-------------------------------------------'
+//                                        v
+//                             +---------------------+
+//                             |        OpenGL       |
+//                             +---------------------+
+//                                        | failure
 //                                        v
 //                             +---------------------+
 //                             |       Software      |
@@ -335,10 +371,9 @@ impl GraphicsDriver {
 
         #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
         {
-            if matches!(
-                renderer,
-                RendererPreference::Auto | RendererPreference::Vulkan { .. }
-            ) {
+            if matches!(renderer, RendererPreference::Vulkan { .. })
+                || (cfg!(target_os = "linux") && renderer == RendererPreference::Auto)
+            {
                 match vulkan::VulkanDriver::new(
                     event_loop,
                     window_attributes.clone(),
