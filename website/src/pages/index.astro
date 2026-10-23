@@ -7,7 +7,11 @@ import PlatformIcon from "../components/PlatformIcon.astro";
 
 const sponsors = JSON.parse(readFileSync("public/sponsors.json", "utf8"));
 const usedBy = [
-  { name: "Polyfrost", href: "https://polyfrost.org", logo: "/polyfrost-logo.svg" },
+  {
+    name: "Polyfrost",
+    href: "https://polyfrost.org",
+    logo: "/polyfrost-logo.svg",
+  },
   {
     name: "Zerac",
     href: "https://www.zerac.com/",
@@ -59,7 +63,7 @@ const features = [
       "Freya ships with a rich set of built-in components, from simple ones like Button, Switch, and Slider to more complex ones like VirtualScrollView, Calendar, and ColorPicker.",
     mediaUrl: "/freya-gallery.png",
     mediaType: "image" as const,
-    actionUrl: "/demo",
+    actionUrl: "/demo/",
     actionLabel: "See the demo",
   },
   {
@@ -132,23 +136,23 @@ const features = [
         >
         <a
           class="block text-center px-6 py-2 bg-pink-300 rounded-lg text-black hover:bg-pink-400 transition-colors delay-[10]"
-          href="/support">Support</a
+          href="/support/">Support</a
         >
         <a
           class="block text-center px-6 py-2 bg-emerald-400 rounded-lg text-black hover:bg-emerald-500 transition-colors delay-[10]"
-          href="/demo">Demo</a
+          href="/demo/">Demo</a
         >
       </div>
     </div>
   </div>
 
   <div
-    class="p-6 py-8 lg:w-content lg:flex gap-10 block justify-evenly items-center mx-auto text-black border border-stone-800 m-2 rounded-2xl bg-custom-dark-gray shadow-lg shadow-black/20"
+    class="w-full p-6 py-8 lg:flex gap-10 block justify-evenly items-center mx-auto text-black border border-stone-800 my-2 rounded-2xl bg-custom-dark-gray shadow-lg shadow-black/20"
   >
-    <div class="text-xs hidden lg:block">
+    <div class="min-w-0 text-xs hidden lg:block">
       <Code code={EXAMPLE_CODE} lang="rs" />
     </div>
-    <div class="flex justify-center flex-col items-center gap-y-8">
+    <div class="min-w-0 flex justify-center flex-col items-center gap-y-8">
       <video muted autoplay playsinline loop class="rounded-xl">
         <source src="/demo.webm" type="video/webm" />
       </video>
@@ -282,7 +286,7 @@ const features = [
       >
       <a
         class="px-6 py-2 bg-pink-300 rounded-lg text-black hover:bg-pink-400 transition-colors delay-[10]"
-        href="/support">Support</a
+        href="/support/">Support</a
       >
     </div>
   </div>

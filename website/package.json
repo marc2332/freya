@@ -14,7 +14,9 @@
   "dependencies": {
     "@astrojs/markdown-satteri": "^0.3.8",
     "@astrojs/rss": "^4.0.19",
+    "@astrojs/sitemap": "^3.7.4",
     "@astrojs/tailwind": "^6.0.0",
+    "@vercel/analytics": "^2.0.1",
     "astro": "7.3.3",
     "tailwindcss": "^3.0.24"
   },
