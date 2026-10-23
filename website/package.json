@@ -15,7 +15,7 @@
     "@astrojs/markdown-satteri": "^0.3.8",
     "@astrojs/rss": "^4.0.19",
     "@astrojs/tailwind": "^6.0.0",
-    "astro": "7.2.8",
+    "astro": "7.3.3",
     "tailwindcss": "^3.0.24"
   },
   "devDependencies": {
