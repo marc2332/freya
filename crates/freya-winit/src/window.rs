@@ -296,10 +296,7 @@ impl AppWindow {
                 focused_accessibility_node: State::create(accesskit::Node::new(
                     accesskit::Role::Window,
                 )),
-                root_size: State::create(Size2D::new(
-                    window_size.width,
-                    window_size.height,
-                )),
+                root_size: State::create(Size2D::new(window_size.width, window_size.height)),
                 scale_factor: State::create(scale_factor),
                 custom_scale_factor: State::create(custom_scale_factor),
                 navigation_mode: State::create(NavigationMode::NotKeyboard),
