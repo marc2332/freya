@@ -199,6 +199,7 @@ impl EmmitableEvent {
                 name: platform_event_name,
                 scroll,
                 source,
+                phase,
                 cursor,
                 ..
             } => {
@@ -217,6 +218,7 @@ impl EmmitableEvent {
                         scroll.x,
                         scroll.y,
                         source,
+                        phase,
                         global_location,
                         element_location,
                     )),
