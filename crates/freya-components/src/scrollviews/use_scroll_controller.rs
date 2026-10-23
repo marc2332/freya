@@ -1,4 +1,7 @@
-use std::time::Instant;
+use std::time::{
+    Duration,
+    Instant,
+};
 
 use freya_core::prelude::*;
 use torin::{
@@ -229,11 +232,15 @@ pub fn use_scroll_controller(config: impl FnOnce() -> ScrollConfig) -> ScrollCon
 
 /// Distance under which the animation is close enough to snap, in pixels.
 const SETTLE_DISTANCE: f32 = 0.5;
+
 /// Speed under which the animation is slow enough to stop, in pixels per second.
 const SETTLE_SPEED: f32 = 20.0;
 
 /// Slowest drag release speed that still starts a fling, in pixels per second.
 const FLING_MIN_SPEED: f32 = 50.0;
+
+/// Maximum time since the last drag movement that still allows a fling.
+const FLING_RELEASE_TIMEOUT: Duration = Duration::from_millis(100);
 
 /// Scrolling feel of a [`TargetPlatform`].
 pub(crate) trait ScrollFeel {
@@ -390,6 +397,33 @@ impl ScrollController {
             task.write().take();
         });
         task.write().replace(animation_task);
+    }
+
+    /// Returns whether the gesture ended or was cancelled, so callers skip applying the scroll delta.
+    pub(crate) fn scroll_gesture_phase(&mut self, phase: TouchPhase, delta: Vector2D) -> bool {
+        match phase {
+            TouchPhase::Started => {
+                self.stop();
+                self.drag.set(Drag::default());
+            }
+            TouchPhase::Moved => self.drag.write().track(-delta),
+            TouchPhase::Ended => {
+                let bounds = *self.bounds.peek();
+                if self.drag.peek().last_move.elapsed() < FLING_RELEASE_TIMEOUT
+                    && let Some((content, viewport)) = bounds
+                {
+                    self.release_drag(self.animated_position(self.position()), content, viewport);
+                }
+                self.drag.set(Drag::default());
+                return true;
+            }
+            TouchPhase::Cancelled => {
+                self.stop();
+                self.drag.set(Drag::default());
+                return true;
+            }
+        }
+        false
     }
 
     /// Freezes the animation and starts a drag from the momentum it caught.
