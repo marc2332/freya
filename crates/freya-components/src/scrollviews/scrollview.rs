@@ -20,6 +20,7 @@ use crate::scrollviews::{
     ScrollController,
     shared::{
         Axis,
+        EnclosingScrollViews,
         get_container_sizes,
         get_corrected_scroll_position,
         get_scroll_position_from_cursor,
@@ -204,6 +205,8 @@ impl Component for ScrollView {
             .scroll_controller
             .unwrap_or_else(|| use_scroll_controller(ScrollConfig::default));
         let mut touch_drag = use_touch_drag(a11y_id);
+        let mut drag_taken_over = use_state(|| false);
+        use_provide_context(|| EnclosingScrollViews::get().with(drag_taken_over));
         let (scrolled_x, scrolled_y) = scroll_controller.into();
         let layout = &self.layout.layout;
         let direction = layout.direction;
@@ -265,6 +268,8 @@ impl Component for ScrollView {
         let invert_scroll_wheel = self.invert_scroll_wheel;
 
         let on_capture_global_pointer_up = move |e: Event<PointerEventData>| {
+            drag_taken_over.set_if_modified(false);
+
             if clicking_scrollbar.read().is_some() {
                 e.prevent_default();
                 clicking_scrollbar.set(None);
