@@ -17,6 +17,7 @@ use freya_core::{
     },
 };
 use rustc_hash::FxHashMap;
+use tiny_diff::DiffNode;
 use torin::size::Size;
 
 struct RawIdMap(FxHashMap<u64, Vec<u64>>);
@@ -38,6 +39,18 @@ impl From<RawIdMap> for FxHashMap<NodeId, Vec<NodeId>> {
 
 fn convert_ids(map: FxHashMap<u64, Vec<u64>>) -> FxHashMap<NodeId, Vec<NodeId>> {
     RawIdMap::from(map).into()
+}
+
+#[test]
+fn diff_preserves_public_field_types() {
+    let diff = Diff {
+        added: vec![Box::from([0])],
+        modified: Vec::new(),
+        removed: Vec::new(),
+        moved: FxHashMap::from_iter([(Box::<[u32]>::from([]), vec![(0, 1)])]),
+    };
+    let movements: FxHashMap<Box<[u32]>, Vec<(u32, u32)>> = diff.moved;
+    assert_eq!(movements.get(&[][..]), Some(&vec![(0, 1)]));
 }
 
 #[test]

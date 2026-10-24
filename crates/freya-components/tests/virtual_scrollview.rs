@@ -122,6 +122,7 @@ pub fn virtual_scroll_view_smooth_scrolling() {
         scroll: (0., -300.).into(),
         cursor: (5., 5.).into(),
         source: WheelSource::Line,
+        phase: TouchPhase::Moved,
     });
     test.sync_and_update();
 

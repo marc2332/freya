@@ -5,6 +5,7 @@
 [![Discord Server](https://img.shields.io/discord/1015005816094478347.svg?logo=discord&style=flat-square)](https://discord.gg/sYejxCdewG)
 [![Github Sponsors](https://img.shields.io/github/sponsors/marc2332?style=social)](https://github.com/sponsors/marc2332)
 [![codecov](https://codecov.io/github/marc2332/freya/branch/main/graph/badge.svg?token=APSGEC84B8)](https://codecov.io/github/marc2332/freya)
+[![hotpath-rs](https://img.shields.io/endpoint?url=https://hotpath.rs/badge-cloud.json)](https://hotpath.rs/app/repos/marc2332/freya)
 
 [Website](https://freyaui.dev) | [Documentation](https://docs.rs/freya/) | [Discord](https://discord.gg/sYejxCdewG) | [Contact](#contact)
 
@@ -20,7 +21,7 @@ freya = "0.4"
 Next release:
 
 ```toml
-freya = "0.5.0-beta.12"
+freya = "=0.5.0-beta.12"
 ```
 
 `main` branch:

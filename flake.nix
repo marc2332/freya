@@ -109,6 +109,10 @@
       unset CARGO_TARGET_DIR NIX_LDFLAGS NIX_LDFLAGS_FOR_BUILD
       MBX_CARGO_SHIM_MODE=1 MBX_CARGO_SHIM_PATH="$0" exec ${mbx}/bin/mbx "$@"
     '';
+    nightlyCargo = pkgs.writeShellScriptBin "freya-nightly-cargo" ''
+      export PATH="${nightlyRust}/bin:$PATH"
+      exec ${mbx}/bin/mbx "$@"
+    '';
     mkDevShell = rustToolchain: extraPackages:
       pkgs.mkShell {
         packages = with pkgs;
@@ -135,9 +139,12 @@
           ++ extraPackages;
 
         LOCALE_ARCHIVE = "${pkgs.glibcLocales}/lib/locale/locale-archive";
+        LIBCLANG_PATH = "${pkgs.libclang.lib}/lib";
         CARGO_TARGET_WASM32_UNKNOWN_EMSCRIPTEN_LINKER = "${pkgs.emscripten}/bin/em++";
         CARGO_TARGET_WASM32_UNKNOWN_EMSCRIPTEN_RUSTFLAGS = "-C link-arg=-sFULL_ES3=1";
-        FREYA_NIGHTLY_CARGO = "${nightlyRust}/bin/cargo";
+        FREYA_NIGHTLY_CARGO = "${nightlyCargo}/bin/freya-nightly-cargo";
+        FREYA_NIGHTLY_RUSTC = "${nightlyRust}/bin/rustc";
+        FREYA_NIGHTLY_RUSTDOC = "${nightlyRust}/bin/rustdoc";
         FREYA_NIGHTLY_RUSTFMT = "${nightlyRust}/bin/rustfmt";
 
         shellHook = ''
