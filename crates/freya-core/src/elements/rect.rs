@@ -513,7 +513,9 @@ impl ElementExt for RectElement {
                 .recorder
                 .clip_path(path.clone(), ClipOp::Intersect, true);
             context.recorder.translate(area.min_x(), area.min_y());
-            context.recorder.scale(scale_factor as f32, scale_factor as f32);
+            context
+                .recorder
+                .scale(scale_factor as f32, scale_factor as f32);
             context.recorder.custom(
                 SkRect::from_xywh(0., 0., size.width, size.height),
                 context.font_collection,
