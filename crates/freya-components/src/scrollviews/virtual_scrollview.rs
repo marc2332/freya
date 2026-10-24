@@ -24,6 +24,7 @@ use crate::scrollviews::{
     ScrollController,
     shared::{
         Axis,
+        EnclosingScrollViews,
         get_container_sizes,
         get_corrected_scroll_position,
         get_scroll_position_from_cursor,
@@ -478,6 +479,8 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
             .unwrap_or_else(|| use_scroll_controller(ScrollConfig::default));
         let mut dragging_content = use_state::<Option<CursorPoint>>(|| None);
         let mut drag_origin = use_state::<Option<CursorPoint>>(|| None);
+        let mut drag_taken_over = use_state(|| false);
+        use_provide_context(|| EnclosingScrollViews::get().with(drag_taken_over));
         let (scrolled_x, scrolled_y) = scroll_controller.into();
         let layout = &self.layout.layout;
         let direction = layout.direction;
@@ -539,6 +542,8 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
         let invert_scroll_wheel = self.invert_scroll_wheel;
 
         let on_capture_global_pointer_up = move |e: Event<PointerEventData>| {
+            drag_taken_over.set_if_modified(false);
+
             if clicking_scrollbar.read().is_some() {
                 e.prevent_default();
                 clicking_scrollbar.set(None);
@@ -621,6 +626,12 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
         };
 
         let on_capture_global_pointer_move = move |e: Event<PointerEventData>| {
+            if drag_scrolling && *drag_taken_over.peek() {
+                // Someone inside handles this drag, see `EnclosingScrollViews`.
+                dragging_content.set_if_modified(None);
+                drag_origin.set_if_modified(None);
+            }
+
             if drag_scrolling {
                 if let Some(prev) = dragging_content() {
                     let coords = e.global_location();

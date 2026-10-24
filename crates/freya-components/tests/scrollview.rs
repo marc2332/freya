@@ -447,3 +447,52 @@ pub fn scroll_view_scrollbar_smaller_than_thumb() {
         .min_y();
     assert_eq!(scrolled_before, scrolled_after);
 }
+
+#[test]
+pub fn scroll_view_drag_taken_over_from_inside() {
+    #[derive(PartialEq)]
+    struct TakesDragOver;
+
+    impl Component for TakesDragOver {
+        fn render(&self) -> impl IntoElement {
+            let scroll_views = use_hook(EnclosingScrollViews::get);
+            rect()
+                .height(Size::px(200.))
+                .width(Size::px(200.))
+                .on_pointer_down(move |_| scroll_views.take_over_drag())
+        }
+    }
+
+    fn app() -> impl IntoElement {
+        ScrollView::new()
+            .drag_scrolling(true)
+            .child(TakesDragOver)
+            .child(rect().height(Size::px(200.)).width(Size::px(200.)))
+            .child(rect().height(Size::px(200.)).width(Size::px(200.)))
+            .child(rect().height(Size::px(200.)).width(Size::px(200.)))
+    }
+
+    let mut test = launch_test(app);
+    let scrollview = test
+        .find(|node, element| {
+            Rect::try_downcast(element)
+                .filter(|rect| rect.accessibility.builder.role() == AccessibilityRole::ScrollView)
+                .map(move |_| node)
+        })
+        .unwrap();
+    let content = scrollview.children()[0].children()[0].children();
+
+    // The drag starts on the component that takes it over: nothing scrolls.
+    test.press_touch((100., 190.));
+    test.move_touch((100., 100.));
+    test.move_touch((100., 10.));
+    test.release_touch((100., 10.));
+    assert!(content[0].is_visible());
+    assert!(!content[3].is_visible());
+
+    // Once the finger lifted, drags scroll again.
+    test.press_touch((100., 400.));
+    test.move_touch((100., 100.));
+    test.release_touch((100., 100.));
+    assert!(content[3].is_visible());
+}

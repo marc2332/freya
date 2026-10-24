@@ -10,6 +10,34 @@ pub enum Axis {
     Y,
 }
 
+/// The scroll views around a component.
+///
+/// A component that handles a touch drag on its own, like a text selection, takes the drag over
+/// so the scroll views around it stop moving the content under the finger. They scroll with
+/// drags again once the finger lifts.
+#[derive(Clone, Default, PartialEq)]
+pub struct EnclosingScrollViews(Vec<State<bool>>);
+
+impl EnclosingScrollViews {
+    /// The scroll views around the current component.
+    pub fn get() -> Self {
+        try_consume_context().unwrap_or_default()
+    }
+
+    /// Stop the drag scrolling of these scroll views until the finger lifts.
+    pub fn take_over_drag(&self) {
+        for mut taken_over in self.0.iter().copied() {
+            taken_over.set_if_modified(true);
+        }
+    }
+
+    /// These scroll views and one more inside them.
+    pub(crate) fn with(mut self, taken_over: State<bool>) -> Self {
+        self.0.push(taken_over);
+        self
+    }
+}
+
 #[doc(hidden)]
 pub fn get_scroll_position_from_wheel(
     wheel_movement: f32,
