@@ -10,7 +10,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        benchmark: [dev_perf-icount, core-icount, painting-icount, torin-icount]
+        include:
+          - benchmark: dev_perf
+            artifact: hotpath-dev
+            report: dev_perf.json
+          - benchmark: core
+            artifact: hotpath-core
+            report: core.json
+          - benchmark: painting
+            artifact: hotpath-painting
+            report: painting.json
+          - benchmark: torin
+            artifact: hotpath-torin
+            report: torin.json
     uses: hotpath-rs/hotpath/.github/workflows/hotpath-relay.yml@v0.29.1
     permissions:
       actions: read
@@ -19,5 +31,5 @@ jobs:
       pull-requests: read
     with:
       benchmark: ${{ matrix.benchmark }}
-      artifact_name: hotpath-${{ matrix.benchmark }}
-      report_file: report.json
+      artifact_name: ${{ matrix.artifact }}
+      report_file: ${{ matrix.report }}

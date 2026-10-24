@@ -15,16 +15,24 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - benchmark: dev_perf-icount
+          - benchmark: dev_perf
+            artifact: hotpath-dev
+            report: dev_perf.json
             recipe: pd-ci
             policy: hotpath/policy.toml
-          - benchmark: core-icount
+          - benchmark: core
+            artifact: hotpath-core
+            report: core.json
             recipe: pc-ci
             policy: hotpath/policy.toml
-          - benchmark: painting-icount
+          - benchmark: painting
+            artifact: hotpath-painting
+            report: painting.json
             recipe: pp-ci
             policy: hotpath/painting-policy.toml
-          - benchmark: torin-icount
+          - benchmark: torin
+            artifact: hotpath-torin
+            report: torin.json
             recipe: pt-ci
             policy: hotpath/policy.toml
     concurrency:
@@ -58,13 +66,13 @@ jobs:
           HOTPATH_UPLOAD: ${{ github.event_name == 'push' && 'fail-on-error' || '0' }}
           HOTPATH_UPLOAD_RESPONSE_PATH: ${{ runner.temp }}/upload.json
           HOTPATH_OUTPUT_FORMAT: json
-          HOTPATH_OUTPUT_PATH: ${{ github.workspace }}/report.json
+          HOTPATH_OUTPUT_PATH: ${{ github.workspace }}/${{ matrix.report }}
           HOTPATH_CALLGRIND_OUT_FILE: ${{ runner.temp }}/callgrind.out.%p
           HOTPATH_USER_METADATA: runner=Linux-X64,toolchain=1.99.0,profile=optimized,valgrind=3.26.0
           CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER: valgrind -q --tool=callgrind --instr-atstart=no --callgrind-out-file=${{ runner.temp }}/callgrind.out.%p
         run: |
           just --set callgrind_runner "$CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER" ${{ matrix.recipe }}
-          jq -e '.functions_icount.data | length > 0' report.json > /dev/null
+          jq -e '.functions_icount.data | length > 0' "$HOTPATH_OUTPUT_PATH" > /dev/null
           if [ "$HOTPATH_UPLOAD" = fail-on-error ]; then
             test -s "$HOTPATH_UPLOAD_RESPONSE_PATH"
           fi
@@ -72,8 +80,8 @@ jobs:
         if: github.event_name != 'push'
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: hotpath-${{ matrix.benchmark }}
-          path: report.json
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.report }}
           retention-days: 1
           if-no-files-found: error
   report:
