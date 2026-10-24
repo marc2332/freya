@@ -70,6 +70,7 @@
 //! - [Camera](freya_camera)
 //! - [Video](freya_video)
 //! - [Freya Query](freya_query)
+//! - [State Persistence](freya_persist)
 //! - [Tokio Integration](self::_docs::tokio_integration)
 //! - [Borderless Windows](self::_docs::borderless)
 //! - [Devtools](self::_docs::devtools)
@@ -97,6 +98,11 @@
 //! - `icons-lucide`: Enables the Lucide icons from [freya_icons]. Implies `icons`.
 //! - `radio`: Reexport [freya_radio] under [radio].
 //! - `query`: Reexport [freya_query] under [query].
+//! - `persist`: Reexport [freya_persist] under [persist].
+//! - `persist-fs`: Enables local filesystem state storage. Implies `persist`.
+//! - `persist-fs-watch`: Enables local file change notifications. Implies `persist-fs`.
+//! - `persist-json`: Enables JSON state encoding. Implies `persist`.
+//! - `persist-radio`: Enables Radio persistence with channel notifications. Implies `persist` and `radio`.
 //! - `markdown`: Reexport [freya_markdown] under [markdown].
 //! - `html`: Reexport [freya_html] under [html].
 //! - `titlebar`: Enables the [TitlebarButton](components::TitlebarButton) component.
@@ -374,6 +380,13 @@ pub mod radio {
 #[cfg_attr(feature = "docs", doc(cfg(feature = "query")))]
 pub mod query {
     pub use freya_query::prelude::*;
+}
+
+/// Reexport `freya-persist` when the `persist` feature is enabled.
+#[cfg(feature = "persist")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "persist")))]
+pub mod persist {
+    pub use freya_persist::prelude::*;
 }
 
 /// Reexport `freya-html` when the `html` feature is enabled.
