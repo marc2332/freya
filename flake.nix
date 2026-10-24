@@ -134,6 +134,7 @@
             just
             python3
             taplo
+            valgrind
           ]
           ++ libraries
           ++ extraPackages;
