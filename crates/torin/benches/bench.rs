@@ -46,7 +46,9 @@ impl TreeAdapter<usize> for TestingTree {
         node_id: &usize,
         reader: impl FnOnce(&Node, &[usize]) -> R,
     ) -> Option<R> {
-        self.mapper.get(node_id).map(|entry| reader(&entry.3, &entry.1))
+        self.mapper
+            .get(node_id)
+            .map(|entry| reader(&entry.3, &entry.1))
     }
 
     fn root_id(&self) -> usize {
@@ -160,12 +162,7 @@ fn aligned_node(depth: usize) -> Node {
     }
 }
 
-fn benchmark(
-    depth: usize,
-    width: usize,
-    mode: BenchmarkMode,
-    node_generator: fn(usize) -> Node,
-) {
+fn benchmark(depth: usize, width: usize, mode: BenchmarkMode, node_generator: fn(usize) -> Node) {
     for _ in 0..ITERATIONS {
         let root_area = Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0));
         let mut measurer = Some(NoopMeasurer);
