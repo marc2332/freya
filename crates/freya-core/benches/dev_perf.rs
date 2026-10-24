@@ -1,20 +1,10 @@
-use std::time::Instant;
-
 use freya::helpers::from_fn_captured;
 use freya_core::{
     integration::*,
     prelude::*,
 };
-use tracing::Level;
-use tracing_subscriber::FmtSubscriber;
-
-#[cfg_attr(feature = "hotpath", hotpath::main(percentiles = [33, 66, 95, 99]))]
+#[cfg_attr(feature = "hotpath", hotpath::main(percentiles = [33, 66, 95, 99], functions_limit = 0))]
 fn main() {
-    let subscriber = FmtSubscriber::builder()
-        .with_max_level(Level::TRACE)
-        .finish();
-    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-
     fn app() -> Element {
         rect()
             .children([
@@ -62,12 +52,9 @@ fn main() {
     let mut state = runner.provide_root_context(|| State::create(10000));
     let mut tree = Tree::default();
 
-    let instant = Instant::now();
     let updates = runner.sync_and_update();
     tree.apply_mutations(updates, 1.0);
-    println!("+ {}ms", instant.elapsed().as_millis());
 
-    let instant = Instant::now();
     runner.handle_event(
         5,
         EventName::MouseUp,
@@ -76,11 +63,8 @@ fn main() {
     );
     let updates = runner.sync_and_update();
     tree.apply_mutations(updates, 1.0);
-    println!("/ {}ms", instant.elapsed().as_millis());
 
     state.set(1000);
-    let instant = Instant::now();
     let updates = runner.sync_and_update();
     tree.apply_mutations(updates, 1.0);
-    println!("- {}ms", instant.elapsed().as_millis());
 }

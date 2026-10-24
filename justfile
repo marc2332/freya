@@ -64,32 +64,39 @@ t-components:
 t-core:
    cargo nextest run --package freya-core --package ragnarok
 
-pe:
-    cargo bench --package freya-core --bench dev_perf
+callgrind_runner := "valgrind -q --tool=callgrind --instr-atstart=no"
+
+pe: ps
 
 hr:
     dx serve --hot-patch --example animation_router --verbose --features "hotreload"
 
 ps:
-    cargo bench --package freya-core --bench dev_perf --features "hotpath"
+    CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="{{callgrind_runner}}" cargo bench --package freya-core --bench dev_perf --features "hotpath-callgrind"
 
 pa:
-    cargo bench --package freya-core --bench dev_perf --features "hotpath, hotpath-alloc"
+    CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="{{callgrind_runner}}" cargo bench --package freya-core --bench dev_perf --features "hotpath-callgrind, hotpath-alloc"
 
 pd-ci:
-    cargo bench --package freya-core --bench dev_perf --features "hotpath, hotpath-alloc, hotpath-cloud"
+    CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="{{callgrind_runner}}" cargo bench --package freya-core --bench dev_perf --features "hotpath-callgrind, hotpath-alloc, hotpath-cloud"
 
 pc:
-    cargo bench --package freya-core --bench core_perf --features "hotpath, hotpath-alloc"
+    CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="{{callgrind_runner}}" cargo bench --package freya-core --bench core_perf --features "hotpath-callgrind, hotpath-alloc"
 
 pc-ci:
-    cargo bench --package freya-core --bench core_perf --features "hotpath, hotpath-alloc, hotpath-cloud"
+    CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="{{callgrind_runner}}" cargo bench --package freya-core --bench core_perf --features "hotpath-callgrind, hotpath-alloc, hotpath-cloud"
 
 pp workload="painting_suite":
-    HOTPATH_FOCUS="${HOTPATH_FOCUS:-/[/](frame|update|painting)$/}" HOTPATH_EXCLUDE_WRAPPER="${HOTPATH_EXCLUDE_WRAPPER:-1}" cargo test --package freya-core --test paint_performance --release --features "hotpath" "{{workload}}" -- --ignored --exact --nocapture --test-threads=1
+    CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="{{callgrind_runner}}" cargo test --package freya-core --test paint_performance --release --features "hotpath-callgrind" "{{workload}}" -- --ignored --exact --nocapture --test-threads=1
 
 pp-ci:
-    HOTPATH_FOCUS="${HOTPATH_FOCUS:-/[/](frame|update|painting)$/}" HOTPATH_EXCLUDE_WRAPPER="${HOTPATH_EXCLUDE_WRAPPER:-1}" cargo test --package freya-core --test paint_performance --release --features "hotpath, hotpath-alloc, hotpath-cloud" painting_suite -- --ignored --exact --nocapture --test-threads=1
+    CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="{{callgrind_runner}}" cargo test --package freya-core --test paint_performance --release --features "hotpath-callgrind, hotpath-alloc, hotpath-cloud" painting_suite -- --ignored --exact --nocapture --test-threads=1
+
+pt:
+    CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="{{callgrind_runner}}" cargo bench --package torin --bench callgrind --features "hotpath-callgrind, hotpath-alloc"
+
+pt-ci:
+    CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="{{callgrind_runner}}" cargo bench --package torin --bench callgrind --features "hotpath-callgrind, hotpath-alloc, hotpath-cloud"
 
 ba:
     cargo build --all-targets --workspace -F freya/all-debug
