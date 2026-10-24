@@ -1358,18 +1358,18 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.6.6"
+version = "4.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "473c7e07f409a8d772161724aa8db6a765a2532a70f9667eeb7b49d3d02fbdca"
+checksum = "aa8876b300ab35ba921adea3dfd70157a46249b33f95c9084ae5709785478946"
 dependencies = [
  "clap_builder",
 ]
 
 [[package]]
 name = "clap_builder"
-version = "4.6.6"
+version = "4.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b48fea5a88e9ae728a2dcbedbfc0e730f7d60da42e1cb049a83c9fb8b789889"
+checksum = "ec0797fb7aeb1406c84efac526901f7ec3ead2124f946b494e72879d4b54704d"
 dependencies = [
  "anstyle",
  "clap_lex",
@@ -1377,9 +1377,9 @@ dependencies = [
 
 [[package]]
 name = "clap_lex"
-version = "1.1.0"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8d4a3bb8b1e0c1050499d1815f5ab16d04f0959b233085fb31653fbfc9d98f9"
+checksum = "1c133bc6a41be0d194c306b5506d15e6feeea7b1d6604bd3f8310dfb2ca96486"
 
 [[package]]
 name = "clipboard-win"
@@ -2817,7 +2817,7 @@ dependencies = [
 
 [[package]]
 name = "freya"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "cfg-if 1.0.4",
  "freya-android",
@@ -2854,7 +2854,7 @@ dependencies = [
 
 [[package]]
 name = "freya-android"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "freya-components",
  "freya-core",
@@ -2866,7 +2866,7 @@ dependencies = [
 
 [[package]]
 name = "freya-animation"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "easer",
  "freya",
@@ -2876,7 +2876,7 @@ dependencies = [
 
 [[package]]
 name = "freya-borderless-plugin"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "freya-core",
  "freya-engine",
@@ -2886,7 +2886,7 @@ dependencies = [
 
 [[package]]
 name = "freya-camera"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "blocking",
  "bytes",
@@ -2900,7 +2900,7 @@ dependencies = [
 
 [[package]]
 name = "freya-clipboard"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "copypasta",
  "freya",
@@ -2909,7 +2909,7 @@ dependencies = [
 
 [[package]]
 name = "freya-code-editor"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "freya-components",
  "freya-core",
@@ -2926,7 +2926,7 @@ dependencies = [
 
 [[package]]
 name = "freya-components"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "accesskit",
  "anyhow",
@@ -2947,7 +2947,6 @@ dependencies = [
  "gif 0.13.3",
  "paste",
  "reqwest 0.12.28",
- "thiserror 2.0.19",
  "torin",
  "tracing",
  "url",
@@ -2955,7 +2954,7 @@ dependencies = [
 
 [[package]]
 name = "freya-core"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "accesskit",
  "async-io",
@@ -2984,6 +2983,7 @@ dependencies = [
  "smallvec",
  "subsecond",
  "tiny-cache",
+ "tiny-diff",
  "tiny-notify",
  "torin",
  "tracing",
@@ -2994,7 +2994,7 @@ dependencies = [
 
 [[package]]
 name = "freya-devtools"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "accesskit",
  "anyhow",
@@ -3013,7 +3013,7 @@ dependencies = [
 
 [[package]]
 name = "freya-devtools-app"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "async-lock",
  "async-tungstenite",
@@ -3031,7 +3031,7 @@ dependencies = [
 
 [[package]]
 name = "freya-edit"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "bitflags 2.13.1",
  "freya",
@@ -3046,7 +3046,7 @@ dependencies = [
 
 [[package]]
 name = "freya-engine"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "euclid",
  "freya-skia-safe",
@@ -3054,7 +3054,7 @@ dependencies = [
 
 [[package]]
 name = "freya-html"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "anyrender",
  "atomic_refcell",
@@ -3082,7 +3082,7 @@ dependencies = [
 
 [[package]]
 name = "freya-i18n"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "fluent",
  "freya",
@@ -3096,7 +3096,7 @@ dependencies = [
 
 [[package]]
 name = "freya-icons"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "bytes",
  "freya",
@@ -3104,7 +3104,7 @@ dependencies = [
 
 [[package]]
 name = "freya-markdown"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "freya",
  "freya-code-editor",
@@ -3116,7 +3116,7 @@ dependencies = [
 
 [[package]]
 name = "freya-material-design"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "freya",
  "freya-animation",
@@ -3127,7 +3127,7 @@ dependencies = [
 
 [[package]]
 name = "freya-metrics-plugin"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "freya-core",
  "freya-engine",
@@ -3137,7 +3137,7 @@ dependencies = [
 
 [[package]]
 name = "freya-plotters-backend"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "freya-engine",
  "plotters-backend",
@@ -3145,7 +3145,7 @@ dependencies = [
 
 [[package]]
 name = "freya-query"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "freya",
  "freya-core",
@@ -3155,7 +3155,7 @@ dependencies = [
 
 [[package]]
 name = "freya-radio"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "freya",
  "freya-core",
@@ -3166,7 +3166,7 @@ dependencies = [
 
 [[package]]
 name = "freya-router"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "freya",
  "freya-core",
@@ -3178,7 +3178,7 @@ dependencies = [
 
 [[package]]
 name = "freya-router-macro"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "freya",
  "freya-router",
@@ -3190,7 +3190,7 @@ dependencies = [
 
 [[package]]
 name = "freya-sdk"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "freya-core",
  "tokio",
@@ -3239,7 +3239,7 @@ dependencies = [
 
 [[package]]
 name = "freya-terminal"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "async-io",
  "freya",
@@ -3261,7 +3261,7 @@ dependencies = [
 
 [[package]]
 name = "freya-testing"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "accesskit",
  "freya",
@@ -3276,7 +3276,7 @@ dependencies = [
 
 [[package]]
 name = "freya-video"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "anyhow",
  "async-channel",
@@ -3297,7 +3297,7 @@ dependencies = [
 
 [[package]]
 name = "freya-web"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "accesskit",
  "euclid",
@@ -3314,7 +3314,7 @@ dependencies = [
 
 [[package]]
 name = "freya-winit"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "accesskit",
  "accesskit_winit",
@@ -3335,6 +3335,7 @@ dependencies = [
  "hotpath",
  "image 0.25.10",
  "keyboard-types 0.8.3",
+ "libc",
  "mundy",
  "objc2 0.6.5",
  "objc2-app-kit 0.3.2",
@@ -3350,6 +3351,8 @@ dependencies = [
  "torin",
  "tracing",
  "tray-icon",
+ "wayland-client",
+ "wayland-protocols",
  "windows-sys 0.60.2",
  "winit",
 ]
@@ -3979,13 +3982,14 @@ dependencies = [
 
 [[package]]
 name = "hotpath"
-version = "0.28.0"
+version = "0.29.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8345e171844f80e5ae4cbed8bc8276e094f6ff2293a6f8e547c200183976674"
+checksum = "62f2351902fa259b758c7303505273393f6b08172ab5bdd5739a2d2bc6d554e8"
 dependencies = [
  "arc-swap",
  "cfg-if 1.0.4",
  "crossbeam-channel",
+ "flate2",
  "futures-core",
  "hdrhistogram",
  "hotpath-drain",
@@ -4003,15 +4007,15 @@ dependencies = [
 
 [[package]]
 name = "hotpath-drain"
-version = "0.0.2"
+version = "0.29.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e149b660b611650bdf3307941ef3e9b81be3c30ed1dfdbe7f670319674f023a6"
+checksum = "83dab2340134d9976d62f9f5172f9c6584c7f521b092f258e0e58e412e160b53"
 
 [[package]]
 name = "hotpath-macros"
-version = "0.28.0"
+version = "0.29.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf73e28fe4a7595c322e4265c1608cb10c215cbbce11e49cfcc258766ba686d6"
+checksum = "a04bbe5701b097f224a08187a78b75bb9d9b4bbaff6a279c2a50ba73edbb7aac"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -6113,7 +6117,7 @@ checksum = "35fb2e5f958ec131621fdd531e9fc186ed768cbe395337403ae56c17a74c68ec"
 
 [[package]]
 name = "pathgraph"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 
 [[package]]
 name = "peeking_take_while"
@@ -6693,7 +6697,7 @@ checksum = "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf"
 
 [[package]]
 name = "ragnarok"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "euclid",
  "hashbrown 0.16.1",
@@ -7380,9 +7384,9 @@ checksum = "f87165f0995f63a9fbeea62b64d10b4d9d8e78ec6d7d51fb2125fda7bb36788f"
 
 [[package]]
 name = "rustls-webpki"
-version = "0.103.15"
+version = "0.103.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3c3cf1d8b1e7d4927e2d154c3fcb02979afb9939629c62cd9048d4f07b60ac2"
+checksum = "4443b1b6d39d7c663139942cc4558262562d2c84123bb6282ef177009ca8b281"
 dependencies = [
  "aws-lc-rs",
  "ring",
@@ -8371,7 +8375,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "once_cell",
  "rustix 1.1.4",
  "windows-sys 0.61.2",
@@ -8487,15 +8491,24 @@ dependencies = [
 
 [[package]]
 name = "tiny-cache"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "rustc-hash 2.1.3",
  "smallvec",
 ]
 
 [[package]]
+name = "tiny-diff"
+version = "0.5.0-beta.12"
+dependencies = [
+ "hashbrown 0.16.1",
+ "hotpath",
+ "rustc-hash 2.1.3",
+]
+
+[[package]]
 name = "tiny-notify"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "futures-lite",
 ]
@@ -8760,11 +8773,12 @@ checksum = "7d56353a2a665ad0f41a421187180aab746c8c325620617ad883a99a1cbe66d2"
 
 [[package]]
 name = "torin"
-version = "0.5.0-rc.10"
+version = "0.5.0-beta.12"
 dependencies = [
  "criterion",
  "euclid",
  "hashbrown 0.16.1",
+ "hotpath",
  "itertools 0.14.0",
  "libm",
  "rustc-hash 2.1.3",
@@ -9601,18 +9615,18 @@ dependencies = [
 
 [[package]]
 name = "webpki-root-certs"
-version = "1.0.9"
+version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b96554aa2acc8ccdb7e1c9a58a7a68dd5d13bccc69cd124cb09406db612a1c9b"
+checksum = "58ec80e73fd8baf57bf0d9615554c75348bda990d6d5bbeab964dd068319fecb"
 dependencies = [
  "rustls-pki-types",
 ]
 
 [[package]]
 name = "webpki-roots"
-version = "1.0.9"
+version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7dcd9d09a39985f5344844e66b0c530a33843579125f23e21e9f0f220850f22a"
+checksum = "1c1c8e20c8a38fc7d65abfe74eb7280e4aa667e8eec8bc84996d2874810748d9"
 dependencies = [
  "rustls-pki-types",
 ]

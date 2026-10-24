@@ -505,15 +505,15 @@ impl ElementExt for RectElement {
         let path = path.detach();
         if let Some(callback) = style.background.render_callback() {
             let callback = callback.clone();
-            let scale_factor = context.scale_factor as f32;
+            let scale_factor = context.scale_factor;
             let text_style_state = context.text_style_state.clone();
-            let size = area.size / scale_factor;
+            let size = area.size / scale_factor as f32;
             context.recorder.save();
             context
                 .recorder
                 .clip_path(path.clone(), ClipOp::Intersect, true);
             context.recorder.translate(area.min_x(), area.min_y());
-            context.recorder.scale(scale_factor, scale_factor);
+            context.recorder.scale(scale_factor as f32, scale_factor as f32);
             context.recorder.custom(
                 SkRect::from_xywh(0., 0., size.width, size.height),
                 context.font_collection,
@@ -523,7 +523,8 @@ impl ElementExt for RectElement {
                             canvas: custom.canvas,
                             font_collection: custom.font_collection,
                         },
-                        origin: area.origin / scale_factor,
+                        scale_factor,
+                        origin: area.origin / scale_factor as f32,
                         size,
                         text_style_state: &text_style_state,
                     });

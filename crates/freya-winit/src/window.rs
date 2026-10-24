@@ -280,7 +280,7 @@ impl AppWindow {
 
         let mut tree = Tree::default();
 
-        let window_size = window.inner_size();
+        let window_size = window.inner_size().to_logical::<f32>(scale_factor);
         let accent_color_preference = accent_color_preference();
         runner.provide_root_context(TargetPlatform::detect);
         let platform = runner.run_in({
@@ -297,10 +297,7 @@ impl AppWindow {
                 focused_accessibility_node: State::create(accesskit::Node::new(
                     accesskit::Role::Window,
                 )),
-                root_size: State::create(Size2D::new(
-                    window_size.width as f32,
-                    window_size.height as f32,
-                )),
+                root_size: State::create(Size2D::new(window_size.width, window_size.height)),
                 scale_factor: State::create(scale_factor),
                 custom_scale_factor: State::create(custom_scale_factor),
                 navigation_mode: State::create(NavigationMode::NotKeyboard),
@@ -488,12 +485,14 @@ impl AppWindow {
 
     /// Syncs the effective scale factor on [`PlatformWindow`] and invalidates layout.
     pub fn scale_factor_changed(&mut self) {
+        let scale_factor = self.effective_scale_factor();
+        let size = self.window.inner_size().to_logical::<f32>(scale_factor);
+        self.platform.scale_factor.set(scale_factor);
         self.platform
-            .scale_factor
-            .set(self.effective_scale_factor());
+            .root_size
+            .set_if_modified(Size2D::new(size.width, size.height));
         self.process_layout_on_next_render = true;
-        self.tree
-            .set_scale_factor(self.effective_scale_factor() as f32);
+        self.tree.set_scale_factor(scale_factor as f32);
         self.tree.layout.reset();
         self.tree.text_cache.reset();
         self.tree.paint_state.damage.mark_full();

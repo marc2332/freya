@@ -9,8 +9,9 @@ min_percent_change = 20
 metrics = ["avg", "total"]
 min_calls = 10
 
-[functions.timing]
+[functions.icount]
 judged = true
-min_percent_change = 35
+fail_check = false
+min_percent_change = 3
 metrics = ["avg", "total"]
-min_calls = 15
+min_calls = 1

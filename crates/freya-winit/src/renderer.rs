@@ -894,7 +894,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 scale_factor,
                                 &self.fallback_fonts,
                             );
-                            app.platform.root_size.set_if_modified(size);
+                            app.platform
+                                .root_size
+                                .set_if_modified(size / scale_factor as f32);
                             app.process_layout_on_next_render = false;
                             self.plugins.send(
                                 PluginEvent::FinishedMeasuringLayout {
@@ -1186,31 +1188,30 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     const WHEEL_SPEED_MODIFIER: f64 = 53.0;
                     const TOUCHPAD_SPEED_MODIFIER: f64 = 2.0;
 
-                    if TouchPhase::Moved == phase {
-                        let (delta_x, delta_y, source) = match delta {
-                            MouseScrollDelta::LineDelta(x, y) => (
-                                x as f64 * WHEEL_SPEED_MODIFIER,
-                                y as f64 * WHEEL_SPEED_MODIFIER,
-                                WheelSource::Line,
-                            ),
-                            MouseScrollDelta::PixelDelta(position) => (
-                                position.x * TOUCHPAD_SPEED_MODIFIER,
-                                position.y * TOUCHPAD_SPEED_MODIFIER,
-                                WheelSource::Pixel,
-                            ),
-                        };
+                    let (delta_x, delta_y, source) = match delta {
+                        MouseScrollDelta::LineDelta(x, y) => (
+                            x as f64 * WHEEL_SPEED_MODIFIER,
+                            y as f64 * WHEEL_SPEED_MODIFIER,
+                            WheelSource::Line,
+                        ),
+                        MouseScrollDelta::PixelDelta(position) => (
+                            position.x * TOUCHPAD_SPEED_MODIFIER,
+                            position.y * TOUCHPAD_SPEED_MODIFIER,
+                            WheelSource::Pixel,
+                        ),
+                    };
 
-                        app.process_platform_events(
-                            vec![PlatformEvent::Wheel {
-                                name: WheelEventName::Wheel,
-                                scroll: (delta_x, delta_y).into(),
-                                cursor: app.position,
-                                source,
-                            }],
-                            &mut self.plugins,
-                            PluginHandle::new(&self.proxy),
-                        );
-                    }
+                    app.process_platform_events(
+                        vec![PlatformEvent::Wheel {
+                            name: WheelEventName::Wheel,
+                            scroll: (delta_x, delta_y).into(),
+                            cursor: app.position,
+                            source,
+                            phase: map_winit_touch_phase(phase),
+                        }],
+                        &mut self.plugins,
+                        PluginHandle::new(&self.proxy),
+                    );
                 }
 
                 WindowEvent::CursorLeft { .. } => {

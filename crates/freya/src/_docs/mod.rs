@@ -14,3 +14,8 @@ pub mod platforms;
 pub mod state_management;
 pub mod tokio_integration;
 pub mod ui_and_components;
+
+pub use freya_core::lifecycle::{
+    context,
+    global_context,
+};

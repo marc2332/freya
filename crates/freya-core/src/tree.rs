@@ -74,7 +74,6 @@ use crate::{
     runner::{
         MutationAdd,
         MutationModified,
-        MutationMove,
         MutationRemove,
         Mutations,
     },
@@ -389,20 +388,18 @@ impl Tree {
                 dirty.push((node_id, DiffModifies::all()));
             }
 
-            for (parent_node_id, movements) in mutations.moved {
-                let parent = self.children.get_mut(&parent_node_id).unwrap();
-                for MutationMove { index: to, node_id } in
-                    movements.into_iter().sorted_by_key(|m| m.index)
-                {
-                    let from = parent.iter().position(|id| *id == node_id).unwrap();
-                    parent.remove(from);
-                    parent.insert(to as usize, node_id);
+            for (parent_node_id, children) in mutations.moved {
+                let parent = self.children.entry(parent_node_id).or_default();
+                if *parent == children {
+                    continue;
                 }
-                let mut diff = DiffModifies::empty();
-                diff.insert(DiffModifies::REORDER_LAYOUT);
-                diff.insert(DiffModifies::ACCESSIBILITY);
-                diff.insert(DiffModifies::STYLE);
-                dirty.push((parent_node_id, diff));
+                *parent = children;
+                dirty.push((
+                    parent_node_id,
+                    DiffModifies::REORDER_LAYOUT
+                        | DiffModifies::ACCESSIBILITY
+                        | DiffModifies::STYLE,
+                ));
             }
 
             for MutationModified {

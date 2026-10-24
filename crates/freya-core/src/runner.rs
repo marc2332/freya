@@ -21,6 +21,7 @@ use rustc_hash::{
     FxHashMap,
     FxHashSet,
 };
+use tiny_diff::DiffNode;
 
 use crate::{
     current_context::CurrentContext,
@@ -104,18 +105,16 @@ pub struct MutationModified {
     pub flags: DiffModifies,
 }
 
-#[derive(Debug)]
-pub struct MutationMove {
-    pub index: u32,
-    pub node_id: NodeId,
-}
-
 #[derive(Default)]
 pub struct Mutations {
+    /// New elements and their final sibling indices, inserted after removals.
     pub added: Vec<MutationAdd>,
+    /// Updated elements and the flags identifying which states need refreshing.
     pub modified: Vec<MutationModified>,
+    /// Elements and scope roots to remove before additions and reordering.
     pub removed: Vec<MutationRemove>,
-    pub moved: FxHashMap<NodeId, Vec<MutationMove>>,
+    /// Final child order for reordered parents, applied after removals and additions.
+    pub moved: FxHashMap<NodeId, Vec<NodeId>>,
 }
 
 impl Mutations {
@@ -138,17 +137,6 @@ impl Debug for Mutations {
             self.modified.iter().map(|m| m.node_id).collect::<Vec<_>>(),
             self.removed,
             self.moved
-                .iter()
-                .map(|(parent_id, moves)| {
-                    (
-                        parent_id,
-                        moves
-                            .iter()
-                            .map(|m| (m.index, m.node_id))
-                            .collect::<Vec<_>>(),
-                    )
-                })
-                .collect::<Vec<_>>()
         ))
     }
 }
@@ -167,6 +155,8 @@ pub enum TasksPollStage {
 
 /// Parents receiving additions, keyed by new tree path, with their lazily found current path.
 type AdditionParents = FxHashMap<Box<[u32]>, (NodeId, Option<Vec<u32>>)>;
+
+type ReorderedParents = FxHashMap<NodeId, Box<[u32]>>;
 
 pub struct Runner {
     pub scopes: FxHashMap<ScopeId, Rc<RefCell<Scope>>>,
@@ -710,6 +700,7 @@ impl Runner {
         self.verify_scopes_integrity();
 
         let mut mutations = Mutations::default();
+        let mut pending_reorders = FxHashMap::default();
 
         let dirty_scopes = self
             .dirty_scopes
@@ -749,13 +740,20 @@ impl Runner {
             let mut diff = Diff::default();
             path_element.diff(scope_rc.borrow().element.as_ref(), &mut diff);
 
-            self.apply_diff(&scope_rc, diff, &mut mutations, &path_element);
+            self.apply_diff(
+                &scope_rc,
+                diff,
+                &mut mutations,
+                &path_element,
+                &mut pending_reorders,
+            );
 
             self.run_scope(
                 &scope_rc,
                 &path_element,
                 &mut mutations,
                 &mut visited_scopes,
+                &mut pending_reorders,
             );
 
             let mut scopes_storages = self.scopes_storages.borrow_mut();
@@ -764,6 +762,22 @@ impl Runner {
             scope_storage.current_run += 1;
 
             scope_rc.borrow_mut().element = Some(path_element);
+        }
+
+        // Collect final child orders after all scopes render, including replaced component roots.
+        for (parent_node_id, path) in pending_reorders {
+            let Some(scope_id) = self.node_to_scope.get(&parent_node_id) else {
+                continue;
+            };
+            let scope = self.scopes[scope_id].borrow();
+            let mut children = Vec::with_capacity(scope.nodes.len(&path).unwrap_or_default());
+            scope.nodes.traverse_1_level(&path, |_, node| {
+                children.push(match node.scope_id {
+                    Some(scope_id) => self.find_scope_root_node_id(scope_id),
+                    None => node.node_id,
+                });
+            });
+            mutations.moved.insert(parent_node_id, children);
         }
 
         mutations
@@ -780,6 +794,7 @@ impl Runner {
         element: &PathElement,
         mutations: &mut Mutations,
         visited_scopes: &mut FxHashSet<ScopeId>,
+        pending_reorders: &mut ReorderedParents,
     ) {
         visited_scopes.insert(scope.borrow().id);
         match element {
@@ -890,9 +905,15 @@ impl Runner {
                 let mut diff = Diff::default();
                 path_element.diff(scope_rc.borrow().element.as_ref(), &mut diff);
 
-                self.apply_diff(&scope_rc, diff, mutations, &path_element);
+                self.apply_diff(&scope_rc, diff, mutations, &path_element, pending_reorders);
 
-                self.run_scope(&scope_rc, &path_element, mutations, visited_scopes);
+                self.run_scope(
+                    &scope_rc,
+                    &path_element,
+                    mutations,
+                    visited_scopes,
+                    pending_reorders,
+                );
                 let mut scopes_storages = self.scopes_storages.borrow_mut();
                 let scope_storage = scopes_storages.get_mut(&assigned_scope_id).unwrap();
                 scope_storage.current_value = 0;
@@ -902,7 +923,7 @@ impl Runner {
             }
             PathElement::Element { elements, .. } => {
                 for element in elements.iter() {
-                    self.run_scope(scope, element, mutations, visited_scopes);
+                    self.run_scope(scope, element, mutations, visited_scopes, pending_reorders);
                 }
             }
         }
@@ -1073,31 +1094,28 @@ impl Runner {
         diff: Diff,
         mutations: &mut Mutations,
         path_element: &PathElement,
+        pending_reorders: &mut ReorderedParents,
     ) {
-        let mut moved_nodes =
-            FxHashMap::<Box<[u32]>, (NodeId, FxHashMap<u32, PathNode>)>::default();
+        let mut moved_nodes = FxHashMap::<Box<[u32]>, Vec<Option<NodeId>>>::default();
         let mut parents_to_resync_scopes = FxHashSet::default();
 
-        // Store the moved nodes so that they can
-        // later be rearranged once the removals and additions have been done
-        for (parent, movements) in &diff.moved {
+        // Children of each reordered parent, by old index
+        for parent in diff.moved.keys() {
             parents_to_resync_scopes.insert(parent.clone());
             // `parent` is a new-tree path. If the parent itself was moved, its path in the
             // old nodes tree will differ, so resolve it before any lookup.
             let old_parent = resolve_old_path(parent, &diff.moved);
-            let paths = moved_nodes.entry(parent.clone()).or_insert_with(|| {
-                let parent_node_id = scope.borrow().nodes.get(&old_parent).unwrap().node_id;
-                (parent_node_id, FxHashMap::default())
-            });
-
-            for (from, _to) in movements.iter() {
-                let mut old_child_path = old_parent.clone();
-                old_child_path.push(*from);
-
-                let path_node = scope.borrow().nodes.get(&old_child_path).cloned().unwrap();
-
-                paths.1.insert(*from, path_node);
-            }
+            let parent_node_id = scope.borrow().nodes.get(&old_parent).unwrap().node_id;
+            let mut children =
+                vec![None; scope.borrow().nodes.len(&old_parent).unwrap_or_default()];
+            scope
+                .borrow()
+                .nodes
+                .traverse_1_level(&old_parent, |path, node| {
+                    children[path[path.len() - 1] as usize] = Some(node.node_id);
+                });
+            pending_reorders.insert(parent_node_id, parent.clone());
+            moved_nodes.insert(parent.clone(), children);
         }
 
         // Capture the identity of addition parents while their old tree paths are still valid
@@ -1153,22 +1171,15 @@ impl Runner {
             let path_node = scope.borrow().nodes.get(removed).cloned();
             if let Some(PathNode { node_id, scope_id }) = path_node {
                 if scope_id.is_none() {
-                    let index_inside_parent = if removed.as_ref() == [0] {
-                        let parent_id = scope.borrow().parent_id;
-                        let scope_id = scope.borrow().id;
-                        let parent_node_id = scope.borrow().parent_node_id_in_parent;
-                        self.find_scope_root_parent_info(parent_id, parent_node_id, scope_id)
-                            .1
+                    let removal = if removed.as_ref() == [0] {
+                        MutationRemove::Scope { id: node_id }
                     } else {
-                        // Only do it for non-scope-roots because the root is is always in the same position therefore it doesnt make sense to resync from its parent
-                        removed[removed.len() - 1]
+                        MutationRemove::Element {
+                            id: node_id,
+                            index: removed[removed.len() - 1],
+                        }
                     };
-
-                    // plain element removal
-                    mutations.removed.push(MutationRemove::Element {
-                        id: node_id,
-                        index: index_inside_parent,
-                    });
+                    mutations.removed.push(removal);
                 }
 
                 // Skip if this removed path is already covered by a previously selected root
@@ -1315,6 +1326,12 @@ impl Runner {
             );
         }
 
+        let added = if diff.moved.is_empty() {
+            FxHashSet::default()
+        } else {
+            diff.added.iter().map(|path| path.as_ref()).collect()
+        };
+
         for (parent, movements) in diff.moved.into_iter().sorted_by(|(a, _), (b, _)| {
             for (x, y) in a.iter().zip(b.iter()) {
                 match x.cmp(y) {
@@ -1324,55 +1341,56 @@ impl Runner {
             }
             a.len().cmp(&b.len())
         }) {
-            parents_to_resync_scopes.insert(parent.clone());
+            let old_children = moved_nodes.remove(&parent).unwrap();
+            // New index to old index
+            let sources = movements
+                .into_iter()
+                .map(|(from, to)| (to, from))
+                .collect::<FxHashMap<_, _>>();
 
-            let (parent_node_id, paths) = moved_nodes.get_mut(&parent).unwrap();
+            // Child count of the new render
+            let mut child_count = 0;
+            path_element.with_element(&parent, |element| {
+                if let PathElement::Element { elements, .. } = element {
+                    child_count = elements.len() as u32;
+                }
+            });
 
-            for (from, to) in movements.into_iter().sorted_by_key(|e| e.1) {
-                let path_node = paths.remove(&from).unwrap();
+            let mut to_path = Vec::with_capacity(parent.len() + 1);
+            to_path.extend_from_slice(&parent);
+            to_path.push(0);
 
-                let PathNode { node_id, scope_id } = path_node;
+            // Walk the final order, move only what is out of place
+            for to in 0..child_count {
+                to_path[parent.len()] = to;
 
-                // Search for this moved node current position
-                let from_path = scope
+                let is_added = added.contains(to_path.as_slice());
+                let node_id = if is_added {
+                    addition_parents.get(to_path.as_slice()).unwrap().0
+                } else {
+                    // Unmoved children keep their index
+                    let from = sources.get(&to).copied().unwrap_or(to);
+                    old_children[from as usize].expect("surviving child must have an old node")
+                };
+
+                if scope
                     .borrow()
                     .nodes
-                    .find_child_path(&parent, |v| v == Some(&path_node))
-                    .unwrap();
-
-                let mut to_path = parent.to_vec();
-                to_path.push(to);
-
-                if from_path == to_path {
+                    .get(&to_path)
+                    .is_some_and(|node| node.node_id == node_id)
+                {
                     continue;
                 }
 
-                // Remove the node from the old position and add it to the new one
-                let path_entry = scope.borrow_mut().nodes.remove(&from_path).unwrap();
+                let current_path = scope
+                    .borrow()
+                    .nodes
+                    .find_child_path(&parent, |v| v.is_some_and(|v| v.node_id == node_id))
+                    .unwrap();
+
+                // Everything before `to` is already final
+                let path_entry = scope.borrow_mut().nodes.remove(&current_path).unwrap();
                 scope.borrow_mut().nodes.insert_entry(&to_path, path_entry);
-
-                if let Some(scope_id) = scope_id {
-                    let scope_root_node_id = self.find_scope_root_node_id(scope_id);
-                    let scope_rc = self.scopes.get(&scope_id).cloned().unwrap();
-                    let scope = scope_rc.borrow();
-
-                    // Mark the scope root node id as moved
-                    mutations
-                        .moved
-                        .entry(scope.parent_node_id_in_parent)
-                        .or_default()
-                        .push(MutationMove {
-                            index: to,
-                            node_id: scope_root_node_id,
-                        });
-                } else {
-                    // Mark the element as moved
-                    mutations
-                        .moved
-                        .entry(*parent_node_id)
-                        .or_default()
-                        .push(MutationMove { index: to, node_id });
-                }
             }
         }
 
@@ -1456,16 +1474,7 @@ impl Runner {
     }
 }
 
-#[derive(Default, Debug)]
-pub struct Diff {
-    pub added: Vec<Box<[u32]>>,
-
-    pub modified: Vec<(Box<[u32]>, DiffModifies)>,
-
-    pub removed: Vec<Box<[u32]>>,
-
-    pub moved: FxHashMap<Box<[u32]>, Vec<(u32, u32)>>,
-}
+pub type Diff = tiny_diff::Diff<DiffModifies>;
 
 /// Converts a new-tree path to its corresponding old-tree path by checking, for each
 /// segment, whether that position was the destination of a movement in `moved`. If so,
