@@ -2172,16 +2172,29 @@ fn mixed_nested_reconciliation_sequences() {
     replay_nested_keyed_layouts(&history);
 }
 
-fn replay_component_root_reorder(component_key: u8, reordered_keys: [u8; 3]) {
-    fn changing_root(reordered: &bool) -> Element {
-        let initial_value = use_state(|| *reordered);
+fn replay_component_root_reorder(
+    component_key: u8,
+    reordered_keys: [u8; 3],
+    change_root_type: bool,
+) {
+    fn changing_root(&(reordered, change_root_type): &(bool, bool)) -> Element {
+        let initial_value = use_state(|| reordered);
         assert!(!initial_value());
-        rect().key(*reordered).into()
+        if change_root_type {
+            if reordered {
+                label().into()
+            } else {
+                rect().into()
+            }
+        } else {
+            rect().key(reordered).into()
+        }
     }
 
     fn app() -> Element {
         let reordered = use_consume::<State<bool>>();
-        let (component_key, reordered_keys) = consume_context::<(u8, [u8; 3])>();
+        let (component_key, reordered_keys, change_root_type) =
+            consume_context::<(u8, [u8; 3], bool)>();
         let keys = if reordered() {
             reordered_keys
         } else {
@@ -2190,7 +2203,7 @@ fn replay_component_root_reorder(component_key: u8, reordered_keys: [u8; 3]) {
         rect()
             .children(keys.into_iter().map(|key| {
                 if key == component_key {
-                    from_fn(key, reordered(), changing_root)
+                    from_fn(key, (reordered(), change_root_type), changing_root)
                 } else {
                     rect().key(key).into()
                 }
@@ -2200,7 +2213,7 @@ fn replay_component_root_reorder(component_key: u8, reordered_keys: [u8; 3]) {
 
     let mut runner = Runner::new(app);
     let mut tree = Tree::default();
-    runner.provide_root_context(|| (component_key, reordered_keys));
+    runner.provide_root_context(|| (component_key, reordered_keys, change_root_type));
     let mut reordered = runner.provide_root_context(|| State::create(false));
     tree.apply_mutations(runner.sync_and_update(), 1.0);
     let root_scope = runner.scopes[&ScopeId::ROOT].clone();
@@ -2219,11 +2232,13 @@ fn replay_component_root_reorder(component_key: u8, reordered_keys: [u8; 3]) {
         tree.apply_mutations(runner.sync_and_update(), 1.0);
         tree.verify_tree_integrity();
         assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+        let keys = if next { reordered_keys } else { [0, 1, 2] };
+        let component_index = keys.iter().position(|key| *key == component_key).unwrap();
         assert_eq!(
             root_scope
                 .borrow()
                 .nodes
-                .get(&[0, component_key as u32])
+                .get(&[0, component_index as u32])
                 .unwrap()
                 .scope_id,
             Some(component_scope_id),
@@ -2235,7 +2250,9 @@ fn replay_component_root_reorder(component_key: u8, reordered_keys: [u8; 3]) {
             .get(&[0])
             .unwrap()
             .node_id;
-        let keys = if next { reordered_keys } else { [0, 1, 2] };
+        if change_root_type {
+            assert_eq!(root_node_id, old_children[component_key as usize]);
+        }
         let expected = keys.map(|key| {
             if key == component_key {
                 root_node_id
@@ -2249,12 +2266,27 @@ fn replay_component_root_reorder(component_key: u8, reordered_keys: [u8; 3]) {
 
 #[test]
 fn unchanged_middle_component_replaces_root_during_sibling_reorder() {
-    replay_component_root_reorder(1, [2, 1, 0]);
+    replay_component_root_reorder(1, [2, 1, 0], false);
 }
 
 #[test]
 fn stationary_component_root_replacement_preserves_reordered_sibling_order() {
-    replay_component_root_reorder(0, [0, 2, 1]);
+    replay_component_root_reorder(0, [0, 2, 1], false);
+}
+
+#[test]
+fn moving_component_replaces_root_during_sibling_reorder() {
+    replay_component_root_reorder(0, [2, 1, 0], false);
+}
+
+#[test]
+fn moving_component_changes_root_type_during_sibling_reorder() {
+    replay_component_root_reorder(0, [2, 1, 0], true);
+}
+
+#[test]
+fn component_changes_root_type_without_sibling_reorder() {
+    replay_component_root_reorder(0, [0, 1, 2], true);
 }
 
 #[test]

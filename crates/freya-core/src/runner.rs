@@ -1171,22 +1171,15 @@ impl Runner {
             let path_node = scope.borrow().nodes.get(removed).cloned();
             if let Some(PathNode { node_id, scope_id }) = path_node {
                 if scope_id.is_none() {
-                    let index_inside_parent = if removed.as_ref() == [0] {
-                        let parent_id = scope.borrow().parent_id;
-                        let scope_id = scope.borrow().id;
-                        let parent_node_id = scope.borrow().parent_node_id_in_parent;
-                        self.find_scope_root_parent_info(parent_id, parent_node_id, scope_id)
-                            .1
+                    let removal = if removed.as_ref() == [0] {
+                        MutationRemove::Scope { id: node_id }
                     } else {
-                        // Only do it for non-scope-roots because the root is is always in the same position therefore it doesnt make sense to resync from its parent
-                        removed[removed.len() - 1]
+                        MutationRemove::Element {
+                            id: node_id,
+                            index: removed[removed.len() - 1],
+                        }
                     };
-
-                    // plain element removal
-                    mutations.removed.push(MutationRemove::Element {
-                        id: node_id,
-                        index: index_inside_parent,
-                    });
+                    mutations.removed.push(removal);
                 }
 
                 // Skip if this removed path is already covered by a previously selected root
