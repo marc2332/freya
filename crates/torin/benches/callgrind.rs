@@ -1,8 +1,8 @@
 pub mod support;
 
 use crate::support::{
+    BenchmarkConfig,
     BenchmarkInput,
-    benchmarks,
 };
 
 const ITERATIONS: usize = 3;
@@ -22,8 +22,9 @@ fn main() {
         wide_depth_7_invalidated,
         aligned_depth_8,
     ];
-    let configs = benchmarks();
+    let configs = BenchmarkConfig::all();
     assert_eq!(configs.len(), measurements.len());
+
     for (config, measure) in configs.into_iter().zip(measurements) {
         for _ in 0..ITERATIONS {
             let mut input = config.prepare();

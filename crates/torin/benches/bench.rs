@@ -8,13 +8,14 @@ use criterion::{
 };
 
 use crate::support::{
+    BenchmarkConfig,
     BenchmarkInput,
-    benchmarks,
 };
 
 fn criterion_benchmark(criterion: &mut Criterion) {
     let mut group = criterion.benchmark_group("benchmarks");
-    for config in benchmarks() {
+
+    for config in BenchmarkConfig::all() {
         group.significance_level(0.05).sample_size(config.sample);
         group.bench_function(config.name(), |bencher| {
             bencher.iter_batched_ref(
