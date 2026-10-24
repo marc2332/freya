@@ -25,8 +25,13 @@ std = [
   "tracing/attributes",
 ]
 serde = ["dep:serde", "euclid/serde"]
+hotpath = ["std", "dep:hotpath", "hotpath/hotpath"]
+hotpath-alloc = ["hotpath", "hotpath/hotpath-alloc"]
+hotpath-cloud = ["hotpath", "hotpath/hotpath-cloud"]
+hotpath-callgrind = ["hotpath", "hotpath/hotpath-callgrind"]
 
 [dependencies]
+hotpath = { workspace = true, optional = true }
 tracing = { version = "0.1.41", default-features = false }
 euclid = { version = "0.22.9", default-features = false, features = ["libm"] }
 rustc-hash = { version = "2.1.1", default-features = false }
@@ -41,12 +46,10 @@ serde = { version = "1.0", optional = true, default-features = false, features =
   "derive",
 ] }
 
-[dev-dependencies]
-criterion = "0.5.1"
-
 [lib]
 bench = false
 
 [[bench]]
 name = "bench"
 harness = false
+required-features = ["hotpath"]

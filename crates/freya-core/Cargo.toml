@@ -77,6 +77,7 @@ tree-sitter-rust = "0.24"
 hotpath = ["hotpath/hotpath", "ragnarok/hotpath"]
 hotpath-alloc = ["hotpath/hotpath-alloc"]
 hotpath-cloud = ["hotpath/hotpath-cloud"]
+hotpath-callgrind = ["hotpath", "hotpath/hotpath-callgrind"]
 hotreload = ["dep:subsecond", "dep:dioxus-devtools"]
 debug-integrity = []
 devtools = ["serde"]

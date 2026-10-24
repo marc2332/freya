@@ -6,33 +6,18 @@ on:
     types: [completed]
 
 jobs:
-  dev:
-    uses: hotpath-rs/hotpath/.github/workflows/hotpath-relay.yml@v0.28.0
+  relay:
+    strategy:
+      fail-fast: false
+      matrix:
+        benchmark: [dev_perf-icount, core-icount, painting-icount, torin-icount]
+    uses: hotpath-rs/hotpath/.github/workflows/hotpath-relay.yml@v0.29.1
     permissions:
       actions: read
       contents: read
       id-token: write
+      pull-requests: read
     with:
-      benchmark: dev_perf
-      artifact_name: hotpath-dev
-      report_file: dev_perf.json
-  core:
-    uses: hotpath-rs/hotpath/.github/workflows/hotpath-relay.yml@v0.28.0
-    permissions:
-      actions: read
-      contents: read
-      id-token: write
-    with:
-      benchmark: core
-      artifact_name: hotpath-core
-      report_file: core.json
-  painting:
-    uses: hotpath-rs/hotpath/.github/workflows/hotpath-relay.yml@v0.28.0
-    permissions:
-      actions: read
-      contents: read
-      id-token: write
-    with:
-      benchmark: painting
-      artifact_name: hotpath-painting
-      report_file: painting.json
+      benchmark: ${{ matrix.benchmark }}
+      artifact_name: hotpath-${{ matrix.benchmark }}
+      report_file: report.json
