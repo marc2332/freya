@@ -134,7 +134,7 @@ pub struct ScrollConfig {
 #[derive(PartialEq, Clone, Copy)]
 pub struct ScrollController {
     pub(crate) scroll: State<(i32, i32)>,
-    bounds: State<Option<(Size2D, Size2D)>>,
+    pub bounds: State<Option<(Size2D, Size2D)>>,
     pub(crate) damp: State<SmoothDamp>,
     pub(crate) drag: State<Drag>,
     pub(crate) task: State<Option<TaskHandle>>,
@@ -163,7 +163,7 @@ impl ScrollController {
     }
 
     /// Updates the content and viewport bounds used to clamp scroll positions.
-    pub(crate) fn apply_layout(&mut self, content_size: Size2D, viewport_size: Size2D) {
+    pub fn apply_layout(&mut self, content_size: Size2D, viewport_size: Size2D) {
         self.bounds.set(Some((content_size, viewport_size)));
 
         let (x, y) = *self.scroll.peek();
