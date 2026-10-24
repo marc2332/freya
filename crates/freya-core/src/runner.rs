@@ -21,6 +21,7 @@ use rustc_hash::{
     FxHashMap,
     FxHashSet,
 };
+use tiny_diff::DiffNode;
 
 use crate::{
     current_context::CurrentContext,
@@ -106,8 +107,11 @@ pub struct MutationModified {
 
 #[derive(Default)]
 pub struct Mutations {
+    /// New elements and their final sibling indices, inserted after removals.
     pub added: Vec<MutationAdd>,
+    /// Updated elements and the flags identifying which states need refreshing.
     pub modified: Vec<MutationModified>,
+    /// Elements and scope roots to remove before additions and reordering.
     pub removed: Vec<MutationRemove>,
     /// Final child order for reordered parents, applied after removals and additions.
     pub moved: FxHashMap<NodeId, Vec<NodeId>>,
@@ -1470,16 +1474,7 @@ impl Runner {
     }
 }
 
-#[derive(Default, Debug)]
-pub struct Diff {
-    pub added: Vec<Box<[u32]>>,
-
-    pub modified: Vec<(Box<[u32]>, DiffModifies)>,
-
-    pub removed: Vec<Box<[u32]>>,
-
-    pub moved: FxHashMap<Box<[u32]>, Vec<(u32, u32)>>,
-}
+pub type Diff = tiny_diff::Diff<DiffModifies>;
 
 /// Converts a new-tree path to its corresponding old-tree path by checking, for each
 /// segment, whether that position was the destination of a movement in `moved`. If so,

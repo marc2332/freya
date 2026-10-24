@@ -49,35 +49,84 @@ pub struct ContextMenu {
 }
 
 impl ContextMenu {
-    /// # Panics
+    /// Returns whether the context menu is open, or `false` if no viewer is mounted.
     ///
-    /// Panics if no [`ContextMenuViewer`] is mounted in an ancestor scope.
-    #[track_caller]
-    pub fn get() -> Self {
-        try_consume_root_context()
-            .expect("ContextMenu requires a `ContextMenuViewer` in an ancestor scope")
-    }
-
+    /// # Example
+    ///
+    /// ```rust
+    /// # use freya::prelude::*;
+    /// fn app() -> impl IntoElement {
+    ///     rect()
+    ///         .child(ContextMenuViewer::new())
+    ///         .child(if ContextMenu::is_open() {
+    ///             "Menu open"
+    ///         } else {
+    ///             "Menu closed"
+    ///         })
+    /// }
+    /// ```
     pub fn is_open() -> bool {
         try_consume_root_context::<Self>().is_some_and(|c| c.menu.read().is_some())
     }
 
     /// Open the context menu, from a press event or programmatically.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use freya::prelude::*;
+    /// fn app() -> impl IntoElement {
+    ///     rect()
+    ///         .child(ContextMenuViewer::new())
+    ///         .child(Button::new().child("Open menu").on_press(|_| {
+    ///             ContextMenu::open(Menu::new().child(MenuButton::new().child("Copy")));
+    ///         }))
+    /// }
+    /// ```
     pub fn open(menu: Menu) {
         Self::open_with_phase(menu, ClosePhase::Idle);
     }
 
     /// Open the context menu from a pointer down event, like `on_secondary_down`.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use freya::prelude::*;
+    /// fn app() -> impl IntoElement {
+    ///     rect().child(ContextMenuViewer::new()).child(
+    ///         rect().child("Right click here").on_secondary_down(|_| {
+    ///             ContextMenu::open_from_down(Menu::new().child(MenuButton::new().child("Copy")));
+    ///         }),
+    ///     )
+    /// }
+    /// ```
     pub fn open_from_down(menu: Menu) {
         Self::open_with_phase(menu, ClosePhase::PendingPress);
     }
 
+    /// Opens the menu at the current pointer location with the given closing phase.
     fn open_with_phase(menu: Menu, phase: ClosePhase) {
-        let mut this = Self::get();
+        let mut this = try_consume_root_context::<Self>()
+            .expect("ContextMenu requires a `ContextMenuViewer` in an ancestor scope");
         this.menu.set(Some(((this.location)(), menu)));
         this.close_phase.set(phase);
     }
 
+    /// Closes the context menu, doing nothing if no viewer is mounted.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use freya::prelude::*;
+    /// fn app() -> impl IntoElement {
+    ///     rect().child(ContextMenuViewer::new()).child(
+    ///         Button::new()
+    ///             .child("Close menu")
+    ///             .on_press(|_| ContextMenu::close()),
+    ///     )
+    /// }
+    /// ```
     pub fn close() {
         if let Some(mut this) = try_consume_root_context::<Self>() {
             this.menu.set(None);
