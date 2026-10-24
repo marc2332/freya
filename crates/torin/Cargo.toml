@@ -46,10 +46,17 @@ serde = { version = "1.0", optional = true, default-features = false, features =
   "derive",
 ] }
 
+[dev-dependencies]
+criterion = "0.5.1"
+
 [lib]
 bench = false
 
 [[bench]]
 name = "bench"
+harness = false
+
+[[bench]]
+name = "callgrind"
 harness = false
 required-features = ["hotpath"]

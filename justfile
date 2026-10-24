@@ -93,10 +93,10 @@ pp-ci:
     CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="{{callgrind_runner}}" cargo test --package freya-core --test paint_performance --release --features "hotpath-callgrind, hotpath-alloc, hotpath-cloud" painting_suite -- --ignored --exact --nocapture --test-threads=1
 
 pt:
-    CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="{{callgrind_runner}}" cargo bench --package torin --bench bench --features "hotpath-callgrind, hotpath-alloc"
+    CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="{{callgrind_runner}}" cargo bench --package torin --bench callgrind --features "hotpath-callgrind, hotpath-alloc"
 
 pt-ci:
-    CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="{{callgrind_runner}}" cargo bench --package torin --bench bench --features "hotpath-callgrind, hotpath-alloc, hotpath-cloud"
+    CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="{{callgrind_runner}}" cargo bench --package torin --bench callgrind --features "hotpath-callgrind, hotpath-alloc, hotpath-cloud"
 
 ba:
     cargo build --all-targets --workspace -F freya/all-debug
