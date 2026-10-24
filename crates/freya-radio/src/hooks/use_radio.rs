@@ -14,8 +14,15 @@ use freya_core::{
     prelude::*,
 };
 
+/// Defines notification channels for shared state.
+///
+/// Each update selects one source channel. Use [`Self::derive_channel`] to keep
+/// relationships between notified channels in one place.
 #[cfg(feature = "tracing")]
 pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash + std::fmt::Debug + Ord {
+    /// Return the channels to notify for this source channel.
+    ///
+    /// Defaults to only `self`. Returned channels are not recursively expanded.
     fn derive_channel(self, _radio: &T) -> Vec<Self> {
         vec![self]
     }
@@ -50,8 +57,6 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
     ///
     /// Declaring related channels here is a best practice enforced by design.
     /// Making every write list them by hand is verbose and easy to get wrong.
-    /// Doing it once here keeps every write consistent.
-    ///
     /// # Example
     ///
     /// ```rust, no_run
@@ -589,7 +594,7 @@ where
     /// ## Example:
     /// ```rust, ignore
     /// # use freya::radio::*;
-    /// radio.write(Channel::Whatever).value = 1;
+    /// radio.write_channel(Channel::Whatever).value = 1;
     /// ```
     #[track_caller]
     pub fn write_channel(&mut self, channel: Channel) -> RadioGuard<Value, Channel> {
@@ -621,7 +626,7 @@ where
         cb(guard);
     }
 
-    /// Get a mutable reference to the current state value, inside a callback that returns the channel to be used.
+    /// Mutate the state and choose which source channel to notify afterward.
     ///
     /// Example:
     ///
@@ -700,13 +705,17 @@ where
 
 impl<Channel> Copy for ChannelSelection<Channel> where Channel: Copy {}
 
+/// Selects the source channel to notify after a state update.
+///
+/// `Current` and `Select` expand through [`RadioChannel::derive_channel`], so a
+/// single selection can notify multiple related channels.
 #[derive(Clone)]
 pub enum ChannelSelection<Channel> {
-    /// Notify the channel associated with the used [Radio].
+    /// Notify the channel associated with the used [`Radio`] and its derived channels.
     Current,
-    /// Notify a given `Channel`.
+    /// Notify the given channel and its derived channels.
     Select(Channel),
-    /// No subscriber will be notified.
+    /// Keep state changes without notifying subscribers.
     Silence,
 }
 
@@ -874,16 +883,30 @@ where
 /// }
 /// ```
 pub trait DataReducer {
+    /// Notification channel type used by this state's radio station.
     type Channel;
+    /// Action accepted by this reducer.
     type Action;
 
+    /// Apply an action to the state and select the source channel to notify.
+    ///
+    /// See [`ChannelSelection`].
+    ///
+    /// This method only mutates state and returns a selection. Dispatch through
+    /// [`RadioReducer::apply`] to notify subscribers using the updated state.
     fn reduce(&mut self, action: Self::Action) -> ChannelSelection<Self::Channel>;
 }
 
+/// Dispatch synchronous actions through a [`Radio`] whose state implements [`DataReducer`].
 pub trait RadioReducer {
+    /// Action accepted by the state's reducer.
     type Action;
+    /// Notification channel type used by the radio.
     type Channel;
 
+    /// Run [`DataReducer::reduce`] synchronously and notify the selected channels.
+    ///
+    /// See [`ChannelSelection`].
     fn apply(&mut self, action: Self::Action) -> ChannelSelection<Self::Channel>;
 }
 
@@ -898,10 +921,25 @@ impl<Data: DataReducer<Channel = Channel, Action = Action>, Channel: RadioChanne
     }
 }
 
+/// Define asynchronous actions for shared state, dispatched with [`RadioAsyncReducer`].
+///
+/// Unlike [`DataReducer`], this reducer receives a radio handle so state borrows
+/// can be scoped around asynchronous work instead of held across await points.
 pub trait DataAsyncReducer {
+    /// Notification channel type used by this state's radio station.
     type Channel;
+    /// Action accepted by this reducer.
     type Action;
 
+    /// Process an action asynchronously and select the final notification channel.
+    ///
+    /// Use [`Radio::write_silently`] for mutations that should only notify when
+    /// [`RadioAsyncReducer::async_apply`] processes the returned selection.
+    /// Ordinary writes still send their own notifications. Release all read and
+    /// write guards before awaiting so other tasks can access the state.
+    ///
+    /// Returning [`ChannelSelection::Silence`] skips the final notification but
+    /// does not undo state changes or notifications already sent by writes.
     #[allow(async_fn_in_trait)]
     async fn async_reduce(
         _radio: &mut Radio<Self, Self::Channel>,
@@ -912,9 +950,17 @@ pub trait DataAsyncReducer {
         Self: Sized;
 }
 
+/// Dispatch asynchronous actions through a [`Radio`] whose state implements [`DataAsyncReducer`].
 pub trait RadioAsyncReducer {
+    /// Action accepted by the state's asynchronous reducer.
     type Action;
 
+    /// Spawn a Freya task to run [`DataAsyncReducer::async_reduce`] and return immediately.
+    ///
+    /// When the reducer completes, its selection is processed against the updated
+    /// state, including [`RadioChannel::derive_channel`] for non-silent selections.
+    /// This method returns neither the selection nor a task handle. Separate calls
+    /// spawn independent tasks, so their completion order is not guaranteed.
     fn async_apply(&mut self, _action: Self::Action)
     where
         Self::Action: 'static;

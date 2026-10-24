@@ -53,7 +53,7 @@ t-layout:
     cargo nextest run --package torin
 
 d:
-    RUSTDOCFLAGS="--cfg docsrs" {{nightly_cargo}} doc --no-deps --workspace --features "all, docs" --open
+    RUSTC="${FREYA_NIGHTLY_RUSTC:-$(rustup which --toolchain {{nightly_toolchain}} rustc)}" RUSTDOC="${FREYA_NIGHTLY_RUSTDOC:-$(rustup which --toolchain {{nightly_toolchain}} rustdoc)}" RUSTDOCFLAGS="--cfg docsrs" env -u NIX_LDFLAGS -u NIX_LDFLAGS_FOR_BUILD {{nightly_cargo}} doc --no-deps --workspace --features "all, docs" --open
 
 tc:
     cargo nextest run --workspace --exclude examples --exclude web --exclude freya-web --features all-tests

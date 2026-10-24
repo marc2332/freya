@@ -2882,6 +2882,7 @@ dependencies = [
  "serde",
  "subsecond",
  "tiny-cache",
+ "tiny-diff",
  "tiny-notify",
  "torin",
  "tracing",
@@ -3232,6 +3233,7 @@ dependencies = [
  "hotpath",
  "image 0.25.10",
  "keyboard-types 0.8.3",
+ "libc",
  "mundy",
  "objc2 0.6.5",
  "objc2-app-kit 0.3.2",
@@ -3247,6 +3249,8 @@ dependencies = [
  "torin",
  "tracing",
  "tray-icon",
+ "wayland-client",
+ "wayland-protocols",
  "windows-sys 0.60.2",
  "winit",
 ]
@@ -8353,6 +8357,15 @@ version = "0.5.0-beta.12"
 dependencies = [
  "rustc-hash 2.1.3",
  "smallvec",
+]
+
+[[package]]
+name = "tiny-diff"
+version = "0.5.0-beta.12"
+dependencies = [
+ "hashbrown 0.16.1",
+ "hotpath",
+ "rustc-hash 2.1.3",
 ]
 
 [[package]]

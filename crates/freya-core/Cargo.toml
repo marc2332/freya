@@ -14,6 +14,7 @@ workspace = true
 
 [dependencies]
 # Core
+tiny-diff = { workspace = true, features = ["std"] }
 generational-box = { workspace = true }
 tracing = { workspace = true }
 rustc-hash = { workspace = true }
@@ -74,7 +75,7 @@ tracing-subscriber = { workspace = true }
 tree-sitter-rust = "0.24"
 
 [features]
-hotpath = ["hotpath/hotpath", "ragnarok/hotpath"]
+hotpath = ["hotpath/hotpath", "ragnarok/hotpath", "tiny-diff/hotpath"]
 hotpath-alloc = ["hotpath/hotpath-alloc"]
 hotpath-cloud = ["hotpath/hotpath-cloud"]
 hotpath-callgrind = ["hotpath", "hotpath/hotpath-callgrind"]

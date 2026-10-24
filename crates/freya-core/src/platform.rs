@@ -216,7 +216,7 @@ pub struct PlatformWindow {
     pub focused_accessibility_id: State<AccessibilityId>,
     /// Accessibility data for this window's currently focused node.
     pub focused_accessibility_node: State<accesskit::Node>,
-    /// This window's logical size.
+    /// This window's size in logical pixels.
     pub root_size: State<Size2D>,
     /// This window's effective rendering scale factor.
     pub scale_factor: State<f64>,
