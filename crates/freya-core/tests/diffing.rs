@@ -686,93 +686,47 @@ fn element_diffing6() {
 }
 
 #[test]
-fn element_diffing7() {
-    fn app() -> Element {
-        let state = use_consume::<State<bool>>();
-
-        if state() {
-            rect()
-                .child(rect().key(4))
-                .child(rect().key(1))
-                .child(rect().key(5))
-                .child(rect().key(0))
-                .into()
-        } else {
-            rect()
-                .child(rect().key(3))
-                .child(rect().key(0))
-                .child(rect().key(1))
-                .into()
-        }
-    }
-    let mut runner = Runner::new(app);
-    let mut tree = Tree::default();
-    let mut state = runner.provide_root_context(|| State::create(true));
-    let mutations = runner.sync_and_update();
-    tree.apply_mutations(mutations, 1.0);
-    state.set(false);
-    let mutations = runner.sync_and_update();
-    assert_eq!(mutations.added.len(), 1);
-    assert!(mutations.modified.is_empty());
-    assert_eq!(mutations.removed.len(), 2);
-    assert_eq!(mutations.moved.len(), 1);
-    assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 1);
-    tree.apply_mutations(mutations, 1.0);
-}
-
-#[test]
-fn element_diffing8() {
+fn mixed_keyed_additions_removals_and_reorders() {
     fn container(_: &()) -> Element {
         rect().into()
     }
 
     fn app() -> Element {
         let state = use_consume::<State<bool>>();
+        let use_component = consume_context::<bool>();
+        let keys: &[u8] = if state() { &[4, 1, 5, 0] } else { &[3, 0, 1] };
+        rect()
+            .children(keys.iter().map(|key| {
+                if use_component && *key == 1 {
+                    from_fn_standalone_borrowed_keyed(*key, (), container)
+                } else {
+                    rect().key(*key).into()
+                }
+            }))
+            .into()
+    }
 
-        if state() {
-            rect()
-                .child(rect().key(4))
-                .child(from_fn_standalone_borrowed_keyed(1, (), container))
-                .child(rect().key(5))
-                .child(rect().key(0))
-                .into()
-        } else {
-            rect()
-                .child(rect().key(3))
-                .child(rect().key(0))
-                .child(from_fn_standalone_borrowed_keyed(1, (), container))
-                .into()
+    for use_component in [false, true] {
+        for (initial, added, removed, children) in [(true, 1, 2, 3), (false, 2, 1, 4)] {
+            let mut runner = Runner::new(app);
+            let mut tree = Tree::default();
+            runner.provide_root_context(|| use_component);
+            let mut state = runner.provide_root_context(|| State::create(initial));
+            tree.apply_mutations(runner.sync_and_update(), 1.0);
+
+            state.set(!initial);
+            let mutations = runner.sync_and_update();
+            assert_eq!(mutations.added.len(), added);
+            assert!(mutations.modified.is_empty());
+            assert_eq!(mutations.removed.len(), removed);
+            assert_eq!(mutations.moved.len(), 1);
+            assert_eq!(mutations.moved.values().next().unwrap().len(), children);
+
+            tree.apply_mutations(mutations, 1.0);
+            tree.verify_tree_integrity();
+            assert_eq!(tree.elements.len(), runner.node_to_scope.len());
         }
     }
-    let mut runner = Runner::new(app);
-    let mut tree = Tree::default();
-    let mut state = runner.provide_root_context(|| State::create(true));
-    let mutations = runner.sync_and_update();
-    tree.apply_mutations(mutations, 1.0);
-    state.set(false);
-    let mutations = runner.sync_and_update();
-    assert_eq!(mutations.added.len(), 1);
-    assert!(mutations.modified.is_empty());
-    assert_eq!(mutations.removed.len(), 2);
-    assert_eq!(mutations.moved.len(), 1);
-    assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 1);
-    tree.apply_mutations(mutations, 1.0);
-    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
-
-    let mut runner = Runner::new(app);
-    let mut tree = Tree::default();
-    let mut state = runner.provide_root_context(|| State::create(false));
-    let mutations = runner.sync_and_update();
-    tree.apply_mutations(mutations, 1.0);
-    state.set(true);
-    let mutations = runner.sync_and_update();
-    assert_eq!(mutations.added.len(), 2);
-    assert!(mutations.modified.is_empty());
-    assert_eq!(mutations.removed.len(), 1);
-    assert_eq!(mutations.moved.len(), 1);
-    assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 2);
-    tree.apply_mutations(mutations, 1.0);
-    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 }
 
 #[test]
@@ -798,7 +752,7 @@ fn element_diffing9() {
     assert_eq!(mutations.added.len(), 1);
     assert!(mutations.modified.is_empty());
     assert!(mutations.removed.is_empty());
-    assert!(mutations.moved.is_empty());
+    assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 3);
     tree.apply_mutations(mutations, 1.0);
     assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 }
@@ -837,8 +791,7 @@ fn element_diffing10() {
     assert!(mutations.modified.is_empty());
     assert!(mutations.removed.is_empty());
     assert_eq!(mutations.moved.len(), 1);
-    assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 1);
-    assert_eq!(mutations.moved.iter().next().unwrap().1[0].index, 0);
+    assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 2);
     tree.apply_mutations(mutations, 1.0);
 }
 
@@ -882,7 +835,7 @@ fn element_diffing11() {
         mutations.removed,
         vec![MutationRemove::Scope { id: 5.into() }]
     );
-    assert!(mutations.moved.is_empty());
+    assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 1);
     tree.apply_mutations(mutations, 1.0);
 }
 
@@ -2069,16 +2022,37 @@ fn replay_nested_keyed_layouts(history: &[NestedLayout]) {
             if let Some(element) = scope.element.as_ref() {
                 collect_element_paths(element, &mut element_paths);
             }
-            element_paths.sort();
 
             let mut node_paths = Vec::new();
-            scope.nodes.traverse(&[], |path, _| {
+            scope.nodes.traverse(&[], |path, parent| {
                 if !path.is_empty() {
                     node_paths.push(path.to_vec());
                 }
+                if parent.scope_id.is_some() {
+                    return;
+                }
+                let mut expected_children = Vec::new();
+                scope.nodes.traverse_1_level(path, |_, child| {
+                    let mut node = child.clone();
+                    while let Some(scope_id) = node.scope_id {
+                        node = runner.scopes[&scope_id]
+                            .borrow()
+                            .nodes
+                            .get(&[0])
+                            .unwrap()
+                            .clone();
+                    }
+                    expected_children.push(node.node_id);
+                });
+                assert_eq!(
+                    tree.children
+                        .get(&parent.node_id)
+                        .cloned()
+                        .unwrap_or_default(),
+                    expected_children,
+                    "child order diverged at {path:?} after {step:?}",
+                );
             });
-            node_paths.sort();
-
             assert_eq!(
                 element_paths, node_paths,
                 "scope {:?} nodes diverged from its element tree after {step:?}",
@@ -2128,5 +2102,170 @@ fn grandchild_addition_under_parent_shifted_by_removal() {
     replay_nested_keyed_layouts(&[
         vec![(0, vec![]), (2, vec![(1, 0, false)]), (3, vec![])],
         vec![(3, vec![]), (2, vec![(1, 2, false)])],
+    ]);
+}
+
+#[test]
+fn mixed_reorder_emits_final_child_order() {
+    fn app() -> Element {
+        let keys = use_consume::<State<Vec<u8>>>();
+        rect()
+            .children(keys.read().iter().map(|key| rect().key(*key)))
+            .into()
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+    let mut keys = runner.provide_root_context(|| State::create(vec![0u8, 1, 2, 3]));
+    tree.apply_mutations(runner.sync_and_update(), 1.0);
+    let parent_node_id = runner.scopes[&ScopeId::ROOT]
+        .borrow()
+        .nodes
+        .get(&[0])
+        .unwrap()
+        .node_id;
+    let previous_children = tree.children[&parent_node_id].clone();
+
+    let mut expected = vec![
+        previous_children[3],
+        previous_children[1],
+        previous_children[0],
+    ];
+    for (next_keys, added_index) in [(vec![3, 4, 1, 0], 1), (vec![5, 3, 4, 1, 0], 0)] {
+        keys.set(next_keys);
+        let mutations = runner.sync_and_update();
+        assert_eq!(mutations.added.len(), 1);
+        assert_eq!(mutations.added[0].index, added_index);
+        expected.insert(added_index as usize, mutations.added[0].node_id);
+        assert_eq!(mutations.moved[&parent_node_id], expected);
+
+        tree.apply_mutations(mutations, 1.0);
+        tree.verify_tree_integrity();
+        assert_eq!(tree.children[&parent_node_id], expected);
+    }
+}
+
+#[test]
+fn mixed_nested_reconciliation_sequences() {
+    let mut seed = 42u64;
+    let mut next = || {
+        seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1);
+        (seed >> 32) as u32
+    };
+    let mut history = Vec::new();
+    for _ in 0..1000 {
+        let mut outer_keys = (0..5u8).map(|key| (next(), key)).collect::<Vec<_>>();
+        outer_keys.sort_unstable();
+        let mut layout = Vec::new();
+        for (_, key) in outer_keys.into_iter().take((next() % 6) as usize) {
+            let mut child_keys = (0..5u8).map(|key| (next(), key)).collect::<Vec<_>>();
+            child_keys.sort_unstable();
+            let children = child_keys
+                .into_iter()
+                .take((next() % 6) as usize)
+                .map(|(_, child_key)| (child_key, (next() % 3) as u8, next() % 2 == 0))
+                .collect();
+            layout.push((key, children));
+        }
+        history.push(layout);
+    }
+    replay_nested_keyed_layouts(&history);
+}
+
+fn replay_component_root_reorder(component_key: u8, reordered_keys: [u8; 3]) {
+    fn changing_root(reordered: &bool) -> Element {
+        let initial_value = use_state(|| *reordered);
+        assert!(!initial_value());
+        rect().key(*reordered).into()
+    }
+
+    fn app() -> Element {
+        let reordered = use_consume::<State<bool>>();
+        let (component_key, reordered_keys) = consume_context::<(u8, [u8; 3])>();
+        let keys = if reordered() {
+            reordered_keys
+        } else {
+            [0, 1, 2]
+        };
+        rect()
+            .children(keys.into_iter().map(|key| {
+                if key == component_key {
+                    from_fn(key, reordered(), changing_root)
+                } else {
+                    rect().key(key).into()
+                }
+            }))
+            .into()
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+    runner.provide_root_context(|| (component_key, reordered_keys));
+    let mut reordered = runner.provide_root_context(|| State::create(false));
+    tree.apply_mutations(runner.sync_and_update(), 1.0);
+    let root_scope = runner.scopes[&ScopeId::ROOT].clone();
+    let parent_node_id = root_scope.borrow().nodes.get(&[0]).unwrap().node_id;
+    let component_scope_id = root_scope
+        .borrow()
+        .nodes
+        .get(&[0, component_key as u32])
+        .unwrap()
+        .scope_id
+        .unwrap();
+    let old_children = tree.children[&parent_node_id].clone();
+
+    for next in [true, false, true] {
+        reordered.set(next);
+        tree.apply_mutations(runner.sync_and_update(), 1.0);
+        tree.verify_tree_integrity();
+        assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+        assert_eq!(
+            root_scope
+                .borrow()
+                .nodes
+                .get(&[0, component_key as u32])
+                .unwrap()
+                .scope_id,
+            Some(component_scope_id),
+        );
+
+        let root_node_id = runner.scopes[&component_scope_id]
+            .borrow()
+            .nodes
+            .get(&[0])
+            .unwrap()
+            .node_id;
+        let keys = if next { reordered_keys } else { [0, 1, 2] };
+        let expected = keys.map(|key| {
+            if key == component_key {
+                root_node_id
+            } else {
+                old_children[key as usize]
+            }
+        });
+        assert_eq!(tree.children[&parent_node_id], expected);
+    }
+}
+
+#[test]
+fn unchanged_middle_component_replaces_root_during_sibling_reorder() {
+    replay_component_root_reorder(1, [2, 1, 0]);
+}
+
+#[test]
+fn stationary_component_root_replacement_preserves_reordered_sibling_order() {
+    replay_component_root_reorder(0, [0, 2, 1]);
+}
+
+#[test]
+fn reorder_with_insertion_among_moved_siblings() {
+    replay_nested_keyed_layouts(&[
+        vec![(0, vec![]), (5, vec![]), (2, vec![])],
+        vec![
+            (2, vec![]),
+            (1, vec![]),
+            (5, vec![(2, 0, true)]),
+            (0, vec![]),
+        ],
     ]);
 }
