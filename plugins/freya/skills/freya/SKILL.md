@@ -358,23 +358,26 @@ impl DataReducer for AppState {
 radio.apply(AppAction::Increment);
 ```
 
-### Readable / Writable (type-erased abstractions)
+### Readable / Writable / WritableSetter
 
-`Readable<T>` and `Writable<T>` are type-erased wrappers over any reactive value of type `T`. Use them as component props so the component works regardless of where the state lives: local `State<T>`, a `Memo<T>`, a radio slice, or a plain owned value. Both are `PartialEq` (always equal) and `Clone`, usable directly as component fields.
+These abstractions hide the backing storage type while keeping the value type `T`. Use them as component props so the component does not depend on where the state lives. All three implement `PartialEq` and `Clone`.
+
+- `Readable<T>` provides read-only access to reactive state or a plain owned value.
+- `Writable<T>` provides mutable access to reactive state through write guards.
+- `WritableSetter<T>` provides readable access and requests updates through a setter callback.
 
 ```rust
 #[derive(PartialEq)]
-struct NameInput { name: Writable<String> }
+struct NameInput { name: WritableSetter<String> }
 
 impl Component for NameInput {
     fn render(&self) -> impl IntoElement {
-        Input::new(self.name.clone()) // Input is two-way bound to the Writable
+        Input::new(self.name.clone())
     }
 }
 
-// Caller side: any source converts via `into_writable()` / `into_readable()`
-NameInput { name: local_name.into_writable() }            // from State<String>
-NameInput { name: name_slice.into_writable() }            // from a RadioSliceMut
+NameInput { name: local_name.into_writable_setter() }
+NameInput { name: name_slice.into() }
 ```
 
 Conversions:
@@ -388,7 +391,47 @@ API surface:
 - `Readable<T>`: `read()` (subscribes), `peek()` (no subscription).
 - `Writable<T>`: `read()`, `peek()`, `write()`, plus `WritableUtils` helpers (`set`, `set_if_modified`, `with_mut`, ...). Subscriptions and notifications route to the original source.
 
-Prefer `Readable<T>` for read-only consumers; use `Writable<T>` only when the component must mutate.
+Prefer `Readable<T>` for read-only consumers, `WritableSetter<T>` for value replacement, and `Writable<T>` when the component needs mutable guards.
+
+### WritableSetter for Inputs and Reducers
+
+`Input::new` accepts `impl Into<WritableSetter<String>>`. `Switch::new` accepts `impl Into<WritableSetter<bool>>`. Pass local state directly:
+
+```rust
+let name = use_state(String::new);
+let toggled = use_state(|| false);
+
+rect()
+    .child(Input::new(name))
+    .child(Switch::new(toggled))
+```
+
+Switch no longer uses `.toggled(...)`, `.on_toggle(...)`, or `Default`.
+
+Use `WritableSetter::new(readable, callback)` when updates should go through a reducer or custom setter instead of writing directly:
+
+```rust
+let mut name = use_state(String::new);
+Input::new(WritableSetter::new(name, move |text| name.set(text)))
+```
+
+For radio state, bind a read-only slice and dispatch actions from the setter:
+
+```rust
+let mut radio = use_radio(AppChannel::Name);
+Input::new(WritableSetter::new(
+    radio.slice_current(|state| &state.name),
+    move |name| {
+        radio.apply(AppAction::SetName(name));
+    },
+))
+```
+
+Direct writable bindings bypass reducer actions. Keep model invariants in the reducer and route edits through a setter instead of synchronizing derived state with component effects.
+
+`State<T>`, `Writable<T>`, and `RadioSliceMut` convert to `WritableSetter<T>` through either `.into_writable_setter()` or `.into()`. The explicit method uses `IntoWritableSetter`, while `.into()` uses `From` implementations. Use a type annotation when `.into()` cannot infer its target.
+
+`WritableSetter<T>` exposes `read()`, `peek()`, `set()`, and `set_if_modified()`, but no `write()`. Its callback may accept, transform, or reject an update. The readable source remains authoritative. Clone the setter when sharing it across components or closures.
 
 ### Context API
 
@@ -423,7 +466,7 @@ Context is the right tool for dependency injection (e.g. passing a DB client, co
 - `use_state` - component-local state
 - Context API - dependency injection and non-reactive shared values across the tree; prefer over statics
 - Freya Radio - large/nested state, surgical per-channel updates, multi-window
-- `Readable`/`Writable` - reusable components that don't care about backing storage
+- `Readable`/`Writable`/`WritableSetter` - reusable components that don't care about backing storage
 
 ## Derived State and Side Effects
 

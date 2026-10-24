@@ -180,10 +180,10 @@ impl Component for StatefulSwitch {
         let mut toggled = use_state(|| false);
         let count = use_consume::<Rc<Cell<usize>>>();
 
-        Switch::new().toggled(toggled()).on_toggle(move |_| {
-            toggled.toggle();
+        Switch::new(WritableSetter::new(toggled, move |value| {
+            toggled.set(value);
             count.set(count.get() + 1);
-        })
+        }))
     }
 
     fn render_key(&self) -> DiffKey {
