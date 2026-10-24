@@ -7,6 +7,7 @@ publish = false
 workspace = true
 
 [features]
+incremental-painting = ["freya/incremental-painting"]
 hotpath = ["freya/hotpath"]
 hotreload = ["freya/hotreload"]
 hotpath-alloc = ["hotpath/hotpath-alloc"]

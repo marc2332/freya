@@ -13,7 +13,7 @@ fn main() {
     launch(
         LaunchConfig::new()
             .with_window(WindowConfig::new(app))
-            .with_plugin(MetricsPlugin::default()),
+            .with_plugin(MetricsPlugin::default().with_visible_stats(true)),
     )
 }
 

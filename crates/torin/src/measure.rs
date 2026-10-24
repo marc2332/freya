@@ -31,7 +31,10 @@ use crate::{
         Torin,
     },
     size::Size,
-    torin::DirtyReason,
+    torin::{
+        DirtyReason,
+        LayoutChange,
+    },
     tree_adapter::{
         LayoutNode,
         NodeKey,
@@ -84,6 +87,9 @@ where
         };
 
         if let Some(measurer) = self.measurer {
+            if offset_x.get() != 0.0 || offset_y.get() != 0.0 {
+                measurer.notify_layout_change(LayoutChange::Changed(node_id));
+            }
             measurer.notify_layout_references(node_id, area, visible_area, inner_sizes);
         }
     }
@@ -105,6 +111,8 @@ where
                     if translate {
                         self.translate_node(child, offset_x, offset_y);
                         buffer.extend_from_slice(children);
+                    } else if let Some(measurer) = self.measurer {
+                        measurer.notify_layout_change(LayoutChange::Changed(child));
                     }
                 })
                 .expect("Node does not exist");
@@ -115,8 +123,13 @@ where
     fn set_hidden(&mut self, node_id: Key, hidden: bool) {
         let mut buffer = vec![node_id];
         while let Some(child) = buffer.pop() {
-            if let Some(layout_node) = self.layout.get_mut(&child) {
+            if let Some(layout_node) = self.layout.get_mut(&child)
+                && layout_node.hidden != hidden
+            {
                 layout_node.hidden = hidden;
+                if let Some(measurer) = self.measurer {
+                    measurer.notify_layout_change(LayoutChange::Changed(child));
+                }
             }
             self.tree_adapter
                 .read_node(&child, |_, children| buffer.extend_from_slice(children));
@@ -955,7 +968,7 @@ where
                     // Cache the child layout if it was mutated and children must be cached
                     if child_revalidated && must_cache_children {
                         // Finally cache this node areas into Torin
-                        self.layout.cache_node(child_id, child_areas);
+                        self.layout.cache_node(child_id, child_areas, self.measurer);
                     }
                 });
         }

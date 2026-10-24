@@ -11,7 +11,6 @@ use freya_engine::prelude::{
     ParagraphBuilder,
     ParagraphStyle,
     SkParagraph,
-    SkRect,
 };
 use torin::prelude::{
     Area,
@@ -37,6 +36,7 @@ use crate::{
         RenderContext,
     },
     elements::paragraph::ParagraphPaintExt,
+    geometry::AreaExt,
     layers::Layer,
     prelude::{
         AccessibilityExt,
@@ -286,19 +286,26 @@ impl ElementExt for LabelElement {
 
     fn clip(&self, context: ClipContext) {
         let area = context.visible_area;
-        context.canvas.clip_rect(
-            SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
-            ClipOp::Intersect,
-            true,
-        );
+        context
+            .recorder
+            .clip_rect(area.to_skia(), ClipOp::Intersect, true);
     }
 
     fn render(&self, context: RenderContext) {
         let layout_data = context.layout_node.data.as_ref().unwrap();
-        let paragraph = layout_data.downcast_ref::<SkParagraph>().unwrap();
+        let paragraph = layout_data.clone().downcast::<SkParagraph>().unwrap();
 
-        let origin = context.layout_node.inner_area.origin;
-        paragraph.paint_at(context.canvas, origin.cast_unit());
+        context.recorder.draw_paragraph(
+            paragraph,
+            context.layout_node.inner_area.origin.cast_unit(),
+            context
+                .text_style_state
+                .text_shadows
+                .iter()
+                .copied()
+                .map(Into::into),
+            context.text_style_state.text_align.into(),
+        );
     }
 }
 

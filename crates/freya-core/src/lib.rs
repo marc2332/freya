@@ -1,6 +1,7 @@
 pub mod accessibility;
 pub mod animation_clock;
 pub mod current_context;
+pub mod damage;
 pub mod data;
 pub mod debug;
 pub mod diff_key;
@@ -10,6 +11,7 @@ pub mod event_handler;
 pub mod events;
 pub mod events_combos;
 pub mod extended_hashmap;
+pub mod geometry;
 pub mod helpers;
 pub mod hooks;
 pub mod io;
@@ -17,10 +19,11 @@ pub mod layers;
 pub mod lifecycle;
 pub mod metrics;
 pub mod node_id;
+pub mod paint_pipeline;
+pub mod paint_state;
 pub mod path_element;
 pub mod platform;
 pub mod reactive_context;
-pub mod render_pipeline;
 pub mod rendering_ticker;
 pub mod runner;
 pub mod scope;
@@ -64,6 +67,7 @@ pub mod prelude {
             screen_reader::*,
         },
         animation_clock::AnimationClock,
+        damage::Damage,
         data::*,
         debug::*,
         diff_key::DiffKey,
@@ -112,6 +116,7 @@ pub mod prelude {
             *,
         },
         events_combos::*,
+        geometry::*,
         hooks::{
             previous_and_current::*,
             use_id::*,
@@ -190,6 +195,7 @@ pub mod integration {
             tree::*,
         },
         animation_clock::AnimationClock,
+        damage::Damage,
         data::*,
         element::*,
         elements::extensions::*,
@@ -201,14 +207,15 @@ pub mod integration {
             name::*,
             platform::*,
         },
+        geometry::*,
         lifecycle::{
             global_context::GlobalContexts,
             state::State,
             writable_utils::WritableUtils,
         },
         node_id::NodeId,
+        paint_pipeline::PaintPipeline,
         platform::*,
-        render_pipeline::RenderPipeline,
         rendering_ticker::*,
         runner::{
             Runner,
