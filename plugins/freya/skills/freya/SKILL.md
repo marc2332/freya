@@ -360,42 +360,25 @@ radio.apply(AppAction::Increment);
 
 ### Readable / Writable / WritableSetter
 
-These abstractions hide the backing storage type while keeping the value type `T`. Use them as component props so the component does not depend on where the state lives. All three implement `PartialEq` and `Clone`.
+Use these as component props to hide the backing storage type. All implement `PartialEq` and `Clone`. `read()` subscribes to changes, while `peek()` does not.
 
-- `Readable<T>` provides read-only access to reactive state or a plain owned value.
-- `Writable<T>` provides mutable access to reactive state through write guards.
-- `WritableSetter<T>` provides readable access and requests updates through a setter callback.
-
-```rust
-#[derive(PartialEq)]
-struct NameInput { name: WritableSetter<String> }
-
-impl Component for NameInput {
-    fn render(&self) -> impl IntoElement {
-        Input::new(self.name.clone())
-    }
-}
-
-NameInput { name: local_name.into_writable_setter() }
-NameInput { name: name_slice.into() }
-```
+| Type | Use | Updates |
+|---|---|---|
+| `Readable<T>` | Read-only values | None |
+| `Writable<T>` | Direct mutation | `write()` and `WritableUtils` helpers |
+| `WritableSetter<T>` | Value replacement | `set()` and `set_if_modified()` through a callback |
 
 Conversions:
-- `State<T>` → `Writable<T>` / `Readable<T>` via `IntoWritable` / `IntoReadable`.
-- `Memo<T>` → `Readable<T>` via `IntoReadable`.
-- `RadioSlice` → `Readable<T>`; `RadioSliceMut` → `Readable<T>` or `Writable<T>`.
-- `Writable<T>` → `Readable<T>` via `From` (downgrade write access).
-- Plain owned `T` → `Readable<T>` via `From` (non-reactive; tests, defaults).
+- `State<T>` supports all three through `.into_readable()`, `.into_writable()`, and `.into_writable_setter()`.
+- `Memo<T>` and `RadioSlice` support `.into_readable()`.
+- `RadioSliceMut` supports all three conversions.
+- `Writable<T>` and `WritableSetter<T>` convert to `Readable<T>` through `.into()`.
+- Plain owned values convert to non-reactive `Readable<T>` through `.into()`.
+- `State<T>`, `Writable<T>`, and `RadioSliceMut` also convert to `WritableSetter<T>` through `.into()`.
 
-API surface:
-- `Readable<T>`: `read()` (subscribes), `peek()` (no subscription).
-- `Writable<T>`: `read()`, `peek()`, `write()`, plus `WritableUtils` helpers (`set`, `set_if_modified`, `with_mut`, ...). Subscriptions and notifications route to the original source.
+### Input and Switch
 
-Prefer `Readable<T>` for read-only consumers, `WritableSetter<T>` for value replacement, and `Writable<T>` when the component needs mutable guards.
-
-### WritableSetter for Inputs and Reducers
-
-`Input::new` accepts `impl Into<WritableSetter<String>>`. `Switch::new` accepts `impl Into<WritableSetter<bool>>`. Pass local state directly:
+`Input::new` accepts `Into<WritableSetter<String>>`, and `Switch::new` accepts `Into<WritableSetter<bool>>`. Pass state directly:
 
 ```rust
 let name = use_state(String::new);
@@ -406,16 +389,9 @@ rect()
     .child(Switch::new(toggled))
 ```
 
-Switch no longer uses `.toggled(...)`, `.on_toggle(...)`, or `Default`.
+Switch has no `.toggled(...)`, `.on_toggle(...)`, or `Default`.
 
-Use `WritableSetter::new(readable, callback)` when updates should go through a reducer or custom setter instead of writing directly:
-
-```rust
-let mut name = use_state(String::new);
-Input::new(WritableSetter::new(name, move |text| name.set(text)))
-```
-
-For radio state, bind a read-only slice and dispatch actions from the setter:
+Use `WritableSetter::new(readable, callback)` to route edits through a reducer:
 
 ```rust
 let mut radio = use_radio(AppChannel::Name);
@@ -427,11 +403,7 @@ Input::new(WritableSetter::new(
 ))
 ```
 
-Direct writable bindings bypass reducer actions. Keep model invariants in the reducer and route edits through a setter instead of synchronizing derived state with component effects.
-
-`State<T>`, `Writable<T>`, and `RadioSliceMut` convert to `WritableSetter<T>` through either `.into_writable_setter()` or `.into()`. The explicit method uses `IntoWritableSetter`, while `.into()` uses `From` implementations. Use a type annotation when `.into()` cannot infer its target.
-
-`WritableSetter<T>` exposes `read()`, `peek()`, `set()`, and `set_if_modified()`, but no `write()`. Its callback may accept, transform, or reject an update. The readable source remains authoritative. Clone the setter when sharing it across components or closures.
+The callback may accept, transform, or reject updates. Direct writable bindings bypass reducers. Keep model invariants in the reducer, not in component effects.
 
 ### Context API
 
