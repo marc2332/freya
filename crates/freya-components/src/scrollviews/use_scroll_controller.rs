@@ -171,7 +171,8 @@ impl ScrollController {
         self.scroll_to_y(y);
     }
 
-    pub(crate) fn position(self) -> Point2D {
+    /// Reads the current scroll position in pixels.
+    pub fn position(self) -> Point2D {
         let (x, y): (i32, i32) = self.into();
         Point2D::new(x as f32, y as f32)
     }
