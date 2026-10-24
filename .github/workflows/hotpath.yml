@@ -62,7 +62,7 @@ jobs:
       - name: Run benchmark under Callgrind
         env:
           HOTPATH_BENCHMARK: ${{ matrix.benchmark }}
-          HOTPATH_POLICY_PATH: ${{ matrix.policy }}
+          HOTPATH_POLICY_PATH: ${{ github.workspace }}/${{ matrix.policy }}
           HOTPATH_UPLOAD: ${{ github.event_name == 'push' && 'fail-on-error' || '0' }}
           HOTPATH_UPLOAD_RESPONSE_PATH: ${{ runner.temp }}/upload.json
           HOTPATH_OUTPUT_FORMAT: json
@@ -73,6 +73,7 @@ jobs:
         run: |
           just --set callgrind_runner "$CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER" ${{ matrix.recipe }}
           jq -e '.functions_icount.data | length > 0' "$HOTPATH_OUTPUT_PATH" > /dev/null
+          jq -e '.meta.policy.source | type == "string" and length > 0' "$HOTPATH_OUTPUT_PATH" > /dev/null
           if [ "$HOTPATH_UPLOAD" = fail-on-error ]; then
             test -s "$HOTPATH_UPLOAD_RESPONSE_PATH"
           fi
