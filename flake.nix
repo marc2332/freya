@@ -39,6 +39,7 @@
       udev
       vulkan-loader
       wayland
+      xz
     ];
     libraryPath = pkgs.lib.makeLibraryPath libraries;
     nixGLPkgs =

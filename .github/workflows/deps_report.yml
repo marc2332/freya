@@ -31,7 +31,7 @@ jobs:
     - name: Install linux dependencies
       if: runner.os == 'Linux'
       background: true
-      run: sudo apt update && sudo apt install build-essential libssl-dev pkg-config libudev-dev libasound2-dev
+      run: sudo apt update && sudo apt install build-essential libssl-dev pkg-config libudev-dev libasound2-dev liblzma-dev libfontconfig1-dev libfreetype6-dev libegl1-mesa-dev libgl1-mesa-dev libgles2-mesa-dev libwayland-dev
     - name: Install Rust toolchain
       uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1
     - name: Install just

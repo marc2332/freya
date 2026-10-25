@@ -13,7 +13,7 @@
 //!
 //! Install these packages:
 //! ```sh
-//! sudo apt install build-essential libssl-dev pkg-config cmake libclang-dev
+//! sudo apt install build-essential libssl-dev pkg-config cmake libclang-dev libudev-dev libasound2-dev liblzma-dev libfontconfig1-dev libfreetype6-dev libegl1-mesa-dev libgl1-mesa-dev libgles2-mesa-dev libwayland-dev
 //! ```
 //!
 //! #### Arch Linux
