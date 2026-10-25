@@ -66,11 +66,12 @@
 //!         .spacing(12.)
 //!         .child(label().text("My tasks").font_size(28.))
 //!         .child(
-//!             rect().horizontal().spacing(8.)
+//!             rect()
+//!                 .horizontal()
+//!                 .spacing(8.)
 //!                 .child(
 //!                     // Bind the input to the string state. (2)
-//!                     Input::new(draft)
-//!                         .placeholder("What needs doing?"),
+//!                     Input::new(draft).placeholder("What needs doing?"),
 //!                 )
 //!                 .child(Button::new().child("Add task")),
 //!         )
@@ -113,26 +114,40 @@
 //!         .spacing(12.)
 //!         .child(label().text("My tasks").font_size(28.))
 //!         .child(
-//!             rect().horizontal().spacing(8.)
+//!             rect()
+//!                 .horizontal()
+//!                 .spacing(8.)
 //!                 .child(Input::new(draft).placeholder("What needs doing?"))
 //!                 .child(
-//!                     Button::new().enabled(can_add).on_press(move |_| {
-//!                         let title = draft.read().trim().to_owned();
-//!                         if !title.is_empty() {
-//!                             let id = *next_id.read();
-//!                             *next_id.write() += 1;
+//!                     Button::new()
+//!                         .enabled(can_add)
+//!                         .on_press(move |_| {
+//!                             let title = draft.read().trim().to_owned();
+//!                             if !title.is_empty() {
+//!                                 let id = *next_id.read();
+//!                                 *next_id.write() += 1;
 //!
-//!                             tasks.write().push(Task { id, title, completed: false });
+//!                                 tasks.write().push(Task {
+//!                                     id,
+//!                                     title,
+//!                                     completed: false,
+//!                                 });
 //!
-//!                             draft.write().clear();
-//!                         }
-//!                     }).child("Add task"),
+//!                                 draft.write().clear();
+//!                             }
+//!                         })
+//!                         .child("Add task"),
 //!                 ),
 //!         )
 //!         // Give the list the remaining height. (2)
-//!         .child(ScrollView::new().height(Size::flex(1.)).children(
-//!             tasks.read().iter().map(|task| label().key(task.id).text(task.title.clone())),
-//!         ))
+//!         .child(
+//!             ScrollView::new().height(Size::flex(1.)).children(
+//!                 tasks
+//!                     .read()
+//!                     .iter()
+//!                     .map(|task| label().key(task.id).text(task.title.clone())),
+//!             ),
+//!         )
 //! }
 //! ```
 //!
@@ -167,18 +182,25 @@
 //!
 //!         let can_add = !draft.read().trim().is_empty();
 //!
-//!         rect().horizontal().spacing(8.)
+//!         rect()
+//!             .horizontal()
+//!             .spacing(8.)
 //!             .child(Input::new(draft).placeholder("What needs doing?"))
-//!             .child(Button::new().enabled(can_add).on_press({
-//!                 let on_add = self.on_add.clone();
-//!                 move |_| {
-//!                     let title = draft.read().trim().to_owned();
-//!                     if !title.is_empty() {
-//!                         on_add.call(title);
-//!                         draft.write().clear();
-//!                     }
-//!                 }
-//!             }).child("Add task"))
+//!             .child(
+//!                 Button::new()
+//!                     .enabled(can_add)
+//!                     .on_press({
+//!                         let on_add = self.on_add.clone();
+//!                         move |_| {
+//!                             let title = draft.read().trim().to_owned();
+//!                             if !title.is_empty() {
+//!                                 on_add.call(title);
+//!                                 draft.write().clear();
+//!                             }
+//!                         }
+//!                     })
+//!                     .child("Add task"),
+//!             )
 //!     }
 //! }
 //! ```
@@ -246,22 +268,40 @@
 //! }
 //!
 //! impl KeyExt for TaskRow {
-//!     fn key_mut(&mut self) -> &mut DiffKey { &mut self.key }
+//!     fn key_mut(&mut self) -> &mut DiffKey {
+//!         &mut self.key
+//!     }
 //! }
 //!
 //! impl Component for TaskRow {
 //!     fn render(&self) -> impl IntoElement {
-//!         rect().width(Size::fill()).content(Content::Flex)
-//!             .horizontal().spacing(8.).cross_align(Alignment::Center)
+//!         rect()
+//!             .width(Size::fill())
+//!             .content(Content::Flex)
+//!             .horizontal()
+//!             .spacing(8.)
+//!             .cross_align(Alignment::Center)
 //!             .child(label().text(self.task.title.clone()).width(Size::flex(1.)))
-//!             .child(Button::new().on_press({
-//!                 let on_toggle = self.on_toggle.clone();
-//!                 move |_| on_toggle.call(())
-//!             }).child(if self.task.completed { "Reopen" } else { "Complete" }))
-//!             .child(Button::new().on_press({
-//!                 let on_remove = self.on_remove.clone();
-//!                 move |_| on_remove.call(())
-//!             }).child("Delete"))
+//!             .child(
+//!                 Button::new()
+//!                     .on_press({
+//!                         let on_toggle = self.on_toggle.clone();
+//!                         move |_| on_toggle.call(())
+//!                     })
+//!                     .child(if self.task.completed {
+//!                         "Reopen"
+//!                     } else {
+//!                         "Complete"
+//!                     }),
+//!             )
+//!             .child(
+//!                 Button::new()
+//!                     .on_press({
+//!                         let on_remove = self.on_remove.clone();
+//!                         move |_| on_remove.call(())
+//!                     })
+//!                     .child("Delete"),
+//!             )
 //!     }
 //!
 //!     fn render_key(&self) -> DiffKey {
@@ -458,16 +498,21 @@
 //!         runner.write_text("Learn Freya");
 //!         click_label(&mut runner, "Add task");
 //!         assert!(
-//!             runner.find(|_, element| {
-//!                 Label::try_downcast(element).filter(|label| label.text == "Learn Freya")
-//!             }).is_some()
+//!             runner
+//!                 .find(|_, element| {
+//!                     Label::try_downcast(element).filter(|label| label.text == "Learn Freya")
+//!                 })
+//!                 .is_some()
 //!         );
 //!
 //!         click_label(&mut runner, "Complete");
 //!         assert!(
-//!             runner.find(|_, element| {
-//!                 Label::try_downcast(element).filter(|label| label.text == "0 tasks remaining")
-//!             }).is_some()
+//!             runner
+//!                 .find(|_, element| {
+//!                     Label::try_downcast(element)
+//!                         .filter(|label| label.text == "0 tasks remaining")
+//!                 })
+//!                 .is_some()
 //!         );
 //!     }
 //! }

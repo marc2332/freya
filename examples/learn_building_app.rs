@@ -188,7 +188,11 @@ impl Component for TaskRow {
                         let on_toggle = self.on_toggle.clone();
                         move |_| on_toggle.call(())
                     })
-                    .child(if self.task.completed { "Reopen" } else { "Complete" }),
+                    .child(if self.task.completed {
+                        "Reopen"
+                    } else {
+                        "Complete"
+                    }),
             )
             .child(
                 Button::new()
@@ -232,16 +236,20 @@ mod tests {
         runner.write_text("Learn Freya");
         click_label(&mut runner, "Add task");
         assert!(
-            runner.find(|_, element| {
-                Label::try_downcast(element).filter(|label| label.text == "Learn Freya")
-            }).is_some()
+            runner
+                .find(|_, element| {
+                    Label::try_downcast(element).filter(|label| label.text == "Learn Freya")
+                })
+                .is_some()
         );
 
         click_label(&mut runner, "Complete");
         assert!(
-            runner.find(|_, element| {
-                Label::try_downcast(element).filter(|label| label.text == "0 tasks remaining")
-            }).is_some()
+            runner
+                .find(|_, element| {
+                    Label::try_downcast(element).filter(|label| label.text == "0 tasks remaining")
+                })
+                .is_some()
         );
     }
 }
