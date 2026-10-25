@@ -66,6 +66,7 @@ accesskit = { workspace = true }
 
 [dev-dependencies]
 freya = { path = "../freya", features = [
+  "radio",
   "markdown",
   "gif",
   "remote-asset",
