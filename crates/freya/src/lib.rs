@@ -55,6 +55,7 @@
 //! - [Working with AI](self::_docs::ai)
 //!
 //! ### Learn
+//! - [Building an app](self::_docs::building_an_app)
 //! - [Built-in Components](crate::components)
 //! - [Built-in Components Gallery](crate::components::gallery)
 //! - [i18n](freya_i18n)
