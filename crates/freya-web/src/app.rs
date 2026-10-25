@@ -39,6 +39,7 @@ pub struct WebApp {
     runner: Runner,
     tree: Tree,
     surface: WebSurface,
+    physical_size: Size2D,
 
     nodes_state: NodesState<NodeId>,
     accessibility: AccessibilityTree,
@@ -47,14 +48,16 @@ pub struct WebApp {
     events_sender: futures_channel::mpsc::UnboundedSender<EventsChunk>,
 
     user_events: Rc<RefCell<Vec<UserEvent>>>,
+    global_events: Rc<RefCell<Vec<GlobalUserEvent>>>,
 
     fonts: Fonts,
 
-    platform: Platform,
+    platform: PlatformWindow,
     ticker_sender: RenderingTickerSender,
 
     background: Color,
     cursor: CursorIcon,
+    cursor_visible: bool,
     needs_render: bool,
     ime: WebIme,
 }
@@ -69,11 +72,12 @@ impl WebApp {
 
         let (events_sender, events_receiver) = futures_channel::mpsc::unbounded();
 
+        GlobalContexts::register();
+
         let app = config.app;
         let mut runner = Runner::new(move || integration(app.clone()).into_element());
 
         runner.provide_root_context(ScreenReader::new);
-        runner.provide_root_context(GlobalContexts::default);
 
         let (ticker_sender, ticker) = RenderingTicker::new();
         runner.provide_root_context(|| ticker);
@@ -82,15 +86,21 @@ impl WebApp {
         runner.provide_root_context(TargetPlatform::detect);
 
         let user_events = Rc::new(RefCell::new(Vec::new()));
+        let global_events = Rc::new(RefCell::new(Vec::new()));
+        GlobalContexts::get().insert_context(Platform::new({
+            let global_events = global_events.clone();
+            move |event| global_events.borrow_mut().push(event)
+        }));
 
-        let platform = runner.provide_root_context({
+        let platform = runner.run_in({
             let user_events = user_events.clone();
-            move || Platform {
+            move || PlatformWindow {
+                id: 0,
                 focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
                 focused_accessibility_node: State::create(accesskit::Node::new(
                     accesskit::Role::Window,
                 )),
-                root_size: State::create(size),
+                root_size: State::create(size / pixel_ratio as f32),
                 scale_factor: State::create(pixel_ratio),
                 custom_scale_factor: State::create(1.),
                 navigation_mode: State::create(NavigationMode::NotKeyboard),
@@ -100,6 +110,9 @@ impl WebApp {
                 sender: Rc::new(move |user_event| user_events.borrow_mut().push(user_event)),
             }
         });
+
+        Platform::get().register_window(platform.clone());
+        runner.provide_root_context(|| CurrentWindowId(platform.id));
 
         let clipboard: Option<Box<dyn ClipboardProvider>> = Some(Box::new(WebClipboard));
         runner.provide_root_context(|| State::create(clipboard));
@@ -131,23 +144,26 @@ impl WebApp {
             runner,
             tree,
             surface,
+            physical_size: size,
             nodes_state,
             accessibility: AccessibilityTree::default(),
             events_receiver,
             events_sender,
             user_events,
+            global_events,
             fonts,
             platform,
             ticker_sender,
             background: config.background,
             cursor: CursorIcon::Default,
+            cursor_visible: true,
             needs_render: true,
             ime: WebIme::new(),
         })
     }
 
     fn size(&self) -> Size2D {
-        *self.platform.root_size.peek()
+        self.physical_size
     }
 
     fn scale_factor(&self) -> f64 {
@@ -166,7 +182,10 @@ impl WebApp {
 
         if let Some((size, pixel_ratio)) = browser.resized {
             self.surface.resize(size.to_i32());
-            self.platform.root_size.set_if_modified(size);
+            self.physical_size = size;
+            self.platform
+                .root_size
+                .set_if_modified(size / pixel_ratio as f32);
             self.needs_render = true;
 
             if (pixel_ratio - self.scale_factor()).abs() > f64::EPSILON {
@@ -250,16 +269,12 @@ impl WebApp {
 
     /// Fulfills the requests made by the app and measures the layout.
     fn finish(&mut self) {
-        for user_event in self.user_events.borrow_mut().drain(..) {
-            match user_event {
-                UserEvent::FocusAccessibilityNode(strategy) => {
-                    self.tree.accessibility_diff.request_focus(strategy);
+        for event in self.global_events.borrow_mut().drain(..) {
+            match event {
+                GlobalUserEvent::OpenUrl(url) => {
+                    run_script(&format!("window.open({url:?}, '_blank');"))
                 }
-                UserEvent::OpenUrl(url) => {
-                    run_script(&format!("window.open({url:?}, '_blank');"));
-                }
-                UserEvent::RequestRedraw => self.needs_render = true,
-                UserEvent::LoadFont {
+                GlobalUserEvent::LoadFont {
                     font_name,
                     font_data,
                 } => {
@@ -268,7 +283,17 @@ impl WebApp {
                     self.tree.text_cache.reset();
                     self.needs_render = true;
                 }
-                UserEvent::SetCustomScaleFactor(_) | UserEvent::Erased(_) => {}
+                GlobalUserEvent::Exit => run_script("window.close();"),
+                GlobalUserEvent::Erased(_) => {}
+            }
+        }
+        for user_event in self.user_events.borrow_mut().drain(..) {
+            match user_event {
+                UserEvent::FocusAccessibilityNode(strategy) => {
+                    self.tree.accessibility_diff.request_focus(strategy);
+                }
+                UserEvent::RequestRedraw => self.needs_render = true,
+                UserEvent::SetCustomScaleFactor(_) => {}
             }
         }
 
@@ -307,11 +332,17 @@ impl WebApp {
         }
 
         let cursor = self.tree.cursor_icon(&self.nodes_state);
-        if cursor != self.cursor {
+        let cursor_visible = self.tree.cursor_visible(&self.nodes_state);
+        if cursor != self.cursor || cursor_visible != self.cursor_visible {
             self.cursor = cursor;
+            self.cursor_visible = cursor_visible;
             run_script(&format!(
                 "document.querySelector('#canvas').style.cursor = '{}';",
-                cursor.name()
+                if cursor_visible {
+                    cursor.name()
+                } else {
+                    "none"
+                }
             ));
         }
     }

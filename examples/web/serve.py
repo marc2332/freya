@@ -49,7 +49,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         ".wasm": "application/wasm",
     }
 
-
 def main() -> int:
     if len(sys.argv) < 2:
         print("expected the path of the built artifact", file=sys.stderr)

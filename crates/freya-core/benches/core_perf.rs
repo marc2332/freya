@@ -16,11 +16,12 @@ use torin::{
 };
 
 const ROWS: usize = 1000;
+const SPARSE_ROWS: usize = 10_000;
 const CONTAINERS: usize = 100;
 const CASCADE_ROWS: usize = 100;
 const ITERATIONS: usize = 30;
 
-#[cfg_attr(feature = "hotpath", hotpath::main(percentiles = [33, 66, 95, 99]))]
+#[cfg_attr(feature = "hotpath", hotpath::main(percentiles = [33, 66, 95, 99], functions_limit = 0))]
 fn main() {
     elements();
     runner();
@@ -84,6 +85,7 @@ fn build_row(index: usize) -> Element {
         .into_element()
 }
 
+#[cfg_attr(feature = "hotpath", hotpath::measure)]
 fn elements() {
     bench("elements: build 1000 rows", || {
         rect()
@@ -95,14 +97,31 @@ fn elements() {
     });
 }
 
-fn runner_app(rotate: bool) -> Element {
+#[derive(Clone, Copy)]
+enum RunnerReorder {
+    None,
+    Rotate,
+    SwapTail,
+}
+
+fn runner_app(reorder: RunnerReorder, row_count: usize) -> Element {
     let mut version = use_state(|| 0u64);
-    let rotation = if rotate { *version.read() as usize } else { 0 };
+    let version_value = *version.read() as usize;
 
     rect()
         .on_mouse_up(move |_| *version.write() += 1)
-        .children((0..ROWS).map(|slot| {
-            let index = (slot + rotation) % ROWS;
+        .children((0..row_count).map(|slot| {
+            let index = match reorder {
+                RunnerReorder::None => slot,
+                RunnerReorder::Rotate => (slot + version_value) % row_count,
+                RunnerReorder::SwapTail if version_value % 2 == 1 && slot == row_count - 2 => {
+                    row_count - 1
+                }
+                RunnerReorder::SwapTail if version_value % 2 == 1 && slot == row_count - 1 => {
+                    row_count - 2
+                }
+                RunnerReorder::SwapTail => slot,
+            };
             rect()
                 .key(index)
                 .child(label().text(format!("Row {index}")))
@@ -111,18 +130,31 @@ fn runner_app(rotate: bool) -> Element {
         .into()
 }
 
+#[cfg_attr(feature = "hotpath", hotpath::measure)]
 fn runner() {
     bench("runner: mount 1000 rows", || {
-        mounted_runner(|| runner_app(false))
+        mounted_runner(|| runner_app(RunnerReorder::None, ROWS))
     });
 
-    let (mut runner, mut tree, target) = mounted_runner(|| runner_app(false));
+    let (mut runner, mut tree, target) = mounted_runner(|| runner_app(RunnerReorder::None, ROWS));
     bench("runner: no-change rebuild", || {
         update(&mut runner, &mut tree, target, EventName::MouseUp)
     });
 
-    let (mut runner, mut tree, target) = mounted_runner(|| runner_app(true));
+    let (mut runner, mut tree, target) = mounted_runner(|| runner_app(RunnerReorder::Rotate, ROWS));
     bench("runner: rotate all keys", || {
+        update(&mut runner, &mut tree, target, EventName::MouseUp)
+    });
+
+    let (mut runner, mut tree, target) =
+        mounted_runner(|| runner_app(RunnerReorder::SwapTail, ROWS));
+    bench("runner: swap last two keys (1000)", || {
+        update(&mut runner, &mut tree, target, EventName::MouseUp)
+    });
+
+    let (mut runner, mut tree, target) =
+        mounted_runner(|| runner_app(RunnerReorder::SwapTail, SPARSE_ROWS));
+    bench("runner: swap last two keys (10000)", || {
         update(&mut runner, &mut tree, target, EventName::MouseUp)
     });
 }
@@ -152,6 +184,7 @@ fn cascade_app() -> Element {
         .into()
 }
 
+#[cfg_attr(feature = "hotpath", hotpath::measure)]
 fn cascades() {
     let (mut runner, mut tree, target) = mounted_runner(cascade_app);
 
@@ -166,6 +199,7 @@ fn cascades() {
     });
 }
 
+#[cfg_attr(feature = "hotpath", hotpath::measure)]
 fn accessibility() {
     let (_runner, mut tree, _) = mounted_runner(cascade_app);
 

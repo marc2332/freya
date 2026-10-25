@@ -1,6 +1,6 @@
 [package]
 name = "freya-core"
-version = "0.5.0-rc.7"
+version = "0.5.0-beta.12"
 description = "Reactivity runtime, tree management, accessibility integration, rendering pipeline and more, for Freya"
 edition = "2024"
 license = "MIT"
@@ -14,11 +14,14 @@ workspace = true
 
 [dependencies]
 # Core
+tiny-diff = { workspace = true, features = ["std"] }
 generational-box = { workspace = true }
 tracing = { workspace = true }
 rustc-hash = { workspace = true }
 bitflags = { workspace = true }
 pathgraph = { workspace = true }
+tiny-cache = { workspace = true }
+tiny-notify = { workspace = true }
 # Core/async
 futures-util = { workspace = true }
 futures-channel = { workspace = true }
@@ -30,7 +33,6 @@ unicode-segmentation = "1.11"
 
 # Layout
 torin = { workspace = true }
-smallvec = "1.15.1"
 
 # OS preferences
 mundy = { workspace = true }
@@ -65,15 +67,18 @@ dioxus-devtools = { version = "0.7.4", optional = true }
 cursor-icon = "1.2.0"
 
 [dev-dependencies]
-freya = { path = "../freya" }
+freya = { path = "../freya", features = ["code-editor"] }
 freya-testing = { path = "../freya-testing" }
 freya-core = { path = "../freya-core", features = ["debug-integrity", "test"] }
 freya-engine = { path = "../freya-engine" }
 tracing-subscriber = { workspace = true }
+tree-sitter-rust = "0.24"
 
 [features]
-hotpath = ["hotpath/hotpath", "ragnarok/hotpath"]
+hotpath = ["hotpath/hotpath", "ragnarok/hotpath", "tiny-diff/hotpath"]
 hotpath-alloc = ["hotpath/hotpath-alloc"]
+hotpath-cloud = ["hotpath/hotpath-cloud"]
+hotpath-callgrind = ["hotpath", "hotpath/hotpath-callgrind"]
 hotreload = ["dep:subsecond", "dep:dioxus-devtools"]
 debug-integrity = []
 devtools = ["serde"]

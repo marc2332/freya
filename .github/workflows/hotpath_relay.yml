@@ -1,0 +1,35 @@
+name: Hotpath relay
+
+on:
+  workflow_run:
+    workflows: [Hotpath]
+    types: [completed]
+
+jobs:
+  relay:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - benchmark: dev_perf
+            artifact: hotpath-dev
+            report: dev_perf.json
+          - benchmark: core
+            artifact: hotpath-core
+            report: core.json
+          - benchmark: painting
+            artifact: hotpath-painting
+            report: painting.json
+          - benchmark: torin
+            artifact: hotpath-torin
+            report: torin.json
+    uses: hotpath-rs/hotpath/.github/workflows/hotpath-relay.yml@f98dee237c49087e20b94b62bcd9becfceeee357 # v0.29.2
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      pull-requests: read
+    with:
+      benchmark: ${{ matrix.benchmark }}
+      artifact_name: ${{ matrix.artifact }}
+      report_file: ${{ matrix.report }}

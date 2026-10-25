@@ -181,19 +181,9 @@ impl GifSource {
 ///
 ///     GifViewer::new(source)
 /// }
-///
-/// # use freya_testing::prelude::*;
-/// # use std::path::PathBuf;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(GifViewer::new(("frog-typing", include_bytes!("../../../examples/frog_typing.gif"))))
-/// # }, "./images/gallery_gif_viewer.png").with_hook(|t| { t.poll(std::time::Duration::from_millis(1), std::time::Duration::from_millis(1500)); t.sync_and_update(); }).with_scale_factor(1.).render();
 /// ```
 ///
-/// # Preview
-/// ![Gif Preview][gif_viewer]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("gif_viewer", "images/gallery_gif_viewer.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(PartialEq)]
 pub struct GifViewer {
     source: GifSource,
@@ -228,13 +218,13 @@ impl GifViewer {
 }
 
 impl KeyExt for GifViewer {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl LayoutExt for GifViewer {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
@@ -243,13 +233,13 @@ impl ContainerSizeExt for GifViewer {}
 impl ContainerPositionExt for GifViewer {}
 
 impl ImageExt for GifViewer {
-    fn get_image_data(&mut self) -> &mut ImageData {
+    fn image_data_mut(&mut self) -> &mut ImageData {
         &mut self.image_data
     }
 }
 
 impl AccessibilityExt for GifViewer {
-    fn get_accessibility_data(&mut self) -> &mut AccessibilityData {
+    fn accessibility_data_mut(&mut self) -> &mut AccessibilityData {
         &mut self.accessibility
     }
 }
@@ -486,7 +476,7 @@ fn gif(frames: Rc<CachedGifFrames>, frame_idx: usize) -> Gif {
 }
 
 impl LayoutExt for Gif {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.element.layout
     }
 }
@@ -494,25 +484,25 @@ impl LayoutExt for Gif {
 impl ContainerExt for Gif {}
 
 impl ImageExt for Gif {
-    fn get_image_data(&mut self) -> &mut ImageData {
+    fn image_data_mut(&mut self) -> &mut ImageData {
         &mut self.element.image_data
     }
 }
 
 impl KeyExt for Gif {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl EventHandlersExt for Gif {
-    fn get_event_handlers(&mut self) -> &mut EventHandlers {
+    fn event_handlers_mut(&mut self) -> &mut EventHandlers {
         &mut self.element.event_handlers
     }
 }
 
 impl AccessibilityExt for Gif {
-    fn get_accessibility_data(&mut self) -> &mut AccessibilityData {
+    fn accessibility_data_mut(&mut self) -> &mut AccessibilityData {
         &mut self.element.accessibility
     }
 }

@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 use itertools::Itertools;
 
 use crate::{
@@ -16,7 +18,7 @@ use crate::{
 
 pub trait EventsMeasurer
 where
-    Self: std::marker::Sized,
+    Self: core::marker::Sized,
 {
     type Name: NameOfEvent;
     type Key: NodeKey;
@@ -106,7 +108,7 @@ impl<T: EventsMeasurer + private::Sealed> EventsMeasurerRunner for T {
 
 pub trait EventsMeasurerRunner
 where
-    Self: std::marker::Sized,
+    Self: core::marker::Sized,
 {
     type Name: NameOfEvent;
     type Key: NodeKey;

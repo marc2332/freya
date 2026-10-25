@@ -178,30 +178,28 @@ impl CodeEditorData {
                     processed = true;
                 }
 
-                self.dragging.clicked = true;
-
                 let char_position = paragraph.get_glyph_position_at_coordinate(
                     location.mul(*scale_factor).to_i32().to_tuple(),
                 );
                 let press_selection =
                     self.measure_selection(char_position.position as usize, editor_line);
 
-                let new_selection = match EventsCombos::<()>::pressed(location) {
+                let press_type = EventsCombos::<()>::pressed(location);
+                let new_selection = match press_type {
                     PressEventType::Quadruple => {
                         TextSelection::new_range((0, self.rope.len_utf16_cu()))
                     }
                     PressEventType::Triple => {
-                        let line = self.char_to_line(press_selection.pos());
-                        let line_char = self.line_to_char(line);
-                        let line_len = self.line(line).unwrap().utf16_len();
-                        TextSelection::new_range((line_char, line_char + line_len))
+                        TextSelection::new_range(self.find_line_boundaries(press_selection.pos()))
                     }
                     PressEventType::Double => {
-                        let range = self.find_word_boundaries(press_selection.pos());
-                        TextSelection::new_range(range)
+                        TextSelection::new_range(self.find_word_boundaries(press_selection.pos()))
                     }
                     PressEventType::Single => press_selection,
                 };
+
+                self.dragging
+                    .start_selection(press_type, new_selection.clone());
 
                 if *self.selection() != new_selection {
                     *self.selection_mut() = new_selection;
@@ -214,6 +212,8 @@ impl CodeEditorData {
                 holder,
             } => {
                 if self.dragging.clicked {
+                    EventsCombos::<()>::moved(location);
+
                     let paragraph = holder.0.borrow();
                     let ParagraphHolderInner {
                         paragraph,
@@ -235,7 +235,7 @@ impl CodeEditorData {
 
                     let current_selection = self.selection().clone();
 
-                    let new_selection = self.measure_selection(to, editor_line);
+                    let new_selection = self.dragging.measure_selection(self, to, editor_line);
 
                     // Update the cursor if it has changed
                     if current_selection != new_selection {
@@ -246,6 +246,7 @@ impl CodeEditorData {
             }
             EditableEvent::Release => {
                 self.dragging.clicked = false;
+                EventsCombos::<()>::released();
             }
             EditableEvent::KeyDown {
                 key,

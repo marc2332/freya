@@ -25,7 +25,7 @@ pub enum EventName {
     TouchEnd,
 
     GlobalPointerMove,
-    GlobalPointerPress,
+    GlobalPointerUp,
     GlobalPointerDown,
 
     GlobalKeyDown,
@@ -35,7 +35,7 @@ pub enum EventName {
     GlobalFileHoverCancelled,
 
     CaptureGlobalPointerMove,
-    CaptureGlobalPointerPress,
+    CaptureGlobalPointerUp,
 
     Wheel,
 
@@ -50,6 +50,8 @@ pub enum EventName {
     FileDrop,
 
     ImePreedit,
+
+    AccessibilityAction,
 }
 
 use std::collections::HashSet;
@@ -93,7 +95,7 @@ impl EventName {
     pub fn is_capture(&self) -> bool {
         matches!(
             &self,
-            Self::CaptureGlobalPointerMove | Self::CaptureGlobalPointerPress
+            Self::CaptureGlobalPointerMove | Self::CaptureGlobalPointerUp
         )
     }
 
@@ -102,10 +104,10 @@ impl EventName {
         matches!(
             self,
             Self::GlobalPointerMove
-                | Self::GlobalPointerPress
+                | Self::GlobalPointerUp
                 | Self::GlobalPointerDown
                 | Self::CaptureGlobalPointerMove
-                | Self::CaptureGlobalPointerPress
+                | Self::CaptureGlobalPointerUp
         )
     }
 
@@ -138,7 +140,7 @@ impl ragnarok::NameOfEvent for EventName {
     fn get_global_events(&self) -> HashSet<Self> {
         match self {
             Self::MouseUp | Self::TouchEnd => {
-                HashSet::from([Self::GlobalPointerPress, Self::CaptureGlobalPointerPress])
+                HashSet::from([Self::GlobalPointerUp, Self::CaptureGlobalPointerUp])
             }
             Self::MouseDown | Self::TouchStart => HashSet::from([Self::GlobalPointerDown]),
             Self::MouseMove | Self::TouchMove => {
@@ -193,9 +195,9 @@ impl ragnarok::NameOfEvent for EventName {
                 events.insert(Self::GlobalKeyUp);
             }
             Self::MouseUp | Self::TouchEnd => {
-                events.extend([Self::PointerPress, Self::GlobalPointerPress])
+                events.extend([Self::PointerPress, Self::GlobalPointerUp])
             }
-            Self::PointerPress => events.extend([Self::MouseUp, Self::GlobalPointerPress]),
+            Self::PointerPress => events.extend([Self::MouseUp, Self::GlobalPointerUp]),
             Self::MouseDown | Self::TouchStart => {
                 events.extend([Self::PointerDown, Self::GlobalPointerDown])
             }
@@ -210,12 +212,12 @@ impl ragnarok::NameOfEvent for EventName {
                     Self::GlobalPointerMove,
                 ]);
             }
-            Self::CaptureGlobalPointerPress => {
+            Self::CaptureGlobalPointerUp => {
                 events.extend([
                     Self::MouseUp,
                     Self::TouchEnd,
                     Self::PointerPress,
-                    Self::GlobalPointerPress,
+                    Self::GlobalPointerUp,
                 ]);
             }
 
@@ -230,7 +232,7 @@ impl ragnarok::NameOfEvent for EventName {
             self,
             Self::GlobalKeyDown
                 | Self::GlobalKeyUp
-                | Self::GlobalPointerPress
+                | Self::GlobalPointerUp
                 | Self::GlobalPointerDown
                 | Self::GlobalPointerMove
                 | Self::GlobalFileHover

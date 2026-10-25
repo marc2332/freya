@@ -308,19 +308,9 @@ impl DecodeMode {
 ///
 ///     ImageViewer::new(source)
 /// }
-/// # use freya::prelude::*;
-/// # use freya_testing::prelude::*;
-/// # use std::path::PathBuf;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(ImageViewer::new(("rust-logo", include_bytes!("../../../examples/rust_logo.png"))))
-/// # }, "./images/gallery_image_viewer.png").with_hook(|t| { t.poll(std::time::Duration::from_millis(1), std::time::Duration::from_millis(300)); t.sync_and_update(); }).with_scale_factor(1.).render();
 /// ```
 ///
-/// # Preview
-/// ![ImageViewer Preview][image_viewer]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("image_viewer", "images/gallery_image_viewer.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(PartialEq)]
 pub struct ImageViewer {
     source: ImageSource,
@@ -330,7 +320,7 @@ pub struct ImageViewer {
     image_data: ImageData,
     accessibility: AccessibilityData,
     effect: EffectData,
-    corner_radius: Option<CornerRadius>,
+    style: StyleState,
     decode_mode: DecodeMode,
 
     children: Vec<Element>,
@@ -349,7 +339,7 @@ impl ImageViewer {
             image_data: ImageData::default(),
             accessibility: AccessibilityData::default(),
             effect: EffectData::default(),
-            corner_radius: None,
+            style: StyleState::default(),
             decode_mode: DecodeMode::default(),
             children: Vec::new(),
             loading_placeholder: None,
@@ -360,13 +350,13 @@ impl ImageViewer {
 }
 
 impl KeyExt for ImageViewer {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl LayoutExt for ImageViewer {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
@@ -376,35 +366,38 @@ impl ContainerWithContentExt for ImageViewer {}
 impl ContainerPositionExt for ImageViewer {}
 
 impl ImageExt for ImageViewer {
-    fn get_image_data(&mut self) -> &mut ImageData {
+    fn image_data_mut(&mut self) -> &mut ImageData {
         &mut self.image_data
     }
 }
 
 impl AccessibilityExt for ImageViewer {
-    fn get_accessibility_data(&mut self) -> &mut AccessibilityData {
+    fn accessibility_data_mut(&mut self) -> &mut AccessibilityData {
         &mut self.accessibility
     }
 }
 
 impl ChildrenExt for ImageViewer {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
 impl EffectExt for ImageViewer {
-    fn get_effect(&mut self) -> &mut EffectData {
+    fn effect_mut(&mut self) -> &mut EffectData {
         &mut self.effect
     }
 }
 
-impl ImageViewer {
-    pub fn corner_radius(mut self, corner_radius: impl Into<CornerRadius>) -> Self {
-        self.corner_radius = Some(corner_radius.into());
-        self
-    }
+impl DecorationExt for ImageViewer {}
 
+impl StyleExt for ImageViewer {
+    fn style_mut(&mut self) -> &mut StyleState {
+        &mut self.style
+    }
+}
+
+impl ImageViewer {
     /// Custom element rendered while loading.
     pub fn loading_placeholder(mut self, placeholder: impl Into<Element>) -> Self {
         self.loading_placeholder = Some(placeholder.into());
@@ -434,9 +427,10 @@ impl ImageViewer {
 
 impl Component for ImageViewer {
     fn render(&self) -> impl IntoElement {
-        let target = self
-            .decode_mode
-            .resolve(&self.layout, *Platform::get().scale_factor.read());
+        let target = self.decode_mode.resolve(
+            &self.layout,
+            *Platform::get().current_window().scale_factor.read(),
+        );
         let sampling_mode = self.image_data.sampling_mode.clone();
         let asset_config =
             AssetConfiguration::new((&self.source, target, &sampling_mode), self.asset_age);
@@ -461,7 +455,7 @@ impl Component for ImageViewer {
                     let asset_config = asset_config.clone();
                     let target = *target;
                     let sampling_mode = sampling_mode.clone();
-                    spawn_forever(async move {
+                    spawn_in_window(async move {
                         match source.load(target, sampling_mode).await {
                             Ok((image, bytes)) => {
                                 asset_cacher.update_asset(
@@ -493,9 +487,7 @@ impl Component for ImageViewer {
                     .image_data(self.image_data.clone())
                     .effect(self.effect.clone())
                     .children(self.children.clone())
-                    .map(self.corner_radius, |img, corner_radius| {
-                        img.corner_radius(corner_radius)
-                    })
+                    .style(self.style.clone())
                     .into_element()
             }
             Asset::Pending | Asset::Loading => rect()

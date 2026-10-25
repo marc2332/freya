@@ -9,22 +9,13 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    let mut toggled = use_state(|| false);
+    let toggled = use_state(|| false);
     rect()
         .center()
         .expanded()
         .spacing(6.)
-        .child(Switch::new().toggled(toggled).on_toggle(move |_| {
-            toggled.toggle();
-        }))
-        .child(Switch::new().toggled(toggled).enabled(false))
-        .child(
-            Switch::new()
-                .expanded()
-                .toggled(toggled)
-                .on_toggle(move |_| {
-                    toggled.toggle();
-                }),
-        )
-        .child(Switch::new().expanded().toggled(toggled).enabled(false))
+        .child(Switch::new(toggled))
+        .child(Switch::new(toggled).enabled(false))
+        .child(Switch::new(toggled).expanded())
+        .child(Switch::new(toggled).expanded().enabled(false))
 }

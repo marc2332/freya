@@ -1,5 +1,6 @@
 use freya_core::prelude::*;
 use torin::{
+    content::Content,
     gaps::Gaps,
     size::Size,
 };
@@ -144,13 +145,13 @@ impl ButtonSegment {
 }
 
 impl ChildrenExt for ButtonSegment {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
 impl KeyExt for ButtonSegment {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -214,6 +215,7 @@ impl Component for ButtonSegment {
 
         rect()
             .a11y_id(a11y_id)
+            .a11y_enabled(self.enabled)
             .a11y_focusable(self.enabled)
             .a11y_role(AccessibilityRole::Button)
             .maybe(self.enabled, |rect| rect.on_press(on_press))
@@ -270,17 +272,9 @@ impl Component for ButtonSegment {
 ///             .child(format!("Option {i}"))
 ///     }))
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_segmented_button.png").render();
 /// ```
 ///
-/// # Preview
-/// ![SegmentedButton Preview][segmented_button]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("segmented_button", "images/gallery_segmented_button.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct SegmentedButton {
     pub(crate) theme: Option<SegmentedButtonThemePartial>,
@@ -310,13 +304,13 @@ impl SegmentedButton {
 }
 
 impl ChildrenExt for SegmentedButton {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
 impl KeyExt for SegmentedButton {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -345,6 +339,7 @@ impl Component for SegmentedButton {
                     .alignment(BorderAlignment::Outer),
             )
             .corner_radius(corner_radius)
+            .content(Content::Fit)
             .horizontal()
             .children(self.children.clone())
     }

@@ -51,7 +51,8 @@ fn app() -> impl IntoElement {
     let mut click_origin = use_state(|| None::<(usize, usize)>);
 
     use_side_effect(move || {
-        let focused = *Platform::get().is_app_focused.read() && focus().is_focused();
+        let focused =
+            *Platform::get().current_window().is_app_focused.read() && focus().is_focused();
         if let Some(handle) = handle.read().clone() {
             handle.focus_changed(focused);
         }
@@ -122,7 +123,7 @@ fn app() -> impl IntoElement {
                                 }
                             }
                         })
-                        .on_global_pointer_press({
+                        .on_global_pointer_up({
                             let handle = handle.clone();
                             move |_: Event<PointerEventData>| {
                                 handle.release();

@@ -5,6 +5,43 @@ use freya_core::prelude::Label;
 use freya_testing::prelude::*;
 
 #[test]
+fn virtual_scroll_view_auto_hide_scrollbars() {
+    for auto_hide_scrollbars in [true, false] {
+        let mut test = launch_test(move || {
+            VirtualScrollView::new(|item, _| rect().key(item.index).height(Size::px(50.)).into())
+                .length(30usize)
+                .item_size(50.)
+                .auto_hide_scrollbars(auto_hide_scrollbars)
+                .scrollbar(move |context: ScrollBarContext| {
+                    assert_eq!(context.auto_hide_scrollbars, auto_hide_scrollbars);
+                    ScrollBar::new(context).into()
+                })
+        });
+        test.sync_and_update();
+        let scrollbars = test.find_many(|node, element| {
+            Rect::try_downcast(element)
+                .filter(|rect| rect.relative_layer == 999.into())
+                .map(|_| node)
+        });
+        assert_eq!(scrollbars.len(), 1);
+        assert!(scrollbars[0].layout().area.width() > 0.);
+        assert!(scrollbars[0].layout().area.height() > 0.);
+
+        test.poll(Duration::from_millis(20), Duration::from_millis(1000));
+
+        assert_eq!(
+            scrollbars[0].layout().area.width() > 0.,
+            !auto_hide_scrollbars
+        );
+        assert_eq!(
+            scrollbars[0].layout().area.height() > 0.,
+            !auto_hide_scrollbars
+        );
+        assert_eq!(scrollbars[0].children().is_empty(), auto_hide_scrollbars);
+    }
+}
+
+#[test]
 pub fn virtual_scroll_view_wheel() {
     fn virtual_scroll_view_wheel_app() -> impl IntoElement {
         VirtualScrollView::new(|item, _| {
@@ -85,6 +122,7 @@ pub fn virtual_scroll_view_smooth_scrolling() {
         scroll: (0., -300.).into(),
         cursor: (5., 5.).into(),
         source: WheelSource::Line,
+        phase: TouchPhase::Moved,
     });
     test.sync_and_update();
 
@@ -167,8 +205,8 @@ pub fn virtual_scroll_view_scrollbar() {
     // Scroll up with arrows
     for _ in 0..11 {
         test.press_key(Key::Named(NamedKey::ArrowUp));
+        test.poll_n(Duration::from_millis(1), 5);
     }
-    test.poll(Duration::from_millis(1), Duration::from_millis(20));
 
     let content = scrollview.children()[0].children()[0].children();
     assert_eq!(content.len(), 11);
@@ -183,7 +221,7 @@ pub fn virtual_scroll_view_scrollbar() {
 
     // Scroll to the bottom with arrows
     test.press_key(Key::Named(NamedKey::End));
-    test.poll(Duration::from_millis(1), Duration::from_millis(20));
+    test.poll_n(Duration::from_millis(1), 5);
 
     let content = scrollview.children()[0].children()[0].children();
     assert_eq!(content.len(), 10);
@@ -680,7 +718,7 @@ pub fn virtual_scroll_view_keyboard_navigation_horizontal() {
     for _ in 0..5 {
         test.press_key(Key::Named(NamedKey::ArrowRight));
     }
-    test.poll(Duration::from_millis(1), Duration::from_millis(20));
+    test.poll_n(Duration::from_millis(1), 5);
 
     let content = scrollview.children()[0].children()[0].children();
 
@@ -694,7 +732,7 @@ pub fn virtual_scroll_view_keyboard_navigation_horizontal() {
     for _ in 0..3 {
         test.press_key(Key::Named(NamedKey::ArrowLeft));
     }
-    test.poll(Duration::from_millis(1), Duration::from_millis(20));
+    test.poll_n(Duration::from_millis(1), 5);
 
     let content = scrollview.children()[0].children()[0].children();
 
@@ -705,7 +743,7 @@ pub fn virtual_scroll_view_keyboard_navigation_horizontal() {
 
     // Press End to jump to the right
     test.press_key(Key::Named(NamedKey::End));
-    test.poll(Duration::from_millis(1), Duration::from_millis(20));
+    test.poll_n(Duration::from_millis(1), 5);
 
     let content = scrollview.children()[0].children()[0].children();
 
@@ -718,7 +756,7 @@ pub fn virtual_scroll_view_keyboard_navigation_horizontal() {
 
     // Press Home to jump to the left
     test.press_key(Key::Named(NamedKey::Home));
-    test.poll(Duration::from_millis(1), Duration::from_millis(20));
+    test.poll_n(Duration::from_millis(1), 5);
 
     let content = scrollview.children()[0].children()[0].children();
 

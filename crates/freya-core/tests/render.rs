@@ -85,6 +85,69 @@ pub fn gradient_text_is_not_clipped() {
 }
 
 #[test]
+pub fn gradient_text_fits_aligned_text() {
+    for alignment in [TextAlign::Left, TextAlign::Center, TextAlign::Right] {
+        let mut test = launch_test(move || {
+            rect()
+                .width(Size::px(400.))
+                .height(Size::px(100.))
+                .background(Color::WHITE)
+                .child(
+                    label()
+                        .width(Size::px(300.))
+                        .font_size(28.)
+                        .text_align(alignment)
+                        .color(
+                            LinearGradient::new()
+                                .angle(90.)
+                                .stop((Color::RED, 0.))
+                                .stop((Color::BLACK, 100.)),
+                        )
+                        .text("Gradient text"),
+                )
+        });
+        test.sync_and_update();
+
+        let image = SkImage::from_encoded(test.render())
+            .and_then(|image| image.make_raster_image(None, None))
+            .unwrap();
+        let pixels = image.peek_pixels().unwrap();
+        let text_pixels: Vec<_> = (0..pixels.width())
+            .flat_map(|x| (0..pixels.height()).map(move |y| (x, y)))
+            .filter_map(|(x, y)| {
+                let color = pixels.get_color((x, y));
+                (color.g() < 100).then_some((x, color.r()))
+            })
+            .collect();
+
+        let left = text_pixels.iter().map(|(x, _)| *x).min().unwrap();
+        let right = text_pixels.iter().map(|(x, _)| *x).max().unwrap();
+
+        let start_red = text_pixels
+            .iter()
+            .filter(|(x, _)| *x < left + 10)
+            .map(|(_, red)| *red)
+            .min()
+            .unwrap();
+        let end_red = text_pixels
+            .iter()
+            .filter(|(x, _)| *x > right - 10)
+            .map(|(_, red)| *red)
+            .max()
+            .unwrap();
+
+        assert!(
+            start_red < 50,
+            "gradient starts too late for {alignment:?}: {start_red} ({left}..{right})"
+        );
+        assert!(
+            end_red > 180,
+            "gradient ends too early for {alignment:?}: {end_red} ({left}..{right})"
+        );
+    }
+}
+
+#[test]
 pub fn gradient_text_follows_the_paragraph() {
     let offset = 50;
     let fill: Fill = LinearGradient::new()

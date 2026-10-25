@@ -18,10 +18,10 @@ use torin::{
 
 use crate::scrollviews::{
     ScrollBar,
-    ScrollBarThemePartial,
+    ScrollBarContext,
+    ScrollBarThumbEvents,
     ScrollConfig,
     ScrollController,
-    ScrollThumb,
     shared::{
         Axis,
         get_container_sizes,
@@ -186,21 +186,9 @@ pub struct VirtualItem {
 ///         .item_size(25.),
 ///     )
 /// }
-///
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_virtual_scrollview.png").with_hook(|t| {
-/// #   t.move_cursor((125., 115.));
-/// #   t.sync_and_update();
-/// # });
 /// ```
 ///
-/// # Preview
-/// ![VirtualScrollView Preview][virtual_scrollview]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("virtual_scrollview", "images/gallery_virtual_scrollview.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone)]
 pub struct VirtualScrollView<D, B: Fn(VirtualItem, &D) -> Element> {
     builder: B,
@@ -209,17 +197,18 @@ pub struct VirtualScrollView<D, B: Fn(VirtualItem, &D) -> Element> {
     length: usize,
     layout: LayoutData,
     show_scrollbar: bool,
+    auto_hide_scrollbars: bool,
     scroll_with_arrows: bool,
     scroll_controller: Option<ScrollController>,
     on_sized: Option<EventHandler<Event<SizedEventData>>>,
     invert_scroll_wheel: bool,
     drag_scrolling: bool,
-    scrollbar_theme: Option<ScrollBarThemePartial>,
+    scrollbar: Callback<ScrollBarContext, Element>,
     key: DiffKey,
 }
 
 impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> LayoutExt for VirtualScrollView<D, B> {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
@@ -227,7 +216,7 @@ impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> LayoutExt for VirtualScrol
 impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> ContainerSizeExt for VirtualScrollView<D, B> {}
 
 impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> KeyExt for VirtualScrollView<D, B> {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -239,10 +228,11 @@ impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> PartialEq for VirtualScrol
             && self.length == other.length
             && self.layout == other.layout
             && self.show_scrollbar == other.show_scrollbar
+            && self.auto_hide_scrollbars == other.auto_hide_scrollbars
             && self.scroll_with_arrows == other.scroll_with_arrows
             && self.scroll_controller == other.scroll_controller
             && self.invert_scroll_wheel == other.invert_scroll_wheel
-            && self.scrollbar_theme == other.scrollbar_theme
+            && self.scrollbar == other.scrollbar
     }
 }
 
@@ -261,12 +251,13 @@ impl<B: Fn(VirtualItem, &()) -> Element> VirtualScrollView<(), B> {
                 l
             },
             show_scrollbar: true,
+            auto_hide_scrollbars: true,
             scroll_with_arrows: true,
             scroll_controller: None,
             on_sized: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
-            scrollbar_theme: None,
+            scrollbar: ScrollBar::default_renderer(),
             key: DiffKey::None,
         }
     }
@@ -285,12 +276,13 @@ impl<B: Fn(VirtualItem, &()) -> Element> VirtualScrollView<(), B> {
                 l
             },
             show_scrollbar: true,
+            auto_hide_scrollbars: true,
             scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
             on_sized: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
-            scrollbar_theme: None,
+            scrollbar: ScrollBar::default_renderer(),
             key: DiffKey::None,
         }
     }
@@ -333,12 +325,13 @@ impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
             }
             .into(),
             show_scrollbar: true,
+            auto_hide_scrollbars: true,
             scroll_with_arrows: true,
             scroll_controller: None,
             on_sized: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
-            scrollbar_theme: None,
+            scrollbar: ScrollBar::default_renderer(),
             key: DiffKey::None,
         }
     }
@@ -362,12 +355,13 @@ impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
             }
             .into(),
             show_scrollbar: true,
+            auto_hide_scrollbars: true,
             scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
             on_sized: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
-            scrollbar_theme: None,
+            scrollbar: ScrollBar::default_renderer(),
             key: DiffKey::None,
         }
     }
@@ -375,6 +369,13 @@ impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
     /// Toggles whether the scrollbar is shown when the content overflows.
     pub fn show_scrollbar(mut self, show_scrollbar: bool) -> Self {
         self.show_scrollbar = show_scrollbar;
+        self
+    }
+
+    /// Toggles hiding idle scrollbars, enabled by default.
+    /// When disabled, scrollbars remain visible while the content overflows.
+    pub fn auto_hide_scrollbars(mut self, auto_hide_scrollbars: bool) -> Self {
+        self.auto_hide_scrollbars = auto_hide_scrollbars;
         self
     }
 
@@ -417,9 +418,9 @@ impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
         self
     }
 
-    /// Sets the theme used by the scrollbar.
-    pub fn scrollbar_theme(mut self, scrollbar_theme: ScrollBarThemePartial) -> Self {
-        self.scrollbar_theme = Some(scrollbar_theme);
+    /// Sets the renderer used for each visible scrollbar.
+    pub fn scrollbar(mut self, scrollbar: impl Into<Callback<ScrollBarContext, Element>>) -> Self {
+        self.scrollbar = scrollbar.into();
         self
     }
 
@@ -518,10 +519,10 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
             ),
         );
 
-        let horizontal_scrollbar_is_visible = !timeout.elapsed()
-            && is_scrollbar_visible(self.show_scrollbar, inner_width, size.read().area.width());
-        let vertical_scrollbar_is_visible = !timeout.elapsed()
-            && is_scrollbar_visible(self.show_scrollbar, inner_height, size.read().area.height());
+        let horizontal_scrollbar_is_visible =
+            is_scrollbar_visible(self.show_scrollbar, inner_width, size.read().area.width());
+        let vertical_scrollbar_is_visible =
+            is_scrollbar_visible(self.show_scrollbar, inner_height, size.read().area.height());
 
         let (scrollbar_x, scrollbar_width) =
             get_scrollbar_pos_and_size(inner_width, size.read().area.width(), rendered_position.x);
@@ -537,7 +538,7 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
         let scroll_with_arrows = self.scroll_with_arrows;
         let invert_scroll_wheel = self.invert_scroll_wheel;
 
-        let on_capture_global_pointer_press = move |e: Event<PointerEventData>| {
+        let on_capture_global_pointer_up = move |e: Event<PointerEventData>| {
             if clicking_scrollbar.read().is_some() {
                 e.prevent_default();
                 clicking_scrollbar.set(None);
@@ -569,14 +570,24 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                 (e.delta_x as f32, e.delta_y as f32)
             };
 
-            let animate = e.source == WheelSource::Line;
+            // TODO(marc2332): Enable and test touchpad smooth scrolling in mac and windows
+            let scroll_gesture =
+                TargetPlatform::get() == TargetPlatform::Linux && e.source == WheelSource::Pixel;
+            if scroll_gesture
+                && scroll_controller.scroll_gesture_phase(e.phase, (x_movement, y_movement).into())
+            {
+                return;
+            }
+
+            let animate = e.source == WheelSource::Line || scroll_gesture;
             if animate {
                 scroll_controller.animate_from(rendered_position);
             } else {
                 scroll_controller.stop();
             }
             let (base_x, base_y) = if animate {
-                (corrected_scrolled_x, corrected_scrolled_y)
+                let position = scroll_controller.position();
+                (position.x, position.y)
             } else {
                 (rendered_position.x, rendered_position.y)
             };
@@ -781,7 +792,7 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
             })
             .scrollable(true)
             .on_wheel(on_wheel)
-            .on_capture_global_pointer_press(on_capture_global_pointer_press)
+            .on_capture_global_pointer_up(on_capture_global_pointer_up)
             .on_mouse_move(on_mouse_move)
             .on_capture_global_pointer_move(on_capture_global_pointer_move)
             .on_key_down(on_key_down)
@@ -835,35 +846,37 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                             .children(children),
                     )
                     .maybe_child(vertical_scrollbar_is_visible.then_some({
-                        rect().child(ScrollBar {
-                            theme: self.scrollbar_theme.clone(),
-                            clicking_scrollbar,
+                        rect().child(self.scrollbar.call(ScrollBarContext {
                             axis: Axis::Y,
-                            offset: scrollbar_y,
-                            size: Size::px(size.read().area.height()),
-                            thumb: ScrollThumb {
-                                theme: self.scrollbar_theme.clone(),
-                                clicking_scrollbar,
-                                axis: Axis::Y,
-                                size: scrollbar_height,
-                            },
-                        })
+                            scroll_position: rendered_position,
+                            viewport_size: size.read().area.size,
+                            content_size: Size2D::new(inner_width, inner_height),
+                            scroll_controller,
+                            timeout,
+                            auto_hide_scrollbars: self.auto_hide_scrollbars,
+                            clicking_scrollbar,
+                            thumb_events: ScrollBarThumbEvents::new(Axis::Y, clicking_scrollbar),
+                            thumb_offset: scrollbar_y,
+                            track_size: Size::px(size.read().area.height()),
+                            thumb_length: scrollbar_height,
+                        }))
                     })),
             )
             .maybe_child(horizontal_scrollbar_is_visible.then_some({
-                rect().child(ScrollBar {
-                    theme: self.scrollbar_theme.clone(),
-                    clicking_scrollbar,
+                rect().child(self.scrollbar.call(ScrollBarContext {
                     axis: Axis::X,
-                    offset: scrollbar_x,
-                    size: Size::px(size.read().area.width()),
-                    thumb: ScrollThumb {
-                        theme: self.scrollbar_theme.clone(),
-                        clicking_scrollbar,
-                        axis: Axis::X,
-                        size: scrollbar_width,
-                    },
-                })
+                    scroll_position: rendered_position,
+                    viewport_size: size.read().area.size,
+                    content_size: Size2D::new(inner_width, inner_height),
+                    scroll_controller,
+                    timeout,
+                    auto_hide_scrollbars: self.auto_hide_scrollbars,
+                    clicking_scrollbar,
+                    thumb_events: ScrollBarThumbEvents::new(Axis::X, clicking_scrollbar),
+                    thumb_offset: scrollbar_x,
+                    track_size: Size::px(size.read().area.width()),
+                    thumb_length: scrollbar_width,
+                }))
             }))
     }
 

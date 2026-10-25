@@ -1,5 +1,181 @@
+use std::time::Duration;
+
 use freya::prelude::*;
 use freya_testing::prelude::*;
+
+#[test]
+fn input_setter_reducer_test() {
+    use freya::radio::*;
+
+    #[derive(Default)]
+    struct AppState {
+        equation: String,
+        result: usize,
+        edits: usize,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+    enum AppChannel {
+        Equation,
+    }
+
+    impl RadioChannel<AppState> for AppChannel {}
+
+    enum AppAction {
+        SetEquation(String),
+    }
+
+    impl DataReducer for AppState {
+        type Channel = AppChannel;
+        type Action = AppAction;
+
+        fn reduce(&mut self, action: AppAction) -> ChannelSelection<AppChannel> {
+            match action {
+                AppAction::SetEquation(equation) => {
+                    self.result = equation.len();
+                    self.equation = equation;
+                    self.edits += 1;
+                }
+            }
+
+            ChannelSelection::Current
+        }
+    }
+
+    fn app() -> impl IntoElement {
+        use_init_radio_station::<AppState, AppChannel>(AppState::default);
+        let mut radio = use_radio(AppChannel::Equation);
+
+        rect()
+            .child(
+                Input::new(WritableSetter::new(
+                    radio.slice_current(|state| &state.equation),
+                    move |equation| {
+                        radio.apply(AppAction::SetEquation(equation));
+                    },
+                ))
+                .height(Size::px(40.)),
+            )
+            .child(
+                rect()
+                    .height(Size::px(40.))
+                    .on_press(move |_| {
+                        radio.apply(AppAction::SetEquation("external".to_string()));
+                    })
+                    .child("Replace"),
+            )
+            .child(format!(
+                "{}:{}:{}",
+                radio.read().equation,
+                radio.read().result,
+                radio.read().edits,
+            ))
+    }
+
+    let mut test = launch_test(app);
+    test.click_cursor((15., 15.));
+    test.write_text("123");
+
+    assert!(
+        test.find(|_, element| {
+            Label::try_downcast(element).filter(|label| label.text.as_ref() == "123:3:1")
+        })
+        .is_some()
+    );
+
+    test.click_cursor((15., 60.));
+
+    assert!(
+        test.find(|_, element| {
+            Paragraph::try_downcast(element)
+                .filter(|paragraph| paragraph.spans.iter().any(|span| span.text == "external"))
+        })
+        .is_some()
+    );
+    assert!(
+        test.find(|_, element| {
+            Label::try_downcast(element).filter(|label| label.text.as_ref() == "external:8:2")
+        })
+        .is_some()
+    );
+}
+
+#[test]
+fn input_setter_transform_and_reject_test() {
+    fn app() -> impl IntoElement {
+        let mut value = use_state(String::new);
+
+        Input::new(WritableSetter::new(value, move |text: String| {
+            if text
+                .chars()
+                .all(|character| character.is_ascii_alphabetic())
+            {
+                value.set(text.to_uppercase());
+            }
+        }))
+    }
+
+    let mut test = launch_test(app);
+    test.click_cursor((15., 15.));
+    test.write_text("a");
+    test.write_text("1");
+
+    assert!(
+        test.find(|_, element| {
+            Paragraph::try_downcast(element)
+                .filter(|paragraph| paragraph.spans.iter().any(|span| span.text == "A"))
+        })
+        .is_some()
+    );
+
+    test.press_key(Key::Named(NamedKey::End));
+    test.write_text("b");
+
+    assert!(
+        test.find(|_, element| {
+            Paragraph::try_downcast(element)
+                .filter(|paragraph| paragraph.spans.iter().any(|span| span.text == "AB"))
+        })
+        .is_some()
+    );
+}
+
+#[test]
+fn input_mutable_radio_slice_test() {
+    use freya::radio::*;
+
+    #[derive(Default)]
+    struct AppState {
+        text: String,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+    enum AppChannel {
+        Text,
+    }
+
+    impl RadioChannel<AppState> for AppChannel {}
+
+    fn app() -> impl IntoElement {
+        use_init_radio_station::<AppState, AppChannel>(AppState::default);
+        let radio = use_radio(AppChannel::Text);
+
+        rect()
+            .child(Input::new(radio.slice_mut_current(|state| &mut state.text)))
+            .child(format!("text={}", radio.read().text))
+    }
+
+    let mut test = launch_test(app);
+    test.click_cursor((15., 15.));
+    test.write_text("radio");
+
+    assert!(
+        test.find(|_, element| {
+            Label::try_downcast(element).filter(|label| label.text.as_ref() == "text=radio")
+        })
+        .is_some()
+    );
+}
 
 #[test]
 pub fn input_test() {
@@ -179,6 +355,47 @@ pub fn input_multiline_test() {
 }
 
 #[test]
+pub fn input_multiline_fixed_height_follows_cursor_test() {
+    fn multiline_app() -> impl IntoElement {
+        let value = use_state(String::new);
+
+        rect().child(
+            Input::new(value)
+                .multiline(true)
+                .width(Size::px(300.))
+                .height(Size::px(60.)),
+        )
+    }
+
+    let mut test = launch_test(multiline_app);
+    test.click_cursor((15.0, 15.0));
+
+    for line in 1..=6 {
+        test.write_text("A line of text");
+        test.press_key(Key::Named(NamedKey::Enter));
+        test.sync_and_update();
+        test.sync_and_update();
+
+        if line >= 5 {
+            let (paragraph_y, paragraph_height) = test
+                .find(|node, element| {
+                    Paragraph::try_downcast(element)
+                        .map(|_| (node.layout().area.min_y(), node.layout().area.height()))
+                })
+                .expect("input paragraph should be present");
+            assert!(
+                paragraph_y < 0.0,
+                "paragraph should scroll when text overflows"
+            );
+            assert!(
+                paragraph_y + paragraph_height - 8.0 <= 61.0,
+                "cursor line should remain visible, paragraph_y={paragraph_y} paragraph_height={paragraph_height}"
+            );
+        }
+    }
+}
+
+#[test]
 pub fn input_multiline_scrollbar_press_test() {
     fn scrollbar_app() -> impl IntoElement {
         let value = use_state(|| "One\nTwo\nThree\nFour\nFive\nSix\nSeven".to_string());
@@ -302,9 +519,12 @@ pub fn input_shift_wheel_scroll_test() {
         name: WheelEventName::Wheel,
         scroll: (0.0, -50.0).into(),
         cursor: (75.0, 15.0).into(),
-        source: WheelSource::Pixel,
+        source: WheelSource::Line,
+        phase: TouchPhase::Moved,
     });
     test.sync_and_update();
+
+    test.poll(Duration::from_millis(16), Duration::from_millis(500));
 
     let scrolled_x = paragraph_x(&test);
     assert!(scrolled_x < initial_x);
@@ -330,14 +550,14 @@ pub fn input_drag_scrolls_to_cursor_test() {
     };
     let initial_x = paragraph_x(&test);
 
-    // Start dragging inside the input and move past its right edge
     test.press_cursor((100.0, 15.0));
     test.sync_and_update();
-    test.move_cursor((400.0, 15.0));
+    test.move_cursor((170.0, 15.0));
     test.sync_and_update();
 
     let dragged_x = paragraph_x(&test);
     assert!(dragged_x < initial_x);
+    assert!(initial_x - dragged_x < 100.0);
 
     // Dragging back past the left edge scrolls back to the beginning
     test.move_cursor((-500.0, 15.0));

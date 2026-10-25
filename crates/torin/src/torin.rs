@@ -1,12 +1,9 @@
-use std::{
-    collections::HashMap,
-    mem,
-};
+use core::mem;
 
 use itertools::Itertools;
-use rustc_hash::FxHashMap;
 
 use crate::{
+    collections::FxHashMap,
     custom_measurer::LayoutMeasurer,
     geometry::Area,
     measure::{
@@ -43,7 +40,7 @@ pub enum RootNodeCandidate<Key: NodeKey> {
 
 impl<Key: NodeKey> RootNodeCandidate<Key> {
     #[must_use]
-    pub fn take(&mut self) -> Self {
+    pub const fn take(&mut self) -> Self {
         mem::replace(self, Self::None)
     }
 
@@ -123,7 +120,7 @@ impl<Key: NodeKey> Torin<Key> {
     /// Create a new Layout
     pub fn new() -> Self {
         Self {
-            results: HashMap::default(),
+            results: FxHashMap::default(),
             dirty: FxHashMap::default(),
             root_node_candidate: RootNodeCandidate::None,
         }
@@ -146,7 +143,7 @@ impl<Key: NodeKey> Torin<Key> {
     }
 
     /// Read the HashSet of dirty nodes
-    pub fn get_dirty_nodes(&self) -> &FxHashMap<Key, DirtyReason> {
+    pub const fn get_dirty_nodes(&self) -> &FxHashMap<Key, DirtyReason> {
         &self.dirty
     }
 

@@ -56,17 +56,9 @@ pub enum ChipStatus {
 /// fn app() -> impl IntoElement {
 ///     Chip::new().child("Chip")
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_chip.png").render();
 /// ```
 ///
-/// # Preview
-/// ![Chip Preview][chip]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("chip", "images/gallery_chip.png"),
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct Chip {
     pub(crate) theme: Option<ChipThemePartial>,
@@ -131,13 +123,13 @@ impl Chip {
 }
 
 impl ChildrenExt for Chip {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
 impl KeyExt for Chip {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -223,6 +215,7 @@ impl Component for Chip {
 
         rect()
             .a11y_id(a11y_id)
+            .a11y_enabled(self.enabled)
             .a11y_focusable(self.enabled)
             .a11y_role(AccessibilityRole::Button)
             .maybe(self.enabled, |rect| rect.on_press(on_press))

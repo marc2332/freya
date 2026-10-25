@@ -138,10 +138,6 @@ impl InputValidator {
 ///     let value = use_state(String::new);
 ///     Input::new(value).placeholder("Type here")
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_input.png").render();
 /// ```
 /// ## **Filled**
 ///
@@ -151,10 +147,6 @@ impl InputValidator {
 ///     let value = use_state(String::new);
 ///     Input::new(value).placeholder("Type here").filled()
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_filled_input.png").render();
 /// ```
 /// ## **Flat**
 ///
@@ -164,26 +156,14 @@ impl InputValidator {
 ///     let value = use_state(String::new);
 ///     Input::new(value).placeholder("Type here").flat()
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_flat_input.png").render();
 /// ```
 ///
-/// # Preview
-/// ![Input Preview][input]
-/// ![Filled Input Preview][filled_input]
-/// ![Flat Input Preview][flat_input]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("input", "images/gallery_input.png"),
-    doc = embed_doc_image::embed_image!("filled_input", "images/gallery_filled_input.png"),
-    doc = embed_doc_image::embed_image!("flat_input", "images/gallery_flat_input.png"),
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct Input {
     pub(crate) theme_colors: Option<InputColorsThemePartial>,
     pub(crate) theme_layout: Option<InputLayoutThemePartial>,
-    value: Writable<String>,
+    value: WritableSetter<String>,
     placeholder: Option<Cow<'static, str>>,
     on_validate: Option<EventHandler<InputValidator>>,
     on_submit: Option<EventHandler<String>>,
@@ -204,13 +184,13 @@ pub struct Input {
 }
 
 impl KeyExt for Input {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl Input {
-    pub fn new(value: impl Into<Writable<String>>) -> Self {
+    pub fn new(value: impl Into<WritableSetter<String>>) -> Self {
         Input {
             theme_colors: None,
             theme_layout: None,
@@ -479,8 +459,9 @@ impl Component for Input {
             if visible_cursor_location.x < visible_start_x {
                 scroll_controller.scroll_to_x(-cursor_location.x as i32);
             } else if visible_cursor_location.x > visible_start_x + viewport.width() {
-                scroll_controller
-                    .scroll_to_x(-(area.peek().width() - viewport.width()).max(0.0) as i32);
+                scroll_controller.scroll_to_x(
+                    -(visible_cursor_location.x + padding.right() - viewport.width()) as i32,
+                );
             }
 
             if multiline {
@@ -490,7 +471,7 @@ impl Component for Input {
                 if visible_cursor_location.y < visible_start_y {
                     scroll_controller.scroll_to_y(-cursor_location.y as i32);
                 } else if cursor_bottom > visible_start_y + viewport.height() {
-                    scroll_controller.scroll_to_y(-(cursor_location.y - viewport.height()) as i32);
+                    scroll_controller.scroll_to_y(-(cursor_bottom - viewport.height()) as i32);
                 }
             }
         };
@@ -566,7 +547,7 @@ impl Component for Input {
                     };
 
                     if apply_change {
-                        *value.write() = text;
+                        value.set(text);
                     }
                     if editable.editor().peek().editor_history().version == previous_history_version
                     {
@@ -651,7 +632,7 @@ impl Component for Input {
             }
         };
 
-        let on_global_pointer_press = move |_: Event<PointerEventData>| {
+        let on_global_pointer_up = move |_: Event<PointerEventData>| {
             match *status.read() {
                 InputStatus::Idle if a11y_id.is_focused() => {
                     editable.process_event(EditableEvent::Release);
@@ -750,6 +731,7 @@ impl Component for Input {
 
         rect()
             .a11y_id(a11y_id)
+            .a11y_enabled(self.enabled)
             .a11y_focusable(self.enabled)
             .a11y_auto_focus(self.auto_focus)
             .a11y_alt(a11y_text)
@@ -760,7 +742,7 @@ impl Component for Input {
                     .on_focus_press(on_input_focus_press)
                     .on_ime_preedit(on_ime_preedit)
                     .on_pointer_press(on_pointer_press)
-                    .on_global_pointer_press(on_global_pointer_press)
+                    .on_global_pointer_up(on_global_pointer_up)
                     .on_global_pointer_move(on_global_pointer_move)
             })
             .on_pointer_enter(on_pointer_enter)

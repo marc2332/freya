@@ -297,10 +297,8 @@ impl ElementExt for LabelElement {
         let layout_data = context.layout_node.data.as_ref().unwrap();
         let paragraph = layout_data.downcast_ref::<SkParagraph>().unwrap();
 
-        paragraph.paint_at(
-            context.canvas,
-            context.layout_node.inner_area.origin.cast_unit(),
-        );
+        let origin = context.layout_node.inner_area.origin;
+        paragraph.paint_at(context.canvas, origin.cast_unit());
     }
 }
 
@@ -315,37 +313,37 @@ impl From<Label> for Element {
 }
 
 impl KeyExt for Label {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl EventHandlersExt for Label {
-    fn get_event_handlers(&mut self) -> &mut EventHandlers {
+    fn event_handlers_mut(&mut self) -> &mut EventHandlers {
         &mut self.element.event_handlers
     }
 }
 
 impl AccessibilityExt for Label {
-    fn get_accessibility_data(&mut self) -> &mut AccessibilityData {
+    fn accessibility_data_mut(&mut self) -> &mut AccessibilityData {
         &mut self.element.accessibility
     }
 }
 
 impl TextStyleExt for Label {
-    fn get_text_style_data(&mut self) -> &mut TextStyleData {
+    fn text_style_data_mut(&mut self) -> &mut TextStyleData {
         &mut self.element.text_style_data
     }
 }
 
 impl EffectExt for Label {
-    fn get_effect(&mut self) -> &mut EffectData {
+    fn effect_mut(&mut self) -> &mut EffectData {
         self.element.effect.get_or_insert_with(EffectData::default)
     }
 }
 
 impl LayerExt for Label {
-    fn get_layer(&mut self) -> &mut Layer {
+    fn layer_mut(&mut self) -> &mut Layer {
         &mut self.element.relative_layer
     }
 }
@@ -386,7 +384,7 @@ impl Label {
 }
 
 impl LayoutExt for Label {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.element.layout
     }
 }

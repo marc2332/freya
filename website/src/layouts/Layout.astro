@@ -1,4 +1,5 @@
 ---
+import Analytics from "@vercel/analytics/astro";
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
 
@@ -9,6 +10,8 @@ export interface Props {
   url?: string;
   type?: string;
   wide?: boolean;
+  stickyNavbar?: boolean;
+  noindex?: boolean;
 }
 
 const {
@@ -18,9 +21,15 @@ const {
   url,
   type = "website",
   wide = false,
+  stickyNavbar = true,
+  noindex = false,
 } = Astro.props;
 
-const canonicalUrl = url ? new URL(url, Astro.site).href : undefined;
+const canonical = new URL(url ?? Astro.url.pathname, Astro.site);
+canonical.pathname = `${canonical.pathname.replace(/\/+$/, "")}/`;
+canonical.search = "";
+canonical.hash = "";
+const canonicalUrl = canonical.href;
 const imageUrl = new URL(image, Astro.site).href;
 ---
 
@@ -29,13 +38,14 @@ const imageUrl = new URL(image, Astro.site).href;
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+		<link rel="icon" type="image/x-icon" href="/favicon.ico" />
 		<link rel="alternate" type="application/rss+xml" title="Freya Blog" href="/rss.xml" />
 		<meta name="generator" content={Astro.generator} />
 		<meta name="description" content={description}>
-		{canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+		{!noindex && <link rel="canonical" href={canonicalUrl} />}
+		{noindex && <meta name="robots" content="noindex, follow" />}
 		<meta property="og:image" content={imageUrl}/>
-		<meta property="og:url" content={canonicalUrl ?? Astro.site}/>
+		<meta property="og:url" content={canonicalUrl}/>
 		<meta property="og:type" content={type}/>
 		<meta property="og:title" content={title}/>
 		<meta property="og:description" content={description}/>
@@ -44,10 +54,11 @@ const imageUrl = new URL(image, Astro.site).href;
 		<meta name="twitter:description" content={description}/>
 		<meta name="twitter:image" content={imageUrl}/>
 		<title>{title}</title>
+		<Analytics />
 	</head>
 	<body>
-		<main class:list={["mx-auto text-white", wide ? "w-full max-w-[1620px]" : "lg:w-content"]}>
-			<Navbar wide={wide} />
+		<main class:list={["mx-auto w-full text-white", wide ? "max-w-[1620px]" : "max-w-[126ch]"]}>
+			<Navbar sticky={stickyNavbar} />
 			<div class="pt-8 px-4 ">
 				<slot />
 			</div>
@@ -58,29 +69,26 @@ const imageUrl = new URL(image, Astro.site).href;
 <style is:global>
 	html {
 		font-family: "Inter", system-ui, sans-serif;
-		background-color: #18181b;
+		min-height: 100%;
+		background:
+			radial-gradient(ellipse at 15% 72%, rgba(76, 67, 35, 0.35), transparent 42%),
+			radial-gradient(ellipse at 50% 88%, rgba(21, 67, 72, 0.35), transparent 45%),
+			radial-gradient(ellipse at 90% 48%, rgba(66, 35, 65, 0.35), transparent 50%),
+			#18181b;
+		background-attachment: fixed;
 	}
 
 	body {
 		margin: 0;
 		padding: 0;
+		min-height: 100vh;
+		background: transparent;
 	}
 
 	* {
 		scroll-behavior: smooth;
 	}
 
-	*::-webkit-scrollbar {
-		width: 10px;
-	}
-
-	*::-webkit-scrollbar-track {
-		background-color: rgb(59, 59, 59);
-	}
-
-	*::-webkit-scrollbar-thumb {
-		background-color: rgba(0, 0, 0, 0.4);
-	}
 	pre {
 		margin: 0;
 	}

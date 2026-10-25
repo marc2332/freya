@@ -56,19 +56,19 @@ pub struct DragZone<T: Clone + 'static + PartialEq> {
 }
 
 impl<T: Clone + PartialEq + 'static> ChildrenExt for DragZone<T> {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
 impl<T: Clone + PartialEq + 'static> KeyExt for DragZone<T> {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl<T: Clone + PartialEq + 'static> LayoutExt for DragZone<T> {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
@@ -159,7 +159,7 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
             });
         };
 
-        let on_global_pointer_press = move |_: Event<PointerEventData>| {
+        let on_global_pointer_up = move |_: Event<PointerEventData>| {
             if !matches!(phase(), DragPhase::Idle) {
                 phase.set(DragPhase::Idle);
                 *drags.write() = None;
@@ -173,7 +173,7 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
 
         rect()
             .layout(self.layout.clone())
-            .on_global_pointer_press(on_global_pointer_press)
+            .on_global_pointer_up(on_global_pointer_up)
             .on_global_pointer_move(on_global_pointer_move)
             .maybe(self.enabled, |el| el.on_pointer_down(on_pointer_down))
             .maybe_child((dragging.zip(self.drag_element.clone())).map(
@@ -227,19 +227,19 @@ pub struct DropZone<T: 'static + PartialEq + Clone> {
 }
 
 impl<T: Clone + PartialEq + 'static> ChildrenExt for DropZone<T> {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
 impl<T: Clone + PartialEq + 'static> KeyExt for DropZone<T> {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl<T: Clone + PartialEq + 'static> LayoutExt for DropZone<T> {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }

@@ -44,23 +44,9 @@ define_theme! {
 ///                .child(LOREM_IPSUM)
 ///        }))
 /// }
-///
-/// # use freya_testing::prelude::*;
-/// # use std::time::Duration;
-/// # launch_doc(|| {
-/// #   rect().child(app())
-/// # }, "./images/gallery_accordion.png").with_hook(|t| {
-/// #   t.click_cursor((125., 115.));
-/// #   t.poll(Duration::from_millis(1), Duration::from_millis(300));
-/// #   t.sync_and_update();
-/// # });
 /// ```
 ///
-/// # Preview
-/// ![Accordion Preview][accordion]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("accordion", "images/gallery_accordion.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq, Default)]
 pub struct Accordion {
     pub(crate) theme: Option<AccordionThemePartial>,
@@ -71,7 +57,7 @@ pub struct Accordion {
 }
 
 impl KeyExt for Accordion {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -94,7 +80,7 @@ impl Accordion {
 }
 
 impl ChildrenExt for Accordion {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }

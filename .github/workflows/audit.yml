@@ -6,13 +6,22 @@ on:
     paths:
       - '**/Cargo.toml'
       - '**/Cargo.lock'
+      - 'deny.toml'
+      - 'justfile'
+      - '.github/workflows/audit.yml'
   pull_request:
     paths:
       - '**/Cargo.toml'
       - '**/Cargo.lock'
+      - 'deny.toml'
+      - 'justfile'
+      - '.github/workflows/audit.yml'
   schedule:
     - cron: '0 6 * * *'
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   audit:
@@ -23,13 +32,53 @@ jobs:
 
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-    - name: Install just
-      uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
-      with:
-        tool: just
     - name: Install cargo-audit
       uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
       with:
         tool: cargo-audit
     - name: Audit
-      run: just sa
+      run: cargo audit
+
+  deny:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: security-deny-${{ github.ref_name }}
+      cancel-in-progress: true
+
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+    - name: Install cargo-deny
+      uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
+      with:
+        tool: cargo-deny
+    - name: Deny
+      run: cargo deny check
+
+  updated-dependencies:
+    name: Updated dependencies (${{ matrix.check }})
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - check: audit
+            tool: cargo-audit
+            command: cargo audit
+          - check: deny
+            tool: cargo-deny
+            command: cargo deny check
+    concurrency:
+      group: security-updated-${{ matrix.check }}-${{ github.ref_name }}
+      cancel-in-progress: true
+
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+    - name: Install ${{ matrix.tool }}
+      uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
+      with:
+        tool: ${{ matrix.tool }}
+    - name: Update dependencies
+      run: cargo update
+    - name: Check updated dependencies
+      run: ${{ matrix.command }}

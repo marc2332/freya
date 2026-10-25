@@ -1,0 +1,32 @@
+# Policy for the painting benchmark.
+
+pr_comment = "on_change"
+
+[functions]
+min_percent_total = 2
+
+[functions.timing]
+judged = false
+min_percent_change = 50
+metrics = ["avg", "total"]
+
+[functions.alloc]
+judged = true
+min_percent_change = 20
+metrics = ["avg", "total"]
+min_calls = 0
+
+[functions.icount]
+judged = true
+fail_check = false
+min_percent_change = 3
+metrics = ["avg", "total"]
+min_calls = 1
+
+[threads]
+names = ["painting_suite"]
+
+[threads.alloc]
+judged = false
+min_percent_change = 20
+metrics = ["total"]

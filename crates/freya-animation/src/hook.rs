@@ -257,7 +257,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
         }
 
         let ticker = RenderingTicker::get();
-        let platform = Platform::get();
+        let platform = Platform::get().current_window();
         let animation_clock = AnimationClock::get();
 
         // Prepare the animations with the the proper direction

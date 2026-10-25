@@ -60,19 +60,9 @@ pub enum SelectStatus {
 ///                 .child(val.to_string())
 ///         }))
 /// }
-///
-/// # use freya_testing::prelude::*;
-/// # use std::time::Duration;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_select.png").with_hook(|t| { t.move_cursor((125., 125.)); t.click_cursor((125., 125.)); t.poll(Duration::from_millis(1), Duration::from_millis(350)); }).with_scale_factor(1.).render();
 /// ```
 ///
-/// # Preview
-/// ![Select Preview][select]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("select", "images/gallery_select.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct Select {
     pub(crate) theme: Option<SelectThemePartial>,
@@ -83,13 +73,13 @@ pub struct Select {
 }
 
 impl ChildrenExt for Select {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
 impl KeyExt for Select {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -142,6 +132,7 @@ impl Component for Select {
         let focused = use_memo(move || {
             a11y_id.is_focused()
                 || Platform::get()
+                    .current_window()
                     .focused_accessibility_node
                     .read()
                     .member_of()
@@ -197,7 +188,7 @@ impl Component for Select {
         };
 
         // Close the select if clicked anywhere
-        let on_global_pointer_press = move |_: Event<PointerEventData>| {
+        let on_global_pointer_up = move |_: Event<PointerEventData>| {
             open.set_if_modified(false);
         };
 
@@ -213,7 +204,7 @@ impl Component for Select {
 
         let offset_y = match (button_area(), list_size()) {
             (Some(button), Some(list)) => {
-                let root_height = Platform::get().root_size.peek().height;
+                let root_height = Platform::get().current_window().root_size.peek().height;
                 let space_below = root_height - button.max_y();
                 let space_above = button.min_y();
                 let flips = list.height > space_below && list.height <= space_above;
@@ -257,7 +248,7 @@ impl Component for Select {
                     .cursor(self.cursor_icon)
                     .on_press(on_press)
                     .on_global_key_down(on_global_key_down)
-                    .on_global_pointer_press(on_global_pointer_press)
+                    .on_global_pointer_up(on_global_pointer_up)
                     .on_sized(move |e: Event<SizedEventData>| {
                         button_area.set_if_modified(Some(e.area));
                     })

@@ -1,3 +1,211 @@
+// RENDERER AND GPU SELECTION
+//
+//                            +---------------------+
+//             Auto [default] | Renderer preference |    explicit
+//             ,--------------|                     |--------------.
+//             v              +---------------------+              v
+//   +-------------------+                               +-------------------+
+//   | FREYA_RENDERER    |                               | Keep config       |
+//   | case-insensitive  |                               | Ignore env        |
+//   +-------------------+                               +-------------------+
+//             |                                                   |
+//             `------------------------.--------------------------'
+//                                      v
+//                           +----------------------+
+//                           | Resolved renderer    |
+//                           +----------------------+
+//                                      |
+//                             Software | other renderers
+//                    ,-----------------+-----------------.
+//                    v                                   v
+//                   [E]                         +----------------+
+//                                               |    Platform    |
+//                                               +----------------+
+//                                                        |
+//                    ,-----------------------.-----------+------.-----------------.-----------------.
+//                    |                       |                  |                 |                 |
+//              Linux Wayland             Linux X11            macOS            Android           Windows
+//                    |                       |                  |                 |                 |
+//                    v                       v                  v                 v                 v
+//                   [A]                     [B]                [C]               [D]               [F]
+//
+// [A] LINUX WAYLAND
+//                                        |
+//                                        v
+//                             +---------------------+
+//                             |  Resolved renderer  |
+//                             +---------------------+
+//                                        |
+// Auto [default] / Vulkan                |                                       OpenGl
+//              ,-------------------------+-------------------------------------------.
+//              |                                                                     |
+//              v                                                                     |
+//   +---------------------+                                                          |
+//   |    GPU preference   |                                                          |
+//   +---------------------+                                                          |
+//              |                                                                     |
+//              |                                                                     |
+//              +-------------------------+-------------------------.                 |
+//              |                         |                         |                 |
+//       Auto [default]              Integrated                 Discrete              |
+//              |                         |                         |                 |
+//              v                         v                         v                 |
+//   +---------------------+   +---------------------+   +---------------------+      |
+//   |        Vulkan       |   |        Vulkan       |   |        Vulkan       |      |
+//   |    compositor GPU   |   |    iGPU preferred   |   |    dGPU preferred   |      |
+//   +---------------------+   +---------------------+   +---------------------+      |
+//              |                         |                         |                 |
+//              | failure                 | failure                 | failure         |
+//              |                         |                         |                 |
+//              |                         |                         |                 |
+//              `-------------------------+-------------------------'                 |
+//                                        |                                           |
+//                                        +-------------------------------------------'
+//                                        v
+//                             +---------------------+
+//                             |        OpenGL       |
+//                             +---------------------+
+//                                        | failure
+//                                        |
+//                                        v
+//                             +---------------------+
+//                             |       Software      |
+//                             +---------------------+
+//
+// [B] LINUX X11
+//                                        |
+//                                        v
+//                             +---------------------+
+//                             |  Resolved renderer  |
+//                             +---------------------+
+//                                        |
+// Auto [default] / Vulkan                |                                       OpenGl
+//              ,-------------------------+-------------------------------------------.
+//              |                                                                     |
+//              v                                                                     |
+//   +---------------------+                                                          |
+//   |    GPU preference   |                                                          |
+//   +---------------------+                                                          |
+//              |                                                                     |
+//              |                                                                     |
+//              +---------------------------------------------------.                 |
+//              |                                                   |                 |
+//       Auto [default]                                         Discrete              |
+//        / Integrated                                              |                 |
+//              v                                                   v                 |
+//   +---------------------+                             +---------------------+      |
+//   |        Vulkan       |                             |        Vulkan       |      |
+//   |    iGPU preferred   |                             |    dGPU preferred   |      |
+//   +---------------------+                             +---------------------+      |
+//              |                                                   |                 |
+//              | failure                                           | failure         |
+//              |                                                   |                 |
+//              |                                                   |                 |
+//              `-------------------------+-------------------------'                 |
+//                                        |                                           |
+//                                        +-------------------------------------------'
+//                                        v
+//                             +---------------------+
+//                             |        OpenGL       |
+//                             +---------------------+
+//                                        | failure
+//                                        |
+//                                        v
+//                             +---------------------+
+//                             |       Software      |
+//                             +---------------------+
+//
+// [F] WINDOWS
+//                                        |
+//                                        v
+//                             +---------------------+
+//                             |  Resolved renderer  |
+//                             +---------------------+
+//                                        |
+//           Vulkan                       |                      Auto [default] / OpenGl
+//              ,-------------------------+-------------------------------------------.
+//              v                                                                     |
+//   +---------------------+                                                          |
+//   |    GPU preference   |                                                          |
+//   +---------------------+                                                          |
+//              |                                                                     |
+//              +---------------------------------------------------.                 |
+//              |                                                   |                 |
+//       Auto [default]                                         Discrete              |
+//        / Integrated                                              |                 |
+//              v                                                   v                 |
+//   +---------------------+                             +---------------------+      |
+//   |        Vulkan       |                             |        Vulkan       |      |
+//   |    iGPU preferred   |                             |    dGPU preferred   |      |
+//   +---------------------+                             +---------------------+      |
+//              | failure                                           | failure         |
+//              `-------------------------+-------------------------'                 |
+//                                        +-------------------------------------------'
+//                                        v
+//                             +---------------------+
+//                             |        OpenGL       |
+//                             +---------------------+
+//                                        | failure
+//                                        v
+//                             +---------------------+
+//                             |       Software      |
+//                             +---------------------+
+//
+// [C] MACOS
+//             |
+//             v
+//   +-------------------+
+//   |       Metal       |
+//   |   platform GPU    |
+//   +-------------------+
+//             | failure
+//             v
+//   +-------------------+
+//   |       Panic       |
+//   +-------------------+
+//
+// [D] ANDROID
+//             |
+//             v
+//   +-------------------+
+//   |      OpenGL       |
+//   |   platform GPU    |
+//   +-------------------+
+//             | failure
+//             v
+//   +-------------------+
+//   |     Software      |
+//   +-------------------+
+//
+// [E] EXPLICIT SOFTWARE
+//             |
+//             v
+//   +-------------------+            +-------------------+
+//   | Software          |--failure-->|     Platform      |
+//   +-------------------+            +-------------------+
+//                                        |           |
+//                                  macOS |           | Linux / Windows / Android
+//                                        v           v
+//                                +-----------+ +-----------+           +----------+
+//                                | Metal     | | OpenGL    |--failure->| Software |
+//                                +-----------+ +-----------+           +----------+
+//
+// After a driver failure, keep the window and try OpenGL, then software, without retrying Vulkan.
+//
+//                          +-------------------+
+//   Linux/Windows/Android  | Existing window   |  other platforms / no gpu
+//   with gpu  ,------------|                   |-------------.
+//             v            +-------------------+             |
+//   +-------------------+                                    |
+//   | OpenGL            |                                    |
+//   +-------------------+                                    |
+//             | failure                                      |
+//             `----------------------.-----------------------'
+//                                    v
+//                          +-------------------+
+//                          | Software          |
+//                          +-------------------+
+
 #[cfg(all(
     any(target_os = "linux", target_os = "windows", target_os = "android"),
     feature = "gpu"
@@ -6,8 +214,11 @@ mod gl;
 #[cfg(all(target_os = "macos", feature = "gpu"))]
 mod metal;
 mod software;
+mod surface;
 #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
 mod vulkan;
+#[cfg(all(target_os = "linux", feature = "gpu"))]
+mod wayland_gpu;
 
 use freya_engine::prelude::Surface as SkiaSurface;
 use winit::{
@@ -19,11 +230,52 @@ use winit::{
     },
 };
 
-use crate::config::RendererPreference;
+use crate::config::{
+    GpuPreference,
+    RendererPreference,
+};
+
+#[cfg(any(target_os = "linux", target_os = "windows"))]
+fn wait_for_display(window: &Window, last_present: &mut Option<std::time::Instant>) {
+    use std::time::{
+        Duration,
+        Instant,
+    };
+
+    #[cfg(target_os = "linux")]
+    {
+        use raw_window_handle::{
+            HasDisplayHandle,
+            RawDisplayHandle,
+        };
+
+        if !matches!(
+            window.display_handle().map(|handle| handle.as_raw()),
+            Ok(RawDisplayHandle::Xlib(_) | RawDisplayHandle::Xcb(_))
+        ) {
+            return;
+        }
+    }
+
+    let refresh_rate = window
+        .current_monitor()
+        .and_then(|monitor| monitor.refresh_rate_millihertz())
+        .filter(|refresh_rate| *refresh_rate > 1_000)
+        .unwrap_or(60_000);
+    let frame_interval = Duration::from_secs_f64(1000.0 / refresh_rate as f64);
+
+    if let Some(last_present) = last_present
+        && let Some(remaining) = frame_interval.checked_sub(last_present.elapsed())
+    {
+        std::thread::sleep(remaining);
+    }
+
+    *last_present = Some(Instant::now());
+}
 
 /// Unrecoverable graphics error requiring a driver rebuild.
 #[derive(Debug)]
-// Only the Vulkan driver reports these.
+// Used by the Vulkan driver.
 #[cfg_attr(
     not(all(any(target_os = "linux", target_os = "windows"), feature = "gpu")),
     allow(dead_code)
@@ -31,6 +283,13 @@ use crate::config::RendererPreference;
 pub enum DriverError {
     DeviceLost,
     OutOfMemory,
+}
+
+/// Shared Vulkan context.
+#[derive(Default)]
+pub struct GraphicsContext {
+    #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
+    vulkan: vulkan::SharedVulkan,
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -54,16 +313,32 @@ impl GraphicsDriver {
         window_attributes: WindowAttributes,
         gpu_resource_cache_limit: usize,
         preference: RendererPreference,
+        graphics_context: &mut GraphicsContext,
     ) -> (Self, Window) {
-        let from_env = std::env::var("FREYA_RENDERER")
-            .ok()
-            .map(|value| value.to_ascii_lowercase());
-        let renderer = preference.as_name().or(from_env.as_deref());
+        let renderer = if preference == RendererPreference::Auto {
+            match std::env::var("FREYA_RENDERER")
+                .unwrap_or_default()
+                .to_ascii_lowercase()
+                .as_str()
+            {
+                "software" => RendererPreference::Software,
+                "opengl" => RendererPreference::OpenGl,
+                "vulkan" => RendererPreference::Vulkan {
+                    gpu_preference: GpuPreference::Auto,
+                },
+                _ => RendererPreference::Auto,
+            }
+        } else {
+            preference
+        };
+        tracing::info!(?preference, ?renderer, "Selecting graphics renderer");
 
-        // Opt-in via FREYA_RENDERER=software, available on every platform.
-        if renderer == Some("software") {
+        if renderer == RendererPreference::Software {
             match software::SoftwareDriver::new(event_loop, window_attributes.clone()) {
-                Ok((driver, window)) => return (Self::Software(driver), window),
+                Ok((driver, window)) => {
+                    tracing::info!("Selected software renderer");
+                    return (Self::Software(driver), window);
+                }
                 Err(err) => {
                     tracing::warn!(
                         "Software renderer initialization failed, falling back to default: {err}"
@@ -72,7 +347,6 @@ impl GraphicsDriver {
             }
         }
 
-        // Metal (macOS)
         #[cfg(all(target_os = "macos", feature = "gpu"))]
         {
             let (driver, window) =
@@ -81,7 +355,6 @@ impl GraphicsDriver {
             return (Self::Metal(driver), window);
         }
 
-        // OpenGL only on Android.
         #[cfg(all(target_os = "android", feature = "gpu"))]
         {
             match gl::OpenGLDriver::new(
@@ -96,49 +369,45 @@ impl GraphicsDriver {
             }
         }
 
-        // Linux: Vulkan by default, set FREYA_RENDERER=opengl to force OpenGL.
-        // Windows: OpenGL by default, set FREYA_RENDERER=vulkan to force Vulkan.
-        // If both fail, falls back to the software renderer.
         #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
         {
-            let use_vulkan = if cfg!(target_os = "windows") {
-                renderer == Some("vulkan")
-            } else {
-                renderer != Some("opengl")
-            };
-
-            if use_vulkan {
+            if matches!(renderer, RendererPreference::Vulkan { .. })
+                || (cfg!(target_os = "linux") && renderer == RendererPreference::Auto)
+            {
                 match vulkan::VulkanDriver::new(
                     event_loop,
                     window_attributes.clone(),
                     gpu_resource_cache_limit,
+                    renderer.gpu_preference(),
+                    &mut graphics_context.vulkan,
                 ) {
-                    Ok((driver, window)) => return (Self::Vulkan(driver), window),
+                    Ok((driver, window)) => {
+                        tracing::info!(gpu = %driver.gpu_name(), "Selected Vulkan renderer");
+                        return (Self::Vulkan(driver), window);
+                    }
                     Err(err) => {
                         tracing::warn!("Vulkan initialization failed, falling back: {err}");
                     }
                 }
             }
-        }
 
-        #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
-        {
             match gl::OpenGLDriver::new(
                 event_loop,
                 window_attributes.clone(),
                 gpu_resource_cache_limit,
             ) {
                 Ok((driver, window)) => {
-                    let gpu_name = driver.gpu_name.clone().unwrap_or_default();
+                    let gpu_name = driver.gpu_name.as_deref().unwrap_or_default();
 
-                    if renderer == Some("opengl")
+                    if renderer == RendererPreference::OpenGl
                         || !gpu_name.contains("Microsoft Basic Render Driver")
                     {
+                        tracing::info!(gpu = %gpu_name, "Selected OpenGL renderer");
                         return (Self::OpenGl(driver), window);
                     }
 
                     tracing::warn!(
-                        "OpenGL is running on {gpu_name}, using the software renderer instead"
+                        "OpenGL selected Microsoft's software renderer ({gpu_name}), using Freya's software renderer instead"
                     );
                 }
                 Err(err) => {
@@ -149,6 +418,7 @@ impl GraphicsDriver {
 
         let (driver, window) = software::SoftwareDriver::new(event_loop, window_attributes)
             .expect("Failed to initialize software renderer");
+        tracing::info!("Selected software renderer fallback");
         (Self::Software(driver), window)
     }
 
@@ -253,7 +523,7 @@ impl GraphicsDriver {
             ))]
             Self::OpenGl(gl) => gl.gpu_name.as_deref(),
             #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
-            Self::Vulkan(vk) => Some(vk.gpu_name.as_str()),
+            Self::Vulkan(vk) => Some(vk.gpu_name()),
             _ => None,
         }
     }

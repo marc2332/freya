@@ -33,6 +33,8 @@ pub enum Route {
         Material,
         #[route("/markdown", MarkdownShowcase)]
         Markdown,
+        #[route("/html", HtmlShowcase)]
+        Html,
         #[route("/gif", GifShowcase)]
         Gif,
         #[route("/scroll", ScrollShowcase)]
@@ -169,6 +171,7 @@ fn sidebar(mut theme: State<Theme>) -> Rect {
                 (Route::Effects, "Effects"),
                 (Route::Material, "Material Design"),
                 (Route::Markdown, "Markdown"),
+                (Route::Html, "HTML"),
                 (Route::Gif, "Gif"),
                 (Route::Scroll, "Virtual Scroll"),
                 (Route::DragDrop, "Drag and Drop"),
@@ -209,9 +212,9 @@ fn sidebar(mut theme: State<Theme>) -> Rect {
                         .main_align(Alignment::space_between())
                         .cross_align(Alignment::center())
                         .child("Dark mode")
-                        .child(Switch::new().toggled(is_dark).on_toggle(move |_| {
-                            theme.set(if is_dark { light_theme() } else { dark_theme() })
-                        })),
+                        .child(Switch::new(WritableSetter::new(is_dark, move |is_dark| {
+                            theme.set(if is_dark { dark_theme() } else { light_theme() })
+                        }))),
                 ),
         )
 }

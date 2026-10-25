@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::rc::Rc;
 
 use freya_engine::prelude::*;
 use torin::prelude::Area;
@@ -16,18 +16,6 @@ where
     }
 }
 
-struct SharedRuntimeEffect(RuntimeEffect);
-
-// SAFETY: `RuntimeEffect` is immutable.
-unsafe impl Send for SharedRuntimeEffect {}
-unsafe impl Sync for SharedRuntimeEffect {}
-
-struct SharedShaderProvider(Box<dyn ShaderProvider>);
-
-// SAFETY: `ShaderProvider` is immutable.
-unsafe impl Send for SharedShaderProvider {}
-unsafe impl Sync for SharedShaderProvider {}
-
 /// A custom paint source backed by an SkSL shader.
 ///
 /// Build it with [`ShaderFill::new`], passing the SkSL source, a compiled
@@ -36,40 +24,40 @@ unsafe impl Sync for SharedShaderProvider {}
 /// backgrounds or text.
 #[derive(Clone)]
 pub struct ShaderFill {
-    sksl: Arc<str>,
-    effect: Arc<SharedRuntimeEffect>,
-    provider: Arc<SharedShaderProvider>,
+    sksl: Rc<str>,
+    effect: Rc<RuntimeEffect>,
+    provider: Rc<dyn ShaderProvider>,
 }
 
 impl ShaderFill {
-    pub fn new<F>(sksl: impl Into<Arc<str>>, effect: RuntimeEffect, provider: F) -> Self
+    pub fn new<F>(sksl: impl Into<Rc<str>>, effect: RuntimeEffect, provider: F) -> Self
     where
         F: Fn(&RuntimeEffect, Area) -> Option<Shader> + 'static,
     {
         Self::from_provider(sksl, effect, provider)
     }
 
-    pub fn from_provider<S>(sksl: impl Into<Arc<str>>, effect: RuntimeEffect, provider: S) -> Self
+    pub fn from_provider<S>(sksl: impl Into<Rc<str>>, effect: RuntimeEffect, provider: S) -> Self
     where
         S: ShaderProvider + 'static,
     {
         Self {
             sksl: sksl.into(),
-            effect: Arc::new(SharedRuntimeEffect(effect)),
-            provider: Arc::new(SharedShaderProvider(Box::new(provider))),
+            effect: Rc::new(effect),
+            provider: Rc::new(provider),
         }
     }
 
     /// Prepare the shader for use by providing the necessary uniforms.
     /// Returns [None] if the provider could not produce a [Shader], in which case the renderer will fallback to no fill.
     pub fn prepare_shader(&self, bounds: Area) -> Option<Shader> {
-        self.provider.0.prepare_shader(&self.effect.0, bounds)
+        self.provider.prepare_shader(&self.effect, bounds)
     }
 }
 
 impl std::fmt::Display for ShaderFill {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "shader({:p})", Arc::as_ptr(&self.provider))
+        write!(f, "shader({:p})", Rc::as_ptr(&self.provider))
     }
 }
 
@@ -84,16 +72,16 @@ impl std::fmt::Debug for ShaderFill {
 impl PartialEq for ShaderFill {
     fn eq(&self, other: &Self) -> bool {
         *self.sksl == *other.sksl
-            && Arc::ptr_eq(&self.effect, &other.effect)
-            && Arc::ptr_eq(&self.provider, &other.provider)
+            && Rc::ptr_eq(&self.effect, &other.effect)
+            && Rc::ptr_eq(&self.provider, &other.provider)
     }
 }
 
 impl std::hash::Hash for ShaderFill {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         (*self.sksl).hash(state);
-        Arc::as_ptr(&self.effect).hash(state);
-        Arc::as_ptr(&self.provider).hash(state);
+        Rc::as_ptr(&self.effect).hash(state);
+        Rc::as_ptr(&self.provider).hash(state);
     }
 }
 
@@ -119,10 +107,8 @@ impl<'de> serde::Deserialize<'de> for ShaderFill {
 
         Ok(Self {
             sksl: sksl.into(),
-            effect: Arc::new(SharedRuntimeEffect(effect)),
-            provider: Arc::new(SharedShaderProvider(Box::new(
-                |_: &RuntimeEffect, _: Area| None,
-            ))),
+            effect: Rc::new(effect),
+            provider: Rc::new(|_: &RuntimeEffect, _: Area| None),
         })
     }
 }

@@ -38,6 +38,10 @@ use crate::{
     prelude::*,
     style::{
         font_size::FontSize,
+        render_callback::{
+            RenderContext as FillRenderContext,
+            RenderTarget,
+        },
         scale::Scale,
         shadow::{
             Shadow,
@@ -493,7 +497,9 @@ impl ElementExt for RectElement {
         let mut paint = Paint::default();
         paint.set_anti_alias(true);
         paint.set_style(PaintStyle::Fill);
-        style.background.apply_to_paint(&mut paint, area);
+        if style.background.render_callback().is_none() {
+            style.background.apply_to_paint(&mut paint, area);
+        }
 
         // Container
         let rounded_rect = self.render_rect(&area, context.scale_factor as f32);
@@ -504,7 +510,27 @@ impl ElementExt for RectElement {
         }
 
         let mut path = path.detach();
-        context.canvas.draw_path(&path, &paint);
+        if let Some(callback) = style.background.render_callback() {
+            let layer = context.canvas.save();
+            context.canvas.clip_path(&path, ClipOp::Intersect, true);
+            context.canvas.translate((area.min_x(), area.min_y()));
+            context
+                .canvas
+                .scale((context.scale_factor as f32, context.scale_factor as f32));
+            callback.call(&mut FillRenderContext {
+                target: RenderTarget::Background {
+                    canvas: context.canvas,
+                    font_collection: context.font_collection,
+                },
+                scale_factor: context.scale_factor,
+                origin: area.origin / context.scale_factor as f32,
+                size: area.size / context.scale_factor as f32,
+                text_style_state: context.text_style_state,
+            });
+            context.canvas.restore_to_count(layer);
+        } else {
+            context.canvas.draw_path(&path, &paint);
+        }
 
         // Shadows
         for shadow in style.shadows.iter() {
@@ -541,37 +567,40 @@ pub struct Rect {
 }
 
 impl ChildrenExt for Rect {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.elements
     }
 }
 
 impl KeyExt for Rect {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl EventHandlersExt for Rect {
-    fn get_event_handlers(&mut self) -> &mut EventHandlers {
+    fn event_handlers_mut(&mut self) -> &mut EventHandlers {
         &mut self.element.event_handlers
     }
 }
 
 impl AccessibilityExt for Rect {
-    fn get_accessibility_data(&mut self) -> &mut AccessibilityData {
+    fn accessibility_data_mut(&mut self) -> &mut AccessibilityData {
         &mut self.element.accessibility
     }
 }
 
 impl TextStyleExt for Rect {
-    fn get_text_style_data(&mut self) -> &mut TextStyleData {
+    fn text_style_data_mut(&mut self) -> &mut TextStyleData {
         &mut self.element.text_style_data
     }
 }
 
+impl BackgroundExt for Rect {}
+impl DecorationExt for Rect {}
+
 impl StyleExt for Rect {
-    fn get_style(&mut self) -> &mut StyleState {
+    fn style_mut(&mut self) -> &mut StyleState {
         &mut self.element.style
     }
 }
@@ -579,13 +608,13 @@ impl StyleExt for Rect {
 impl MaybeExt for Rect {}
 
 impl LayerExt for Rect {
-    fn get_layer(&mut self) -> &mut Layer {
+    fn layer_mut(&mut self) -> &mut Layer {
         &mut self.element.relative_layer
     }
 }
 
 impl LayoutExt for Rect {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.element.layout
     }
 }
@@ -595,7 +624,7 @@ impl ContainerExt for Rect {}
 impl ContainerWithContentExt for Rect {}
 
 impl ScrollableExt for Rect {
-    fn get_effect(&mut self) -> &mut EffectData {
+    fn effect_mut(&mut self) -> &mut EffectData {
         if self.element.effect.is_none() {
             self.element.effect = Some(EffectData::default())
         }
@@ -605,7 +634,7 @@ impl ScrollableExt for Rect {
 }
 
 impl InteractiveExt for Rect {
-    fn get_effect(&mut self) -> &mut EffectData {
+    fn effect_mut(&mut self) -> &mut EffectData {
         if self.element.effect.is_none() {
             self.element.effect = Some(EffectData::default())
         }
@@ -615,7 +644,7 @@ impl InteractiveExt for Rect {
 }
 
 impl EffectExt for Rect {
-    fn get_effect(&mut self) -> &mut EffectData {
+    fn effect_mut(&mut self) -> &mut EffectData {
         if self.element.effect.is_none() {
             self.element.effect = Some(EffectData::default())
         }
@@ -698,8 +727,8 @@ impl Rect {
         self
     }
 
-    /// Apply a gaussian blur of the given radius to the rect.
-    pub fn blur(mut self, blur: f32) -> Self {
+    /// Apply a Gaussian blur of the given radius to the backdrop behind the rect.
+    pub fn backdrop_blur(mut self, blur: f32) -> Self {
         self.element
             .effect
             .get_or_insert_with(Default::default)

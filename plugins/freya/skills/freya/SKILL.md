@@ -32,7 +32,7 @@ impl Component for Counter {
     fn render(&self) -> impl IntoElement {
         let mut count = use_state(|| self.initial);
         label()
-            .on_mouse_up(move |_| *count.write() += 1)
+            .on_press(move |_| *count.write() += 1)
             .text(format!("Count: {}", count.read()))
     }
 }
@@ -178,15 +178,15 @@ Catalog (all prefixed `on_`):
 - **Touch**: `touch_start`, `touch_end`, `touch_move`, `touch_cancel`.
 - **File drop**: `file_drop`.
 - **Layout**: `sized` (measured size changed).
-- **Global** (no hit-test; use sparingly): `global_pointer_press`, `global_pointer_down`, `global_pointer_move`, `global_key_down`, `global_key_up`, `global_file_hover`, `global_file_hover_cancelled`.
-- **Capture** (run before regular handlers): `capture_global_pointer_press`, `capture_global_pointer_move`.
+- **Global** (no hit-test; use sparingly): `global_pointer_up`, `global_pointer_down`, `global_pointer_move`, `global_key_down`, `global_key_up`, `global_file_hover`, `global_file_hover_cancelled`.
+- **Capture** (run before regular handlers): `capture_global_pointer_up`, `capture_global_pointer_move`.
 
 **Prefer `on_press` over raw mouse/pointer events** for interactive elements: it covers click, tap, and keyboard activation, so accessibility comes free. Use `on_mouse_*` / `on_pointer_*` only when you need pointer-specific behavior (drag handles, canvas tools).
 
 `Event<T>` has two cancellation methods, plus `.map(...)` / `.try_map(...)` to transform inner data:
 
 - `.stop_propagation()`: don't bubble this event to ancestor handlers. No effect on events that don't bubble (move/enter/leave, capture, global).
-- `.prevent_default()`: don't fire the follow-up events this one triggers (e.g. in `on_mouse_up`, suppresses the `on_pointer_press` and `on_global_pointer_press` that would follow).
+- `.prevent_default()`: don't fire the follow-up events this one triggers (e.g. in `on_mouse_up`, suppresses the `on_pointer_press` and `on_global_pointer_up` that would follow).
 
 ### Callback props on custom components
 
@@ -262,7 +262,7 @@ Hooks are prefixed with `use_` (e.g. `use_state`, `use_animation`). Follow these
 ```rust
 let mut state = use_state(|| false);
 let on_click = move |_| state.set(true); // capture, not call inside handler
-rect().on_mouse_up(on_click)
+rect().on_press(on_click)
 ```
 
 ## State Management
@@ -358,37 +358,52 @@ impl DataReducer for AppState {
 radio.apply(AppAction::Increment);
 ```
 
-### Readable / Writable (type-erased abstractions)
+### Readable / Writable / WritableSetter
 
-`Readable<T>` and `Writable<T>` are type-erased wrappers over any reactive value of type `T`. Use them as component props so the component works regardless of where the state lives: local `State<T>`, a `Memo<T>`, a radio slice, or a plain owned value. Both are `PartialEq` (always equal) and `Clone`, usable directly as component fields.
+Use these as component props to hide the backing storage type. All implement `PartialEq` and `Clone`. `read()` subscribes to changes, while `peek()` does not.
 
-```rust
-#[derive(PartialEq)]
-struct NameInput { name: Writable<String> }
-
-impl Component for NameInput {
-    fn render(&self) -> impl IntoElement {
-        Input::new(self.name.clone()) // Input is two-way bound to the Writable
-    }
-}
-
-// Caller side: any source converts via `into_writable()` / `into_readable()`
-NameInput { name: local_name.into_writable() }            // from State<String>
-NameInput { name: name_slice.into_writable() }            // from a RadioSliceMut
-```
+| Type | Use | Updates |
+|---|---|---|
+| `Readable<T>` | Read-only values | None |
+| `Writable<T>` | Direct mutation | `write()` and `WritableUtils` helpers |
+| `WritableSetter<T>` | Value replacement | `set()` and `set_if_modified()` through a callback |
 
 Conversions:
-- `State<T>` → `Writable<T>` / `Readable<T>` via `IntoWritable` / `IntoReadable`.
-- `Memo<T>` → `Readable<T>` via `IntoReadable`.
-- `RadioSlice` → `Readable<T>`; `RadioSliceMut` → `Readable<T>` or `Writable<T>`.
-- `Writable<T>` → `Readable<T>` via `From` (downgrade write access).
-- Plain owned `T` → `Readable<T>` via `From` (non-reactive; tests, defaults).
+- `State<T>` supports all three through `.into_readable()`, `.into_writable()`, and `.into_writable_setter()`.
+- `Memo<T>` and `RadioSlice` support `.into_readable()`.
+- `RadioSliceMut` supports all three conversions.
+- `Writable<T>` and `WritableSetter<T>` convert to `Readable<T>` through `.into()`.
+- Plain owned values convert to non-reactive `Readable<T>` through `.into()`.
+- `State<T>`, `Writable<T>`, and `RadioSliceMut` also convert to `WritableSetter<T>` through `.into()`.
 
-API surface:
-- `Readable<T>`: `read()` (subscribes), `peek()` (no subscription).
-- `Writable<T>`: `read()`, `peek()`, `write()`, plus `WritableUtils` helpers (`set`, `set_if_modified`, `with_mut`, ...). Subscriptions and notifications route to the original source.
+### Input and Switch
 
-Prefer `Readable<T>` for read-only consumers; use `Writable<T>` only when the component must mutate.
+`Input::new` accepts `Into<WritableSetter<String>>`, and `Switch::new` accepts `Into<WritableSetter<bool>>`. Pass state directly:
+
+```rust
+let name = use_state(String::new);
+let toggled = use_state(|| false);
+
+rect()
+    .child(Input::new(name))
+    .child(Switch::new(toggled))
+```
+
+Switch has no `.toggled(...)`, `.on_toggle(...)`, or `Default`.
+
+Use `WritableSetter::new(readable, callback)` to route edits through a reducer:
+
+```rust
+let mut radio = use_radio(AppChannel::Name);
+Input::new(WritableSetter::new(
+    radio.slice_current(|state| &state.name),
+    move |name| {
+        radio.apply(AppAction::SetName(name));
+    },
+))
+```
+
+The callback may accept, transform, or reject updates. Direct writable bindings bypass reducers. Keep model invariants in the reducer, not in component effects.
 
 ### Context API
 
@@ -423,7 +438,7 @@ Context is the right tool for dependency injection (e.g. passing a DB client, co
 - `use_state` - component-local state
 - Context API - dependency injection and non-reactive shared values across the tree; prefer over statics
 - Freya Radio - large/nested state, surgical per-channel updates, multi-window
-- `Readable`/`Writable` - reusable components that don't care about backing storage
+- `Readable`/`Writable`/`WritableSetter` - reusable components that don't care about backing storage
 
 ## Derived State and Side Effects
 
@@ -717,7 +732,7 @@ impl Task {
 }
 
 impl KeyExt for Task {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -888,13 +903,19 @@ use freya::material_design::*;
 Button::new().ripple().child("Click me")
 ```
 
-## WebView
+## HTML
 
-Enable with `features = ["webview"]`. Embeds a browser view into your UI:
+Enable with `features = ["html"]`. Renders an HTML + CSS document with Blitz:
 
 ```rust
-use freya::webview::*;
-WebView::new("https://example.com").expanded()
+use freya::html::*;
+// The view is driven by a handle, which also exposes history navigation
+// (back/forward) and the current URL. Sources can be remote or inline.
+let mut handle = use_html(|| HtmlSource::url("https://example.com"));
+HtmlView::new(handle).expanded();
+handle.back();
+handle.navigate("https://freyaui.dev");
+use_html(|| HtmlSource::html("<h1>Hello</h1>"));
 ```
 
 ## Terminal
@@ -906,7 +927,7 @@ use freya::terminal::*;
 let mut cmd = CommandBuilder::new("bash");
 cmd.env("TERM", "xterm-256color");
 let handle = TerminalHandle::new(TerminalId::new(), PtyBackend::new(cmd), None).ok();
-// Render with Terminal::new(handle) and forward keyboard events via handle.write_key()
+// Render with Terminal::new(handle) and forward keyboard events via handle.key_mut()
 ```
 
 ## Camera
@@ -966,7 +987,7 @@ freya = { version = "...", features = ["router", "radio"] }
 | `markdown` | `Markdown` renderer component |
 | `icons` | SVG icon library via Lucide (`freya-icons`) |
 | `material-design` | Material Design theme (`freya-material-design`) |
-| `webview` | Embed a WebView (`freya-webview`) |
+| `html` | Render HTML + CSS via Blitz (`freya-html`) |
 | `terminal` | Terminal emulator (`freya-terminal`) |
 | `terminal-pty` | Built-in PTY backend for the terminal, implies `terminal` |
 | `code-editor` | Code editing APIs (`freya-code-editor`) |

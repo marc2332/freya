@@ -114,7 +114,8 @@ impl Component for TerminalPanel {
         let mut dimensions = use_state(|| (0.0, 0.0));
 
         use_side_effect(move || {
-            let focused = *Platform::get().is_app_focused.read() && focus().is_focused();
+            let focused =
+                *Platform::get().current_window().is_app_focused.read() && focus().is_focused();
             if let Some(handle) = handle.read().clone() {
                 handle.focus_changed(focused);
             }
@@ -234,7 +235,7 @@ impl Component for TerminalPanel {
                                             handle.mouse_up(row, col, button);
                                         }
                                     })
-                                    .on_global_pointer_press({
+                                    .on_global_pointer_up({
                                         let handle = handle.clone();
                                         move |_: Event<PointerEventData>| {
                                             handle.release();

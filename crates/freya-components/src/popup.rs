@@ -116,24 +116,12 @@ impl Component for PopupBackground {
 ///                 .on_press(move |_| show_popup.toggle()),
 ///         )
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(
-/// #      app()
-/// #   )
-/// # }, "./images/gallery_popup.png").with_scale_factor(0.8).with_hook(|test| {
-/// #   test.poll(std::time::Duration::from_millis(10), std::time::Duration::from_millis(500));
-/// # }).render();
 /// ```
 ///
-/// # Preview
-/// ![Popup Preview][popup]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[doc(alias = "alert")]
 #[doc(alias = "dialog")]
 #[doc(alias = "window")]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("popup", "images/gallery_popup.png"),
-)]
 #[derive(Clone, PartialEq)]
 pub struct Popup {
     pub(crate) theme: Option<PopupThemePartial>,
@@ -144,7 +132,7 @@ pub struct Popup {
 }
 
 impl KeyExt for Popup {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -173,7 +161,7 @@ impl Popup {
 }
 
 impl ChildrenExt for Popup {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
@@ -329,7 +317,7 @@ impl PopupContent {
 }
 
 impl ChildrenExt for PopupContent {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
@@ -362,7 +350,7 @@ impl PopupButtons {
 }
 
 impl ChildrenExt for PopupButtons {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }

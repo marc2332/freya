@@ -38,7 +38,6 @@ use ffmpeg_sidecar::{
 };
 use freya_core::{
     elements::image::ImageHandle,
-    notify::ArcNotify,
     prelude::{
         Bytes,
         OwnedTaskHandle,
@@ -52,6 +51,7 @@ use rodio::cpal::traits::{
     DeviceTrait,
     HostTrait,
 };
+use tiny_notify::ArcNotify;
 
 /// Source of a video to decode.
 #[derive(PartialEq, Eq, Clone, Debug, Hash)]

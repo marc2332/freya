@@ -1,7 +1,7 @@
 use freya_core::prelude::*;
-use thiserror::Error;
 use torin::{
     content::Content,
+    node::Node,
     prelude::{
         Area,
         Direction,
@@ -49,14 +49,6 @@ impl PanelSize {
         }
     }
 
-    /// Convert a raw size value to the appropriate layout [Size].
-    fn to_layout_size(self, value: f32) -> Size {
-        match self {
-            Self::Pixels(_) => Size::px(value),
-            Self::Percentage(_) => Size::flex(value),
-        }
-    }
-
     /// The upper bound for this sizing mode.
     fn max_size(&self) -> f32 {
         match self {
@@ -74,25 +66,41 @@ impl PanelSize {
     }
 }
 
-#[derive(Error, Debug)]
-pub enum ResizableError {
-    #[error("Panel does not exist")]
-    PanelNotFound,
-}
-
+/// A panel's size and constraints.
 #[derive(Clone, Copy, Debug)]
 pub struct Panel {
     pub size: f32,
     pub initial_size: f32,
     pub min_size: f32,
     pub sizing: PanelSize,
-    pub id: usize,
 }
 
+impl Panel {
+    /// Rebalances percentage panel sizes when this panel is added or removed,
+    /// leaving fixed-size panels unchanged and respecting minimum sizes.
+    fn redistribute<'a>(&self, panels: impl Iterator<Item = &'a mut Panel>, adding: bool) {
+        if matches!(self.sizing, PanelSize::Pixels(_)) {
+            return;
+        }
+
+        let mut buffer = self.size;
+        for panel in panels.filter(|panel| matches!(panel.sizing, PanelSize::Percentage(_))) {
+            let adjustment = (panel.initial_size - panel.size).min(buffer);
+            if !adding || adjustment >= 0. {
+                let adjustment = if adding { -adjustment } else { adjustment };
+                panel.size = (panel.size + adjustment).max(panel.min_size);
+                buffer -= panel.initial_size - panel.size;
+            }
+        }
+    }
+}
+
+/// Resize state for a container. Panel membership and order come from its declarations.
 #[derive(Default)]
 pub struct ResizableContext {
-    pub panels: Vec<Panel>,
-    pub direction: Direction,
+    panels: Vec<(DiffKey, Panel)>,
+    direction: Direction,
+    dragging: Option<usize>,
 }
 
 impl ResizableContext {
@@ -102,123 +110,125 @@ impl ResizableContext {
         self.direction
     }
 
-    pub fn panels(&mut self) -> &mut Vec<Panel> {
-        &mut self.panels
+    /// Returns the panels in declaration order.
+    pub fn panels(&self) -> Vec<Panel> {
+        self.panels.iter().map(|(_, panel)| *panel).collect()
     }
 
-    pub fn push_panel(&mut self, panel: Panel, order: Option<usize>) {
-        // Only redistribute among percentage panels
-        if matches!(panel.sizing, PanelSize::Percentage(_)) {
-            let mut buffer = panel.size;
-
-            for panel in self
+    fn reconcile(&mut self, mut panels: Vec<(DiffKey, Panel)>, direction: Direction) -> bool {
+        let unchanged = self.panels.len() == panels.len()
+            && self
                 .panels
-                .iter_mut()
-                .filter(|p| matches!(p.sizing, PanelSize::Percentage(_)))
-            {
-                let resized_sized = (panel.initial_size - panel.size).min(buffer);
+                .iter()
+                .zip(&panels)
+                .all(|((old_key, old), (key, new))| {
+                    old_key == key && old.sizing == new.sizing && old.min_size == new.min_size
+                });
+        if unchanged && self.direction == direction {
+            return false;
+        }
 
-                if resized_sized >= 0. {
-                    panel.size = (panel.size - resized_sized).max(panel.min_size);
-                    let new_resized_sized = panel.initial_size - panel.size;
-                    buffer -= new_resized_sized;
-                }
+        let mut previous = std::mem::take(&mut self.panels);
+        let mut index = 0;
+        while index < previous.len() {
+            if panels.iter().any(|(key, _)| *key == previous[index].0) {
+                index += 1;
+            } else {
+                let (_, removed) = previous.remove(index);
+                removed.redistribute(previous.iter_mut().map(|(_, panel)| panel), false);
             }
         }
 
-        match order {
-            Some(order) if order < self.panels.len() => self.panels.insert(order, panel),
-            _ => self.panels.push(panel),
-        }
-    }
-
-    pub fn remove_panel(&mut self, id: usize) -> Result<(), ResizableError> {
-        let removed_panel = self
-            .panels
-            .iter()
-            .copied()
-            .find(|p| p.id == id)
-            .ok_or(ResizableError::PanelNotFound)?;
-        self.panels.retain(|e| e.id != id);
-
-        // Only redistribute among percentage panels
-        if matches!(removed_panel.sizing, PanelSize::Percentage(_)) {
-            let mut buffer = removed_panel.size;
-
-            for panel in self
-                .panels
-                .iter_mut()
-                .filter(|p| matches!(p.sizing, PanelSize::Percentage(_)))
-            {
-                let resized_sized = (panel.initial_size - panel.size).min(buffer);
-
-                panel.size = (panel.size + resized_sized).max(panel.min_size);
-                let new_resized_sized = panel.initial_size - panel.size;
-                buffer -= new_resized_sized;
+        for (key, panel) in &panels {
+            if !previous.iter().any(|(old_key, _)| old_key == key) {
+                panel.redistribute(previous.iter_mut().map(|(_, panel)| panel), true);
+                previous.push((key.clone(), *panel));
             }
         }
 
-        Ok(())
+        for (key, panel) in &mut panels {
+            if let Some((_, old)) = previous.iter().find(|(old_key, old)| {
+                old_key == key
+                    && std::mem::discriminant(&old.sizing) == std::mem::discriminant(&panel.sizing)
+            }) {
+                panel.size = old.size;
+            }
+            panel.size = panel.size.clamp(panel.min_size, panel.sizing.max_size());
+        }
+        self.panels = panels;
+        self.direction = direction;
+        self.dragging = None;
+        true
     }
 
+    /// Resizes panels around a divider at the given declaration index (1..panel count).
     pub fn apply_resize(
         &mut self,
-        panel_index: usize,
-        pixel_distance: f32,
+        divider_index: usize,
+        drag_delta: f32,
         container_size: f32,
     ) -> bool {
-        let mut changed_panels = false;
+        if divider_index == 0 || divider_index >= self.panels.len() {
+            return false;
+        }
 
-        // Precompute conversion factor between pixels and flex weight
-        let handle_space = self.panels.len().saturating_sub(1) as f32 * Self::HANDLE_SIZE;
-        let (px_total, flex_total) =
-            self.panels
-                .iter()
-                .fold((0.0, 0.0), |(px, flex): (f32, f32), p| match p.sizing {
-                    PanelSize::Pixels(_) => (px + p.size, flex),
-                    PanelSize::Percentage(_) => (px, flex + p.size),
-                });
-        let flex_factor = flex_total / (container_size - px_total - handle_space).max(1.0);
+        let panels = &mut self.panels;
+        let mut sizes_changed = false;
 
-        let abs_distance = pixel_distance.abs();
-        let (behind_range, forward_range) = if pixel_distance >= 0. {
-            (0..panel_index, panel_index..self.panels.len())
+        let handle_space = panels.len().saturating_sub(1) as f32 * Self::HANDLE_SIZE;
+        let (total_fixed_size, total_flex_weight) = panels.iter().fold(
+            (0.0, 0.0),
+            |(fixed_size, flex_weight): (f32, f32), (_, panel)| match panel.sizing {
+                PanelSize::Pixels(_) => (fixed_size + panel.size, flex_weight),
+                PanelSize::Percentage(_) => (fixed_size, flex_weight + panel.size),
+            },
+        );
+        let flex_per_pixel =
+            total_flex_weight / (container_size - total_fixed_size - handle_space).max(1.0);
+
+        let shrink_amount = drag_delta.abs();
+        let (growing_index, mut shrinking_range) = if drag_delta >= 0. {
+            (divider_index - 1, divider_index..panels.len())
         } else {
-            (panel_index..self.panels.len(), 0..panel_index)
+            (divider_index, 0..divider_index)
         };
 
-        let mut acc_pixels = 0.0;
+        let mut freed_space = 0.0;
 
-        // Shrink forward panels
-        for panel in self.panels[forward_range].iter_mut() {
-            let old_size = panel.size;
-            let scale = panel.sizing.flex_scale(flex_factor);
-            let new_size =
-                (panel.size - abs_distance * scale).clamp(panel.min_size, panel.sizing.max_size());
-            changed_panels |= panel.size != new_size;
+        while let Some(index) = if drag_delta >= 0. {
+            shrinking_range.next()
+        } else {
+            shrinking_range.next_back()
+        } {
+            let (_, panel) = &mut panels[index];
+            let previous_size = panel.size;
+            let units_per_pixel = panel.sizing.flex_scale(flex_per_pixel);
+            let new_size = (panel.size - shrink_amount * units_per_pixel)
+                .clamp(panel.min_size, panel.sizing.max_size());
+            sizes_changed |= panel.size != new_size;
             panel.size = new_size;
-            acc_pixels -= (new_size - old_size) / scale.max(f32::MIN_POSITIVE);
+            freed_space -= (new_size - previous_size) / units_per_pixel.max(f32::MIN_POSITIVE);
 
-            if old_size > panel.min_size {
+            if previous_size > panel.min_size {
                 break;
             }
         }
 
-        // Grow behind panel
-        if let Some(panel) = self.panels[behind_range].last_mut() {
-            let scale = panel.sizing.flex_scale(flex_factor);
-            let new_size =
-                (panel.size + acc_pixels * scale).clamp(panel.min_size, panel.sizing.max_size());
-            changed_panels |= panel.size != new_size;
-            panel.size = new_size;
-        }
+        let (_, panel) = &mut panels[growing_index];
+        let units_per_pixel = panel.sizing.flex_scale(flex_per_pixel);
+        let new_size = (panel.size + freed_space * units_per_pixel)
+            .clamp(panel.min_size, panel.sizing.max_size());
+        sizes_changed |= panel.size != new_size;
+        panel.size = new_size;
 
-        changed_panels
+        sizes_changed
     }
 
     pub fn reset(&mut self) {
-        for panel in &mut self.panels {
-            panel.size = panel.initial_size;
+        for (_, panel) in &mut self.panels {
+            panel.size = panel
+                .initial_size
+                .clamp(panel.min_size, panel.sizing.max_size());
         }
     }
 }
@@ -234,24 +244,13 @@ impl ResizableContext {
 ///         .panel(ResizablePanel::new(PanelSize::percent(50.)).child("Panel 1"))
 ///         .panel(ResizablePanel::new(PanelSize::percent(50.)).child("Panel 2"))
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(
-/// #       ResizableContainer::new()
-/// #           .panel(ResizablePanel::new(PanelSize::percent(50.)).child("Panel 1"))
-/// #           .panel(ResizablePanel::new(PanelSize::percent(50.)).child("Panel 2"))
-/// #   )
-/// # }, "./images/gallery_resizable_container.png").render();
 /// ```
 ///
-/// # Preview
-/// ![ResizableContainer Preview][resizable_container]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("resizable_container", "images/gallery_resizable_container.png"),
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(PartialEq, Clone)]
 pub struct ResizableContainer {
-    direction: Direction,
+    key: DiffKey,
+    layout: LayoutData,
     panels: Vec<ResizablePanel>,
     controller: Option<Writable<ResizableContext>>,
 }
@@ -262,17 +261,38 @@ impl Default for ResizableContainer {
     }
 }
 
+impl LayoutExt for ResizableContainer {
+    fn layout_mut(&mut self) -> &mut LayoutData {
+        &mut self.layout
+    }
+}
+
+impl ContainerExt for ResizableContainer {}
+
+impl KeyExt for ResizableContainer {
+    fn key_mut(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
+}
+
 impl ResizableContainer {
     pub fn new() -> Self {
         Self {
-            direction: Direction::Vertical,
+            key: DiffKey::None,
+            layout: Node {
+                width: Size::fill(),
+                height: Size::fill(),
+                content: Content::flex(),
+                ..Default::default()
+            }
+            .into(),
             panels: vec![],
             controller: None,
         }
     }
 
     pub fn direction(mut self, direction: Direction) -> Self {
-        self.direction = direction;
+        self.layout.direction = direction;
         self
     }
 
@@ -299,61 +319,100 @@ impl Component for ResizableContainer {
         let mut size = use_state(Area::default);
         use_provide_context(|| size);
 
-        let direction = use_reactive(&self.direction);
-        use_provide_context(|| {
-            self.controller.clone().unwrap_or_else(|| {
-                let mut state = State::create(ResizableContext {
-                    direction: self.direction,
-                    ..Default::default()
-                });
-
-                Effect::create_sync_with_gen(move |current_gen| {
-                    let direction = direction();
-                    if current_gen > 0 {
-                        state.write().direction = direction;
-                    }
-                });
-
-                state.into_writable()
-            })
+        let mut controller = use_provide_context(|| {
+            self.controller
+                .clone()
+                .unwrap_or_else(|| State::create(ResizableContext::default()).into_writable())
         });
+        let declarations: Vec<_> = self
+            .panels
+            .iter()
+            .enumerate()
+            .map(|(index, panel)| {
+                let initial_size = panel.initial_size.value();
+                (
+                    panel.key.clone().or(DiffKey::DefaultU64(index as u64)),
+                    Panel {
+                        size: initial_size,
+                        initial_size,
+                        min_size: panel.min_size.unwrap_or(initial_size * 0.25),
+                        sizing: panel.initial_size,
+                    },
+                )
+            })
+            .collect();
+        controller.write_if(|mut context| context.reconcile(declarations, self.layout.direction));
+        let context = controller.read();
 
         rect()
-            .direction(self.direction)
+            .layout(self.layout.clone())
             .on_sized(move |e: Event<SizedEventData>| size.set(e.area))
-            .expanded()
-            .content(Content::flex())
-            .children(self.panels.iter().enumerate().flat_map(|(i, e)| {
-                if i > 0 {
-                    vec![
-                        ResizableHandle::new(i).into_element(),
-                        e.clone().into_element(),
-                    ]
-                } else {
-                    vec![e.clone().into_element()]
+            .on_global_pointer_up({
+                let mut controller = controller.clone();
+                move |_: Event<PointerEventData>| {
+                    controller.write_if(|mut context| context.dragging.take().is_some());
                 }
-            }))
+            })
+            .children(
+                context
+                    .panels
+                    .iter()
+                    .zip(&self.panels)
+                    .enumerate()
+                    .flat_map(|(index, ((key, state), panel))| {
+                        let main_size = match state.sizing {
+                            PanelSize::Pixels(_) => Size::px(state.size),
+                            PanelSize::Percentage(_) => Size::flex(state.size),
+                        };
+                        let (width, height) = match context.direction {
+                            Direction::Horizontal => (main_size, Size::fill()),
+                            Direction::Vertical => (Size::fill(), main_size),
+                        };
+
+                        [
+                            (index > 0)
+                                .then(|| ResizableHandle::new(index).key(index).into_element()),
+                            Some(
+                                rect()
+                                    .key(key)
+                                    .a11y_role(AccessibilityRole::Pane)
+                                    .width(width)
+                                    .height(height)
+                                    .overflow(panel.overflow)
+                                    .children(panel.children.clone())
+                                    .into_element(),
+                            ),
+                        ]
+                        .into_iter()
+                        .flatten()
+                    }),
+            )
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
     }
 }
 
+/// A panel declaration. Its position in the container determines its order.
+/// Use a key to preserve its size and child state when moving it.
 #[derive(PartialEq, Clone)]
 pub struct ResizablePanel {
     key: DiffKey,
     initial_size: PanelSize,
     min_size: Option<f32>,
     children: Vec<Element>,
-    order: Option<usize>,
     overflow: Overflow,
 }
 
 impl KeyExt for ResizablePanel {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl ChildrenExt for ResizablePanel {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
@@ -365,11 +424,12 @@ impl ResizablePanel {
             initial_size,
             min_size: None,
             children: vec![],
-            order: None,
             overflow: Overflow::Clip,
         }
     }
 
+    /// Sets the initial size, also used by the controller's reset operation.
+    /// Existing resized sizes are retained unless the sizing mode changes.
     pub fn initial_size(mut self, initial_size: PanelSize) -> Self {
         self.initial_size = initial_size;
         self
@@ -381,71 +441,10 @@ impl ResizablePanel {
         self
     }
 
-    pub fn order(mut self, order: impl Into<usize>) -> Self {
-        self.order = Some(order.into());
-        self
-    }
-
     /// Sets how content is clipped inside the panel bounds.
     pub fn overflow(mut self, overflow: impl Into<Overflow>) -> Self {
         self.overflow = overflow.into();
         self
-    }
-}
-
-impl Component for ResizablePanel {
-    fn render(&self) -> impl IntoElement {
-        let registry = use_consume::<Writable<ResizableContext>>();
-
-        let initial_value = self.initial_size.value();
-        let id = use_hook({
-            let mut registry = registry.clone();
-            move || {
-                let id = UseId::<ResizableContext>::get_in_hook();
-                let panel = Panel {
-                    initial_size: initial_value,
-                    size: initial_value,
-                    min_size: self.min_size.unwrap_or(initial_value * 0.25),
-                    sizing: self.initial_size,
-                    id,
-                };
-                registry.write().push_panel(panel, self.order);
-                id
-            }
-        });
-
-        use_drop({
-            let mut registry = registry.clone();
-            move || {
-                let _ = registry.write().remove_panel(id);
-            }
-        });
-
-        let registry = registry.read();
-        let index = registry
-            .panels
-            .iter()
-            .position(|e| e.id == id)
-            .unwrap_or_default();
-
-        let Panel { size, sizing, .. } = registry.panels[index];
-        let main_size = sizing.to_layout_size(size);
-
-        let (width, height) = match registry.direction {
-            Direction::Horizontal => (main_size, Size::fill()),
-            Direction::Vertical => (Size::fill(), main_size),
-        };
-
-        rect()
-            .a11y_role(AccessibilityRole::Pane)
-            .width(width)
-            .height(height)
-            .overflow(self.overflow)
-            .children(self.children.clone())
-    }
-
-    fn render_key(&self) -> DiffKey {
-        self.key.clone().or(self.default_key())
     }
 }
 
@@ -461,6 +460,7 @@ pub enum HandleStatus {
 
 #[derive(PartialEq)]
 pub struct ResizableHandle {
+    key: DiffKey,
     panel_index: usize,
     /// Theme override.
     pub(crate) theme: Option<ResizableHandleThemePartial>,
@@ -469,9 +469,16 @@ pub struct ResizableHandle {
 impl ResizableHandle {
     pub fn new(panel_index: usize) -> Self {
         Self {
+            key: DiffKey::None,
             panel_index,
             theme: None,
         }
+    }
+}
+
+impl KeyExt for ResizableHandle {
+    fn key_mut(&mut self) -> &mut DiffKey {
+        &mut self.key
     }
 }
 
@@ -487,32 +494,26 @@ impl Component for ResizableHandle {
             "resizable_handle"
         );
         let mut size = use_state(Area::default);
-        let mut clicking = use_state(|| false);
         let mut status = use_state(HandleStatus::default);
-        let registry = use_consume::<Writable<ResizableContext>>();
+        let mut controller = use_consume::<Writable<ResizableContext>>();
         let container_size = use_consume::<State<Area>>();
         let mut allow_resizing = use_state(|| false);
 
         let panel_index = self.panel_index;
-        let direction = registry.read().direction;
+        let (direction, dragging) = {
+            let context = controller.read();
+            (context.direction, context.dragging == Some(panel_index))
+        };
 
         let cursor = match direction {
             Direction::Horizontal => CursorIcon::ColResize,
             _ => CursorIcon::RowResize,
         };
 
-        let on_pointer_leave = move |_| {
-            *status.write() = HandleStatus::Idle;
-        };
-
-        let on_pointer_enter = move |_| {
-            *status.write() = HandleStatus::Hovering;
-        };
-
         let on_capture_global_pointer_move = {
-            let mut registry = registry;
+            let mut controller = controller.clone();
             move |e: Event<PointerEventData>| {
-                if *clicking.read() {
+                if controller.peek().dragging == Some(panel_index) {
                     e.prevent_default();
 
                     if !*allow_resizing.read() {
@@ -522,9 +523,9 @@ impl Component for ResizableHandle {
                     let coords = e.global_location();
                     let handle = size.read();
                     let container = container_size.read();
-                    let mut registry = registry.write();
+                    let mut context = controller.write();
 
-                    let (pixel_displacement, container_axis_size) = match registry.direction {
+                    let (drag_delta, container_axis_size) = match context.direction {
                         Direction::Horizontal => {
                             (coords.x as f32 - handle.min_x(), container.width())
                         }
@@ -533,27 +534,14 @@ impl Component for ResizableHandle {
                         }
                     };
 
-                    let changed_panels =
-                        registry.apply_resize(panel_index, pixel_displacement, container_axis_size);
+                    let sizes_changed =
+                        context.apply_resize(panel_index, drag_delta, container_axis_size);
 
-                    if changed_panels {
+                    if sizes_changed {
                         allow_resizing.set(false);
                     }
                 }
             }
-        };
-
-        let on_pointer_down = move |e: Event<PointerEventData>| {
-            if !e.data().is_primary() {
-                return;
-            }
-            e.stop_propagation();
-            e.prevent_default();
-            clicking.set(true);
-        };
-
-        let on_global_pointer_press = move |_: Event<PointerEventData>| {
-            clicking.set_if_modified(false);
         };
 
         let handle_size = Size::px(ResizableContext::HANDLE_SIZE);
@@ -563,7 +551,7 @@ impl Component for ResizableHandle {
         };
 
         let background = match *status.read() {
-            HandleStatus::Idle if !*clicking.read() => background,
+            HandleStatus::Idle if !dragging => background,
             _ => hover_background,
         };
 
@@ -577,10 +565,20 @@ impl Component for ResizableHandle {
                 size.set(e.area);
                 allow_resizing.set(true);
             })
-            .on_pointer_down(on_pointer_down)
-            .on_global_pointer_press(on_global_pointer_press)
-            .on_pointer_enter(on_pointer_enter)
+            .on_pointer_down(move |e: Event<PointerEventData>| {
+                if !e.data().is_primary() {
+                    return;
+                }
+                e.stop_propagation();
+                e.prevent_default();
+                controller.write().dragging = Some(panel_index);
+            })
+            .on_pointer_enter(move |_| status.set(HandleStatus::Hovering))
             .on_capture_global_pointer_move(on_capture_global_pointer_move)
-            .on_pointer_leave(on_pointer_leave)
+            .on_pointer_leave(move |_| status.set(HandleStatus::Idle))
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
     }
 }

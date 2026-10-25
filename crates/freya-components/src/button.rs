@@ -65,10 +65,6 @@ pub enum ButtonLayoutVariant {
 ///         .on_press(|_| println!("Pressed!"))
 ///         .child("Press me")
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_button.png").render();
 /// ```
 /// ## **Filled**
 ///
@@ -80,10 +76,6 @@ pub enum ButtonLayoutVariant {
 ///         .filled()
 ///         .child("Press me")
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_filled_button.png").render();
 /// ```
 /// ## **Outline**
 ///
@@ -95,10 +87,6 @@ pub enum ButtonLayoutVariant {
 ///         .outline()
 ///         .child("Press me")
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_outline_button.png").render();
 /// ```
 /// ## **Flat**
 ///
@@ -110,23 +98,9 @@ pub enum ButtonLayoutVariant {
 ///         .flat()
 ///         .child("Press me")
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_flat_button.png").render();
 /// ```
 ///
-/// # Preview
-/// ![Button Preview][button]
-/// ![Outline Button Preview][outline_button]
-/// ![Filled Button Preview][filled_button]
-/// ![Flat Button Preview][flat_button]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("button", "images/gallery_button.png"),
-    doc = embed_doc_image::embed_image!("filled_button", "images/gallery_filled_button.png"),
-    doc = embed_doc_image::embed_image!("outline_button", "images/gallery_outline_button.png"),
-    doc = embed_doc_image::embed_image!("flat_button", "images/gallery_flat_button.png"),
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct Button {
     pub(crate) theme_colors: Option<ButtonColorsThemePartial>,
@@ -150,13 +124,13 @@ impl Default for Button {
 }
 
 impl ChildrenExt for Button {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.elements
     }
 }
 
 impl KeyExt for Button {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -342,6 +316,7 @@ impl Component for Button {
         rect()
             .overflow(Overflow::Clip)
             .a11y_id(a11y_id)
+            .a11y_enabled(self.enabled)
             .a11y_focusable(self.enabled && self.focusable)
             .a11y_role(AccessibilityRole::Button)
             .background(background.mul_if(!self.enabled, 0.9))
@@ -375,7 +350,9 @@ impl Component for Button {
                                     handler.call(e);
                                 }
                             }
-                            PressEventData::Touch(_) | PressEventData::Keyboard(_) => {
+                            PressEventData::Touch(_)
+                            | PressEventData::Keyboard(_)
+                            | PressEventData::Accessibility(_) => {
                                 if let Some(handler) = &on_press {
                                     handler.call(e);
                                 }
@@ -386,8 +363,8 @@ impl Component for Button {
                 .on_pointer_over(move |_| {
                     hovering.set(true);
                 })
-                .on_pointer_out(move |_| hovering.set_if_modified(false))
             })
+            .on_pointer_out(move |_| hovering.set_if_modified(false))
             .cursor(if self.enabled {
                 self.cursor_icon
             } else {

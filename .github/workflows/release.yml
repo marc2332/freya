@@ -21,22 +21,30 @@ jobs:
         run: |
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
       - name: Install linux dependencies
+        background: true
         run: sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev libwebkit2gtk-4.1-dev libasound2-dev
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1.16.1
+      - name: Set up cargo cache
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          shared-key: "release-ubuntu-latest"
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Read version
         id: version
         run: |
           version=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "freya") | .version')
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=v$version" >> "$GITHUB_OUTPUT"
+      - name: Wait for setup
+        wait-all:
       - name: Publish to crates.io (dry run)
-        uses: marc2332/letmerelease@c66006321d3b02e76f8a35a6e87eaa0679844014 # v0.1.4
+        uses: marc2332/letmerelease@b6afa5247bbcaf7d9d6feef8d613ecc749ab3668 # v0.1.5
         with:
           token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
           dry-run: true
       - name: Publish to crates.io
-        uses: marc2332/letmerelease@c66006321d3b02e76f8a35a6e87eaa0679844014 # v0.1.4
+        uses: marc2332/letmerelease@b6afa5247bbcaf7d9d6feef8d613ecc749ab3668 # v0.1.5
         with:
           token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
       - name: Push tag

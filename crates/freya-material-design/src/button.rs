@@ -57,8 +57,8 @@ pub struct RippleButton {
 }
 
 impl ChildrenExt for RippleButton {
-    fn get_children(&mut self) -> &mut Vec<Element> {
-        self.ripple.get_children()
+    fn children_mut(&mut self) -> &mut Vec<Element> {
+        self.ripple.children_mut()
     }
 }
 
@@ -104,8 +104,8 @@ impl Component for RippleButton {
 
         let ripple = self.ripple.clone().padding(theme_layout.padding);
 
-        button.get_children().clear();
-        button.get_children().push(ripple.into());
+        button.children_mut().clear();
+        button.children_mut().push(ripple.into());
         button.padding(0.)
     }
 
