@@ -163,7 +163,8 @@ impl InputValidator {
 pub struct Input {
     pub(crate) theme_colors: Option<InputColorsThemePartial>,
     pub(crate) theme_layout: Option<InputLayoutThemePartial>,
-    value: Writable<String>,
+    value: Readable<String>,
+    on_change: EventHandler<String>,
     placeholder: Option<Cow<'static, str>>,
     on_validate: Option<EventHandler<InputValidator>>,
     on_submit: Option<EventHandler<String>>,
@@ -191,10 +192,31 @@ impl KeyExt for Input {
 
 impl Input {
     pub fn new(value: impl Into<Writable<String>>) -> Self {
+        let mut value = value.into();
+        Self::new_callback(Readable::from(value.clone()), move |text| {
+            *value.write() = text;
+        })
+    }
+
+    /// Create an input with a readable value and a callback for edits.
+    ///
+    /// ```rust
+    /// use freya::prelude::*;
+    ///
+    /// fn app() -> impl IntoElement {
+    ///     let mut value = use_state(String::new);
+    ///     Input::new_callback(value, move |text| value.set(text))
+    /// }
+    /// ```
+    pub fn new_callback(
+        value: impl IntoReadable<String>,
+        on_change: impl Into<EventHandler<String>>,
+    ) -> Self {
         Input {
             theme_colors: None,
             theme_layout: None,
-            value: value.into(),
+            value: value.into_readable(),
+            on_change: on_change.into(),
             placeholder: None,
             on_validate: None,
             on_submit: None,
@@ -360,7 +382,8 @@ impl Component for Input {
             },
         );
         let mut is_dragging = use_state(|| false);
-        let mut value = self.value.clone();
+        let value = self.value.clone();
+        let on_change = self.on_change.clone();
 
         let theme_colors = match self.style_variant {
             InputStyleVariant::Normal => {
@@ -547,7 +570,7 @@ impl Component for Input {
                     };
 
                     if apply_change {
-                        *value.write() = text;
+                        on_change.call(text);
                     }
                     if editable.editor().peek().editor_history().version == previous_history_version
                     {
