@@ -5,6 +5,11 @@ pr_comment = "on_change"
 [functions]
 min_percent_total = 2
 
+[functions.timing]
+judged = false
+min_percent_change = 50
+metrics = ["avg", "total"]
+
 [functions.alloc]
 judged = true
 min_percent_change = 20

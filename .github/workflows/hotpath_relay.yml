@@ -23,7 +23,7 @@ jobs:
           - benchmark: torin
             artifact: hotpath-torin
             report: torin.json
-    uses: hotpath-rs/hotpath/.github/workflows/hotpath-relay.yml@v0.29.1
+    uses: hotpath-rs/hotpath/.github/workflows/hotpath-relay.yml@f98dee237c49087e20b94b62bcd9becfceeee357 # v0.29.2
     permissions:
       actions: read
       contents: read
