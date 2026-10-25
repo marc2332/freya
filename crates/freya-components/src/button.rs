@@ -363,8 +363,8 @@ impl Component for Button {
                 .on_pointer_over(move |_| {
                     hovering.set(true);
                 })
-                .on_pointer_out(move |_| hovering.set_if_modified(false))
             })
+            .on_pointer_out(move |_| hovering.set_if_modified(false))
             .cursor(if self.enabled {
                 self.cursor_icon
             } else {
