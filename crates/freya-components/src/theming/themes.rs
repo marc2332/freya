@@ -584,7 +584,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             padding: Preference::Specific(Gaps::new(8., 16., 8., 16.)),
             selected_padding: Preference::Specific(Gaps::new(8., 12., 8., 12.)),
             width: Preference::Specific(Size::Inner),
-            height: Preference::Specific(Size::Inner),
+            height: Preference::Specific(Size::FillMinimum),
             color: Preference::Reference("text_primary"),
             selected_icon_fill: Preference::Reference("primary"),
         },
