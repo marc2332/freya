@@ -47,6 +47,7 @@ members = [
   "./crates/freya-material-design",
   "./crates/freya-plotters-backend",
   "./crates/freya-query",
+  "./crates/freya-persist",
   "./crates/freya-html",
   "./crates/freya-terminal",
   "./crates/freya-code-editor",
@@ -98,6 +99,7 @@ freya-sdk = { path = "./crates/freya-sdk", version = "=0.5.0-beta.12" }
 freya-material-design = { path = "./crates/freya-material-design", version = "=0.5.0-beta.12" }
 freya-plotters-backend = { path = "./crates/freya-plotters-backend", version = "=0.5.0-beta.12" }
 freya-query = { path = "./crates/freya-query", version = "=0.5.0-beta.12" }
+freya-persist = { path = "./crates/freya-persist", version = "=0.5.0-rc.10" }
 freya-html = { path = "./crates/freya-html", version = "=0.5.0-beta.12" }
 freya-terminal = { path = "./crates/freya-terminal", version = "=0.5.0-beta.12", default-features = false }
 freya-code-editor = { path = "./crates/freya-code-editor", version = "=0.5.0-beta.12" }
@@ -122,6 +124,7 @@ futures-channel = "0.3.31"
 futures-lite = "2.6.1"
 async-io = "2.5.0"
 async-channel = "2.5.0"
+notify = "8.2"
 blocking = "1.6.2"
 ureq = "3.1.4"
 reqwest = { version = "0.12", default-features = false, features = [
@@ -131,6 +134,8 @@ reqwest = { version = "0.12", default-features = false, features = [
 ] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+dirs = "6"
+tempfile = "3"
 url = "2.5"
 linkify = "0.11"
 open = "5.1"
@@ -214,6 +219,7 @@ tree-sitter-rust = "0.24"
 freya-skia-safe = { workspace = true }
 
 tracing-subscriber = { workspace = true }
+tracing = { workspace = true }
 
 rand = "0.10"
 
