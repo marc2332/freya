@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-/// A readable value whose updates go through a setter callback.
+/// A writable value whose updates go through a setter callback.
 ///
 /// ```rust
 /// use freya::prelude::*;
