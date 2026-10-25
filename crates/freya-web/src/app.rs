@@ -39,6 +39,7 @@ pub struct WebApp {
     runner: Runner,
     tree: Tree,
     surface: WebSurface,
+    physical_size: Size2D,
 
     nodes_state: NodesState<NodeId>,
     accessibility: AccessibilityTree,
@@ -99,7 +100,7 @@ impl WebApp {
                 focused_accessibility_node: State::create(accesskit::Node::new(
                     accesskit::Role::Window,
                 )),
-                root_size: State::create(size),
+                root_size: State::create(size / pixel_ratio as f32),
                 scale_factor: State::create(pixel_ratio),
                 custom_scale_factor: State::create(1.),
                 navigation_mode: State::create(NavigationMode::NotKeyboard),
@@ -143,6 +144,7 @@ impl WebApp {
             runner,
             tree,
             surface,
+            physical_size: size,
             nodes_state,
             accessibility: AccessibilityTree::default(),
             events_receiver,
@@ -161,7 +163,7 @@ impl WebApp {
     }
 
     fn size(&self) -> Size2D {
-        *self.platform.root_size.peek()
+        self.physical_size
     }
 
     fn scale_factor(&self) -> f64 {
@@ -180,7 +182,10 @@ impl WebApp {
 
         if let Some((size, pixel_ratio)) = browser.resized {
             self.surface.resize(size.to_i32());
-            self.platform.root_size.set_if_modified(size);
+            self.physical_size = size;
+            self.platform
+                .root_size
+                .set_if_modified(size / pixel_ratio as f32);
             self.needs_render = true;
 
             if (pixel_ratio - self.scale_factor()).abs() > f64::EPSILON {

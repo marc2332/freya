@@ -84,6 +84,9 @@ These crates are required for `freya-core` to function:
 - `torin`: UI layout library specifically made for Freya, although it's agnostic.
 - `ragnarok`: UI events measurer (e.g what event to figure when the user clicks in a coordinate).
 - `pathgraph`: Map to store nested data structures based on the assumption that you always know its location.
+- `tiny-diff`: Keyed tree nodes diffing.
+- `tiny-cache`: FIFO and per-user LRU caches with shared values.
+- `tiny-notify`: Single-waiter and broadcast notification primitives.
 
 ### Extra crates
 

@@ -11,11 +11,12 @@ min_percent_change = 20
 metrics = ["avg", "total"]
 min_calls = 0
 
-[functions.timing]
-judged = false
-min_percent_change = 50
+[functions.icount]
+judged = true
+fail_check = false
+min_percent_change = 3
 metrics = ["avg", "total"]
-min_calls = 10
+min_calls = 1
 
 [threads]
 names = ["painting_suite"]

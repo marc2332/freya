@@ -19,6 +19,7 @@ plot = ["freya/plot"]
 members = [
   "./crates/freya",
   "./crates/freya-core",
+  "./crates/tiny-diff",
   "./crates/torin",
   "./crates/ragnarok",
   "./crates/freya-clipboard",
@@ -68,6 +69,7 @@ members = [
 rate-limit.existing-packages = 40
 
 [workspace.dependencies]
+tiny-diff = { path = "./crates/tiny-diff", version = "=0.5.0-beta.12" }
 freya = { path = "./crates/freya", version = "=0.5.0-beta.12" }
 freya-core = { path = "./crates/freya-core", version = "=0.5.0-beta.12" }
 torin = { path = "./crates/torin", version = "=0.5.0-beta.12" }
@@ -180,7 +182,7 @@ accesskit = "0.25.1"
 accesskit_winit = "0.34.0"
 
 # Performance
-hotpath = "0.28"
+hotpath = "0.29.1"
 
 # Errors
 anyhow = "1.0.100"

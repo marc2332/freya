@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use freya::prelude::*;
 use freya_testing::prelude::*;
 
@@ -517,9 +519,12 @@ pub fn input_shift_wheel_scroll_test() {
         name: WheelEventName::Wheel,
         scroll: (0.0, -50.0).into(),
         cursor: (75.0, 15.0).into(),
-        source: WheelSource::Pixel,
+        source: WheelSource::Line,
+        phase: TouchPhase::Moved,
     });
     test.sync_and_update();
+
+    test.poll(Duration::from_millis(16), Duration::from_millis(500));
 
     let scrolled_x = paragraph_x(&test);
     assert!(scrolled_x < initial_x);

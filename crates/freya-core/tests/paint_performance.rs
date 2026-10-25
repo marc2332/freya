@@ -27,7 +27,11 @@ use freya_engine::prelude::{
 };
 use freya_testing::TestingRunner;
 
-const ITERATIONS: usize = 200;
+const ITERATIONS: usize = if cfg!(feature = "hotpath-callgrind") {
+    10
+} else {
+    200
+};
 const COLUMNS: usize = 45;
 const ROWS: usize = 40;
 const CELL_WIDTH: f32 = 54.;
@@ -384,6 +388,7 @@ fn mount(app: impl Into<AppComponent>) -> (PaintingWorkload, Rc<Cell<usize>>) {
     (PaintingWorkload { runner }, count)
 }
 
+#[cfg_attr(feature = "hotpath", hotpath::measure)]
 fn small_ui() {
     let (mut workload, count) = mount(|| controls_app(2));
     let targets = workload.buttons();
@@ -395,6 +400,7 @@ fn small_ui() {
     assert_eq!(count.get(), ITERATIONS);
 }
 
+#[cfg_attr(feature = "hotpath", hotpath::measure)]
 fn medium_ui() {
     let (mut workload, count) = mount(|| controls_app(12));
     let targets = workload.buttons();
@@ -406,6 +412,7 @@ fn medium_ui() {
     assert_eq!(count.get(), ITERATIONS);
 }
 
+#[cfg_attr(feature = "hotpath", hotpath::measure)]
 fn large_switches() {
     let (mut runner, count) = TestingRunner::new(
         switches_app,
@@ -427,6 +434,7 @@ fn large_switches() {
     assert_eq!(count.get(), ITERATIONS);
 }
 
+#[cfg_attr(feature = "hotpath", hotpath::measure)]
 fn images_medium() {
     let bytes = Bytes::from_static(include_bytes!("../../../examples/rust_logo.png"));
     let image = SkImage::from_encoded(SkData::new_copy(&bytes)).expect("Image must decode");
@@ -455,6 +463,7 @@ fn images_medium() {
     assert_eq!(count.get(), ITERATIONS);
 }
 
+#[cfg_attr(feature = "hotpath", hotpath::measure)]
 fn medium_text() {
     let (mut workload, count) = mount(|| {
         ScrollView::new().children((0..20).map(|index| TextBlock {
@@ -469,6 +478,7 @@ fn medium_text() {
     assert_eq!(count.get(), ITERATIONS);
 }
 
+#[cfg_attr(feature = "hotpath", hotpath::measure)]
 fn large_text() {
     let (mut workload, count) = mount(|| {
         ScrollView::new().children((0..200).map(|index| TextBlock {
@@ -483,6 +493,7 @@ fn large_text() {
     assert_eq!(count.get(), ITERATIONS);
 }
 
+#[cfg_attr(feature = "hotpath", hotpath::measure)]
 fn medium_code_editor_typing() {
     let source = (0..200)
         .map(|line| format!("fn function_{line}() -> usize {{ {line} }}\n"))
@@ -522,6 +533,7 @@ fn medium_code_editor_typing() {
     );
 }
 
+#[cfg_attr(feature = "hotpath", hotpath::measure)]
 fn medium_scrolling() {
     let (mut workload, _) = mount(|| ScrollView::new().children((0..200).map(scroll_item)));
     workload.run(timings!("medium-scrolling"), |runner, _| {
@@ -529,6 +541,7 @@ fn medium_scrolling() {
     });
 }
 
+#[cfg_attr(feature = "hotpath", hotpath::measure)]
 fn medium_virtualscrolling() {
     let (mut workload, _) = mount(|| {
         VirtualScrollView::new(|item, _| scroll_item(item.index).into_element())
@@ -540,6 +553,7 @@ fn medium_virtualscrolling() {
     });
 }
 
+#[cfg_attr(feature = "hotpath", hotpath::measure)]
 fn medium_animation() {
     let (mut runner, changed) = TestingRunner::new(
         animation_app,
@@ -547,12 +561,18 @@ fn medium_animation() {
         |runner| runner.provide_root_context(|| Rc::new(Cell::new(false))),
         1.,
     );
+    #[cfg(feature = "hotpath-callgrind")]
+    runner.animation_clock().disable();
     runner.render_to_surface();
     let mut workload = PaintingWorkload { runner };
 
     workload.run_with_interval(
         timings!("medium-animation"),
-        Duration::from_millis(16),
+        if cfg!(feature = "hotpath-callgrind") {
+            Duration::ZERO
+        } else {
+            Duration::from_millis(16)
+        },
         |_, _| {},
     );
     assert!(changed.get());
