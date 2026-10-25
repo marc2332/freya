@@ -330,7 +330,7 @@ impl GpuResourceCacheLimit {
 
 pub type EmbeddedFonts = Vec<(Cow<'static, str>, Bytes)>;
 #[cfg(feature = "tray")]
-pub type TrayIconGetter = Box<dyn FnOnce() -> tray_icon::TrayIcon + Send>;
+pub type TrayIconGetter = Box<dyn FnOnce() -> tray_icon::TrayIcon>;
 #[cfg(feature = "tray")]
 pub type TrayHandler =
     Box<dyn FnMut(crate::tray_icon::TrayEvent, crate::renderer::RendererContext)>;
@@ -424,7 +424,7 @@ impl LaunchConfig {
     #[cfg(feature = "tray")]
     pub fn with_tray(
         mut self,
-        tray_icon: impl FnOnce() -> tray_icon::TrayIcon + 'static + Send,
+        tray_icon: impl FnOnce() -> tray_icon::TrayIcon + 'static,
         tray_handler: impl FnMut(crate::tray_icon::TrayEvent, crate::renderer::RendererContext)
         + 'static,
     ) -> Self {

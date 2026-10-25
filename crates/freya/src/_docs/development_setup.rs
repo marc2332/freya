@@ -13,14 +13,14 @@
 //!
 //! Install these packages:
 //! ```sh
-//! sudo apt install build-essential libssl-dev pkg-config cmake libgtk-3-dev libclang-dev
+//! sudo apt install build-essential libssl-dev pkg-config cmake libclang-dev
 //! ```
 //!
 //! #### Arch Linux
 //!
 //! Install these packages:
 //! ```sh
-//! sudo pacman -S base-devel openssl cmake gtk3 clang
+//! sudo pacman -S base-devel openssl cmake clang
 //! ```
 //!
 //! #### Fedora
@@ -28,7 +28,7 @@
 //! Install these packages:
 //!
 //! ```sh
-//! sudo dnf install openssl-devel clang-devel systemd-devel gtk3-devel @development-tools -y
+//! sudo dnf install openssl-devel clang-devel systemd-devel @development-tools -y
 //! ```
 //!
 //! ### MacOS
