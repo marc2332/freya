@@ -12,7 +12,9 @@
 //!
 //! Start with section 1 in `src/main.rs`, then apply each section's changes.
 //! The [finished example](https://github.com/marc2332/freya/blob/main/examples/learn_building_app.rs)
-//! includes tests. Run it from a Freya checkout.
+//! includes tests.
+//!
+//! If you cloned the Freya repository, run it like this:
 //!
 //! ```sh
 //! cargo run --example learn_building_app
