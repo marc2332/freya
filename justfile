@@ -78,25 +78,25 @@ pa:
     CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="{{callgrind_runner}}" cargo bench --package freya-core --bench dev_perf --features "hotpath-callgrind, hotpath-alloc"
 
 pd-ci:
-    CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="{{callgrind_runner}}" cargo bench --package freya-core --bench dev_perf --features "hotpath-callgrind, hotpath-alloc, hotpath-cloud"
+    cargo bench --package freya-core --bench dev_perf --features "hotpath-callgrind, hotpath-alloc, hotpath-cloud"
 
 pc:
     CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="{{callgrind_runner}}" cargo bench --package freya-core --bench core_perf --features "hotpath-callgrind, hotpath-alloc"
 
 pc-ci:
-    CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="{{callgrind_runner}}" cargo bench --package freya-core --bench core_perf --features "hotpath-callgrind, hotpath-alloc, hotpath-cloud"
+    cargo bench --package freya-core --bench core_perf --features "hotpath-callgrind, hotpath-alloc, hotpath-cloud"
 
 pp workload="painting_suite":
     CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="{{callgrind_runner}}" cargo test --package freya-core --test paint_performance --release --features "hotpath-callgrind" "{{workload}}" -- --ignored --exact --nocapture --test-threads=1
 
 pp-ci:
-    CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="{{callgrind_runner}}" cargo test --package freya-core --test paint_performance --release --features "hotpath-callgrind, hotpath-alloc, hotpath-cloud" painting_suite -- --ignored --exact --nocapture --test-threads=1
+    cargo test --package freya-core --test paint_performance --release --features "hotpath-callgrind, hotpath-alloc, hotpath-cloud" painting_suite -- --ignored --exact --nocapture --test-threads=1
 
 pt:
     CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="{{callgrind_runner}}" cargo bench --package torin --bench callgrind --features "hotpath-callgrind, hotpath-alloc"
 
 pt-ci:
-    CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="{{callgrind_runner}}" cargo bench --package torin --bench callgrind --features "hotpath-callgrind, hotpath-alloc, hotpath-cloud"
+    cargo bench --package torin --bench callgrind --features "hotpath-callgrind, hotpath-alloc, hotpath-cloud"
 
 ba:
     cargo build --all-targets --workspace -F freya/all-debug

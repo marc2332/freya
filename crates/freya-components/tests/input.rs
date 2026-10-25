@@ -550,14 +550,14 @@ pub fn input_drag_scrolls_to_cursor_test() {
     };
     let initial_x = paragraph_x(&test);
 
-    // Start dragging inside the input and move past its right edge
     test.press_cursor((100.0, 15.0));
     test.sync_and_update();
-    test.move_cursor((400.0, 15.0));
+    test.move_cursor((170.0, 15.0));
     test.sync_and_update();
 
     let dragged_x = paragraph_x(&test);
     assert!(dragged_x < initial_x);
+    assert!(initial_x - dragged_x < 100.0);
 
     // Dragging back past the left edge scrolls back to the beginning
     test.move_cursor((-500.0, 15.0));

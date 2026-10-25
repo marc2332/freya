@@ -459,8 +459,9 @@ impl Component for Input {
             if visible_cursor_location.x < visible_start_x {
                 scroll_controller.scroll_to_x(-cursor_location.x as i32);
             } else if visible_cursor_location.x > visible_start_x + viewport.width() {
-                scroll_controller
-                    .scroll_to_x(-(area.peek().width() - viewport.width()).max(0.0) as i32);
+                scroll_controller.scroll_to_x(
+                    -(visible_cursor_location.x + padding.right() - viewport.width()) as i32,
+                );
             }
 
             if multiline {

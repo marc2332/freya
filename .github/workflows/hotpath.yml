@@ -41,6 +41,11 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    env: &benchmark-env
+      HOTPATH_BENCHMARK: ${{ matrix.benchmark }}
+      HOTPATH_POLICY_PATH: ${{ github.workspace }}/${{ matrix.policy }}
+      HOTPATH_OUTPUT_FORMAT: json
+      HOTPATH_USER_METADATA: runner=Linux-X64,toolchain=1.99.0,profile=optimized,valgrind=3.26.0
     steps: &benchmark-steps
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -59,20 +64,21 @@ jobs:
         uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
         with:
           tool: just
-      - name: Run benchmark under Callgrind
+      - name: Run benchmark natively
         env:
-          HOTPATH_BENCHMARK: ${{ matrix.benchmark }}
-          HOTPATH_POLICY_PATH: ${{ github.workspace }}/${{ matrix.policy }}
+          HOTPATH_OUTPUT_PATH: ${{ runner.temp }}/native.json
+        run: just ${{ matrix.recipe }}
+      - name: Run benchmark under Callgrind and merge the native report
+        env:
           HOTPATH_UPLOAD: ${{ github.event_name == 'push' && 'fail-on-error' || '0' }}
           HOTPATH_UPLOAD_RESPONSE_PATH: ${{ runner.temp }}/upload.json
-          HOTPATH_OUTPUT_FORMAT: json
           HOTPATH_OUTPUT_PATH: ${{ github.workspace }}/${{ matrix.report }}
+          HOTPATH_MERGE_REPORT: ${{ runner.temp }}/native.json
           HOTPATH_CALLGRIND_OUT_FILE: ${{ runner.temp }}/callgrind.out.%p
-          HOTPATH_USER_METADATA: runner=Linux-X64,toolchain=1.99.0,profile=optimized,valgrind=3.26.0
           CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER: valgrind -q --tool=callgrind --instr-atstart=no --callgrind-out-file=${{ runner.temp }}/callgrind.out.%p
         run: |
-          just --set callgrind_runner "$CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER" ${{ matrix.recipe }}
-          jq -e '.functions_icount.data | length > 0' "$HOTPATH_OUTPUT_PATH" > /dev/null
+          just ${{ matrix.recipe }}
+          jq -e '.meta.run == "merged" and (.functions_icount.data | length > 0) and (.functions_timing.data | length > 0)' "$HOTPATH_OUTPUT_PATH" > /dev/null
           jq -e '.meta.policy.source | type == "string" and length > 0' "$HOTPATH_OUTPUT_PATH" > /dev/null
           if [ "$HOTPATH_UPLOAD" = fail-on-error ]; then
             test -s "$HOTPATH_UPLOAD_RESPONSE_PATH"
@@ -95,4 +101,5 @@ jobs:
       cancel-in-progress: true
     permissions:
       contents: read
+    env: *benchmark-env
     steps: *benchmark-steps
