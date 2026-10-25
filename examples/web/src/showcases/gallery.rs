@@ -35,14 +35,13 @@ demos! {
 
     SwitchDemo => "Switch" {
         let toggled = use_state(|| true);
-        let disabled = use_state(|| false);
 
         rect()
             .spacing(12.)
             .cross_align(Alignment::center())
             .child(Switch::new(toggled))
             .child(if toggled() { "On" } else { "Off" })
-            .child(Switch::new(disabled).enabled(false))
+            .child(Switch::new(WritableSetter::new(false, |_| {})).enabled(false))
             .child("Disabled")
     }
 

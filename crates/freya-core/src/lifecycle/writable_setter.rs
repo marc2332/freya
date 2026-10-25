@@ -7,8 +7,7 @@ use crate::prelude::*;
 ///
 /// fn app() -> impl IntoElement {
 ///     let mut value = use_state(String::new);
-///     let value = WritableSetter::new(value, move |text| value.set(text));
-///     Input::new(value)
+///     Input::new(WritableSetter::new(value, move |text| value.set(text)))
 /// }
 /// ```
 pub struct WritableSetter<T: 'static> {
