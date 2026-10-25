@@ -7,6 +7,37 @@ use freya::prelude::*;
 use freya_testing::prelude::*;
 
 #[test]
+fn writable_setter_skips_unchanged_values() {
+    fn app() -> impl IntoElement {
+        let mut value = use_state(|| 0);
+        let mut updates = use_state(|| 0);
+        let setter = WritableSetter::new(value, move |updated| {
+            value.set(updated);
+            *updates.write() += 1;
+        });
+        let mut setter_clone = setter.clone();
+
+        rect()
+            .child(Button::new().child("Set").on_press(move |_| {
+                setter_clone.set_if_modified(0);
+                setter_clone.set_if_modified(1);
+                setter_clone.set_if_modified(1);
+            }))
+            .child(format!("{}:{}", setter.read(), updates.read()))
+    }
+
+    let mut test = launch_test(app);
+    test.click_cursor((15., 15.));
+
+    assert!(
+        test.find(|_, element| {
+            Label::try_downcast(element).filter(|label| label.text.as_ref() == "1:1")
+        })
+        .is_some()
+    );
+}
+
+#[test]
 fn writable_read_subscribes_state() {
     static READER_RENDER_COUNT: AtomicI32 = AtomicI32::new(0);
 
