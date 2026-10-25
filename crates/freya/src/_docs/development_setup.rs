@@ -52,3 +52,13 @@
 //! - `mold`
 //!
 //! If there is another one not supported don't hesitate to add it here.
+//!
+//! ## Build your first app
+//!
+//! Follow [Building your first app](crate::_docs::building_an_app) to create a small todo app,
+//! from its first window to testing user interactions. The guide explains layout, components,
+//! state ownership, and stable list keys as you need them.
+//!
+//! For individual APIs, browse [UI and Components](crate::_docs::ui_and_components),
+//! [State Management](crate::_docs::state_management), and the
+//! [runnable examples](https://github.com/marc2332/freya/tree/main/examples).

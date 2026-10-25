@@ -1,6 +1,7 @@
 pub mod _async;
 pub mod ai;
 pub mod borderless;
+pub mod building_an_app;
 pub mod development_setup;
 pub mod devtools;
 pub mod events;
