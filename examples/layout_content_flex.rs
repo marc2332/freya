@@ -12,7 +12,6 @@ fn app() -> impl IntoElement {
     rect()
         .content(Content::Flex)
         .center()
-        .width(Size::fill())
         .expanded()
         .horizontal()
         .child(
