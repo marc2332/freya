@@ -7,6 +7,8 @@
 //!
 //! **Freya** is a declarative, cross-platform GUI 🦀 Rust library, powered by 🎨 [Skia](https://skia.org/).
 //!
+//! New to Freya? Follow [Building your first app](self::_docs::building_an_app) to build and test a todo app.
+//!
 //! #### Example
 //!
 //! ```rust, no_run

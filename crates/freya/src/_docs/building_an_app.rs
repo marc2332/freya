@@ -33,6 +33,7 @@
 //! }
 //!
 //! fn app() -> impl IntoElement {
+//!     // Make the light theme available to all components in the app.
 //!     use_init_theme(light_theme);
 //!
 //!     rect()
@@ -460,7 +461,7 @@
 //!
 //! ## 7. Test the app
 //!
-//! Add `freya-testing` as a development dependency.
+//! Add [`freya-testing`](freya_testing) as a development dependency.
 //!
 //! ```sh
 //! cargo add freya-testing --dev
