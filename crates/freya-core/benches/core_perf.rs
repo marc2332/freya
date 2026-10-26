@@ -235,7 +235,7 @@ fn grid_app(global_listeners: bool) -> Element {
                     rect()
                         .key(column)
                         .width(Size::percent(100.0 / GRID_SIDE as f32))
-                        .maybe(global_listeners, |el| el.on_global_pointer_press(|_| {}))
+                        .maybe(global_listeners, |el| el.on_global_pointer_up(|_| {}))
                         .maybe(!global_listeners, |el| {
                             el.on_mouse_move(|_| {}).on_mouse_down(|_| {})
                         })
