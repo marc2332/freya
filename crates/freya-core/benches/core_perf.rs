@@ -91,6 +91,7 @@ fn build_row(index: usize) -> Element {
         .into_element()
 }
 
+#[cfg_attr(feature = "hotpath", hotpath::measure)]
 fn elements() {
     bench("elements: build 1000 rows", || {
         rect()
@@ -135,6 +136,7 @@ fn runner_app(reorder: RunnerReorder, row_count: usize) -> Element {
         .into()
 }
 
+#[cfg_attr(feature = "hotpath", hotpath::measure)]
 fn runner() {
     bench("runner: mount 1000 rows", || {
         mounted_runner(|| runner_app(RunnerReorder::None, ROWS))
@@ -188,6 +190,7 @@ fn cascade_app() -> Element {
         .into()
 }
 
+#[cfg_attr(feature = "hotpath", hotpath::measure)]
 fn cascades() {
     let (mut runner, mut tree, target) = mounted_runner(cascade_app);
 
@@ -298,6 +301,7 @@ fn events() {
     });
 }
 
+#[cfg_attr(feature = "hotpath", hotpath::measure)]
 fn accessibility() {
     let (_runner, mut tree, _) = mounted_runner(cascade_app);
     measure_layout(&mut tree);

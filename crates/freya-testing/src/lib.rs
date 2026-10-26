@@ -141,6 +141,7 @@ impl Drop for TestingRunner {
 }
 
 impl TestingRunner {
+    /// Creates a runner with a physical viewport size and rendering scale factor.
     pub fn new<T>(
         app: impl Into<AppComponent>,
         size: Size2D,
@@ -205,7 +206,7 @@ impl TestingRunner {
                 focused_accessibility_node: State::create(accesskit::Node::new(
                     accesskit::Role::Window,
                 )),
-                root_size: State::create(size),
+                root_size: State::create(size / scale_factor as f32),
                 scale_factor: State::create(scale_factor),
                 custom_scale_factor: State::create(1.0),
                 navigation_mode: State::create(NavigationMode::NotKeyboard),
@@ -573,7 +574,8 @@ impl TestingRunner {
             name: WheelEventName::Wheel,
             scroll,
             cursor,
-            source: WheelSource::Pixel,
+            source: WheelSource::Custom,
+            phase: TouchPhase::Moved,
         });
         self.sync_and_update();
         // Refresh hover states after the scroll

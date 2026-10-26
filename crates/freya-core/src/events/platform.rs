@@ -107,6 +107,7 @@ pub enum PlatformEvent {
         scroll: CursorPoint,
         cursor: CursorPoint,
         source: WheelSource,
+        phase: TouchPhase,
     },
     /// A Touch Event.
     Touch {

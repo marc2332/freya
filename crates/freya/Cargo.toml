@@ -1,6 +1,6 @@
 [package]
 name = "freya"
-version = "0.5.0-rc.10"
+version = "0.5.0-rc.13"
 description = "Cross-platform and native GUI Library powered by Skia."
 edition = "2024"
 license = "MIT"
@@ -110,7 +110,7 @@ markdown = ["dep:freya-markdown"]
 markdown-code-editor = ["markdown", "code-editor", "freya-markdown/code-editor"]
 sdk = ["dep:freya-sdk"]
 sdk-tokio = ["sdk", "freya-sdk/tokio"]
-tray = ["winit", "freya-winit/tray", "dep:tray-icon"]
+tray = ["winit", "freya-winit/tray"]
 material-design = ["dep:freya-material-design"]
 hotpath = ["winit", "freya-core/hotpath", "freya-winit/hotpath"]
 icons = ["dep:freya-icons"]
@@ -156,9 +156,6 @@ freya-web = { workspace = true, optional = true }
 freya-metrics-plugin = { workspace = true, optional = true }
 freya-material-design = { workspace = true, optional = true }
 freya-testing = { workspace = true, optional = true }
-
-# Tray
-tray-icon = { workspace = true, optional = true }
 
 # Plot
 plotters = { version = "0.3.7", default-features = false, features = [

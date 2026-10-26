@@ -570,14 +570,24 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                 (e.delta_x as f32, e.delta_y as f32)
             };
 
-            let animate = e.source == WheelSource::Line;
+            // TODO(marc2332): Enable and test touchpad smooth scrolling in mac and windows
+            let scroll_gesture =
+                TargetPlatform::get() == TargetPlatform::Linux && e.source == WheelSource::Pixel;
+            if scroll_gesture
+                && scroll_controller.scroll_gesture_phase(e.phase, (x_movement, y_movement).into())
+            {
+                return;
+            }
+
+            let animate = e.source == WheelSource::Line || scroll_gesture;
             if animate {
                 scroll_controller.animate_from(rendered_position);
             } else {
                 scroll_controller.stop();
             }
             let (base_x, base_y) = if animate {
-                (corrected_scrolled_x, corrected_scrolled_y)
+                let position = scroll_controller.position();
+                (position.x, position.y)
             } else {
                 (rendered_position.x, rendered_position.y)
             };
