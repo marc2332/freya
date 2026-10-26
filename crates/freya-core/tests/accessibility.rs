@@ -90,6 +90,44 @@ fn moving_an_a11y_id_between_siblings() {
     }
 }
 
+#[test]
+fn keyed_sibling_reorders_update_accessibility_children() {
+    let (mut test, mut keys) = TestingRunner::new(
+        || {
+            let keys = use_consume::<State<[u64; 3]>>();
+            rect()
+                .a11y_id(AccessibilityId(1000))
+                .a11y_role(AccessibilityRole::Group)
+                .children(keys().into_iter().map(|key| {
+                    rect()
+                        .key(key)
+                        .width(Size::px(100.))
+                        .height(Size::px(20.))
+                        .a11y_id(AccessibilityId(100 + key))
+                        .a11y_role(AccessibilityRole::Button)
+                }))
+        },
+        (300., 300.).into(),
+        |runner| runner.provide_root_context(|| State::create([0u64, 1, 2])),
+        1.,
+    );
+    test.sync_and_update();
+
+    for next in [[2, 1, 0], [1, 0, 2], [0, 1, 2]] {
+        keys.set(next);
+        let update = test.sync_and_update();
+        let (_, parent) = update
+            .nodes
+            .iter()
+            .find(|(id, _)| *id == AccessibilityId(1000))
+            .expect("reordered parent must receive an accessibility update");
+        assert_eq!(
+            parent.children(),
+            next.map(|key| AccessibilityId(100 + key))
+        );
+    }
+}
+
 fn action_request(
     action: AccessibilityAction,
     target_node: AccessibilityId,
