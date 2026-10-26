@@ -1,6 +1,6 @@
 [package]
 name = "freya-winit"
-version = "0.5.0-beta.12"
+version = "0.5.0-rc.13"
 description = "Winit renderer for Freya"
 edition = "2024"
 license = "MIT"
@@ -68,6 +68,12 @@ rfd = { workspace = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 gtk = { version = "0.18.2", optional = true }
+libc = { version = "0.2", optional = true }
+wayland-client = { version = "0.31", features = [
+  "system",
+  "dlopen",
+], optional = true }
+wayland-protocols = { version = "0.32", features = ["client"], optional = true }
 freya-engine = { workspace = true, features = [
   "gl",
   "vulkan",
@@ -126,6 +132,9 @@ gpu = [
   "dep:glutin-winit",
   "dep:ash",
   "dep:ash-window",
+  "dep:libc",
+  "dep:wayland-client",
+  "dep:wayland-protocols",
   "dep:objc2",
   "dep:objc2-metal",
   "dep:objc2-quartz-core",

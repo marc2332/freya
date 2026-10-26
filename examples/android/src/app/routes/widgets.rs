@@ -100,16 +100,10 @@ impl Component for WidgetsDemo {
                     .spacing(20.)
                     .child(
                         rect().spacing(8.).child("Dark Theme").child(
-                            Switch::new()
-                                .expanded()
-                                .toggled(is_dark)
-                                .on_toggle(move |_| {
-                                    if is_dark {
-                                        theme.set(light_theme());
-                                    } else {
-                                        theme.set(dark_theme());
-                                    }
-                                }),
+                            Switch::new(WritableSetter::new(is_dark, move |is_dark| {
+                                theme.set(if is_dark { dark_theme() } else { light_theme() });
+                            }))
+                            .expanded(),
                         ),
                     )
                     .child(

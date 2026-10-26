@@ -10,7 +10,7 @@ use std::{
 
 use crate::prelude::*;
 
-/// A type-erased writable state that only exposes the value type `T`.
+/// A writable reactive value that hides its backing storage type.
 ///
 /// This abstraction allows components to accept state from any source without knowing
 /// whether it comes from local state ([`use_state`]) or
