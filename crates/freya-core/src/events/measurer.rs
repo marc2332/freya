@@ -45,7 +45,6 @@ impl ragnarok::EventsMeasurer for EventsMeasurerAdapter<'_> {
     }
 
     fn is_point_inside(&self, key: &Self::Key, cursor: ragnarok::CursorPoint) -> bool {
-        let element = self.tree.elements.get(key).unwrap();
         let Some(layout_node) = self.tree.layout.get(key) else {
             return false;
         };
@@ -53,6 +52,14 @@ impl ragnarok::EventsMeasurer for EventsMeasurerAdapter<'_> {
         if layout_node.hidden {
             return false;
         }
+
+        if !layout_node.visible_area().contains(cursor.to_f32()) {
+            return false;
+        }
+
+        let Some(element) = self.tree.elements.get(key) else {
+            return false;
+        };
 
         // Make sure the cursor is inside the element
         if !element.is_point_inside(EventMeasurementContext {

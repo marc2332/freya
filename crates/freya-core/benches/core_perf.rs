@@ -10,6 +10,10 @@ use freya_engine::prelude::{
     FontMgr,
     TypefaceFontProvider,
 };
+use ragnarok::{
+    EventsExecutorRunner,
+    EventsMeasurerRunner,
+};
 use torin::{
     prelude::Size2D,
     size::Size,
@@ -19,13 +23,15 @@ const ROWS: usize = 1000;
 const SPARSE_ROWS: usize = 10_000;
 const CONTAINERS: usize = 100;
 const CASCADE_ROWS: usize = 100;
+const GRID_SIDE: usize = 30;
 const ITERATIONS: usize = 30;
 
-#[cfg_attr(feature = "hotpath", hotpath::main(percentiles = [33, 66, 95, 99]))]
+#[cfg_attr(feature = "hotpath", hotpath::main(percentiles = [33, 66, 95, 99], functions_limit = 0))]
 fn main() {
     elements();
     runner();
     cascades();
+    events();
     accessibility();
 }
 
@@ -196,9 +202,7 @@ fn cascades() {
     });
 }
 
-fn accessibility() {
-    let (_runner, mut tree, _) = mounted_runner(cascade_app);
-
+fn measure_layout(tree: &mut Tree) {
     let (events_sender, _events_receiver) = futures_channel::mpsc::unbounded();
     let mut font_collection = FontCollection::new();
     let font_manager: FontMgr = TypefaceFontProvider::new().into();
@@ -214,6 +218,89 @@ fn accessibility() {
         1.0,
         &[],
     );
+}
+
+fn grid_app(global_listeners: bool) -> Element {
+    rect()
+        .on_mouse_up(|_| {})
+        .children((0..GRID_SIDE).map(move |row| {
+            rect()
+                .key(row)
+                .horizontal()
+                .height(Size::percent(100.0 / GRID_SIDE as f32))
+                .children((0..GRID_SIDE).map(move |column| {
+                    rect()
+                        .key(column)
+                        .width(Size::percent(100.0 / GRID_SIDE as f32))
+                        .maybe(global_listeners, |el| el.on_global_pointer_press(|_| {}))
+                        .maybe(!global_listeners, |el| {
+                            el.on_mouse_move(|_| {}).on_mouse_down(|_| {})
+                        })
+                        .child(
+                            rect()
+                                .width(Size::px(20.0))
+                                .height(Size::px(20.0))
+                                .background((0, 119, 255)),
+                        )
+                        .into_element()
+                }))
+                .into_element()
+        }))
+        .into()
+}
+
+fn events() {
+    let (_runner, mut tree, _) = mounted_runner(|| grid_app(false));
+    measure_layout(&mut tree);
+
+    let mut nodes_state = NodesState::default();
+    let mut cursor_x = 0.0;
+    bench("events: hit test a grid of listeners", || {
+        cursor_x = (cursor_x + 1.0) % 400.0;
+        EventsMeasurerAdapter {
+            tree: &mut tree,
+            scale_factor: 1.0,
+        }
+        .run(
+            &mut vec![PlatformEvent::Mouse {
+                name: MouseEventName::MouseMove,
+                cursor: (cursor_x, 200.0).into(),
+                button: None,
+            }],
+            &mut nodes_state,
+            None,
+        )
+    });
+
+    let (mut runner, mut tree, _) = mounted_runner(|| grid_app(true));
+    measure_layout(&mut tree);
+
+    let mut nodes_state = NodesState::default();
+    bench("events: dispatch to a grid of global listeners", || {
+        let processed_events = EventsMeasurerAdapter {
+            tree: &mut tree,
+            scale_factor: 1.0,
+        }
+        .run(
+            &mut vec![PlatformEvent::Mouse {
+                name: MouseEventName::MouseUp,
+                cursor: (5.0, 5.0).into(),
+                button: Some(MouseButton::Left),
+            }],
+            &mut nodes_state,
+            None,
+        );
+
+        EventsExecutorAdapter {
+            runner: &mut runner,
+        }
+        .run(&mut nodes_state, processed_events)
+    });
+}
+
+fn accessibility() {
+    let (_runner, mut tree, _) = mounted_runner(cascade_app);
+    measure_layout(&mut tree);
 
     let mut accessibility_tree = AccessibilityTree::default();
     bench("accessibility: full build", || {
