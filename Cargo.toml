@@ -184,7 +184,7 @@ accesskit = "0.25.1"
 accesskit_winit = "0.34.0"
 
 # Performance
-hotpath = "0.29.2"
+hotpath = "0.30.0"
 
 # Errors
 anyhow = "1.0.100"
