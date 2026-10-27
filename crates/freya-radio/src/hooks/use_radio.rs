@@ -507,7 +507,7 @@ where
 
     pub(crate) fn subscribe_if_not(&self) {
         if let Some(rc) = ReactiveContext::try_current() {
-            let antenna = &self.antenna.write_unchecked();
+            let antenna = self.antenna.peek();
             let channel = antenna.channel.clone();
             let is_listening = antenna.station.is_listening(&channel, &rc);
 
@@ -547,7 +547,7 @@ where
     pub fn with(&self, cb: impl FnOnce(ReadRef<Value>)) {
         self.subscribe_if_not();
         let value = self.antenna.peek().station.value;
-        let borrow = value.read();
+        let borrow = value.peek();
         cb(borrow);
     }
 
@@ -568,7 +568,7 @@ where
         let channel = self.antenna.peek().channel.clone();
         RadioGuard {
             channels: channel.derive_channel(&*value),
-            station: self.antenna.read().station,
+            station: self.antenna.peek().station,
             value,
         }
     }
@@ -601,7 +601,7 @@ where
         let value = self.antenna.peek().station.value.write_unchecked();
         RadioGuard {
             channels: channel.derive_channel(&*value),
-            station: self.antenna.read().station,
+            station: self.antenna.peek().station,
             value,
         }
     }
@@ -649,7 +649,7 @@ where
         let value = self.antenna.peek().station.value.write_unchecked();
         let mut guard = RadioGuard {
             channels: Vec::default(),
-            station: self.antenna.read().station,
+            station: self.antenna.peek().station,
             value,
         };
         let channel_selection = cb(&mut guard.value);
@@ -676,7 +676,7 @@ where
         let value = self.antenna.peek().station.value.write_unchecked();
         RadioGuard {
             channels: Vec::default(),
-            station: self.antenna.read().station,
+            station: self.antenna.peek().station,
             value,
         }
     }
