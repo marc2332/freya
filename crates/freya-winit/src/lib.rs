@@ -157,7 +157,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
         global_contexts,
         #[cfg(feature = "tray")]
         tray: launch_config.tray,
-        #[cfg(all(feature = "tray", not(target_os = "linux")))]
+        #[cfg(feature = "tray")]
         tray_icon: None,
         resumed: false,
         proxy,
@@ -174,48 +174,20 @@ fn launch_inner(mut launch_config: LaunchConfig) {
 
     #[cfg(feature = "tray")]
     {
-        use crate::{
-            renderer::{
-                NativeTrayEvent,
-                NativeTrayEventAction,
-            },
-            tray::{
-                TrayIconEvent,
-                menu::MenuEvent,
-            },
+        use crate::tray::{
+            TrayEvent,
+            TrayIconEvent,
+            menu::MenuEvent,
         };
 
         let proxy = renderer.proxy.clone();
         MenuEvent::set_event_handler(Some(move |event| {
-            let _ = proxy.send_event(NativeEvent::Tray(NativeTrayEvent {
-                action: NativeTrayEventAction::MenuEvent(event),
-            }));
+            let _ = proxy.send_event(NativeEvent::Tray(TrayEvent::Menu(event)));
         }));
         let proxy = renderer.proxy.clone();
         TrayIconEvent::set_event_handler(Some(move |event| {
-            let _ = proxy.send_event(NativeEvent::Tray(NativeTrayEvent {
-                action: NativeTrayEventAction::TrayEvent(event),
-            }));
+            let _ = proxy.send_event(NativeEvent::Tray(TrayEvent::Icon(event)));
         }));
-
-        #[cfg(target_os = "linux")]
-        if let Some(tray_icon) = renderer.tray.0.take() {
-            std::thread::spawn(move || {
-                if !gtk::is_initialized() {
-                    gtk::disable_setlocale();
-
-                    if gtk::init().is_ok() {
-                        tracing::debug!("Tray: GTK initialized");
-                    } else {
-                        tracing::error!("Tray: Failed to initialize GTK");
-                    }
-                }
-
-                let _tray_icon = (tray_icon)();
-
-                gtk::main();
-            });
-        }
     }
 
     event_loop.run_app(&mut renderer).unwrap();

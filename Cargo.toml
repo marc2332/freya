@@ -163,7 +163,9 @@ raw-window-handle = "0.6.0"
 winit = "0.30.13"
 
 # Tray
-tray-icon = "0.21"
+tray-icon = { version = "0.26.1", default-features = false, features = [
+  "ksni",
+] }
 
 # OpenGL
 gl = "0.14.0"
