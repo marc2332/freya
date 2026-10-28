@@ -35,6 +35,26 @@ jobs:
             report: torin.json
             recipe: pt-ci
             policy: hotpath/policy.toml
+          # torin's Criterion benchmarks, each its own series, through hotpath's
+          # Criterion adapter: `iterations` fixes the layout runs per report.
+          - benchmark: torin-criterion-binary-12
+            artifact: hotpath-torin-criterion-binary-12
+            report: torin-criterion-binary-12.json
+            recipe: ptc-ci 'benchmarks/size=4095 depth=12 wide=2 mode=not cached'
+            iterations: 100
+            policy: hotpath/policy.toml
+          - benchmark: torin-criterion-wide-5-cached
+            artifact: hotpath-torin-criterion-wide-5-cached
+            report: torin-criterion-wide-5-cached.json
+            recipe: ptc-ci 'benchmarks/size=54241 depth=5 wide=15 mode=cached'
+            iterations: 100
+            policy: hotpath/policy.toml
+          - benchmark: torin-criterion-aligned-8
+            artifact: hotpath-torin-criterion-aligned-8
+            report: torin-criterion-aligned-8.json
+            recipe: ptc-ci 'benchmarks/alignments=true size=21845 depth=8 wide=4 mode=not cached'
+            iterations: 10
+            policy: hotpath/policy.toml
     concurrency:
       group: hotpath-upload-${{ matrix.benchmark }}-${{ github.ref }}
       cancel-in-progress: false
@@ -46,6 +66,8 @@ jobs:
       HOTPATH_POLICY_PATH: ${{ github.workspace }}/${{ matrix.policy }}
       HOTPATH_OUTPUT_FORMAT: json
       HOTPATH_USER_METADATA: runner=Linux-X64,toolchain=1.99.0,profile=optimized,valgrind=3.26.0
+      # Blank (Criterion untouched) for the non-Criterion benchmarks.
+      HOTPATH_CRITERION_ITERATIONS: ${{ matrix.iterations }}
     steps: &benchmark-steps
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
