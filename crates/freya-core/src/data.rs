@@ -506,11 +506,8 @@ impl AccessibilityState {
             group.retain(|id| *id != self.a11y_id);
         }
 
-        let a11y_id = data.a11y_id.unwrap_or(self.a11y_intrinsic_id);
-        if self.a11y_id != a11y_id {
-            accessibility_diff.add_or_update(node_id);
-            self.a11y_id = a11y_id;
-        }
+        self.a11y_id = data.a11y_id.unwrap_or(self.a11y_intrinsic_id);
+        accessibility_diff.add_or_update(node_id);
 
         if let Some(member_of) = data.builder.member_of() {
             let group = accessibility_groups.entry(member_of).or_default();
