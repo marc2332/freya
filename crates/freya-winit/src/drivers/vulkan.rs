@@ -88,6 +88,7 @@ use raw_window_handle::{
     HasWindowHandle,
     RawDisplayHandle,
 };
+use rustc_hash::FxHashMap;
 use winit::{
     dpi::PhysicalSize,
     event_loop::ActiveEventLoop,
@@ -108,11 +109,16 @@ use crate::{
 /// Vulkan device extensions used by Skia.
 const DEVICE_EXTENSIONS: &[&CStr] = &[KHR_SWAPCHAIN_NAME];
 
-/// Weak references to Vulkan contexts shared by GPU preference.
+/// DRM device major and minor numbers.
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct DrmDevice(pub u32, pub u32);
+
+/// Weak references to Vulkan contexts shared by GPU selection policy.
 #[derive(Default)]
 pub struct SharedVulkan {
-    integrated_context: Weak<VulkanInner>,
-    discrete_context: Weak<VulkanInner>,
+    contexts: FxHashMap<GpuPreference, Weak<VulkanInner>>,
+    #[cfg(target_os = "linux")]
+    compositor_device: std::cell::OnceCell<Option<DrmDevice>>,
 }
 
 impl SharedVulkan {
@@ -123,20 +129,38 @@ impl SharedVulkan {
         gpu_resource_cache_limit: usize,
         gpu_preference: GpuPreference,
     ) -> Result<(Rc<VulkanInner>, SurfaceKHR), Box<dyn std::error::Error>> {
-        let prefer_integrated = gpu_preference == GpuPreference::PreferIntegrated;
-        let context = if prefer_integrated {
-            &mut self.integrated_context
-        } else {
-            &mut self.discrete_context
-        };
-        if let Some(inner) = context.upgrade() {
+        if let Some(inner) = self.contexts.get(&gpu_preference).and_then(Weak::upgrade) {
             let surface = inner.create_presentable_surface(window)?;
+            tracing::info!(gpu = %inner.gpu_name, "Reusing Vulkan GPU context");
             return Ok((inner, surface));
         }
 
-        let (inner, surface) =
-            VulkanInner::new(window, gpu_resource_cache_limit, prefer_integrated)?;
-        *context = Rc::downgrade(&inner);
+        #[cfg(target_os = "linux")]
+        let compositor_device = if gpu_preference == GpuPreference::Auto
+            && matches!(
+                window.display_handle()?.as_raw(),
+                RawDisplayHandle::Wayland(_)
+            ) {
+            Some(
+                self.compositor_device
+                    .get_or_init(|| crate::drivers::wayland_gpu::preferred_device(window))
+                    .ok_or("Wayland's preferred GPU is unavailable, trying OpenGL")?,
+            )
+        } else {
+            None
+        };
+        #[cfg(target_os = "windows")]
+        let compositor_device = None;
+
+        tracing::info!(?gpu_preference, ?compositor_device, "Selecting Vulkan GPU");
+
+        let (inner, surface) = VulkanInner::new(
+            window,
+            gpu_resource_cache_limit,
+            gpu_preference,
+            compositor_device,
+        )?;
+        self.contexts.insert(gpu_preference, Rc::downgrade(&inner));
 
         Ok((inner, surface))
     }
@@ -173,13 +197,17 @@ impl VulkanInner {
     fn new(
         window: &Window,
         gpu_resource_cache_limit: usize,
-        prefer_integrated: bool,
+        gpu_preference: GpuPreference,
+        compositor_device: Option<DrmDevice>,
     ) -> Result<(Rc<Self>, SurfaceKHR), Box<dyn std::error::Error>> {
         let entry = unsafe { Entry::load()? };
 
         // Use the Vulkan loader's API version for Skia.
         let api_version =
             unsafe { entry.try_enumerate_instance_version() }?.unwrap_or(API_VERSION_1_0);
+        if compositor_device.is_some() && api_version < ash::vk::API_VERSION_1_1 {
+            return Err("Matching Wayland's GPU requires Vulkan 1.1".into());
+        }
 
         let instance_extensions = enumerate_required_extensions(window.display_handle()?.as_raw())?;
         let instance = create_instance(&entry, instance_extensions, api_version)?;
@@ -194,8 +222,22 @@ impl VulkanInner {
             )?
         };
 
-        let (physical_device, queue_family_index, gpu_name) =
-            pick_physical_device(&instance, &surface_fns, surface, prefer_integrated)?;
+        let (physical_device, queue_family_index, gpu_name) = match pick_physical_device(
+            &instance,
+            &surface_fns,
+            surface,
+            gpu_preference,
+            compositor_device,
+        ) {
+            Ok(device) => device,
+            Err(error) => {
+                unsafe {
+                    surface_fns.destroy_surface(surface, None);
+                    instance.destroy_instance(None);
+                }
+                return Err(error);
+            }
+        };
 
         let (device, queue) =
             create_logical_device(&instance, physical_device, queue_family_index)?;
@@ -674,29 +716,76 @@ fn create_instance(
     Ok(unsafe { entry.create_instance(&create_info, None)? })
 }
 
-/// Rank Vulkan GPU types using the requested preference.
-fn device_type_rank(device_type: PhysicalDeviceType, prefer_integrated: bool) -> Option<u32> {
-    match device_type {
-        PhysicalDeviceType::DISCRETE_GPU => Some(if prefer_integrated { 1 } else { 0 }),
-        PhysicalDeviceType::INTEGRATED_GPU => Some(if prefer_integrated { 0 } else { 1 }),
-        PhysicalDeviceType::VIRTUAL_GPU => Some(2),
-        PhysicalDeviceType::OTHER => Some(3),
-        _ => None,
-    }
-}
-
 fn pick_physical_device(
     instance: &Instance,
     surface_fns: &InstanceSurfaceFns,
     surface: SurfaceKHR,
-    prefer_integrated: bool,
+    gpu_preference: GpuPreference,
+    compositor_device: Option<DrmDevice>,
 ) -> Result<(PhysicalDevice, u32, String), Box<dyn std::error::Error>> {
+    let prefer_discrete = gpu_preference == GpuPreference::Discrete;
     let devices = unsafe { instance.enumerate_physical_devices()? };
     devices
         .into_iter()
         .filter_map(|physical_device| {
             let properties = unsafe { instance.get_physical_device_properties(physical_device) };
-            let rank = device_type_rank(properties.device_type, prefer_integrated)?;
+            let gpu_name = properties.device_name_as_c_str().unwrap_or(c"Unknown GPU");
+            tracing::info!(
+                gpu = ?gpu_name,
+                device_type = ?properties.device_type,
+                "Considering Vulkan GPU"
+            );
+
+            let rank = match properties.device_type {
+                PhysicalDeviceType::INTEGRATED_GPU => if prefer_discrete { 1 } else { 0 },
+                PhysicalDeviceType::DISCRETE_GPU => if prefer_discrete { 0 } else { 1 },
+                PhysicalDeviceType::VIRTUAL_GPU => 2,
+                PhysicalDeviceType::OTHER => 3,
+                _ => return None,
+            };
+            let extensions =
+                unsafe { instance.enumerate_device_extension_properties(physical_device) }.ok()?;
+            let supports_extension = |name| {
+                extensions.iter().any(|extension| {
+                    (unsafe { CStr::from_ptr(extension.extension_name.as_ptr()) }) == name
+                })
+            };
+            if !supports_extension(KHR_SWAPCHAIN_NAME) {
+                tracing::info!(
+                    gpu = ?gpu_name,
+                    "Skipping Vulkan GPU without swapchain support"
+                );
+                return None;
+            }
+
+            if let Some(DrmDevice(major, minor)) = compositor_device {
+                if !supports_extension(ash::vk::EXT_PHYSICAL_DEVICE_DRM_NAME) {
+                    tracing::info!(
+                        gpu = ?gpu_name,
+                        "Skipping Vulkan GPU without DRM device properties"
+                    );
+                    return None;
+                }
+
+                let mut drm = ash::vk::PhysicalDeviceDrmPropertiesEXT::default();
+                let mut properties = ash::vk::PhysicalDeviceProperties2::default().push_next(&mut drm);
+                unsafe { instance.get_physical_device_properties2(physical_device, &mut properties) };
+
+                let device = (i64::from(major), i64::from(minor));
+                // Wayland may identify the same GPU by its primary (display/rendering) or render-only DRM node.
+                let matches_primary = drm.has_primary != 0
+                    && (drm.primary_major, drm.primary_minor) == device;
+                let matches_render = drm.has_render != 0
+                    && (drm.render_major, drm.render_minor) == device;
+                if !matches_primary && !matches_render {
+                    tracing::info!(
+                        gpu = ?gpu_name,
+                        "Skipping Vulkan GPU that does not match Wayland's preferred device"
+                    );
+                    return None;
+                }
+            }
+
             let queue_family_index = unsafe {
                 instance
                     .get_physical_device_queue_family_properties(physical_device)
@@ -711,29 +800,18 @@ fn pick_physical_device(
                                 surface,
                             )
                             .unwrap_or(false);
-                        if supports_graphics && supports_surface {
-                            Some(index as u32)
-                        } else {
-                            None
-                        }
-                    })?
-            };
-            let extensions_supported = unsafe {
-                instance
-                    .enumerate_device_extension_properties(physical_device)
-                    .map(|exts| {
-                        exts.iter().any(|ext| {
-                            CStr::from_ptr(ext.extension_name.as_ptr()) == KHR_SWAPCHAIN_NAME
-                        })
+                        (supports_graphics && supports_surface).then_some(index as u32)
                     })
-                    .unwrap_or(false)
+            };
+            let Some(queue_family_index) = queue_family_index else {
+                tracing::info!(
+                    gpu = ?gpu_name,
+                    "Skipping Vulkan GPU without graphics presentation support"
+                );
+                return None;
             };
 
-            if extensions_supported {
-                Some((rank, physical_device, queue_family_index, properties))
-            } else {
-                None
-            }
+            Some((rank, physical_device, queue_family_index, properties))
         })
         .min_by_key(|(rank, ..)| *rank)
         .map(|(_, physical_device, queue_family_index, properties)| {
@@ -741,6 +819,11 @@ fn pick_physical_device(
                 .device_name_as_c_str()
                 .map(|name| name.to_string_lossy().into_owned())
                 .unwrap_or_default();
+            tracing::info!(
+                gpu = %gpu_name,
+                device_type = ?properties.device_type,
+                "Selected Vulkan GPU"
+            );
             (physical_device, queue_family_index, gpu_name)
         })
         .ok_or_else(|| "No suitable Vulkan physical device found, GPU-less software implementations are skipped".into())

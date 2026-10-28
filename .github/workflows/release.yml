@@ -22,7 +22,7 @@ jobs:
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
       - name: Install linux dependencies
         background: true
-        run: sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev libwebkit2gtk-4.1-dev libasound2-dev
+        run: sudo apt update && sudo apt install build-essential libssl-dev pkg-config libudev-dev libasound2-dev liblzma-dev libfontconfig1-dev libfreetype6-dev libegl1-mesa-dev libgl1-mesa-dev libgles2-mesa-dev libwayland-dev
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1.16.1
       - name: Set up cargo cache
@@ -39,12 +39,12 @@ jobs:
       - name: Wait for setup
         wait-all:
       - name: Publish to crates.io (dry run)
-        uses: marc2332/letmerelease@b6afa5247bbcaf7d9d6feef8d613ecc749ab3668 # v0.1.5
+        uses: marc2332/letmerelease@1ad3f83e6c6ab8ef40f2badfe45e339fbb7eef29 # v0.2.0
         with:
           token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
           dry-run: true
       - name: Publish to crates.io
-        uses: marc2332/letmerelease@b6afa5247bbcaf7d9d6feef8d613ecc749ab3668 # v0.1.5
+        uses: marc2332/letmerelease@1ad3f83e6c6ab8ef40f2badfe45e339fbb7eef29 # v0.2.0
         with:
           token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
       - name: Push tag

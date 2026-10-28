@@ -1,6 +1,7 @@
 import { defineConfig } from 'astro/config';
 import { satteri, satteriHeadingIdsPlugin } from '@astrojs/markdown-satteri';
 import tailwind from "@astrojs/tailwind";
+import sitemap from "@astrojs/sitemap";
 
 const headingAnchors = {
   name: "heading-anchors",
@@ -18,7 +19,8 @@ const headingAnchors = {
 // https://astro.build/config
 export default defineConfig({
   site: "https://freyaui.dev",
-  integrations: [tailwind()],
+  trailingSlash: "always",
+  integrations: [tailwind(), sitemap()],
   server: {
     allowedHosts: [".ngrok-free.app"],
   },

@@ -4,76 +4,124 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 jobs:
-  hotpath:
-    runs-on: ubuntu-latest
+  upload:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 60
+    strategy: &benchmark-strategy
+      fail-fast: false
+      matrix:
+        include:
+          - benchmark: dev_perf
+            artifact: hotpath-dev
+            report: dev_perf.json
+            recipe: pd-ci
+            policy: hotpath/policy.toml
+          - benchmark: core
+            artifact: hotpath-core
+            report: core.json
+            recipe: pc-ci
+            policy: hotpath/policy.toml
+          - benchmark: painting
+            artifact: hotpath-painting
+            report: painting.json
+            recipe: pp-ci
+            policy: hotpath/painting-policy.toml
+          - benchmark: torin
+            artifact: hotpath-torin
+            report: torin.json
+            recipe: pt-ci
+            policy: hotpath/policy.toml
+          # torin's Criterion benchmarks, each its own series, through hotpath's
+          # Criterion adapter: `iterations` fixes the layout runs per report.
+          - benchmark: torin-criterion-binary-12
+            artifact: hotpath-torin-criterion-binary-12
+            report: torin-criterion-binary-12.json
+            recipe: ptc-ci 'benchmarks/size=4095 depth=12 wide=2 mode=not cached'
+            iterations: 100
+            policy: hotpath/policy.toml
+          - benchmark: torin-criterion-wide-5-cached
+            artifact: hotpath-torin-criterion-wide-5-cached
+            report: torin-criterion-wide-5-cached.json
+            recipe: ptc-ci 'benchmarks/size=54241 depth=5 wide=15 mode=cached'
+            iterations: 100
+            policy: hotpath/policy.toml
+          - benchmark: torin-criterion-aligned-8
+            artifact: hotpath-torin-criterion-aligned-8
+            report: torin-criterion-aligned-8.json
+            recipe: ptc-ci 'benchmarks/alignments=true size=21845 depth=8 wide=4 mode=not cached'
+            iterations: 10
+            policy: hotpath/policy.toml
     concurrency:
-      group: hotpath-${{ github.ref }}
-      # A cancelled push run leaves its commit without a baseline.
-      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+      group: hotpath-upload-${{ matrix.benchmark }}-${{ github.ref }}
+      cancel-in-progress: false
     permissions:
       contents: read
       id-token: write
-    steps:
+    env: &benchmark-env
+      HOTPATH_BENCHMARK: ${{ matrix.benchmark }}
+      HOTPATH_POLICY_PATH: ${{ github.workspace }}/${{ matrix.policy }}
+      HOTPATH_OUTPUT_FORMAT: json
+      HOTPATH_USER_METADATA: runner=Linux-X64,toolchain=1.99.0,profile=optimized,valgrind=3.26.0
+      # Blank (Criterion untouched) for the non-Criterion benchmarks.
+      HOTPATH_CRITERION_ITERATIONS: ${{ matrix.iterations }}
+    steps: &benchmark-steps
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           submodules: true
-      - name: Install linux dependencies
-        background: true
+      - name: Install linux dependencies and Valgrind
         run: |
-          sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev libwebkit2gtk-4.1-dev libasound2-dev
+          sudo apt-get update
+          sudo apt-get install -y build-essential libssl-dev pkg-config libudev-dev libasound2-dev liblzma-dev libfontconfig1-dev libfreetype6-dev libegl1-mesa-dev libgl1-mesa-dev libgles2-mesa-dev libwayland-dev valgrind=1:3.26.0-0ubuntu1
+          valgrind --version
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1
+        with:
+          toolchain: "1.99.0"
       - name: Install just
         uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
         with:
           tool: just
-      - name: Wait for setup
-        wait-all:
-      - name: Dev benchmark
+      - name: Run benchmark natively
         env:
-          HOTPATH_BENCHMARK: dev_perf
-          HOTPATH_UPLOAD: ${{ github.event_name == 'push' && 'fail-on-error' || '0' }}
-          HOTPATH_OUTPUT_FORMAT: ${{ github.event_name == 'push' && 'none' || 'json' }}
-          HOTPATH_OUTPUT_PATH: ${{ github.workspace }}/dev_perf.json
-        run: just pd-ci
-      - name: Core benchmark
+          HOTPATH_OUTPUT_PATH: ${{ runner.temp }}/native.json
+        run: just ${{ matrix.recipe }}
+      - name: Run benchmark under Callgrind and merge the native report
         env:
-          HOTPATH_BENCHMARK: core
           HOTPATH_UPLOAD: ${{ github.event_name == 'push' && 'fail-on-error' || '0' }}
-          HOTPATH_OUTPUT_FORMAT: ${{ github.event_name == 'push' && 'none' || 'json' }}
-          HOTPATH_OUTPUT_PATH: ${{ github.workspace }}/core.json
-        run: just pc-ci
-      - name: Painting benchmarks
-        env:
-          HOTPATH_BENCHMARK: painting
-          HOTPATH_UPLOAD: ${{ github.event_name == 'push' && 'fail-on-error' || '0' }}
-          HOTPATH_OUTPUT_FORMAT: ${{ github.event_name == 'push' && 'none' || 'json' }}
-          HOTPATH_OUTPUT_PATH: ${{ github.workspace }}/painting.json
-        run: just pp-ci
-      - name: Upload dev report
-        if: github.event_name == 'pull_request'
+          HOTPATH_UPLOAD_RESPONSE_PATH: ${{ runner.temp }}/upload.json
+          HOTPATH_OUTPUT_PATH: ${{ github.workspace }}/${{ matrix.report }}
+          HOTPATH_MERGE_REPORT: ${{ runner.temp }}/native.json
+          HOTPATH_CALLGRIND_OUT_FILE: ${{ runner.temp }}/callgrind.out.%p
+          CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER: valgrind -q --tool=callgrind --instr-atstart=no --callgrind-out-file=${{ runner.temp }}/callgrind.out.%p
+        run: |
+          just ${{ matrix.recipe }}
+          jq -e '.meta.run == "merged" and (.functions_icount.data | length > 0) and (.functions_timing.data | length > 0)' "$HOTPATH_OUTPUT_PATH" > /dev/null
+          jq -e '.meta.policy.source | type == "string" and length > 0' "$HOTPATH_OUTPUT_PATH" > /dev/null
+          if [ "$HOTPATH_UPLOAD" = fail-on-error ]; then
+            test -s "$HOTPATH_UPLOAD_RESPONSE_PATH"
+          fi
+      - name: Upload report
+        if: github.event_name != 'push'
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: hotpath-dev
-          path: dev_perf.json
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.report }}
           retention-days: 1
           if-no-files-found: error
-      - name: Upload core report
-        if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: hotpath-core
-          path: core.json
-          retention-days: 1
-          if-no-files-found: error
-      - name: Upload painting report
-        if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: hotpath-painting
-          path: painting.json
-          retention-days: 1
-          if-no-files-found: error
+  report:
+    if: github.event_name != 'push'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 60
+    strategy: *benchmark-strategy
+    concurrency:
+      group: hotpath-report-${{ matrix.benchmark }}-${{ github.ref }}
+      cancel-in-progress: true
+    permissions:
+      contents: read
+    env: *benchmark-env
+    steps: *benchmark-steps

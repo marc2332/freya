@@ -191,6 +191,7 @@ impl WheelSource {
 #[derive(Debug, Clone, PartialEq)]
 pub struct WheelEventData {
     pub source: WheelSource,
+    pub phase: TouchPhase,
     pub delta_x: f64,
     pub delta_y: f64,
     pub global_location: CursorPoint,
@@ -202,6 +203,7 @@ impl WheelEventData {
         delta_x: f64,
         delta_y: f64,
         source: WheelSource,
+        phase: TouchPhase,
         global_location: CursorPoint,
         element_location: CursorPoint,
     ) -> Self {
@@ -209,6 +211,7 @@ impl WheelEventData {
             delta_x,
             delta_y,
             source,
+            phase,
             global_location,
             element_location,
         }

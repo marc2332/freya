@@ -2,11 +2,10 @@
 import { getCollection } from "astro:content";
 
 export interface Props {
-  wide?: boolean;
   sticky?: boolean;
 }
 
-const { wide = false, sticky = true } = Astro.props;
+const { sticky = true } = Astro.props;
 const threeMonthsAgo = new Date();
 threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 const latestRecentPost = (await getCollection("blog"))
@@ -20,7 +19,7 @@ const latestRecentPost = (await getCollection("blog"))
     sticky && "sticky top-0 z-50",
   ]}
 >
-  <div class:list={["mx-auto text-stone-300", wide ? "w-full" : "lg:w-content"]}>
+  <div class="mx-auto w-full text-stone-300">
     <div class="w-full flex justify-center items-center sm:hidden pb-2">
       <a class="flex items-center hover:text-white" title="Freya Home Page" href="/">
         <img src="/logo.svg" width="50" class="block" />
@@ -41,7 +40,7 @@ const latestRecentPost = (await getCollection("blog"))
           latestRecentPost && (
             <a
               class="hidden lg:flex items-center gap-2 mr-2 max-w-56 rounded-lg border border-stone-800 bg-custom-dark-black px-3 py-1 text-xs hover:border-custom-purple hover:bg-custom-dark-gray transition-colors"
-              href={`/posts/${latestRecentPost.data.slug}`}
+              href={`/posts/${latestRecentPost.data.slug}/`}
               title={latestRecentPost.data.title}
             >
               <span class="truncate text-white">{latestRecentPost.data.title}</span>
@@ -54,7 +53,7 @@ const latestRecentPost = (await getCollection("blog"))
         <a
           class="inline-block mx-4 hover:text-white hover:underline"
           title="Freya Blog"
-          href="/blog"
+          href="/blog/"
         >
           Blog
         </a>
@@ -68,7 +67,7 @@ const latestRecentPost = (await getCollection("blog"))
         <a
           class="inline-block mx-4 hover:text-white hover:underline"
           title="Freya support and contracting"
-          href="/support"
+          href="/support/"
         >
           Support
         </a>

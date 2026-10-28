@@ -1,6 +1,6 @@
 [package]
 name = "freya-markdown"
-version = "0.5.0-beta.12"
+version = "0.5.0-rc.13"
 edition = "2024"
 description = "Markdown rendering component for Freya"
 license = "MIT"
@@ -25,7 +25,7 @@ freya-components = { workspace = true }
 freya-code-editor = { workspace = true, optional = true }
 torin = { workspace = true }
 
-pulldown-cmark = "0.13"
+pulldown-cmark = "0.13.5"
 
 [dev-dependencies]
 freya = { path = "../freya", features = ["markdown"] }

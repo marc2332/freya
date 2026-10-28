@@ -1,4 +1,7 @@
-use std::time::Instant;
+use std::time::{
+    Duration,
+    Instant,
+};
 
 use freya_core::prelude::*;
 use torin::{
@@ -82,12 +85,41 @@ pub struct ScrollConfig {
 ///
 /// For an exact pixel offset use [`scroll_to_y`](ScrollController::scroll_to_y) or
 /// [`scroll_to_x`](ScrollController::scroll_to_x). The current position is available by converting
-/// the controller into a `(i32, i32)` tuple of `(x, y)` pixels.
+/// the controller into a `(i32, i32)` tuple of `(x, y)` pixels, or calling
+/// [`position`](ScrollController::position).
+///
+/// # Animated scrolling
+///
+/// Scrolling to a position is instant by default. To animate, call
+/// [`animate_from`](ScrollController::animate_from) with the current position before setting
+/// the target offset.
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> impl IntoElement {
+///     let mut scroll_controller = use_scroll_controller(ScrollConfig::default);
+///
+///     rect()
+///         .child(
+///             Button::new()
+///                 .on_press(move |_| {
+///                     let current = scroll_controller.position();
+///                     scroll_controller.animate_from(current);
+///                     scroll_controller.scroll_to_y(-500);
+///                 })
+///                 .child("Animate scroll"),
+///         )
+///         .child(
+///             ScrollView::new_controlled(scroll_controller)
+///                 .children((0..100).map(|i| label().key(i).text(format!("Item {i}")))),
+///         )
+/// }
+/// ```
 ///
 /// # Keeping scrollviews in sync
 ///
-/// Because a [`ScrollController`] is a cheap [`Copy`] handle, you can pass the same one to several
-/// scrollviews and they share a single scroll position, moving any of them moves the rest.
+/// Pass the same [`ScrollController`] to several scrollviews to share a single scroll position.
+/// Moving any of them moves the rest.
 ///
 /// ```rust
 /// # use freya::prelude::*;
@@ -131,7 +163,7 @@ pub struct ScrollConfig {
 #[derive(PartialEq, Clone, Copy)]
 pub struct ScrollController {
     pub(crate) scroll: State<(i32, i32)>,
-    bounds: State<Option<(Size2D, Size2D)>>,
+    pub bounds: State<Option<(Size2D, Size2D)>>,
     pub(crate) damp: State<SmoothDamp>,
     pub(crate) drag: State<Drag>,
     pub(crate) task: State<Option<TaskHandle>>,
@@ -160,7 +192,7 @@ impl ScrollController {
     }
 
     /// Updates the content and viewport bounds used to clamp scroll positions.
-    pub(crate) fn apply_layout(&mut self, content_size: Size2D, viewport_size: Size2D) {
+    pub fn apply_layout(&mut self, content_size: Size2D, viewport_size: Size2D) {
         self.bounds.set(Some((content_size, viewport_size)));
 
         let (x, y) = *self.scroll.peek();
@@ -168,7 +200,8 @@ impl ScrollController {
         self.scroll_to_y(y);
     }
 
-    pub(crate) fn position(self) -> Point2D {
+    /// Reads the current scroll position in pixels.
+    pub fn position(self) -> Point2D {
         let (x, y): (i32, i32) = self.into();
         Point2D::new(x as f32, y as f32)
     }
@@ -229,11 +262,15 @@ pub fn use_scroll_controller(config: impl FnOnce() -> ScrollConfig) -> ScrollCon
 
 /// Distance under which the animation is close enough to snap, in pixels.
 const SETTLE_DISTANCE: f32 = 0.5;
+
 /// Speed under which the animation is slow enough to stop, in pixels per second.
 const SETTLE_SPEED: f32 = 20.0;
 
 /// Slowest drag release speed that still starts a fling, in pixels per second.
 const FLING_MIN_SPEED: f32 = 50.0;
+
+/// Maximum time since the last drag movement that still allows a fling.
+const FLING_RELEASE_TIMEOUT: Duration = Duration::from_millis(100);
 
 /// Scrolling feel of a [`TargetPlatform`].
 pub(crate) trait ScrollFeel {
@@ -390,6 +427,33 @@ impl ScrollController {
             task.write().take();
         });
         task.write().replace(animation_task);
+    }
+
+    /// Returns whether the gesture ended or was cancelled, so callers skip applying the scroll delta.
+    pub(crate) fn scroll_gesture_phase(&mut self, phase: TouchPhase, delta: Vector2D) -> bool {
+        match phase {
+            TouchPhase::Started => {
+                self.stop();
+                self.drag.set(Drag::default());
+            }
+            TouchPhase::Moved => self.drag.write().track(-delta),
+            TouchPhase::Ended => {
+                let bounds = *self.bounds.peek();
+                if self.drag.peek().last_move.elapsed() < FLING_RELEASE_TIMEOUT
+                    && let Some((content, viewport)) = bounds
+                {
+                    self.release_drag(self.animated_position(self.position()), content, viewport);
+                }
+                self.drag.set(Drag::default());
+                return true;
+            }
+            TouchPhase::Cancelled => {
+                self.stop();
+                self.drag.set(Drag::default());
+                return true;
+            }
+        }
+        false
     }
 
     /// Freezes the animation and starts a drag from the momentum it caught.

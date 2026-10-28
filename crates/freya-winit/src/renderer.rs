@@ -30,7 +30,7 @@ use torin::prelude::{
     CursorPoint,
     Size2D,
 };
-#[cfg(all(feature = "tray", not(target_os = "linux")))]
+#[cfg(feature = "tray")]
 use tray_icon::TrayIcon;
 #[cfg(feature = "accessibility")]
 use winit::dpi::{
@@ -90,7 +90,7 @@ pub struct WinitRenderer {
         Option<crate::config::TrayIconGetter>,
         Option<crate::config::TrayHandler>,
     ),
-    #[cfg(all(feature = "tray", not(target_os = "linux")))]
+    #[cfg(feature = "tray")]
     pub(crate) tray_icon: Option<TrayIcon>,
     pub resumed: bool,
     pub windows: FxHashMap<WindowId, AppWindow>,
@@ -236,20 +236,6 @@ pub struct NativeWindowEvent {
     pub action: NativeWindowEventAction,
 }
 
-#[cfg(feature = "tray")]
-#[derive(Debug)]
-pub enum NativeTrayEventAction {
-    TrayEvent(tray_icon::TrayIconEvent),
-    MenuEvent(tray_icon::menu::MenuEvent),
-    LaunchWindow(SingleThreadErasedEvent),
-}
-
-#[cfg(feature = "tray")]
-#[derive(Debug)]
-pub struct NativeTrayEvent {
-    pub action: NativeTrayEventAction,
-}
-
 pub enum NativeGenericEvent {
     PollFutures,
     User(GlobalUserEvent),
@@ -274,7 +260,7 @@ unsafe impl Sync for NativeGenericEvent {}
 pub enum NativeEvent {
     Window(NativeWindowEvent),
     #[cfg(feature = "tray")]
-    Tray(NativeTrayEvent),
+    Tray(crate::tray_icon::TrayEvent),
     Generic(NativeGenericEvent),
     Preferences(mundy::Preferences),
 }
@@ -294,7 +280,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
         if !self.resumed {
             #[cfg(feature = "tray")]
             {
-                #[cfg(not(target_os = "linux"))]
                 if let Some(tray_icon) = self.tray.0.take() {
                     self.tray_icon = Some((tray_icon)());
                 }
@@ -400,7 +385,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 }
             }
             #[cfg(feature = "tray")]
-            NativeEvent::Tray(NativeTrayEvent { action }) => {
+            NativeEvent::Tray(event) => {
                 let renderer_context = RendererContext {
                     fallback_fonts: &mut self.fallback_fonts,
                     active_event_loop,
@@ -413,45 +398,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     gpu_resource_cache_limit: self.gpu_resource_cache_limit,
                     graphics_context: &mut self.graphics_context,
                 };
-                match action {
-                    NativeTrayEventAction::TrayEvent(icon_event) => {
-                        use crate::tray::TrayEvent;
-                        if let Some(tray_handler) = &mut self.tray.1 {
-                            (tray_handler)(TrayEvent::Icon(icon_event), renderer_context)
-                        }
-                    }
-                    NativeTrayEventAction::MenuEvent(menu_event) => {
-                        use crate::tray::TrayEvent;
-                        if let Some(tray_handler) = &mut self.tray.1 {
-                            (tray_handler)(TrayEvent::Menu(menu_event), renderer_context)
-                        }
-                    }
-                    NativeTrayEventAction::LaunchWindow(data) => {
-                        let window_config = data
-                            .0
-                            .downcast::<WindowConfig>()
-                            .expect("Expected WindowConfig");
-                        let app_window = AppWindow::new(
-                            *window_config,
-                            active_event_loop,
-                            &self.proxy,
-                            &mut self.plugins,
-                            &mut self.font_collection,
-                            &self.font_manager,
-                            &self.fallback_fonts,
-                            self.gpu_resource_cache_limit,
-                            &mut self.graphics_context,
-                        );
-
-                        self.proxy
-                            .send_event(NativeEvent::Window(NativeWindowEvent {
-                                window_id: app_window.window.id(),
-                                action: NativeWindowEventAction::PollRunner,
-                            }))
-                            .ok();
-
-                        self.windows.insert(app_window.window.id(), app_window);
-                    }
+                if let Some(tray_handler) = &mut self.tray.1 {
+                    (tray_handler)(event, renderer_context);
                 }
             }
             NativeEvent::Generic(NativeGenericEvent::User(GlobalUserEvent::LoadFont {
@@ -861,7 +809,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 scale_factor,
                                 &self.fallback_fonts,
                             );
-                            app.platform.root_size.set_if_modified(size);
+                            app.platform
+                                .root_size
+                                .set_if_modified(size / scale_factor as f32);
                             app.process_layout_on_next_render = false;
                             self.plugins.send(
                                 PluginEvent::FinishedMeasuringLayout {
@@ -1123,31 +1073,30 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     const WHEEL_SPEED_MODIFIER: f64 = 53.0;
                     const TOUCHPAD_SPEED_MODIFIER: f64 = 2.0;
 
-                    if TouchPhase::Moved == phase {
-                        let (delta_x, delta_y, source) = match delta {
-                            MouseScrollDelta::LineDelta(x, y) => (
-                                x as f64 * WHEEL_SPEED_MODIFIER,
-                                y as f64 * WHEEL_SPEED_MODIFIER,
-                                WheelSource::Line,
-                            ),
-                            MouseScrollDelta::PixelDelta(position) => (
-                                position.x * TOUCHPAD_SPEED_MODIFIER,
-                                position.y * TOUCHPAD_SPEED_MODIFIER,
-                                WheelSource::Pixel,
-                            ),
-                        };
+                    let (delta_x, delta_y, source) = match delta {
+                        MouseScrollDelta::LineDelta(x, y) => (
+                            x as f64 * WHEEL_SPEED_MODIFIER,
+                            y as f64 * WHEEL_SPEED_MODIFIER,
+                            WheelSource::Line,
+                        ),
+                        MouseScrollDelta::PixelDelta(position) => (
+                            position.x * TOUCHPAD_SPEED_MODIFIER,
+                            position.y * TOUCHPAD_SPEED_MODIFIER,
+                            WheelSource::Pixel,
+                        ),
+                    };
 
-                        app.process_platform_events(
-                            vec![PlatformEvent::Wheel {
-                                name: WheelEventName::Wheel,
-                                scroll: (delta_x, delta_y).into(),
-                                cursor: app.position,
-                                source,
-                            }],
-                            &mut self.plugins,
-                            PluginHandle::new(&self.proxy),
-                        );
-                    }
+                    app.process_platform_events(
+                        vec![PlatformEvent::Wheel {
+                            name: WheelEventName::Wheel,
+                            scroll: (delta_x, delta_y).into(),
+                            cursor: app.position,
+                            source,
+                            phase: map_winit_touch_phase(phase),
+                        }],
+                        &mut self.plugins,
+                        PluginHandle::new(&self.proxy),
+                    );
                 }
 
                 WindowEvent::CursorLeft { .. } => {

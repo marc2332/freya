@@ -35,18 +35,21 @@ pub type WindowBuilderHook =
 pub type WindowHandleHook = Box<dyn FnOnce(&mut Window)>;
 
 /// Preferred GPU type, with fallback to other available hardware.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum GpuPreference {
-    /// Prefer an integrated GPU.
-    PreferIntegrated,
-    /// Prefer a discrete GPU.
+    /// Match Wayland's preferred GPU, otherwise prefer integrated hardware.
     #[default]
-    PreferDiscrete,
+    Auto,
+    /// Prefer an integrated GPU.
+    Integrated,
+    /// Prefer a discrete GPU.
+    Discrete,
 }
 
 /// Graphics driver preference a window asks for.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum RendererPreference {
+    /// Always pick the best renderer given the hardware and the OS.
     #[default]
     Auto,
     Software,
@@ -62,15 +65,6 @@ impl RendererPreference {
         match self {
             Self::Vulkan { gpu_preference } => gpu_preference,
             _ => GpuPreference::default(),
-        }
-    }
-
-    pub(crate) fn as_name(self) -> Option<&'static str> {
-        match self {
-            Self::Auto => None,
-            Self::Software => Some("software"),
-            Self::OpenGl => Some("opengl"),
-            Self::Vulkan { .. } => Some("vulkan"),
         }
     }
 }
@@ -336,7 +330,7 @@ impl GpuResourceCacheLimit {
 
 pub type EmbeddedFonts = Vec<(Cow<'static, str>, Bytes)>;
 #[cfg(feature = "tray")]
-pub type TrayIconGetter = Box<dyn FnOnce() -> tray_icon::TrayIcon + Send>;
+pub type TrayIconGetter = Box<dyn FnOnce() -> tray_icon::TrayIcon>;
 #[cfg(feature = "tray")]
 pub type TrayHandler =
     Box<dyn FnMut(crate::tray_icon::TrayEvent, crate::renderer::RendererContext)>;
@@ -430,7 +424,7 @@ impl LaunchConfig {
     #[cfg(feature = "tray")]
     pub fn with_tray(
         mut self,
-        tray_icon: impl FnOnce() -> tray_icon::TrayIcon + 'static + Send,
+        tray_icon: impl FnOnce() -> tray_icon::TrayIcon + 'static,
         tray_handler: impl FnMut(crate::tray_icon::TrayEvent, crate::renderer::RendererContext)
         + 'static,
     ) -> Self {
