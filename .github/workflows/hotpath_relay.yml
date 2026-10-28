@@ -23,7 +23,16 @@ jobs:
           - benchmark: torin
             artifact: hotpath-torin
             report: torin.json
-    uses: hotpath-rs/hotpath/.github/workflows/hotpath-relay.yml@f98dee237c49087e20b94b62bcd9becfceeee357 # v0.29.2
+          - benchmark: torin-criterion-binary-12
+            artifact: hotpath-torin-criterion-binary-12
+            report: torin-criterion-binary-12.json
+          - benchmark: torin-criterion-wide-5-cached
+            artifact: hotpath-torin-criterion-wide-5-cached
+            report: torin-criterion-wide-5-cached.json
+          - benchmark: torin-criterion-aligned-8
+            artifact: hotpath-torin-criterion-aligned-8
+            report: torin-criterion-aligned-8.json
+    uses: hotpath-rs/hotpath/.github/workflows/hotpath-relay.yml@f9b96d36318755f82c4399a135dad4711ff10295 # v0.30.0
     permissions:
       actions: read
       contents: read
