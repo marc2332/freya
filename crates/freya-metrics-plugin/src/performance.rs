@@ -70,6 +70,7 @@ pub(crate) struct WindowMetrics {
     pub(crate) tasks_poll_time: Duration,
     pub(crate) started_events: Option<Instant>,
     pub(crate) events_time: Duration,
+    pub(crate) events_batches: usize,
     pub(crate) started_accessibility_updates: Option<Instant>,
     pub(crate) finished_accessibility_updates: Option<Duration>,
     pub(crate) started_presenting: Option<Instant>,

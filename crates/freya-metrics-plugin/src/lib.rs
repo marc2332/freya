@@ -205,6 +205,7 @@ impl FreyaPlugin for MetricsPlugin {
                 // Reset frame accumulators.
                 metrics.tasks_poll_time = Duration::ZERO;
                 metrics.events_time = Duration::ZERO;
+                metrics.events_batches = 0;
                 metrics.finished_layout = None;
             }
             PluginEvent::BeforePresenting { window, .. } => {
@@ -253,6 +254,7 @@ impl FreyaPlugin for MetricsPlugin {
                 let metrics = self.get_metrics(window.id());
                 if let Some(started) = metrics.started_events.take() {
                     metrics.events_time += started.elapsed();
+                    metrics.events_batches += 1;
                 }
                 if self.overlay_visible() {
                     handle.send_event_loop_event(NativeEvent::Window(NativeWindowEvent {
@@ -316,6 +318,7 @@ impl FreyaPlugin for MetricsPlugin {
                         performance_state.finished_tree_updates.unwrap_or_default();
                     let tasks_poll_time = performance_state.tasks_poll_time;
                     let events_time = performance_state.events_time;
+                    let events_batches = performance_state.events_batches;
                     let finished_accessibility_updates = performance_state
                         .finished_accessibility_updates
                         .unwrap_or_default();
@@ -362,7 +365,11 @@ impl FreyaPlugin for MetricsPlugin {
                         ),
                         (
                             "Events",
-                            format!("{:.3}ms", events_time.as_secs_f64() * 1000.0),
+                            format!(
+                                "{}x {:.3}ms",
+                                events_batches,
+                                events_time.as_secs_f64() * 1000.0
+                            ),
                         ),
                         (
                             "Overlay",
