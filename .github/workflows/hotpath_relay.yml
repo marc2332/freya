@@ -32,7 +32,7 @@ jobs:
           - benchmark: torin-criterion-aligned-8
             artifact: hotpath-torin-criterion-aligned-8
             report: torin-criterion-aligned-8.json
-    uses: hotpath-rs/hotpath/.github/workflows/hotpath-relay.yml@f9b96d36318755f82c4399a135dad4711ff10295 # v0.30.0
+    uses: hotpath-rs/hotpath/.github/workflows/hotpath-relay.yml@6611490c8b1b33b69c4845e86daa450a50f461c6 # v0.30.0
     permissions:
       actions: read
       contents: read
