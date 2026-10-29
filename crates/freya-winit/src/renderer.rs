@@ -104,7 +104,7 @@ pub struct WinitRenderer {
 
 impl WinitRenderer {
     /// Processes buffered input when its deadline is due and requests redraws for UI changes.
-    fn update_pending_input(&mut self) {
+    fn process_buffered_events(&mut self) {
         let now = Instant::now();
         for app in self.windows.values_mut() {
             if !app
@@ -589,7 +589,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
     }
 
     fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
-        self.update_pending_input();
+        self.process_buffered_events();
         if !matches!(event_loop.control_flow(), ControlFlow::Poll) {
             let deadline = self
                 .windows
