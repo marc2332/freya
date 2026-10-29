@@ -1,11 +1,18 @@
 #![allow(dead_code)]
 
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    time::{
+        Duration,
+        Instant,
+    },
+};
 
 use ragnarok::{
     Area,
     CursorPoint,
     EmmitableEvent,
+    EventBuffer,
     EventsExecutor,
     EventsExecutorRunner,
     EventsMeasurer,
@@ -951,85 +958,76 @@ fn touch_released_after_mouse_down() {
     TestExecutor::without_handler().run(&mut nodes_state, processed_events);
 }
 
-mod event_buffer {
-    use core::time::Duration;
-    use std::time::Instant;
+fn movement(y: f64) -> TestSourceEvent {
+    TestSourceEvent::MouseMove {
+        cursor: (495.0, y).into(),
+    }
+}
 
-    use ragnarok::EventBuffer;
-
-    use crate::TestSourceEvent;
-
-    fn movement(y: f64) -> TestSourceEvent {
-        TestSourceEvent::MouseMove {
-            cursor: (495.0, y).into(),
+#[test]
+fn coalesces_1000_hz_movement_at_the_update_rate() {
+    let mut input: EventBuffer<TestSourceEvent> =
+        EventBuffer::new(Duration::from_secs_f64(1.0 / 60.0));
+    let started = Duration::ZERO;
+    let mut updates = 0;
+    for millisecond in 0..1000 {
+        let now = started + Duration::from_millis(millisecond);
+        input.push([movement(millisecond as f64)], now);
+        if input.deadline().is_some_and(|deadline| deadline <= now) {
+            assert_eq!(input.take(now), [movement(millisecond as f64)]);
+            updates += 1;
         }
     }
+    assert!((59..=61).contains(&updates), "processed {updates} updates");
+    assert_eq!(
+        input.take(started + Duration::from_secs(1)),
+        [movement(999.0)]
+    );
+    assert!(input.deadline().is_none());
+}
 
-    #[test]
-    fn coalesces_1000_hz_movement_at_the_update_rate() {
-        let mut input: EventBuffer<TestSourceEvent> =
-            EventBuffer::new(Duration::from_secs_f64(1.0 / 60.0));
-        let started = Duration::ZERO;
-        let mut updates = 0;
-        for millisecond in 0..1000 {
-            let now = started + Duration::from_millis(millisecond);
-            input.push([movement(millisecond as f64)], now);
-            if input.deadline().is_some_and(|deadline| deadline <= now) {
-                assert_eq!(input.take(now), [movement(millisecond as f64)]);
-                updates += 1;
-            }
-        }
-        assert!((59..=61).contains(&updates), "processed {updates} updates");
-        assert_eq!(
-            input.take(started + Duration::from_secs(1)),
-            [movement(999.0)]
-        );
-        assert!(input.deadline().is_none());
+#[test]
+fn preserves_discrete_events_and_the_final_drag_position() {
+    let mut input = EventBuffer::new(Duration::from_millis(16));
+    let now = Instant::now();
+    let down = TestSourceEvent::MouseDown {
+        cursor: (495.0, 20.0).into(),
+    };
+    let up = TestSourceEvent::MouseUp {
+        cursor: (495.0, 320.0).into(),
+    };
+    let touch_release = TestSourceEvent::TouchReleased {
+        cursor: (100.0, 200.0).into(),
+    };
+    input.push([down], now);
+    for step in 1..=1000 {
+        input.push([movement(20.0 + step as f64 * 0.3)], now);
     }
+    input.push([up, touch_release, touch_release], now);
+    assert_eq!(
+        input.take(now),
+        [down, movement(320.0), up, touch_release, touch_release]
+    );
+}
 
-    #[test]
-    fn preserves_discrete_events_and_the_final_drag_position() {
-        let mut input = EventBuffer::new(Duration::from_millis(16));
-        let now = Instant::now();
-        let down = TestSourceEvent::MouseDown {
-            cursor: (495.0, 20.0).into(),
-        };
-        let up = TestSourceEvent::MouseUp {
-            cursor: (495.0, 320.0).into(),
-        };
-        let touch_release = TestSourceEvent::TouchReleased {
-            cursor: (100.0, 200.0).into(),
-        };
-        input.push([down], now);
-        for step in 1..=1000 {
-            input.push([movement(20.0 + step as f64 * 0.3)], now);
-        }
-        input.push([up, touch_release, touch_release], now);
-        assert_eq!(
-            input.take(now),
-            [down, movement(320.0), up, touch_release, touch_release]
-        );
-    }
+#[test]
+fn discrete_input_flushes_movement_before_the_deadline() {
+    let mut input = EventBuffer::new(Duration::from_millis(16));
+    let now = Instant::now();
+    input.push([movement(0.0)], now);
+    input.take(now);
+    input.push([movement(1.0)], now + Duration::from_millis(1));
+    assert_eq!(input.deadline(), Some(now + Duration::from_millis(16)));
+    input.push([movement(2.0)], now + Duration::from_millis(2));
+    assert_eq!(input.deadline(), Some(now + Duration::from_millis(16)));
 
-    #[test]
-    fn discrete_input_flushes_movement_before_the_deadline() {
-        let mut input = EventBuffer::new(Duration::from_millis(16));
-        let now = Instant::now();
-        input.push([movement(0.0)], now);
-        input.take(now);
-        input.push([movement(1.0)], now + Duration::from_millis(1));
-        assert_eq!(input.deadline(), Some(now + Duration::from_millis(16)));
-        input.push([movement(2.0)], now + Duration::from_millis(2));
-        assert_eq!(input.deadline(), Some(now + Duration::from_millis(16)));
-
-        let up = TestSourceEvent::MouseUp {
-            cursor: (495.0, 2.0).into(),
-        };
-        let released = now + Duration::from_millis(3);
-        input.push([up], released);
-        assert_eq!(input.deadline(), Some(released));
-        assert_eq!(input.take(released), [movement(2.0), up]);
-    }
+    let up = TestSourceEvent::MouseUp {
+        cursor: (495.0, 2.0).into(),
+    };
+    let released = now + Duration::from_millis(3);
+    input.push([up], released);
+    assert_eq!(input.deadline(), Some(released));
+    assert_eq!(input.take(released), [movement(2.0), up]);
 }
 
 #[test]
