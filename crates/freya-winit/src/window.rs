@@ -655,7 +655,7 @@ impl AppWindow {
     }
 
     /// Applies buffered input and synchronizes its UI updates and layout.
-    pub(crate) fn process_input(
+    pub(crate) fn process_buffered_events(
         &mut self,
         font_collection: &mut FontCollection,
         font_manager: &FontMgr,
