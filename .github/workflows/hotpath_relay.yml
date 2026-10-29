@@ -9,8 +9,7 @@ permissions: {}
 
 jobs:
   relay:
-    # Only successful pull request runs have a report to relay; the action
-    # checks this too, so this only saves starting the runners.
+    # Only successful pull request runs have a report to relay
     if: >-
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.conclusion == 'success'
