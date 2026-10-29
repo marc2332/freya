@@ -166,6 +166,16 @@ impl From<TouchEventName> for EventName {
 impl ragnarok::SourceEvent for PlatformEvent {
     type Name = EventName;
 
+    fn can_coalesce_with(&self, next: &Self) -> bool {
+        matches!(
+            (self, next),
+            (
+                Self::Mouse { name: MouseEventName::MouseMove, button: previous, .. },
+                Self::Mouse { name: MouseEventName::MouseMove, button, .. },
+            ) if previous == button
+        )
+    }
+
     /// Check if the event means the cursor was moved.
     fn is_moved(&self) -> bool {
         matches!(

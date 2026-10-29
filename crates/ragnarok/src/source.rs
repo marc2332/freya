@@ -13,6 +13,11 @@ pub trait SourceEvent: Clone + PartialEq {
         false
     }
 
+    /// Whether another event can replace this one.
+    fn can_coalesce_with(&self, _next: &Self) -> bool {
+        false
+    }
+
     fn try_location(&self) -> Option<CursorPoint>;
 
     fn as_event_name(&self) -> Self::Name;
