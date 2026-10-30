@@ -148,7 +148,7 @@ impl AccessibilityTree {
             nodes.len()
         );
 
-        if !self.map.contains_key(&self.focused_id) {
+        if !self.can_focus(self.focused_id, tree) {
             self.focused_id = ACCESSIBILITY_ROOT_ID;
         }
 
@@ -219,8 +219,8 @@ impl AccessibilityTree {
 
         let has_request_focus = requested_focus.is_some();
 
-        // Fallback the focused id to the root if the focused node no longer exists
-        if !self.map.contains_key(&self.focused_id) {
+        // Return focus to the root when the focused node is removed or disabled.
+        if !self.can_focus(self.focused_id, tree) {
             self.focused_id = ACCESSIBILITY_ROOT_ID;
         }
 
@@ -243,6 +243,13 @@ impl AccessibilityTree {
         }
     }
 
+    fn can_focus(&self, id: AccessibilityId, tree: &Tree) -> bool {
+        self.map.get(&id).is_some_and(|node_id| {
+            id == ACCESSIBILITY_ROOT_ID || tree.accessibility_state.get(node_id)
+                .is_some_and(|state| state.a11y_focusable != Focusable::Disabled)
+        })
+    }
+
     /// Focus a Node given the strategy.
     pub fn focus_node_with_strategy(
         &mut self,
@@ -250,7 +257,7 @@ impl AccessibilityTree {
         tree: &mut Tree,
     ) {
         if let AccessibilityFocusStrategy::Node(id) = strategy {
-            if self.map.contains_key(&id) {
+            if self.can_focus(id, tree) {
                 self.focused_id = id;
             }
             return;
