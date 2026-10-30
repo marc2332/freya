@@ -5,8 +5,16 @@ on:
     workflows: [Hotpath]
     types: [completed]
 
+permissions: {}
+
 jobs:
   relay:
+    # Only successful pull request runs have a report to relay
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -32,13 +40,16 @@ jobs:
           - benchmark: torin-criterion-aligned-8
             artifact: hotpath-torin-criterion-aligned-8
             report: torin-criterion-aligned-8.json
-    uses: hotpath-rs/hotpath/.github/workflows/hotpath-relay.yml@f9b96d36318755f82c4399a135dad4711ff10295 # v0.30.0
     permissions:
       actions: read
-      contents: read
       id-token: write
       pull-requests: read
-    with:
-      benchmark: ${{ matrix.benchmark }}
-      artifact_name: ${{ matrix.artifact }}
-      report_file: ${{ matrix.report }}
+    concurrency:
+      group: hotpath-relay-${{ matrix.benchmark }}-${{ github.event.workflow_run.head_repository.full_name }}-${{ github.event.workflow_run.head_branch }}
+      cancel-in-progress: true
+    steps:
+      - uses: hotpath-rs/hotpath-relay@v1.0.0
+        with:
+          benchmark: ${{ matrix.benchmark }}
+          artifact_name: ${{ matrix.artifact }}
+          report_file: ${{ matrix.report }}
