@@ -1,15 +1,21 @@
-use freya_clipboard::{
-    copypasta::{
-        ClipboardContext,
-        ClipboardProvider,
-    },
-    prelude::Clipboard,
+#[cfg(not(target_os = "android"))]
+use freya_clipboard::copypasta::{
+    ClipboardContext,
+    ClipboardProvider,
 };
+use freya_clipboard::prelude::Clipboard;
+#[cfg(not(target_os = "android"))]
 use raw_window_handle::HasDisplayHandle;
 #[cfg(target_os = "linux")]
 use raw_window_handle::RawDisplayHandle;
 use winit::event_loop::OwnedDisplayHandle;
 
+#[cfg(target_os = "android")]
+pub(crate) fn create_clipboard(_display_handle: OwnedDisplayHandle) -> Clipboard {
+    Clipboard::create(Some(Box::new(freya_clipboard::android::AndroidClipboard)))
+}
+
+#[cfg(not(target_os = "android"))]
 pub(crate) fn create_clipboard(display_handle: OwnedDisplayHandle) -> Clipboard {
     let provider = display_handle.display_handle().ok().and_then(|handle| {
         #[allow(clippy::match_single_binding)]

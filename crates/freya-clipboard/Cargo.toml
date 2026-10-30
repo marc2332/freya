@@ -17,5 +17,9 @@ workspace = true
 copypasta = "0.10"
 freya-core = { workspace = true }
 
+[target.'cfg(target_os = "android")'.dependencies]
+jni = "0.22"
+ndk-context = "0.1"
+
 [dev-dependencies]
 freya = { path = "../freya" }
