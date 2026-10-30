@@ -245,8 +245,11 @@ impl AccessibilityTree {
 
     fn can_focus(&self, id: AccessibilityId, tree: &Tree) -> bool {
         self.map.get(&id).is_some_and(|node_id| {
-            id == ACCESSIBILITY_ROOT_ID || tree.accessibility_state.get(node_id)
-                .is_some_and(|state| state.a11y_focusable != Focusable::Disabled)
+            id == ACCESSIBILITY_ROOT_ID
+                || tree
+                    .accessibility_state
+                    .get(node_id)
+                    .is_some_and(|state| state.a11y_focusable != Focusable::Disabled)
         })
     }
 

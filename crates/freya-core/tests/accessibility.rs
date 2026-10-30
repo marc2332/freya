@@ -56,9 +56,7 @@ fn disabled_nodes_reject_focus_and_release_existing_focus() {
     let (mut test, mut enabled) = TestingRunner::new(
         move || {
             let enabled = use_consume::<State<bool>>();
-            rect()
-                .a11y_id(input_id)
-                .a11y_focusable(*enabled.read())
+            rect().a11y_id(input_id).a11y_focusable(*enabled.read())
         },
         (300., 300.).into(),
         |runner| runner.provide_root_context(|| State::create(false)),
