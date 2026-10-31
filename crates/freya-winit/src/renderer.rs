@@ -2,6 +2,7 @@ use std::{
     borrow::Cow,
     fmt,
     rc::Rc,
+    time::Instant,
 };
 
 #[cfg(feature = "accessibility")]
@@ -19,17 +20,8 @@ use freya_engine::prelude::{
     TypefaceFontProvider,
     register_font_typeface,
 };
-use futures_util::{
-    FutureExt as _,
-    StreamExt,
-    select,
-};
-use ragnarok::EventsExecutorRunner;
 use rustc_hash::FxHashMap;
-use torin::prelude::{
-    CursorPoint,
-    Size2D,
-};
+use torin::prelude::CursorPoint;
 #[cfg(feature = "tray")]
 use tray_icon::TrayIcon;
 #[cfg(feature = "accessibility")]
@@ -49,6 +41,7 @@ use winit::{
     },
     event_loop::{
         ActiveEventLoop,
+        ControlFlow,
         EventLoopProxy,
     },
     window::{
@@ -74,7 +67,10 @@ use crate::{
         PluginHandle,
         PluginsManager,
     },
-    window::AppWindow,
+    window::{
+        AppWindow,
+        frame_interval,
+    },
     winit_mappings::{
         self,
         map_winit_mouse_button,
@@ -104,6 +100,32 @@ pub struct WinitRenderer {
     pub exit_on_close: bool,
     pub gpu_resource_cache_limit: usize,
     pub graphics_context: GraphicsContext,
+}
+
+impl WinitRenderer {
+    /// Processes buffered input when its deadline is due and requests redraws for UI changes.
+    fn process_pending_events(&mut self) {
+        let now = Instant::now();
+        for app in self.windows.values_mut() {
+            if !app
+                .event_buffer
+                .deadline()
+                .is_some_and(|deadline| deadline <= now)
+            {
+                continue;
+            }
+            app.event_buffer.interval = frame_interval(&app.window);
+            if app.process_buffered_events(
+                &mut self.font_collection,
+                &self.font_manager,
+                &self.fallback_fonts,
+                &mut self.plugins,
+                PluginHandle::new(&self.proxy),
+            ) {
+                app.window.request_redraw();
+            }
+        }
+    }
 }
 
 impl Drop for WinitRenderer {
@@ -501,115 +523,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 if let Some(app) = &mut self.windows.get_mut(&window_id) {
                     match action {
                         NativeWindowEventAction::PollRunner => {
-                            let mut cx = std::task::Context::from_waker(&app.waker);
-
-                            #[cfg(feature = "hotreload")]
-                            let hotreload_triggered = app
-                                .hot_reload_pending
-                                .swap(false, std::sync::atomic::Ordering::AcqRel);
-
-                            #[cfg(feature = "hotreload")]
-                            if hotreload_triggered {
-                                app.runner.reload();
-                            }
-
-                            {
-                                let mut observer = self.plugins.tasks_poll_observer(
-                                    &app.window,
-                                    PluginHandle::new(&self.proxy),
-                                );
-                                let fut = std::pin::pin!(async {
-                                    select! {
-                                        events_chunk = app.events_receiver.next() => {
-                                            match events_chunk {
-                                                Some(EventsChunk::Processed(processed_events)) => {
-                                                    let events_executor_adapter = EventsExecutorAdapter {
-                                                        runner: &mut app.runner,
-                                                    };
-                                                    events_executor_adapter.run(&mut app.nodes_state, processed_events);
-                                                }
-                                                Some(EventsChunk::Batch(events)) => {
-                                                    for event in events {
-                                                        app.runner.handle_event(event.node_id, event.name, event.data, event.bubbles);
-                                                    }
-                                                }
-                                                _ => {}
-                                            }
-                                        },
-                                        _ = app.runner.handle_events_with(&mut observer).fuse() => {},
-                                    }
-                                });
-
-                                match fut.poll(&mut cx) {
-                                    std::task::Poll::Ready(_) => {
-                                        self.proxy
-                                            .send_event(NativeEvent::Window(NativeWindowEvent {
-                                                window_id: app.window.id(),
-                                                action: NativeWindowEventAction::PollRunner,
-                                            }))
-                                            .ok();
-                                    }
-                                    std::task::Poll::Pending => {}
-                                }
-                            }
-
-                            app.runner.handle_events_immediately_with(
-                                &mut self.plugins.tasks_poll_observer(
-                                    &app.window,
-                                    PluginHandle::new(&self.proxy),
-                                ),
-                            );
-                            self.plugins.send(
-                                PluginEvent::StartedUpdatingTree {
-                                    window: &app.window,
-                                    tree: &app.tree,
-                                },
-                                PluginHandle::new(&self.proxy),
-                            );
-                            let mutations = app.runner.sync_and_update();
-                            let scale_factor = app.effective_scale_factor() as f32;
-                            let result = app
-                                .runner
-                                .run_in(|| app.tree.apply_mutations(mutations, scale_factor));
-                            app.update_cursor_icon();
-                            if result.needs_render {
-                                app.process_layout_on_next_render = true;
+                            if app.poll_runner(&mut self.plugins, PluginHandle::new(&self.proxy)) {
                                 app.window.request_redraw();
-                            }
-                            #[cfg(feature = "hotreload")]
-                            if hotreload_triggered {
-                                // Hot-patches can change closure bodies and custom `ElementExt` impls
-                                // that `PartialEq` can't observe, so force a layout + redraw.
-                                app.process_layout_on_next_render = true;
-                                app.window.request_redraw();
-                            }
-                            if result.needs_accessibility {
-                                app.accessibility_tasks_for_next_render |=
-                                    AccessibilityTask::ProcessUpdate { mode: None };
-                                app.window.request_redraw();
-                            }
-                            if let Some(strategy) = result.auto_focus {
-                                self.proxy
-                                    .send_event(NativeEvent::Window(NativeWindowEvent {
-                                        window_id: app.window.id(),
-                                        action: NativeWindowEventAction::User(
-                                            UserEvent::FocusAccessibilityNode(strategy),
-                                        ),
-                                    }))
-                                    .ok();
-                            }
-                            self.plugins.send(
-                                PluginEvent::FinishedUpdatingTree {
-                                    window: &app.window,
-                                    tree: &app.tree,
-                                },
-                                PluginHandle::new(&self.proxy),
-                            );
-                            #[cfg(debug_assertions)]
-                            {
-                                tracing::info!("Updated app tree.");
-                                tracing::info!("{:#?}", app.tree);
-                                tracing::info!("{:#?}", app.runner);
                             }
                         }
                         #[cfg(feature = "accessibility")]
@@ -665,15 +580,26 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             }
                         },
                         NativeWindowEventAction::PlatformEvent(platform_event) => {
-                            app.process_platform_events(
-                                vec![platform_event],
-                                &mut self.plugins,
-                                PluginHandle::new(&self.proxy),
-                            );
+                            app.queue_platform_events(vec![platform_event]);
                         }
                     }
                 }
             }
+        }
+    }
+
+    fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
+        self.process_pending_events();
+        if !matches!(event_loop.control_flow(), ControlFlow::Poll) {
+            let deadline = self
+                .windows
+                .values()
+                .filter_map(|app| app.event_buffer.deadline())
+                .min();
+            event_loop.set_control_flow(match deadline {
+                Some(deadline) => ControlFlow::WaitUntil(deadline),
+                None => ControlFlow::Wait,
+            });
         }
     }
 
@@ -776,65 +702,19 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 modifiers,
                             })
                             .collect();
-                        app.process_platform_events(
-                            platform_events,
-                            &mut self.plugins,
-                            PluginHandle::new(&self.proxy),
-                        );
+                        app.queue_platform_events(platform_events);
                     }
                 }
                 WindowEvent::RedrawRequested => {
                     let scale_factor = app.effective_scale_factor();
                     hotpath::measure_block!("RedrawRequested", {
-                        if app.process_layout_on_next_render {
-                            self.plugins.send(
-                                PluginEvent::StartedMeasuringLayout {
-                                    window: &app.window,
-                                    tree: &app.tree,
-                                },
-                                PluginHandle::new(&self.proxy),
-                            );
-                            let size: Size2D = (
-                                app.window.inner_size().width as f32,
-                                app.window.inner_size().height as f32,
-                            )
-                                .into();
-
-                            app.tree.measure_layout(
-                                size,
-                                &mut self.font_collection,
-                                &self.font_manager,
-                                &app.events_sender,
-                                &mut app.nodes_state,
-                                scale_factor,
-                                &self.fallback_fonts,
-                            );
-                            app.platform
-                                .root_size
-                                .set_if_modified(size / scale_factor as f32);
-                            app.process_layout_on_next_render = false;
-                            self.plugins.send(
-                                PluginEvent::FinishedMeasuringLayout {
-                                    window: &app.window,
-                                    tree: &app.tree,
-                                },
-                                PluginHandle::new(&self.proxy),
-                            );
-
-                            if std::mem::take(&mut app.send_mouse_move_on_next_layout)
-                                && app.cursor_in_window
-                            {
-                                app.process_platform_events(
-                                    vec![PlatformEvent::Mouse {
-                                        name: MouseEventName::MouseMove,
-                                        cursor: app.position,
-                                        button: None,
-                                    }],
-                                    &mut self.plugins,
-                                    PluginHandle::new(&self.proxy),
-                                );
-                            }
-                        }
+                        app.measure_layout(
+                            &mut self.font_collection,
+                            &self.font_manager,
+                            &self.fallback_fonts,
+                            &mut self.plugins,
+                            PluginHandle::new(&self.proxy),
+                        );
 
                         let resource_cache = app.driver.resource_cache_usage();
                         let present_result = app.driver.present(
@@ -1011,15 +891,11 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     } else {
                         MouseEventName::MouseUp
                     };
-                    app.process_platform_events(
-                        vec![PlatformEvent::Mouse {
-                            name,
-                            cursor: (app.position.x, app.position.y).into(),
-                            button: Some(map_winit_mouse_button(button)),
-                        }],
-                        &mut self.plugins,
-                        PluginHandle::new(&self.proxy),
-                    );
+                    app.queue_platform_events(vec![PlatformEvent::Mouse {
+                        name,
+                        cursor: (app.position.x, app.position.y).into(),
+                        button: Some(map_winit_mouse_button(button)),
+                    }]);
                 }
 
                 WindowEvent::KeyboardInput {
@@ -1057,16 +933,12 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         PluginHandle::new(&self.proxy),
                     );
 
-                    app.process_platform_events(
-                        vec![PlatformEvent::Keyboard {
-                            name,
-                            key,
-                            code,
-                            modifiers,
-                        }],
-                        &mut self.plugins,
-                        PluginHandle::new(&self.proxy),
-                    );
+                    app.queue_platform_events(vec![PlatformEvent::Keyboard {
+                        name,
+                        key,
+                        code,
+                        modifiers,
+                    }]);
                 }
 
                 WindowEvent::MouseWheel { delta, phase, .. } => {
@@ -1086,17 +958,13 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         ),
                     };
 
-                    app.process_platform_events(
-                        vec![PlatformEvent::Wheel {
-                            name: WheelEventName::Wheel,
-                            scroll: (delta_x, delta_y).into(),
-                            cursor: app.position,
-                            source,
-                            phase: map_winit_touch_phase(phase),
-                        }],
-                        &mut self.plugins,
-                        PluginHandle::new(&self.proxy),
-                    );
+                    app.queue_platform_events(vec![PlatformEvent::Wheel {
+                        name: WheelEventName::Wheel,
+                        scroll: (delta_x, delta_y).into(),
+                        cursor: app.position,
+                        source,
+                        phase: map_winit_touch_phase(phase),
+                    }]);
                 }
 
                 WindowEvent::CursorLeft { .. } => {
@@ -1104,13 +972,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         == ElementState::Released
                     {
                         app.cursor_in_window = false;
-                        app.process_platform_events(
-                            vec![PlatformEvent::PointerExit {
-                                cursor: app.position,
-                            }],
-                            &mut self.plugins,
-                            PluginHandle::new(&self.proxy),
-                        );
+                        app.queue_platform_events(vec![PlatformEvent::PointerExit {
+                            cursor: app.position,
+                        }]);
                     }
                 }
                 WindowEvent::CursorMoved { position, .. } => {
@@ -1131,11 +995,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         });
                     }
 
-                    app.process_platform_events(
-                        platform_events,
-                        &mut self.plugins,
-                        PluginHandle::new(&self.proxy),
-                    );
+                    app.queue_platform_events(platform_events);
                 }
 
                 WindowEvent::Touch(Touch {
@@ -1154,65 +1014,45 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         TouchPhase::Started => TouchEventName::TouchStart,
                     };
 
-                    app.process_platform_events(
-                        vec![PlatformEvent::Touch {
-                            name,
-                            location: app.position,
-                            finger_id: id,
-                            phase: map_winit_touch_phase(phase),
-                            force: force.map(map_winit_touch_force),
-                        }],
-                        &mut self.plugins,
-                        PluginHandle::new(&self.proxy),
-                    );
+                    app.queue_platform_events(vec![PlatformEvent::Touch {
+                        name,
+                        location: app.position,
+                        finger_id: id,
+                        phase: map_winit_touch_phase(phase),
+                        force: force.map(map_winit_touch_force),
+                    }]);
                 }
                 WindowEvent::Ime(Ime::Commit(text)) => {
-                    app.process_platform_events(
-                        vec![PlatformEvent::Keyboard {
-                            name: KeyboardEventName::KeyDown,
-                            key: keyboard_types::Key::Character(text),
-                            code: keyboard_types::Code::Unidentified,
-                            modifiers: winit_mappings::map_winit_modifiers(app.modifiers_state),
-                        }],
-                        &mut self.plugins,
-                        PluginHandle::new(&self.proxy),
-                    );
+                    app.queue_platform_events(vec![PlatformEvent::Keyboard {
+                        name: KeyboardEventName::KeyDown,
+                        key: keyboard_types::Key::Character(text),
+                        code: keyboard_types::Code::Unidentified,
+                        modifiers: winit_mappings::map_winit_modifiers(app.modifiers_state),
+                    }]);
                 }
                 WindowEvent::Ime(Ime::Preedit(text, pos)) => {
-                    app.process_platform_events(
-                        vec![PlatformEvent::ImePreedit {
-                            name: ImeEventName::Preedit,
-                            text,
-                            cursor: pos,
-                        }],
-                        &mut self.plugins,
-                        PluginHandle::new(&self.proxy),
-                    );
+                    app.queue_platform_events(vec![PlatformEvent::ImePreedit {
+                        name: ImeEventName::Preedit,
+                        text,
+                        cursor: pos,
+                    }]);
                 }
                 WindowEvent::DroppedFile(file_path) => {
                     app.dropped_file_paths.push(file_path);
                 }
                 WindowEvent::HoveredFile(file_path) => {
-                    app.process_platform_events(
-                        vec![PlatformEvent::File {
-                            name: FileEventName::FileHover,
-                            file_paths: vec![file_path],
-                            cursor: app.position,
-                        }],
-                        &mut self.plugins,
-                        PluginHandle::new(&self.proxy),
-                    );
+                    app.queue_platform_events(vec![PlatformEvent::File {
+                        name: FileEventName::FileHover,
+                        file_paths: vec![file_path],
+                        cursor: app.position,
+                    }]);
                 }
                 WindowEvent::HoveredFileCancelled => {
-                    app.process_platform_events(
-                        vec![PlatformEvent::File {
-                            name: FileEventName::FileHoverCancelled,
-                            file_paths: Vec::new(),
-                            cursor: app.position,
-                        }],
-                        &mut self.plugins,
-                        PluginHandle::new(&self.proxy),
-                    );
+                    app.queue_platform_events(vec![PlatformEvent::File {
+                        name: FileEventName::FileHoverCancelled,
+                        file_paths: Vec::new(),
+                        cursor: app.position,
+                    }]);
                 }
                 _ => {}
             }
