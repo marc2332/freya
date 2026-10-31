@@ -2854,6 +2854,8 @@ dependencies = [
  "copypasta",
  "freya",
  "freya-core",
+ "jni 0.22.4",
+ "ndk-context",
 ]
 
 [[package]]
