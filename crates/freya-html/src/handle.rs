@@ -102,6 +102,16 @@ impl HtmlHandle {
         self.push(HtmlSource::Html(html.into()));
     }
 
+    /// Replaces the current document and history entry, discarding forward history.
+    pub fn replace_html(&mut self, html: impl Into<String>) {
+        let source = HtmlSource::Html(html.into());
+        self.load(&source);
+        let mut history = self.history.write();
+        let index = history.index;
+        history.entries.truncate(index);
+        history.entries.push(source);
+    }
+
     /// Go back one entry in the history.
     pub fn back(&mut self) {
         if self.can_go_back() {

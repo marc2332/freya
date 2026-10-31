@@ -43,3 +43,5 @@ oaty = "0.2"
 
 [dev-dependencies]
 freya = { path = "../freya" }
+freya-testing = { workspace = true }
+freya-skia-safe = { workspace = true }
