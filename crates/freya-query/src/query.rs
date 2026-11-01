@@ -617,7 +617,9 @@ impl<Q: QueryCapability> QueryReader<Q> {
     pub fn err(&'_ self) -> Option<Ref<'_, Q::Err>> {
         Ref::filter_map(self.state.borrow(), |state| match state {
             QueryStateData::Settled { res: Err(err), .. }
-            | QueryStateData::Loading { res: Some(Err(err)) } => Some(err),
+            | QueryStateData::Loading {
+                res: Some(Err(err)),
+            } => Some(err),
             _ => None,
         })
         .ok()
