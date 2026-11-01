@@ -602,27 +602,30 @@ impl<Q: QueryCapability> QueryReader<Q> {
         self.state.borrow()
     }
 
-    /// Get the result of the query if it has settled.
+    /// Get the result of the query if it has settled, or its previous result while it reloads.
     pub fn ok(&'_ self) -> Option<Ref<'_, Result<Q::Ok, Q::Err>>> {
         Ref::filter_map(self.state.borrow(), |state| match state {
-            QueryStateData::Settled { res, .. } => Some(res),
+            QueryStateData::Settled { res, .. } | QueryStateData::Loading { res: Some(res) } => {
+                Some(res)
+            }
             _ => None,
         })
         .ok()
     }
 
-    /// Get the error of the query if it has settled with one.
+    /// Get the error of the query if it has settled with one or is reloading after one.
     pub fn err(&'_ self) -> Option<Ref<'_, Q::Err>> {
         Ref::filter_map(self.state.borrow(), |state| match state {
-            QueryStateData::Settled { res: Err(err), .. } => Some(err),
+            QueryStateData::Settled { res: Err(err), .. }
+            | QueryStateData::Loading { res: Some(Err(err)) } => Some(err),
             _ => None,
         })
         .ok()
     }
 
-    /// Get the result of the query, panics if it has not settled.
+    /// Get the result of the query, panics if it has no data.
     pub fn unwrap(&'_ self) -> Ref<'_, Result<Q::Ok, Q::Err>> {
-        self.ok().expect("Query is not settled.")
+        self.ok().expect("Query has no data.")
     }
 }
 
