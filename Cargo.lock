@@ -3155,7 +3155,6 @@ dependencies = [
 name = "freya-terminal"
 version = "0.5.0-rc.13"
 dependencies = [
- "async-io",
  "freya",
  "freya-core",
  "freya-engine",

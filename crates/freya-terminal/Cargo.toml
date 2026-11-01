@@ -36,7 +36,6 @@ portable-pty = { version = "0.9", optional = true }
 linkify = { workspace = true }
 
 # Async
-async-io = { workspace = true }
 futures-lite = { workspace = true }
 futures-channel = { workspace = true }
 
