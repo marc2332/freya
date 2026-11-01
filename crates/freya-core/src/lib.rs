@@ -170,7 +170,10 @@ pub mod integration {
             screen_reader::*,
             tree::*,
         },
-        animation_clock::AnimationClock,
+        animation_clock::{
+            AnimationClock,
+            New,
+        },
         data::*,
         element::*,
         elements::extensions::*,
