@@ -19,7 +19,7 @@ use rustc_hash::{
     FxHashMap,
     FxHashSet,
 };
-#[cfg(feature = "incremental-painting")]
+#[cfg(feature = "experimental-incremental-painting")]
 use torin::torin::LayoutChange;
 use torin::{
     node::Node,
@@ -132,7 +132,7 @@ impl Tree {
         self.layout_nodes
             .insert(node_id, Self::scaled_layout_node(&element, scale_factor));
 
-        #[cfg(feature = "incremental-painting")]
+        #[cfg(feature = "experimental-incremental-painting")]
         if element.is_render_volatile() {
             self.paint_state.dirty_always.insert(node_id);
         } else {
@@ -477,7 +477,7 @@ impl Tree {
                     needs_render = true;
                 }
 
-                #[cfg(feature = "incremental-painting")]
+                #[cfg(feature = "experimental-incremental-painting")]
                 if flags.intersects(
                     DiffModifies::STYLE
                         | DiffModifies::LAYER
@@ -581,7 +581,7 @@ impl Tree {
                 buffer.push_front(&layer_root);
 
                 while let Some(node_id) = buffer.pop_front() {
-                    #[cfg(feature = "incremental-painting")]
+                    #[cfg(feature = "experimental-incremental-painting")]
                     self.paint_state.dirty_changed.insert(*node_id);
                     let element = self.elements.get(node_id).unwrap();
                     if let Some(parent_node_id) = self.parents.get(node_id) {
@@ -619,7 +619,7 @@ impl Tree {
                 buffer.push_front(&effect_root);
 
                 while let Some(node_id) = buffer.pop_front() {
-                    #[cfg(feature = "incremental-painting")]
+                    #[cfg(feature = "experimental-incremental-painting")]
                     self.paint_state.dirty_changed.insert(*node_id);
                     let element = self.elements.get(node_id).unwrap();
                     if let Some(parent_node_id) = self.parents.get(node_id) {
@@ -657,7 +657,7 @@ impl Tree {
                 buffer.push_front(&text_style_root);
 
                 while let Some(node_id) = buffer.pop_front() {
-                    #[cfg(feature = "incremental-painting")]
+                    #[cfg(feature = "experimental-incremental-painting")]
                     self.paint_state.dirty_changed.insert(*node_id);
                     let element = self.elements.get(node_id).unwrap();
                     if let Some(parent_node_id) = self.parents.get(node_id) {
@@ -754,10 +754,10 @@ impl Tree {
             heights: &self.heights,
         };
 
-        #[cfg(feature = "incremental-painting")]
+        #[cfg(feature = "experimental-incremental-painting")]
         let mut layout_changes = Vec::new();
         let layout_adapter = LayoutMeasurerAdapter {
-            #[cfg(feature = "incremental-painting")]
+            #[cfg(feature = "experimental-incremental-painting")]
             layout_changes: &mut layout_changes,
             elements: &self.elements,
             text_style_state: &self.text_style_state,
@@ -779,7 +779,7 @@ impl Tree {
             );
         });
 
-        #[cfg(feature = "incremental-painting")]
+        #[cfg(feature = "experimental-incremental-painting")]
         hotpath::measure_block!("layout changes", {
             let paint_state = &mut self.paint_state;
             let mut changed_nodes = Vec::new();
@@ -936,7 +936,7 @@ pub struct MutationsApplyResult {
 }
 
 pub struct LayoutMeasurerAdapter<'a> {
-    #[cfg(feature = "incremental-painting")]
+    #[cfg(feature = "experimental-incremental-painting")]
     layout_changes: &'a mut Vec<LayoutChange<NodeId>>,
     pub font_collection: &'a mut FontCollection,
     pub font_manager: &'a FontMgr,
@@ -1011,7 +1011,7 @@ impl LayoutMeasurer<NodeId> for LayoutMeasurerAdapter<'_> {
             })
     }
 
-    #[cfg(feature = "incremental-painting")]
+    #[cfg(feature = "experimental-incremental-painting")]
     fn notify_layout_change(&mut self, change: LayoutChange<NodeId>) {
         self.layout_changes.push(change);
     }

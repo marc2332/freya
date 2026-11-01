@@ -19,9 +19,9 @@ features = ["all-publish"]
 no-default-features = true
 
 [features]
-incremental-painting = [
-  "freya-core/incremental-painting",
-  "freya-winit?/incremental-painting",
+experimental-incremental-painting = [
+  "freya-core/experimental-incremental-painting",
+  "freya-winit?/experimental-incremental-painting",
 ]
 default = ["winit", "gpu", "accessibility", "platform-text-gamma"]
 # Shortcuts

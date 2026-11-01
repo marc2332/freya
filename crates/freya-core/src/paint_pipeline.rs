@@ -1,4 +1,4 @@
-#[cfg(feature = "incremental-painting")]
+#[cfg(feature = "experimental-incremental-painting")]
 use freya_engine::prelude::{
     BlendMode,
     PathBuilder,
@@ -20,7 +20,7 @@ use torin::prelude::{
     LayoutNode,
 };
 
-#[cfg(feature = "incremental-painting")]
+#[cfg(feature = "experimental-incremental-painting")]
 use crate::geometry::{
     AreaExt,
     SkRectExt,
@@ -63,7 +63,7 @@ impl PaintPipeline<'_> {
         area
     }
 
-    #[cfg(not(feature = "incremental-painting"))]
+    #[cfg(not(feature = "experimental-incremental-painting"))]
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     pub fn paint(self) {
         self.canvas.clear(self.background);
@@ -87,7 +87,7 @@ impl PaintPipeline<'_> {
         }
     }
 
-    #[cfg(feature = "incremental-painting")]
+    #[cfg(feature = "experimental-incremental-painting")]
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     pub fn paint(mut self) {
         if self.force_full {
@@ -109,7 +109,7 @@ impl PaintPipeline<'_> {
 
     /// Repaint everything, re-recording only the dirty and volatile nodes.
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
-    #[cfg(feature = "incremental-painting")]
+    #[cfg(feature = "experimental-incremental-painting")]
     fn paint_full(&mut self) {
         self.canvas.clear(self.background);
         let tree = &mut *self.tree;
@@ -152,7 +152,7 @@ impl PaintPipeline<'_> {
 
     /// Refresh invalid recordings and collect repaint regions.
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
-    #[cfg(feature = "incremental-painting")]
+    #[cfg(feature = "experimental-incremental-painting")]
     fn pre_pass(&mut self) {
         let tree = &mut *self.tree;
 
@@ -248,7 +248,7 @@ impl PaintPipeline<'_> {
 
     /// Repaint only the damaged regions, replaying cached recordings.
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
-    #[cfg(feature = "incremental-painting")]
+    #[cfg(feature = "experimental-incremental-painting")]
     fn paint_partial(&mut self) {
         let paint_state = &self.tree.paint_state;
         let damage = &paint_state.damage;
@@ -406,7 +406,7 @@ impl PaintPipeline<'_> {
             }
         }
 
-        #[cfg(feature = "incremental-painting")]
+        #[cfg(feature = "experimental-incremental-painting")]
         let layout_bounds = match &recorder {
             RenderCanvas::Recording(recorder) => Some(
                 recorder
@@ -426,7 +426,7 @@ impl PaintPipeline<'_> {
             });
         });
 
-        #[cfg(feature = "incremental-painting")]
+        #[cfg(feature = "experimental-incremental-painting")]
         if let RenderCanvas::Recording(recorder) = recorder {
             let mut recording = recorder.finish();
             if recording.bounds.is_some_and(|bounds| bounds.is_empty())

@@ -890,7 +890,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                         offscreen.width() != surface.width()
                                             || offscreen.height() != surface.height()
                                     });
-                                if cfg!(feature = "incremental-painting") && stale_offscreen {
+                                if cfg!(feature = "experimental-incremental-painting")
+                                    && stale_offscreen
+                                {
                                     *offscreen_surface = surface.new_surface(&surface.image_info());
                                     app.tree.paint_state.damage.mark_full();
                                 }

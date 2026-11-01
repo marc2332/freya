@@ -1,4 +1,4 @@
-#![cfg(feature = "incremental-painting")]
+#![cfg(feature = "experimental-incremental-painting")]
 
 use freya::prelude::*;
 use freya_testing::prelude::*;

@@ -1,4 +1,4 @@
-#![cfg(feature = "incremental-painting")]
+#![cfg(feature = "experimental-incremental-painting")]
 
 use freya_core::{
     node_id::NodeId,

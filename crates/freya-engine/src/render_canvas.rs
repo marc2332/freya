@@ -5,7 +5,7 @@ use std::{
 
 use euclid::Point2D;
 
-#[cfg(feature = "incremental-painting")]
+#[cfg(feature = "experimental-incremental-painting")]
 use crate::prelude::RenderRecorder;
 use crate::prelude::{
     Canvas,
@@ -31,7 +31,7 @@ use crate::prelude::{
 /// Draw directly onto a canvas or record operations for later replay.
 pub enum RenderCanvas<'a> {
     Direct(&'a Canvas),
-    #[cfg(feature = "incremental-painting")]
+    #[cfg(feature = "experimental-incremental-painting")]
     Recording(RenderRecorder),
 }
 
@@ -41,7 +41,7 @@ impl RenderCanvas<'_> {
             Self::Direct(canvas) => {
                 canvas.save();
             }
-            #[cfg(feature = "incremental-painting")]
+            #[cfg(feature = "experimental-incremental-painting")]
             Self::Recording(recorder) => recorder.save(),
         }
     }
@@ -51,7 +51,7 @@ impl RenderCanvas<'_> {
             Self::Direct(canvas) => {
                 canvas.restore();
             }
-            #[cfg(feature = "incremental-painting")]
+            #[cfg(feature = "experimental-incremental-painting")]
             Self::Recording(recorder) => recorder.restore(),
         }
     }
@@ -61,7 +61,7 @@ impl RenderCanvas<'_> {
             Self::Direct(canvas) => {
                 canvas.translate((x, y));
             }
-            #[cfg(feature = "incremental-painting")]
+            #[cfg(feature = "experimental-incremental-painting")]
             Self::Recording(recorder) => recorder.translate(x, y),
         }
     }
@@ -71,7 +71,7 @@ impl RenderCanvas<'_> {
             Self::Direct(canvas) => {
                 canvas.scale((x, y));
             }
-            #[cfg(feature = "incremental-painting")]
+            #[cfg(feature = "experimental-incremental-painting")]
             Self::Recording(recorder) => recorder.scale(x, y),
         }
     }
@@ -81,7 +81,7 @@ impl RenderCanvas<'_> {
             Self::Direct(canvas) => {
                 canvas.concat(&matrix);
             }
-            #[cfg(feature = "incremental-painting")]
+            #[cfg(feature = "experimental-incremental-painting")]
             Self::Recording(recorder) => recorder.concat(matrix),
         }
     }
@@ -91,7 +91,7 @@ impl RenderCanvas<'_> {
             Self::Direct(canvas) => {
                 canvas.clip_rect(rect, op, anti_alias);
             }
-            #[cfg(feature = "incremental-painting")]
+            #[cfg(feature = "experimental-incremental-painting")]
             Self::Recording(recorder) => recorder.clip_rect(rect, op, anti_alias),
         }
     }
@@ -101,7 +101,7 @@ impl RenderCanvas<'_> {
             Self::Direct(canvas) => {
                 canvas.clip_rrect(rrect, op, anti_alias);
             }
-            #[cfg(feature = "incremental-painting")]
+            #[cfg(feature = "experimental-incremental-painting")]
             Self::Recording(recorder) => recorder.clip_rrect(rrect, op, anti_alias),
         }
     }
@@ -111,7 +111,7 @@ impl RenderCanvas<'_> {
             Self::Direct(canvas) => {
                 canvas.clip_path(&path, op, anti_alias);
             }
-            #[cfg(feature = "incremental-painting")]
+            #[cfg(feature = "experimental-incremental-painting")]
             Self::Recording(recorder) => recorder.clip_path(path, op, anti_alias),
         }
     }
@@ -121,7 +121,7 @@ impl RenderCanvas<'_> {
             Self::Direct(canvas) => {
                 canvas.draw_rect(rect, &paint);
             }
-            #[cfg(feature = "incremental-painting")]
+            #[cfg(feature = "experimental-incremental-painting")]
             Self::Recording(recorder) => recorder.draw_rect(rect, paint),
         }
     }
@@ -131,7 +131,7 @@ impl RenderCanvas<'_> {
             Self::Direct(canvas) => {
                 canvas.draw_path(&path, &paint);
             }
-            #[cfg(feature = "incremental-painting")]
+            #[cfg(feature = "experimental-incremental-painting")]
             Self::Recording(recorder) => recorder.draw_path(path, paint),
         }
     }
@@ -143,7 +143,7 @@ impl RenderCanvas<'_> {
                 paint.set_mask_filter(SkMaskFilter::blur(SkBlurStyle::Normal, blur_sigma, false));
                 canvas.draw_path(&path, &paint);
             }
-            #[cfg(feature = "incremental-painting")]
+            #[cfg(feature = "experimental-incremental-painting")]
             Self::Recording(recorder) => recorder.draw_path_blurred(path, paint, blur_sigma),
         }
     }
@@ -153,7 +153,7 @@ impl RenderCanvas<'_> {
             Self::Direct(canvas) => {
                 canvas.draw_rrect(rrect, &paint);
             }
-            #[cfg(feature = "incremental-painting")]
+            #[cfg(feature = "experimental-incremental-painting")]
             Self::Recording(recorder) => recorder.draw_rrect(rrect, paint),
         }
     }
@@ -163,7 +163,7 @@ impl RenderCanvas<'_> {
             Self::Direct(canvas) => {
                 canvas.draw_drrect(outer, inner, &paint);
             }
-            #[cfg(feature = "incremental-painting")]
+            #[cfg(feature = "experimental-incremental-painting")]
             Self::Recording(recorder) => recorder.draw_drrect(outer, inner, paint),
         }
     }
@@ -182,7 +182,7 @@ impl RenderCanvas<'_> {
                 paragraph.borrow().paint(canvas, (0., 0.));
                 canvas.restore_to_count(checkpoint);
             }
-            #[cfg(feature = "incremental-painting")]
+            #[cfg(feature = "experimental-incremental-painting")]
             Self::Recording(recorder) => {
                 recorder.draw_paragraph(paragraph, origin, _text_shadows, _text_align);
             }
@@ -200,7 +200,7 @@ impl RenderCanvas<'_> {
             Self::Direct(canvas) => {
                 canvas.draw_image_rect_with_sampling_options(&image, None, rect, sampling, &paint);
             }
-            #[cfg(feature = "incremental-painting")]
+            #[cfg(feature = "experimental-incremental-painting")]
             Self::Recording(recorder) => recorder.draw_image_rect(image, rect, sampling, paint),
         }
     }
@@ -215,7 +215,7 @@ impl RenderCanvas<'_> {
                     canvas.save_layer(&SaveLayerRec::default().bounds(&bounds));
                 }
             },
-            #[cfg(feature = "incremental-painting")]
+            #[cfg(feature = "experimental-incremental-painting")]
             Self::Recording(recorder) => recorder.save_layer(bounds, alpha),
         }
     }
@@ -225,7 +225,7 @@ impl RenderCanvas<'_> {
             Self::Direct(canvas) => {
                 canvas.save_layer(&SaveLayerRec::default().bounds(&bounds).backdrop(&filter));
             }
-            #[cfg(feature = "incremental-painting")]
+            #[cfg(feature = "experimental-incremental-painting")]
             Self::Recording(recorder) => recorder.backdrop_blur(bounds, filter, _blur_sigma),
         }
     }
@@ -241,7 +241,7 @@ impl RenderCanvas<'_> {
                 canvas,
                 font_collection,
             }),
-            #[cfg(feature = "incremental-painting")]
+            #[cfg(feature = "experimental-incremental-painting")]
             Self::Recording(recorder) => recorder.custom(_bounds, draw),
         }
     }

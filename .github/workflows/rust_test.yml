@@ -54,4 +54,4 @@ jobs:
       if: runner.os != 'Linux'
       run: just t
     - name: Run incremental painting tests
-      run: cargo nextest run --package freya-core --features incremental-painting --test paint --test paint_equality --test damage --test area_invalidation
+      run: cargo nextest run --package freya-core --features experimental-incremental-painting --test paint --test paint_equality --test damage --test area_invalidation
