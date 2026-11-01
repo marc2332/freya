@@ -163,7 +163,7 @@ impl InputValidator {
 pub struct Input {
     pub(crate) theme_colors: Option<InputColorsThemePartial>,
     pub(crate) theme_layout: Option<InputLayoutThemePartial>,
-    value: Writable<String>,
+    value: WritableSetter<String>,
     placeholder: Option<Cow<'static, str>>,
     on_validate: Option<EventHandler<InputValidator>>,
     on_submit: Option<EventHandler<String>>,
@@ -190,7 +190,7 @@ impl KeyExt for Input {
 }
 
 impl Input {
-    pub fn new(value: impl Into<Writable<String>>) -> Self {
+    pub fn new(value: impl Into<WritableSetter<String>>) -> Self {
         Input {
             theme_colors: None,
             theme_layout: None,
@@ -459,8 +459,9 @@ impl Component for Input {
             if visible_cursor_location.x < visible_start_x {
                 scroll_controller.scroll_to_x(-cursor_location.x as i32);
             } else if visible_cursor_location.x > visible_start_x + viewport.width() {
-                scroll_controller
-                    .scroll_to_x(-(area.peek().width() - viewport.width()).max(0.0) as i32);
+                scroll_controller.scroll_to_x(
+                    -(visible_cursor_location.x + padding.right() - viewport.width()) as i32,
+                );
             }
 
             if multiline {
@@ -546,7 +547,7 @@ impl Component for Input {
                     };
 
                     if apply_change {
-                        *value.write() = text;
+                        value.set(text);
                     }
                     if editable.editor().peek().editor_history().version == previous_history_version
                     {

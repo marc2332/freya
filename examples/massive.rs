@@ -35,12 +35,7 @@ fn app() -> impl IntoElement {
 }
 
 fn stateful_switch() -> Element {
-    let mut toggled = use_state(|| false);
+    let toggled = use_state(|| false);
 
-    Switch::new()
-        .toggled(toggled())
-        .on_toggle(move |_| {
-            toggled.toggle();
-        })
-        .into()
+    Switch::new(toggled).into()
 }

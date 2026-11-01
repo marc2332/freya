@@ -138,6 +138,7 @@ pub mod prelude {
             state::*,
             task::*,
             writable::*,
+            writable_setter::*,
             writable_utils::*,
         },
         platform::*,

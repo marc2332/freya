@@ -358,37 +358,52 @@ impl DataReducer for AppState {
 radio.apply(AppAction::Increment);
 ```
 
-### Readable / Writable (type-erased abstractions)
+### Readable / Writable / WritableSetter
 
-`Readable<T>` and `Writable<T>` are type-erased wrappers over any reactive value of type `T`. Use them as component props so the component works regardless of where the state lives: local `State<T>`, a `Memo<T>`, a radio slice, or a plain owned value. Both are `PartialEq` (always equal) and `Clone`, usable directly as component fields.
+Use these as component props to hide the backing storage type. All implement `PartialEq` and `Clone`. `read()` subscribes to changes, while `peek()` does not.
 
-```rust
-#[derive(PartialEq)]
-struct NameInput { name: Writable<String> }
-
-impl Component for NameInput {
-    fn render(&self) -> impl IntoElement {
-        Input::new(self.name.clone()) // Input is two-way bound to the Writable
-    }
-}
-
-// Caller side: any source converts via `into_writable()` / `into_readable()`
-NameInput { name: local_name.into_writable() }            // from State<String>
-NameInput { name: name_slice.into_writable() }            // from a RadioSliceMut
-```
+| Type | Use | Updates |
+|---|---|---|
+| `Readable<T>` | Read-only values | None |
+| `Writable<T>` | Direct mutation | `write()` and `WritableUtils` helpers |
+| `WritableSetter<T>` | Value replacement | `set()` and `set_if_modified()` through a callback |
 
 Conversions:
-- `State<T>` → `Writable<T>` / `Readable<T>` via `IntoWritable` / `IntoReadable`.
-- `Memo<T>` → `Readable<T>` via `IntoReadable`.
-- `RadioSlice` → `Readable<T>`; `RadioSliceMut` → `Readable<T>` or `Writable<T>`.
-- `Writable<T>` → `Readable<T>` via `From` (downgrade write access).
-- Plain owned `T` → `Readable<T>` via `From` (non-reactive; tests, defaults).
+- `State<T>` supports all three through `.into_readable()`, `.into_writable()`, and `.into_writable_setter()`.
+- `Memo<T>` and `RadioSlice` support `.into_readable()`.
+- `RadioSliceMut` supports all three conversions.
+- `Writable<T>` and `WritableSetter<T>` convert to `Readable<T>` through `.into()`.
+- Plain owned values convert to non-reactive `Readable<T>` through `.into()`.
+- `State<T>`, `Writable<T>`, and `RadioSliceMut` also convert to `WritableSetter<T>` through `.into()`.
 
-API surface:
-- `Readable<T>`: `read()` (subscribes), `peek()` (no subscription).
-- `Writable<T>`: `read()`, `peek()`, `write()`, plus `WritableUtils` helpers (`set`, `set_if_modified`, `with_mut`, ...). Subscriptions and notifications route to the original source.
+### Input and Switch
 
-Prefer `Readable<T>` for read-only consumers; use `Writable<T>` only when the component must mutate.
+`Input::new` accepts `Into<WritableSetter<String>>`, and `Switch::new` accepts `Into<WritableSetter<bool>>`. Pass state directly:
+
+```rust
+let name = use_state(String::new);
+let toggled = use_state(|| false);
+
+rect()
+    .child(Input::new(name))
+    .child(Switch::new(toggled))
+```
+
+Switch has no `.toggled(...)`, `.on_toggle(...)`, or `Default`.
+
+Use `WritableSetter::new(readable, callback)` to route edits through a reducer:
+
+```rust
+let mut radio = use_radio(AppChannel::Name);
+Input::new(WritableSetter::new(
+    radio.slice_current(|state| &state.name),
+    move |name| {
+        radio.apply(AppAction::SetName(name));
+    },
+))
+```
+
+The callback may accept, transform, or reject updates. Direct writable bindings bypass reducers. Keep model invariants in the reducer, not in component effects.
 
 ### Context API
 
@@ -423,7 +438,7 @@ Context is the right tool for dependency injection (e.g. passing a DB client, co
 - `use_state` - component-local state
 - Context API - dependency injection and non-reactive shared values across the tree; prefer over statics
 - Freya Radio - large/nested state, surgical per-channel updates, multi-window
-- `Readable`/`Writable` - reusable components that don't care about backing storage
+- `Readable`/`Writable`/`WritableSetter` - reusable components that don't care about backing storage
 
 ## Derived State and Side Effects
 

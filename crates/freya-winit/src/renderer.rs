@@ -36,7 +36,7 @@ use torin::prelude::{
     CursorPoint,
     Size2D,
 };
-#[cfg(all(feature = "tray", not(target_os = "linux")))]
+#[cfg(feature = "tray")]
 use tray_icon::TrayIcon;
 #[cfg(feature = "accessibility")]
 use winit::dpi::{
@@ -96,7 +96,7 @@ pub struct WinitRenderer {
         Option<crate::config::TrayIconGetter>,
         Option<crate::config::TrayHandler>,
     ),
-    #[cfg(all(feature = "tray", not(target_os = "linux")))]
+    #[cfg(feature = "tray")]
     pub(crate) tray_icon: Option<TrayIcon>,
     pub resumed: bool,
     pub windows: FxHashMap<WindowId, AppWindow>,
@@ -242,20 +242,6 @@ pub struct NativeWindowEvent {
     pub action: NativeWindowEventAction,
 }
 
-#[cfg(feature = "tray")]
-#[derive(Debug)]
-pub enum NativeTrayEventAction {
-    TrayEvent(tray_icon::TrayIconEvent),
-    MenuEvent(tray_icon::menu::MenuEvent),
-    LaunchWindow(SingleThreadErasedEvent),
-}
-
-#[cfg(feature = "tray")]
-#[derive(Debug)]
-pub struct NativeTrayEvent {
-    pub action: NativeTrayEventAction,
-}
-
 pub enum NativeGenericEvent {
     PollFutures,
     User(GlobalUserEvent),
@@ -280,7 +266,7 @@ unsafe impl Sync for NativeGenericEvent {}
 pub enum NativeEvent {
     Window(NativeWindowEvent),
     #[cfg(feature = "tray")]
-    Tray(NativeTrayEvent),
+    Tray(crate::tray_icon::TrayEvent),
     Generic(NativeGenericEvent),
     Preferences(mundy::Preferences),
 }
@@ -323,7 +309,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
         if !self.resumed {
             #[cfg(feature = "tray")]
             {
-                #[cfg(not(target_os = "linux"))]
                 if let Some(tray_icon) = self.tray.0.take() {
                     self.tray_icon = Some((tray_icon)());
                 }
@@ -429,7 +414,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 }
             }
             #[cfg(feature = "tray")]
-            NativeEvent::Tray(NativeTrayEvent { action }) => {
+            NativeEvent::Tray(event) => {
                 let renderer_context = RendererContext {
                     fallback_fonts: &mut self.fallback_fonts,
                     active_event_loop,
@@ -442,45 +427,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     gpu_resource_cache_limit: self.gpu_resource_cache_limit,
                     graphics_context: &mut self.graphics_context,
                 };
-                match action {
-                    NativeTrayEventAction::TrayEvent(icon_event) => {
-                        use crate::tray::TrayEvent;
-                        if let Some(tray_handler) = &mut self.tray.1 {
-                            (tray_handler)(TrayEvent::Icon(icon_event), renderer_context)
-                        }
-                    }
-                    NativeTrayEventAction::MenuEvent(menu_event) => {
-                        use crate::tray::TrayEvent;
-                        if let Some(tray_handler) = &mut self.tray.1 {
-                            (tray_handler)(TrayEvent::Menu(menu_event), renderer_context)
-                        }
-                    }
-                    NativeTrayEventAction::LaunchWindow(data) => {
-                        let window_config = data
-                            .0
-                            .downcast::<WindowConfig>()
-                            .expect("Expected WindowConfig");
-                        let app_window = AppWindow::new(
-                            *window_config,
-                            active_event_loop,
-                            &self.proxy,
-                            &mut self.plugins,
-                            &mut self.font_collection,
-                            &self.font_manager,
-                            &self.fallback_fonts,
-                            self.gpu_resource_cache_limit,
-                            &mut self.graphics_context,
-                        );
-
-                        self.proxy
-                            .send_event(NativeEvent::Window(NativeWindowEvent {
-                                window_id: app_window.window.id(),
-                                action: NativeWindowEventAction::PollRunner,
-                            }))
-                            .ok();
-
-                        self.windows.insert(app_window.window.id(), app_window);
-                    }
+                if let Some(tray_handler) = &mut self.tray.1 {
+                    (tray_handler)(event, renderer_context);
                 }
             }
             NativeEvent::Generic(NativeGenericEvent::User(GlobalUserEvent::LoadFont {

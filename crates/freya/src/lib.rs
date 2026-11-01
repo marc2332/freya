@@ -7,6 +7,8 @@
 //!
 //! **Freya** is a declarative, cross-platform GUI 🦀 Rust library, powered by 🎨 [Skia](https://skia.org/).
 //!
+//! New to Freya? Follow [Building your first app](self::_docs::building_an_app) to build and test a todo app.
+//!
 //! #### Example
 //!
 //! ```rust, no_run
@@ -55,6 +57,7 @@
 //! - [Working with AI](self::_docs::ai)
 //!
 //! ### Learn
+//! - [Building an app](self::_docs::building_an_app)
 //! - [Built-in Components](crate::components)
 //! - [Built-in Components Gallery](crate::components::gallery)
 //! - [i18n](freya_i18n)
@@ -221,6 +224,7 @@ pub mod components {
         chip::*,
         color_picker::*,
         context_menu::*,
+        cursor_blink::*,
         define_theme,
         docking::*,
         drag_drop::*,

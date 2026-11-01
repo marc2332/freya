@@ -37,7 +37,7 @@ fn accent_theme(accent: Color) -> Theme {
 fn app() -> impl IntoElement {
     let mut theme = use_init_theme(light_theme);
     let mut accent = use_state(|| Color::from_rgb(103, 80, 164));
-    let mut toggled = use_state(|| false);
+    let toggled = use_state(|| false);
 
     rect()
         .theme_background()
@@ -59,11 +59,7 @@ fn app() -> impl IntoElement {
                 .spacing(8.)
                 .child(Button::new().filled().child("Filled button"))
                 .child(Button::new().outline().child("Outline button"))
-                .child(
-                    Switch::new()
-                        .toggled(toggled)
-                        .on_toggle(move |_| toggled.toggle()),
-                )
+                .child(Switch::new(toggled))
                 .child(Slider::new(|_| {}).value(50.).size(Size::px(150.))),
         )
 }

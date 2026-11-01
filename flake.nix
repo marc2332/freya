@@ -23,13 +23,8 @@
     pkgs = nixpkgs.legacyPackages.${system};
     libraries = with pkgs; [
       alsa-lib
-      atk
-      cairo
       fontconfig
       freetype
-      gdk-pixbuf
-      glib
-      gtk3
       libGL
       libclang
       libgcc.lib
@@ -38,16 +33,13 @@
       libxcursor
       libxi
       libxrandr
-      libsoup_3
       llvmPackages.bintools
       openssl
       pkg-config
       udev
       vulkan-loader
       wayland
-      webkitgtk_4_1
-      xdo
-      xdotool
+      xz
     ];
     libraryPath = pkgs.lib.makeLibraryPath libraries;
     nixGLPkgs =

@@ -19,11 +19,14 @@ fn app() -> impl IntoElement {
         .expanded()
         .spacing(6.)
         .child("Switch theme")
-        .child(Switch::new().toggled(is_light).on_toggle(move |_| {
-            if is_light {
-                theme.set(dark_theme());
-            } else {
-                theme.set(light_theme());
-            }
-        }))
+        .child(Switch::new(WritableSetter::new(
+            is_light,
+            move |is_light| {
+                theme.set(if is_light {
+                    light_theme()
+                } else {
+                    dark_theme()
+                });
+            },
+        )))
 }

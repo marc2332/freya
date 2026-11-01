@@ -1,6 +1,9 @@
-use freya_core::lifecycle::writable::{
-    IntoWritable,
-    Writable,
+use freya_core::lifecycle::{
+    writable::{
+        IntoWritable,
+        Writable,
+    },
+    writable_setter::WritableSetter,
 };
 
 use crate::{
@@ -44,5 +47,13 @@ impl<T: 'static, Value: 'static, Channel: RadioChannel<Value> + 'static> IntoWri
 {
     fn into_writable(self) -> Writable<T> {
         Writable::from_slice(self)
+    }
+}
+
+impl<T: 'static, Value: 'static, Channel: RadioChannel<Value> + 'static>
+    From<RadioSliceMut<Value, T, Channel>> for WritableSetter<T>
+{
+    fn from(value: RadioSliceMut<Value, T, Channel>) -> Self {
+        value.into_writable().into()
     }
 }

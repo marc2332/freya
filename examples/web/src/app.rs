@@ -212,9 +212,9 @@ fn sidebar(mut theme: State<Theme>) -> Rect {
                         .main_align(Alignment::space_between())
                         .cross_align(Alignment::center())
                         .child("Dark mode")
-                        .child(Switch::new().toggled(is_dark).on_toggle(move |_| {
-                            theme.set(if is_dark { light_theme() } else { dark_theme() })
-                        })),
+                        .child(Switch::new(WritableSetter::new(is_dark, move |is_dark| {
+                            theme.set(if is_dark { dark_theme() } else { light_theme() })
+                        }))),
                 ),
         )
 }

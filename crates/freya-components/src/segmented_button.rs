@@ -1,5 +1,6 @@
 use freya_core::prelude::*;
 use torin::{
+    content::Content,
     gaps::Gaps,
     size::Size,
 };
@@ -338,6 +339,7 @@ impl Component for SegmentedButton {
                     .alignment(BorderAlignment::Outer),
             )
             .corner_radius(corner_radius)
+            .content(Content::Fit)
             .horizontal()
             .children(self.children.clone())
     }

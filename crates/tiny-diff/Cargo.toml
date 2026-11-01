@@ -1,6 +1,6 @@
 [package]
 name = "tiny-diff"
-version = "0.5.0-beta.12"
+version = "0.5.0-rc.13"
 edition = "2024"
 license = "MIT"
 description = "Keyed tree diffing with no_std support"

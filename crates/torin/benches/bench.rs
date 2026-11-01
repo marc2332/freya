@@ -1,7 +1,7 @@
 pub mod support;
 
-use criterion::{
-    BatchSize,
+use criterion::BatchSize;
+use hotpath::criterion::{
     Criterion,
     criterion_group,
     criterion_main,
