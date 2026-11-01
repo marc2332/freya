@@ -54,14 +54,14 @@ pub struct RippleSideBarItem {
 }
 
 impl ChildrenExt for RippleSideBarItem {
-    fn get_children(&mut self) -> &mut Vec<Element> {
-        self.ripple.get_children()
+    fn children_mut(&mut self) -> &mut Vec<Element> {
+        self.ripple.children_mut()
     }
 }
 
 impl KeyExt for RippleSideBarItem {
-    fn write_key(&mut self) -> &mut DiffKey {
-        self.item.write_key()
+    fn key_mut(&mut self) -> &mut DiffKey {
+        self.item.key_mut()
     }
 }
 
@@ -97,8 +97,8 @@ impl Component for RippleSideBarItem {
 
         let theme_override = item.get_theme().cloned().unwrap_or_default().padding(0.);
 
-        item.get_children().clear();
-        item.get_children().push(ripple.into());
+        item.children_mut().clear();
+        item.children_mut().push(ripple.into());
         item.theme(theme_override)
     }
 

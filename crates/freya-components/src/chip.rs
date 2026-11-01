@@ -7,7 +7,10 @@ use torin::{
 use crate::{
     define_theme,
     get_theme,
-    icons::tick::TickIcon,
+    icons::{
+        IconThemePartialExt,
+        tick::TickIcon,
+    },
 };
 
 define_theme! {
@@ -53,17 +56,9 @@ pub enum ChipStatus {
 /// fn app() -> impl IntoElement {
 ///     Chip::new().child("Chip")
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_chip.png").render();
 /// ```
 ///
-/// # Preview
-/// ![Chip Preview][chip]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("chip", "images/gallery_chip.png"),
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct Chip {
     pub(crate) theme: Option<ChipThemePartial>,
@@ -71,7 +66,7 @@ pub struct Chip {
     on_press: Option<EventHandler<Event<PressEventData>>>,
     selected: bool,
     enabled: bool,
-    cursor_icon: CursorIcon,
+    cursor_icon: Option<CursorIcon>,
     key: DiffKey,
 }
 
@@ -83,7 +78,7 @@ impl Default for Chip {
             on_press: None,
             selected: false,
             enabled: true,
-            cursor_icon: CursorIcon::default(),
+            cursor_icon: None,
             key: DiffKey::None,
         }
     }
@@ -121,20 +116,20 @@ impl Chip {
     }
 
     /// Override the cursor icon shown when hovering over this component while enabled.
-    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+    pub fn cursor(mut self, cursor_icon: impl Into<Option<CursorIcon>>) -> Self {
         self.cursor_icon = cursor_icon.into();
         self
     }
 }
 
 impl ChildrenExt for Chip {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
 impl KeyExt for Chip {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -167,12 +162,6 @@ impl Component for Chip {
         } = theme;
 
         let enabled = use_reactive(&self.enabled);
-        let cursor_icon = self.cursor_icon;
-        use_drop(move || {
-            if status() == ChipStatus::Hovering && enabled() {
-                Cursor::set(CursorIcon::default());
-            }
-        });
 
         let on_press = self.on_press.clone();
         let on_press = move |e: Event<PressEventData>| {
@@ -184,16 +173,10 @@ impl Component for Chip {
 
         let on_pointer_enter = move |_| {
             status.set(ChipStatus::Hovering);
-            if enabled() {
-                Cursor::set(cursor_icon);
-            } else {
-                Cursor::set(CursorIcon::NotAllowed);
-            }
         };
 
         let on_pointer_leave = move |_| {
             if status() == ChipStatus::Hovering {
-                Cursor::set(CursorIcon::default());
                 status.set(ChipStatus::Idle);
             }
         };
@@ -232,11 +215,17 @@ impl Component for Chip {
 
         rect()
             .a11y_id(a11y_id)
+            .a11y_enabled(self.enabled)
             .a11y_focusable(self.enabled)
             .a11y_role(AccessibilityRole::Button)
             .maybe(self.enabled, |rect| rect.on_press(on_press))
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
+            .cursor(if self.enabled {
+                self.cursor_icon
+            } else {
+                CursorIcon::NotAllowed.into()
+            })
             .width(width)
             .height(height)
             .padding(padding)

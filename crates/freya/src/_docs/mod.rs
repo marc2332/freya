@@ -1,12 +1,22 @@
 pub mod _async;
+pub mod ai;
+pub mod borderless;
+pub mod building_an_app;
 pub mod development_setup;
 pub mod devtools;
 pub mod events;
 pub mod extending_components;
+pub mod fonts;
 pub mod hooks;
 pub mod hot_reload;
 pub mod layers;
+pub mod optimizing;
 pub mod platforms;
 pub mod state_management;
 pub mod tokio_integration;
 pub mod ui_and_components;
+
+pub use freya_core::lifecycle::{
+    context,
+    global_context,
+};

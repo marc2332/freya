@@ -63,25 +63,25 @@ pub trait AccessibilityIdExt {
 
 impl AccessibilityIdExt for AccessibilityId {
     fn is_focused(&self) -> bool {
-        let platform = Platform::get();
+        let platform = Platform::get().current_window();
         *platform.focused_accessibility_id.read() == *self
     }
 
     fn request_focus(&self) {
-        let platform = Platform::get();
+        let platform = Platform::get().current_window();
 
         if *platform.focused_accessibility_id.peek() != *self {
-            Platform::get().send(UserEvent::FocusAccessibilityNode(
+            platform.send(UserEvent::FocusAccessibilityNode(
                 AccessibilityFocusStrategy::Node(*self),
             ));
         }
     }
 
     fn request_unfocus(&self) {
-        let platform = Platform::get();
+        let platform = Platform::get().current_window();
 
         if *platform.focused_accessibility_id.peek() == *self {
-            Platform::get().send(UserEvent::FocusAccessibilityNode(
+            platform.send(UserEvent::FocusAccessibilityNode(
                 AccessibilityFocusStrategy::Node(ACCESSIBILITY_ROOT_ID),
             ));
         }
@@ -161,7 +161,7 @@ impl KeyboardEventExt for KeyboardEventData {
 pub fn use_focus(a11y_id: AccessibilityId) -> Memo<Focus> {
     let id = use_reactive(&a11y_id);
     use_memo(move || {
-        let platform = Platform::get();
+        let platform = Platform::get().current_window();
         let is_focused = *platform.focused_accessibility_id.read() == id();
         let is_keyboard = *platform.navigation_mode.read() == NavigationMode::Keyboard;
 

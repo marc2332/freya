@@ -3,7 +3,6 @@ use std::{
     time::Duration,
 };
 
-use async_io::Timer;
 use freya_animation::{
     easing::Function,
     hook::{
@@ -50,11 +49,6 @@ define_theme! {
 /// fn app() -> impl IntoElement {
 ///     Tooltip::new_text("Hello, World!")
 /// }
-///
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_tooltip.png").render();
 /// ```
 ///
 /// Use [Tooltip::new] to show any element:
@@ -80,11 +74,7 @@ define_theme! {
 /// # let _ = app();
 /// ```
 ///
-/// # Preview
-/// ![Tooltip Preview][tooltip]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("tooltip", "images/gallery_tooltip.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(PartialEq, Clone)]
 pub struct Tooltip {
     /// Theme override.
@@ -101,13 +91,13 @@ impl Default for Tooltip {
 }
 
 impl KeyExt for Tooltip {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl ChildrenExt for Tooltip {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
@@ -169,19 +159,19 @@ pub struct TooltipContainer {
 }
 
 impl KeyExt for TooltipContainer {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl LayoutExt for TooltipContainer {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
 
 impl ChildrenExt for TooltipContainer {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
@@ -244,7 +234,7 @@ impl Component for TooltipContainer {
                 handle.cancel();
             }
             let task = spawn(async move {
-                Timer::after(delay).await;
+                timer(delay).await;
                 is_hovering.set_if_modified(true);
             });
             delay_task.set(Some(task));

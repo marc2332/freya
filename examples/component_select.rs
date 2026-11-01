@@ -19,7 +19,7 @@ fn app() -> impl IntoElement {
     });
     let mut selected_select = use_state(|| 0);
 
-    rect().center().expanded().horizontal().spacing(6.).child(
+    rect().horizontal().padding(20.).spacing(6.).child(
         Select::new()
             .selected_item(values[selected_select()].to_string())
             .children(values.iter().enumerate().map(|(i, val)| {

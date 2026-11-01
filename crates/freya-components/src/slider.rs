@@ -30,17 +30,8 @@ define_theme! {
 ///
 ///     Slider::new(move |per| percentage.set(per)).value(percentage())
 /// }
-///
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().padding(48.).center().expanded().child(app())
-/// # }, "./images/gallery_slider.png").render();
 /// ```
-/// # Preview
-/// ![Slider Preview][slider]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("slider", "images/gallery_slider.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct Slider {
     pub(crate) theme: Option<SliderThemePartial>,
@@ -50,13 +41,13 @@ pub struct Slider {
     direction: Direction,
     enabled: bool,
     scroll_enabled: bool,
-    cursor_icon: CursorIcon,
+    cursor_icon: Option<CursorIcon>,
     step: Option<f64>,
     key: DiffKey,
 }
 
 impl KeyExt for Slider {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -71,7 +62,7 @@ impl Slider {
             direction: Direction::Horizontal,
             enabled: true,
             scroll_enabled: true,
-            cursor_icon: CursorIcon::default(),
+            cursor_icon: None,
             step: None,
             key: DiffKey::None,
         }
@@ -111,7 +102,7 @@ impl Slider {
     }
 
     /// Override the cursor icon shown when hovering over this component while enabled.
-    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+    pub fn cursor(mut self, cursor_icon: impl Into<Option<CursorIcon>>) -> Self {
         self.cursor_icon = cursor_icon.into();
         self
     }
@@ -128,17 +119,8 @@ impl Component for Slider {
         let theme = get_theme!(&self.theme, SliderThemePreference, "slider");
         let a11y_id = use_a11y();
         let focus = use_focus(a11y_id);
-        let mut hovering = use_state(|| false);
         let mut clicking = use_state(|| false);
         let mut size = use_state(Area::default);
-
-        let enabled = use_reactive(&self.enabled);
-        let cursor_icon = self.cursor_icon;
-        use_drop(move || {
-            if hovering() {
-                Cursor::set(CursorIcon::default());
-            }
-        });
 
         let direction_is_vertical = self.direction == Direction::Vertical;
         let value = self.value;
@@ -177,20 +159,6 @@ impl Component for Slider {
             }
         };
 
-        let on_pointer_enter = move |_| {
-            hovering.set(true);
-            if enabled() {
-                Cursor::set(cursor_icon);
-            } else {
-                Cursor::set(CursorIcon::NotAllowed);
-            }
-        };
-
-        let on_pointer_leave = move |_| {
-            Cursor::set(CursorIcon::default());
-            hovering.set(false);
-        };
-
         let calc_percentage = move |x: f64, y: f64| -> f64 {
             let pct = if direction_is_vertical {
                 let y = y - 8.0;
@@ -216,13 +184,13 @@ impl Component for Slider {
             }
         };
 
-        let on_global_pointer_press = move |_: Event<PointerEventData>| {
+        let on_global_pointer_up = move |_: Event<PointerEventData>| {
             clicking.set(false);
         };
 
-        let on_global_pointer_move = move |e: Event<PointerEventData>| {
-            e.stop_propagation();
+        let on_capture_global_pointer_move = move |e: Event<PointerEventData>| {
             if *clicking.peek() {
+                e.prevent_default();
                 let coordinates = e.global_location();
                 on_moved.call(calc_percentage(
                     coordinates.x - size.read().min_x() as f64,
@@ -326,18 +294,22 @@ impl Component for Slider {
 
         rect()
             .a11y_id(a11y_id)
+            .a11y_enabled(self.enabled)
             .a11y_focusable(self.enabled)
             .a11y_role(AccessibilityRole::Slider)
             .on_sized(move |e: Event<SizedEventData>| size.set(e.area))
             .maybe(self.enabled, |rect| {
                 rect.on_key_down(on_key_down)
                     .on_pointer_down(on_pointer_down)
-                    .on_global_pointer_move(on_global_pointer_move)
-                    .on_global_pointer_press(on_global_pointer_press)
+                    .on_capture_global_pointer_move(on_capture_global_pointer_move)
+                    .on_global_pointer_up(on_global_pointer_up)
                     .maybe(self.scroll_enabled, |el| el.on_wheel(on_wheel))
             })
-            .on_pointer_enter(on_pointer_enter)
-            .on_pointer_leave(on_pointer_leave)
+            .cursor(if self.enabled {
+                self.cursor_icon
+            } else {
+                CursorIcon::NotAllowed.into()
+            })
             .border(border)
             .corner_radius(50.)
             .padding(padding)

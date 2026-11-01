@@ -1,6 +1,8 @@
 use keyboard_types::Modifiers;
 
-/// Extension trait for [`Modifiers`] adding OS-aware helpers.
+use crate::platform::TargetPlatform;
+
+/// Extension trait for [`Modifiers`] adding platform-aware helpers.
 pub trait ModifiersExt {
     /// Returns the platform's command modifier.
     ///
@@ -18,18 +20,16 @@ pub trait ModifiersExt {
 
 impl ModifiersExt for Modifiers {
     fn ctrl_or_meta() -> Modifiers {
-        if cfg!(target_os = "macos") {
-            Modifiers::META
-        } else {
-            Modifiers::CONTROL
+        match TargetPlatform::get() {
+            TargetPlatform::MacOs => Modifiers::META,
+            _ => Modifiers::CONTROL,
         }
     }
 
     fn ctrl_or_alt() -> Modifiers {
-        if cfg!(target_os = "macos") {
-            Modifiers::ALT
-        } else {
-            Modifiers::CONTROL
+        match TargetPlatform::get() {
+            TargetPlatform::MacOs => Modifiers::ALT,
+            _ => Modifiers::CONTROL,
         }
     }
 }

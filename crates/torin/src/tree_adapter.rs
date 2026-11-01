@@ -1,7 +1,5 @@
-use std::{
-    any::Any,
-    rc::Rc,
-};
+use alloc::rc::Rc;
+use core::any::Any;
 
 pub use euclid::Rect;
 
@@ -64,24 +62,21 @@ impl LayoutNode {
     }
 }
 
-pub trait NodeKey: Clone + PartialEq + Eq + std::hash::Hash + Copy + std::fmt::Debug {}
+pub trait NodeKey: Clone + PartialEq + Eq + core::hash::Hash + Copy + core::fmt::Debug {}
 
 impl NodeKey for usize {}
 
 pub trait TreeAdapter<Key: NodeKey> {
     fn root_id(&self) -> Key;
 
-    /// Get the Node size
-    fn get_node(&self, node_id: &Key) -> Option<Node>;
+    /// Read the Node and its children.
+    fn read_node<R>(&self, node_id: &Key, reader: impl FnOnce(&Node, &[Key]) -> R) -> Option<R>;
 
     /// Get the height in the Tree of the given Node
     fn height(&self, node_id: &Key) -> Option<u16>;
 
     /// Get the parent of a Node
     fn parent_of(&self, node_id: &Key) -> Option<Key>;
-
-    /// Get the children of a Node
-    fn children_of(&mut self, node_id: &Key) -> Vec<Key>;
 
     /// Get the closest common parent Node of two Nodes
     fn closest_common_parent(
@@ -94,13 +89,13 @@ pub trait TreeAdapter<Key: NodeKey> {
         let height_b = self.height(node_b)?;
 
         let (node_a, node_b) = match height_a.cmp(&height_b) {
-            std::cmp::Ordering::Less => (
+            core::cmp::Ordering::Less => (
                 *node_a,
                 // Does not make sense to call the walker for when the node a is higher than the node b
                 balance_heights(self, *node_b, *node_a, None::<fn(_)>).unwrap_or(*node_b),
             ),
-            std::cmp::Ordering::Equal => (*node_a, *node_b),
-            std::cmp::Ordering::Greater => (
+            core::cmp::Ordering::Equal => (*node_a, *node_b),
+            core::cmp::Ordering::Greater => (
                 balance_heights(self, *node_a, *node_b, Some(walker)).unwrap_or(*node_a),
                 *node_b,
             ),

@@ -12,6 +12,13 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
+#[derive(PartialEq, Clone, Copy, Default)]
+enum OrderDirection {
+    Up,
+    #[default]
+    Down,
+}
+
 #[derive(PartialEq, Clone)]
 enum OrderBy {
     Name,
@@ -94,39 +101,38 @@ fn app() -> impl IntoElement {
     rect().padding(8.).child(
         Table::new()
             .child(
-                TableHead::new().child(
-                    TableRow::new().children(columns.into_iter().enumerate().map(
-                        |(n, (text, order_by))| {
-                            TableCell::new()
-                                .key(n)
-                                .order_direction(if *order.read() == order_by {
-                                    Some(*order_direction.read())
-                                } else {
-                                    None
-                                })
-                                .on_press(move |_| on_column_head_click(&order_by))
-                                .child(text.to_string())
-                        },
-                    )),
-                ),
+                TableRow::new().children(columns.into_iter().enumerate().map(
+                    |(n, (text, order_by))| {
+                        rect()
+                            .key(n)
+                            .width(Size::fill())
+                            .horizontal()
+                            .main_align(Alignment::End)
+                            .cross_align(Alignment::Center)
+                            .maybe_child((*order.read() == order_by).then(|| {
+                                ArrowIcon::new()
+                                    .margin(10.)
+                                    .rotate(match *order_direction.read() {
+                                        OrderDirection::Down => 0.,
+                                        OrderDirection::Up => 180.,
+                                    })
+                            }))
+                            .on_press(move |_| on_column_head_click(&order_by))
+                            .child(text.to_string())
+                    },
+                )),
             )
             .child(
-                TableBody::new().child(
-                    VirtualScrollView::new_with_data(filtered_data, move |item, filtered_data| {
-                        let row = &filtered_data[item.index];
-                        TableRow::new()
-                            .key(item.index)
-                            .children(row.iter().enumerate().map(|(n, cell)| {
-                                TableCell::new()
-                                    .key(n)
-                                    .height(Size::px(35.))
-                                    .child(cell.to_string())
-                            }))
-                            .into()
-                    })
-                    .length(len)
-                    .item_size(36.),
-                ),
+                VirtualScrollView::new_with_data(filtered_data, move |item, filtered_data| {
+                    let row = &filtered_data[item.index];
+                    TableRow::new()
+                        .key(item.index)
+                        .height(Size::px(35.))
+                        .children(row.iter().cloned())
+                        .into()
+                })
+                .length(len)
+                .item_size(35.),
             ),
     )
 }

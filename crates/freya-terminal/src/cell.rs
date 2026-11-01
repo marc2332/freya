@@ -90,7 +90,7 @@ pub(crate) fn snapshot_row<T: EventListener>(
     cells: &mut Vec<TermCell>,
 ) {
     let row = &term.grid[Line(viewport_row as i32 - term.display_offset() as i32)];
-    let styles = term.grid.style_set.styles();
+    let styles = term.grid.styles();
     let extras = &term.grid.extras_table;
     cells.clear();
     cells.extend(

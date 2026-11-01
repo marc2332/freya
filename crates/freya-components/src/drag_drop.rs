@@ -56,19 +56,19 @@ pub struct DragZone<T: Clone + 'static + PartialEq> {
 }
 
 impl<T: Clone + PartialEq + 'static> ChildrenExt for DragZone<T> {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
 impl<T: Clone + PartialEq + 'static> KeyExt for DragZone<T> {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl<T: Clone + PartialEq + 'static> LayoutExt for DragZone<T> {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
@@ -150,7 +150,7 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
         };
 
         let on_pointer_down = move |e: Event<PointerEventData>| {
-            if e.data().button() != Some(MouseButton::Left) {
+            if !e.data().is_primary() {
                 return;
             }
             phase.set(DragPhase::Pressing {
@@ -159,7 +159,7 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
             });
         };
 
-        let on_global_pointer_press = move |_: Event<PointerEventData>| {
+        let on_global_pointer_up = move |_: Event<PointerEventData>| {
             if !matches!(phase(), DragPhase::Idle) {
                 phase.set(DragPhase::Idle);
                 *drags.write() = None;
@@ -173,7 +173,7 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
 
         rect()
             .layout(self.layout.clone())
-            .on_global_pointer_press(on_global_pointer_press)
+            .on_global_pointer_up(on_global_pointer_up)
             .on_global_pointer_move(on_global_pointer_move)
             .maybe(self.enabled, |el| el.on_pointer_down(on_pointer_down))
             .maybe_child((dragging.zip(self.drag_element.clone())).map(
@@ -227,19 +227,19 @@ pub struct DropZone<T: 'static + PartialEq + Clone> {
 }
 
 impl<T: Clone + PartialEq + 'static> ChildrenExt for DropZone<T> {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
 impl<T: Clone + PartialEq + 'static> KeyExt for DropZone<T> {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl<T: Clone + PartialEq + 'static> LayoutExt for DropZone<T> {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
@@ -273,8 +273,24 @@ impl<T: Clone + PartialEq + 'static> Component for DropZone<T> {
         let on_drag_over = self.on_drag_over.clone();
 
         let on_mouse_up = {
+            let on_drop = on_drop.clone();
             let on_drag_over = on_drag_over.clone();
             move |e: Event<MouseEventData>| {
+                e.stop_propagation();
+                let payload = (*drags.read()).clone();
+                if let Some(payload) = payload {
+                    on_drop.call(payload);
+                    *drags.write() = None;
+                    if let Some(on_drag_over) = &on_drag_over {
+                        on_drag_over.call(false);
+                    }
+                }
+            }
+        };
+
+        let on_touch_end = {
+            let on_drag_over = on_drag_over.clone();
+            move |e: Event<TouchEventData>| {
                 e.stop_propagation();
                 let payload = (*drags.read()).clone();
                 if let Some(payload) = payload {
@@ -290,6 +306,7 @@ impl<T: Clone + PartialEq + 'static> Component for DropZone<T> {
         rect()
             .layout(self.layout.clone())
             .on_mouse_up(on_mouse_up)
+            .on_touch_end(on_touch_end)
             .map(on_drag_over, move |el, on_drag_over| {
                 el.on_pointer_enter({
                     let on_drag_over = on_drag_over.clone();

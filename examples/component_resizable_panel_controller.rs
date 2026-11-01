@@ -10,10 +10,7 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    let mut controller = use_state(|| ResizableContext {
-        panels: vec![],
-        direction: Direction::Vertical,
-    });
+    let mut controller = use_state(ResizableContext::default);
 
     let on_reset = move |_| {
         controller.write().reset();

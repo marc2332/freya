@@ -6,7 +6,6 @@ use std::{
     },
 };
 
-use async_io::Timer;
 use freya_core::prelude::*;
 
 #[derive(Default, PartialEq, Clone, Debug)]
@@ -177,12 +176,12 @@ impl<Animated: AnimatedValue> Deref for UseAnimation<Animated> {
 
 impl<Animated: AnimatedValue> UseAnimation<Animated> {
     /// Get the animated value.
-    pub fn get(&self) -> ReadRef<'static, Animated> {
+    pub fn get(&self) -> ReadRef<'_, Animated> {
         self.animated_value.read()
     }
 
     /// Get the last configured direction used to animation.
-    pub fn direction(&self) -> ReadRef<'static, AnimDirection> {
+    pub fn direction(&self) -> ReadRef<'_, AnimDirection> {
         self.last_direction.read()
     }
 
@@ -258,7 +257,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
         }
 
         let ticker = RenderingTicker::get();
-        let platform = Platform::get();
+        let platform = Platform::get().current_window();
         let animation_clock = AnimationClock::get();
 
         // Prepare the animations with the the proper direction
@@ -306,7 +305,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
                     };
 
                     if !delay.is_zero() {
-                        Timer::after(delay).await;
+                        timer(delay).await;
                     }
 
                     index = 0;
@@ -527,13 +526,15 @@ pub fn use_animation_with_dependencies<Animated: AnimatedValue, D: 'static + Clo
         *animation.config.write() = anim_conf;
 
         if is_creation {
-            match animation.config.peek().on_creation {
+            let on_creation = animation.config.peek().on_creation;
+            match on_creation {
                 OnCreation::Run => animation.run(AnimDirection::Forward),
                 OnCreation::Finish => animation.finish(),
                 _ => {}
             }
         } else {
-            match animation.config.peek().on_change {
+            let on_change = animation.config.peek().on_change;
+            match on_change {
                 OnChange::Finish => animation.finish(),
                 OnChange::Rerun => {
                     let last_direction = *animation.last_direction.peek();

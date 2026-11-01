@@ -11,7 +11,7 @@
 //! freya = { version = "...", features = ["query"] }
 //! ```
 //!
-//! Freya's built-in async primitives (`spawn`, `spawn_forever`, `use_future`)
+//! Freya's built-in async primitives (`spawn`, `spawn_in_window`, `spawn_global`, `use_future`)
 //! are great for *individual* async operations, but they don't share results
 //! between components, deduplicate concurrent calls, or invalidate stale data.
 //! Freya Query builds on top of those primitives and adds caching, background

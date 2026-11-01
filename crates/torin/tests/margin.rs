@@ -44,7 +44,7 @@ pub fn margin() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_tree,
+        &mocked_tree,
     );
 
     let layout_node = layout.get(&1).unwrap();

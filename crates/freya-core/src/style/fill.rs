@@ -13,16 +13,23 @@ use std::{
 use freya_engine::prelude::{
     Paint,
     SkColor,
+    TextStyle,
 };
 use torin::prelude::Area;
 
 use crate::{
+    data::TextStyleState,
     prelude::Color,
     style::{
         gradient::{
             ConicGradient,
             LinearGradient,
             RadialGradient,
+        },
+        render_callback::{
+            RenderCallback,
+            RenderContext,
+            RenderTarget,
         },
         shader::ShaderFill,
     },
@@ -54,15 +61,14 @@ pub enum Fill {
     RadialGradient(Box<RadialGradient>),
     /// A [`ConicGradient`].
     ConicGradient(Box<ConicGradient>),
+    /// Custom background or text paint.
+    Callback(#[cfg_attr(feature = "serde", serde(skip))] RenderCallback),
 }
 
 impl Fill {
     pub fn set_a(&mut self, a: u8) {
         if let Fill::Color(color) = self {
-            // Only actually change the alpha if its non-transparent
-            if *color != Color::TRANSPARENT {
-                *color = color.with_a(a);
-            }
+            *color = color.with_a(a);
         }
     }
 
@@ -74,8 +80,46 @@ impl Fill {
         }
     }
 
+    /// Applies this fill as a text color.
+    pub fn apply_to_text_style(
+        &self,
+        text_style: &mut TextStyle,
+        area: Area,
+        text_style_state: &TextStyleState,
+        scale_factor: f64,
+    ) {
+        match self {
+            Self::Color(color) => {
+                text_style.set_color(*color);
+            }
+            Self::Callback(callback) => {
+                text_style.set_color(Color::TRANSPARENT);
+                callback.call(&mut RenderContext {
+                    target: RenderTarget::TextStyle(text_style),
+                    scale_factor,
+                    origin: area.origin,
+                    size: area.size,
+                    text_style_state,
+                });
+            }
+            _ => {
+                let mut paint = Paint::default();
+                paint.set_anti_alias(true);
+                self.apply_to_paint(&mut paint, area);
+                text_style.set_foreground_paint(&paint);
+            }
+        }
+    }
+
+    pub fn render_callback(&self) -> Option<&RenderCallback> {
+        match self {
+            Self::Callback(callback) => Some(callback),
+            _ => None,
+        }
+    }
+
     pub fn apply_to_paint(&self, paint: &mut Paint, area: Area) {
-        match &self {
+        match self {
             Fill::Color(color) => {
                 paint.set_color(*color);
             }
@@ -90,6 +134,9 @@ impl Fill {
             }
             Fill::Shader(shader) => {
                 paint.set_shader(shader.prepare_shader(area));
+            }
+            Fill::Callback(_) => {
+                paint.set_color(Color::TRANSPARENT);
             }
         }
     }
@@ -110,7 +157,14 @@ impl Hash for Fill {
             Fill::LinearGradient(gradient) => gradient.hash(state),
             Fill::RadialGradient(gradient) => gradient.hash(state),
             Fill::ConicGradient(gradient) => gradient.hash(state),
+            Fill::Callback(callback) => callback.hash(state),
         }
+    }
+}
+
+impl From<RenderCallback> for Fill {
+    fn from(callback: RenderCallback) -> Self {
+        Self::Callback(callback)
     }
 }
 
@@ -182,6 +236,7 @@ impl fmt::Display for Fill {
             Self::LinearGradient(gradient) => gradient.as_ref().fmt(f),
             Self::RadialGradient(gradient) => gradient.as_ref().fmt(f),
             Self::ConicGradient(gradient) => gradient.as_ref().fmt(f),
+            Self::Callback(callback) => callback.fmt(f),
         }
     }
 }

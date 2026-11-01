@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use alloc::borrow::Cow;
 
 pub trait Scaled {
     fn scale(&mut self, scale_factor: f32);

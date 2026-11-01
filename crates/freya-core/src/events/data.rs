@@ -8,6 +8,10 @@ use std::{
     rc::Rc,
 };
 
+pub use accesskit::{
+    Action as AccessibilityAction,
+    ActionRequest as AccessibilityActionEventData,
+};
 use torin::prelude::{
     Area,
     CursorPoint,
@@ -144,6 +148,22 @@ impl SizedEventData {
     }
 }
 
+/// Data of a Visible event.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct VisibleEventData {
+    pub area: Area,
+}
+
+impl VisibleEventData {
+    pub fn new(area: Area) -> Self {
+        Self { area }
+    }
+
+    pub fn div(&mut self, rhs: f32) {
+        self.area = self.area.div(rhs);
+    }
+}
+
 /// Data of a Styled event.
 #[derive(Debug, Clone, PartialEq)]
 pub struct StyledEventData {
@@ -153,14 +173,25 @@ pub struct StyledEventData {
 
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub enum WheelSource {
-    Device,
+    /// Discrete line-based steps, usually from a mouse wheel.
+    Line,
+    /// Continuous pixel deltas, usually from a touchpad.
+    Pixel,
     Custom,
+}
+
+impl WheelSource {
+    /// Whether the event came from a physical device rather than being synthesized from code.
+    pub fn is_device(&self) -> bool {
+        matches!(self, Self::Line | Self::Pixel)
+    }
 }
 
 /// Data of a Wheel event.
 #[derive(Debug, Clone, PartialEq)]
 pub struct WheelEventData {
     pub source: WheelSource,
+    pub phase: TouchPhase,
     pub delta_x: f64,
     pub delta_y: f64,
     pub global_location: CursorPoint,
@@ -172,6 +203,7 @@ impl WheelEventData {
         delta_x: f64,
         delta_y: f64,
         source: WheelSource,
+        phase: TouchPhase,
         global_location: CursorPoint,
         element_location: CursorPoint,
     ) -> Self {
@@ -179,6 +211,7 @@ impl WheelEventData {
             delta_x,
             delta_y,
             source,
+            phase,
             global_location,
             element_location,
         }
@@ -295,9 +328,11 @@ impl FileEventData {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum EventType {
+    AccessibilityAction(AccessibilityActionEventData),
     Mouse(MouseEventData),
     Keyboard(KeyboardEventData),
     Sized(SizedEventData),
+    Visible(VisibleEventData),
     Styled(StyledEventData),
     Wheel(WheelEventData),
     Touch(TouchEventData),

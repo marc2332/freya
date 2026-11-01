@@ -10,7 +10,6 @@ use freya::{
     radio::*,
     terminal::*,
 };
-use portable_pty::CommandBuilder;
 
 #[derive(Default, Clone)]
 struct AppState {
@@ -101,7 +100,7 @@ impl Component for TerminalPanel {
             cmd.env("TERM", "xterm-256color");
             cmd.env("COLORTERM", "truecolor");
             cmd.env("LANG", "en_GB.UTF-8");
-            TerminalHandle::new(TerminalId::new(), cmd, None).ok()
+            TerminalHandle::new(TerminalId::new(), PtyBackend::new(cmd), None).ok()
         });
 
         use_future(move || async move {
@@ -115,7 +114,8 @@ impl Component for TerminalPanel {
         let mut dimensions = use_state(|| (0.0, 0.0));
 
         use_side_effect(move || {
-            let focused = *Platform::get().is_app_focused.read() && focus().is_focused();
+            let focused =
+                *Platform::get().current_window().is_app_focused.read() && focus().is_focused();
             if let Some(handle) = handle.read().clone() {
                 handle.focus_changed(focused);
             }
@@ -192,14 +192,13 @@ impl Component for TerminalPanel {
                                                 }
                                                 _ => TerminalMouseButton::Left,
                                             };
-                                            let selection_type =
-                                                match EventsCombos::pressed(e.element_location) {
-                                                    PressEventType::Double => {
-                                                        SelectionType::Semantic
-                                                    }
-                                                    PressEventType::Triple => SelectionType::Lines,
-                                                    _ => SelectionType::Simple,
-                                                };
+                                            let selection_type = match EventsCombos::<()>::pressed(
+                                                e.element_location,
+                                            ) {
+                                                PressEventType::Double => SelectionType::Semantic,
+                                                PressEventType::Triple => SelectionType::Lines,
+                                                _ => SelectionType::Simple,
+                                            };
                                             handle.mouse_down(row, col, button, selection_type);
                                             e.stop_propagation();
                                             e.prevent_default();
@@ -236,7 +235,7 @@ impl Component for TerminalPanel {
                                             handle.mouse_up(row, col, button);
                                         }
                                     })
-                                    .on_global_pointer_press({
+                                    .on_global_pointer_up({
                                         let handle = handle.clone();
                                         move |_: Event<PointerEventData>| {
                                             handle.release();

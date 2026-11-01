@@ -268,7 +268,7 @@ impl Route {
                                 None
                             },
                             // Try to parse the child route and turn it into a parent route
-                            format_route_as_root_route: |#field_name| Self::#name { #field_name: #field_name }.to_string(),
+                            format_route_as_root_route: |#field_name| Self::#name { #field_name }.to_string(),
                         })
                     }
                 }
@@ -280,7 +280,7 @@ impl Route {
                     #[allow(unused)]
                     (#last_index, Self::#name { #(#dynamic_segments,)* }) => {
                         freya::prelude::Element::from(#component {
-                            #(#dynamic_segments_from_route: #dynamic_segments_from_route,)*
+                            #(#dynamic_segments_from_route,)*
                         })
                     }
                 }

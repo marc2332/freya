@@ -1,0 +1,70 @@
+use freya::helpers::from_fn_captured;
+use freya_core::{
+    integration::*,
+    prelude::*,
+};
+#[cfg_attr(feature = "hotpath", hotpath::main(percentiles = [33, 66, 95, 99], functions_limit = 0))]
+fn main() {
+    fn app() -> Element {
+        rect()
+            .children([
+                from_fn_captured(|| counter(5)),
+                from_fn_captured(|| counter(10)),
+            ])
+            .into()
+    }
+
+    fn counter(stuff: u8) -> Element {
+        let mut value = use_state(|| stuff);
+        let count = use_consume::<State<i32>>();
+
+        rect()
+            .layer(value() as i16)
+            .on_mouse_up(move |_| {
+                *value.write() += 1;
+            })
+            .children(
+                [
+                    label().text(format!("Value is {}", value())).into_element(),
+                    rect()
+                        .children(
+                            (0..count())
+                                .map(|i| label().text(format!("Value is {i}")))
+                                .collect::<Vec<_>>(),
+                        )
+                        .into_element(),
+                    label().text("Hey!").into_element(),
+                ]
+                .into_iter()
+                .chain({
+                    if value() == stuff + 1 {
+                        vec![label().text("Hello World!").into_element()]
+                    } else {
+                        vec![]
+                    }
+                })
+                .collect::<Vec<Element>>(),
+            )
+            .into()
+    }
+
+    let mut runner = Runner::new(app);
+    let mut state = runner.provide_root_context(|| State::create(10000));
+    let mut tree = Tree::default();
+
+    let updates = runner.sync_and_update();
+    tree.apply_mutations(updates, 1.0);
+
+    runner.handle_event(
+        5,
+        EventName::MouseUp,
+        EventType::Mouse(MouseEventData::default()),
+        false,
+    );
+    let updates = runner.sync_and_update();
+    tree.apply_mutations(updates, 1.0);
+
+    state.set(1000);
+    let updates = runner.sync_and_update();
+    tree.apply_mutations(updates, 1.0);
+}

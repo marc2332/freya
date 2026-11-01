@@ -28,6 +28,7 @@ pub fn apply_value(
     }
 
     match function {
+        Function::Fn(function) => origin + (destination - origin) * function(t / d, ease),
         Function::Back => match ease {
             Ease::In => Back::ease_in(t, b, c, d),
             Ease::InOut => Back::ease_in_out(t, b, c, d),
@@ -81,7 +82,15 @@ pub fn apply_value(
     }
 }
 
-#[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
+/// Built-in easing functions or a custom normalized easing function.
+///
+/// ```
+/// # use freya::prelude::*;
+/// # use freya::animation::*;
+///
+/// let animation = AnimNum::new(0., 100.).time(300).function(Function::Cubic);
+/// ```
+#[derive(Default, Clone, Copy, Debug, Eq)]
 pub enum Function {
     Back,
     Bounce,
@@ -94,6 +103,22 @@ pub enum Function {
     Quad,
     Quart,
     Sine,
+    Fn(fn(f32, Ease) -> f32),
+}
+
+impl From<fn(f32, Ease) -> f32> for Function {
+    fn from(function: fn(f32, Ease) -> f32) -> Self {
+        Self::Fn(function)
+    }
+}
+
+impl PartialEq for Function {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Fn(function), Self::Fn(other)) => std::ptr::fn_addr_eq(*function, *other),
+            _ => std::mem::discriminant(self) == std::mem::discriminant(other),
+        }
+    }
 }
 
 impl fmt::Display for Function {

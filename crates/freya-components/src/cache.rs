@@ -11,7 +11,6 @@ use std::{
     time::Duration,
 };
 
-use async_io::Timer;
 use freya_core::{
     integration::FxHashSet,
     prelude::*,
@@ -112,6 +111,7 @@ impl AssetCacher {
         try_consume_root_context()
     }
 
+    #[track_caller]
     pub fn get() -> Self {
         consume_root_context()
     }
@@ -181,10 +181,10 @@ impl AssetCacher {
         if spawn_clear_task {
             // Only clear the asset if a duration was specified
             if let AssetAge::Duration(duration) = asset_config.age {
-                let clear_task = spawn_forever({
+                let clear_task = spawn_in_window({
                     let asset_config = asset_config.clone();
                     async move {
-                        Timer::after(duration).await;
+                        timer(duration).await;
                         registry.write().remove(&asset_config);
                     }
                 });
@@ -225,6 +225,15 @@ impl AssetCacher {
         }
     }
 
+    /// Read the number of successfully cached assets.
+    pub fn cached_size(&self) -> usize {
+        self.registry
+            .read()
+            .values()
+            .filter(|asset_state| matches!(&asset_state.asset, Asset::Cached(_)))
+            .count()
+    }
+
     /// Read the size of the cache registry.
     pub fn size(&self) -> usize {
         self.registry.read().len()
@@ -242,7 +251,7 @@ pub fn use_asset(asset_config: &AssetConfiguration) {
             return;
         };
         // Try to clean in the next async tick, when this scope will already be dropped
-        spawn_forever(async move {
+        spawn_in_window(async move {
             asset_cacher.try_clean(&asset_config);
         });
     });

@@ -31,10 +31,15 @@ impl<R: Routable> From<R> for NavigationTarget {
     }
 }
 
-/// A target for the router to navigate to.
+/// A destination for router navigation.
+///
+/// Route variants and valid relative paths become [`Self::Internal`]. Absolute
+/// URLs become [`Self::External`]. [`RouterContext::push`](crate::prelude::RouterContext::push)
+/// and [`RouterContext::replace`](crate::prelude::RouterContext::replace) accept
+/// values that convert into this type.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum NavigationTarget<R = String> {
-    /// An internal path that the router can navigate to by itself.
+    /// Route handled by a router.
     ///
     /// ```rust
     /// # use freya::prelude::*;
@@ -56,7 +61,7 @@ pub enum NavigationTarget<R = String> {
     /// assert_eq!(explicit, implicit);
     /// ```
     Internal(R),
-    /// An external target that the router doesn't control.
+    /// An absolute URL outside the current router.
     External(String),
 }
 
@@ -128,11 +133,11 @@ impl<R: Routable> Display for NavigationTarget<R> {
     }
 }
 
-/// An error that can occur when parsing a [`NavigationTarget`].
+/// An error returned when parsing a [`NavigationTarget`] from a string.
 pub enum NavigationTargetParseError<R: Routable> {
-    /// A URL that is not valid.
+    /// The value is neither a valid absolute URL nor a valid internal route.
     InvalidUrl(ParseError),
-    /// An internal URL that is not valid.
+    /// The relative URL does not match the route type.
     InvalidInternalURL(<R as FromStr>::Err),
 }
 

@@ -44,34 +44,20 @@ define_theme! {
 ///                .child(LOREM_IPSUM)
 ///        }))
 /// }
-///
-/// # use freya_testing::prelude::*;
-/// # use std::time::Duration;
-/// # launch_doc(|| {
-/// #   rect().child(app())
-/// # }, "./images/gallery_accordion.png").with_hook(|t| {
-/// #   t.click_cursor((125., 115.));
-/// #   t.poll(Duration::from_millis(1), Duration::from_millis(300));
-/// #   t.sync_and_update();
-/// # });
 /// ```
 ///
-/// # Preview
-/// ![Accordion Preview][accordion]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("accordion", "images/gallery_accordion.png")
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq, Default)]
 pub struct Accordion {
     pub(crate) theme: Option<AccordionThemePartial>,
     header: Option<Element>,
     children: Vec<Element>,
-    cursor_icon: CursorIcon,
+    cursor_icon: Option<CursorIcon>,
     key: DiffKey,
 }
 
 impl KeyExt for Accordion {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -87,14 +73,14 @@ impl Accordion {
     }
 
     /// Override the cursor icon shown when hovering over this component.
-    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+    pub fn cursor(mut self, cursor_icon: impl Into<Option<CursorIcon>>) -> Self {
         self.cursor_icon = cursor_icon.into();
         self
     }
 }
 
 impl ChildrenExt for Accordion {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
@@ -103,7 +89,6 @@ impl Component for Accordion {
     fn render(self: &Accordion) -> impl IntoElement {
         let header_a11y_id = use_a11y();
         let accordion_theme = get_theme!(&self.theme, AccordionThemePreference, "accordion");
-        let cursor_icon = self.cursor_icon;
         let mut open = use_state(|| false);
         let mut animation = use_animation(move |_conf| {
             AnimNum::new(0., 100.)
@@ -128,12 +113,7 @@ impl Component for Accordion {
                     .width(1.)
                     .alignment(BorderAlignment::Inner),
             )
-            .on_pointer_enter(move |_| {
-                Cursor::set(cursor_icon);
-            })
-            .on_pointer_leave(move |_| {
-                Cursor::set(CursorIcon::default());
-            })
+            .cursor(self.cursor_icon)
             .on_press(move |_| {
                 if open.toggled() {
                     animation.start();

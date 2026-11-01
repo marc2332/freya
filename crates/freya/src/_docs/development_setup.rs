@@ -13,14 +13,14 @@
 //!
 //! Install these packages:
 //! ```sh
-//! sudo apt install build-essential libssl-dev pkg-config cmake libgtk-3-dev libclang-dev
+//! sudo apt install build-essential libssl-dev pkg-config cmake libclang-dev libudev-dev libasound2-dev liblzma-dev libfontconfig1-dev libfreetype6-dev libegl1-mesa-dev libgl1-mesa-dev libgles2-mesa-dev libwayland-dev
 //! ```
 //!
 //! #### Arch Linux
 //!
 //! Install these packages:
 //! ```sh
-//! sudo pacman -S base-devel openssl cmake gtk3 clang
+//! sudo pacman -S base-devel openssl cmake clang
 //! ```
 //!
 //! #### Fedora
@@ -28,18 +28,22 @@
 //! Install these packages:
 //!
 //! ```sh
-//! sudo dnf install openssl-devel clang-devel systemd-devel gtk3-devel @development-tools -y
+//! sudo dnf install openssl-devel clang-devel systemd-devel @development-tools -y
 //! ```
-//!
-//! #### Nix
-//!
-//! A [flake.nix](https://github.com/marc2332/freya/blob/main/flake.nix) is included in the repository. Run `nix develop` to enter a dev shell with all required dependencies.
-//!
-//! Don't hesitate to contribute so other distros can be added here.
 //!
 //! ### MacOS
 //!
 //! No setup required. But feel free to add more if we miss something.
+//!
+//! ### Android
+//!
+//! Requires the Android SDK, the NDK and `cargo-ndk`. See the
+//! [`android`](https://github.com/marc2332/freya/blob/main/examples/android/README.md) example README.
+//!
+//! ### Web
+//!
+//! Requires the `wasm32-unknown-emscripten` target and Emscripten. See the
+//! [`web`](https://github.com/marc2332/freya/blob/main/examples/web/README.md) example README.
 //!
 //! ## Custom Linkers
 //!
@@ -48,3 +52,13 @@
 //! - `mold`
 //!
 //! If there is another one not supported don't hesitate to add it here.
+//!
+//! ## Build your first app
+//!
+//! Follow [Building your first app](crate::_docs::building_an_app) to create a small todo app,
+//! from its first window to testing user interactions. The guide explains layout, components,
+//! state ownership, and stable list keys as you need them.
+//!
+//! For individual APIs, browse [UI and Components](crate::_docs::ui_and_components),
+//! [State Management](crate::_docs::state_management), and the
+//! [runnable examples](https://github.com/marc2332/freya/tree/main/examples).

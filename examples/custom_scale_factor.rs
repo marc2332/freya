@@ -17,7 +17,7 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    let custom_scale_factor = *Platform::get().custom_scale_factor.read();
+    let custom_scale_factor = *Platform::get().current_window().custom_scale_factor.read();
 
     rect()
         .expanded()
@@ -31,20 +31,28 @@ fn app() -> impl IntoElement {
                 .child(
                     Button::new()
                         .on_press(move |_| {
-                            Platform::get().set_custom_scale_factor(custom_scale_factor + 0.25)
+                            Platform::get()
+                                .current_window()
+                                .set_custom_scale_factor(custom_scale_factor + 0.25)
                         })
                         .child("Increase"),
                 )
                 .child(
                     Button::new()
                         .on_press(move |_| {
-                            Platform::get().set_custom_scale_factor(custom_scale_factor - 0.25)
+                            Platform::get()
+                                .current_window()
+                                .set_custom_scale_factor(custom_scale_factor - 0.25)
                         })
                         .child("Decrease"),
                 )
                 .child(
                     Button::new()
-                        .on_press(move |_| Platform::get().set_custom_scale_factor(1.0))
+                        .on_press(move |_| {
+                            Platform::get()
+                                .current_window()
+                                .set_custom_scale_factor(1.0)
+                        })
                         .child("Reset"),
                 ),
         )

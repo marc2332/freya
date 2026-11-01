@@ -31,14 +31,14 @@ pub struct RippleMenuItem {
 }
 
 impl ChildrenExt for RippleMenuItem {
-    fn get_children(&mut self) -> &mut Vec<Element> {
-        self.ripple.get_children()
+    fn children_mut(&mut self) -> &mut Vec<Element> {
+        self.ripple.children_mut()
     }
 }
 
 impl KeyExt for RippleMenuItem {
-    fn write_key(&mut self) -> &mut DiffKey {
-        self.item.write_key()
+    fn key_mut(&mut self) -> &mut DiffKey {
+        self.item.key_mut()
     }
 }
 
@@ -68,8 +68,8 @@ impl Component for RippleMenuItem {
             .padding(padding)
             .width(Size::fill_minimum());
 
-        item.get_children().clear();
-        item.get_children().push(ripple.into());
+        item.children_mut().clear();
+        item.children_mut().push(ripple.into());
         item.padding(0.)
     }
 

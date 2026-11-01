@@ -97,8 +97,8 @@ impl<T: 'static> Readable<T> {
     /// Create from local `State<T>`.
     pub fn from_state(state: State<T>) -> Self {
         Self {
-            read_fn: Rc::new(move || ReadableRef::Ref(state.read())),
-            peek_fn: Rc::new(move || ReadableRef::Ref(state.peek())),
+            read_fn: Rc::new(move || ReadableRef::Ref(state.read_unchecked())),
+            peek_fn: Rc::new(move || ReadableRef::Ref(state.peek_unchecked())),
             equal_fn: Rc::new(move |_| true),
         }
     }
@@ -174,6 +174,12 @@ impl<T: 'static> Readable<T> {
 
 pub trait IntoReadable<T: 'static> {
     fn into_readable(self) -> Readable<T>;
+}
+
+impl<T: 'static> IntoReadable<T> for Readable<T> {
+    fn into_readable(self) -> Readable<T> {
+        self
+    }
 }
 
 impl<T: 'static> IntoReadable<T> for State<T> {

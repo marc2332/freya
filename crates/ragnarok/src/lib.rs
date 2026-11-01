@@ -6,6 +6,11 @@
 //! that are sent to the consumer of **Raganarok** and ultimately if an `Emmitable` event is cancelled
 //! this will discard some of the yet-to-emit `Emmitable` events and possibly affect the internal state of the nodes.
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
+extern crate alloc;
+
+pub mod collections;
 pub mod emmitable;
 pub mod executor;
 pub mod key;

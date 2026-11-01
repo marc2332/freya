@@ -1,6 +1,6 @@
 [package]
 name = "freya-clipboard"
-version = "0.5.0-rc.3"
+version = "0.5.0-rc.13"
 edition = "2024"
 description = "Clipboard integration for Freya."
 license = "MIT"
@@ -16,6 +16,10 @@ workspace = true
 [dependencies]
 copypasta = "0.10"
 freya-core = { workspace = true }
+
+[target.'cfg(target_os = "android")'.dependencies]
+jni = "0.22"
+ndk-context = "0.1"
 
 [dev-dependencies]
 freya = { path = "../freya" }

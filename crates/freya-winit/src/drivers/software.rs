@@ -1,11 +1,12 @@
 use std::num::NonZeroU32;
+#[cfg(any(target_os = "linux", target_os = "windows"))]
+use std::time::Instant;
 
 use freya_engine::prelude::{
     AlphaType,
     ColorType,
     ImageInfo,
     Surface as SkiaSurface,
-    wrap_pixels,
 };
 use raw_window_handle::{
     DisplayHandle,
@@ -16,6 +17,8 @@ use raw_window_handle::{
     RawWindowHandle,
     WindowHandle,
 };
+#[cfg(target_os = "windows")]
+use windows_sys::Win32::Graphics::Dwm::DwmFlush;
 use winit::{
     dpi::PhysicalSize,
     event_loop::ActiveEventLoop,
@@ -24,6 +27,8 @@ use winit::{
         WindowAttributes,
     },
 };
+
+use crate::drivers::surface::wrap_software_pixels;
 
 struct DisplayHandleWrapper(RawDisplayHandle);
 
@@ -47,6 +52,8 @@ impl HasWindowHandle for WindowHandleWrapper {
 pub struct SoftwareDriver {
     _context: softbuffer::Context<DisplayHandleWrapper>,
     surface: softbuffer::Surface<DisplayHandleWrapper, WindowHandleWrapper>,
+    #[cfg(any(target_os = "linux", target_os = "windows"))]
+    last_present: Option<Instant>,
 }
 
 impl SoftwareDriver {
@@ -81,10 +88,36 @@ impl SoftwareDriver {
         Ok(Self {
             _context: context,
             surface,
+            #[cfg(any(target_os = "linux", target_os = "windows"))]
+            last_present: None,
         })
     }
 
+    #[cfg(any(target_os = "linux", target_os = "windows"))]
+    fn wait_for_display(&mut self, window: &Window) {
+        #[cfg(target_os = "windows")]
+        // SAFETY: `DwmFlush` takes no arguments and only blocks until the next composition.
+        if unsafe { DwmFlush() } >= 0 {
+            return;
+        }
+
+        crate::drivers::wait_for_display(window, &mut self.last_present);
+    }
+
     pub fn present(
+        &mut self,
+        size: PhysicalSize<u32>,
+        window: &Window,
+        render: impl FnOnce(&mut SkiaSurface),
+    ) {
+        self.present_frame(size, window, render);
+
+        #[cfg(any(target_os = "linux", target_os = "windows"))]
+        self.wait_for_display(window);
+    }
+
+    /// Draw the frame and blit it, skipped whenever there is no surface to draw into.
+    fn present_frame(
         &mut self,
         size: PhysicalSize<u32>,
         window: &Window,
@@ -117,7 +150,7 @@ impl SoftwareDriver {
             std::slice::from_raw_parts_mut(pixels.as_mut_ptr() as *mut u8, pixels.len() * 4)
         };
 
-        match wrap_pixels(&info, bytes, Some(row_bytes), None) {
+        match wrap_software_pixels(&info, bytes, row_bytes) {
             Some(mut wrapped_surface) => render(&mut wrapped_surface),
             None => {
                 tracing::error!("Failed to wrap software pixels into a Skia surface");

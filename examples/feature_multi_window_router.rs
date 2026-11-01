@@ -10,19 +10,11 @@ use freya::{
 fn main() {
     let router = RouterContext::create_global::<Route>(RouterConfig::default());
 
-    launch(LaunchConfig::new().with_window(WindowConfig::new_app(RouterApp { router })))
+    launch(LaunchConfig::new().with_window(WindowConfig::new(app).with_root_context(router)))
 }
 
-struct RouterApp {
-    router: RouterContext,
-}
-
-impl App for RouterApp {
-    fn render(&self) -> impl IntoElement {
-        use_share_router(move || self.router);
-
-        Outlet::<Route>::new()
-    }
+fn app() -> impl IntoElement {
+    Outlet::<Route>::new()
 }
 
 #[derive(PartialEq)]
@@ -30,11 +22,10 @@ struct Home {}
 impl Component for Home {
     fn render(&self) -> impl IntoElement {
         let on_open = move |_| {
+            let router = RouterContext::get();
             spawn(async move {
                 let _ = Platform::get()
-                    .launch_window(WindowConfig::new_app(RouterApp {
-                        router: RouterContext::get(),
-                    }))
+                    .launch_window(WindowConfig::new(app).with_root_context(router))
                     .await;
             });
         };

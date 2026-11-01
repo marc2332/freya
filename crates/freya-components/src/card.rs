@@ -59,17 +59,9 @@ pub enum CardLayoutVariant {
 ///         .height(Size::percent(75.))
 ///         .child("Hello, World!")
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   rect().center().expanded().child(app())
-/// # }, "./images/gallery_card.png").render();
 /// ```
 ///
-/// # Preview
-/// ![Card Preview][card]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("card", "images/gallery_card.png"),
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct Card {
     pub(crate) theme_colors: Option<CardColorsThemePartial>,
@@ -82,7 +74,7 @@ pub struct Card {
     style_variant: CardStyleVariant,
     layout_variant: CardLayoutVariant,
     hoverable: bool,
-    cursor_icon: CursorIcon,
+    cursor_icon: Option<CursorIcon>,
 }
 
 impl Default for Card {
@@ -92,19 +84,19 @@ impl Default for Card {
 }
 
 impl ChildrenExt for Card {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.elements
     }
 }
 
 impl KeyExt for Card {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl LayoutExt for Card {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
@@ -118,7 +110,7 @@ impl ContainerConstraintsExt for Card {}
 impl ContainerWithContentExt for Card {}
 
 impl AccessibilityExt for Card {
-    fn get_accessibility_data(&mut self) -> &mut AccessibilityData {
+    fn accessibility_data_mut(&mut self) -> &mut AccessibilityData {
         &mut self.accessibility
     }
 }
@@ -141,7 +133,7 @@ impl Card {
             on_press: None,
             elements: Vec::default(),
             hoverable: false,
-            cursor_icon: CursorIcon::default(),
+            cursor_icon: None,
             key: DiffKey::None,
         }
     }
@@ -208,7 +200,7 @@ impl Card {
     }
 
     /// Override the cursor icon shown when hovering over this component while hoverable.
-    pub fn cursor_icon(mut self, cursor_icon: impl Into<CursorIcon>) -> Self {
+    pub fn cursor(mut self, cursor_icon: impl Into<Option<CursorIcon>>) -> Self {
         self.cursor_icon = cursor_icon.into();
         self
     }
@@ -221,13 +213,6 @@ impl Component for Card {
         let focus = use_focus(a11y_id);
 
         let is_hoverable = self.hoverable;
-        let cursor_icon = self.cursor_icon;
-
-        use_drop(move || {
-            if hovering() && is_hoverable {
-                Cursor::set(CursorIcon::default());
-            }
-        });
 
         let theme_colors = match self.style_variant {
             CardStyleVariant::Filled => {
@@ -294,16 +279,13 @@ impl Component for Card {
                 })
             })
             .maybe(is_hoverable, |rect| {
-                rect.on_pointer_enter(move |_| {
-                    hovering.set(true);
-                    Cursor::set(cursor_icon);
-                })
-                .on_pointer_leave(move |_| {
-                    if hovering() {
-                        Cursor::set(CursorIcon::default());
-                        hovering.set(false);
-                    }
-                })
+                rect.cursor(self.cursor_icon)
+                    .on_pointer_enter(move |_| {
+                        hovering.set(true);
+                    })
+                    .on_pointer_leave(move |_| {
+                        hovering.set_if_modified(false);
+                    })
             })
             .children(self.elements.clone())
     }

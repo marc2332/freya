@@ -5,7 +5,24 @@
 
 ## Prerequisites
 
-### Android SDK
+### With Nix (x86_64 Linux)
+
+From the repository root, enter the Android development shell:
+
+```sh
+nix develop .#android
+```
+
+The shell provides Rust with both Android targets, `cargo-ndk`, Java 17, ADB, SDK platforms 36 and 36.1, build tools 36.0.0 and NDK r26d. The SDK and NDK environment variables are configured automatically.
+
+Skip the manual setup below and build the example:
+
+```sh
+cd examples/android/AndroidApp
+./gradlew assembleDebug
+```
+
+### Android SDK (manual setup)
 
 Install [Android Studio](https://developer.android.com/studio) (recommended) or the [Android command-line tools](https://developer.android.com/studio#command-line-tools-only). API level 36 is required.
 
@@ -55,7 +72,15 @@ From the `./AndroidApp/` directory:
 ./gradlew assembleDebug
 ```
 
-The APK will be at `./AndroidApp/app/build/outputs/apk/debug/app-debug.apk`. Install it via `adb install` or by copying it to your device.
+The APK will be at `app/build/outputs/apk/debug/app-debug.apk` relative to the `AndroidApp` directory.
+
+## Installing on Your Phone
+
+With your phone connected and USB debugging enabled, run from `examples/android/AndroidApp`:
+
+```sh
+./gradlew installDebug && adb shell am start -n com.freya.androidapp/.MainActivity
+```
 
 ## Running on Desktop
 

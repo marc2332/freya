@@ -113,7 +113,7 @@ impl Border {
     }
 
     #[inline]
-    pub(crate) fn is_visible(&self) -> bool {
+    pub fn is_visible(&self) -> bool {
         !(self.width.top == 0.0
             && self.width.left == 0.0
             && self.width.bottom == 0.0

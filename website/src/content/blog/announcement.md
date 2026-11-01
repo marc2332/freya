@@ -15,15 +15,15 @@ I'm [Marc](https://github.com/marc2332/) and I am happy to announce the first al
 
 * Website: [freyaui.dev/](https://freyaui.dev/)
     
-* Source Code: [github.com/marc2332/freya](http://github.com/marc2332/freya)
+* Source Code: [github.com/marc2332/freya](https://github.com/marc2332/freya)
     
-* Book: [book.freyaui.dev/](https://book.freyaui.dev/)
+* Guides: [Freya documentation](https://docs.rs/freya/latest/freya/_docs/index.html)
     
 * Discord: [https://discord.gg/sYejxCdewG](https://discord.gg/sYejxCdewG)
     
 * Stable API docs: [docs.rs/freya/latest/freya/](https://docs.rs/freya/latest/freya/)
     
-* Nightly API docs: [docs.freyaui.dev/freya](https://docs.freyaui.dev/freya)
+* Development source: [Freya on GitHub](https://github.com/marc2332/freya)
     
 
 ### What is Freya 🦀 ?
@@ -38,7 +38,7 @@ Read [this](https://github.com/marc2332/freya#want-to-try-it-). Just be aware th
 
 **Dioxus** is a renderer-agnostic UI library for Rust, like React. It uses [**components**](https://dioxuslabs.com/learn/0.4/reference/components) as functions and [**hooks**](https://dioxuslabs.com/learn/0.4/reference/hooks). It supports many renderers: web, backend with SSR, liveview and fullstack, desktop and mobile with webview, desktop with WGPU, or even TUI.
 
-[Learn more about Dioxus.](https://dioxuslabs.com/learn/0.4/guide/your_first_component/) And see the [differences](https://book.freyaui.dev/differences_with_dioxus.html) with Freya.
+[Learn more about Dioxus.](https://dioxuslabs.com/learn/0.4/guide/your_first_component/) And see the [current differences](/posts/0.4/#why-the-rewrite) with Freya.
 
 ### Reasons to use Freya ✅
 

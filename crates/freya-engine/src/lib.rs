@@ -1,6 +1,9 @@
+mod font;
 mod skia;
 
 pub mod prelude {
+    pub use crate::font::register_font_typeface;
+
     mod source {
         pub use crate::skia::*;
     }

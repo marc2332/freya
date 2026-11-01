@@ -249,7 +249,7 @@ where
     pub fn write_silently(&'_ self) -> WriteRef<'static, SliceValue> {
         let value = self.station.value.write_unchecked();
         let selector = self.selector.clone();
-        value.map(|v| RefMut::map(v, |v| selector(v)))
+        value.map(move |v| RefMut::map(v, |v| selector(v)))
     }
 
     /// Notify listeners for this slice's channel.
@@ -275,11 +275,11 @@ where
     Value: 'static,
     SliceValue: 'static,
 {
-    fn write_state(&mut self) -> WriteRef<'static, SliceValue> {
+    fn write_state(&mut self) -> WriteRef<'_, SliceValue> {
         self.write_unchecked()
     }
 
-    fn peek_state(&self) -> ReadRef<'static, SliceValue> {
+    fn peek_state(&self) -> ReadRef<'_, SliceValue> {
         self.peek_unchecked()
     }
 }

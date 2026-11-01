@@ -14,8 +14,15 @@ use freya_core::{
     prelude::*,
 };
 
+/// Defines notification channels for shared state.
+///
+/// Each update selects one source channel. Use [`Self::derive_channel`] to keep
+/// relationships between notified channels in one place.
 #[cfg(feature = "tracing")]
 pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash + std::fmt::Debug + Ord {
+    /// Return the channels to notify for this source channel.
+    ///
+    /// Defaults to only `self`. Returned channels are not recursively expanded.
     fn derive_channel(self, _radio: &T) -> Vec<Self> {
         vec![self]
     }
@@ -50,8 +57,6 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
     ///
     /// Declaring related channels here is a best practice enforced by design.
     /// Making every write list them by hand is verbose and easy to get wrong.
-    /// Doing it once here keeps every write consistent.
-    ///
     /// # Example
     ///
     /// ```rust, no_run
@@ -85,7 +90,7 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
 /// A `RadioStation` holds the global state value and manages subscriptions to different channels.
 /// Components can subscribe to specific channels to receive notifications when the state changes.
 ///
-/// RadioStations can be shared across multiple windows or components using [`use_share_radio`].
+/// Share a station between windows with `WindowConfig::with_root_context`.
 ///
 /// # Examples
 ///
@@ -132,8 +137,8 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
 ///
 /// launch(
 ///     LaunchConfig::new()
-///         .with_window(WindowConfig::new(Window1 { radio_station }))
-///         .with_window(WindowConfig::new(Window2 { radio_station })),
+///         .with_window(WindowConfig::new(window1).with_root_context(radio_station))
+///         .with_window(WindowConfig::new(window2).with_root_context(radio_station)),
 /// );
 /// ```
 pub struct RadioStation<Value, Channel>
@@ -182,8 +187,8 @@ where
     ///
     /// launch(
     ///     LaunchConfig::new()
-    ///         .with_window(WindowConfig::new(Window1 { radio_station }))
-    ///         .with_window(WindowConfig::new(Window2 { radio_station })),
+    ///         .with_window(WindowConfig::new(window1).with_root_context(radio_station))
+    ///         .with_window(WindowConfig::new(window2).with_root_context(radio_station)),
     /// );
     /// ```
     pub fn create_global(init_value: Value) -> Self {
@@ -242,7 +247,7 @@ where
 
     #[track_caller]
     pub fn peek_unchecked(&self) -> ReadRef<'static, Value> {
-        self.value.peek()
+        self.value.peek_unchecked()
     }
 
     /// Read the current state value without subscribing to changes.
@@ -256,7 +261,7 @@ where
     /// ```
     #[track_caller]
     pub fn peek(&'_ self) -> ReadRef<'_, Value> {
-        self.value.peek()
+        self.value.peek_unchecked()
     }
 
     pub(crate) fn cleanup(&self) {
@@ -502,7 +507,7 @@ where
 
     pub(crate) fn subscribe_if_not(&self) {
         if let Some(rc) = ReactiveContext::try_current() {
-            let antenna = &self.antenna.write_unchecked();
+            let antenna = self.antenna.peek();
             let channel = antenna.channel.clone();
             let is_listening = antenna.station.is_listening(&channel, &rc);
 
@@ -525,7 +530,7 @@ where
     #[track_caller]
     pub fn read(&'_ self) -> ReadRef<'_, Value> {
         self.subscribe_if_not();
-        self.antenna.peek().station.value.peek()
+        self.antenna.peek().station.value.peek_unchecked()
     }
 
     /// Read the current state value inside a callback.
@@ -542,7 +547,7 @@ where
     pub fn with(&self, cb: impl FnOnce(ReadRef<Value>)) {
         self.subscribe_if_not();
         let value = self.antenna.peek().station.value;
-        let borrow = value.read();
+        let borrow = value.peek();
         cb(borrow);
     }
 
@@ -563,7 +568,7 @@ where
         let channel = self.antenna.peek().channel.clone();
         RadioGuard {
             channels: channel.derive_channel(&*value),
-            station: self.antenna.read().station,
+            station: self.antenna.peek().station,
             value,
         }
     }
@@ -589,14 +594,14 @@ where
     /// ## Example:
     /// ```rust, ignore
     /// # use freya::radio::*;
-    /// radio.write(Channel::Whatever).value = 1;
+    /// radio.write_channel(Channel::Whatever).value = 1;
     /// ```
     #[track_caller]
     pub fn write_channel(&mut self, channel: Channel) -> RadioGuard<Value, Channel> {
         let value = self.antenna.peek().station.value.write_unchecked();
         RadioGuard {
             channels: channel.derive_channel(&*value),
-            station: self.antenna.read().station,
+            station: self.antenna.peek().station,
             value,
         }
     }
@@ -621,7 +626,7 @@ where
         cb(guard);
     }
 
-    /// Get a mutable reference to the current state value, inside a callback that returns the channel to be used.
+    /// Mutate the state and choose which source channel to notify afterward.
     ///
     /// Example:
     ///
@@ -644,7 +649,7 @@ where
         let value = self.antenna.peek().station.value.write_unchecked();
         let mut guard = RadioGuard {
             channels: Vec::default(),
-            station: self.antenna.read().station,
+            station: self.antenna.peek().station,
             value,
         };
         let channel_selection = cb(&mut guard.value);
@@ -671,7 +676,7 @@ where
         let value = self.antenna.peek().station.value.write_unchecked();
         RadioGuard {
             channels: Vec::default(),
-            station: self.antenna.read().station,
+            station: self.antenna.peek().station,
             value,
         }
     }
@@ -682,7 +687,7 @@ where
     Channel: RadioChannel<Value>,
     Value: 'static,
 {
-    fn write_state(&mut self) -> WriteRef<'static, Value> {
+    fn write_state(&mut self) -> WriteRef<'_, Value> {
         let antenna = self.antenna.peek();
         let channel = antenna.channel.clone();
         let value = antenna.station.value.write_unchecked();
@@ -693,20 +698,24 @@ where
         value
     }
 
-    fn peek_state(&self) -> ReadRef<'static, Value> {
+    fn peek_state(&self) -> ReadRef<'_, Value> {
         self.antenna.peek().station.peek_unchecked()
     }
 }
 
 impl<Channel> Copy for ChannelSelection<Channel> where Channel: Copy {}
 
+/// Selects the source channel to notify after a state update.
+///
+/// `Current` and `Select` expand through [`RadioChannel::derive_channel`], so a
+/// single selection can notify multiple related channels.
 #[derive(Clone)]
 pub enum ChannelSelection<Channel> {
-    /// Notify the channel associated with the used [Radio].
+    /// Notify the channel associated with the used [`Radio`] and its derived channels.
     Current,
-    /// Notify a given `Channel`.
+    /// Notify the given channel and its derived channels.
     Select(Channel),
-    /// No subscriber will be notified.
+    /// Keep state changes without notifying subscribers.
     Silence,
 }
 
@@ -745,23 +754,12 @@ impl<Channel> ChannelSelection<Channel> {
     }
 }
 
-/// Provide an existing [`RadioStation`] to descendant components.
-/// This is useful for sharing the same global state across different parts of the component tree
-/// or across multiple windows.
-pub fn use_share_radio<Value, Channel>(radio: impl FnOnce() -> RadioStation<Value, Channel>)
-where
-    Channel: RadioChannel<Value>,
-    Value: 'static,
-{
-    use_provide_context(radio);
-}
-
 /// Subscribe to the global state for a specific channel.
 /// Returns a [`Radio`] handle that allows reading and writing the state.
 /// The current component will re-render whenever the specified channel is notified.
 ///
 /// This hook must be called within a component that has access to a [`RadioStation`]
-/// (either through [`use_init_radio_station`] or [`use_share_radio`]).
+/// (either through [`use_init_radio_station`] or the context API).
 ///
 /// # Example
 ///
@@ -792,6 +790,7 @@ where
 ///     }
 /// }
 /// ```
+#[track_caller]
 pub fn use_radio<Value, Channel>(channel: Channel) -> Radio<Value, Channel>
 where
     Channel: RadioChannel<Value>,
@@ -838,6 +837,7 @@ where
     use_provide_context(|| RadioStation::create(init_value()))
 }
 
+#[track_caller]
 pub fn use_radio_station<Value, Channel>() -> RadioStation<Value, Channel>
 where
     Channel: RadioChannel<Value>,
@@ -883,16 +883,30 @@ where
 /// }
 /// ```
 pub trait DataReducer {
+    /// Notification channel type used by this state's radio station.
     type Channel;
+    /// Action accepted by this reducer.
     type Action;
 
+    /// Apply an action to the state and select the source channel to notify.
+    ///
+    /// See [`ChannelSelection`].
+    ///
+    /// This method only mutates state and returns a selection. Dispatch through
+    /// [`RadioReducer::apply`] to notify subscribers using the updated state.
     fn reduce(&mut self, action: Self::Action) -> ChannelSelection<Self::Channel>;
 }
 
+/// Dispatch synchronous actions through a [`Radio`] whose state implements [`DataReducer`].
 pub trait RadioReducer {
+    /// Action accepted by the state's reducer.
     type Action;
+    /// Notification channel type used by the radio.
     type Channel;
 
+    /// Run [`DataReducer::reduce`] synchronously and notify the selected channels.
+    ///
+    /// See [`ChannelSelection`].
     fn apply(&mut self, action: Self::Action) -> ChannelSelection<Self::Channel>;
 }
 
@@ -907,10 +921,25 @@ impl<Data: DataReducer<Channel = Channel, Action = Action>, Channel: RadioChanne
     }
 }
 
+/// Define asynchronous actions for shared state, dispatched with [`RadioAsyncReducer`].
+///
+/// Unlike [`DataReducer`], this reducer receives a radio handle so state borrows
+/// can be scoped around asynchronous work instead of held across await points.
 pub trait DataAsyncReducer {
+    /// Notification channel type used by this state's radio station.
     type Channel;
+    /// Action accepted by this reducer.
     type Action;
 
+    /// Process an action asynchronously and select the final notification channel.
+    ///
+    /// Use [`Radio::write_silently`] for mutations that should only notify when
+    /// [`RadioAsyncReducer::async_apply`] processes the returned selection.
+    /// Ordinary writes still send their own notifications. Release all read and
+    /// write guards before awaiting so other tasks can access the state.
+    ///
+    /// Returning [`ChannelSelection::Silence`] skips the final notification but
+    /// does not undo state changes or notifications already sent by writes.
     #[allow(async_fn_in_trait)]
     async fn async_reduce(
         _radio: &mut Radio<Self, Self::Channel>,
@@ -921,9 +950,17 @@ pub trait DataAsyncReducer {
         Self: Sized;
 }
 
+/// Dispatch asynchronous actions through a [`Radio`] whose state implements [`DataAsyncReducer`].
 pub trait RadioAsyncReducer {
+    /// Action accepted by the state's asynchronous reducer.
     type Action;
 
+    /// Spawn a Freya task to run [`DataAsyncReducer::async_reduce`] and return immediately.
+    ///
+    /// When the reducer completes, its selection is processed against the updated
+    /// state, including [`RadioChannel::derive_channel`] for non-silent selections.
+    /// This method returns neither the selection nor a task handle. Separate calls
+    /// spawn independent tasks, so their completion order is not guaranteed.
     fn async_apply(&mut self, _action: Self::Action)
     where
         Self::Action: 'static;

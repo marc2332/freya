@@ -35,7 +35,7 @@ pub trait AndroidExt {
 
 impl AndroidExt for Platform {
     fn set_status_bar_light(&self, light: bool) -> Result<(), jni::errors::Error> {
-        if let Some(app) = try_consume_root_context::<AndroidApp>() {
+        if let Some(app) = GlobalContexts::get().try_get_context::<AndroidApp>() {
             status_bar::set_status_bar_light(&app, light)
         } else {
             Ok(())
@@ -43,7 +43,7 @@ impl AndroidExt for Platform {
     }
 
     fn show_keyboard(&self) -> Result<(), jni::errors::Error> {
-        if let Some(app) = try_consume_root_context::<AndroidApp>() {
+        if let Some(app) = GlobalContexts::get().try_get_context::<AndroidApp>() {
             keyboard::show_keyboard(&app)
         } else {
             Ok(())
@@ -51,7 +51,7 @@ impl AndroidExt for Platform {
     }
 
     fn hide_keyboard(&self) -> Result<(), jni::errors::Error> {
-        if let Some(app) = try_consume_root_context::<AndroidApp>() {
+        if let Some(app) = GlobalContexts::get().try_get_context::<AndroidApp>() {
             keyboard::hide_keyboard(&app)
         } else {
             Ok(())
@@ -80,9 +80,8 @@ impl FreyaPlugin for AndroidPlugin {
     }
 
     fn on_event(&mut self, event: &mut PluginEvent, _handle: PluginHandle) {
-        if let PluginEvent::RunnerCreated { runner } = event {
-            let app = self.app.clone();
-            runner.provide_root_context(move || app);
+        if let PluginEvent::RunnerCreated { .. } = event {
+            GlobalContexts::get().insert_context(self.app.clone());
         }
     }
 
@@ -119,7 +118,8 @@ impl Component for AndroidRoot {
         // Show/hide keyboard based on focused node type
         use_side_effect(move || {
             let platform = Platform::get();
-            let focused_node = platform.focused_accessibility_node.read();
+            let window = platform.current_window();
+            let focused_node = window.focused_accessibility_node.read();
             let result = if is_ime_role(focused_node.role()) {
                 platform.show_keyboard()
             } else {

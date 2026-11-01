@@ -2,7 +2,7 @@
 use crate::prelude::Border;
 #[cfg(debug_assertions)]
 use crate::prelude::Color;
-use crate::prelude::StyleExt;
+use crate::prelude::DecorationExt;
 
 pub trait DebugExt
 where
@@ -11,7 +11,7 @@ where
     fn debug(self) -> Self;
 }
 
-impl<T: StyleExt> DebugExt for T {
+impl<T: DecorationExt> DebugExt for T {
     #[cfg(debug_assertions)]
     fn debug(self) -> Self {
         self.border(Border::new().width(2.).fill(Color::RED))

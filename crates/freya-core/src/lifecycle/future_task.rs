@@ -90,7 +90,7 @@ impl<D: 'static, F: Future<Output = D> + 'static> FutureTask<D, F> {
     }
 
     /// Read the state of the [FutureTask]. See [FutureState].
-    pub fn state(&self) -> ReadRef<'static, FutureState<D>> {
+    pub fn state(&self) -> ReadRef<'_, FutureState<D>> {
         self.state.read()
     }
 }

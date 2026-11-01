@@ -11,7 +11,7 @@ struct CompA {
 }
 
 impl KeyExt for CompA {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -32,7 +32,7 @@ struct CompB {
 }
 
 impl KeyExt for CompB {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }

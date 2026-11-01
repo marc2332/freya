@@ -43,9 +43,10 @@ define_theme! {
         hover_background: Color,
         select_background: Color,
         border_fill: Color,
-        select_border_fill: Color,
+        focus_border_fill: Color,
         corner_radius: CornerRadius,
         color: Color,
+        select_color: Color,
     }
 }
 
@@ -76,31 +77,9 @@ define_theme! {
 ///                 )
 ///         }))
 /// }
-/// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
-/// #   let mut show_menu = use_state(|| true);
-/// #   rect().center().expanded().child(
-/// #       rect()
-/// #           .child(
-/// #               Button::new()
-/// #                   .on_press(move |_| show_menu.toggle())
-/// #                   .child("Open Menu"),
-/// #           )
-/// #           .maybe_child(show_menu().then(|| {
-/// #               Menu::new()
-/// #                   .on_close(move |_| show_menu.set(false))
-/// #                   .child(MenuButton::new().child("Open"))
-/// #                   .child(MenuButton::new().child("Save"))
-/// #           }))
-/// #   )
-/// # }, "./images/gallery_menu.png").with_hook(|t| { t.poll(std::time::Duration::from_millis(1), std::time::Duration::from_millis(100)); }).render();
 /// ```
 ///
-/// # Preview
-/// ![Menu Preview][menu]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("menu", "images/gallery_menu.png"),
-)]
+/// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Default, Clone, PartialEq)]
 pub struct Menu {
     pub(crate) theme: Option<MenuContainerThemePartial>,
@@ -111,13 +90,13 @@ pub struct Menu {
 }
 
 impl ChildrenExt for Menu {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
 impl KeyExt for Menu {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -174,7 +153,7 @@ impl ComponentOwned for Menu {
             .on_press(move |ev: Event<PressEventData>| {
                 ev.stop_propagation();
             })
-            .on_global_pointer_press(move |_: Event<PointerEventData>| {
+            .on_global_pointer_up(move |_: Event<PointerEventData>| {
                 if let Some(on_close) = &self.on_close {
                     on_close.call(());
                 }
@@ -211,13 +190,13 @@ pub struct MenuContainer {
 }
 
 impl KeyExt for MenuContainer {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
 impl ChildrenExt for MenuContainer {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
@@ -258,7 +237,7 @@ impl ComponentOwned for MenuContainer {
             .offset_y(offset_y)
             .on_sized(move |e: Event<SizedEventData>| {
                 if measured.peek().is_none() {
-                    let root_size = *Platform::get().root_size.peek();
+                    let root_size = *Platform::get().current_window().root_size.peek();
                     measured.set(Some((e.area, root_size)));
                 }
             })
@@ -321,14 +300,14 @@ impl Default for MenuItem {
             on_press: None,
             on_pointer_enter: None,
             selected: false,
-            padding: (6.0, 12.0).into(),
+            padding: (8.0, 14.0).into(),
             key: DiffKey::None,
         }
     }
 }
 
 impl KeyExt for MenuItem {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -383,7 +362,7 @@ impl MenuItem {
 }
 
 impl ChildrenExt for MenuItem {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
@@ -404,9 +383,15 @@ impl ComponentOwned for MenuItem {
             theme.background
         };
 
+        let color = if self.selected {
+            theme.select_color
+        } else {
+            theme.color
+        };
+
         let border = if focus() == Focus::Keyboard {
             Border::new()
-                .fill(theme.select_border_fill)
+                .fill(theme.focus_border_fill)
                 .width(2.)
                 .alignment(BorderAlignment::Inner)
         } else {
@@ -449,7 +434,7 @@ impl ComponentOwned for MenuItem {
             .corner_radius(theme.corner_radius)
             .background(background)
             .border(border)
-            .color(theme.color)
+            .color(color)
             .text_align(TextAlign::Start)
             .main_align(Alignment::Center)
             .overflow(Overflow::Clip)
@@ -485,13 +470,13 @@ pub struct MenuButton {
 }
 
 impl ChildrenExt for MenuButton {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
 impl KeyExt for MenuButton {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -551,7 +536,7 @@ pub struct SubMenu {
 }
 
 impl KeyExt for SubMenu {
-    fn write_key(&mut self) -> &mut DiffKey {
+    fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
@@ -574,7 +559,7 @@ impl SubMenu {
 }
 
 impl ChildrenExt for SubMenu {
-    fn get_children(&mut self) -> &mut Vec<Element> {
+    fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.items
     }
 }

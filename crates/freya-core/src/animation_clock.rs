@@ -44,6 +44,7 @@ impl AnimationClock {
     pub const DISABLED_SPEED: f32 = 999_999_999.0;
 
     /// Retrieve the current [`AnimationClock`] from the root context.
+    #[track_caller]
     pub fn get() -> Self {
         consume_root_context()
     }

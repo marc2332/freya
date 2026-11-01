@@ -2,13 +2,13 @@
 //!
 //! Terminal emulator integration for Freya applications.
 //!
-//! This crate provides a way to embed interactive terminal emulators in your Freya applications.
-//! It uses PTY (pseudo-terminal) to spawn shell processes and drives an
-//! [`rio_vt`] grid for parsing and reflow.
+//! A [`TerminalHandle`](handle::TerminalHandle) drives a [`rio_vt`] grid and talks to any
+//! [`TerminalBackend`](backends::TerminalBackend), such as the built-in [`PtyBackend`](backends::pty::PtyBackend).
 //!
 //! ## Features
 //!
 //! - **PTY Integration**: Spawn and interact with shell processes
+//! - **Custom backends**: Attach the terminal to anything that produces output, not only a PTY
 //! - **Reflowing terminal**: Lines reflow on width change and scrollback is preserved across resizes
 //! - **256-Color Support**: ANSI 16 colors, 6x6x6 RGB cube, and 24-level grayscale
 //! - **Keyboard Input**: Handle all standard terminal key sequences
@@ -29,7 +29,7 @@
 //!     let mut handle = use_state(|| {
 //!         let mut cmd = CommandBuilder::new("bash");
 //!         cmd.env("TERM", "xterm-256color");
-//!         TerminalHandle::new(TerminalId::new(), cmd, None).ok()
+//!         TerminalHandle::new(TerminalId::new(), PtyBackend::new(cmd), None).ok()
 //!     });
 //!
 //!     let a11y_id = use_a11y();
@@ -56,7 +56,7 @@
 //!
 //! ## Handling Terminal Exit
 //!
-//! You can detect when the terminal/PTY closes using `TerminalHandle::closed`:
+//! You can detect when the terminal closes using `TerminalHandle::closed`:
 //!
 //! ```rust,ignore
 //! use_future(move || async move {
@@ -67,22 +67,31 @@
 //!
 //! ## Advance usage
 //!
-//! Check the `feature_terminal.rs` example in the repository.
+//! Check the `feature_terminal.rs` example in the repository, and `feature_terminal_custom.rs`
+//! for a custom [`TerminalBackend`](backends::TerminalBackend). The `pty` feature, on by default,
+//! provides [`PtyBackend`](backends::pty::PtyBackend).
+pub mod backends;
 mod cell;
 pub mod colors;
 pub mod element;
 pub mod handle;
 pub mod parser;
-pub mod pty;
 mod rendering;
 mod url;
 
 /// Prelude module for convenient imports.
 pub mod prelude {
+    #[cfg(feature = "pty")]
     pub use portable_pty::CommandBuilder;
     pub use rio_vt::selection::SelectionType;
 
+    #[cfg(feature = "pty")]
+    pub use crate::backends::pty::PtyBackend;
     pub use crate::{
+        backends::{
+            TerminalBackend,
+            TerminalOutput,
+        },
         element::Terminal,
         handle::{
             TerminalError,

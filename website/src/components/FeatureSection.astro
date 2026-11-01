@@ -6,6 +6,8 @@ export interface Props {
   mediaType: "image" | "video";
   reverse?: boolean;
   wide?: boolean;
+  actionUrl?: string;
+  actionLabel?: string;
 }
 
 const {
@@ -15,10 +17,13 @@ const {
   mediaType,
   reverse = false,
   wide = false,
+  actionUrl,
+  actionLabel,
 } = Astro.props;
 
-const mediaClass = wide ? "w-full lg:w-2/3" : "w-full lg:w-1/2";
-const textClass = wide ? "w-full lg:w-1/3" : "w-full lg:w-1/2";
+const mediaClass = wide ? "w-full lg:w-[81%]" : "w-full lg:w-[64%]";
+const textClass = wide ? "w-full lg:w-[19%]" : "w-full lg:w-[36%]";
+const dialogId = `media-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
 ---
 
 <section
@@ -27,27 +32,69 @@ const textClass = wide ? "w-full lg:w-1/3" : "w-full lg:w-1/2";
   <div class={mediaClass}>
     {
       mediaType === "video" ? (
-        <video
-          muted
-          autoplay
-          playsinline
-          loop
-          class="rounded-xl w-full border border-stone-800 shadow-lg shadow-black/30"
-        >
-          <source src={mediaUrl} type="video/mp4" />
-        </video>
+        <>
+          <button
+            type="button"
+            class="block w-full cursor-zoom-in text-left"
+            onclick={`document.getElementById('${dialogId}').showModal()`}
+            aria-label={`View ${title} video larger`}
+          >
+            <video
+              muted
+              autoplay
+              playsinline
+              loop
+              class="rounded-xl w-full border border-stone-800 shadow-lg shadow-black/30"
+            >
+              <source src={mediaUrl} type="video/mp4" />
+            </video>
+          </button>
+          <dialog
+            id={dialogId}
+            class="max-h-[90vh] max-w-[90vw] rounded-xl border-0 bg-transparent p-0 backdrop:bg-black/80"
+            onclick="if (event.target === event.currentTarget) this.close()"
+            style="border: none; outline: none; box-shadow: none;"
+          >
+            <video controls autoplay class="max-h-[85vh] max-w-[85vw] rounded-lg">
+              <source src={mediaUrl} type="video/mp4" />
+            </video>
+          </dialog>
+        </>
       ) : (
-        <img
-          src={mediaUrl}
-          alt={title}
-          class="rounded-xl w-full border border-stone-800 shadow-lg shadow-black/30"
-          loading="lazy"
-        />
+        <button
+          type="button"
+          class="block w-full cursor-zoom-in text-left"
+          onclick={`document.getElementById('${dialogId}').showModal()`}
+          aria-label={`View ${title} image larger`}
+        >
+          <img
+            src={mediaUrl}
+            alt={title}
+            class="rounded-xl w-full border border-stone-800 shadow-lg shadow-black/30"
+            loading="lazy"
+          />
+        </button>
+        <dialog
+          id={dialogId}
+          class="max-h-[90vh] max-w-[90vw] rounded-xl border-0 bg-transparent p-0 backdrop:bg-black/80"
+          onclick="if (event.target === event.currentTarget) this.close()"
+          style="border: none; outline: none; box-shadow: none;"
+        >
+          <img src={mediaUrl} alt={title} class="max-h-[85vh] max-w-[85vw] rounded-lg" />
+        </dialog>
       )
     }
   </div>
   <div class={textClass}>
     <h2 class="text-2xl lg:text-3xl font-bold mb-4 text-white">{title}</h2>
     <p class="text-stone-400 text-lg leading-relaxed">{description}</p>
+    {actionUrl && actionLabel && (
+      <a
+        class="inline-block mt-6 rounded-lg bg-emerald-400 px-6 py-2 text-black hover:bg-emerald-500 transition-colors"
+        href={actionUrl}
+      >
+        {actionLabel}
+      </a>
+    )}
   </div>
 </section>

@@ -1,0 +1,55 @@
+name: Hotpath relay
+
+on:
+  workflow_run:
+    workflows: [Hotpath]
+    types: [completed]
+
+permissions: {}
+
+jobs:
+  relay:
+    # Only successful pull request runs have a report to relay
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - benchmark: dev_perf
+            artifact: hotpath-dev
+            report: dev_perf.json
+          - benchmark: core
+            artifact: hotpath-core
+            report: core.json
+          - benchmark: painting
+            artifact: hotpath-painting
+            report: painting.json
+          - benchmark: torin
+            artifact: hotpath-torin
+            report: torin.json
+          - benchmark: torin-criterion-binary-12
+            artifact: hotpath-torin-criterion-binary-12
+            report: torin-criterion-binary-12.json
+          - benchmark: torin-criterion-wide-5-cached
+            artifact: hotpath-torin-criterion-wide-5-cached
+            report: torin-criterion-wide-5-cached.json
+          - benchmark: torin-criterion-aligned-8
+            artifact: hotpath-torin-criterion-aligned-8
+            report: torin-criterion-aligned-8.json
+    permissions:
+      actions: read
+      id-token: write
+      pull-requests: read
+    concurrency:
+      group: hotpath-relay-${{ matrix.benchmark }}-${{ github.event.workflow_run.head_repository.full_name }}-${{ github.event.workflow_run.head_branch }}
+      cancel-in-progress: true
+    steps:
+      - uses: hotpath-rs/hotpath-relay@v1.0.0
+        with:
+          benchmark: ${{ matrix.benchmark }}
+          artifact_name: ${{ matrix.artifact }}
+          report_file: ${{ matrix.report }}

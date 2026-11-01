@@ -1,2 +1,10 @@
 User-agent: *
 Allow: /
+
+Sitemap: https://freyaui.dev/sitemap-index.xml
+
+User-agent: meta-externalagent
+Disallow: /
+
+User-agent: Meta-ExternalFetcher
+Disallow: /

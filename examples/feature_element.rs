@@ -70,7 +70,7 @@ impl ElementExt for CoolElement {
 }
 
 impl LayoutExt for CoolElement {
-    fn get_layout(&mut self) -> &mut LayoutData {
+    fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout_data
     }
 }

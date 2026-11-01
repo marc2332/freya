@@ -1,7 +1,8 @@
-use std::{
-    any::Any,
+use alloc::{
     rc::Rc,
+    vec::Vec,
 };
+use core::any::Any;
 
 use crate::{
     geometry::Size2D,
@@ -93,6 +94,6 @@ impl LayoutMeasurer<usize> for NoopMeasurer {
     }
 
     fn should_measure_inner_children(&mut self, _node_id: usize) -> bool {
-        false
+        true
     }
 }

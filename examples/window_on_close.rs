@@ -31,17 +31,12 @@ fn close_dialog(window_id: WindowId) -> impl IntoElement {
                 .horizontal()
                 .spacing(4.)
                 .child(Button::new().child("No, keep open").on_press(move |_| {
-                    let platform = Platform::get();
-                    Platform::get().with_window(None, move |window| {
-                        platform.close_window(window.id());
-                    });
+                    Platform::get().close_window(Platform::window_id());
                 }))
                 .child(Button::new().child("Yes, Close").on_press(move |_| {
                     let platform = Platform::get();
                     platform.close_window(window_id);
-                    Platform::get().with_window(None, move |window| {
-                        platform.close_window(window.id());
-                    });
+                    platform.close_window(Platform::window_id());
                 })),
         )
 }
