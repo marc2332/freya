@@ -88,6 +88,7 @@ pub type RenderCallback = Box<dyn FnOnce(&mut SkiaSurface)>;
 pub struct AppWindow {
     pub(crate) runner: Runner,
     pub(crate) tree: Tree,
+    pub(crate) offscreen_surface: Option<SkiaSurface>,
     pub(crate) driver: GraphicsDriver,
     pub(crate) window: Window,
     pub(crate) nodes_state: NodesState<NodeId>,
@@ -438,6 +439,8 @@ impl AppWindow {
 
             background: window_config.background,
 
+            offscreen_surface: None,
+
             dropped_file_paths: Vec::new(),
 
             on_close,
@@ -492,6 +495,7 @@ impl AppWindow {
         self.tree.set_scale_factor(scale_factor as f32);
         self.tree.layout.reset();
         self.tree.text_cache.reset();
+        self.tree.paint_state.damage.mark_full();
         self.window.request_redraw();
     }
 

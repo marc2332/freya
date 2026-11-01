@@ -9,11 +9,10 @@ use std::{
 };
 
 use freya_engine::prelude::{
-    Canvas,
     FontCollection,
     FontMgr,
+    RenderCanvas,
     SkRRect,
-    SkRect,
 };
 use rustc_hash::FxHashMap;
 use torin::{
@@ -53,6 +52,7 @@ use crate::{
         },
         name::EventName,
     },
+    geometry::AreaExt,
     layers::Layer,
     node_id::NodeId,
     prelude::{
@@ -181,12 +181,17 @@ pub trait ElementExt: Any {
     /// Renders this element using the supplied canvas and layout context.
     fn render(&self, _context: RenderContext) {}
 
+    /// Whether this element must be re-recorded and repainted on every frame.
+    fn is_render_volatile(&self) -> bool {
+        false
+    }
+
     /// Creates a rounded rectangle from an area using this element's corner radius.
     fn render_rect(&self, area: &Area, scale_factor: f32) -> SkRRect {
         let style = self.style();
         let corner_radius = style.corner_radius.with_scale(scale_factor);
         SkRRect::new_rect_radii(
-            SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
+            area.to_skia(),
             &[
                 (corner_radius.top_left(), corner_radius.top_left()).into(),
                 (corner_radius.top_right(), corner_radius.top_right()).into(),
@@ -214,9 +219,9 @@ pub struct LayoutContext<'a> {
 }
 
 #[allow(dead_code)]
-pub struct RenderContext<'a> {
+pub struct RenderContext<'a, 'canvas> {
     pub font_collection: &'a mut FontCollection,
-    pub canvas: &'a Canvas,
+    pub recorder: &'a mut RenderCanvas<'canvas>,
     pub layout_node: &'a LayoutNode,
     pub text_style_state: &'a TextStyleState,
     pub scale_factor: f64,
@@ -238,8 +243,8 @@ pub struct PostMeasureContext<'a> {
     pub scale_factor: f64,
 }
 
-pub struct ClipContext<'a> {
-    pub canvas: &'a Canvas,
+pub struct ClipContext<'a, 'canvas> {
+    pub recorder: &'a mut RenderCanvas<'canvas>,
     pub visible_area: &'a Area,
     pub scale_factor: f64,
 }

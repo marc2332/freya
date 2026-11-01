@@ -117,6 +117,7 @@
 //! - `hotpath`: Enables Freya's internal usage of hotpath.
 //! - `hotreload`: Enables hot reload support via the `dx` CLI from `dioxus-cli`. See [Hot Reload](self::_docs::hot_reload).
 //! - `zoom-shortcuts`: Enables `Ctrl`/`Cmd` + `+`/`-`/`0` to zoom the app.
+//! - `experimental-incremental-painting`: Caches paint commands and repaints only damaged regions when possible. Disabled by default.
 
 /// Common imports to build Freya apps, use it with `use freya::prelude::*;`.
 pub mod prelude {

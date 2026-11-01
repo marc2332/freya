@@ -36,7 +36,6 @@ use freya_winit::{
 };
 
 mod performance;
-#[cfg(debug_assertions)]
 mod stats;
 
 use performance::{
@@ -46,7 +45,6 @@ use performance::{
     draw_axis_label,
     format_bytes,
 };
-#[cfg(debug_assertions)]
 use stats::draw_stats_overlay;
 
 /// Metrics plugin that displays performance and stats overlays on top of the
@@ -54,9 +52,7 @@ use stats::draw_stats_overlay;
 pub struct MetricsPlugin {
     performance_enabled: bool,
     performance_toggle_shortcut: (Key, Modifiers),
-    #[cfg(debug_assertions)]
     stats_enabled: bool,
-    #[cfg(debug_assertions)]
     stats_toggle_shortcut: (Key, Modifiers),
     metrics: HashMap<WindowId, WindowMetrics>,
 }
@@ -69,9 +65,7 @@ impl Default for MetricsPlugin {
                 Key::Character("p".into()),
                 Modifiers::ctrl_or_meta() | Modifiers::SHIFT,
             ),
-            #[cfg(debug_assertions)]
             stats_enabled: false,
-            #[cfg(debug_assertions)]
             stats_toggle_shortcut: (
                 Key::Character("l".into()),
                 Modifiers::ctrl_or_meta() | Modifiers::SHIFT,
@@ -94,14 +88,12 @@ impl MetricsPlugin {
         self
     }
 
-    #[cfg(debug_assertions)]
     /// Set whether the stats overlay is visible by default.
     pub fn with_visible_stats(mut self, visible: bool) -> Self {
         self.stats_enabled = visible;
         self
     }
 
-    #[cfg(debug_assertions)]
     /// Set the keyboard shortcut that toggles the stats overlay.
     pub fn with_stats_toggle_shortcut(mut self, key: Key, modifiers: Modifiers) -> Self {
         self.stats_toggle_shortcut = (key, modifiers);
@@ -112,14 +104,8 @@ impl MetricsPlugin {
         self.metrics.entry(id).or_default()
     }
 
-    #[cfg(debug_assertions)]
     fn overlay_visible(&self) -> bool {
         self.performance_enabled || self.stats_enabled
-    }
-
-    #[cfg(not(debug_assertions))]
-    fn overlay_visible(&self) -> bool {
-        self.performance_enabled
     }
 }
 
@@ -148,9 +134,7 @@ impl FreyaPlugin for MetricsPlugin {
                 if performance_toggled {
                     self.performance_enabled = !self.performance_enabled;
                 }
-                #[cfg(debug_assertions)]
                 let debug_toggled = matches_shortcut(&self.stats_toggle_shortcut);
-                #[cfg(debug_assertions)]
                 if debug_toggled {
                     self.stats_enabled = !self.stats_enabled;
                 }
@@ -162,7 +146,6 @@ impl FreyaPlugin for MetricsPlugin {
                         }));
                     }
                 }
-                #[cfg(debug_assertions)]
                 if debug_toggled {
                     for window_id in self.metrics.keys() {
                         handle.send_event_loop_event(NativeEvent::Window(NativeWindowEvent {
@@ -292,11 +275,9 @@ impl FreyaPlugin for MetricsPlugin {
                     metrics = ?metrics,
                 );
 
-                #[cfg(debug_assertions)]
                 if !self.performance_enabled && !self.stats_enabled {
                     return;
                 }
-                #[cfg(not(debug_assertions))]
                 if !self.performance_enabled {
                     return;
                 }
@@ -307,7 +288,6 @@ impl FreyaPlugin for MetricsPlugin {
                 if self.performance_enabled {
                     let performance_state = self.get_metrics(window.id());
                     let started_render = performance_state.started_render.take().unwrap();
-
                     let finished_render = started_render.elapsed();
                     let finished_presenting =
                         performance_state.finished_presenting.unwrap_or_default();
@@ -534,7 +514,6 @@ impl FreyaPlugin for MetricsPlugin {
                     performance_state.overlay_time = overlay_started.elapsed();
                 }
 
-                #[cfg(debug_assertions)]
                 if self.stats_enabled {
                     draw_stats_overlay(
                         canvas,
