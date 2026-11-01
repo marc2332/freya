@@ -1,6 +1,7 @@
 use accesskit::TreeId;
 use freya::prelude::*;
 use freya_core::integration::{
+    ACCESSIBILITY_ROOT_ID,
     AccessibilityTree,
     NodesState,
     Runner,
@@ -47,6 +48,32 @@ fn initialization_preserves_pending_focus() {
     assert_eq!(update.focus, input_id);
     assert_eq!(accessibility.focused_id, input_id);
     assert!(tree.accessibility_diff.requested_focus.is_none());
+}
+
+#[test]
+fn disabled_nodes_reject_focus_and_release_existing_focus() {
+    let input_id = AccessibilityId(100);
+    let (mut test, mut enabled) = TestingRunner::new(
+        move || {
+            let enabled = use_consume::<State<bool>>();
+            rect().a11y_id(input_id).a11y_focusable(*enabled.read())
+        },
+        (300., 300.).into(),
+        |runner| runner.provide_root_context(|| State::create(false)),
+        1.,
+    );
+    test.sync_and_update();
+
+    test.run_in(|| input_id.request_focus());
+    assert_eq!(test.sync_and_update().focus, ACCESSIBILITY_ROOT_ID);
+
+    enabled.set(true);
+    test.sync_and_update();
+    test.run_in(|| input_id.request_focus());
+    assert_eq!(test.sync_and_update().focus, input_id);
+
+    enabled.set(false);
+    assert_eq!(test.sync_and_update().focus, ACCESSIBILITY_ROOT_ID);
 }
 
 #[test]

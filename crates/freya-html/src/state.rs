@@ -69,6 +69,7 @@ use crate::{
         SkiaScenePainter,
     },
     cache::ResourceCache,
+    fonts::font_context,
     handle::ElementHit,
     net::{
         FetchRequest,
@@ -81,7 +82,7 @@ use crate::{
 /// Owns a parsed Blitz document and paints it directly into Freya's Skia canvas.
 pub(crate) struct BlitzState {
     document: Option<HtmlDocument>,
-    fonts: Vec<Bytes>,
+    font_context: blitz_dom::FontContext,
     net_provider: Arc<dyn NetProvider>,
     shell_provider: Arc<dyn ShellProvider>,
     navigation_provider: Arc<dyn NavigationProvider>,
@@ -107,7 +108,7 @@ impl BlitzState {
         let redraw = Arc::new(AtomicBool::new(true));
         Self {
             document: None,
-            fonts,
+            font_context: font_context(&fonts),
             net_provider: Arc::new(HttpNetProvider {
                 fetch,
                 cache: resource_cache,
@@ -133,7 +134,7 @@ impl BlitzState {
             net_provider: Some(self.net_provider.clone()),
             shell_provider: Some(self.shell_provider.clone()),
             navigation_provider: Some(self.navigation_provider.clone()),
-            font_ctx: font_context(&self.fonts),
+            font_ctx: Some(self.font_context.clone()),
             ..Default::default()
         };
         self.document = Some(HtmlDocument::from_html(html, config));
@@ -318,47 +319,6 @@ impl BlitzState {
             document.handle_ui_event(event);
         }
     }
-}
-
-fn font_context(fonts: &[Bytes]) -> Option<blitz_dom::FontContext> {
-    use parley::fontique::{
-        Blob,
-        Collection,
-        CollectionOptions,
-        GenericFamily,
-        SourceCache,
-    };
-
-    if fonts.is_empty() {
-        return None;
-    }
-
-    let mut context = blitz_dom::FontContext {
-        source_cache: SourceCache::new_shared(),
-        collection: Collection::new(CollectionOptions {
-            shared: false,
-            system_fonts: !cfg!(target_os = "emscripten"),
-        }),
-    };
-    let mut family_ids = Vec::new();
-    for data in fonts {
-        let decoded = blitz_dom::decode_font_bytes(data).into_owned();
-        let registered = context
-            .collection
-            .register_fonts(Blob::new(Arc::new(decoded) as _), None);
-        family_ids.extend(registered.into_iter().map(|(family_id, _)| family_id));
-    }
-    for generic in [
-        GenericFamily::SansSerif,
-        GenericFamily::Serif,
-        GenericFamily::Monospace,
-        GenericFamily::SystemUi,
-    ] {
-        context
-            .collection
-            .append_generic_families(generic, family_ids.iter().copied());
-    }
-    Some(context)
 }
 
 fn map_button(button: Option<FreyaMouseButton>) -> MouseEventButton {
