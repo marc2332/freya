@@ -126,7 +126,7 @@ impl EventListener for EventProxy {
                     let _ = backend.write(text.as_bytes());
                 }
             }
-            RioEvent::Title(t) => {
+            RioEvent::Title(_, t) => {
                 *self.title.borrow_mut() = Some(t);
                 self.title_notifier.notify();
             }
