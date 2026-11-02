@@ -98,6 +98,14 @@ pt:
 pt-ci:
     cargo bench --package torin --bench callgrind --features "hotpath-callgrind, hotpath-alloc, hotpath-cloud"
 
+# One torin Criterion benchmark run HOTPATH_CRITERION_ITERATIONS times, e.g.
+# `HOTPATH_CRITERION_ITERATIONS=100 just ptc "benchmarks/size=4095 depth=12 wide=2 mode=not cached"`
+ptc benchmark:
+    CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="{{callgrind_runner}}" cargo bench --package torin --bench bench --features "hotpath-callgrind, hotpath-alloc" -- --test --exact "{{benchmark}}"
+
+ptc-ci benchmark:
+    cargo bench --package torin --bench bench --features "hotpath-callgrind, hotpath-alloc, hotpath-cloud" -- --test --exact "{{benchmark}}"
+
 ba:
     cargo build --all-targets --workspace -F freya/all-debug
 

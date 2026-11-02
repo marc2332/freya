@@ -150,7 +150,7 @@ euclid = "0.22.9"
 itertools = "0.14.0"
 
 # Rendering
-freya-skia-safe = { version = "0.104.0", features = [
+freya-skia-safe = { version = "0.105.0-beta.1", features = [
   "textlayout",
   "svg",
   "webp",
@@ -163,7 +163,9 @@ raw-window-handle = "0.6.0"
 winit = "0.30.13"
 
 # Tray
-tray-icon = "0.21"
+tray-icon = { version = "0.26.1", default-features = false, features = [
+  "ksni",
+] }
 
 # OpenGL
 gl = "0.14.0"
@@ -182,7 +184,7 @@ accesskit = "0.25.1"
 accesskit_winit = "0.34.0"
 
 # Performance
-hotpath = "0.29.2"
+hotpath = "0.30.0"
 
 # Errors
 anyhow = "1.0.100"

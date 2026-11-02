@@ -67,7 +67,6 @@ open = { workspace = true }
 rfd = { workspace = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-gtk = { version = "0.18.2", optional = true }
 libc = { version = "0.2", optional = true }
 wayland-client = { version = "0.31", features = [
   "system",
@@ -143,5 +142,5 @@ gpu = [
 accessibility = ["dep:accesskit_winit"]
 hotpath = ["hotpath/hotpath"]
 hotreload = ["freya-core/hotreload"]
-tray = ["dep:tray-icon", "dep:gtk"]
+tray = ["dep:tray-icon"]
 tracing = []

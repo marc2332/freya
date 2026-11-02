@@ -30,6 +30,7 @@ pub mod anyrender;
 mod cache;
 mod component;
 mod element;
+mod fonts;
 mod handle;
 mod net;
 mod state;
