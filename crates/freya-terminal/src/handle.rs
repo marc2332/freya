@@ -8,7 +8,6 @@ use std::{
     },
 };
 
-use async_io::Timer;
 use freya_core::prelude::{
     Platform,
     TaskHandle,
@@ -16,10 +15,7 @@ use freya_core::prelude::{
     UserEvent,
     spawn_in_window,
 };
-use futures_lite::{
-    StreamExt,
-    future,
-};
+use futures_lite::StreamExt;
 use keyboard_types::{
     Key,
     Modifiers,
@@ -126,7 +122,7 @@ impl EventListener for EventProxy {
                     let _ = backend.write(text.as_bytes());
                 }
             }
-            RioEvent::Title(t) => {
+            RioEvent::Title(_, t) => {
                 *self.title.borrow_mut() = Some(t);
                 self.title_notifier.notify();
             }
@@ -258,30 +254,10 @@ impl TerminalHandle {
             let output_notifier = output_notifier.clone();
             async move {
                 let mut processor = Processor::default();
-                loop {
-                    let read = async { Some(receiver.next().await) };
-                    let result = if let Some(deadline) = processor.sync_timeout().sync_timeout() {
-                        let expiry = async {
-                            Timer::at(deadline).await;
-                            None
-                        };
-                        future::or(read, expiry).await
-                    } else {
-                        read.await
-                    };
-                    match result {
-                        None => {
-                            processor.stop_sync(&mut *term.borrow_mut());
-                            output_notifier.notify();
-                            platform.send(UserEvent::RequestRedraw);
-                        }
-                        Some(None) => break,
-                        Some(Some(bytes)) => {
-                            processor.advance(&mut *term.borrow_mut(), &bytes);
-                            output_notifier.notify();
-                            platform.send(UserEvent::RequestRedraw);
-                        }
-                    }
+                while let Some(bytes) = receiver.next().await {
+                    processor.advance(&mut *term.borrow_mut(), &bytes);
+                    output_notifier.notify();
+                    platform.send(UserEvent::RequestRedraw);
                 }
                 // Output ended, drop the backend and notify observers.
                 *backend.borrow_mut() = None;
