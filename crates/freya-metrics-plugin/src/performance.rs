@@ -6,7 +6,7 @@ use std::{
     },
 };
 
-use freya_core::prelude::default_fonts;
+use freya_core::integration::default_fonts;
 use freya_engine::prelude::{
     Canvas,
     Color,

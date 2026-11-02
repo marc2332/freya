@@ -1,8 +1,8 @@
 #![cfg(debug_assertions)]
 
 use freya_core::{
+    integration::default_fonts,
     metrics::Metrics,
-    prelude::default_fonts,
 };
 use freya_engine::prelude::{
     Canvas,
