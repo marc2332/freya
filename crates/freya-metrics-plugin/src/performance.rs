@@ -6,6 +6,7 @@ use std::{
     },
 };
 
+use freya_core::prelude::default_fonts;
 use freya_engine::prelude::{
     Canvas,
     Color,
@@ -178,6 +179,7 @@ pub(crate) fn draw_axis_label(
     let mut text_style = TextStyle::default();
     text_style.set_color(Color::from_rgb(170, 170, 170));
     text_style.set_font_size(10.0);
+    text_style.set_font_families(&default_fonts());
     paragraph_builder.push_style(&text_style);
     paragraph_builder.add_text(text);
     let mut paragraph = paragraph_builder.build();
@@ -191,6 +193,7 @@ pub(crate) fn add_text(paragraph_builder: &mut ParagraphBuilder, text: String, f
     let font_style = FontStyle::new(Weight::BOLD, Width::NORMAL, Slant::Upright);
     text_style.set_font_style(font_style);
     text_style.set_font_size(font_size);
+    text_style.set_font_families(&default_fonts());
     paragraph_builder.push_style(&text_style);
     paragraph_builder.add_text(text);
 }
