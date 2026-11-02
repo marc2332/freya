@@ -167,13 +167,53 @@ impl ragnarok::SourceEvent for PlatformEvent {
     type Name = EventName;
 
     fn can_coalesce_with(&self, next: &Self) -> bool {
-        matches!(
-            (self, next),
+        match (self, next) {
             (
-                Self::Mouse { name: MouseEventName::MouseMove, button: previous, .. },
-                Self::Mouse { name: MouseEventName::MouseMove, button, .. },
-            ) if previous == button
-        )
+                Self::Mouse {
+                    name: MouseEventName::MouseMove,
+                    button: previous,
+                    ..
+                },
+                Self::Mouse {
+                    name: MouseEventName::MouseMove,
+                    button,
+                    ..
+                },
+            ) => previous == button,
+            (
+                Self::Wheel {
+                    scroll: previous,
+                    cursor: previous_cursor,
+                    source: WheelSource::Line,
+                    phase: TouchPhase::Moved,
+                    ..
+                },
+                Self::Wheel {
+                    scroll,
+                    cursor,
+                    source: WheelSource::Line,
+                    phase: TouchPhase::Moved,
+                    ..
+                },
+            ) => {
+                previous_cursor == cursor
+                    && previous.x.partial_cmp(&0.0) == scroll.x.partial_cmp(&0.0)
+                    && previous.y.partial_cmp(&0.0) == scroll.y.partial_cmp(&0.0)
+                    && (previous.x + scroll.x).is_finite()
+                    && (previous.y + scroll.y).is_finite()
+            }
+            _ => false,
+        }
+    }
+
+    fn coalesce_with(&mut self, next: Self) {
+        match (self, next) {
+            (Self::Wheel { scroll, .. }, Self::Wheel { scroll: next, .. }) => {
+                scroll.x += next.x;
+                scroll.y += next.y;
+            }
+            (event, next) => *event = next,
+        }
     }
 
     /// Check if the event means the cursor was moved.

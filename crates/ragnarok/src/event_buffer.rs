@@ -6,7 +6,7 @@ use core::{
 
 use crate::SourceEvent;
 
-/// Buffers events and combines repeated movement until the next update.
+/// Buffers events and combines compatible input until the next update.
 pub struct EventBuffer<Source, Timestamp = Duration> {
     events: VecDeque<Source>,
     deadline: Option<Timestamp>,
@@ -32,14 +32,13 @@ where
     pub fn push(&mut self, events: impl IntoIterator<Item = Source>, now: Timestamp) {
         for event in events {
             let continuous = event.can_coalesce_with(&event);
-            if self
-                .events
-                .back()
-                .is_some_and(|previous| previous.can_coalesce_with(&event))
+            if let Some(previous) = self.events.back_mut()
+                && previous.can_coalesce_with(&event)
             {
-                self.events.pop_back();
+                previous.coalesce_with(event);
+            } else {
+                self.events.push_back(event);
             }
-            self.events.push_back(event);
 
             let deadline = if continuous {
                 self.last_update
