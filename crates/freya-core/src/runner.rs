@@ -322,6 +322,7 @@ impl Runner {
     }
 
     /// Dispatches an event, returning whether its default action remains enabled.
+    /// Missing nodes are ignored without cancelling other queued events.
     pub fn handle_event(
         &mut self,
         node_id: impl Into<NodeId>,
