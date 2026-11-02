@@ -27,7 +27,7 @@ thiserror = { workspace = true }
 keyboard-types = { workspace = true }
 
 # Terminal emulator
-rio-vt = "=0.5.26"
+rio-vt = { version = "=0.5.29", default-features = false }
 
 # Built-in PTY backend
 portable-pty = { version = "0.9", optional = true }
@@ -36,7 +36,6 @@ portable-pty = { version = "0.9", optional = true }
 linkify = { workspace = true }
 
 # Async
-async-io = { workspace = true }
 futures-lite = { workspace = true }
 futures-channel = { workspace = true }
 
