@@ -124,12 +124,15 @@ impl Fill {
                 paint.set_color(*color);
             }
             Fill::LinearGradient(gradient) => {
+                paint.set_dither(gradient.dither);
                 paint.set_shader(gradient.prepare_shader(area));
             }
             Fill::RadialGradient(gradient) => {
+                paint.set_dither(gradient.dither);
                 paint.set_shader(gradient.prepare_shader(area));
             }
             Fill::ConicGradient(gradient) => {
+                paint.set_dither(gradient.dither);
                 paint.set_shader(gradient.prepare_shader(area));
             }
             Fill::Shader(shader) => {
