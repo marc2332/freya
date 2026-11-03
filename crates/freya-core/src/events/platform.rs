@@ -198,12 +198,12 @@ impl ragnarok::SourceEvent for PlatformEvent {
         matches!(self, Self::PointerExit { .. })
     }
 
-    /// Check if this event is a touch released event.
+    /// Check if this event ends or cancels a touch.
     fn is_touch_released(&self) -> bool {
         matches!(
             &self,
             Self::Touch {
-                phase: TouchPhase::Ended,
+                phase: TouchPhase::Ended | TouchPhase::Cancelled,
                 ..
             }
         )

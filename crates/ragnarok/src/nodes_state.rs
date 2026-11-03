@@ -86,6 +86,7 @@ impl<Key: NodeKey> NodesState<Key> {
 
             let cursor_still_inside = source_movement_event.is_none_or(|event| {
                 !event.is_pointer_exit()
+                    && !event.is_touch_released()
                     && event
                         .try_location()
                         .is_none_or(|cursor| events_measurer.is_point_inside(node_key, cursor))
