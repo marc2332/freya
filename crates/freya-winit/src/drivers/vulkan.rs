@@ -327,7 +327,12 @@ pub struct VulkanDriver {
 impl Drop for VulkanDriver {
     fn drop(&mut self) {
         // Flush pending Skia work.
-        self.shared.gr_context.borrow_mut().flush_and_submit();
+        if let Err(error) = self.shared.gr_context.borrow_mut().flush_and_submit() {
+            tracing::error!(
+                ?error,
+                "Failed to submit Vulkan rendering commands during teardown"
+            );
+        }
         let device = &self.shared.device;
         unsafe {
             let _ = device.device_wait_idle();
@@ -547,7 +552,14 @@ impl VulkanDriver {
 
         window.pre_present_notify();
 
-        self.shared.gr_context.borrow_mut().flush_and_submit();
+        self.shared
+            .gr_context
+            .borrow_mut()
+            .flush_and_submit()
+            .map_err(|error| {
+                tracing::error!(?error, "Failed to submit Vulkan rendering commands");
+                DriverError::DeviceLost
+            })?;
 
         unsafe {
             self.shared
