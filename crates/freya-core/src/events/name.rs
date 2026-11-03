@@ -162,12 +162,20 @@ impl ragnarok::NameOfEvent for EventName {
         events.insert(*self);
 
         match self {
-            Self::MouseMove | Self::TouchMove => {
+            Self::MouseMove => {
                 events.insert(Self::PointerMove);
                 events.insert(Self::PointerEnter);
                 events.insert(Self::PointerOver);
             }
-            Self::MouseDown | Self::TouchStart => {
+            Self::TouchMove => {
+                events.insert(Self::PointerMove);
+            }
+            Self::TouchStart => {
+                events.insert(Self::PointerDown);
+                events.insert(Self::PointerEnter);
+                events.insert(Self::PointerOver);
+            }
+            Self::MouseDown => {
                 events.insert(Self::PointerDown);
             }
             Self::MouseUp | Self::TouchEnd => {
