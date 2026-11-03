@@ -831,13 +831,20 @@ fn touch_released_event() {
         None,
     );
 
-    assert!(
-        processed_events
-            .emmitable_events
-            .iter()
-            .any(|e| e.name == EventName::TouchReleased && e.key == 0)
-    );
+    for name in [
+        EventName::TouchReleased,
+        EventName::MouseOut,
+        EventName::MouseLeave,
+    ] {
+        assert!(
+            processed_events
+                .emmitable_events
+                .iter()
+                .any(|event| event.name == name && event.key == 0)
+        );
+    }
     TestExecutor::without_handler().run(&mut nodes_state, processed_events);
+    assert!(!nodes_state.is_hovered(0));
 }
 
 #[test]
