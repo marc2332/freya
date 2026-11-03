@@ -275,6 +275,7 @@ impl Component for ScrollView {
 
             if drag_scrolling && (dragging_content().is_some() || drag_origin().is_some()) {
                 if dragging_content().is_some() {
+                    e.prevent_default();
                     let content = size.read().inner_sizes;
                     let viewport = size.read().area.size;
                     scroll_controller.release_drag(rendered_position, content, viewport);

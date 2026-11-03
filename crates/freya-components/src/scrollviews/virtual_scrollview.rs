@@ -546,6 +546,7 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
 
             if drag_scrolling && (dragging_content().is_some() || drag_origin().is_some()) {
                 if dragging_content().is_some() {
+                    e.prevent_default();
                     let content = Size2D::new(inner_width, inner_height);
                     scroll_controller.release_drag(
                         rendered_position,
