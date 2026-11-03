@@ -10,6 +10,9 @@
 //! # }
 //! ```
 //!
+//! Configure inline documents with [`HtmlContent`], including a validated
+//! base URL through [`HtmlContent::with_base_url`].
+//!
 //! Use [`HtmlSource::url`] to load a remote page. Add local fonts with
 //! [`HtmlViewer::font`]. On web, provide a font for inline documents or load one
 //! through CSS `@font-face`.
@@ -29,6 +32,7 @@
 pub mod anyrender;
 mod cache;
 mod component;
+mod content;
 mod element;
 mod fonts;
 mod handle;
@@ -37,6 +41,7 @@ mod state;
 
 pub use cache::ResourceCache;
 pub use component::HtmlViewer;
+pub use content::HtmlContent;
 pub use handle::{
     ElementHit,
     HtmlHandle,
@@ -48,6 +53,7 @@ pub mod prelude {
     pub use crate::{
         cache::ResourceCache,
         component::HtmlViewer,
+        content::HtmlContent,
         handle::{
             ElementHit,
             HtmlHandle,
