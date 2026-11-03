@@ -321,6 +321,8 @@ impl Runner {
         })
     }
 
+    /// Dispatches an event, returning whether its default action remains enabled.
+    /// Missing nodes are ignored without cancelling other queued events.
     pub fn handle_event(
         &mut self,
         node_id: impl Into<NodeId>,
@@ -335,7 +337,7 @@ impl Runner {
         let default = Rc::new(RefCell::new(true));
 
         let Some(scope_id) = self.node_to_scope.get(&node_id) else {
-            return false;
+            return true;
         };
         let Some(path) = self
             .scopes
@@ -351,7 +353,7 @@ impl Runner {
                     })
             })
         else {
-            return false;
+            return true;
         };
 
         let mut current_target = Some((path, *scope_id));
