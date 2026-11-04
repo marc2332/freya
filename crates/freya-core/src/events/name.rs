@@ -167,7 +167,12 @@ impl ragnarok::NameOfEvent for EventName {
                 events.insert(Self::PointerEnter);
                 events.insert(Self::PointerOver);
             }
-            Self::MouseDown | Self::TouchStart => {
+            Self::TouchStart => {
+                events.insert(Self::PointerDown);
+                events.insert(Self::PointerEnter);
+                events.insert(Self::PointerOver);
+            }
+            Self::MouseDown => {
                 events.insert(Self::PointerDown);
             }
             Self::MouseUp | Self::TouchEnd => {

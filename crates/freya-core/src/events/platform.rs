@@ -166,6 +166,56 @@ impl From<TouchEventName> for EventName {
 impl ragnarok::SourceEvent for PlatformEvent {
     type Name = EventName;
 
+    fn can_coalesce_with(&self, next: &Self) -> bool {
+        match (self, next) {
+            (
+                Self::Mouse {
+                    name: MouseEventName::MouseMove,
+                    button: previous,
+                    ..
+                },
+                Self::Mouse {
+                    name: MouseEventName::MouseMove,
+                    button,
+                    ..
+                },
+            ) => previous == button,
+            (
+                Self::Wheel {
+                    scroll: previous,
+                    cursor: previous_cursor,
+                    source: WheelSource::Line,
+                    phase: TouchPhase::Moved,
+                    ..
+                },
+                Self::Wheel {
+                    scroll,
+                    cursor,
+                    source: WheelSource::Line,
+                    phase: TouchPhase::Moved,
+                    ..
+                },
+            ) => {
+                previous_cursor == cursor
+                    && previous.x.partial_cmp(&0.0) == scroll.x.partial_cmp(&0.0)
+                    && previous.y.partial_cmp(&0.0) == scroll.y.partial_cmp(&0.0)
+                    && (previous.x + scroll.x).is_finite()
+                    && (previous.y + scroll.y).is_finite()
+            }
+            _ => false,
+        }
+    }
+
+    fn coalesce_with(&mut self, next: Self) {
+        match (self, next) {
+            (Self::Wheel { scroll, .. }, Self::Wheel { scroll: next, .. }) => {
+                scroll.x += next.x;
+                scroll.y += next.y;
+            }
+            (event, next) => *event = next,
+        }
+    }
+
     /// Check if the event means the cursor was moved.
     fn is_moved(&self) -> bool {
         matches!(
@@ -198,12 +248,12 @@ impl ragnarok::SourceEvent for PlatformEvent {
         matches!(self, Self::PointerExit { .. })
     }
 
-    /// Check if this event is a touch released event.
+    /// Check if this event ends or cancels a touch.
     fn is_touch_released(&self) -> bool {
         matches!(
             &self,
             Self::Touch {
-                phase: TouchPhase::Ended,
+                phase: TouchPhase::Ended | TouchPhase::Cancelled,
                 ..
             }
         )

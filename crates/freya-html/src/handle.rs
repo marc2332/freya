@@ -6,13 +6,16 @@ use std::{
 
 use freya_core::prelude::*;
 
-use crate::state::BlitzState;
+use crate::{
+    content::HtmlContent,
+    state::BlitzState,
+};
 
 /// A document for an [HtmlViewer](crate::HtmlViewer), either remote or inline.
 #[derive(Clone, PartialEq)]
 pub enum HtmlSource {
     Url(String),
-    Html(String),
+    Html(HtmlContent),
 }
 
 impl HtmlSource {
@@ -21,8 +24,8 @@ impl HtmlSource {
         Self::Url(url.into())
     }
 
-    /// An inline HTML + CSS string.
-    pub fn html(html: impl Into<String>) -> Self {
+    /// Inline HTML + CSS, optionally configured with an [HtmlContent].
+    pub fn html(html: impl Into<HtmlContent>) -> Self {
         Self::Html(html.into())
     }
 }
@@ -97,13 +100,13 @@ impl HtmlHandle {
         self.push(HtmlSource::Url(url.into()));
     }
 
-    /// Load the inline HTML + CSS string, discarding any forward history.
-    pub fn load_html(&mut self, html: impl Into<String>) {
+    /// Load inline HTML + CSS and its configuration, discarding any forward history.
+    pub fn load_html(&mut self, html: impl Into<HtmlContent>) {
         self.push(HtmlSource::Html(html.into()));
     }
 
-    /// Replaces the current document and history entry, discarding forward history.
-    pub fn replace_html(&mut self, html: impl Into<String>) {
+    /// Replaces the current document, configuration, and history entry, discarding forward history.
+    pub fn replace_html(&mut self, html: impl Into<HtmlContent>) {
         let source = HtmlSource::Html(html.into());
         self.load(&source);
         let mut history = self.history.write();
@@ -187,7 +190,10 @@ impl HtmlHandle {
             HtmlSource::Url(url) => {
                 spawn(load_url(view, url.clone()));
             }
-            HtmlSource::Html(html) => view.borrow_mut().load(html, None),
+            HtmlSource::Html(content) => view.borrow_mut().load(
+                &content.html,
+                content.base_url.as_ref().map(ToString::to_string),
+            ),
         }
     }
 }
