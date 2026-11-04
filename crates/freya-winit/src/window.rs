@@ -4,6 +4,10 @@ use std::{
     rc::Rc,
     sync::Arc,
     task::Waker,
+    time::{
+        Duration,
+        Instant,
+    },
 };
 
 #[cfg(feature = "accessibility")]
@@ -24,15 +28,20 @@ use freya_engine::prelude::{
     FontMgr,
     Surface as SkiaSurface,
 };
-use futures_util::task::{
-    ArcWake,
-    waker,
+use futures_util::{
+    StreamExt,
+    task::{
+        ArcWake,
+        waker,
+    },
 };
 use keyboard_types::{
     Code,
     Key,
 };
 use ragnarok::{
+    EventBuffer,
+    EventsExecutorRunner,
     EventsMeasurerRunner,
     NodesState,
 };
@@ -112,6 +121,7 @@ pub struct AppWindow {
 
     pub(crate) process_layout_on_next_render: bool,
     pub(crate) send_mouse_move_on_next_layout: bool,
+    pub(crate) event_buffer: EventBuffer<PlatformEvent, Instant>,
 
     pub(crate) render_callbacks: Vec<RenderCallback>,
 
@@ -398,6 +408,8 @@ impl AppWindow {
             PluginHandle::new(event_loop_proxy),
         );
 
+        let input_interval = frame_interval(&window);
+
         AppWindow {
             runner,
             tree,
@@ -425,6 +437,7 @@ impl AppWindow {
 
             process_layout_on_next_render: true,
             send_mouse_move_on_next_layout: false,
+            event_buffer: EventBuffer::new(input_interval),
 
             render_callbacks: Vec::new(),
 
@@ -495,14 +508,207 @@ impl AppWindow {
         self.window.request_redraw();
     }
 
-    /// Measures the given platform events and emits the results.
-    /// Wheel events schedule a mouse move to refresh hover states.
-    pub(crate) fn process_platform_events(
+    pub(crate) fn poll_runner(
         &mut self,
-        mut platform_events: Vec<PlatformEvent>,
+        plugins: &mut PluginsManager,
+        handle: PluginHandle,
+    ) -> bool {
+        let mut context = std::task::Context::from_waker(&self.waker);
+
+        #[cfg(feature = "hotreload")]
+        let hotreload_triggered = self
+            .hot_reload_pending
+            .swap(false, std::sync::atomic::Ordering::AcqRel);
+        #[cfg(feature = "hotreload")]
+        if hotreload_triggered {
+            self.runner.reload();
+        }
+
+        while let std::task::Poll::Ready(Some(chunk)) =
+            self.events_receiver.poll_next_unpin(&mut context)
+        {
+            match chunk {
+                EventsChunk::Processed(processed) => {
+                    EventsExecutorAdapter {
+                        runner: &mut self.runner,
+                    }
+                    .run(&mut self.nodes_state, processed);
+                }
+                EventsChunk::Batch(events) => {
+                    for event in events {
+                        self.runner.handle_event(
+                            event.node_id,
+                            event.name,
+                            event.data,
+                            event.bubbles,
+                        );
+                    }
+                }
+            }
+        }
+
+        {
+            let mut observer = plugins.tasks_poll_observer(&self.window, handle.clone());
+            let future = std::pin::pin!(self.runner.handle_events_with(&mut observer));
+            if future.poll(&mut context).is_ready() {
+                self.waker.wake_by_ref();
+            }
+        }
+        self.runner.handle_events_immediately_with(
+            &mut plugins.tasks_poll_observer(&self.window, handle.clone()),
+        );
+
+        plugins.send(
+            PluginEvent::StartedUpdatingTree {
+                window: &self.window,
+                tree: &self.tree,
+            },
+            handle.clone(),
+        );
+        let mutations = self.runner.sync_and_update();
+        let scale_factor = self.effective_scale_factor() as f32;
+        let result = self
+            .runner
+            .run_in(|| self.tree.apply_mutations(mutations, scale_factor));
+        self.update_cursor_icon();
+        let needs_redraw = result.needs_render || result.needs_accessibility;
+        self.process_layout_on_next_render |= result.needs_render;
+        #[cfg(feature = "hotreload")]
+        let needs_redraw = {
+            self.process_layout_on_next_render |= hotreload_triggered;
+            needs_redraw || hotreload_triggered
+        };
+        if result.needs_accessibility {
+            self.accessibility_tasks_for_next_render |=
+                AccessibilityTask::ProcessUpdate { mode: None };
+        }
+        if let Some(strategy) = result.auto_focus {
+            handle.send_event_loop_event(NativeEvent::Window(NativeWindowEvent {
+                window_id: self.window.id(),
+                action: NativeWindowEventAction::User(UserEvent::FocusAccessibilityNode(strategy)),
+            }));
+        }
+        plugins.send(
+            PluginEvent::FinishedUpdatingTree {
+                window: &self.window,
+                tree: &self.tree,
+            },
+            handle,
+        );
+        needs_redraw
+    }
+
+    pub(crate) fn measure_layout(
+        &mut self,
+        font_collection: &mut FontCollection,
+        font_manager: &FontMgr,
+        fallback_fonts: &[Cow<'static, str>],
         plugins: &mut PluginsManager,
         handle: PluginHandle,
     ) {
+        if !self.process_layout_on_next_render {
+            return;
+        }
+        plugins.send(
+            PluginEvent::StartedMeasuringLayout {
+                window: &self.window,
+                tree: &self.tree,
+            },
+            handle.clone(),
+        );
+        let size: Size2D = (
+            self.window.inner_size().width as f32,
+            self.window.inner_size().height as f32,
+        )
+            .into();
+        let scale_factor = self.effective_scale_factor();
+        self.tree.measure_layout(
+            size,
+            font_collection,
+            font_manager,
+            &self.events_sender,
+            &mut self.nodes_state,
+            scale_factor,
+            fallback_fonts,
+        );
+        self.platform
+            .root_size
+            .set_if_modified(size / scale_factor as f32);
+        self.process_layout_on_next_render = false;
+        plugins.send(
+            PluginEvent::FinishedMeasuringLayout {
+                window: &self.window,
+                tree: &self.tree,
+            },
+            handle,
+        );
+        if std::mem::take(&mut self.send_mouse_move_on_next_layout) && self.cursor_in_window {
+            self.event_buffer.push(
+                [PlatformEvent::Mouse {
+                    name: MouseEventName::MouseMove,
+                    cursor: self.position,
+                    button: None,
+                }],
+                Instant::now(),
+            );
+        }
+    }
+
+    /// Applies buffered input and synchronizes its UI updates and layout.
+    pub(crate) fn process_buffered_events(
+        &mut self,
+        font_collection: &mut FontCollection,
+        font_manager: &FontMgr,
+        fallback_fonts: &[Cow<'static, str>],
+        plugins: &mut PluginsManager,
+        handle: PluginHandle,
+    ) -> bool {
+        let mut needs_redraw = self.poll_runner(plugins, handle.clone());
+        self.measure_layout(
+            font_collection,
+            font_manager,
+            fallback_fonts,
+            plugins,
+            handle.clone(),
+        );
+
+        for event in self.event_buffer.take(Instant::now()) {
+            self.process_platform_event(event, plugins, handle.clone());
+            needs_redraw |= self.poll_runner(plugins, handle.clone());
+            self.measure_layout(
+                font_collection,
+                font_manager,
+                fallback_fonts,
+                plugins,
+                handle.clone(),
+            );
+        }
+
+        needs_redraw |= self.poll_runner(plugins, handle.clone());
+        self.measure_layout(
+            font_collection,
+            font_manager,
+            fallback_fonts,
+            plugins,
+            handle,
+        );
+        needs_redraw
+    }
+
+    /// Queues input for the next update, preserving discrete event boundaries.
+    pub(crate) fn queue_platform_events(&mut self, platform_events: Vec<PlatformEvent>) {
+        self.event_buffer.push(platform_events, Instant::now());
+    }
+
+    fn process_platform_event(
+        &mut self,
+        platform_event: PlatformEvent,
+        plugins: &mut PluginsManager,
+        handle: PluginHandle,
+    ) {
+        self.send_mouse_move_on_next_layout |=
+            matches!(platform_event, PlatformEvent::Wheel { .. });
+        let mut platform_events = vec![platform_event];
         plugins.send(
             PluginEvent::StartedMeasuringEvents {
                 window: &self.window,
@@ -510,13 +716,6 @@ impl AppWindow {
             },
             handle.clone(),
         );
-
-        if platform_events
-            .iter()
-            .any(|platform_event| matches!(platform_event, PlatformEvent::Wheel { .. }))
-        {
-            self.send_mouse_move_on_next_layout = true;
-        }
 
         let mut events_measurer_adapter = EventsMeasurerAdapter {
             scale_factor: self.effective_scale_factor(),
@@ -527,10 +726,6 @@ impl AppWindow {
             &mut self.nodes_state,
             self.accessibility.focused_node_id(),
         );
-        self.events_sender
-            .unbounded_send(EventsChunk::Processed(processed_events))
-            .unwrap();
-
         plugins.send(
             PluginEvent::FinishedMeasuringEvents {
                 window: &self.window,
@@ -538,6 +733,11 @@ impl AppWindow {
             },
             handle,
         );
+
+        EventsExecutorAdapter {
+            runner: &mut self.runner,
+        }
+        .run(&mut self.nodes_state, processed_events);
     }
 
     /// Sets the custom scale factor, clamped to a reasonable range.
@@ -549,6 +749,15 @@ impl AppWindow {
         self.platform.custom_scale_factor.set(clamped);
         self.scale_factor_changed();
     }
+}
+
+pub(crate) fn frame_interval(window: &Window) -> Duration {
+    let refresh_rate = window
+        .current_monitor()
+        .and_then(|monitor| monitor.refresh_rate_millihertz())
+        .filter(|refresh_rate| *refresh_rate > 1_000)
+        .unwrap_or(60_000);
+    Duration::from_secs_f64(1000.0 / refresh_rate as f64)
 }
 
 fn accent_color_preference() -> mundy::Preferences {

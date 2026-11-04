@@ -194,7 +194,7 @@ thiserror = "2.0.17"
 image = "0.25.6"
 
 # Video
-ffmpeg-sidecar = "2.3"
+ffmpeg-sidecar = "2.7"
 rodio = { version = "0.20", default-features = false }
 
 # SDK
