@@ -74,12 +74,15 @@ impl<C: Into<Color>> From<(C, f32)> for GradientStop {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct LinearGradient {
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub(crate) dither: bool,
     stops: Vec<GradientStop>,
     angle: f32,
 }
 
 impl Hash for LinearGradient {
     fn hash<H: Hasher>(&self, state: &mut H) {
+        self.dither.hash(state);
         self.stops.hash(state);
         self.angle.to_bits().hash(state);
     }
@@ -89,6 +92,12 @@ impl LinearGradient {
     /// Create an empty [LinearGradient] with defaults.
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Enable dithering to reduce color banding, disabled by default.
+    pub fn dither(mut self, dither: bool) -> Self {
+        self.dither = dither;
+        self
     }
 
     /// Add a single stop.
@@ -172,11 +181,14 @@ impl fmt::Display for LinearGradient {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct RadialGradient {
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub(crate) dither: bool,
     stops: Vec<GradientStop>,
 }
 
 impl Hash for RadialGradient {
     fn hash<H: Hasher>(&self, state: &mut H) {
+        self.dither.hash(state);
         self.stops.hash(state);
     }
 }
@@ -185,6 +197,12 @@ impl RadialGradient {
     /// Create an empty [RadialGradient] with defaults.
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Enable dithering to reduce color banding, disabled by default.
+    pub fn dither(mut self, dither: bool) -> Self {
+        self.dither = dither;
+        self
     }
 
     /// Add a single stop.
@@ -255,6 +273,8 @@ impl fmt::Display for RadialGradient {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ConicGradient {
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub(crate) dither: bool,
     stops: Vec<GradientStop>,
     angles: Option<(f32, f32)>,
     angle: Option<f32>,
@@ -262,6 +282,7 @@ pub struct ConicGradient {
 
 impl Hash for ConicGradient {
     fn hash<H: Hasher>(&self, state: &mut H) {
+        self.dither.hash(state);
         self.stops.hash(state);
         if let Some((start, end)) = self.angles {
             start.to_bits().hash(state);
@@ -277,6 +298,12 @@ impl ConicGradient {
     /// Create an empty [ConicGradient] with defaults.
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Enable dithering to reduce color banding, disabled by default.
+    pub fn dither(mut self, dither: bool) -> Self {
+        self.dither = dither;
+        self
     }
 
     /// Add a single stop.
