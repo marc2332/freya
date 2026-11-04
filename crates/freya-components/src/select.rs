@@ -67,6 +67,7 @@ pub enum SelectStatus {
 pub struct Select {
     pub(crate) theme: Option<SelectThemePartial>,
     selected_item: Option<Element>,
+    list_match_width: bool,
     children: Vec<Element>,
     cursor_icon: Option<CursorIcon>,
     key: DiffKey,
@@ -95,6 +96,7 @@ impl Select {
         Self {
             theme: None,
             selected_item: None,
+            list_match_width: false,
             children: Vec::new(),
             cursor_icon: None,
             key: DiffKey::None,
@@ -108,6 +110,12 @@ impl Select {
 
     pub fn selected_item(mut self, item: impl Into<Element>) -> Self {
         self.selected_item = Some(item.into());
+        self
+    }
+
+    /// Match the dropdiwb width to the button width.
+    pub fn list_match_width(mut self, enabled: bool) -> Self {
+        self.list_match_width = enabled;
         self
     }
 
@@ -258,6 +266,7 @@ impl Component for Select {
                     .padding((8., 18., 8., 18.))
                     .border(border)
                     .horizontal()
+                    .content(Content::flex())
                     .center()
                     .color(theme.color)
                     .corner_radius(8.)
@@ -272,7 +281,11 @@ impl Component for Select {
             .maybe_child((visible || opacity > 0.).then(|| {
                 rect().height(Size::px(0.)).width(Size::px(0.)).child(
                     rect()
-                        .width(Size::window_percent(100.))
+                        .width(if self.list_match_width {
+                            Size::px(button_area().map_or(0., |area| area.width()))
+                        } else {
+                            Size::window_percent(100.)
+                        })
                         .margin(Gaps::new(4., 0., 4., 0.))
                         .offset_y(offset_y)
                         .on_sized(move |e: Event<SizedEventData>| {
@@ -281,6 +294,7 @@ impl Component for Select {
                         .child(
                             rect()
                                 .layer(Layer::Overlay)
+                                .maybe(self.list_match_width, |el| el.width(Size::fill()))
                                 .border(
                                     Border::new()
                                         .fill(theme.border_fill)
@@ -291,7 +305,7 @@ impl Component for Select {
                                 .corner_radius(10.)
                                 .background(theme.select_background)
                                 .padding(6.)
-                                .content(Content::Fit)
+                                .maybe(!self.list_match_width, |el| el.content(Content::Fit))
                                 .opacity(opacity)
                                 .children(self.children.clone()),
                         ),
