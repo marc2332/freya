@@ -8,16 +8,15 @@
 //! Point your assistant to [freyaui.dev/llms.txt](https://freyaui.dev/llms.txt).
 //! It links to Freya's documentation and examples.
 //!
-//! ## Use the Freya AI skill plugin
+//! ## Use the Freya AI skill
 //!
-//! Freya provides an [AI skill](https://github.com/marc2332/freya/blob/main/plugins/freya/skills/freya/SKILL.md)
-//! for coding assistants. In Claude Code, install it with:
+//! Freya provides an [AI skill](https://github.com/marc2332/freya/blob/main/skills/freya/SKILL.md)
+//! for coding assistants. Install it with [skills](https://skills.sh):
 //!
-//! ```text
-//! /plugin marketplace add marc2332/freya
-//! /plugin install freya@freya-marketplace
+//! ```sh
+//! npx skills add marc2332/freya --skill freya
 //! ```
 //!
-//! For other AI coding agents, provide the
-//! [skill document](https://github.com/marc2332/freya/blob/main/plugins/freya/skills/freya/SKILL.md)
+//! Choose your coding agent when prompted. You can also provide the
+//! [skill document](https://github.com/marc2332/freya/blob/main/skills/freya/SKILL.md)
 //! as context directly.
