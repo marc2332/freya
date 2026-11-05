@@ -932,23 +932,33 @@ where
         self
     }
 
-    /// Set how text that does not fit its bounds is truncated. See [`TextOverflow`].
-    fn text_overflow(mut self, text_overflow: impl Into<TextOverflow>) -> Self {
-        self.text_style_data_mut().text_overflow = Some(text_overflow.into());
-        self
-    }
-
-    /// Add a shadow cast behind the text. See [`TextShadow`].
+    /// Add a shadow cast behind the text, replacing inherited shadows. See [`TextShadow`].
     fn text_shadow(mut self, text_shadow: impl Into<TextShadow>) -> Self {
         self.text_style_data_mut()
             .text_shadows
+            .get_or_insert_default()
             .push(text_shadow.into());
+        self
+    }
+
+    /// Replace the text shadows. An empty list clears inherited shadows.
+    fn text_shadows(mut self, text_shadows: impl IntoIterator<Item = TextShadow>) -> Self {
+        self.text_style_data_mut().text_shadows = Some(text_shadows.into_iter().collect());
         self
     }
 
     /// Set a line drawn through, under or over the text. See [`TextDecoration`].
     fn text_decoration(mut self, text_decoration: impl Into<TextDecoration>) -> Self {
         self.text_style_data_mut().text_decoration = Some(text_decoration.into());
+        self
+    }
+}
+
+/// Methods for truncating text within an element's bounds.
+pub trait TextOverflowExt: TextStyleExt {
+    /// Set how text that does not fit its bounds is truncated. See [`TextOverflow`].
+    fn text_overflow(mut self, text_overflow: impl Into<TextOverflow>) -> Self {
+        self.text_style_data_mut().text_overflow = Some(text_overflow.into());
         self
     }
 }

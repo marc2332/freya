@@ -77,6 +77,7 @@ use crate::{
         LayoutExt,
         MaybeExt,
         TextAlign,
+        TextOverflowExt,
         TextStyleExt,
         VerticalAlign,
     },
@@ -1002,6 +1003,8 @@ impl AccessibilityExt for Paragraph {
         &mut self.element.accessibility
     }
 }
+
+impl TextOverflowExt for Paragraph {}
 
 impl TextStyleExt for Paragraph {
     fn text_style_data_mut(&mut self) -> &mut TextStyleData {
