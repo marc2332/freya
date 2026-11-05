@@ -2,9 +2,9 @@
 import Layout from "./Layout.astro";
 import BlogPostTOC from "../components/BlogPostTOC.astro";
 import BlogImageViewer from "../components/BlogImageViewer.astro";
+import PostDate from "../components/PostDate.astro";
 const { frontmatter, headings } = Astro.props;
 
-const formattedDate = new Date(frontmatter.date).toLocaleString().split(",")[0];
 ---
 
 <Layout
@@ -18,7 +18,7 @@ const formattedDate = new Date(frontmatter.date).toLocaleString().split(",")[0];
     <div class="flex">
         <article class="sm:w-3/4 sm:px-8 px-2 w-full max-w-[78ch]">
             <h1>{frontmatter.title}</h1>
-            <i>{formattedDate} - {frontmatter.author}</i>
+            <i><PostDate date={frontmatter.date} /> - {frontmatter.author}</i>
             <slot />
         </article>
         <BlogPostTOC headings={headings}/>

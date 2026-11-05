@@ -2,15 +2,15 @@
 import { getCollection } from "astro:content";
 const posts = await getCollection("blog");
 import Layout from "../layouts/Layout.astro";
+import PostDate from "../components/PostDate.astro";
 ---
 
 <Layout title="Freya Blog - GUI Library for Rust" description="Release notes, news and updates from Freya, a native GUI library for Rust.">
   {posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime()).map((post) => {
-    const formattedDate = post.data.date.toLocaleString().split(',')[0];
     return (
       <a href={`/posts/${post.data.slug}/`} class="block border bg-custom-dark-gray border-stone-700 my-2 p-8 rounded-lg hover:border-stone-500 transition-colors delay-[10]">
         <h2 class="m-0">{post.data.title}</h2>
-        <i class="block mb-4 text-stone-500">{formattedDate} - {post.data.author}</i>
+        <i class="block mb-4 text-stone-500"><PostDate date={post.data.date} /> - {post.data.author}</i>
         <p>{post.data.description}</p>
       </a>
     )
