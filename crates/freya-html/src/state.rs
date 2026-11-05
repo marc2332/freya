@@ -43,9 +43,12 @@ use blitz_traits::{
 use freya_core::prelude::{
     Bytes,
     Code as FreyaCode,
+    Force,
     Key as FreyaKey,
     Modifiers as FreyaModifiers,
     MouseButton as FreyaMouseButton,
+    TouchEventData,
+    TouchPhase,
 };
 use freya_engine::prelude::{
     Canvas,
@@ -138,6 +141,7 @@ impl BlitzState {
             ..Default::default()
         };
         self.document = Some(HtmlDocument::from_html(html, config));
+        self.active_pointers.borrow_mut().clear();
         self.paint_key = None;
         self.shell_provider.request_redraw();
     }
@@ -230,6 +234,63 @@ impl BlitzState {
             UiEvent::PointerDown(event)
         } else {
             UiEvent::PointerUp(event)
+        });
+        self.shell_provider.request_redraw();
+    }
+
+    pub fn touch(&mut self, data: &TouchEventData, phase: TouchPhase) {
+        let id = BlitzPointerId::Finger(data.finger_id);
+        let pressed = matches!(phase, TouchPhase::Started | TouchPhase::Moved);
+        let mut event = self.pointer_event(
+            data.element_location.x as f32,
+            data.element_location.y as f32,
+            MouseEventButton::Main,
+        );
+        event.id = id;
+        event.coords.screen_x = data.global_location.x as f32;
+        event.coords.screen_y = data.global_location.y as f32;
+        event.buttons = if pressed {
+            MouseEventButtons::from(MouseEventButton::Main)
+        } else {
+            MouseEventButtons::empty()
+        };
+        event.details.pressure = if pressed {
+            match data.force {
+                Some(Force::Normalized(force)) => force,
+                Some(Force::Calibrated {
+                    force,
+                    max_possible_force,
+                    ..
+                }) if max_possible_force > 0.0 => force / max_possible_force,
+                _ => 0.5,
+            }
+            .clamp(0.0, 1.0)
+        } else {
+            0.0
+        };
+        {
+            let mut pointers = self.active_pointers.borrow_mut();
+            let position = pointers.iter().position(|pointer| pointer.id == id);
+            event.is_primary = position
+                .map(|position| pointers[position].is_primary)
+                .unwrap_or(pointers.is_empty() && phase == TouchPhase::Started);
+            if pressed {
+                let mut snapshot = event.clone();
+                snapshot.active_pointers = Arc::new(AtomicRefCell::new(Vec::new()));
+                if let Some(position) = position {
+                    pointers[position] = snapshot;
+                } else {
+                    pointers.push(snapshot);
+                }
+            } else if let Some(position) = position {
+                pointers.remove(position);
+            }
+        }
+        self.dispatch(match phase {
+            TouchPhase::Started => UiEvent::PointerDown(event),
+            TouchPhase::Moved => UiEvent::PointerMove(event),
+            TouchPhase::Ended => UiEvent::PointerUp(event),
+            TouchPhase::Cancelled => UiEvent::PointerCancel(event),
         });
         self.shell_provider.request_redraw();
     }
