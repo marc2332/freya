@@ -1,6 +1,7 @@
 ---
 import Layout from "./Layout.astro";
 import BlogPostTOC from "../components/BlogPostTOC.astro";
+import BlogImageViewer from "../components/BlogImageViewer.astro";
 const { frontmatter, headings } = Astro.props;
 
 const formattedDate = new Date(frontmatter.date).toLocaleString().split(",")[0];
@@ -22,6 +23,7 @@ const formattedDate = new Date(frontmatter.date).toLocaleString().split(",")[0];
         </article>
         <BlogPostTOC headings={headings}/>
     </div>
+    <BlogImageViewer />
 </Layout>
 
 <style is:global>
