@@ -328,7 +328,7 @@ impl AppWindow {
 
         runner.provide_root_context(|| font_collection.clone());
 
-        if let Some(root_context) = window_config.root_context {
+        for root_context in window_config.root_contexts {
             runner.run_in(root_context);
         }
 
