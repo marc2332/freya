@@ -775,16 +775,15 @@ Thanks to my sponsors for supporting this project! 😄
 ### History with Dioxus
 Freya 0.1, 0.2 and 0.3 were based on the core crates of Dioxus. Starting 0.4 Freya does no longer use Dioxus, instead it uses its own reactive core, partially inspired by Dioxus but yet with lots of differences.
 
-### Claude Code Skill
+### AI Skill
 
-A Claude Code skill with Freya best practices and patterns is available. Install it with:
+A skill with Freya best practices and patterns is available for AI coding agents. Install it with [skills](https://skills.sh):
 
+```sh
+npx skills add marc2332/freya --skill freya
 ```
-/plugin marketplace add marc2332/freya
-/plugin install freya@freya-marketplace
-```
 
-For other AI coding agents, you can use the skill document directly as context: [plugins/freya/skills/freya/SKILL.md](plugins/freya/skills/freya/SKILL.md)
+Choose your coding agent when prompted. You can also use the [skill document](skills/freya/SKILL.md) directly as context.
 
 ### License
 
