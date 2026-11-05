@@ -546,6 +546,7 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
 
             if drag_scrolling && (dragging_content().is_some() || drag_origin().is_some()) {
                 if dragging_content().is_some() {
+                    e.prevent_default();
                     let content = Size2D::new(inner_width, inner_height);
                     scroll_controller.release_drag(
                         rendered_position,
@@ -784,7 +785,6 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
             .max_width(layout.maximum_width.clone())
             .max_height(layout.maximum_height.clone())
             .a11y_id(a11y_id)
-            .a11y_focusable(false)
             .a11y_role(AccessibilityRole::ScrollView)
             .a11y_builder(move |node| {
                 node.set_scroll_x(rendered_position.x as f64);

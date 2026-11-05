@@ -28,6 +28,7 @@ multiple-versions = "warn"
 [bans.build]
 allow-build-scripts = [
   { name = "ahash" },
+  { name = "alloca" },
   { name = "alsa-sys" },
   { name = "android-activity" },
   { name = "anyhow" },

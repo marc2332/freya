@@ -159,7 +159,10 @@ impl MetalDriver {
         render(&mut surface);
 
         window.pre_present_notify();
-        self.gr_context.flush_and_submit();
+        if let Err(error) = self.gr_context.flush_and_submit() {
+            tracing::error!(?error, "Failed to submit Metal rendering commands");
+            return;
+        }
         drop(surface);
 
         let command_buffer = self

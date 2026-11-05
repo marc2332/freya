@@ -1,7 +1,6 @@
 ---
 name: freya
 description: Freya Rust GUI framework best practices, patterns, and conventions. Use when writing Freya components, hooks, elements, or working on a Freya project.
-user-invocable: true
 ---
 
 # Freya Best Practices
