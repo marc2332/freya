@@ -154,6 +154,31 @@ impl Component for HtmlViewer {
                     );
                 }
             })
+            .on_touch_start({
+                let state = state.clone();
+                move |event: Event<TouchEventData>| {
+                    a11y_id.request_focus();
+                    state.borrow_mut().touch(&event, TouchPhase::Started);
+                }
+            })
+            .on_touch_move({
+                let state = state.clone();
+                move |event: Event<TouchEventData>| {
+                    state.borrow_mut().touch(&event, TouchPhase::Moved);
+                }
+            })
+            .on_touch_end({
+                let state = state.clone();
+                move |event: Event<TouchEventData>| {
+                    state.borrow_mut().touch(&event, TouchPhase::Ended);
+                }
+            })
+            .on_touch_cancel({
+                let state = state.clone();
+                move |event: Event<TouchEventData>| {
+                    state.borrow_mut().touch(&event, TouchPhase::Cancelled);
+                }
+            })
             .on_wheel({
                 let state = state.clone();
                 move |e: Event<WheelEventData>| {
