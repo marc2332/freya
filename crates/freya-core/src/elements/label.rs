@@ -49,6 +49,7 @@ use crate::{
         MaybeExt,
         Span,
         TextAlign,
+        TextOverflowExt,
         TextStyleExt,
     },
     text_cache::CachedParagraph,
@@ -329,6 +330,8 @@ impl AccessibilityExt for Label {
         &mut self.element.accessibility
     }
 }
+
+impl TextOverflowExt for Label {}
 
 impl TextStyleExt for Label {
     fn text_style_data_mut(&mut self) -> &mut TextStyleData {
