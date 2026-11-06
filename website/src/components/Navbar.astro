@@ -36,7 +36,7 @@ const latestRecentPost = (await getCollection("blog"))
         <img src="/logo.svg" width="50" class="block" />
         <img src="/freya.svg" width="65" class="ml-4 block" />
       </a>
-      <div class="flex items-center">
+      <div class="flex flex-wrap items-center justify-center gap-y-3">
         {
           latestRecentPost && (
             <a
@@ -62,6 +62,13 @@ const latestRecentPost = (await getCollection("blog"))
           href="https://docs.rs/freya/latest/freya/"
         >
           Docs
+        </a>
+        <a
+          class="inline-block mx-4 hover:text-white hover:underline"
+          title="Freya source code on GitHub"
+          href="https://github.com/marc2332/freya"
+        >
+          Source code
         </a>
         <a
           class="inline-block mx-4 hover:text-white hover:underline"
