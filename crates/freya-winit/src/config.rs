@@ -87,7 +87,7 @@ pub type OnCloseHook = Box<dyn FnMut(crate::renderer::RendererContext, WindowId)
 pub struct WindowConfig {
     /// Root component for the window app.
     pub(crate) app: AppComponent,
-    pub(crate) root_context: Option<Box<dyn FnOnce()>>,
+    pub(crate) root_contexts: Vec<Box<dyn FnOnce()>>,
     /// Size of the Window.
     pub(crate) size: (f64, f64),
     /// Minimum size of the Window.
@@ -153,7 +153,7 @@ impl WindowConfig {
     fn new_with_defaults(app: impl Into<AppComponent>) -> Self {
         Self {
             app: app.into(),
-            root_context: None,
+            root_contexts: Vec::new(),
             size: (700.0, 500.0),
             min_size: None,
             max_size: None,
@@ -174,7 +174,7 @@ impl WindowConfig {
 
     /// Provide a context to the window's root before its first render.
     pub fn with_root_context<T: Clone + 'static>(mut self, value: T) -> Self {
-        self.root_context = Some(Box::new(move || {
+        self.root_contexts.push(Box::new(move || {
             freya_core::prelude::provide_root_context(value);
         }));
         self
@@ -330,7 +330,7 @@ impl GpuResourceCacheLimit {
 
 pub type EmbeddedFonts = Vec<(Cow<'static, str>, Bytes)>;
 #[cfg(feature = "tray")]
-pub type TrayIconGetter = Box<dyn FnOnce() -> tray_icon::TrayIcon + Send>;
+pub type TrayIconGetter = Box<dyn FnOnce() -> tray_icon::TrayIcon>;
 #[cfg(feature = "tray")]
 pub type TrayHandler =
     Box<dyn FnMut(crate::tray_icon::TrayEvent, crate::renderer::RendererContext)>;
@@ -424,7 +424,7 @@ impl LaunchConfig {
     #[cfg(feature = "tray")]
     pub fn with_tray(
         mut self,
-        tray_icon: impl FnOnce() -> tray_icon::TrayIcon + 'static + Send,
+        tray_icon: impl FnOnce() -> tray_icon::TrayIcon + 'static,
         tray_handler: impl FnMut(crate::tray_icon::TrayEvent, crate::renderer::RendererContext)
         + 'static,
     ) -> Self {

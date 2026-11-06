@@ -201,6 +201,9 @@ impl Size {
     }
 
     /// Use a [`Fill`](Size::Fill) size.
+    ///
+    /// Fills the remaining space along the parent's layout direction, so later siblings may overflow.
+    /// Prefer [`Size::flex`] for more advanced layouts that share space between siblings.
     pub const fn fill() -> Size {
         Size::Fill
     }

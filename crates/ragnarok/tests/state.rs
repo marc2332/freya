@@ -1,11 +1,15 @@
 #![allow(dead_code)]
 
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    time::Duration,
+};
 
 use ragnarok::{
     Area,
     CursorPoint,
     EmmitableEvent,
+    EventBuffer,
     EventsExecutor,
     EventsExecutorRunner,
     EventsMeasurer,
@@ -25,6 +29,7 @@ enum EventName {
     MouseOut,
     MouseDown,
     MouseUp,
+    Wheel,
 
     KeyboardDown,
 
@@ -164,11 +169,8 @@ impl NameOfEvent for EventName {
     fn get_cancellable_events(&self) -> HashSet<Self> {
         let mut events = HashSet::default();
         events.insert(*self);
-        match self {
-            Self::CaptureGlobalMouseMove => {
-                events.extend([Self::MouseMove, Self::MouseEnter, Self::MouseOver]);
-            }
-            _ => {}
+        if self == &Self::CaptureGlobalMouseMove {
+            events.extend([Self::MouseMove, Self::MouseEnter, Self::MouseOver]);
         }
         events
     }
@@ -181,6 +183,7 @@ enum TestSourceEvent {
     MouseMove { cursor: CursorPoint },
     MouseUp { cursor: CursorPoint },
     TouchReleased { cursor: CursorPoint },
+    Wheel { cursor: CursorPoint, delta: f64 },
 }
 
 impl SourceEvent for TestSourceEvent {
@@ -198,12 +201,34 @@ impl SourceEvent for TestSourceEvent {
         matches!(self, Self::TouchReleased { .. })
     }
 
-    fn try_location(&self) -> Option<ragnarok::CursorPoint> {
+    fn can_coalesce_with(&self, next: &Self) -> bool {
+        match (self, next) {
+            (Self::MouseMove { .. }, Self::MouseMove { .. }) => true,
+            (
+                Self::Wheel {
+                    cursor: previous_cursor,
+                    delta: previous,
+                },
+                Self::Wheel { cursor, delta },
+            ) => previous_cursor == cursor && previous.partial_cmp(&0.0) == delta.partial_cmp(&0.0),
+            _ => false,
+        }
+    }
+
+    fn coalesce_with(&mut self, next: Self) {
+        match (self, next) {
+            (Self::Wheel { delta, .. }, Self::Wheel { delta: next, .. }) => *delta += next,
+            (event, next) => *event = next,
+        }
+    }
+
+    fn try_location(&self) -> Option<CursorPoint> {
         match self {
             Self::MouseDown { cursor } => Some(*cursor),
             Self::MouseMove { cursor } => Some(*cursor),
             Self::MouseUp { cursor } => Some(*cursor),
             Self::TouchReleased { cursor } => Some(*cursor),
+            Self::Wheel { cursor, .. } => Some(*cursor),
         }
     }
 
@@ -213,6 +238,7 @@ impl SourceEvent for TestSourceEvent {
             Self::MouseDown { .. } => EventName::MouseDown,
             Self::MouseUp { .. } => EventName::MouseUp,
             Self::TouchReleased { .. } => EventName::TouchReleased,
+            Self::Wheel { .. } => EventName::Wheel,
         }
     }
 }
@@ -831,13 +857,20 @@ fn touch_released_event() {
         None,
     );
 
-    assert!(
-        processed_events
-            .emmitable_events
-            .iter()
-            .any(|e| e.name == EventName::TouchReleased && e.key == 0)
-    );
+    for name in [
+        EventName::TouchReleased,
+        EventName::MouseOut,
+        EventName::MouseLeave,
+    ] {
+        assert!(
+            processed_events
+                .emmitable_events
+                .iter()
+                .any(|event| event.name == name && event.key == 0)
+        );
+    }
     TestExecutor::without_handler().run(&mut nodes_state, processed_events);
+    assert!(!nodes_state.is_hovered(0));
 }
 
 #[test]
@@ -945,6 +978,68 @@ fn touch_released_after_mouse_down() {
             .any(|e| e.name == EventName::TouchReleased && e.key == 0)
     );
     TestExecutor::without_handler().run(&mut nodes_state, processed_events);
+}
+
+fn movement(y: f64) -> TestSourceEvent {
+    TestSourceEvent::MouseMove {
+        cursor: (495.0, y).into(),
+    }
+}
+
+#[test]
+fn buffers_movement_until_update_or_release() {
+    let mut input: EventBuffer<TestSourceEvent> = EventBuffer::new(Duration::from_millis(16));
+    let down = TestSourceEvent::MouseDown {
+        cursor: (495.0, 0.0).into(),
+    };
+    input.push([down, movement(0.0)], Duration::ZERO);
+    assert_eq!(input.deadline(), Some(Duration::ZERO));
+    assert_eq!(input.take(Duration::ZERO), [down, movement(0.0)]);
+
+    for millisecond in 1..16 {
+        input.push(
+            [movement(millisecond as f64)],
+            Duration::from_millis(millisecond),
+        );
+    }
+    assert_eq!(input.deadline(), Some(Duration::from_millis(16)));
+    assert_eq!(input.take(Duration::from_millis(16)), [movement(15.0)]);
+
+    input.push([movement(16.0)], Duration::from_millis(17));
+    assert_eq!(input.deadline(), Some(Duration::from_millis(32)));
+    let up = TestSourceEvent::MouseUp {
+        cursor: (495.0, 16.0).into(),
+    };
+    let touch = TestSourceEvent::TouchReleased {
+        cursor: (100.0, 200.0).into(),
+    };
+    input.push([up, touch, touch], Duration::from_millis(18));
+    assert_eq!(input.deadline(), Some(Duration::from_millis(18)));
+    assert_eq!(
+        input.take(Duration::from_millis(18)),
+        [movement(16.0), up, touch, touch]
+    );
+    assert!(input.deadline().is_none());
+}
+
+#[test]
+fn wheel_batches_keep_accumulated_deltas_and_direction_changes() {
+    let mut input: EventBuffer<TestSourceEvent> = EventBuffer::new(Duration::from_millis(16));
+    let cursor = (100.0, 100.0).into();
+    let wheel = |delta| TestSourceEvent::Wheel { cursor, delta };
+    input.push([wheel(-53.0)], Duration::ZERO);
+    assert_eq!(input.take(Duration::ZERO), [wheel(-53.0)]);
+
+    input.push([wheel(-53.0); 8], Duration::from_millis(1));
+    assert_eq!(input.deadline(), Some(Duration::from_millis(16)));
+    input.push([wheel(53.0); 3], Duration::from_millis(2));
+    let released = TestSourceEvent::MouseUp { cursor };
+    input.push([released], Duration::from_millis(3));
+    assert_eq!(input.deadline(), Some(Duration::from_millis(3)));
+    assert_eq!(
+        input.take(Duration::from_millis(3)),
+        [wheel(-424.0), wheel(159.0), released]
+    );
 }
 
 #[test]
