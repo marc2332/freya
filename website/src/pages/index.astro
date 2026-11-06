@@ -63,154 +63,176 @@ const capabilities = [
   {
     title: "Rendering",
     icon: "gpu",
-    description: "Skia rendering with Vulkan, OpenGL, Metal, and software backends. GPU support and fallback depend on the platform.",
+    description:
+      "Skia rendering with Vulkan, OpenGL, Metal, and software backends. GPU support and fallback depend on the platform.",
     href: `${docsUrl}/_docs/platforms/index.html`,
     label: "Rendering backends",
   },
   {
     title: "Async runtime",
     icon: "async",
-    description: "Spawn tasks tied to a component, a window, or the whole app. Integrate Tokio when you need it.",
+    description:
+      "Spawn tasks tied to a component, a window, or the whole app. Integrate Tokio when you need it.",
     href: `${docsUrl}/_docs/_async/index.html`,
     label: "Async guide",
   },
   {
     title: "State & caching",
     icon: "cache",
-    description: "Reactive state, shared stores, and async queries with caching and invalidation through Freya Query and Radio.",
+    description:
+      "Reactive state, shared stores, and async queries with caching and invalidation through Freya Query and Radio.",
     href: `${docsUrl}/_docs/state_management/index.html`,
     label: "State management",
   },
   {
     title: "Routing",
     icon: "route",
-    description: "Typed routes, nested views, and navigation history, without putting everything in one component.",
+    description:
+      "Typed routes, nested views, and navigation history, without putting everything in one component.",
     href: "https://docs.rs/freya-router/latest/freya_router/",
     label: "Router docs",
   },
   {
     title: "Multi-window & tray",
     icon: "windows",
-    description: "Open more windows, share state between them, and keep desktop actions in the system tray.",
+    description:
+      "Open more windows, share state between them, and keep desktop actions in the system tray.",
     href: "https://github.com/marc2332/freya/tree/main/examples",
     label: "Desktop examples",
   },
   {
     title: "Terminal",
     icon: "terminal",
-    description: "Embed a terminal with PTY support, keyboard and mouse input, and clipboard integration.",
+    description:
+      "Embed a terminal with PTY support, keyboard and mouse input, and clipboard integration.",
     href: "https://docs.rs/freya-terminal/latest/freya_terminal/",
     label: "Terminal docs",
   },
   {
     title: "HTML & Markdown",
     icon: "html",
-    description: "Render HTML and CSS with Blitz, or display Markdown documents inside your app.",
+    description:
+      "Render HTML and CSS with Blitz, or display Markdown documents inside your app.",
     href: "https://github.com/marc2332/freya/tree/main/examples/feature_html",
     label: "HTML example",
   },
   {
     title: "Camera & video",
     icon: "camera",
-    description: "Capture webcam frames or play video with audio using optional media integrations.",
+    description:
+      "Capture webcam frames or play video with audio using optional media integrations.",
     href: "https://docs.rs/freya-video/latest/freya_video/",
     label: "Video docs",
   },
   {
     title: "Components & animation",
     icon: "components",
-    description: "Buttons, inputs, calendars, virtual lists, and more. Animate sizes, positions, and colors.",
+    description:
+      "Buttons, inputs, calendars, virtual lists, and more. Animate sizes, positions, and colors.",
     href: "/demo/",
     label: "Try the components",
   },
   {
     title: "Text & code editing",
     icon: "editor",
-    description: "Text selection, cursor control, rich editing, and a code editor with tree-sitter highlighting.",
+    description:
+      "Text selection, cursor control, rich editing, and a code editor with tree-sitter highlighting.",
     href: "https://docs.rs/freya-code-editor/latest/freya_code_editor/",
     label: "Code editor docs",
   },
   {
     title: "Testing & devtools",
     icon: "testing",
-    description: "Test interactions headlessly. Inspect the component tree, layout, and performance as you build.",
+    description:
+      "Test interactions headlessly. Inspect the component tree, layout, and performance as you build.",
     href: "https://docs.rs/freya-testing/latest/freya_testing/",
     label: "Testing docs",
   },
   {
     title: "Docs & examples",
     icon: "docs",
-    description: "API references, guides, and runnable examples, from a counter to multi-window apps.",
+    description:
+      "API references, guides, and runnable examples, from a counter to multi-window apps.",
     href: `${docsUrl}/`,
     label: "Read the docs",
   },
   {
     title: "AI-ready",
     icon: "ai",
-    description: "Give your coding assistant the Freya skill or llms.txt so it can work with the right APIs.",
+    description:
+      "Give your coding assistant the Freya skill or llms.txt so it can work with the right APIs.",
     href: `${docsUrl}/_docs/ai/index.html`,
     label: "Set up your assistant",
   },
   {
     title: "Charts & plotting",
     icon: "charts",
-    description: "Build charts, graphs, and interactive data visualizations with the Plotters integration.",
+    description:
+      "Build charts, graphs, and interactive data visualizations with the Plotters integration.",
     href: "https://docs.rs/freya-plotters-backend/latest/freya_plotters_backend/",
     label: "Plotters docs",
   },
   {
     title: "Icons",
     icon: "icons",
-    description: "Use Lucide icons in your components, with control over their size and color.",
+    description:
+      "Use Lucide icons in your components, with control over their size and color.",
     href: "https://docs.rs/freya-icons/latest/freya_icons/",
     label: "Icon docs",
   },
   {
     title: "Internationalization",
     icon: "language",
-    description: "Translate your app with Fluent and switch languages while it is running.",
+    description:
+      "Translate your app with Fluent and switch languages while it is running.",
     href: "https://docs.rs/freya-i18n/latest/freya_i18n/",
     label: "Internationalization docs",
   },
   {
     title: "Accessibility",
     icon: "accessibility",
-    description: "AccessKit integration, accessible roles and labels, keyboard navigation, and focus management.",
+    description:
+      "AccessKit integration, accessible roles and labels, keyboard navigation, and focus management.",
     href: "https://github.com/marc2332/freya/blob/main/examples/accessibility.rs",
     label: "Accessibility example",
   },
   {
     title: "Theming",
     icon: "palette",
-    description: "Share colors and typography across components, create custom themes, and switch them at runtime.",
+    description:
+      "Share colors and typography across components, create custom themes, and switch them at runtime.",
     href: "https://github.com/marc2332/freya/blob/main/examples/theme_definition.rs",
     label: "Custom theme example",
   },
   {
     title: "Shaders & custom drawing",
     icon: "drawing",
-    description: "Write Skia shaders, draw on the canvas, and add gradients, shadows, and blur to your UI.",
+    description:
+      "Write Skia shaders, draw on the canvas, and add gradients, shadows, and blur to your UI.",
     href: "https://github.com/marc2332/freya/blob/main/examples/style_shader_fill.rs",
     label: "Shader example",
   },
   {
     title: "Docking & resizable panels",
     icon: "panels",
-    description: "Build tabbed workspaces with dockable panels, split layouts, and draggable resize handles.",
+    description:
+      "Build tabbed workspaces with dockable panels, split layouts, and draggable resize handles.",
     href: "https://github.com/marc2332/freya/blob/main/examples/component_docking.rs",
     label: "Docking example",
   },
   {
     title: "Drag & drop",
     icon: "drag",
-    description: "Move typed data between drag sources and drop targets, or handle files dropped into your app.",
+    description:
+      "Move typed data between drag sources and drop targets, or handle files dropped into your app.",
     href: "https://github.com/marc2332/freya/blob/main/examples/component_drag_drop.rs",
     label: "Drag and drop example",
   },
   {
     title: "Material Design",
     icon: "design",
-    description: "Add Material Design components and effects, including ripples, to your app.",
+    description:
+      "Add Material Design components and effects, including ripples, to your app.",
     href: "https://docs.rs/freya-material-design/latest/freya_material_design/",
     label: "Material Design docs",
   },
@@ -446,9 +468,10 @@ const features = [
 <style>
   .hero {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     align-items: center;
-    gap: 3rem;
-    padding: 3.5rem 0 2rem;
+    gap: 2rem;
+    padding: 1.5rem 0;
   }
 
   .hero-preview {
@@ -456,6 +479,12 @@ const features = [
     width: 100%;
     max-width: 440px;
     justify-self: center;
+  }
+
+  .hero-preview video {
+    display: block;
+    width: 100%;
+    height: auto;
   }
 
   .platforms, .platform {
@@ -537,10 +566,11 @@ const features = [
 
   .hero-example {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     align-items: center;
     gap: 1.5rem;
     min-width: 0;
-    padding: calc(1.25rem + 24px) calc(1.25rem + 4px);
+    padding: 1.5rem 0.75rem;
     border: 1px solid #29292c;
     border-radius: 1rem;
     background: #131315;
@@ -549,9 +579,9 @@ const features = [
   .example-code {
     min-width: 0;
     max-width: 100%;
-    width: max-content;
+    width: 100%;
     justify-self: center;
-    overflow: auto;
+    overflow-x: auto;
     font-size: 0.75rem;
   }
 
@@ -576,6 +606,15 @@ const features = [
   }
 
   @media (min-width: 640px) {
+    .hero {
+      gap: 3rem;
+      padding: 3.5rem 0 2rem;
+    }
+
+    .hero-example {
+      padding: calc(1.25rem + 24px) calc(1.25rem + 4px);
+    }
+
     .capability-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -587,8 +626,12 @@ const features = [
     }
 
     .hero-example {
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 2rem;
+    }
+
+    .example-code {
+      width: max-content;
     }
   }
 </style>

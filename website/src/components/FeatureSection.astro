@@ -23,8 +23,16 @@ const {
   actionLabel,
 } = Astro.props;
 
-const mediaClass = compact ? "feature-media w-full" : wide ? "w-full lg:w-[81%]" : "w-full lg:w-[64%]";
-const textClass = compact ? "w-full p-4" : wide ? "w-full lg:w-[19%]" : "w-full lg:w-[36%]";
+const mediaClass = compact
+  ? "feature-media w-full"
+  : wide
+    ? "w-full lg:w-[81%]"
+    : "w-full lg:w-[64%]";
+const textClass = compact
+  ? "w-full p-4"
+  : wide
+    ? "w-full lg:w-[19%]"
+    : "w-full lg:w-[36%]";
 const dialogId = `media-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
 ---
 
