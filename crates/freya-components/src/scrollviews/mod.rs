@@ -8,6 +8,9 @@ mod virtual_scrollview;
 pub use scrollbar::*;
 pub use scrollthumb::*;
 pub use scrollview::*;
-pub use shared::Axis;
+pub use shared::{
+    Axis,
+    EnclosingScrollViews,
+};
 pub use use_scroll_controller::*;
 pub use virtual_scrollview::*;
