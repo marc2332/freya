@@ -253,6 +253,7 @@ impl CornerRadiusExt for Button {
 impl Component for Button {
     fn render(&self) -> impl IntoElement {
         let mut hovering = use_state(|| false);
+        let mut pressing = use_state(|| false);
         let a11y_id = use_a11y();
         let focus = use_focus(a11y_id);
 
@@ -307,7 +308,9 @@ impl Component for Button {
                 .width(1.)
                 .alignment(BorderAlignment::Inner)
         };
-        let background = if enabled() && hovering() {
+        let background = if enabled() && pressing() {
+            theme_colors.hover_background * 0.92
+        } else if enabled() && hovering() {
             theme_colors.hover_background
         } else {
             theme_colors.background
@@ -328,10 +331,21 @@ impl Component for Button {
             .color(theme_colors.color.mul_if(!self.enabled, 0.9))
             .center()
             .maybe(self.enabled, |rect| {
-                rect.map(self.on_pointer_down.clone(), |rect, on_pointer_down| {
-                    rect.on_pointer_down(move |e: Event<PointerEventData>| {
-                        on_pointer_down.call(e);
-                    })
+                rect.on_pointer_down({
+                    let on_pointer_down = self.on_pointer_down.clone();
+                    move |e: Event<PointerEventData>| {
+                        if e.data().is_primary() {
+                            pressing.set_if_modified(true);
+                        }
+                        if let Some(on_pointer_down) = &on_pointer_down {
+                            on_pointer_down.call(e);
+                        }
+                    }
+                })
+                .on_key_down(move |e: Event<KeyboardEventData>| {
+                    if e.is_press_event() {
+                        pressing.set_if_modified(true);
+                    }
                 })
                 .map(self.on_secondary_down.clone(), |el, on_secondary_down| {
                     el.on_secondary_down(move |e: Event<PressEventData>| {
@@ -361,9 +375,20 @@ impl Component for Button {
                     }
                 })
                 .on_pointer_over(move |_| {
-                    hovering.set(true);
+                    hovering.set_if_modified(true);
                 })
             })
+            .on_global_pointer_up(move |e: Event<PointerEventData>| {
+                if e.data().is_primary() {
+                    pressing.set_if_modified(false);
+                }
+            })
+            .on_global_key_up(move |e: Event<KeyboardEventData>| {
+                if e.is_press_event() {
+                    pressing.set_if_modified(false);
+                }
+            })
+            .on_pointer_leave(move |_| pressing.set_if_modified(false))
             .on_pointer_out(move |_| hovering.set_if_modified(false))
             .cursor(if self.enabled {
                 self.cursor_icon
