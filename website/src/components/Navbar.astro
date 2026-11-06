@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import PostDate from "./PostDate.astro";
 
 export interface Props {
   sticky?: boolean;
@@ -44,9 +45,7 @@ const latestRecentPost = (await getCollection("blog"))
               title={latestRecentPost.data.title}
             >
               <span class="truncate text-white">{latestRecentPost.data.title}</span>
-              <time class="shrink-0 text-stone-400" datetime={latestRecentPost.data.date.toISOString()}>
-                {latestRecentPost.data.date.toLocaleDateString()}
-              </time>
+              <PostDate class="shrink-0 text-stone-400" date={latestRecentPost.data.date} />
             </a>
           )
         }

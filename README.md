@@ -15,13 +15,7 @@
 Latest stable release:
 
 ```toml
-freya = "0.4"
-```
-
-Next release:
-
-```toml
-freya = "0.5.0-rc.13"
+freya = "0.5"
 ```
 
 `main` branch:
