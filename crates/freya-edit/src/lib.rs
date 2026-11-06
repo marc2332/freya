@@ -3,6 +3,7 @@ mod editor_history;
 mod event;
 mod rope_editor;
 mod text_editor;
+mod touch;
 mod use_editable;
 
 pub use config::*;
@@ -15,4 +16,5 @@ pub use ropey::{
     RopeSlice,
 };
 pub use text_editor::*;
+pub use touch::*;
 pub use use_editable::*;
