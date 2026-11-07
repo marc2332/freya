@@ -177,3 +177,4 @@ allow-build-scripts = [
 [sources]
 unknown-registry = "deny"
 unknown-git = "deny"
+allow-git = ["https://github.com/marc2332/accesskit"]
