@@ -39,7 +39,7 @@ ragnarok = { workspace = true }
 keyboard-types = { workspace = true }
 
 # Accessibility
-accesskit_winit = { workspace = true, optional = true }
+accesskit_xplat = { workspace = true, optional = true }
 accesskit = { workspace = true }
 
 # Other
@@ -139,7 +139,7 @@ gpu = [
   "dep:objc2-quartz-core",
   "dep:objc2-app-kit",
 ]
-accessibility = ["dep:accesskit_winit"]
+accessibility = ["dep:accesskit_xplat"]
 hotpath = ["hotpath/hotpath"]
 hotreload = ["freya-core/hotreload"]
 tray = ["dep:tray-icon"]

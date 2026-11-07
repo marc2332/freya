@@ -11,7 +11,7 @@ use std::{
 };
 
 #[cfg(feature = "accessibility")]
-use accesskit_winit::Adapter;
+use accesskit_xplat::Adapter;
 use freya_components::{
     cache::AssetCacher,
     integration::integration,
@@ -45,10 +45,14 @@ use ragnarok::{
     EventsMeasurerRunner,
     NodesState,
 };
+#[cfg(all(feature = "accessibility", not(target_os = "android")))]
+use raw_window_handle::HasWindowHandle;
 use torin::prelude::{
     CursorPoint,
     Size2D,
 };
+#[cfg(all(feature = "accessibility", target_os = "android"))]
+use winit::platform::android::ActiveEventLoopExtAndroid;
 use winit::{
     dpi::{
         LogicalPosition,
@@ -68,6 +72,8 @@ use winit::{
     },
 };
 
+#[cfg(feature = "accessibility")]
+use crate::renderer::AccessibilityEventHandler;
 use crate::{
     accessibility::AccessibilityTask,
     config::{
@@ -114,7 +120,7 @@ pub struct AppWindow {
 
     pub(crate) accessibility: AccessibilityTree,
     #[cfg(feature = "accessibility")]
-    pub(crate) accessibility_adapter: accesskit_winit::Adapter,
+    pub(crate) accessibility_adapter: Adapter,
     pub(crate) accessibility_tasks_for_next_render: AccessibilityTask,
     #[cfg(feature = "accessibility")]
     pub(crate) screen_reader: ScreenReader,
@@ -155,6 +161,41 @@ fn clamp_custom_scale_factor(custom_scale_factor: f64) -> f64 {
 }
 
 impl AppWindow {
+    #[cfg(feature = "accessibility")]
+    pub(crate) fn process_accessibility_window_event(&mut self, event: &winit::event::WindowEvent) {
+        use winit::event::WindowEvent;
+
+        match event {
+            WindowEvent::Focused(is_focused) => {
+                self.accessibility_adapter.set_focus(*is_focused);
+            }
+            WindowEvent::Moved(_) | WindowEvent::Resized(_) => {
+                let outer_position = match event {
+                    WindowEvent::Moved(position) => *position,
+                    _ => self.window.outer_position().unwrap_or_default(),
+                };
+                let inner_size = match event {
+                    WindowEvent::Resized(size) => *size,
+                    _ => self.window.inner_size(),
+                };
+                let outer_position: (_, _) = outer_position.cast::<f64>().into();
+                let outer_size: (_, _) = self.window.outer_size().cast::<f64>().into();
+                let inner_position: (_, _) = self
+                    .window
+                    .inner_position()
+                    .unwrap_or_default()
+                    .cast::<f64>()
+                    .into();
+                let inner_size: (_, _) = inner_size.cast::<f64>().into();
+                self.accessibility_adapter.set_window_bounds(
+                    accesskit::Rect::from_origin_size(outer_position, outer_size),
+                    accesskit::Rect::from_origin_size(inner_position, inner_size),
+                );
+            }
+            _ => {}
+        }
+    }
+
     pub(crate) fn process_accessibility_update(&mut self, mode: Option<NavigationMode>) {
         let title = self.window.title();
         let update =
@@ -361,8 +402,19 @@ impl AppWindow {
         );
 
         #[cfg(feature = "accessibility")]
-        let accessibility_adapter =
-            Adapter::with_event_loop_proxy(active_event_loop, &window, event_loop_proxy.clone());
+        let accessibility_adapter = Adapter::with_combined_handler(
+            #[cfg(target_os = "android")]
+            active_event_loop.android_app(),
+            #[cfg(not(target_os = "android"))]
+            window
+                .window_handle()
+                .expect("The newly created window must have a window handle")
+                .as_raw(),
+            Arc::new(AccessibilityEventHandler {
+                window_id: window.id(),
+                proxy: event_loop_proxy.clone(),
+            }),
+        );
 
         window.set_visible(true);
 

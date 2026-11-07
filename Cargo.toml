@@ -184,7 +184,7 @@ softbuffer = "0.4.8"
 
 # accessibility
 accesskit = "0.25.1"
-accesskit_winit = "0.34.0"
+accesskit_xplat = "0.2.1"
 
 # Performance
 hotpath = "0.30.0"
