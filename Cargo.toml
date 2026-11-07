@@ -180,8 +180,8 @@ ash-window = "0.13.0"
 softbuffer = "0.4.8"
 
 # accessibility
-accesskit = "0.25.1"
-accesskit_winit = "0.34.0"
+accesskit = { git = "https://github.com/marc2332/accesskit", branch = "perf/faster-children-changes-notify" }
+accesskit_winit = { git = "https://github.com/marc2332/accesskit", branch = "perf/faster-children-changes-notify" }
 
 # Performance
 hotpath = "0.30.0"
