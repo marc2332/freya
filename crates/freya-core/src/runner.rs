@@ -738,11 +738,8 @@ impl Runner {
                 }
             });
 
-            let path_element = PathElement::from_element(
-                vec![0],
-                element,
-                scope_rc.borrow().element.as_ref(),
-            );
+            let path_element =
+                PathElement::from_element(vec![0], element, scope_rc.borrow().element.as_ref());
             let mut diff = Diff::default();
             path_element.diff(scope_rc.borrow().element.as_ref(), &mut diff);
 
@@ -907,11 +904,8 @@ impl Runner {
                     )
                 });
 
-                let path_element = PathElement::from_element(
-                    vec![0],
-                    element,
-                    scope_rc.borrow().element.as_ref(),
-                );
+                let path_element =
+                    PathElement::from_element(vec![0], element, scope_rc.borrow().element.as_ref());
                 let mut diff = Diff::default();
                 path_element.diff(scope_rc.borrow().element.as_ref(), &mut diff);
 
