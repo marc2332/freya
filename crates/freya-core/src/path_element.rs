@@ -18,10 +18,13 @@ use crate::{
 #[derive(Debug)]
 pub enum PathChildren {
     Owned(Box<[PathElement]>),
-    Retained {
-        source: Rc<Vec<Element>>,
-        elements: Rc<[PathElement]>,
-    },
+    Retained(Rc<RetainedPathChildren>),
+}
+
+#[derive(Debug)]
+pub struct RetainedPathChildren {
+    source: Rc<Vec<Element>>,
+    elements: Box<[PathElement]>,
 }
 
 impl std::ops::Deref for PathChildren {
@@ -30,7 +33,7 @@ impl std::ops::Deref for PathChildren {
     fn deref(&self) -> &Self::Target {
         match self {
             Self::Owned(children) => children,
-            Self::Retained { elements, .. } => elements,
+            Self::Retained(children) => &children.elements,
         }
     }
 }
@@ -110,7 +113,9 @@ impl PathElement {
                 key,
             } => {
                 let previous = previous.filter(|previous| {
-                    previous.key() == &key && previous.path() == path.as_slice()
+                    !matches!(&elements, ElementChildren::Owned(children) if children.is_empty())
+                        && previous.key() == &key
+                        && previous.path() == path.as_slice()
                 });
                 let convert_child = |(index, child)| {
                     let mut child_path = Vec::with_capacity(path.len() + 1);
@@ -132,26 +137,25 @@ impl PathElement {
                             .collect(),
                     ),
                     ElementChildren::Retained(source) => {
-                        let elements = match previous {
+                        let children = match previous {
                             Some(Self::Element {
-                                elements:
-                                    PathChildren::Retained {
-                                        source: previous_source,
-                                        elements,
-                                    },
+                                elements: PathChildren::Retained(previous),
                                 ..
-                            }) if Rc::ptr_eq(&source, previous_source) => {
+                            }) if Rc::ptr_eq(&source, &previous.source) => {
                                 elements_changed = false;
-                                elements.clone()
+                                previous.clone()
                             }
-                            _ => source
-                                .iter()
-                                .cloned()
-                                .enumerate()
-                                .map(convert_child)
-                                .collect(),
+                            _ => Rc::new(RetainedPathChildren {
+                                elements: source
+                                    .iter()
+                                    .cloned()
+                                    .enumerate()
+                                    .map(convert_child)
+                                    .collect(),
+                                source,
+                            }),
                         };
-                        PathChildren::Retained { source, elements }
+                        PathChildren::Retained(children)
                     }
                 };
                 Self::Element {
@@ -191,14 +195,11 @@ impl DiffNode for PathElement {
         match (self, previous) {
             (
                 Self::Element {
-                    elements: PathChildren::Retained { elements, .. },
+                    elements: PathChildren::Retained(elements),
                     ..
                 },
                 Self::Element {
-                    elements:
-                        PathChildren::Retained {
-                            elements: previous, ..
-                        },
+                    elements: PathChildren::Retained(previous),
                     ..
                 },
             ) => Rc::ptr_eq(elements, previous),
