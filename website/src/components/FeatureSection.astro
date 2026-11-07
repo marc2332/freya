@@ -4,6 +4,7 @@ export interface Props {
   description: string;
   mediaUrl: string;
   mediaType: "image" | "video";
+  compact?: boolean;
   reverse?: boolean;
   wide?: boolean;
   actionUrl?: string;
@@ -15,19 +16,28 @@ const {
   description,
   mediaUrl,
   mediaType,
+  compact = false,
   reverse = false,
   wide = false,
   actionUrl,
   actionLabel,
 } = Astro.props;
 
-const mediaClass = wide ? "w-full lg:w-[81%]" : "w-full lg:w-[64%]";
-const textClass = wide ? "w-full lg:w-[19%]" : "w-full lg:w-[36%]";
+const mediaClass = compact
+  ? "feature-media w-full"
+  : wide
+    ? "w-full lg:w-[81%]"
+    : "w-full lg:w-[64%]";
+const textClass = compact
+  ? "w-full p-4"
+  : wide
+    ? "w-full lg:w-[19%]"
+    : "w-full lg:w-[36%]";
 const dialogId = `media-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
 ---
 
 <section
-  class={`fade-in-section flex flex-col ${reverse ? "lg:flex-row-reverse" : "lg:flex-row"} items-center gap-8 lg:gap-14 py-12 lg:py-20`}
+  class={compact ? "feature-card overflow-hidden rounded-xl border border-stone-800 bg-custom-dark-gray" : `fade-in-section flex flex-col ${reverse ? "lg:flex-row-reverse" : "lg:flex-row"} items-center gap-8 lg:gap-14 py-12 lg:py-20`}
 >
   <div class={mediaClass}>
     {
@@ -86,11 +96,11 @@ const dialogId = `media-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
     }
   </div>
   <div class={textClass}>
-    <h2 class="text-2xl lg:text-3xl font-bold mb-4 text-white">{title}</h2>
-    <p class="text-stone-400 text-lg leading-relaxed">{description}</p>
+    {compact ? <h3 class="text-base font-semibold mb-2 text-white">{title}</h3> : <h2 class="text-2xl lg:text-3xl font-bold mb-4 text-white">{title}</h2>}
+    <p class:list={["text-stone-400 leading-relaxed", compact ? "text-sm" : "text-lg"]}>{description}</p>
     {actionUrl && actionLabel && (
       <a
-        class="inline-block mt-6 rounded-lg bg-emerald-400 px-6 py-2 text-black hover:bg-emerald-500 transition-colors"
+        class={compact ? "inline-block mt-3 text-sm text-emerald-300 hover:text-emerald-200" : "inline-block mt-6 rounded-lg bg-emerald-400 px-6 py-2 text-black hover:bg-emerald-500 transition-colors"}
         href={actionUrl}
       >
         {actionLabel}
@@ -98,3 +108,27 @@ const dialogId = `media-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
     )}
   </div>
 </section>
+
+<style>
+  .feature-card {
+    border-color: #29292c;
+  }
+
+  .feature-media :global(button > img),
+  .feature-media :global(button > video) {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    object-fit: contain;
+    border: 0;
+    border-bottom: 1px solid #222225;
+    border-radius: 0;
+    box-shadow: none;
+    background: #101012;
+  }
+
+  .feature-card button:focus-visible,
+  .feature-card a:focus-visible {
+    outline: 2px solid #7dd3fc;
+    outline-offset: -3px;
+  }
+</style>
