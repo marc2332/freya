@@ -83,7 +83,12 @@ where
             return;
         };
 
-        if let Some(measurer) = self.measurer {
+        if self
+            .tree_adapter
+            .read_node(&node_id, |node, _| node.has_layout_references)
+            .unwrap_or(false)
+            && let Some(measurer) = self.measurer
+        {
             measurer.notify_layout_references(node_id, area, visible_area, inner_sizes);
         }
     }
