@@ -29,7 +29,7 @@ struct WaylandFeedback {
 }
 
 /// Read the compositor's preferred DRM device.
-pub(crate) fn preferred_device(window: &Window) -> Option<DrmDevice> {
+pub(crate) fn preferred_device(window: &dyn Window) -> Option<DrmDevice> {
     let RawDisplayHandle::Wayland(display) = window.display_handle().ok()?.as_raw() else {
         return None;
     };

@@ -58,16 +58,16 @@ pub struct SoftwareDriver {
 
 impl SoftwareDriver {
     pub fn new(
-        event_loop: &ActiveEventLoop,
+        event_loop: &dyn ActiveEventLoop,
         window_attributes: WindowAttributes,
-    ) -> Result<(Self, Window), Box<dyn std::error::Error>> {
+    ) -> Result<(Self, Box<dyn Window>), Box<dyn std::error::Error>> {
         let window = event_loop.create_window(window_attributes)?;
-        let driver = Self::from_window(&window)?;
+        let driver = Self::from_window(window.as_ref())?;
         Ok((driver, window))
     }
 
     /// Build the driver on an existing window instead of creating a new one.
-    pub fn from_window(window: &Window) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn from_window(window: &dyn Window) -> Result<Self, Box<dyn std::error::Error>> {
         let display_handle = window.display_handle()?.as_raw();
         let window_handle = window.window_handle()?.as_raw();
 
@@ -76,7 +76,7 @@ impl SoftwareDriver {
         let mut surface = softbuffer::Surface::new(&context, WindowHandleWrapper(window_handle))
             .map_err(|err| format!("Could not create softbuffer surface: {err}"))?;
 
-        let size = window.inner_size();
+        let size = window.surface_size();
         if let (Some(width), Some(height)) =
             (NonZeroU32::new(size.width), NonZeroU32::new(size.height))
         {
@@ -94,7 +94,7 @@ impl SoftwareDriver {
     }
 
     #[cfg(any(target_os = "linux", target_os = "windows"))]
-    fn wait_for_display(&mut self, window: &Window) {
+    fn wait_for_display(&mut self, window: &dyn Window) {
         #[cfg(target_os = "windows")]
         // SAFETY: `DwmFlush` takes no arguments and only blocks until the next composition.
         if unsafe { DwmFlush() } >= 0 {
@@ -107,7 +107,7 @@ impl SoftwareDriver {
     pub fn present(
         &mut self,
         size: PhysicalSize<u32>,
-        window: &Window,
+        window: &dyn Window,
         render: impl FnOnce(&mut SkiaSurface),
     ) {
         self.present_frame(size, window, render);
@@ -120,7 +120,7 @@ impl SoftwareDriver {
     fn present_frame(
         &mut self,
         size: PhysicalSize<u32>,
-        window: &Window,
+        window: &dyn Window,
         render: impl FnOnce(&mut SkiaSurface),
     ) {
         let (Some(width), Some(height)) =

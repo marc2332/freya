@@ -41,7 +41,7 @@ use futures_util::task::{
     waker,
 };
 
-use crate::winit::event_loop::EventLoopProxy;
+use crate::renderer::NativeEventProxy;
 
 pub mod winit {
     pub use winit::*;
@@ -96,12 +96,13 @@ fn launch_inner(mut launch_config: LaunchConfig) {
     use winit::event_loop::EventLoop;
 
     let event_loop = launch_config.event_loop.take().unwrap_or_else(|| {
-        EventLoop::<NativeEvent>::with_user_event()
+        EventLoop::builder()
             .build()
             .expect("Failed to create event loop.")
     });
 
-    let proxy = event_loop.create_proxy();
+    let (sender, receiver) = std::sync::mpsc::channel();
+    let proxy = NativeEventProxy::new(event_loop.create_proxy(), sender);
 
     let mut font_collection = FontCollection::new();
     let def_mgr = FontMgr::default();
@@ -118,7 +119,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
     font_collection.set_dynamic_font_manager(font_mgr.clone());
     font_collection.paragraph_cache_mut().turn_on(false);
 
-    struct FuturesWaker(EventLoopProxy<NativeEvent>);
+    struct FuturesWaker(NativeEventProxy);
 
     impl ArcWake for FuturesWaker {
         fn wake_by_ref(arc_self: &Arc<Self>) {
@@ -152,7 +153,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
         global_tasks.spawn(task(LaunchProxy(proxy.clone())));
     }
 
-    let mut renderer = WinitRenderer {
+    let renderer = WinitRenderer {
         windows: HashMap::default(),
         global_contexts,
         #[cfg(feature = "tray")]
@@ -161,6 +162,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
         tray_icon: None,
         resumed: false,
         proxy,
+        events: receiver,
         font_provider: provider,
         font_manager: font_mgr,
         font_collection,
@@ -190,5 +192,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
         }));
     }
 
-    event_loop.run_app(&mut renderer).unwrap();
+    event_loop
+        .run_app(renderer)
+        .expect("Failed to run event loop");
 }

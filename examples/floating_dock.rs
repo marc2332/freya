@@ -12,7 +12,7 @@ use std::{
 
 #[cfg(target_os = "linux")]
 use freya::winit::platform::x11::{
-    WindowAttributesExtX11,
+    WindowAttributesX11,
     WindowType,
 };
 #[cfg(target_os = "linux")]
@@ -37,7 +37,10 @@ fn main() {
                 .with_transparency(true)
                 .with_window_attributes(move |attributes, _| {
                     attributes
-                        .with_x11_window_type(vec![WindowType::Dock])
+                        .with_platform_attributes(Box::new(
+                            WindowAttributesX11::default()
+                                .with_x11_window_type(vec![WindowType::Dock]),
+                        ))
                         .with_window_level(WindowLevel::AlwaysOnTop)
                         .with_position(LogicalPosition { x: 54, y: 32 })
                 }),

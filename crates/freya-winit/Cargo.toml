@@ -26,6 +26,7 @@ bytes = { workspace = true }
 # Window
 raw-window-handle = { workspace = true }
 winit = { workspace = true }
+url = { workspace = true }
 freya-engine = { workspace = true }
 
 # Software rendering
@@ -91,7 +92,6 @@ windows-sys = { version = "0.60", features = ["Win32_Graphics_Dwm"] }
 [target.'cfg(any(target_os = "linux", target_os = "windows"))'.dependencies]
 gl = { workspace = true, optional = true }
 glutin = { workspace = true, optional = true }
-glutin-winit = { workspace = true, optional = true }
 ash = { workspace = true, optional = true }
 ash-window = { workspace = true, optional = true }
 
@@ -99,7 +99,6 @@ ash-window = { workspace = true, optional = true }
 [target.'cfg(target_os = "android")'.dependencies]
 gl = { workspace = true, optional = true }
 glutin = { workspace = true, optional = true }
-glutin-winit = { workspace = true, optional = true }
 freya-engine = { workspace = true, features = ["gl"], optional = true }
 
 # Rendering Metal (macOS)
@@ -128,7 +127,6 @@ gpu = [
   "dep:freya-engine",
   "dep:gl",
   "dep:glutin",
-  "dep:glutin-winit",
   "dep:ash",
   "dep:ash-window",
   "dep:libc",

@@ -17,27 +17,25 @@ pub use keyboard_types::{
     Key,
     Modifiers,
 };
-use winit::{
-    event_loop::EventLoopProxy,
-    window::{
-        Window,
-        WindowId,
-    },
+use winit::window::{
+    Window,
+    WindowId,
 };
 
 use crate::renderer::{
     NativeEvent,
+    NativeEventProxy,
     NativeWindowEvent,
     NativeWindowEventAction,
 };
 
 #[derive(Clone)]
 pub struct PluginHandle {
-    pub proxy: EventLoopProxy<NativeEvent>,
+    pub proxy: NativeEventProxy,
 }
 
 impl PluginHandle {
-    pub fn new(proxy: &EventLoopProxy<NativeEvent>) -> Self {
+    pub fn new(proxy: &NativeEventProxy) -> Self {
         Self {
             proxy: proxy.clone(),
         }
@@ -83,7 +81,7 @@ impl PluginsManager {
     /// Observer reporting every tasks polling batch of a [Runner] as plugin events.
     pub fn tasks_poll_observer<'a>(
         &'a mut self,
-        window: &'a Window,
+        window: &'a dyn Window,
         handle: PluginHandle,
     ) -> impl FnMut(TasksPollStage) + 'a {
         move |stage| {
@@ -107,12 +105,10 @@ impl PluginsManager {
 /// Event emitted to Plugins.
 pub enum PluginEvent<'a> {
     /// A runner just got created.
-    RunnerCreated {
-        runner: &'a mut Runner,
-    },
+    RunnerCreated { runner: &'a mut Runner },
     /// A Window just got created.
     WindowCreated {
-        window: &'a Window,
+        window: &'a dyn Window,
         font_collection: &'a FontCollection,
         tree: &'a Tree,
         animation_clock: &'a AnimationClock,
@@ -123,41 +119,41 @@ pub enum PluginEvent<'a> {
 
     /// The graphics driver was rebuilt at runtime.
     GraphicsDriverChanged {
-        window: &'a Window,
+        window: &'a dyn Window,
         graphics_driver: &'static str,
         gpu_name: Option<&'a str>,
     },
 
     /// A Window just got closed.
     WindowClosed {
-        window: &'a Window,
+        window: &'a dyn Window,
         tree: &'a Tree,
     },
 
     /// After having rendered, presented and everything else.
     AfterRedraw {
-        window: &'a Window,
+        window: &'a dyn Window,
         font_collection: &'a FontCollection,
         tree: &'a Tree,
     },
 
     /// Before presenting the canvas to the window.
     BeforePresenting {
-        window: &'a Window,
+        window: &'a dyn Window,
         font_collection: &'a FontCollection,
         tree: &'a Tree,
     },
 
     /// After presenting the canvas to the window.
     AfterPresenting {
-        window: &'a Window,
+        window: &'a dyn Window,
         font_collection: &'a FontCollection,
         tree: &'a Tree,
     },
 
     /// Before starting to render the app to the Canvas.
     BeforeRender {
-        window: &'a Window,
+        window: &'a dyn Window,
         canvas: &'a Canvas,
         font_collection: &'a FontCollection,
         tree: &'a Tree,
@@ -165,7 +161,7 @@ pub enum PluginEvent<'a> {
 
     /// After rendering the app to the Canvas.
     AfterRender {
-        window: &'a Window,
+        window: &'a dyn Window,
         canvas: &'a Canvas,
         font_collection: &'a FontCollection,
         tree: &'a Tree,
@@ -175,63 +171,59 @@ pub enum PluginEvent<'a> {
 
     /// Before starting to measure the layout.
     StartedMeasuringLayout {
-        window: &'a Window,
+        window: &'a dyn Window,
         tree: &'a Tree,
     },
 
     /// After measuringg the layout.
     FinishedMeasuringLayout {
-        window: &'a Window,
+        window: &'a dyn Window,
         tree: &'a Tree,
     },
 
     /// Before starting to process the queued events.
     StartedMeasuringEvents {
-        window: &'a Window,
+        window: &'a dyn Window,
         tree: &'a Tree,
     },
 
     /// After processing the queued events.
     FinishedMeasuringEvents {
-        window: &'a Window,
+        window: &'a dyn Window,
         tree: &'a Tree,
     },
 
     StartedUpdatingTree {
-        window: &'a Window,
+        window: &'a dyn Window,
         tree: &'a Tree,
     },
 
     FinishedUpdatingTree {
-        window: &'a Window,
+        window: &'a dyn Window,
         tree: &'a Tree,
     },
 
     /// Before starting to poll a batch of async tasks.
-    StartedPollingTasks {
-        window: &'a Window,
-    },
+    StartedPollingTasks { window: &'a dyn Window },
 
     /// After polling a batch of async tasks.
-    FinishedPollingTasks {
-        window: &'a Window,
-    },
+    FinishedPollingTasks { window: &'a dyn Window },
 
     BeforeAccessibility {
-        window: &'a Window,
+        window: &'a dyn Window,
         font_collection: &'a FontCollection,
         tree: &'a Tree,
     },
 
     AfterAccessibility {
-        window: &'a Window,
+        window: &'a dyn Window,
         font_collection: &'a FontCollection,
         tree: &'a Tree,
     },
 
     /// A keyboard input was received.
     KeyboardInput {
-        window: &'a Window,
+        window: &'a dyn Window,
         key: Key,
         code: Code,
         modifiers: Modifiers,

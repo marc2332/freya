@@ -32,10 +32,12 @@ use winit::dpi::{
 use winit::{
     application::ApplicationHandler,
     event::{
+        ButtonSource,
         ElementState,
         Ime,
         MouseScrollDelta,
-        Touch,
+        PointerKind,
+        PointerSource,
         TouchPhase,
         WindowEvent,
     },
@@ -79,6 +81,27 @@ use crate::{
     },
 };
 
+#[derive(Clone)]
+pub struct NativeEventProxy {
+    proxy: EventLoopProxy,
+    sender: std::sync::mpsc::Sender<NativeEvent>,
+}
+
+impl NativeEventProxy {
+    pub(crate) fn new(proxy: EventLoopProxy, sender: std::sync::mpsc::Sender<NativeEvent>) -> Self {
+        Self { proxy, sender }
+    }
+
+    pub fn send_event(
+        &self,
+        event: NativeEvent,
+    ) -> Result<(), std::sync::mpsc::SendError<NativeEvent>> {
+        self.sender.send(event)?;
+        self.proxy.wake_up();
+        Ok(())
+    }
+}
+
 pub struct WinitRenderer {
     pub windows_configs: Vec<WindowConfig>,
     #[cfg(feature = "tray")]
@@ -91,7 +114,8 @@ pub struct WinitRenderer {
     pub resumed: bool,
     pub windows: FxHashMap<WindowId, AppWindow>,
     pub global_contexts: GlobalContexts,
-    pub proxy: EventLoopProxy<NativeEvent>,
+    pub proxy: NativeEventProxy,
+    pub(crate) events: std::sync::mpsc::Receiver<NativeEvent>,
     pub plugins: PluginsManager,
     pub fallback_fonts: Vec<Cow<'static, str>>,
     pub font_provider: TypefaceFontProvider,
@@ -114,7 +138,7 @@ impl WinitRenderer {
             {
                 continue;
             }
-            app.event_buffer.interval = frame_interval(&app.window);
+            app.event_buffer.interval = frame_interval(app.window.as_ref());
             if app.process_buffered_events(
                 &mut self.font_collection,
                 &self.font_manager,
@@ -133,7 +157,7 @@ impl Drop for WinitRenderer {
         let tasks = self.global_contexts.get_context::<GlobalTasks>();
         tasks.clear();
         for window_id in self.windows.keys() {
-            Platform::get().unregister_window(*window_id);
+            Platform::get().unregister_window(window_id.into_raw() as u64);
         }
         self.windows.clear();
         // Cancel cleanup tasks spawned during window teardown.
@@ -145,12 +169,12 @@ impl Drop for WinitRenderer {
 pub struct RendererContext<'a> {
     pub windows: &'a mut FxHashMap<WindowId, AppWindow>,
     pub global_contexts: &'a GlobalContexts,
-    pub proxy: &'a mut EventLoopProxy<NativeEvent>,
+    pub proxy: &'a mut NativeEventProxy,
     pub plugins: &'a mut PluginsManager,
     pub fallback_fonts: &'a mut Vec<Cow<'static, str>>,
     pub font_manager: &'a mut FontMgr,
     pub font_collection: &'a mut FontCollection,
-    pub active_event_loop: &'a ActiveEventLoop,
+    pub active_event_loop: &'a dyn ActiveEventLoop,
     pub gpu_resource_cache_limit: usize,
     pub graphics_context: &'a mut GraphicsContext,
 }
@@ -210,7 +234,7 @@ pub enum NativeWindowEventAction {
 
 /// Proxy wrapper provided to launch tasks so they can post callbacks executed inside the renderer.
 #[derive(Clone)]
-pub struct LaunchProxy(pub EventLoopProxy<NativeEvent>);
+pub struct LaunchProxy(pub NativeEventProxy);
 
 impl LaunchProxy {
     /// Queue a callback to be run on the renderer thread with access to a [`RendererContext`].
@@ -290,7 +314,7 @@ pub enum NativeEvent {
 #[cfg(feature = "accessibility")]
 pub(crate) struct AccessibilityEventHandler {
     pub(crate) window_id: WindowId,
-    pub(crate) proxy: EventLoopProxy<NativeEvent>,
+    pub(crate) proxy: NativeEventProxy,
 }
 
 #[cfg(feature = "accessibility")]
@@ -305,8 +329,8 @@ impl accesskit_xplat::EventHandler for AccessibilityEventHandler {
     }
 }
 
-impl ApplicationHandler<NativeEvent> for WinitRenderer {
-    fn resumed(&mut self, active_event_loop: &winit::event_loop::ActiveEventLoop) {
+impl ApplicationHandler for WinitRenderer {
+    fn can_create_surfaces(&mut self, active_event_loop: &dyn winit::event_loop::ActiveEventLoop) {
         if !self.resumed {
             #[cfg(feature = "tray")]
             {
@@ -366,8 +390,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 );
 
                 let new_id = new_window.id();
-                Platform::get().unregister_window(old_id);
-                app_window.platform.id = new_id.into();
+                Platform::get().unregister_window(old_id.into_raw() as u64);
+                app_window.platform.id = new_id.into_raw() as u64;
                 app_window.platform.sender = Rc::new({
                     let proxy = self.proxy.clone();
                     move |event| {
@@ -398,9 +422,30 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
         }
     }
 
+    fn proxy_wake_up(&mut self, active_event_loop: &dyn ActiveEventLoop) {
+        while let Ok(event) = self.events.try_recv() {
+            self.user_event(active_event_loop, event);
+        }
+    }
+
+    fn about_to_wait(&mut self, event_loop: &dyn ActiveEventLoop) {
+        self.update_control_flow(event_loop);
+    }
+
+    fn window_event(
+        &mut self,
+        event_loop: &dyn winit::event_loop::ActiveEventLoop,
+        window_id: winit::window::WindowId,
+        event: winit::event::WindowEvent,
+    ) {
+        self.process_window_event(event_loop, window_id, event);
+    }
+}
+
+impl WinitRenderer {
     fn user_event(
         &mut self,
-        active_event_loop: &winit::event_loop::ActiveEventLoop,
+        active_event_loop: &dyn winit::event_loop::ActiveEventLoop,
         event: NativeEvent,
     ) {
         match event {
@@ -491,11 +536,11 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             let _ = ack.send(window_id);
                         }
                         NativePlatformErasedEventAction::CloseWindow(window_id) => {
-                            Platform::get().unregister_window(window_id);
+                            Platform::get().unregister_window(window_id.into_raw() as u64);
                             if let Some(app) = self.windows.remove(&window_id) {
                                 self.plugins.send(
                                     PluginEvent::WindowClosed {
-                                        window: &app.window,
+                                        window: app.window.as_ref(),
                                         tree: &app.tree,
                                     },
                                     PluginHandle::new(&self.proxy),
@@ -596,7 +641,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
         }
     }
 
-    fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
+    fn update_control_flow(&mut self, event_loop: &dyn ActiveEventLoop) {
         self.process_pending_events();
         if !matches!(event_loop.control_flow(), ControlFlow::Poll) {
             let deadline = self
@@ -611,9 +656,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
         }
     }
 
-    fn window_event(
+    fn process_window_event(
         &mut self,
-        event_loop: &winit::event_loop::ActiveEventLoop,
+        event_loop: &dyn winit::event_loop::ActiveEventLoop,
         window_id: winit::window::WindowId,
         event: winit::event::WindowEvent,
     ) {
@@ -662,11 +707,11 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     }
 
                     if matches!(decision, CloseDecision::Close) {
-                        Platform::get().unregister_window(window_id);
+                        Platform::get().unregister_window(window_id.into_raw() as u64);
                         if let Some(app) = self.windows.remove(&window_id) {
                             self.plugins.send(
                                 PluginEvent::WindowClosed {
-                                    window: &app.window,
+                                    window: app.window.as_ref(),
                                     tree: &app.tree,
                                 },
                                 PluginHandle::new(&self.proxy),
@@ -726,12 +771,12 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
 
                         let resource_cache = app.driver.resource_cache_usage();
                         let present_result = app.driver.present(
-                            app.window.inner_size().cast(),
-                            &app.window,
+                            app.window.surface_size().cast(),
+                            app.window.as_ref(),
                             |surface| {
                                 self.plugins.send(
                                     PluginEvent::BeforeRender {
-                                        window: &app.window,
+                                        window: app.window.as_ref(),
                                         canvas: surface.canvas(),
                                         font_collection: &self.font_collection,
                                         tree: &app.tree,
@@ -764,7 +809,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
 
                                 self.plugins.send(
                                     PluginEvent::AfterRender {
-                                        window: &app.window,
+                                        window: app.window.as_ref(),
                                         canvas: surface.canvas(),
                                         font_collection: &self.font_collection,
                                         tree: &app.tree,
@@ -780,7 +825,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
 
                                 self.plugins.send(
                                     PluginEvent::BeforePresenting {
-                                        window: &app.window,
+                                        window: app.window.as_ref(),
                                         font_collection: &self.font_collection,
                                         tree: &app.tree,
                                     },
@@ -797,7 +842,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
 
                         self.plugins.send(
                             PluginEvent::AfterPresenting {
-                                window: &app.window,
+                                window: app.window.as_ref(),
                                 font_collection: &self.font_collection,
                                 tree: &app.tree,
                             },
@@ -806,7 +851,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
 
                         self.plugins.send(
                             PluginEvent::BeforeAccessibility {
-                                window: &app.window,
+                                window: app.window.as_ref(),
                                 font_collection: &self.font_collection,
                                 tree: &app.tree,
                             },
@@ -832,13 +877,15 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                     &app.tree,
                                     &title,
                                 );
-                                app.window.set_ime_allowed(is_ime_role(focused_node.role()));
+                                let ime_allowed = is_ime_role(focused_node.role());
                                 app.platform
                                     .focused_accessibility_node
                                     .set_if_modified(focused_node);
 
                                 let area = layout_node.visible_area();
-                                app.window.set_ime_cursor_area(
+                                crate::integration::update_ime(
+                                    app.window.as_ref(),
+                                    ime_allowed,
                                     LogicalPosition::new(area.min_x(), area.min_y()),
                                     LogicalSize::new(area.width(), area.height()),
                                 );
@@ -854,7 +901,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
 
                         self.plugins.send(
                             PluginEvent::AfterAccessibility {
-                                window: &app.window,
+                                window: app.window.as_ref(),
                                 font_collection: &self.font_collection,
                                 tree: &app.tree,
                             },
@@ -865,7 +912,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
 
                         self.plugins.send(
                             PluginEvent::AfterRedraw {
-                                window: &app.window,
+                                window: app.window.as_ref(),
                                 font_collection: &self.font_collection,
                                 tree: &app.tree,
                             },
@@ -873,7 +920,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         );
                     });
                 }
-                WindowEvent::Resized(size) => {
+                WindowEvent::SurfaceResized(size) => {
                     if let Err(error) = app.driver.resize(size) {
                         tracing::warn!(
                             "Graphics driver lost while resizing ({error:?}), rebuilding on the same window"
@@ -888,7 +935,43 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     app.tree.layout.invalidate(NodeId::ROOT);
                 }
 
-                WindowEvent::MouseInput { state, button, .. } => {
+                WindowEvent::PointerButton {
+                    state,
+                    position,
+                    button: ButtonSource::Touch { finger_id, force },
+                    ..
+                } => {
+                    let finger_id = finger_id.into_raw() as u64;
+                    app.position = CursorPoint::from((position.x, position.y));
+                    let phase = if state.is_pressed() {
+                        app.active_touches.insert(finger_id, app.position);
+                        TouchPhase::Started
+                    } else {
+                        app.active_touches.remove(&finger_id);
+                        TouchPhase::Ended
+                    };
+                    app.queue_platform_events(vec![PlatformEvent::Touch {
+                        name: if state.is_pressed() {
+                            TouchEventName::TouchStart
+                        } else {
+                            TouchEventName::TouchEnd
+                        },
+                        location: app.position,
+                        finger_id,
+                        phase: map_winit_touch_phase(phase),
+                        force: force.map(map_winit_touch_force),
+                    }]);
+                }
+                WindowEvent::PointerButton {
+                    state,
+                    button,
+                    position,
+                    ..
+                } => {
+                    let Some(button) = button.mouse_button() else {
+                        return;
+                    };
+                    app.position = CursorPoint::from((position.x, position.y));
                     app.mouse_state = state;
                     app.platform
                         .navigation_mode
@@ -921,7 +1004,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         ElementState::Released => KeyboardEventName::KeyUp,
                     };
                     let key = winit_mappings::map_winit_key(&event.logical_key);
-                    let code = winit_mappings::map_winit_physical_key(&event.physical_key);
+                    let code = event.physical_key.into();
                     let modifiers = winit_mappings::map_winit_modifiers(app.modifiers_state);
 
                     app.pressed_keys
@@ -932,7 +1015,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
 
                     self.plugins.send(
                         PluginEvent::KeyboardInput {
-                            window: &app.window,
+                            window: app.window.as_ref(),
                             key: key.clone(),
                             code,
                             modifiers,
@@ -964,6 +1047,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             position.y * TOUCHPAD_SPEED_MODIFIER,
                             WheelSource::Pixel,
                         ),
+                        _ => return,
                     };
 
                     app.queue_platform_events(vec![PlatformEvent::Wheel {
@@ -975,7 +1059,22 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     }]);
                 }
 
-                WindowEvent::CursorLeft { .. } => {
+                WindowEvent::PointerLeft {
+                    kind: PointerKind::Touch(finger_id),
+                    ..
+                } => {
+                    let finger_id = finger_id.into_raw() as u64;
+                    if let Some(position) = app.active_touches.remove(&finger_id) {
+                        app.queue_platform_events(vec![PlatformEvent::Touch {
+                            name: TouchEventName::TouchCancel,
+                            location: position,
+                            finger_id,
+                            phase: map_winit_touch_phase(TouchPhase::Cancelled),
+                            force: None,
+                        }]);
+                    }
+                }
+                WindowEvent::PointerLeft { .. } => {
                     if std::mem::replace(&mut app.mouse_state, ElementState::Released)
                         == ElementState::Released
                     {
@@ -985,51 +1084,33 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         }]);
                     }
                 }
-                WindowEvent::CursorMoved { position, .. } => {
-                    app.position = CursorPoint::from((position.x, position.y));
-                    app.cursor_in_window = true;
-
-                    let mut platform_events = vec![PlatformEvent::Mouse {
-                        name: MouseEventName::MouseMove,
-                        cursor: app.position,
-                        button: None,
-                    }];
-
-                    if !app.dropped_file_paths.is_empty() {
-                        platform_events.push(PlatformEvent::File {
-                            name: FileEventName::FileDrop,
-                            file_paths: std::mem::take(&mut app.dropped_file_paths),
-                            cursor: app.position,
-                        });
-                    }
-
-                    app.queue_platform_events(platform_events);
-                }
-
-                WindowEvent::Touch(Touch {
-                    location,
-                    phase,
-                    id,
-                    force,
+                WindowEvent::PointerMoved {
+                    position,
+                    source: PointerSource::Touch { finger_id, force },
                     ..
-                }) => {
-                    app.position = CursorPoint::from((location.x, location.y));
-
-                    let name = match phase {
-                        TouchPhase::Cancelled => TouchEventName::TouchCancel,
-                        TouchPhase::Ended => TouchEventName::TouchEnd,
-                        TouchPhase::Moved => TouchEventName::TouchMove,
-                        TouchPhase::Started => TouchEventName::TouchStart,
-                    };
-
+                } => {
+                    let finger_id = finger_id.into_raw() as u64;
+                    app.position = CursorPoint::from((position.x, position.y));
+                    app.active_touches.insert(finger_id, app.position);
                     app.queue_platform_events(vec![PlatformEvent::Touch {
-                        name,
+                        name: TouchEventName::TouchMove,
                         location: app.position,
-                        finger_id: id,
-                        phase: map_winit_touch_phase(phase),
+                        finger_id,
+                        phase: map_winit_touch_phase(TouchPhase::Moved),
                         force: force.map(map_winit_touch_force),
                     }]);
                 }
+                WindowEvent::PointerMoved { position, .. } => {
+                    app.position = CursorPoint::from((position.x, position.y));
+                    app.cursor_in_window = true;
+
+                    app.queue_platform_events(vec![PlatformEvent::Mouse {
+                        name: MouseEventName::MouseMove,
+                        cursor: app.position,
+                        button: None,
+                    }]);
+                }
+
                 WindowEvent::Ime(Ime::Commit(text)) => {
                     app.queue_platform_events(vec![PlatformEvent::Keyboard {
                         name: KeyboardEventName::KeyDown,
@@ -1045,17 +1126,91 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         cursor: pos,
                     }]);
                 }
-                WindowEvent::DroppedFile(file_path) => {
-                    app.dropped_file_paths.push(file_path);
+                WindowEvent::DragEntered { id, position } => {
+                    use winit::{
+                        data_transfer::TypeHint,
+                        event_loop::DndAction,
+                    };
+                    if let Some(position) = position {
+                        app.position = (position.x, position.y).into();
+                    }
+                    let accepts_files = event_loop
+                        .data_transfer(id)
+                        .is_ok_and(|transfer| transfer.has_type(&TypeHint::UriList));
+                    if accepts_files {
+                        if let Err(error) = event_loop.set_valid_dnd_actions(id, &[DndAction::Copy])
+                        {
+                            tracing::warn!(?error, "Failed to accept file drag");
+                        }
+                        match event_loop.fetch_data_transfer(id, &TypeHint::UriList) {
+                            Ok(_) => app.drag = Some((id, Vec::new(), false)),
+                            Err(error) => tracing::warn!(?error, "Failed to fetch dragged files"),
+                        }
+                    }
                 }
-                WindowEvent::HoveredFile(file_path) => {
-                    app.queue_platform_events(vec![PlatformEvent::File {
-                        name: FileEventName::FileHover,
-                        file_paths: vec![file_path],
-                        cursor: app.position,
-                    }]);
+                WindowEvent::DragPosition { position, .. } => {
+                    app.position = (position.x, position.y).into();
                 }
-                WindowEvent::HoveredFileCancelled => {
+                WindowEvent::DataTransferReceived { id, value, .. } => {
+                    if app
+                        .drag
+                        .as_ref()
+                        .is_some_and(|(drag_id, _, _)| *drag_id == id)
+                    {
+                        match value.try_as_uris() {
+                            Ok(uris) => {
+                                let file_paths = uris
+                                    .iter()
+                                    .filter_map(|uri| {
+                                        url::Url::parse(uri).ok()?.to_file_path().ok()
+                                    })
+                                    .collect::<Vec<_>>();
+                                let dropped =
+                                    app.drag.as_ref().is_some_and(|(_, _, dropped)| *dropped);
+                                app.queue_platform_events(vec![PlatformEvent::File {
+                                    name: if dropped {
+                                        FileEventName::FileDrop
+                                    } else {
+                                        FileEventName::FileHover
+                                    },
+                                    file_paths: file_paths.clone(),
+                                    cursor: app.position,
+                                }]);
+                                app.drag = if dropped {
+                                    None
+                                } else {
+                                    Some((id, file_paths, false))
+                                };
+                            }
+                            Err(error) => {
+                                app.drag = None;
+                                tracing::warn!(?error, "Failed to read dragged files");
+                            }
+                        }
+                    }
+                }
+                WindowEvent::DragDropped { id, .. } => {
+                    if let Some((drag_id, file_paths, _)) = app.drag.take()
+                        && drag_id == id
+                    {
+                        if file_paths.is_empty() {
+                            app.drag = Some((id, file_paths, true));
+                        } else {
+                            app.queue_platform_events(vec![PlatformEvent::File {
+                                name: FileEventName::FileDrop,
+                                file_paths,
+                                cursor: app.position,
+                            }]);
+                        }
+                    }
+                }
+                WindowEvent::DragLeft { id }
+                    if app
+                        .drag
+                        .as_ref()
+                        .is_some_and(|(drag_id, _, dropped)| *drag_id == id && !dropped) =>
+                {
+                    app.drag = None;
                     app.queue_platform_events(vec![PlatformEvent::File {
                         name: FileEventName::FileHoverCancelled,
                         file_paths: Vec::new(),
@@ -1072,14 +1227,14 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
             drop(app.driver);
             app.driver = GraphicsDriver::recover_reusing_window(
                 event_loop,
-                &app.window,
+                app.window.as_ref(),
                 self.gpu_resource_cache_limit,
-                app.window_attributes.transparent,
+                app.window_attributes.transparent(),
             );
             tracing::info!("Recovered onto the {} driver", app.driver.name());
             self.plugins.send(
                 PluginEvent::GraphicsDriverChanged {
-                    window: &app.window,
+                    window: app.window.as_ref(),
                     graphics_driver: app.driver.name(),
                     gpu_name: app.driver.gpu_name(),
                 },
@@ -1091,7 +1246,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
     }
 }
 
-fn subscribe_preferences(proxy: EventLoopProxy<NativeEvent>) {
+fn subscribe_preferences(proxy: NativeEventProxy) {
     let subscription = mundy::Preferences::subscribe(mundy::Interest::AccentColor, move |prefs| {
         let _ = proxy.send_event(NativeEvent::Preferences(prefs));
     });

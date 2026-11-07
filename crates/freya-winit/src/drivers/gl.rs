@@ -37,6 +37,8 @@ use glutin::{
         PossiblyCurrentContext,
     },
     display::{
+        Display,
+        DisplayApiPreference,
         GetGlDisplay,
         GlDisplay,
     },
@@ -51,11 +53,10 @@ use glutin::{
         WindowSurface,
     },
 };
-use glutin_winit::{
-    ApiPreference,
-    DisplayBuilder,
+use raw_window_handle::{
+    HasDisplayHandle,
+    HasWindowHandle,
 };
-use raw_window_handle::HasWindowHandle;
 use winit::{
     dpi::PhysicalSize,
     event_loop::ActiveEventLoop,
@@ -100,69 +101,87 @@ impl OpenGLDriver {
     }
 
     pub fn new(
-        event_loop: &ActiveEventLoop,
+        event_loop: &dyn ActiveEventLoop,
         window_attributes: WindowAttributes,
         gpu_resource_cache_limit: usize,
-    ) -> Result<(Self, Window), Box<dyn std::error::Error>> {
-        let transparent = window_attributes.transparent;
-        let template = Self::config_template(transparent);
-
-        let build_with_preference =
-            |preference| -> Result<(Self, Window), Box<dyn std::error::Error>> {
-                let display_builder = DisplayBuilder::new()
-                    .with_preference(preference)
-                    .with_window_attributes(Some(window_attributes.clone()));
-                let (window, gl_config) =
-                    display_builder.build(event_loop, template.clone(), |configs| {
-                        Self::pick_config(configs, transparent)
-                    })?;
-                let window = window.ok_or("OpenGL display builder returned no window")?;
-                let driver = Self::build(&gl_config, &window, gpu_resource_cache_limit)?;
-
-                Ok((driver, window))
+    ) -> Result<(Self, Box<dyn Window>), Box<dyn std::error::Error>> {
+        let transparent = window_attributes.transparent();
+        #[cfg(target_os = "windows")]
+        {
+            let window = event_loop.create_window(window_attributes)?;
+            let driver = Self::from_window(
+                event_loop,
+                window.as_ref(),
+                gpu_resource_cache_limit,
+                transparent,
+            )?;
+            Ok((driver, window))
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            let gl_config = Self::create_config(event_loop, None, transparent)?;
+            #[cfg(target_os = "linux")]
+            let window_attributes = {
+                use glutin::platform::x11::X11GlConfigExt;
+                use winit::platform::x11::WindowAttributesX11;
+                if let Some(visual) = gl_config.x11_visual() {
+                    let attributes = window_attributes
+                        .platform
+                        .as_ref()
+                        .and_then(|attributes| attributes.cast_ref::<WindowAttributesX11>())
+                        .cloned()
+                        .unwrap_or_default()
+                        .with_x11_visual(visual.visual_id() as _);
+                    window_attributes.with_platform_attributes(Box::new(attributes))
+                } else {
+                    window_attributes
+                }
             };
-
-        match build_with_preference(ApiPreference::FallbackEgl) {
-            Ok(result) => Ok(result),
-            Err(error) => {
-                tracing::warn!("OpenGL initialization failed, retrying with EGL: {error}");
-                build_with_preference(ApiPreference::PreferEgl)
-            }
+            let window = event_loop.create_window(window_attributes)?;
+            let driver = Self::build(&gl_config, window.as_ref(), gpu_resource_cache_limit)?;
+            Ok((driver, window))
         }
     }
 
     /// Build the driver on an existing window instead of creating a new one.
     pub fn from_window(
-        event_loop: &ActiveEventLoop,
-        window: &Window,
+        event_loop: &dyn ActiveEventLoop,
+        window: &dyn Window,
         gpu_resource_cache_limit: usize,
         transparent: bool,
     ) -> Result<Self, Box<dyn std::error::Error>> {
-        let template = Self::config_template(transparent)
-            .compatible_with_native_window(window.window_handle()?.as_raw());
+        let gl_config = Self::create_config(event_loop, Some(window), transparent)?;
+        Self::build(&gl_config, window, gpu_resource_cache_limit)
+    }
 
-        let build_with_preference = |preference| -> Result<Self, Box<dyn std::error::Error>> {
-            let display_builder = DisplayBuilder::new().with_preference(preference);
-            let (_, gl_config) =
-                display_builder.build(event_loop, template.clone(), |configs| {
-                    Self::pick_config(configs, transparent)
-                })?;
-
-            Self::build(&gl_config, window, gpu_resource_cache_limit)
-        };
-
-        match build_with_preference(ApiPreference::FallbackEgl) {
-            Ok(driver) => Ok(driver),
-            Err(error) => {
-                tracing::warn!("OpenGL recovery failed, retrying with EGL: {error}");
-                build_with_preference(ApiPreference::PreferEgl)
-            }
+    fn create_config(
+        event_loop: &dyn ActiveEventLoop,
+        window: Option<&dyn Window>,
+        transparent: bool,
+    ) -> Result<Config, Box<dyn std::error::Error>> {
+        let window_handle = window
+            .map(|window| window.window_handle().map(|handle| handle.as_raw()))
+            .transpose()?;
+        #[cfg(target_os = "linux")]
+        let preference = DisplayApiPreference::EglThenGlx(Box::new(
+            winit::platform::x11::register_xlib_error_hook,
+        ));
+        #[cfg(target_os = "windows")]
+        let preference = DisplayApiPreference::WglThenEgl(window_handle);
+        #[cfg(target_os = "android")]
+        let preference = DisplayApiPreference::Egl;
+        let display = unsafe { Display::new(event_loop.display_handle()?.as_raw(), preference)? };
+        let mut template = Self::config_template(transparent);
+        if let Some(window_handle) = window_handle {
+            template = template.compatible_with_native_window(window_handle);
         }
+        let configs = unsafe { display.find_configs(template.build())? };
+        Ok(Self::pick_config(configs, transparent))
     }
 
     fn build(
         gl_config: &Config,
-        window: &Window,
+        window: &dyn Window,
         gpu_resource_cache_limit: usize,
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let window_handle = window.window_handle()?.as_raw();
@@ -190,7 +209,7 @@ impl OpenGLDriver {
             })
             .ok_or("could not create an OpenGL context with any profile")?;
 
-        let size = window.inner_size();
+        let size = window.surface_size();
 
         let attrs = SurfaceAttributesBuilder::<WindowSurface>::new().build(
             window_handle,
@@ -283,7 +302,7 @@ impl OpenGLDriver {
         Ok(driver)
     }
 
-    pub fn present(&mut self, window: &Window, render: impl FnOnce(&mut SkiaSurface)) {
+    pub fn present(&mut self, window: &dyn Window, render: impl FnOnce(&mut SkiaSurface)) {
         if !self.gl_context.is_current() {
             self.gl_context.make_current(&self.gl_surface).unwrap();
         }

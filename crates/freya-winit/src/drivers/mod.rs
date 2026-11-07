@@ -236,7 +236,7 @@ use crate::config::{
 };
 
 #[cfg(any(target_os = "linux", target_os = "windows"))]
-fn wait_for_display(window: &Window, last_present: &mut Option<std::time::Instant>) {
+fn wait_for_display(window: &dyn Window, last_present: &mut Option<std::time::Instant>) {
     use std::time::{
         Duration,
         Instant,
@@ -259,7 +259,9 @@ fn wait_for_display(window: &Window, last_present: &mut Option<std::time::Instan
 
     let refresh_rate = window
         .current_monitor()
-        .and_then(|monitor| monitor.refresh_rate_millihertz())
+        .and_then(|monitor| monitor.current_video_mode())
+        .and_then(|mode| mode.refresh_rate_millihertz())
+        .map(|refresh_rate| refresh_rate.get())
         .filter(|refresh_rate| *refresh_rate > 1_000)
         .unwrap_or(60_000);
     let frame_interval = Duration::from_secs_f64(1000.0 / refresh_rate as f64);
@@ -309,12 +311,12 @@ pub enum GraphicsDriver {
 impl GraphicsDriver {
     #[allow(clippy::needless_return, unreachable_code, unused_variables)]
     pub fn new(
-        event_loop: &ActiveEventLoop,
+        event_loop: &dyn ActiveEventLoop,
         window_attributes: WindowAttributes,
         gpu_resource_cache_limit: usize,
         preference: RendererPreference,
         graphics_context: &mut GraphicsContext,
-    ) -> (Self, Window) {
+    ) -> (Self, Box<dyn Window>) {
         let renderer = if preference == RendererPreference::Auto {
             match std::env::var("FREYA_RENDERER")
                 .unwrap_or_default()
@@ -428,8 +430,8 @@ impl GraphicsDriver {
         allow(unused_variables)
     )]
     pub fn recover_reusing_window(
-        event_loop: &ActiveEventLoop,
-        window: &Window,
+        event_loop: &dyn ActiveEventLoop,
+        window: &dyn Window,
         gpu_resource_cache_limit: usize,
         transparent: bool,
     ) -> Self {
@@ -457,7 +459,7 @@ impl GraphicsDriver {
     pub fn present(
         &mut self,
         size: PhysicalSize<u32>,
-        window: &Window,
+        window: &dyn Window,
         render: impl FnOnce(&mut SkiaSurface),
     ) -> Result<(), DriverError> {
         match self {

@@ -5,7 +5,7 @@
 
 #[cfg(target_os = "linux")]
 use freya::winit::platform::x11::{
-    WindowAttributesExtX11,
+    WindowAttributesX11,
     WindowType,
 };
 use freya::{
@@ -29,7 +29,9 @@ fn main() {
                 .with_background(Color::TRANSPARENT)
                 .with_window_attributes(move |attributes, el| {
                     #[cfg(target_os = "linux")]
-                    let attributes = attributes.with_x11_window_type(vec![WindowType::Dock]);
+                    let attributes = attributes.with_platform_attributes(Box::new(
+                        WindowAttributesX11::default().with_x11_window_type(vec![WindowType::Dock]),
+                    ));
 
                     let mut attributes = attributes.with_window_level(WindowLevel::AlwaysOnTop);
 
@@ -37,7 +39,10 @@ fn main() {
                         .primary_monitor()
                         .or_else(|| el.available_monitors().next())
                     {
-                        let size = monitor.size();
+                        let Some(mode) = monitor.current_video_mode() else {
+                            return attributes;
+                        };
+                        let size = mode.size();
                         attributes = attributes.with_position(LogicalPosition {
                             x: size.width as i32 / 2 - width / 2,
                             y: 40,

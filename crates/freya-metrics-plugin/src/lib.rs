@@ -395,8 +395,8 @@ impl FreyaPlugin for MetricsPlugin {
                             "Window Size",
                             format!(
                                 "{}x{}",
-                                window.inner_size().width,
-                                window.inner_size().height
+                                window.surface_size().width,
+                                window.surface_size().height
                             ),
                         ),
                         ("Scale Factor", format!("{}x", window.scale_factor())),
@@ -547,7 +547,7 @@ impl FreyaPlugin for MetricsPlugin {
                         canvas,
                         font_collection,
                         window.scale_factor() as f32,
-                        window.inner_size().width,
+                        window.surface_size().width,
                         *metrics,
                     );
                 }

@@ -125,7 +125,7 @@ impl SharedVulkan {
     /// Get or create the shared context and window surface.
     fn acquire(
         &mut self,
-        window: &Window,
+        window: &dyn Window,
         gpu_resource_cache_limit: usize,
         gpu_preference: GpuPreference,
     ) -> Result<(Rc<VulkanInner>, SurfaceKHR), Box<dyn std::error::Error>> {
@@ -195,7 +195,7 @@ impl Drop for VulkanInner {
 impl VulkanInner {
     /// Create shared Vulkan and Skia state.
     fn new(
-        window: &Window,
+        window: &dyn Window,
         gpu_resource_cache_limit: usize,
         gpu_preference: GpuPreference,
         compositor_device: Option<DrmDevice>,
@@ -275,7 +275,7 @@ impl VulkanInner {
     /// Create a presentable window surface.
     fn create_presentable_surface(
         &self,
-        window: &Window,
+        window: &dyn Window,
     ) -> Result<SurfaceKHR, Box<dyn std::error::Error>> {
         let surface = self.create_surface(window)?;
         let supported = unsafe {
@@ -294,7 +294,10 @@ impl VulkanInner {
         Ok(surface)
     }
 
-    fn create_surface(&self, window: &Window) -> Result<SurfaceKHR, Box<dyn std::error::Error>> {
+    fn create_surface(
+        &self,
+        window: &dyn Window,
+    ) -> Result<SurfaceKHR, Box<dyn std::error::Error>> {
         Ok(unsafe {
             ash_window::create_surface(
                 &self.entry,
@@ -356,17 +359,17 @@ impl VulkanDriver {
     }
 
     pub fn new(
-        event_loop: &ActiveEventLoop,
+        event_loop: &dyn ActiveEventLoop,
         window_attributes: WindowAttributes,
         gpu_resource_cache_limit: usize,
         gpu_preference: GpuPreference,
         shared_context: &mut SharedVulkan,
-    ) -> Result<(Self, Window), Box<dyn std::error::Error>> {
-        let transparent = window_attributes.transparent;
+    ) -> Result<(Self, Box<dyn Window>), Box<dyn std::error::Error>> {
+        let transparent = window_attributes.transparent();
         let window = event_loop.create_window(window_attributes)?;
 
         let (shared, surface) =
-            shared_context.acquire(&window, gpu_resource_cache_limit, gpu_preference)?;
+            shared_context.acquire(window.as_ref(), gpu_resource_cache_limit, gpu_preference)?;
         let wayland = matches!(
             window.display_handle()?.as_raw(),
             RawDisplayHandle::Wayland(_)
@@ -392,7 +395,7 @@ impl VulkanDriver {
         let (swapchain, swapchain_images, swapchain_extent) = create_swapchain(
             &driver.shared,
             surface,
-            window.inner_size(),
+            window.surface_size(),
             None,
             transparent,
             wayland,
@@ -468,7 +471,7 @@ impl VulkanDriver {
     pub fn present(
         &mut self,
         size: PhysicalSize<u32>,
-        window: &Window,
+        window: &dyn Window,
         render: impl FnOnce(&mut SkiaSurface),
     ) -> Result<(), DriverError> {
         if size.width == 0 || size.height == 0 {
@@ -661,7 +664,7 @@ impl VulkanDriver {
     /// Recreate the surface and its swapchain after the surface was lost.
     fn recreate_surface(
         &mut self,
-        window: &Window,
+        window: &dyn Window,
         size: PhysicalSize<u32>,
     ) -> Result<(), DriverError> {
         unsafe {

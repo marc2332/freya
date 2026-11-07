@@ -9,7 +9,7 @@ use freya::{
 };
 
 fn main() {
-    let event_loop = EventLoop::<NativeEvent>::with_user_event()
+    let event_loop = EventLoop::builder()
         .build()
         .expect("Failed to create event loop.");
 

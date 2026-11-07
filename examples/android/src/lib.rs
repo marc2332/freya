@@ -14,7 +14,6 @@ mod app;
 #[unsafe(no_mangle)]
 fn android_main(droid_app: AndroidApp) {
     use freya::android::AndroidPlugin;
-    use freya_winit::renderer::NativeEvent;
     use winit::{
         event_loop::EventLoop,
         platform::android::EventLoopBuilderExtAndroid,
@@ -24,7 +23,7 @@ fn android_main(droid_app: AndroidApp) {
         android_logger::Config::default().with_max_level(log::LevelFilter::Debug),
     );
 
-    let event_loop = EventLoop::<NativeEvent>::with_user_event()
+    let event_loop = EventLoop::builder()
         .with_android_app(droid_app.clone())
         .build()
         .expect("Failed to build event loop");
