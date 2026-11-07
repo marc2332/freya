@@ -120,6 +120,7 @@ impl Component for Slider {
         let a11y_id = use_a11y();
         let focus = use_focus(a11y_id);
         let mut clicking = use_state(|| false);
+        let mut hovering = use_state(|| false);
         let mut size = use_state(Area::default);
 
         let direction_is_vertical = self.direction == Direction::Vertical;
@@ -289,7 +290,12 @@ impl Component for Slider {
         let track = rect()
             .width(track_width)
             .height(track_height)
-            .background(theme.thumb_inner_background.mul_if(!self.enabled, 0.85))
+            .background(
+                theme
+                    .thumb_inner_background
+                    .mul_if(self.enabled && hovering(), 0.92)
+                    .mul_if(!self.enabled, 0.85),
+            )
             .corner_radius(50.);
 
         rect()
@@ -305,6 +311,8 @@ impl Component for Slider {
                     .on_global_pointer_up(on_global_pointer_up)
                     .maybe(self.scroll_enabled, |el| el.on_wheel(on_wheel))
             })
+            .on_pointer_enter(move |_| hovering.set_if_modified(true))
+            .on_pointer_leave(move |_| hovering.set_if_modified(false))
             .cursor(if self.enabled {
                 self.cursor_icon
             } else {
@@ -319,7 +327,12 @@ impl Component for Slider {
                 rect()
                     .width(inner_slider_width)
                     .height(inner_slider_height)
-                    .background(theme.background.mul_if(!self.enabled, 0.85))
+                    .background(
+                        theme
+                            .background
+                            .mul_if(self.enabled && hovering(), 0.92)
+                            .mul_if(!self.enabled, 0.85),
+                    )
                     .corner_radius(50.)
                     .direction(self.direction)
                     .main_align(thumb_main_align)
