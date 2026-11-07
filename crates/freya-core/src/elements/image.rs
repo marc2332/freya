@@ -446,7 +446,7 @@ impl From<Image> for Element {
         Element::Element {
             key: value.key,
             element: Rc::new(value.element),
-            elements: value.elements,
+            elements: value.elements.into(),
         }
     }
 }
