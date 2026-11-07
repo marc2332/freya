@@ -265,7 +265,7 @@ pub fn menu_nested_submenus() {
     assert!(!label_texts.contains(&"Option 3".to_string()));
 
     // Hover over "More Options" to reveal nested submenu
-    test.move_cursor((200.0, 45.0));
+    test.move_cursor((150.0, 60.0));
     test.sync_and_update();
 
     let labels = test.find_many(|node, element| Label::try_downcast(element).map(|_| node));
@@ -279,7 +279,7 @@ pub fn menu_nested_submenus() {
     assert!(label_texts.contains(&"Option 3".to_string()));
 
     // Move mouse away to close nested submenu
-    test.move_cursor((200.0, 20.0));
+    test.move_cursor((150.0, 20.0));
     test.sync_and_update();
 
     let labels = test.find_many(|node, element| Label::try_downcast(element).map(|_| node));
