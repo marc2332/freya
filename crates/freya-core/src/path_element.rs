@@ -96,11 +96,7 @@ impl PathElement {
     }
 
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
-    pub fn from_element(
-        path: Vec<u32>,
-        element: Element,
-        previous: Option<&Self>,
-    ) -> Self {
+    pub fn from_element(path: Vec<u32>, element: Element, previous: Option<&Self>) -> Self {
         match element {
             Element::Component { key, comp, props } => PathElement::Component {
                 key,
@@ -129,21 +125,31 @@ impl PathElement {
                 let mut elements_changed = true;
                 let elements = match elements {
                     ElementChildren::Owned(children) => PathChildren::Owned(
-                        children.into_iter().enumerate().map(convert_child).collect(),
+                        children
+                            .into_iter()
+                            .enumerate()
+                            .map(convert_child)
+                            .collect(),
                     ),
                     ElementChildren::Retained(source) => {
                         let elements = match previous {
                             Some(Self::Element {
-                                elements: PathChildren::Retained {
-                                    source: previous_source,
-                                    elements,
-                                },
+                                elements:
+                                    PathChildren::Retained {
+                                        source: previous_source,
+                                        elements,
+                                    },
                                 ..
                             }) if Rc::ptr_eq(&source, previous_source) => {
                                 elements_changed = false;
                                 elements.clone()
                             }
-                            _ => source.iter().cloned().enumerate().map(convert_child).collect(),
+                            _ => source
+                                .iter()
+                                .cloned()
+                                .enumerate()
+                                .map(convert_child)
+                                .collect(),
                         };
                         PathChildren::Retained { source, elements }
                     }
@@ -155,7 +161,7 @@ impl PathElement {
                     key,
                     elements_changed,
                 }
-            },
+            }
         }
     }
 }
@@ -189,9 +195,10 @@ impl DiffNode for PathElement {
                     ..
                 },
                 Self::Element {
-                    elements: PathChildren::Retained {
-                        elements: previous, ..
-                    },
+                    elements:
+                        PathChildren::Retained {
+                            elements: previous, ..
+                        },
                     ..
                 },
             ) => Rc::ptr_eq(elements, previous),
