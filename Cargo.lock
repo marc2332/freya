@@ -21,8 +21,7 @@ checksum = "366ffbaa4442f4684d91e2cd7c5ea7c4ed8add41959a31447066e279e432b618"
 [[package]]
 name = "accesskit"
 version = "0.25.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad442f58ee04714aaa0ba0a2768c1ea1935b29507bb22ddece8cbbc76db02932"
+source = "git+https://github.com/marc2332/accesskit?branch=perf%2Ffaster-children-changes-notify#ab035dfc22a0636f03c71d762be90ea23e95e9a6"
 dependencies = [
  "enumn",
  "serde",
@@ -30,12 +29,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "accesskit"
+version = "0.25.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e883d1d28c5fd5568c79ed2d2bd48d9f2fd3945c8974ed0f53690ceddb051be"
+dependencies = [
+ "uuid",
+]
+
+[[package]]
 name = "accesskit_atspi_common"
 version = "0.21.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "52c182f9c282ac9c5638d876d551d15e5f7d397ec263349a0c6a2b61595dd5e4"
+source = "git+https://github.com/marc2332/accesskit?branch=perf%2Ffaster-children-changes-notify#ab035dfc22a0636f03c71d762be90ea23e95e9a6"
 dependencies = [
- "accesskit",
+ "accesskit 0.25.1",
  "accesskit_consumer",
  "atspi-common",
  "phf 0.14.0",
@@ -46,20 +53,18 @@ dependencies = [
 [[package]]
 name = "accesskit_consumer"
 version = "0.39.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a45e2bb300bea6d5f33a82c3e051c3ddc6f41c209750f68a0acbe991a284344"
+source = "git+https://github.com/marc2332/accesskit?branch=perf%2Ffaster-children-changes-notify#ab035dfc22a0636f03c71d762be90ea23e95e9a6"
 dependencies = [
- "accesskit",
+ "accesskit 0.25.1",
  "hashbrown 0.17.1",
 ]
 
 [[package]]
 name = "accesskit_ios"
 version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28e539d64b27fd4c14de8f78ada8f7c944c092f52f7e49fb63316507a57f6937"
+source = "git+https://github.com/marc2332/accesskit?branch=perf%2Ffaster-children-changes-notify#ab035dfc22a0636f03c71d762be90ea23e95e9a6"
 dependencies = [
- "accesskit",
+ "accesskit 0.25.1",
  "accesskit_consumer",
  "hashbrown 0.17.1",
  "objc2 0.5.2",
@@ -70,10 +75,9 @@ dependencies = [
 [[package]]
 name = "accesskit_macos"
 version = "0.27.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5701624bf6a11efb6d4c8e922bf44126ed96250e5faa9a7a0468c979635839a4"
+source = "git+https://github.com/marc2332/accesskit?branch=perf%2Ffaster-children-changes-notify#ab035dfc22a0636f03c71d762be90ea23e95e9a6"
 dependencies = [
- "accesskit",
+ "accesskit 0.25.1",
  "accesskit_consumer",
  "hashbrown 0.17.1",
  "objc2 0.5.2",
@@ -84,10 +88,9 @@ dependencies = [
 [[package]]
 name = "accesskit_unix"
 version = "0.24.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "202f24df034a7476d07b7f74284de84f6d62aabd858dbe7ee9cad3b7ad6f8f9d"
+source = "git+https://github.com/marc2332/accesskit?branch=perf%2Ffaster-children-changes-notify#ab035dfc22a0636f03c71d762be90ea23e95e9a6"
 dependencies = [
- "accesskit",
+ "accesskit 0.25.1",
  "accesskit_atspi_common",
  "async-channel",
  "async-executor",
@@ -102,10 +105,9 @@ dependencies = [
 [[package]]
 name = "accesskit_windows"
 version = "0.35.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ce63f35d6bdcf59f26b76b3379063f738e6412cef46999cc772d46aa3de35adb"
+source = "git+https://github.com/marc2332/accesskit?branch=perf%2Ffaster-children-changes-notify#ab035dfc22a0636f03c71d762be90ea23e95e9a6"
 dependencies = [
- "accesskit",
+ "accesskit 0.25.1",
  "accesskit_consumer",
  "hashbrown 0.17.1",
  "static_assertions",
@@ -116,10 +118,9 @@ dependencies = [
 [[package]]
 name = "accesskit_winit"
 version = "0.34.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee96dd150375c05912d8a473f98c2fb155fb3234fac88292d396548a2460fa77"
+source = "git+https://github.com/marc2332/accesskit?branch=perf%2Ffaster-children-changes-notify#ab035dfc22a0636f03c71d762be90ea23e95e9a6"
 dependencies = [
- "accesskit",
+ "accesskit 0.25.1",
  "accesskit_ios",
  "accesskit_macos",
  "accesskit_unix",
@@ -341,7 +342,7 @@ version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "40c48f72fd53cd289104fc64099abca73db4166ad86ea0b4341abe65af83dadc"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -352,7 +353,7 @@ checksum = "291e6a250ff86cd4a820112fb8898808a366d8f9f58ce16d1f538353ad55747d"
 dependencies = [
  "anstyle",
  "once_cell_polyfill",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -907,7 +908,7 @@ version = "0.3.0-beta.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "53e58a506e20e90b69ab8b03f933c125237361c31b0dae0e7e149c5bcbf9b28a"
 dependencies = [
- "accesskit",
+ "accesskit 0.25.2",
  "anyrender",
  "app_units",
  "atomic_refcell",
@@ -2310,7 +2311,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2832,7 +2833,7 @@ dependencies = [
 name = "freya-components"
 version = "0.5.0-rc.13"
 dependencies = [
- "accesskit",
+ "accesskit 0.25.1",
  "anyhow",
  "async-lock",
  "bytes",
@@ -2860,7 +2861,7 @@ dependencies = [
 name = "freya-core"
 version = "0.5.0-rc.13"
 dependencies = [
- "accesskit",
+ "accesskit 0.25.1",
  "async-io",
  "bitflags 2.13.1",
  "blocking",
@@ -2899,7 +2900,7 @@ dependencies = [
 name = "freya-devtools"
 version = "0.5.0-rc.13"
 dependencies = [
- "accesskit",
+ "accesskit 0.25.1",
  "anyhow",
  "async-lock",
  "async-tungstenite",
@@ -3166,7 +3167,7 @@ dependencies = [
 name = "freya-testing"
 version = "0.5.0-rc.13"
 dependencies = [
- "accesskit",
+ "accesskit 0.25.1",
  "freya",
  "freya-clipboard",
  "freya-components",
@@ -3202,7 +3203,7 @@ dependencies = [
 name = "freya-web"
 version = "0.5.0-rc.13"
 dependencies = [
- "accesskit",
+ "accesskit 0.25.1",
  "euclid",
  "freya-clipboard",
  "freya-components",
@@ -3219,7 +3220,7 @@ dependencies = [
 name = "freya-winit"
 version = "0.5.0-rc.13"
 dependencies = [
- "accesskit",
+ "accesskit 0.25.1",
  "accesskit_winit",
  "ash",
  "ash-window",
@@ -4777,7 +4778,7 @@ dependencies = [
  "objc2-foundation 0.3.2",
  "png 0.18.1",
  "thiserror 2.0.19",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5023,7 +5024,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6247,7 +6248,7 @@ dependencies = [
  "once_cell",
  "socket2",
  "tracing",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6877,7 +6878,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.12.1",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6936,7 +6937,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7457,7 +7458,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4"
 dependencies = [
  "libc",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7883,10 +7884,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "once_cell",
  "rustix 1.1.4",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -8385,7 +8386,7 @@ dependencies = [
  "once_cell",
  "png 0.18.1",
  "thiserror 2.0.19",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -8499,7 +8500,7 @@ checksum = "f2f6fb2847f6742cd76af783a2a2c49e9375d0a111c7bef6f71cd9e738c72d6e"
 dependencies = [
  "memoffset",
  "tempfile",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -9133,7 +9134,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
