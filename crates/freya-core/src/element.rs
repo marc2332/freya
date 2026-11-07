@@ -256,6 +256,37 @@ pub trait ComponentProps: Any {
     fn changed(&self, other: &dyn ComponentProps) -> bool;
 }
 
+#[derive(Clone, Debug)]
+pub enum ElementChildren {
+    Owned(Vec<Element>),
+    Retained(Rc<Vec<Element>>),
+}
+
+impl Default for ElementChildren {
+    fn default() -> Self {
+        Self::Owned(Vec::new())
+    }
+}
+
+impl From<Vec<Element>> for ElementChildren {
+    fn from(children: Vec<Element>) -> Self {
+        Self::Owned(children)
+    }
+}
+
+impl PartialEq for ElementChildren {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Owned(children), Self::Owned(previous)) => children == previous,
+            (Self::Retained(children), Self::Retained(previous)) => {
+                Rc::ptr_eq(children, previous) || children == previous
+            }
+            (Self::Owned(owned), Self::Retained(retained))
+            | (Self::Retained(retained), Self::Owned(owned)) => owned == retained.as_ref(),
+        }
+    }
+}
+
 #[derive(Clone)]
 pub enum Element {
     Component {
@@ -266,7 +297,7 @@ pub enum Element {
     Element {
         key: DiffKey,
         element: Rc<dyn ElementExt>,
-        elements: Vec<Element>,
+        elements: ElementChildren,
     },
 }
 

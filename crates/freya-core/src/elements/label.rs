@@ -308,7 +308,7 @@ impl From<Label> for Element {
         Element::Element {
             key: value.key,
             element: Rc::new(value.element),
-            elements: vec![],
+            elements: vec![].into(),
         }
     }
 }

@@ -129,7 +129,7 @@ impl From<Html> for Element {
         Element::Element {
             key: DiffKey::None,
             element: Rc::new(value.element),
-            elements: vec![],
+            elements: vec![].into(),
         }
     }
 }

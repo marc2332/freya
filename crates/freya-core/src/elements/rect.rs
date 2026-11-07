@@ -562,13 +562,23 @@ impl ElementExt for RectElement {
 #[derive(Default, Clone)]
 pub struct Rect {
     element: RectElement,
-    elements: Vec<Element>,
+    elements: ElementChildren,
     key: DiffKey,
 }
 
 impl ChildrenExt for Rect {
     fn children_mut(&mut self) -> &mut Vec<Element> {
-        &mut self.elements
+        match &mut self.elements {
+            ElementChildren::Owned(children) => children,
+            ElementChildren::Retained(children) => Rc::make_mut(children),
+        }
+    }
+}
+
+impl RetainedChildrenExt for Rect {
+    fn retained_children(mut self, children: Rc<Vec<Element>>) -> Self {
+        self.elements = ElementChildren::Retained(children);
+        self
     }
 }
 
