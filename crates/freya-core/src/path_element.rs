@@ -112,10 +112,17 @@ impl PathElement {
                 element,
                 key,
             } => {
+                if matches!(&elements, ElementChildren::Owned(children) if children.is_empty()) {
+                    return Self::Element {
+                        key,
+                        element,
+                        elements: PathChildren::Owned(Box::default()),
+                        path: path.into_boxed_slice(),
+                        elements_changed: true,
+                    };
+                }
                 let previous = previous.filter(|previous| {
-                    !matches!(&elements, ElementChildren::Owned(children) if children.is_empty())
-                        && previous.key() == &key
-                        && previous.path() == path.as_slice()
+                    previous.key() == &key && previous.path() == path.as_slice()
                 });
                 let convert_child = |(index, child)| {
                     let mut child_path = Vec::with_capacity(path.len() + 1);
