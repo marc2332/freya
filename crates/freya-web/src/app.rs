@@ -296,7 +296,7 @@ impl WebApp {
                 UserEvent::SetCustomScaleFactor(_) => {}
                 UserEvent::Erased(command) => {
                     if let Ok(command) = command.0.downcast::<NativeDragCommand>() {
-                        command.unsupported();
+                        let _ = command.response.send(Err(DragError::Unsupported));
                     }
                 }
             }

@@ -1,6 +1,6 @@
 use std::{
     path::PathBuf,
-    sync::mpsc,
+    time::Duration,
 };
 
 use freya::helpers::*;
@@ -415,7 +415,10 @@ fn native_drop_with_multiple_files() {
             .background((255, 255, 255))
             .on_drag_over(|event: Event<DragEventData>| event.accept(DropAction::Copy))
             .on_drop(move |event: Event<DragEventData>| {
-                *state.write() = futures_lite::future::block_on(event.data.read_files()).unwrap();
+                let data = event.data.clone();
+                spawn(async move {
+                    state.set_if_modified(data.read_files().await.unwrap());
+                });
             })
             .into()
     }
@@ -428,32 +431,38 @@ fn native_drop_with_multiple_files() {
     );
     test.sync_and_update();
 
-    let data = DragDataHandle::new(vec![DragDataType::Files], |_, response| {
-        response
-            .send(Ok(DragValue::Files(vec![
-                PathBuf::from("first.txt"),
-                PathBuf::from("second.txt"),
-            ])))
-            .unwrap();
-    });
-    let (sender, targets) = mpsc::channel();
-    let decision = DragDecision::new(move |target, _| sender.send(target).unwrap());
+    let data = DragDataHandle::new(vec![DragDataType::Files]);
+    let decision = DragDecision::default();
     test.send_event(PlatformEvent::Drag {
         name: DragEventName::Over,
         cursor: (15., 15.).into(),
         data: data.clone(),
-        decision: Some(decision),
+        decision: Some(decision.clone()),
         target: None,
     });
     test.sync_and_update();
     test.send_event(PlatformEvent::Drag {
         name: DragEventName::Drop,
         cursor: (15., 15.).into(),
-        data,
+        data: data.clone(),
         decision: None,
-        target: Some(targets.try_recv().unwrap()),
+        target: Some(decision.accepted().unwrap().0),
     });
     test.sync_and_update();
+    test.poll_n(Duration::ZERO, 2);
+    let requests = data.take_read_requests().unwrap();
+    assert_eq!(requests.len(), 1);
+    for request in requests {
+        assert_eq!(request.format, DragDataType::Files);
+        request
+            .response
+            .send(Ok(DragValue::Files(vec![
+                PathBuf::from("first.txt"),
+                PathBuf::from("second.txt"),
+            ])))
+            .unwrap();
+    }
+    test.poll_n(Duration::ZERO, 2);
 
     assert_eq!(
         *state.peek(),

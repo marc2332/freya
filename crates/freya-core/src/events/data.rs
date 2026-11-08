@@ -1,6 +1,5 @@
 use std::{
     cell::RefCell,
-    fmt,
     ops::{
         Deref,
         Div,
@@ -8,10 +7,7 @@ use std::{
     rc::Rc,
     sync::{
         Arc,
-        atomic::{
-            AtomicBool,
-            Ordering,
-        },
+        OnceLock,
     },
 };
 
@@ -329,10 +325,9 @@ impl ImePreeditEventData {
 }
 
 /// The first accepting handler wins while a drag event bubbles.
-#[derive(Clone)]
+#[derive(Clone, Default, Debug)]
 pub struct DragDecision {
-    accepted: Arc<AtomicBool>,
-    notify: Arc<dyn Fn(NodeId, DropAction) + Send + Sync>,
+    accepted: Arc<OnceLock<(NodeId, DropAction)>>,
 }
 
 impl PartialEq for DragDecision {
@@ -341,27 +336,9 @@ impl PartialEq for DragDecision {
     }
 }
 
-impl fmt::Debug for DragDecision {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter
-            .debug_struct("DragDecision")
-            .field("accepted", &self.accepted.load(Ordering::Relaxed))
-            .finish()
-    }
-}
-
 impl DragDecision {
-    pub fn new(notify: impl Fn(NodeId, DropAction) + Send + Sync + 'static) -> Self {
-        Self {
-            accepted: Arc::new(AtomicBool::new(false)),
-            notify: Arc::new(notify),
-        }
-    }
-
-    fn accept(&self, target: NodeId, action: DropAction) {
-        if !self.accepted.swap(true, Ordering::Relaxed) {
-            (self.notify)(target, action);
-        }
+    pub fn accepted(&self) -> Option<(NodeId, DropAction)> {
+        self.accepted.get().copied()
     }
 }
 
@@ -379,7 +356,7 @@ impl DragEventData {
     /// Accepts this drag over the current element.
     pub fn accept(&self, action: DropAction) {
         if let Some(decision) = &self.decision {
-            decision.accept(self.target, action);
+            let _ = decision.accepted.set((self.target, action));
         }
     }
 }

@@ -448,6 +448,14 @@ impl ApplicationHandler for WinitRenderer {
 }
 
 impl WinitRenderer {
+    /// Processes buffered input, UI updates, and pending native drag requests.
+    fn process_pending_updates(&mut self, event_loop: &dyn ActiveEventLoop) {
+        self.process_pending_events();
+        for app in self.windows.values_mut() {
+            app.native_drag.process_pending(event_loop);
+        }
+    }
+
     fn user_event(
         &mut self,
         active_event_loop: &dyn winit::event_loop::ActiveEventLoop,
@@ -658,7 +666,7 @@ impl WinitRenderer {
     }
 
     fn update_control_flow(&mut self, event_loop: &dyn ActiveEventLoop) {
-        self.process_pending_events();
+        self.process_pending_updates(event_loop);
         if !matches!(event_loop.control_flow(), ControlFlow::Poll) {
             let deadline = self
                 .windows
@@ -702,36 +710,18 @@ impl WinitRenderer {
                     .into_iter()
                     .filter(|format| transfer.has_type(&to_type_hint(*format)))
                     .collect();
-                    let transfer_id = id.into_raw();
-                    let proxy = self.proxy.clone();
-                    let data = DragDataHandle::new(formats, move |format, response| {
-                        let command = NativeDragCommand::Read {
-                            transfer: transfer_id,
-                            format,
-                            response,
-                        };
-                        let _ = proxy.send_event(NativeEvent::Window(NativeWindowEvent {
-                            window_id,
-                            action: NativeWindowEventAction::User(UserEvent::Erased(
-                                SingleThreadErasedEvent(Box::new(command)),
-                            )),
-                        }));
-                    });
+                    let data = DragDataHandle::new(formats);
                     app.native_drag.incoming = Some(IncomingDrag {
                         id,
                         data,
-                        generation: 0,
+                        decision: None,
                         accepted: None,
                         dropped: false,
                     });
-                    if let Some(event) = app.native_drag.prepare_drag_over(
-                        event_loop,
-                        window_id,
-                        &self.proxy,
-                        app.position,
-                    ) {
+                    if let Some(event) = app.native_drag.prepare_drag_over(app.position) {
                         app.queue_platform_events(vec![event]);
                     }
+                    self.process_pending_updates(event_loop);
                 }
                 WindowEvent::DragPosition { id, position, .. } => {
                     app.position = CursorPoint::new(position.x, position.y);
@@ -743,14 +733,10 @@ impl WinitRenderer {
                     {
                         return;
                     }
-                    if let Some(event) = app.native_drag.prepare_drag_over(
-                        event_loop,
-                        window_id,
-                        &self.proxy,
-                        app.position,
-                    ) {
+                    if let Some(event) = app.native_drag.prepare_drag_over(app.position) {
                         app.queue_platform_events(vec![event]);
                     }
+                    self.process_pending_updates(event_loop);
                 }
                 WindowEvent::DragDropped { id, .. } => {
                     let Some(incoming) = app
@@ -762,16 +748,14 @@ impl WinitRenderer {
                         return;
                     };
                     incoming.dropped = true;
-                    let Some(target) = incoming.accepted else {
-                        return;
-                    };
+                    let target = incoming.accepted;
                     let events = vec![
                         PlatformEvent::Drag {
                             name: DragEventName::Drop,
                             cursor: app.position,
                             data: incoming.data.clone(),
                             decision: None,
-                            target: Some(target),
+                            target,
                         },
                         PlatformEvent::Drag {
                             name: DragEventName::Leave,
@@ -782,6 +766,7 @@ impl WinitRenderer {
                         },
                     ];
                     app.queue_platform_events(events);
+                    self.process_pending_updates(event_loop);
                 }
                 WindowEvent::DragLeft { id } => {
                     let Some(incoming) = app
@@ -801,6 +786,7 @@ impl WinitRenderer {
                     };
                     app.native_drag.expire();
                     app.queue_platform_events(vec![event]);
+                    self.process_pending_updates(event_loop);
                 }
                 WindowEvent::DataTransferReceived { id, serial, value } => {
                     if let Some(pending) = app.native_drag.reads.remove(&serial) {
