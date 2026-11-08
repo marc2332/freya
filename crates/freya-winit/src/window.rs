@@ -168,40 +168,32 @@ impl AppWindow {
         font_manager: &FontMgr,
         fallback_fonts: &[Cow<'static, str>],
     ) {
-        match command {
-            NativeDragCommand::Start {
-                data,
-                actions,
-                preview,
-                scope_id,
-                response,
-            } => {
-                let icon = preview
-                    .map(|preview| {
-                        self.render_drag_preview(
-                            preview,
-                            scope_id,
-                            font_collection,
-                            font_manager,
-                            fallback_fonts,
-                        )
-                    })
-                    .transpose();
-                match icon {
-                    Ok(icon) => self.native_drag.start(
-                        event_loop,
-                        self.window.id(),
-                        data,
-                        actions,
-                        icon,
-                        response,
-                    ),
-                    Err(error) => {
-                        let _ = response.send(Err(error));
-                    }
-                }
+        let NativeDragCommand {
+            data,
+            actions,
+            preview,
+            scope_id,
+            response,
+        } = command;
+        let icon = preview
+            .map(|preview| {
+                self.render_drag_preview(
+                    preview,
+                    scope_id,
+                    font_collection,
+                    font_manager,
+                    fallback_fonts,
+                )
+            })
+            .transpose();
+        match icon {
+            Ok(icon) => {
+                self.native_drag
+                    .start(event_loop, self.window.id(), data, actions, icon, response)
             }
-            command => self.native_drag.command(event_loop, command),
+            Err(error) => {
+                let _ = response.send(Err(error));
+            }
         }
     }
 

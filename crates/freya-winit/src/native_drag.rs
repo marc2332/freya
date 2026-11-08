@@ -21,17 +21,10 @@ use winit::{
     window::WindowId,
 };
 
-use crate::renderer::{
-    NativeEvent,
-    NativeEventProxy,
-    NativeWindowEvent,
-    NativeWindowEventAction,
-};
-
 pub(crate) struct IncomingDrag {
     pub(crate) id: DataTransferId,
     pub(crate) data: DragDataHandle,
-    pub(crate) generation: u64,
+    pub(crate) decision: Option<DragDecision>,
     pub(crate) accepted: Option<NodeId>,
     pub(crate) dropped: bool,
 }
@@ -75,7 +68,14 @@ impl NativeDragState {
                     "A native drag needs an allowed action".into(),
                 ));
             }
-            let actions: Vec<_> = actions.into_iter().map(to_winit_action).collect();
+            let actions: Vec<_> = actions
+                .into_iter()
+                .map(|action| match action {
+                    DropAction::Copy => DndAction::Copy,
+                    DropAction::Move => DndAction::Move,
+                    DropAction::Link => DndAction::Link,
+                })
+                .collect();
             event_loop
                 .start_drag(window, data, &actions, icon)
                 .map_err(|error| DragError::Platform(error.to_string()))
@@ -90,56 +90,51 @@ impl NativeDragState {
         }
     }
 
-    pub(crate) fn command(&mut self, event_loop: &dyn ActiveEventLoop, command: NativeDragCommand) {
-        match command {
-            NativeDragCommand::Read {
-                transfer,
-                format,
-                response,
-            } => {
-                let transfer = DataTransferId::from_raw(transfer);
-                if !self
-                    .incoming
-                    .as_ref()
-                    .is_some_and(|incoming| incoming.id == transfer)
-                {
-                    let _ = response.send(Err(DragError::Expired));
-                    return;
+    pub(crate) fn process_pending(&mut self, event_loop: &dyn ActiveEventLoop) {
+        let Some(incoming) = &mut self.incoming else {
+            return;
+        };
+
+        if let Some(decision) = incoming.decision.take()
+            && !incoming.dropped
+        {
+            let accepted = decision.accepted();
+            let actions: Vec<_> = accepted
+                .map(|(_, action)| match action {
+                    DropAction::Copy => DndAction::Copy,
+                    DropAction::Move => DndAction::Move,
+                    DropAction::Link => DndAction::Link,
+                })
+                .into_iter()
+                .collect();
+            if event_loop
+                .set_valid_dnd_actions(incoming.id, &actions)
+                .is_ok()
+            {
+                incoming.accepted = accepted.map(|(target, _)| target);
+            }
+        }
+
+        let Ok(requests) = incoming.data.take_read_requests() else {
+            self.expire();
+            return;
+        };
+        for DragReadRequest { format, response } in requests {
+            match event_loop.fetch_data_transfer(incoming.id, &to_type_hint(format)) {
+                Ok(serial) => {
+                    self.reads.insert(
+                        serial,
+                        PendingRead {
+                            transfer: incoming.id,
+                            format,
+                            response,
+                        },
+                    );
                 }
-                match event_loop.fetch_data_transfer(transfer, &to_type_hint(format)) {
-                    Ok(serial) => {
-                        self.reads.insert(
-                            serial,
-                            PendingRead {
-                                transfer,
-                                format,
-                                response,
-                            },
-                        );
-                    }
-                    Err(error) => {
-                        let _ = response.send(Err(DragError::Platform(error.to_string())));
-                    }
+                Err(error) => {
+                    let _ = response.send(Err(DragError::Platform(error.to_string())));
                 }
             }
-            NativeDragCommand::Accept {
-                transfer,
-                generation,
-                target,
-                action,
-            } => {
-                if let Some(incoming) = &mut self.incoming
-                    && incoming.id.into_raw() == transfer
-                    && incoming.generation == generation
-                    && !incoming.dropped
-                    && event_loop
-                        .set_valid_dnd_actions(incoming.id, &[to_winit_action(action)])
-                        .is_ok()
-                {
-                    incoming.accepted = Some(target);
-                }
-            }
-            command @ NativeDragCommand::Start { .. } => command.unsupported(),
         }
     }
 
@@ -152,37 +147,14 @@ impl NativeDragState {
         }
     }
 
-    pub(crate) fn prepare_drag_over(
-        &mut self,
-        event_loop: &dyn ActiveEventLoop,
-        window: WindowId,
-        proxy: &NativeEventProxy,
-        cursor: CursorPoint,
-    ) -> Option<PlatformEvent> {
+    pub(crate) fn prepare_drag_over(&mut self, cursor: CursorPoint) -> Option<PlatformEvent> {
         let incoming = self.incoming.as_mut()?;
         if incoming.dropped {
             return None;
         }
-        incoming.generation = incoming.generation.wrapping_add(1);
         incoming.accepted = None;
-        let _ = event_loop.set_valid_dnd_actions(incoming.id, &[]);
-        let transfer = incoming.id.into_raw();
-        let generation = incoming.generation;
-        let proxy = proxy.clone();
-        let decision = DragDecision::new(move |target, action| {
-            let command = NativeDragCommand::Accept {
-                transfer,
-                generation,
-                target,
-                action,
-            };
-            let _ = proxy.send_event(NativeEvent::Window(NativeWindowEvent {
-                window_id: window,
-                action: NativeWindowEventAction::User(UserEvent::Erased(SingleThreadErasedEvent(
-                    Box::new(command),
-                ))),
-            }));
-        });
+        let decision = DragDecision::default();
+        incoming.decision = Some(decision.clone());
         Some(PlatformEvent::Drag {
             name: DragEventName::Over,
             cursor,
@@ -214,14 +186,6 @@ pub(crate) fn to_type_hint(format: DragDataType) -> TypeHint {
         DragDataType::Audio => TypeHint::Audio {
             extension_hint: Some("wav"),
         },
-    }
-}
-
-fn to_winit_action(action: DropAction) -> DndAction {
-    match action {
-        DropAction::Copy => DndAction::Copy,
-        DropAction::Move => DndAction::Move,
-        DropAction::Link => DndAction::Link,
     }
 }
 

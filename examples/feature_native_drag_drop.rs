@@ -18,14 +18,13 @@ fn app() -> impl IntoElement {
     let mut message = use_state(|| "Drop text or files here".to_string());
     let mut status = use_state(|| "Drag the card here or into another application".to_string());
     let mut hovering = use_state(|| false);
+
     rect()
         .expanded()
         .padding(24.)
         .spacing(24.)
         .child(
             NativeDrag::new(|| DragData::text("Hello from Freya!"))
-                .actions([DropAction::Copy])
-                .enabled(true)
                 .preview(|| {
                     rect()
                         .padding(16.)

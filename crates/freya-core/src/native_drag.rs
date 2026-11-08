@@ -29,7 +29,6 @@ use torin::prelude::{
 
 use crate::{
     element::Element,
-    node_id::NodeId,
     platform::PlatformWindow,
     prelude::current_scope_id,
     scope_id::ScopeId,
@@ -118,12 +117,22 @@ impl fmt::Display for DragError {
 impl std::error::Error for DragError {}
 
 type DragRead = Shared<BoxFuture<'static, Result<DragValue, DragError>>>;
-type DragReader = dyn Fn(DragDataType, oneshot::Sender<Result<DragValue, DragError>>) + Send + Sync;
+
+/// A read request waiting for the platform to handle it.
+pub struct DragReadRequest {
+    pub format: DragDataType,
+    pub response: oneshot::Sender<Result<DragValue, DragError>>,
+}
+
+#[derive(Default)]
+struct IncomingReads {
+    cached: FxHashMap<DragDataType, DragRead>,
+    pending: Vec<DragReadRequest>,
+}
 
 struct IncomingData {
     formats: Vec<DragDataType>,
-    reader: Box<DragReader>,
-    reads: Mutex<FxHashMap<DragDataType, DragRead>>,
+    reads: Mutex<IncomingReads>,
     expired: AtomicBool,
 }
 
@@ -148,20 +157,18 @@ impl fmt::Debug for DragDataHandle {
 }
 
 impl DragDataHandle {
-    /// Creates a handle that uses the given callback to read drag data.
-    pub fn new(
-        formats: Vec<DragDataType>,
-        reader: impl Fn(DragDataType, oneshot::Sender<Result<DragValue, DragError>>)
-        + Send
-        + Sync
-        + 'static,
-    ) -> Self {
+    pub fn new(formats: Vec<DragDataType>) -> Self {
         Self(Arc::new(IncomingData {
             formats,
-            reader: Box::new(reader),
             reads: Mutex::default(),
             expired: AtomicBool::new(false),
         }))
+    }
+
+    /// Takes the read requests waiting for the platform to handle them.
+    pub fn take_read_requests(&self) -> Result<Vec<DragReadRequest>, DragError> {
+        let mut reads = self.0.reads.lock().map_err(|_| DragError::Expired)?;
+        Ok(std::mem::take(&mut reads.pending))
     }
 
     pub fn types(&self) -> &[DragDataType] {
@@ -180,18 +187,24 @@ impl DragDataHandle {
         self.has(DragDataType::Text)
     }
 
-    /// Blocks new read requests. Earlier requests can still finish and their results stay available.
+    /// Stops new reads and cancels queued requests.
+    /// Started reads and saved results stay available.
     pub fn expire(&self) {
         self.0.expired.store(true, Ordering::Relaxed);
+        if let Ok(requests) = self.take_read_requests() {
+            for request in requests {
+                let _ = request.response.send(Err(DragError::Expired));
+            }
+        }
     }
 
     /// Reads a format once and reuses the result for later reads.
     pub async fn read(&self, format: DragDataType) -> Result<DragValue, DragError> {
-        let (read, request) = {
+        let read = {
             let mut reads = self.0.reads.lock().map_err(|_| DragError::Expired)?;
 
-            if let Some(read) = reads.get(&format) {
-                (read.clone(), None)
+            if let Some(read) = reads.cached.get(&format) {
+                read.clone()
             } else {
                 if self.0.expired.load(Ordering::Relaxed) {
                     return Err(DragError::Expired);
@@ -204,14 +217,14 @@ impl DragDataHandle {
                 let read = async move { receiver.await.map_err(|_| DragError::Expired)? }
                     .boxed()
                     .shared();
-                reads.insert(format, read.clone());
-                (read, Some(sender))
+                reads.cached.insert(format, read.clone());
+                reads.pending.push(DragReadRequest {
+                    format,
+                    response: sender,
+                });
+                read
             }
         };
-
-        if let Some(sender) = request {
-            (self.0.reader)(format, sender);
-        }
 
         read.await
     }
@@ -260,39 +273,12 @@ pub enum NativeDragPreview {
     },
 }
 
-pub enum NativeDragCommand {
-    Start {
-        data: DragData,
-        actions: Vec<DropAction>,
-        preview: Option<NativeDragPreview>,
-        scope_id: ScopeId,
-        response: oneshot::Sender<Result<NativeDragResult, DragError>>,
-    },
-    Read {
-        transfer: i64,
-        format: DragDataType,
-        response: oneshot::Sender<Result<DragValue, DragError>>,
-    },
-    Accept {
-        transfer: i64,
-        generation: u64,
-        target: NodeId,
-        action: DropAction,
-    },
-}
-
-impl NativeDragCommand {
-    pub fn unsupported(self) {
-        match self {
-            Self::Start { response, .. } => {
-                let _ = response.send(Err(DragError::Unsupported));
-            }
-            Self::Read { response, .. } => {
-                let _ = response.send(Err(DragError::Unsupported));
-            }
-            Self::Accept { .. } => {}
-        }
-    }
+pub struct NativeDragCommand {
+    pub data: DragData,
+    pub actions: Vec<DropAction>,
+    pub preview: Option<NativeDragPreview>,
+    pub scope_id: ScopeId,
+    pub response: oneshot::Sender<Result<NativeDragResult, DragError>>,
 }
 
 pub trait NativeDragPlatformWindow {
@@ -313,7 +299,7 @@ impl NativeDragPlatformWindow for PlatformWindow {
         preview: Option<NativeDragPreview>,
     ) -> Result<NativeDragResult, DragError> {
         let (response, receiver) = oneshot::channel();
-        let command = NativeDragCommand::Start {
+        let command = NativeDragCommand {
             data,
             actions,
             preview,
