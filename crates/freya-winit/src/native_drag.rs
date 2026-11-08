@@ -1,3 +1,5 @@
+use std::io;
+
 use freya_core::integration::*;
 use futures_channel::oneshot;
 use rustc_hash::FxHashMap;
@@ -138,6 +140,29 @@ impl NativeDragState {
         }
     }
 
+    pub(crate) fn receive(
+        &mut self,
+        transfer: DataTransferId,
+        serial: AsyncRequestSerial,
+        value: &dyn TypedData,
+    ) {
+        let Some(pending) = self.reads.remove(&serial) else {
+            return;
+        };
+        let result = if pending.transfer == transfer {
+            match pending.read(value) {
+                Err(error) if error.kind() == io::ErrorKind::WouldBlock => {
+                    self.reads.insert(serial, pending);
+                    return;
+                }
+                result => result.map_err(|error| DragError::InvalidData(error.to_string())),
+            }
+        } else {
+            Err(DragError::Expired)
+        };
+        let _ = pending.response.send(result);
+    }
+
     pub(crate) fn expire(&mut self) {
         if let Some(incoming) = self.incoming.take() {
             incoming.data.expire();
@@ -190,33 +215,30 @@ pub(crate) fn to_type_hint(format: DragDataType) -> TypeHint {
 }
 
 impl PendingRead {
-    pub(crate) fn read(&self, value: &dyn TypedData) -> Result<DragValue, DragError> {
+    fn read(&self, value: &dyn TypedData) -> io::Result<DragValue> {
         match self.format {
             DragDataType::Files => {
-                let uris = value
-                    .try_as_uris()
-                    .map_err(|error| DragError::InvalidData(error.to_string()))?;
+                let uris = value.try_as_uris()?;
                 let paths = uris
                     .into_iter()
                     .map(|uri| {
                         Url::parse(&uri)
-                            .map_err(|error| DragError::InvalidData(error.to_string()))?
+                            .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?
                             .to_file_path()
                             .map_err(|_| {
-                                DragError::InvalidData("A dropped URI is not a local file".into())
+                                io::Error::new(
+                                    io::ErrorKind::InvalidData,
+                                    "A dropped URI is not a local file",
+                                )
                             })
                     })
                     .collect::<Result<Vec<_>, _>>()?;
                 Ok(DragValue::Files(paths))
             }
-            DragDataType::Text | DragDataType::Html | DragDataType::Rtf => value
-                .try_as_string()
-                .map(DragValue::Text)
-                .map_err(|error| DragError::InvalidData(error.to_string())),
-            _ => value
-                .try_as_bytes()
-                .map(DragValue::Bytes)
-                .map_err(|error| DragError::InvalidData(error.to_string())),
+            DragDataType::Text | DragDataType::Html | DragDataType::Rtf => {
+                value.try_as_string().map(DragValue::Text)
+            }
+            _ => value.try_as_bytes().map(DragValue::Bytes),
         }
     }
 }

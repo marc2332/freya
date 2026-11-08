@@ -789,44 +789,39 @@ impl WinitRenderer {
                     self.process_pending_updates(event_loop);
                 }
                 WindowEvent::DataTransferReceived { id, serial, value } => {
-                    if let Some(pending) = app.native_drag.reads.remove(&serial) {
-                        let result = if pending.transfer == id {
-                            pending.read(value.as_ref())
-                        } else {
-                            Err(DragError::Expired)
-                        };
-                        let _ = pending.response.send(result);
-                    }
+                    app.native_drag.receive(id, serial, value.as_ref());
                 }
                 WindowEvent::OutgoingDragDropped { id, action } => {
-                    if let Some((_, response)) = app
+                    let Some((_, response)) = app
                         .native_drag
                         .outgoing
                         .take_if(|(outgoing_id, _)| *outgoing_id == id)
-                    {
-                        let action = action.and_then(|action| match action {
-                            DndAction::Copy => Some(DropAction::Copy),
-                            DndAction::Move => Some(DropAction::Move),
-                            DndAction::Link => Some(DropAction::Link),
-                            _ => None,
-                        });
-                        let _ = response.send(Ok(NativeDragResult::Dropped(action)));
-                    }
+                    else {
+                        return;
+                    };
+                    let action = action.and_then(|action| match action {
+                        DndAction::Copy => Some(DropAction::Copy),
+                        DndAction::Move => Some(DropAction::Move),
+                        DndAction::Link => Some(DropAction::Link),
+                        _ => None,
+                    });
+                    let _ = response.send(Ok(NativeDragResult::Dropped(action)));
                     app.mouse_state = ElementState::Released;
-                    app.queue_platform_events(vec![PlatformEvent::PointerExit {
+                    app.queue_platform_events(vec![PlatformEvent::PointerCancel {
                         cursor: app.position,
                     }]);
                 }
                 WindowEvent::OutgoingDragCanceled { id } => {
-                    if let Some((_, response)) = app
+                    let Some((_, response)) = app
                         .native_drag
                         .outgoing
                         .take_if(|(outgoing_id, _)| *outgoing_id == id)
-                    {
-                        let _ = response.send(Ok(NativeDragResult::Cancelled));
-                    }
+                    else {
+                        return;
+                    };
+                    let _ = response.send(Ok(NativeDragResult::Cancelled));
                     app.mouse_state = ElementState::Released;
-                    app.queue_platform_events(vec![PlatformEvent::PointerExit {
+                    app.queue_platform_events(vec![PlatformEvent::PointerCancel {
                         cursor: app.position,
                     }]);
                 }
