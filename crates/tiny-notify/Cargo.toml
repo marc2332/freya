@@ -1,6 +1,6 @@
 [package]
 name = "tiny-notify"
-version = "0.5.0"
+version.workspace = true
 description = "Executor-independent single-waiter and broadcast notification primitives"
 edition = "2024"
 license = "MIT"

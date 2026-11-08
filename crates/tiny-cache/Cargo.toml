@@ -1,6 +1,6 @@
 [package]
 name = "tiny-cache"
-version = "0.5.0"
+version.workspace = true
 description = "FIFO and per-user LRU caches with shared values"
 edition = "2024"
 license = "MIT"
