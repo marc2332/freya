@@ -1,11 +1,18 @@
 use std::{
     cell::RefCell,
+    fmt,
     ops::{
         Deref,
         Div,
     },
-    path::PathBuf,
     rc::Rc,
+    sync::{
+        Arc,
+        atomic::{
+            AtomicBool,
+            Ordering,
+        },
+    },
 };
 
 pub use accesskit::{
@@ -18,9 +25,16 @@ use torin::prelude::{
     Size2D,
 };
 
-use crate::data::{
-    StyleState,
-    TextStyleState,
+use crate::{
+    data::{
+        StyleState,
+        TextStyleState,
+    },
+    native_drag::{
+        DragDataHandle,
+        DropAction,
+    },
+    node_id::NodeId,
 };
 
 #[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
@@ -314,15 +328,59 @@ impl ImePreeditEventData {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct FileEventData {
-    pub cursor: CursorPoint,
-    pub file_paths: Vec<PathBuf>,
+/// The first accepting handler wins while a drag event bubbles.
+#[derive(Clone)]
+pub struct DragDecision {
+    accepted: Arc<AtomicBool>,
+    notify: Arc<dyn Fn(NodeId, DropAction) + Send + Sync>,
 }
 
-impl FileEventData {
-    pub(crate) fn new(cursor: CursorPoint, file_paths: Vec<PathBuf>) -> Self {
-        Self { cursor, file_paths }
+impl PartialEq for DragDecision {
+    fn eq(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.accepted, &other.accepted)
+    }
+}
+
+impl fmt::Debug for DragDecision {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("DragDecision")
+            .field("accepted", &self.accepted.load(Ordering::Relaxed))
+            .finish()
+    }
+}
+
+impl DragDecision {
+    pub fn new(notify: impl Fn(NodeId, DropAction) + Send + Sync + 'static) -> Self {
+        Self {
+            accepted: Arc::new(AtomicBool::new(false)),
+            notify: Arc::new(notify),
+        }
+    }
+
+    fn accept(&self, target: NodeId, action: DropAction) {
+        if !self.accepted.swap(true, Ordering::Relaxed) {
+            (self.notify)(target, action);
+        }
+    }
+}
+
+/// Drag data and its position in logical pixels.
+#[derive(Clone, Debug, PartialEq)]
+pub struct DragEventData {
+    pub data: DragDataHandle,
+    pub global_location: CursorPoint,
+    pub element_location: CursorPoint,
+    pub(crate) target: NodeId,
+    pub(crate) decision: Option<DragDecision>,
+}
+
+impl DragEventData {
+    /// Accepts this drag over the current element.
+    pub fn accept(&self, action: DropAction) {
+        if let Some(decision) = &self.decision {
+            decision.accept(self.target, action);
+        }
     }
 }
 
@@ -338,5 +396,5 @@ pub enum EventType {
     Touch(TouchEventData),
     Pointer(PointerEventData),
     ImePreedit(ImePreeditEventData),
-    File(FileEventData),
+    Drag(DragEventData),
 }

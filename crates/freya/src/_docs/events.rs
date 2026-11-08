@@ -47,7 +47,13 @@
 //! - Layout: [`on_sized`](freya_core::prelude::EventHandlersExt::on_sized),
 //!   [`on_visible`](freya_core::prelude::EventHandlersExt::on_visible),
 //!   [`on_hidden`](freya_core::prelude::EventHandlersExt::on_hidden).
-//! - Files: [`on_file_drop`](freya_core::prelude::EventHandlersExt::on_file_drop).
+//! - Native drag and drop: [`on_drag_enter`](freya_core::prelude::EventHandlersExt::on_drag_enter),
+//!   [`on_drag_over`](freya_core::prelude::EventHandlersExt::on_drag_over),
+//!   [`on_drag_leave`](freya_core::prelude::EventHandlersExt::on_drag_leave),
+//!   [`on_drop`](freya_core::prelude::EventHandlersExt::on_drop).
+//!
+//! Accept drops with `event.accept(DropAction::Copy)` in `on_drag_over`.
+//! In `on_drop`, read data with `event.data.read_files().await` or `event.data.read_text().await`.
 //!
 //! Each handler receives an [`Event<D>`](freya_core::prelude::Event) where `D` is the payload
 //! (e.g [`PointerEventData`](freya_core::prelude::PointerEventData),
@@ -166,8 +172,6 @@
 //! - [`on_global_pointer_move`](freya_core::prelude::EventHandlersExt::on_global_pointer_move)
 //! - [`on_global_key_down`](freya_core::prelude::EventHandlersExt::on_global_key_down)
 //! - [`on_global_key_up`](freya_core::prelude::EventHandlersExt::on_global_key_up)
-//! - [`on_global_file_hover`](freya_core::prelude::EventHandlersExt::on_global_file_hover)
-//! - [`on_global_file_hover_cancelled`](freya_core::prelude::EventHandlersExt::on_global_file_hover_cancelled)
 //!
 //! Global events do **not** bubble (they are dispatched directly to every listener), so
 //! `stop_propagation` has no effect on them. A non-global handler that calls

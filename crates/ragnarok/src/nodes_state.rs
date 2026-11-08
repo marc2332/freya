@@ -17,6 +17,7 @@ use crate::{
 pub struct NodesState<Key: NodeKey> {
     pressed_nodes: FxHashSet<Key>,
     hovered_nodes: FxHashSet<Key>,
+    drag_hovered_nodes: FxHashSet<Key>,
     visible_nodes: FxHashSet<Key>,
     entered_node: Option<Key>,
 }
@@ -26,6 +27,7 @@ impl<Key: NodeKey> Default for NodesState<Key> {
         Self {
             pressed_nodes: FxHashSet::default(),
             hovered_nodes: FxHashSet::default(),
+            drag_hovered_nodes: FxHashSet::default(),
             visible_nodes: FxHashSet::default(),
             entered_node: None,
         }
@@ -40,7 +42,7 @@ impl<Key: NodeKey> NodesState<Key> {
     pub(crate) fn retain_states<
         Emmitable: EmmitableEvent<Key = Key, Name = Name>,
         Name: NameOfEvent,
-        Source: SourceEvent,
+        Source: SourceEvent<Key = Key>,
     >(
         &mut self,
         events_measurer: &impl EventsMeasurer<
@@ -51,6 +53,7 @@ impl<Key: NodeKey> NodesState<Key> {
         >,
         emmitable_events: &[Emmitable],
         source_events: &[Source],
+        update: &NodesStatesUpdate<Key>,
     ) -> Vec<Emmitable> {
         let mut collateral_emmitable_events = Vec::default();
 
@@ -91,21 +94,21 @@ impl<Key: NodeKey> NodesState<Key> {
                         .try_location()
                         .is_none_or(|cursor| events_measurer.is_point_inside(node_key, cursor))
             });
-
             if cursor_still_inside {
                 return true;
             }
 
-            // Emit leave events for nodes no longer hovered
-            let source_event = source_movement_event.unwrap();
-            for derived_event in Name::new_leave().get_derived_events() {
-                if events_measurer.is_listening_to(node_key, &derived_event) {
-                    collateral_emmitable_events.push(events_measurer.new_emmitable_event(
-                        *node_key,
-                        derived_event,
-                        source_event.clone(),
-                        Some(area),
-                    ));
+            // Emit leave events for nodes no longer hovered.
+            if let Some(source_event) = source_movement_event {
+                for derived_event in Name::new_leave().get_derived_events() {
+                    if events_measurer.is_listening_to(node_key, &derived_event) {
+                        collateral_emmitable_events.push(events_measurer.new_emmitable_event(
+                            *node_key,
+                            derived_event,
+                            source_event.clone(),
+                            Some(area),
+                        ));
+                    }
                 }
             }
 
@@ -113,7 +116,37 @@ impl<Key: NodeKey> NodesState<Key> {
             tracing::info!("Unmarked as hovered {:?}", node_key);
 
             removed_from_hovered.insert(*node_key);
+            false
+        });
 
+        let source_drag_event = source_events
+            .iter()
+            .find(|event| event.is_drag_over() || event.is_drag_leave());
+
+        // Retain drag hover using the already measured visible hits.
+        self.drag_hovered_nodes.retain(|node_key| {
+            let Some(area) = events_measurer.try_area_of(node_key) else {
+                return false;
+            };
+            let Some(source_event) = source_drag_event else {
+                return true;
+            };
+            if !source_event.is_drag_leave() && update.drag_hovered_nodes.contains(node_key) {
+                return true;
+            }
+
+            if let Some(name) = Name::new_drag_leave() {
+                for derived_event in name.get_derived_events() {
+                    if events_measurer.is_listening_to(node_key, &derived_event) {
+                        collateral_emmitable_events.push(events_measurer.new_emmitable_event(
+                            *node_key,
+                            derived_event,
+                            source_event.clone(),
+                            Some(area),
+                        ));
+                    }
+                }
+            }
             false
         });
 
@@ -167,6 +200,7 @@ impl<Key: NodeKey> NodesState<Key> {
     >(
         &mut self,
         emmitable_events: &mut Vec<Emmitable>,
+        update_pointer_hover: bool,
     ) {
         // The exclusive enter event identifies the entered node
         let entered_node = emmitable_events
@@ -184,6 +218,8 @@ impl<Key: NodeKey> NodesState<Key> {
             .map(|e| e.key());
 
         emmitable_events.retain(|ev| match ev.name() {
+            // Deduplicate drag enters against the separate drag hover state.
+            name if name.is_drag_enter() => !self.drag_hovered_nodes.contains(&ev.key()),
             // Deduplicate exclusive enter against `entered_node`
             _ if ev.name().is_exclusive_enter() => {
                 entered_node.as_ref() == Some(&ev.key()) && entered_node != self.entered_node
@@ -195,19 +231,22 @@ impl<Key: NodeKey> NodesState<Key> {
             _ => true,
         });
 
-        self.entered_node = entered_node.or_else(|| {
-            self.entered_node
-                .filter(|node| self.hovered_nodes.contains(node))
-        });
+        if update_pointer_hover {
+            self.entered_node = entered_node.or_else(|| {
+                self.entered_node
+                    .filter(|node| self.hovered_nodes.contains(node))
+            });
+        }
     }
 
     /// Create the nodes states given the [PotentialEvent]s.
-    pub fn create_update<Name: NameOfEvent, Source: SourceEvent>(
+    pub fn create_update<Name: NameOfEvent, Source: SourceEvent<Key = Key>>(
         &self,
         events_measurer: &impl EventsMeasurer<Key = Key, Name = Name>,
         potential_events: &PotentialEvents<Key, Name, Source>,
     ) -> NodesStatesUpdate<Key> {
         let mut hovered_nodes = FxHashSet::default();
+        let mut drag_hovered_nodes = FxHashSet::default();
         let mut pressed_nodes = FxHashSet::default();
 
         for (name, events) in potential_events {
@@ -229,6 +268,9 @@ impl<Key: NodeKey> NodesState<Key> {
                 }
 
                 match name {
+                    name if name.is_drag_over() => {
+                        drag_hovered_nodes.insert(*node_key);
+                    }
                     name if name.is_moved() && tracks_hover => {
                         hovered_nodes.insert(*node_key);
 
@@ -253,12 +295,14 @@ impl<Key: NodeKey> NodesState<Key> {
         NodesStatesUpdate {
             pressed_nodes,
             hovered_nodes,
+            drag_hovered_nodes,
         }
     }
 
     /// Apply the given [NodesStatesUpdate], extending the cached hovered/pressed nodes.
     pub fn apply_update(&mut self, update: NodesStatesUpdate<Key>) {
         self.hovered_nodes.extend(update.hovered_nodes);
+        self.drag_hovered_nodes.extend(update.drag_hovered_nodes);
         self.pressed_nodes.extend(update.pressed_nodes);
     }
 
@@ -289,6 +333,7 @@ impl<Key: NodeKey> NodesState<Key> {
 pub struct NodesStatesUpdate<Key: NodeKey> {
     pressed_nodes: FxHashSet<Key>,
     hovered_nodes: FxHashSet<Key>,
+    drag_hovered_nodes: FxHashSet<Key>,
 }
 
 impl<Key: NodeKey> Default for NodesStatesUpdate<Key> {
@@ -296,6 +341,7 @@ impl<Key: NodeKey> Default for NodesStatesUpdate<Key> {
         Self {
             pressed_nodes: FxHashSet::default(),
             hovered_nodes: FxHashSet::default(),
+            drag_hovered_nodes: FxHashSet::default(),
         }
     }
 }
@@ -304,6 +350,9 @@ impl<Key: NodeKey> NodesStatesUpdate<Key> {
     /// Discard the state of a given [NodeKey] and [NameOfEvent] in this [NodesStatesUpdate].
     pub fn discard<Name: NameOfEvent>(&mut self, name: &Name, node_key: &Key) {
         match name {
+            _ if name.is_drag_over() => {
+                self.drag_hovered_nodes.remove(node_key);
+            }
             _ if name.is_moved() => {
                 self.hovered_nodes.remove(node_key);
             }

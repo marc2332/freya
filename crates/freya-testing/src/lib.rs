@@ -218,6 +218,11 @@ impl TestingRunner {
                         UserEvent::FocusAccessibilityNode(strategy) => {
                             requested_focus_strategy.borrow_mut().replace(strategy);
                         }
+                        UserEvent::Erased(command) => {
+                            if let Ok(command) = command.0.downcast::<NativeDragCommand>() {
+                                command.unsupported();
+                            }
+                        }
                         UserEvent::RequestRedraw | UserEvent::SetCustomScaleFactor(_) => {
                             // Nothing
                         }

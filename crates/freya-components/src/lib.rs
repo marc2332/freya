@@ -28,6 +28,7 @@ pub mod integration;
 pub mod lazy;
 pub mod loader;
 pub mod menu;
+pub mod native_drag;
 pub mod overflowed_content;
 pub mod popup;
 pub mod portal;
