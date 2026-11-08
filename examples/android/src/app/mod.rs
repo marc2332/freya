@@ -1,5 +1,7 @@
 mod routes;
 
+#[cfg(target_os = "android")]
+use freya::android::AndroidExt;
 use freya::{
     animation::*,
     icons::lucide,
@@ -58,16 +60,22 @@ impl Component for AppTopBar {
     fn render(&self) -> impl IntoElement {
         use_init_theme(light_theme);
 
+        #[cfg(target_os = "android")]
+        let content_padding = Platform::get().content_padding();
+        #[cfg(not(target_os = "android"))]
+        let content_padding = Gaps::default();
+
         rect().native_router().child(AnimatedRouter::<Route>::new(
             rect()
                 .content(Content::flex())
+                .padding(content_padding)
                 .theme_background()
                 .theme_color()
                 .child(
                     rect()
                         .width(Size::fill())
                         .height(Size::flex(1.))
-                        .padding((40., 0., 8., 0.))
+                        .padding((0., 0., 8., 0.))
                         .child(AnimatedOutlet),
                 )
                 .child(
@@ -75,7 +83,7 @@ impl Component for AppTopBar {
                         .horizontal()
                         .width(Size::fill())
                         .main_align(Alignment::center())
-                        .padding((4., 4., 20., 4.))
+                        .padding(4.)
                         .spacing(4.)
                         .child(tab(Route::ScrollView, "Scroll", lucide::scroll_text))
                         .child(tab(Route::Widgets, "Widgets", lucide::sliders_horizontal))
