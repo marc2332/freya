@@ -9,6 +9,7 @@ use crate::{
         data::{
             EventType,
             KeyboardEventData,
+            MouseButton,
             MouseEventData,
             PointerEventData,
             TouchEventData,
@@ -76,6 +77,17 @@ impl EmmitableEvent {
         let bubbles = name.does_bubble();
 
         match platform_event {
+            PlatformEvent::PointerCancel { cursor } => Self::new(
+                node_id,
+                name,
+                PlatformEvent::Mouse {
+                    name: MouseEventName::MouseUp,
+                    cursor,
+                    button: Some(MouseButton::Left),
+                },
+                node_area,
+                scale_factor,
+            ),
             PlatformEvent::PointerExit { cursor } => Self::new(
                 node_id,
                 name,

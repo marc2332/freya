@@ -57,6 +57,13 @@ impl<Key: NodeKey> NodesState<Key> {
     ) -> Vec<Emmitable> {
         let mut collateral_emmitable_events = Vec::default();
 
+        if source_events
+            .iter()
+            .any(|event| event.is_pointer_cancelled())
+        {
+            self.pressed_nodes.clear();
+        }
+
         let source_press_event = source_events.iter().any(|e| e.is_pressed());
 
         #[allow(unused_variables)]
@@ -76,9 +83,12 @@ impl<Key: NodeKey> NodesState<Key> {
             true
         });
 
-        let source_movement_event = source_events
-            .iter()
-            .find(|e| e.is_moved() || e.is_touch_released() || e.is_pointer_exit());
+        let source_movement_event = source_events.iter().find(|event| {
+            event.is_moved()
+                || event.is_touch_released()
+                || event.is_pointer_exit()
+                || event.is_pointer_cancelled()
+        });
         let mut removed_from_hovered = FxHashSet::default();
 
         self.hovered_nodes.retain(|node_key| {
@@ -89,6 +99,7 @@ impl<Key: NodeKey> NodesState<Key> {
 
             let cursor_still_inside = source_movement_event.is_none_or(|event| {
                 !event.is_pointer_exit()
+                    && !event.is_pointer_cancelled()
                     && !event.is_touch_released()
                     && event
                         .try_location()

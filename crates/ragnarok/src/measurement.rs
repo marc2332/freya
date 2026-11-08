@@ -81,7 +81,10 @@ pub fn measure_potential_events<
                 continue;
             }
             for source_event in source_events {
-                if source_event.is_pointer_exit() || source_event.is_drag_leave() {
+                if source_event.is_pointer_exit()
+                    || source_event.is_pointer_cancelled()
+                    || source_event.is_drag_leave()
+                {
                     continue;
                 }
                 let Some(cursor) = source_event.try_location() else {

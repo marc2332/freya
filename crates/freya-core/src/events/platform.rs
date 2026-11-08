@@ -95,6 +95,8 @@ pub enum PlatformEvent {
     },
     /// The pointer exited the window at its last known position.
     PointerExit { cursor: CursorPoint },
+    /// Ends a pointer gesture without clicking an element.
+    PointerCancel { cursor: CursorPoint },
     /// A Keyboard Event.
     Keyboard {
         name: KeyboardEventName,
@@ -259,6 +261,10 @@ impl ragnarok::SourceEvent for PlatformEvent {
         matches!(self, Self::PointerExit { .. })
     }
 
+    fn is_pointer_cancelled(&self) -> bool {
+        matches!(self, Self::PointerCancel { .. })
+    }
+
     /// Check if this event ends or cancels a touch.
     fn is_touch_released(&self) -> bool {
         matches!(
@@ -274,6 +280,7 @@ impl ragnarok::SourceEvent for PlatformEvent {
         match self {
             Self::Mouse { name, .. } => (*name).into(),
             Self::PointerExit { .. } => EventName::MouseMove,
+            Self::PointerCancel { .. } => EventName::MouseUp,
             Self::Keyboard { name, .. } => (*name).into(),
             Self::Wheel { name, .. } => (*name).into(),
             Self::ImePreedit { name, .. } => (*name).into(),

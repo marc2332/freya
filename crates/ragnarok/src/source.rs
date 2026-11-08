@@ -15,6 +15,10 @@ pub trait SourceEvent: Clone + PartialEq {
         false
     }
 
+    fn is_pointer_cancelled(&self) -> bool {
+        false
+    }
+
     fn is_drag_over(&self) -> bool {
         self.as_event_name().is_drag_over()
     }
