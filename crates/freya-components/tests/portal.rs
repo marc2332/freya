@@ -45,21 +45,27 @@ pub fn portal_animates_position_change() {
     }
 
     let mut test = launch_test(portal_app);
-    test.animation_clock().disable();
-    test.poll_n(Duration::from_millis(1), 15);
+    test.poll_n(Duration::ZERO, 8);
 
     let initial_a_x = label_x(&test, "A");
     let initial_b_x = label_x(&test, "B");
     assert!(initial_a_x < initial_b_x);
 
     test.click_cursor((15.0, 15.0));
-    test.poll_n(Duration::from_millis(1), 15);
+    test.poll_n(Duration::ZERO, 8);
+
+    let midpoint = (initial_a_x + initial_b_x) / 2.;
+    assert!(label_x(&test, "A") < midpoint);
+    assert!(label_x(&test, "B") > midpoint);
+
+    test.animation_clock().disable();
+    test.poll_n(Duration::ZERO, 8);
 
     assert_eq!(label_x(&test, "A"), initial_b_x);
     assert_eq!(label_x(&test, "B"), initial_a_x);
 }
 
-fn spaced_portal_app(dependency: fn(bool) -> u8) -> impl IntoElement {
+fn spaced_portal_app(dependency: fn(bool) -> u8, remount: bool) -> impl IntoElement {
     let mut spaced = use_state(|| false);
 
     rect()
@@ -76,35 +82,50 @@ fn spaced_portal_app(dependency: fn(bool) -> u8) -> impl IntoElement {
                         .width(Size::px(if spaced() { 100. } else { 0. }))
                         .height(Size::px(100.)),
                 )
-                .child(test_portal("A").animation_dependency(dependency(spaced()))),
+                .child(
+                    test_portal("A")
+                        .key(("A", remount && spaced()))
+                        .animation_dependency(dependency(spaced())),
+                ),
         )
 }
 
 #[test]
 pub fn portal_with_dependency_snaps_on_unrelated_layout_change() {
-    let mut test = launch_test(|| spaced_portal_app(|_| 0));
-    test.poll_n(Duration::from_millis(1), 15);
+    let mut test = launch_test(|| spaced_portal_app(|_| 0, false));
+    test.poll_n(Duration::ZERO, 8);
     let initial_x = label_x(&test, "A");
 
     test.click_cursor((15.0, 15.0));
-    test.poll_n(Duration::from_millis(1), 15);
+    test.poll_n(Duration::ZERO, 8);
 
     assert_eq!(label_x(&test, "A"), initial_x + 100.);
 }
 
 #[test]
 pub fn portal_with_dependency_animates_on_dependency_change() {
-    let mut test = launch_test(|| spaced_portal_app(|spaced| spaced as u8));
-    test.poll_n(Duration::from_millis(1), 15);
-    let initial_x = label_x(&test, "A");
+    for remount in [false, true] {
+        for poll_before_layout_events in [false, true] {
+            let mut test = launch_test(move || spaced_portal_app(|spaced| spaced as u8, remount));
+            test.poll_n(Duration::ZERO, 8);
+            let initial_x = label_x(&test, "A");
 
-    test.click_cursor((15.0, 15.0));
-    test.poll_n(Duration::from_millis(1), 15);
+            test.click_cursor((15.0, 15.0));
+            for _ in 0..8 {
+                if poll_before_layout_events {
+                    test.handle_events_immediately();
+                }
+                test.sync_and_update();
+            }
 
-    assert!(label_x(&test, "A") < initial_x + 50.);
+            assert!(
+                label_x(&test, "A") < initial_x + 50.,
+                "remount={remount}, poll_before_layout_events={poll_before_layout_events}"
+            );
 
-    test.animation_clock().disable();
-    test.poll_n(Duration::from_millis(1), 15);
-
-    assert_eq!(label_x(&test, "A"), initial_x + 100.);
+            test.animation_clock().disable();
+            test.poll_n(Duration::ZERO, 8);
+            assert_eq!(label_x(&test, "A"), initial_x + 100.);
+        }
+    }
 }

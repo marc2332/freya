@@ -324,6 +324,7 @@ impl Component for Button {
             .a11y_role(AccessibilityRole::Button)
             .background(background.mul_if(!self.enabled, 0.9))
             .border(border)
+            .margin(theme_layout.margin)
             .padding(theme_layout.padding)
             .corner_radius(theme_layout.corner_radius)
             .width(theme_layout.width)

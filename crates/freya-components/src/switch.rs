@@ -224,6 +224,7 @@ impl Component for Switch {
             .a11y_builder(|builder| builder.set_toggled(Toggled::from(toggled)))
             .width(Size::px(theme_layout.width))
             .height(Size::px(theme_layout.height))
+            .margin(theme_layout.margin)
             .padding(Gaps::new_all(theme_layout.padding))
             .main_align(Alignment::center())
             .offset_x(offset_x - press_size / 2.0)
