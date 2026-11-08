@@ -3,10 +3,7 @@ use freya::{
     prelude::*,
 };
 
-use crate::showcases::{
-    DemoGrid,
-    inline_menu,
-};
+use crate::showcases::DemoGrid;
 
 demos! {
     ButtonDemo => "Button" {
@@ -85,7 +82,8 @@ demos! {
     MenuItemDemo => "MenuItem" {
         let mut selected = use_state(|| 0usize);
 
-        inline_menu()
+        MenuContainer::new()
+            .layer(0)
             .children(["Open", "Save", "Export"].into_iter().enumerate().map(
                 |(index, name)| {
                     MenuItem::new()

@@ -25,6 +25,7 @@ define_theme! {
         background: Color,
         progress_background: Color,
         height: f32,
+        font_size: f32,
     }
 }
 
@@ -102,13 +103,7 @@ impl Component for ProgressBar {
             .corner_radius(99.)
             .overflow(Overflow::Clip)
             .background(progressbar_theme.background)
-            .border(
-                Border::new()
-                    .width(1.)
-                    .alignment(BorderAlignment::Outer)
-                    .fill(progressbar_theme.background),
-            )
-            .font_size(13.)
+            .font_size(progressbar_theme.font_size)
             .child(
                 rect()
                     .horizontal()
