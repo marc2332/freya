@@ -16,7 +16,7 @@ use crate::{
 pub fn measure_source_global_events<
     Key: NodeKey,
     Name: NameOfEvent,
-    Source: SourceEvent<Name = Name>,
+    Source: SourceEvent<Name = Name, Key = Key>,
     Emmitable: EmmitableEvent<Key = Key, Name = Name>,
 >(
     events_measurer: &impl EventsMeasurer<
@@ -25,7 +25,7 @@ pub fn measure_source_global_events<
         Emmitable = Emmitable,
         Source = Source,
     >,
-    source_events: &Vec<Source>,
+    source_events: &[Source],
     emmitable_events: &mut Vec<Emmitable>,
 ) {
     for source_event in source_events {
@@ -57,10 +57,10 @@ pub fn measure_source_global_events<
 pub fn measure_potential_events<
     Key: NodeKey,
     Name: NameOfEvent,
-    Source: SourceEvent<Name = Name>,
+    Source: SourceEvent<Name = Name, Key = Key>,
     Emmitable: EmmitableEvent<Key = Key, Name = Name>,
 >(
-    source_events: &Vec<Source>,
+    source_events: &[Source],
     events_measurer: &impl EventsMeasurer<
         Key = Key,
         Name = Name,
@@ -81,7 +81,7 @@ pub fn measure_potential_events<
                 continue;
             }
             for source_event in source_events {
-                if source_event.is_pointer_exit() {
+                if source_event.is_pointer_exit() || source_event.is_drag_leave() {
                     continue;
                 }
                 let Some(cursor) = source_event.try_location() else {
@@ -126,7 +126,7 @@ pub fn measure_potential_events<
 pub fn measure_emmitable_events<
     Key: NodeKey,
     Name: NameOfEvent,
-    Source: SourceEvent<Name = Name>,
+    Source: SourceEvent<Name = Name, Key = Key>,
     Emmitable: EmmitableEvent,
 >(
     potential_events: &PotentialEvents<Key, Name, Source>,
@@ -140,7 +140,7 @@ pub fn measure_emmitable_events<
     let mut emmitable_events = Vec::new();
 
     for (event, potential_events) in potential_events {
-        // Get the derived events, but exclude globals like some file events
+        // Exclude global events
         let derived_events_names = event
             .get_derived_events()
             .into_iter()
@@ -164,7 +164,14 @@ pub fn measure_emmitable_events<
                     continue;
                 }
 
-                if events_measurer.is_listening_to(node_key, &derived_event_name) {
+                let should_emit = if derived_event_name.is_drop() {
+                    // Emit drops only on their accepted target.
+                    source_event.drop_target() == Some(*node_key)
+                } else {
+                    events_measurer.is_listening_to(node_key, &derived_event_name)
+                };
+
+                if should_emit {
                     let area = events_measurer.try_area_of(node_key);
                     if let Some(area) = area {
                         let emmitable_event = events_measurer.new_emmitable_event(

@@ -43,6 +43,30 @@ pub trait NameOfEvent:
     /// without the node necessarily leaving the cursor area entirely.
     fn new_exclusive_enter() -> Self;
 
+    fn is_drag_enter(&self) -> bool {
+        false
+    }
+
+    fn is_drag_over(&self) -> bool {
+        false
+    }
+
+    fn is_drag_leave(&self) -> bool {
+        false
+    }
+
+    fn is_drop(&self) -> bool {
+        false
+    }
+
+    fn new_drag_enter() -> Option<Self> {
+        None
+    }
+
+    fn new_drag_leave() -> Option<Self> {
+        None
+    }
+
     /// Get a set of events derived from this event. For example, mouse movement derives into mouse movement + mouse enter.
     fn get_derived_events(&self) -> HashSet<Self>;
     /// Get a set of global events derived from this event.

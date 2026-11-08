@@ -294,6 +294,11 @@ impl WebApp {
                 }
                 UserEvent::RequestRedraw => self.needs_render = true,
                 UserEvent::SetCustomScaleFactor(_) => {}
+                UserEvent::Erased(command) => {
+                    if let Ok(command) = command.0.downcast::<NativeDragCommand>() {
+                        command.unsupported();
+                    }
+                }
             }
         }
 
