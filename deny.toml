@@ -139,6 +139,7 @@ allow-build-scripts = [
   { name = "stylo_static_prefs" },
   { name = "syn" },
   { name = "system-configuration-sys" },
+  { name = "target-features" },
   { name = "target-lexicon" },
   { name = "thiserror" },
   { name = "tiny-xlib" },
