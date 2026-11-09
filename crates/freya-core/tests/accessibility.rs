@@ -51,6 +51,49 @@ fn initialization_preserves_pending_focus() {
 }
 
 #[test]
+fn preparing_updates_preserves_focus_without_building_an_update() {
+    let input_id = AccessibilityId(100);
+    let mut runner = Runner::new(move || {
+        rect()
+            .expanded()
+            .child(
+                rect()
+                    .a11y_id(input_id)
+                    .a11y_focusable(true)
+                    .a11y_role(AccessibilityRole::TextInput),
+            )
+            .into_element()
+    });
+    let mut tree = Tree::default();
+    tree.apply_mutations(runner.sync_and_update(), 1.0);
+    let (events_sender, _events_receiver) = futures_channel::mpsc::unbounded();
+    tree.measure_layout(
+        (300.0, 300.0).into(),
+        &mut FontCollection::new(),
+        &FontMgr::default(),
+        &events_sender,
+        &mut NodesState::default(),
+        1.0,
+        &[],
+    );
+    tree.accessibility_diff
+        .request_focus(AccessibilityFocusStrategy::Node(input_id));
+    let mut accessibility = AccessibilityTree::default();
+
+    let updated_nodes = accessibility.prepare_updates(&mut tree, &events_sender);
+
+    assert_eq!(accessibility.focused_id, input_id);
+    assert!(accessibility.focused_node_id().is_some());
+    assert!(tree.accessibility_diff.requested_focus.is_none());
+    assert!(tree.accessibility_diff.added_or_updated.is_empty());
+    assert!(tree.accessibility_diff.removed.is_empty());
+
+    let update = accessibility.build_update(&tree, "", updated_nodes);
+    assert_eq!(update.focus, input_id);
+    assert!(update.nodes.iter().any(|(id, _)| *id == input_id));
+}
+
+#[test]
 fn disabled_nodes_reject_focus_and_release_existing_focus() {
     let input_id = AccessibilityId(100);
     let (mut test, mut enabled) = TestingRunner::new(
