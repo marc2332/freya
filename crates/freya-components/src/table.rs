@@ -24,6 +24,7 @@ define_theme! {
         row_background: Color,
         divider_fill: Color,
         corner_radius: CornerRadius,
+        cell_padding: Gaps,
         color: Color,
     }
 }
@@ -119,9 +120,9 @@ impl Component for TableRow {
                 rect()
                     .width(width)
                     .overflow(Overflow::Clip)
-                    .padding(Gaps::new_all(5.0))
+                    .padding(theme.cell_padding)
                     .horizontal()
-                    .main_align(Alignment::End)
+                    .main_align(Alignment::Start)
                     .cross_align(Alignment::Center)
                     .child(child.clone())
             }))

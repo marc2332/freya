@@ -341,7 +341,7 @@ version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "40c48f72fd53cd289104fc64099abca73db4166ad86ea0b4341abe65af83dadc"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -352,7 +352,7 @@ checksum = "291e6a250ff86cd4a820112fb8898808a366d8f9f58ce16d1f538353ad55747d"
 dependencies = [
  "anstyle",
  "once_cell_polyfill",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2310,7 +2310,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2719,7 +2719,7 @@ dependencies = [
 
 [[package]]
 name = "freya"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "cfg-if 1.0.4",
  "freya-android",
@@ -2756,7 +2756,7 @@ dependencies = [
 
 [[package]]
 name = "freya-android"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "freya-components",
  "freya-core",
@@ -2768,7 +2768,7 @@ dependencies = [
 
 [[package]]
 name = "freya-animation"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "easer",
  "freya",
@@ -2778,7 +2778,7 @@ dependencies = [
 
 [[package]]
 name = "freya-borderless-plugin"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "freya-core",
  "freya-engine",
@@ -2788,7 +2788,7 @@ dependencies = [
 
 [[package]]
 name = "freya-camera"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "blocking",
  "bytes",
@@ -2802,7 +2802,7 @@ dependencies = [
 
 [[package]]
 name = "freya-clipboard"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "copypasta",
  "freya",
@@ -2813,7 +2813,7 @@ dependencies = [
 
 [[package]]
 name = "freya-code-editor"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "freya-components",
  "freya-core",
@@ -2830,7 +2830,7 @@ dependencies = [
 
 [[package]]
 name = "freya-components"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "accesskit",
  "anyhow",
@@ -2858,7 +2858,7 @@ dependencies = [
 
 [[package]]
 name = "freya-core"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "accesskit",
  "async-io",
@@ -2897,7 +2897,7 @@ dependencies = [
 
 [[package]]
 name = "freya-devtools"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "accesskit",
  "anyhow",
@@ -2916,7 +2916,7 @@ dependencies = [
 
 [[package]]
 name = "freya-devtools-app"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "async-lock",
  "async-tungstenite",
@@ -2934,7 +2934,7 @@ dependencies = [
 
 [[package]]
 name = "freya-edit"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "bitflags 2.13.1",
  "freya",
@@ -2949,14 +2949,14 @@ dependencies = [
 
 [[package]]
 name = "freya-engine"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "freya-skia-safe",
 ]
 
 [[package]]
 name = "freya-html"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "anyrender",
  "atomic_refcell",
@@ -2986,7 +2986,7 @@ dependencies = [
 
 [[package]]
 name = "freya-i18n"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "fluent",
  "freya",
@@ -3000,7 +3000,7 @@ dependencies = [
 
 [[package]]
 name = "freya-icons"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "bytes",
  "freya",
@@ -3008,7 +3008,7 @@ dependencies = [
 
 [[package]]
 name = "freya-markdown"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "freya",
  "freya-code-editor",
@@ -3020,7 +3020,7 @@ dependencies = [
 
 [[package]]
 name = "freya-material-design"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "freya",
  "freya-animation",
@@ -3031,7 +3031,7 @@ dependencies = [
 
 [[package]]
 name = "freya-metrics-plugin"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "freya-core",
  "freya-engine",
@@ -3041,7 +3041,7 @@ dependencies = [
 
 [[package]]
 name = "freya-plotters-backend"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "freya-engine",
  "plotters-backend",
@@ -3049,7 +3049,7 @@ dependencies = [
 
 [[package]]
 name = "freya-query"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "freya",
  "freya-core",
@@ -3059,7 +3059,7 @@ dependencies = [
 
 [[package]]
 name = "freya-radio"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "freya",
  "freya-core",
@@ -3070,7 +3070,7 @@ dependencies = [
 
 [[package]]
 name = "freya-router"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "freya",
  "freya-core",
@@ -3082,7 +3082,7 @@ dependencies = [
 
 [[package]]
 name = "freya-router-macro"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "freya",
  "freya-router",
@@ -3094,7 +3094,7 @@ dependencies = [
 
 [[package]]
 name = "freya-sdk"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "freya-core",
  "tokio",
@@ -3143,7 +3143,7 @@ dependencies = [
 
 [[package]]
 name = "freya-terminal"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "freya",
  "freya-core",
@@ -3164,7 +3164,7 @@ dependencies = [
 
 [[package]]
 name = "freya-testing"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "accesskit",
  "freya",
@@ -3179,7 +3179,7 @@ dependencies = [
 
 [[package]]
 name = "freya-video"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "anyhow",
  "async-channel",
@@ -3200,7 +3200,7 @@ dependencies = [
 
 [[package]]
 name = "freya-web"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "accesskit",
  "euclid",
@@ -3217,7 +3217,7 @@ dependencies = [
 
 [[package]]
 name = "freya-winit"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "accesskit",
  "accesskit_winit",
@@ -3606,18 +3606,12 @@ dependencies = [
 
 [[package]]
 name = "hashbrown"
-version = "0.14.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5274423e17b7c9fc20b6e7e208532f9b19825d82dfd615708b70edd83df41f1"
-dependencies = [
- "ahash",
-]
-
-[[package]]
-name = "hashbrown"
 version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "841d1cc9bed7f9236f321df977030373f4a4163ae1a7dbfe1a51a2c1a51d9100"
+dependencies = [
+ "foldhash",
+]
 
 [[package]]
 name = "hashbrown"
@@ -3632,11 +3626,11 @@ dependencies = [
 
 [[package]]
 name = "hashlink"
-version = "0.9.1"
+version = "0.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ba4ff7128dee98c7dc9794b6a411377e1404dba1c97deb8d1a55297bd25d8af"
+checksum = "a596f1b20ed2cc5ecac41a164aaebc7258057060f06c0cf7a2ba3991ee7990fb"
 dependencies = [
- "hashbrown 0.14.5",
+ "hashbrown 0.17.1",
 ]
 
 [[package]]
@@ -4476,9 +4470,9 @@ dependencies = [
 
 [[package]]
 name = "libsqlite3-sys"
-version = "0.30.1"
+version = "0.39.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e99fb7a497b1e3339bc746195567ed8d3e24945ecd636e3619d20b9de9e9149"
+checksum = "14a5f01b87b92705d07b433c06f96cbc764637d81a0bffb5734ce17cf0f9a2b3"
 dependencies = [
  "cc",
  "pkg-config",
@@ -4777,7 +4771,7 @@ dependencies = [
  "objc2-foundation 0.3.2",
  "png 0.18.1",
  "thiserror 2.0.19",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5023,7 +5017,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5737,7 +5731,7 @@ checksum = "2ee67f1008b1ba2321834326597b8e186293b049a023cdef258527550b9935b4"
 
 [[package]]
 name = "pathgraph"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 
 [[package]]
 name = "peeking_take_while"
@@ -6247,7 +6241,7 @@ dependencies = [
  "once_cell",
  "socket2",
  "tracing",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6273,7 +6267,7 @@ checksum = "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf"
 
 [[package]]
 name = "ragnarok"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "euclid",
  "hashbrown 0.16.1",
@@ -6820,10 +6814,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "rusqlite"
-version = "0.32.1"
+name = "rsqlite-vfs"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7753b721174eb8ff87a9a0e799e2d7bc3749323e773db92e0984debb00019d6e"
+checksum = "c51c9ae4df8a7fba42103df5c621fa3c37eccf3a3c650879e90fc48b11cc192c"
+dependencies = [
+ "hashbrown 0.16.1",
+ "thiserror 2.0.19",
+]
+
+[[package]]
+name = "rusqlite"
+version = "0.41.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "da9bba6f3506135e120a6586df05be18b48d18896600646a4bec8f993d91a594"
 dependencies = [
  "bitflags 2.13.1",
  "fallible-iterator",
@@ -6831,6 +6835,7 @@ dependencies = [
  "hashlink",
  "libsqlite3-sys",
  "smallvec",
+ "sqlite-wasm-rs",
 ]
 
 [[package]]
@@ -6877,7 +6882,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.12.1",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6936,7 +6941,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7457,7 +7462,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4"
 dependencies = [
  "libc",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7499,6 +7504,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3763264f6b73151db08c50ff20d7d8a0b8796e021cdea7ceedad07b80155fa0e"
 dependencies = [
  "lock_api",
+]
+
+[[package]]
+name = "sqlite-wasm-rs"
+version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc3efc0da82635d7e1ced0053bbbfa8c7ab9645d0bf36ceb4f7127bb85315d75"
+dependencies = [
+ "cc",
+ "js-sys",
+ "rsqlite-vfs",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -7883,10 +7900,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "once_cell",
  "rustix 1.1.4",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7999,7 +8016,7 @@ dependencies = [
 
 [[package]]
 name = "tiny-cache"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "rustc-hash 2.1.3",
  "smallvec",
@@ -8007,7 +8024,7 @@ dependencies = [
 
 [[package]]
 name = "tiny-diff"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "hashbrown 0.16.1",
  "hotpath",
@@ -8016,7 +8033,7 @@ dependencies = [
 
 [[package]]
 name = "tiny-notify"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "futures-lite",
 ]
@@ -8236,7 +8253,7 @@ checksum = "7d56353a2a665ad0f41a421187180aab746c8c325620617ad883a99a1cbe66d2"
 
 [[package]]
 name = "torin"
-version = "0.5.0-rc.13"
+version = "0.6.0-alpha.1"
 dependencies = [
  "criterion",
  "euclid",
@@ -8385,7 +8402,7 @@ dependencies = [
  "once_cell",
  "png 0.18.1",
  "thiserror 2.0.19",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -8499,7 +8516,7 @@ checksum = "f2f6fb2847f6742cd76af783a2a2c49e9375d0a111c7bef6f71cd9e738c72d6e"
 dependencies = [
  "memoffset",
  "tempfile",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -9133,7 +9150,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

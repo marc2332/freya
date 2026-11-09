@@ -146,6 +146,7 @@ impl Component for Switch {
         };
 
         let mut pressing = use_state(|| false);
+        let mut hovering = use_state(|| false);
         let a11y_id = use_a11y();
         let focus = use_focus(a11y_id);
 
@@ -228,7 +229,11 @@ impl Component for Switch {
             .main_align(Alignment::center())
             .offset_x(offset_x - press_size / 2.0)
             .corner_radius(CornerRadius::new_all(50.))
-            .background(background.mul_if(!self.enabled, 0.85))
+            .background(
+                background
+                    .mul_if(self.enabled && hovering(), 0.94)
+                    .mul_if(!self.enabled, 0.85),
+            )
             .border(border)
             .maybe(self.enabled, |rect| {
                 rect.on_press({
@@ -247,7 +252,11 @@ impl Component for Switch {
                 })
             })
             .on_global_pointer_up(move |_| pressing.set_if_modified(false))
-            .on_pointer_leave(move |_| pressing.set_if_modified(false))
+            .on_pointer_enter(move |_| hovering.set_if_modified(true))
+            .on_pointer_leave(move |_| {
+                hovering.set_if_modified(false);
+                pressing.set_if_modified(false);
+            })
             .cursor(if self.enabled {
                 self.cursor_icon
             } else {

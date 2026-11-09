@@ -36,7 +36,11 @@ use crate::{
         MenuContainerThemePreference,
         MenuItemThemePreference,
     },
-    popup::PopupThemePreference,
+    popup::{
+        PopupContentThemePreference,
+        PopupThemePreference,
+        PopupTitleThemePreference,
+    },
     progressbar::ProgressBarThemePreference,
     radio_item::RadioItemThemePreference,
     resizable_container::ResizableHandleThemePreference,
@@ -170,7 +174,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         ButtonLayoutThemePreference {
             padding: Preference::Specific(Gaps::new(6., 12., 6., 12.)),
             margin: Preference::Specific(Gaps::new_all(0.)),
-            corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
+            corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
             width: Preference::Specific(Size::Inner),
             height: Preference::Specific(Size::Inner),
         },
@@ -180,7 +184,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         ButtonLayoutThemePreference {
             padding: Preference::Specific(Gaps::new(3., 6., 3., 6.)),
             margin: Preference::Specific(Gaps::new_all(0.)),
-            corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
+            corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
             width: Preference::Specific(Size::Inner),
             height: Preference::Specific(Size::Inner),
         },
@@ -190,7 +194,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         ButtonLayoutThemePreference {
             padding: Preference::Specific(Gaps::new(10., 16., 10., 16.)),
             margin: Preference::Specific(Gaps::new_all(0.)),
-            corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
+            corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
             width: Preference::Specific(Size::Inner),
             height: Preference::Specific(Size::Inner),
         },
@@ -229,7 +233,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "flat_button",
         ButtonColorsThemePreference {
             background: Preference::Specific(Color::TRANSPARENT),
-            hover_background: Preference::Reference("surface_tertiary"),
+            hover_background: Preference::Reference("surface_secondary"),
             border_fill: Preference::Specific(Color::TRANSPARENT),
             focus_border_fill: Preference::Reference("border"),
             color: Preference::Reference("text_primary"),
@@ -337,6 +341,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             background: Preference::Reference("surface_primary"),
             progress_background: Preference::Reference("primary"),
             height: Preference::Specific(20.),
+            font_size: Preference::Specific(13.),
         },
     );
     theme.set(
@@ -377,14 +382,14 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "input_layout",
         InputLayoutThemePreference {
-            corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
+            corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
             padding: Preference::Specific(Gaps::new(8., 8., 8., 8.)),
         },
     );
     theme.set(
         "compact_input_layout",
         InputLayoutThemePreference {
-            corner_radius: Preference::Specific(CornerRadius::new_all(4.)),
+            corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
             padding: Preference::Specific(Gaps::new(4., 6., 4., 6.)),
         },
     );
@@ -488,12 +493,24 @@ fn register_base_component_themes(theme: &mut Theme) {
             width: Preference::Specific(Size::Inner),
             margin: Preference::Specific(Gaps::new_all(0.)),
             select_background: Preference::Reference("background"),
-            background_button: Preference::Reference("surface_tertiary"),
-            hover_background: Preference::Reference("surface_secondary"),
+            background_button: Preference::Reference("surface_secondary"),
+            hover_background: Preference::Reference("surface_primary"),
             color: Preference::Reference("text_primary"),
-            border_fill: Preference::Reference("border"),
+            border_fill: Preference::Reference("surface_primary"),
             focus_border_fill: Preference::Reference("border_focus"),
             arrow_fill: Preference::Reference("text_primary"),
+        },
+    );
+    theme.set(
+        "popup_title",
+        PopupTitleThemePreference {
+            font_size: Preference::Specific(18.),
+        },
+    );
+    theme.set(
+        "popup_content",
+        PopupContentThemePreference {
+            font_size: Preference::Specific(15.),
         },
     );
     theme.set(
@@ -524,7 +541,8 @@ fn register_base_component_themes(theme: &mut Theme) {
             row_background: Preference::Specific(Color::TRANSPARENT),
             hover_row_background: Preference::Reference("surface_secondary"),
             divider_fill: Preference::Reference("surface_primary"),
-            corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
+            corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
+            cell_padding: Preference::Specific(Gaps::new(8., 12., 8., 12.)),
             color: Preference::Reference("text_primary"),
         },
     );
@@ -558,7 +576,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             select_background: Preference::Reference("surface_primary"),
             border_fill: Preference::Specific(Color::TRANSPARENT),
             focus_border_fill: Preference::Reference("border_focus"),
-            corner_radius: Preference::Specific(CornerRadius::new_all(10.)),
+            corner_radius: Preference::Specific(CornerRadius::new_all(14.)),
             color: Preference::Reference("text_primary"),
             select_color: Preference::Reference("text_primary"),
         },
@@ -567,34 +585,33 @@ fn register_base_component_themes(theme: &mut Theme) {
         "menu_container",
         MenuContainerThemePreference {
             background: Preference::Reference("background"),
-            padding: Preference::Specific(Gaps::new_all(4.)),
-            shadow: Preference::Reference("shadow"),
+            padding: Preference::Specific(Gaps::new_all(6.)),
+            shadow: Preference::Specific(Color::from((0, 0, 0, 0.25))),
             border_fill: Preference::Reference("surface_primary"),
-            corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
+            corner_radius: Preference::Specific(CornerRadius::new_all(20.)),
         },
     );
     theme.set(
         "button_segment",
         ButtonSegmentThemePreference {
-            background: Preference::Reference("surface_tertiary"),
+            background: Preference::Specific(Color::TRANSPARENT),
             hover_background: Preference::Reference("surface_secondary"),
             disabled_background: Preference::Reference("disabled"),
             selected_background: Preference::Reference("surface_secondary"),
-            focus_background: Preference::Reference("surface_secondary"),
-            padding: Preference::Specific(Gaps::new(8., 16., 8., 16.)),
-            selected_padding: Preference::Specific(Gaps::new(8., 12., 8., 12.)),
+            focus_background: Preference::Reference("surface_primary"),
+            padding: Preference::Specific(Gaps::new(6., 14., 6., 14.)),
+            selected_padding: Preference::Specific(Gaps::new(6., 14., 6., 14.)),
             width: Preference::Specific(Size::Inner),
             height: Preference::Specific(Size::FillMinimum),
             color: Preference::Reference("text_primary"),
-            selected_icon_fill: Preference::Reference("primary"),
         },
     );
     theme.set(
         "segmented_button",
         SegmentedButtonThemePreference {
-            background: Preference::Reference("surface_tertiary"),
+            background: Preference::Reference("background"),
             border_fill: Preference::Reference("border"),
-            corner_radius: Preference::Specific(CornerRadius::new_all(99.)),
+            corner_radius: Preference::Specific(CornerRadius::new_all(12.)),
         },
     );
     #[cfg(feature = "titlebar")]
