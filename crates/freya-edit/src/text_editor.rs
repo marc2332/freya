@@ -772,16 +772,15 @@ pub trait TextEditor {
 
                     "c" | "C" | "x" | "X" if meta_or_ctrl => {
                         let cut = matches!(character.as_str(), "x" | "X");
-                        if allow_write_clipboard && (!cut || allow_changes) {
-                            if let Some(selected) = self.get_selected_text() {
-                                Clipboard::set_text_deferred(selected);
-                                if cut {
-                                    if let Some((start, end)) = self.get_selection_range() {
-                                        self.remove(start..end);
-                                        self.move_cursor_to(start);
-                                        event.insert(TextEvent::TEXT_CHANGED);
-                                    }
-                                }
+                        if allow_write_clipboard
+                            && (!cut || allow_changes)
+                            && let Some(selected) = self.get_selected_text()
+                        {
+                            Clipboard::set_text_deferred(selected);
+                            if cut && let Some((start, end)) = self.get_selection_range() {
+                                self.remove(start..end);
+                                self.move_cursor_to(start);
+                                event.insert(TextEvent::TEXT_CHANGED);
                             }
                         }
                     }
