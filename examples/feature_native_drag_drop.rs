@@ -24,7 +24,7 @@ fn app() -> impl IntoElement {
         .padding(24.)
         .spacing(24.)
         .child(
-            NativeDrag::new(|| DragData::text("Hello from Freya!"))
+            NativeDrag::new(|| TransferData::text("Hello from Freya!"))
                 .preview(|| {
                     rect()
                         .padding(16.)

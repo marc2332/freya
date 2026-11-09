@@ -3,7 +3,7 @@ use std::{
     rc::Rc,
 };
 
-use freya_clipboard::copypasta::ClipboardProvider;
+use freya_clipboard::prelude::Clipboard;
 use freya_components::{
     cache::AssetCacher,
     integration::integration,
@@ -60,6 +60,7 @@ pub struct WebApp {
     cursor_visible: bool,
     needs_render: bool,
     ime: WebIme,
+    clipboard: WebClipboard,
 }
 
 impl WebApp {
@@ -114,8 +115,8 @@ impl WebApp {
         Platform::get().register_window(platform.clone());
         runner.provide_root_context(|| CurrentWindowId(platform.id));
 
-        let clipboard: Option<Box<dyn ClipboardProvider>> = Some(Box::new(WebClipboard));
-        runner.provide_root_context(|| State::create(clipboard));
+        let clipboard = WebClipboard::new();
+        GlobalContexts::get().insert_context(Clipboard::create(Some(Box::new(clipboard.clone()))));
 
         let mut tree = Tree::default();
         runner.provide_root_context(|| tree.accessibility_generator.clone());
@@ -159,6 +160,7 @@ impl WebApp {
             cursor_visible: true,
             needs_render: true,
             ime: WebIme::new(),
+            clipboard,
         })
     }
 
@@ -172,6 +174,7 @@ impl WebApp {
 
     /// Advances the app by one browser frame.
     pub fn frame(&mut self) {
+        self.clipboard.poll();
         let mut browser = BrowserState::take();
 
         if ime_focused() {

@@ -15,7 +15,7 @@ fn app(enabled: bool) -> impl IntoElement {
 
     NativeDrag::new(move || {
         state.write().generated += 1;
-        DragData::text("Dragged text")
+        TransferData::text("Dragged text")
     })
     .width(Size::px(100.))
     .height(Size::px(100.))

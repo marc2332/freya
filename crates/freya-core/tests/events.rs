@@ -431,7 +431,7 @@ fn native_drop_with_multiple_files() {
     );
     test.sync_and_update();
 
-    let data = DragDataHandle::new(vec![DragDataType::Files]);
+    let data = DragDataHandle::new(vec![DataFormat::Files]);
     let decision = DragDecision::default();
     test.send_event(PlatformEvent::Drag {
         name: DragEventName::Over,
@@ -453,10 +453,10 @@ fn native_drop_with_multiple_files() {
     let requests = data.take_read_requests().unwrap();
     assert_eq!(requests.len(), 1);
     for request in requests {
-        assert_eq!(request.format, DragDataType::Files);
+        assert_eq!(request.format, DataFormat::Files);
         request
             .response
-            .send(Ok(DragValue::Files(vec![
+            .send(Ok(DataValue::Files(vec![
                 PathBuf::from("first.txt"),
                 PathBuf::from("second.txt"),
             ])))

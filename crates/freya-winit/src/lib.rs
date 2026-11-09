@@ -25,6 +25,7 @@ use crate::{
 mod accessibility;
 mod clipboard;
 pub mod config;
+mod data_transfer;
 mod drag_preview;
 mod drivers;
 pub mod extensions;
@@ -143,9 +144,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
             let _ = proxy.send_event(NativeEvent::Generic(NativeGenericEvent::User(event)));
         }
     }));
-    global_contexts.insert_context(crate::clipboard::create_clipboard(
-        event_loop.owned_display_handle(),
-    ));
+    global_contexts.insert_context(crate::clipboard::create_clipboard(proxy.clone()));
     for insert_global in launch_config.globals {
         insert_global(&global_contexts);
     }
@@ -165,6 +164,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
         resumed: false,
         proxy,
         events: receiver,
+        clipboard_reads: HashMap::default(),
         font_provider: provider,
         font_manager: font_mgr,
         font_collection,
