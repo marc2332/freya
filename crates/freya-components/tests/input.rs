@@ -286,6 +286,80 @@ pub fn input_validator_test() {
 }
 
 #[test]
+fn input_clipboard_paste_updates_value_and_validates() {
+    use freya::clipboard::Clipboard;
+    use freya_core::events::modifiers::ModifiersExt;
+
+    fn app() -> impl IntoElement {
+        let value = use_state(String::new);
+        rect()
+            .child(
+                Input::new(value)
+                    .on_pre_key_down(move |event: Event<KeyboardEventData>| {
+                        if matches!(&event.key, Key::Character(character) if character == "v") {
+                            let contents = if value.peek().is_empty() {
+                                "123"
+                            } else {
+                                "invalid"
+                            };
+                            Clipboard::set_text_deferred(contents.to_string());
+                        }
+                        true
+                    })
+                    .on_validate(move |validator: InputValidator| {
+                        validator.set_valid(
+                            validator
+                                .text()
+                                .chars()
+                                .all(|character| character.is_ascii_digit()),
+                        );
+                    }),
+            )
+            .child(format!("value={}", value.read()))
+    }
+
+    let mut runner = launch_test(app);
+    runner.click_cursor((15., 15.));
+    let shortcut = |runner: &mut TestingRunner, character: &str| {
+        runner.send_event(PlatformEvent::Keyboard {
+            name: KeyboardEventName::KeyDown,
+            key: Key::Character(character.to_string()),
+            code: Code::Unidentified,
+            modifiers: Modifiers::ctrl_or_meta(),
+        });
+        runner.sync_and_update();
+        runner.handle_events_immediately();
+        runner.sync_and_update();
+    };
+    shortcut(&mut runner, "v");
+    assert!(
+        runner
+            .find(|_, element| {
+                Label::try_downcast(element).filter(|label| label.text.as_ref() == "value=123")
+            })
+            .is_some()
+    );
+
+    shortcut(&mut runner, "a");
+    shortcut(&mut runner, "v");
+    assert!(
+        runner
+            .find(|_, element| {
+                Label::try_downcast(element).filter(|label| label.text.as_ref() == "value=123")
+            })
+            .is_some()
+    );
+    assert!(
+        runner
+            .find(|_, element| {
+                Paragraph::try_downcast(element)
+                    .filter(|paragraph| paragraph.spans.iter().any(|span| span.text == "123"))
+            })
+            .is_some()
+    );
+}
+
+#[test]
 pub fn input_submit_test() {
     fn submit_app() -> impl IntoElement {
         let value = use_state(String::new);

@@ -48,12 +48,9 @@ use std::{
 };
 
 use accesskit::TreeUpdate;
-use freya_clipboard::{
-    copypasta::{
-        ClipboardContext,
-        ClipboardProvider,
-    },
-    prelude::Clipboard,
+use freya_clipboard::prelude::{
+    Clipboard,
+    MemoryClipboard,
 };
 use freya_components::{
     cache::AssetCacher,
@@ -154,11 +151,9 @@ impl TestingRunner {
         let app = app.into();
         let mut runner = Runner::new(move || integration(app.clone()).into_element());
 
-        GlobalContexts::get().insert_context(Clipboard::create(
-            ClipboardContext::new()
-                .ok()
-                .map(|clipboard| Box::new(clipboard) as Box<dyn ClipboardProvider>),
-        ));
+        GlobalContexts::get().insert_context(Clipboard::create(Some(Box::new(
+            MemoryClipboard::default(),
+        ))));
 
         runner.provide_root_context(ScreenReader::new);
 

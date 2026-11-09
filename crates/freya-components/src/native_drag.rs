@@ -11,7 +11,7 @@ use torin::prelude::{
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     NativeDrag::new(|| DragData::text("Hello from Freya!"))
+///     NativeDrag::new(|| TransferData::text("Hello from Freya!"))
 ///         .preview(|| "Dragging text".into_element())
 ///         .child("Drag me")
 /// }
@@ -19,7 +19,7 @@ use torin::prelude::{
 #[derive(Clone, PartialEq)]
 pub struct NativeDrag {
     children: Vec<Element>,
-    data: NoArgCallback<DragData>,
+    data: NoArgCallback<TransferData>,
     actions: Vec<DropAction>,
     preview: Option<NoArgCallback<Element>>,
     preview_size: Option<Size2D>,
@@ -32,7 +32,7 @@ pub struct NativeDrag {
 
 impl NativeDrag {
     /// Creates a drag source with a data factory called when dragging starts.
-    pub fn new(data: impl Into<NoArgCallback<DragData>>) -> Self {
+    pub fn new(data: impl Into<NoArgCallback<TransferData>>) -> Self {
         Self {
             children: Vec::new(),
             data: data.into(),

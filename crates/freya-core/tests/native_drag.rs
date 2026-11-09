@@ -61,7 +61,7 @@ fn nearest_accepting_node_wins_and_receives_the_drop() {
         2.,
     );
     test.sync_and_update();
-    let data = DragDataHandle::new(vec![DragDataType::Text]);
+    let data = DragDataHandle::new(vec![DataFormat::Text]);
     test.send_event(PlatformEvent::Drag {
         name: DragEventName::Drop,
         cursor: (20., 20.).into(),
@@ -91,7 +91,7 @@ fn nearest_accepting_node_wins_and_receives_the_drop() {
 
 #[test]
 fn cloned_handles_share_pending_and_cached_reads() {
-    let data = DragDataHandle::new(vec![DragDataType::Text]);
+    let data = DragDataHandle::new(vec![DataFormat::Text]);
     let clone = data.clone();
     let mut first = pin!(data.read_text());
     let mut second = pin!(clone.read_text());
@@ -101,10 +101,10 @@ fn cloned_handles_share_pending_and_cached_reads() {
     let mut requests = data.take_read_requests().unwrap();
     assert_eq!(requests.len(), 1);
     let request = requests.pop().unwrap();
-    assert_eq!(request.format, DragDataType::Text);
+    assert_eq!(request.format, DataFormat::Text);
     request
         .response
-        .send(Ok(DragValue::Text("Shared".into())))
+        .send(Ok(DataValue::Text("Shared".into())))
         .unwrap();
     assert!(data.take_read_requests().unwrap().is_empty());
     assert_eq!(block_on(first).unwrap(), "Shared");
@@ -117,7 +117,7 @@ fn cloned_handles_share_pending_and_cached_reads() {
 
 #[test]
 fn expiration_cancels_queued_reads() {
-    let data = DragDataHandle::new(vec![DragDataType::Text]);
+    let data = DragDataHandle::new(vec![DataFormat::Text]);
     let mut read = pin!(data.read_text());
     assert!(block_on(poll_once(read.as_mut())).is_none());
 
@@ -130,7 +130,7 @@ fn expiration_cancels_queued_reads() {
 
 #[test]
 fn expiration_keeps_started_reads() {
-    let data = DragDataHandle::new(vec![DragDataType::Text]);
+    let data = DragDataHandle::new(vec![DataFormat::Text]);
     let mut read = pin!(data.read_text());
     assert!(block_on(poll_once(read.as_mut())).is_none());
     let request = data.take_read_requests().unwrap().pop().unwrap();
@@ -138,7 +138,7 @@ fn expiration_keeps_started_reads() {
     data.expire();
     request
         .response
-        .send(Ok(DragValue::Text("Received".into())))
+        .send(Ok(DataValue::Text("Received".into())))
         .unwrap();
 
     assert_eq!(block_on(read).unwrap(), "Received");

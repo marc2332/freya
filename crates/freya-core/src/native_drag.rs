@@ -28,6 +28,11 @@ use torin::prelude::{
 };
 
 use crate::{
+    data_transfer::{
+        DataFormat,
+        DataValue,
+        TransferData,
+    },
     element::Element,
     platform::PlatformWindow,
     prelude::current_scope_id,
@@ -44,51 +49,6 @@ pub enum DropAction {
     Copy,
     Move,
     Link,
-}
-
-/// A type of dragged data.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum DragDataType {
-    Files,
-    Text,
-    Html,
-    Rtf,
-    Image,
-    Audio,
-}
-
-/// Data sent during a native drag.
-#[derive(Clone, Debug, PartialEq)]
-pub enum DragValue {
-    Files(Vec<PathBuf>),
-    Text(String),
-    Bytes(Vec<u8>),
-}
-
-/// Data available to other apps during a native drag.
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct DragData {
-    pub formats: Vec<(DragDataType, DragValue)>,
-}
-
-impl DragData {
-    pub fn files(paths: impl IntoIterator<Item = PathBuf>) -> Self {
-        Self::default().with(
-            DragDataType::Files,
-            DragValue::Files(paths.into_iter().collect()),
-        )
-    }
-
-    pub fn text(text: impl Into<String>) -> Self {
-        Self::default().with(DragDataType::Text, DragValue::Text(text.into()))
-    }
-
-    /// Adds or replaces the data for a format.
-    pub fn with(mut self, format: DragDataType, value: DragValue) -> Self {
-        self.formats.retain(|(existing, _)| *existing != format);
-        self.formats.push((format, value));
-        self
-    }
 }
 
 /// An error when starting a native drag or reading its data.
@@ -116,22 +76,22 @@ impl fmt::Display for DragError {
 
 impl std::error::Error for DragError {}
 
-type DragRead = Shared<BoxFuture<'static, Result<DragValue, DragError>>>;
+type DragRead = Shared<BoxFuture<'static, Result<DataValue, DragError>>>;
 
 /// A read request waiting for the platform to handle it.
 pub struct DragReadRequest {
-    pub format: DragDataType,
-    pub response: oneshot::Sender<Result<DragValue, DragError>>,
+    pub format: DataFormat,
+    pub response: oneshot::Sender<Result<DataValue, DragError>>,
 }
 
 #[derive(Default)]
 struct IncomingReads {
-    cached: FxHashMap<DragDataType, DragRead>,
+    cached: FxHashMap<DataFormat, DragRead>,
     pending: Vec<DragReadRequest>,
 }
 
 struct IncomingData {
-    formats: Vec<DragDataType>,
+    formats: Vec<DataFormat>,
     reads: Mutex<IncomingReads>,
     expired: AtomicBool,
 }
@@ -157,7 +117,7 @@ impl fmt::Debug for DragDataHandle {
 }
 
 impl DragDataHandle {
-    pub fn new(formats: Vec<DragDataType>) -> Self {
+    pub fn new(formats: Vec<DataFormat>) -> Self {
         Self(Arc::new(IncomingData {
             formats,
             reads: Mutex::default(),
@@ -171,20 +131,20 @@ impl DragDataHandle {
         Ok(std::mem::take(&mut reads.pending))
     }
 
-    pub fn types(&self) -> &[DragDataType] {
+    pub fn types(&self) -> &[DataFormat] {
         &self.0.formats
     }
 
-    pub fn has(&self, format: DragDataType) -> bool {
+    pub fn has(&self, format: DataFormat) -> bool {
         self.types().contains(&format)
     }
 
     pub fn has_files(&self) -> bool {
-        self.has(DragDataType::Files)
+        self.has(DataFormat::Files)
     }
 
     pub fn has_text(&self) -> bool {
-        self.has(DragDataType::Text)
+        self.has(DataFormat::Text)
     }
 
     /// Stops new reads and cancels queued requests.
@@ -199,7 +159,7 @@ impl DragDataHandle {
     }
 
     /// Reads a format once and reuses the result for later reads.
-    pub async fn read(&self, format: DragDataType) -> Result<DragValue, DragError> {
+    pub async fn read(&self, format: DataFormat) -> Result<DataValue, DragError> {
         let read = {
             let mut reads = self.0.reads.lock().map_err(|_| DragError::Expired)?;
 
@@ -230,23 +190,23 @@ impl DragDataHandle {
     }
 
     pub async fn read_files(&self) -> Result<Vec<PathBuf>, DragError> {
-        match self.read(DragDataType::Files).await? {
-            DragValue::Files(paths) => Ok(paths),
+        match self.read(DataFormat::Files).await? {
+            DataValue::Files(paths) => Ok(paths),
             _ => Err(DragError::InvalidData("Expected file paths".into())),
         }
     }
 
     pub async fn read_text(&self) -> Result<String, DragError> {
-        match self.read(DragDataType::Text).await? {
-            DragValue::Text(text) => Ok(text),
+        match self.read(DataFormat::Text).await? {
+            DataValue::Text(text) => Ok(text),
             _ => Err(DragError::InvalidData("Expected text".into())),
         }
     }
 
-    pub async fn read_bytes(&self, format: DragDataType) -> Result<Vec<u8>, DragError> {
+    pub async fn read_bytes(&self, format: DataFormat) -> Result<Vec<u8>, DragError> {
         match self.read(format).await? {
-            DragValue::Bytes(bytes) => Ok(bytes),
-            DragValue::Text(text) => Ok(text.into_bytes()),
+            DataValue::Bytes(bytes) => Ok(bytes),
+            DataValue::Text(text) => Ok(text.into_bytes()),
             _ => Err(DragError::InvalidData("Expected bytes".into())),
         }
     }
@@ -274,7 +234,7 @@ pub enum NativeDragPreview {
 }
 
 pub struct NativeDragCommand {
-    pub data: DragData,
+    pub data: TransferData,
     pub actions: Vec<DropAction>,
     pub preview: Option<NativeDragPreview>,
     pub scope_id: ScopeId,
@@ -285,7 +245,7 @@ pub trait NativeDragPlatformWindow {
     /// Starts a native drag while the pointer is held down and waits until it ends.
     fn start_drag(
         &self,
-        data: DragData,
+        data: TransferData,
         actions: Vec<DropAction>,
         preview: Option<NativeDragPreview>,
     ) -> impl Future<Output = Result<NativeDragResult, DragError>>;
@@ -294,7 +254,7 @@ pub trait NativeDragPlatformWindow {
 impl NativeDragPlatformWindow for PlatformWindow {
     async fn start_drag(
         &self,
-        data: DragData,
+        data: TransferData,
         actions: Vec<DropAction>,
         preview: Option<NativeDragPreview>,
     ) -> Result<NativeDragResult, DragError> {

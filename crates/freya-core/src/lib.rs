@@ -2,6 +2,7 @@ pub mod accessibility;
 pub mod animation_clock;
 pub mod current_context;
 pub mod data;
+pub mod data_transfer;
 pub mod debug;
 pub mod diff_key;
 pub mod element;
@@ -66,6 +67,7 @@ pub mod prelude {
         },
         animation_clock::AnimationClock,
         data::*,
+        data_transfer::*,
         debug::*,
         diff_key::DiffKey,
         element::{
@@ -197,6 +199,7 @@ pub mod integration {
             New,
         },
         data::*,
+        data_transfer::*,
         element::*,
         elements::extensions::*,
         events::{

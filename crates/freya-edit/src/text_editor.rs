@@ -5,7 +5,7 @@ use std::{
     ops::Range,
 };
 
-use freya_clipboard::clipboard::Clipboard;
+use freya_clipboard::prelude::Clipboard;
 use freya_core::{
     elements::paragraph::{
         ParagraphCursorExt,
@@ -563,7 +563,22 @@ pub trait TextEditor {
         selection
     }
 
-    // Process a Keyboard event
+    /// Replaces the current selection with pasted text.
+    fn paste(&mut self, contents: &str) -> TextEvent {
+        if contents.is_empty() && self.get_selection_range().is_none() {
+            return TextEvent::empty();
+        }
+        if let Some((start, end)) = self.get_selection_range() {
+            self.remove(start..end);
+            self.move_cursor_to(start);
+        }
+        let position = self.cursor_pos();
+        let inserted = self.insert(contents, position);
+        self.move_cursor_to(position + inserted);
+        self.clear_selection();
+        TextEvent::TEXT_CHANGED | TextEvent::SELECTION_CHANGED
+    }
+
     #[allow(clippy::too_many_arguments)]
     fn process_key(
         &mut self,
@@ -573,7 +588,7 @@ pub trait TextEditor {
         holder: Option<&ParagraphHolder>,
         allow_tabs: bool,
         allow_changes: bool,
-        allow_read_clipboard: bool,
+        _allow_read_clipboard: bool,
         allow_write_clipboard: bool,
     ) -> TextEvent {
         let mut event = TextEvent::empty();
@@ -755,41 +770,22 @@ pub trait TextEditor {
                         self.set_selection((0, len));
                     }
 
-                    // Copy selected text
-                    "c" if meta_or_ctrl && allow_write_clipboard => {
-                        let selected = self.get_selected_text();
-                        if let Some(selected) = selected {
-                            Clipboard::set(selected).ok();
-                        }
-                    }
-
-                    // Cut selected text
-                    "x" if meta_or_ctrl && allow_changes && allow_write_clipboard => {
-                        let selection = self.get_selection_range();
-                        if let Some((start, end)) = selection {
-                            let text = self.get_selected_text().unwrap();
-                            self.remove(start..end);
-                            Clipboard::set(text).ok();
-                            self.move_cursor_to(start);
-                            event.insert(TextEvent::TEXT_CHANGED);
-                        }
-                    }
-
-                    // Paste copied text
-                    "v" if meta_or_ctrl && allow_changes && allow_read_clipboard => {
-                        if let Ok(copied_text) = Clipboard::get() {
-                            let selection = self.get_selection_range();
-                            if let Some((start, end)) = selection {
-                                self.remove(start..end);
-                                self.move_cursor_to(start);
+                    "c" | "C" | "x" | "X" if meta_or_ctrl => {
+                        let cut = matches!(character.as_str(), "x" | "X");
+                        if allow_write_clipboard && (!cut || allow_changes) {
+                            if let Some(selected) = self.get_selected_text() {
+                                Clipboard::set_text_deferred(selected);
+                                if cut {
+                                    if let Some((start, end)) = self.get_selection_range() {
+                                        self.remove(start..end);
+                                        self.move_cursor_to(start);
+                                        event.insert(TextEvent::TEXT_CHANGED);
+                                    }
+                                }
                             }
-                            let cursor_pos = self.cursor_pos();
-                            self.insert(&copied_text, cursor_pos);
-                            let last_idx = copied_text.encode_utf16().count() + cursor_pos;
-                            self.move_cursor_to(last_idx);
-                            event.insert(TextEvent::TEXT_CHANGED);
                         }
                     }
+                    "v" | "V" if meta_or_ctrl => {}
 
                     // Undo last change
                     "z" if meta_or_ctrl && allow_changes => {

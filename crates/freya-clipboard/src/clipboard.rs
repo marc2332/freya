@@ -1,58 +1,105 @@
-//! Provides a clipboard abstraction to access the target system's clipboard.
+use std::{
+    fmt,
+    rc::Rc,
+};
 
-use copypasta::ClipboardProvider;
 use freya_core::prelude::*;
+use futures_util::future::LocalBoxFuture;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum ClipboardError {
     FailedToRead,
     FailedToSet,
     NotAvailable,
+    UnsupportedFormat,
 }
 
-/// App clipboard.
-///
-/// # Examples
-///
-/// ```rust,no_run
-/// use freya_clipboard::prelude::Clipboard;
-///
-/// // Read the clipboard content
-/// if let Ok(content) = Clipboard::get() {
-///     println!("{}", content);
-/// }
-///
-/// // Write to the clipboard
-/// Clipboard::set("Hello, Freya!".to_string());
-/// ```
+impl fmt::Display for ClipboardError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(match self {
+            Self::FailedToRead => "Could not read the clipboard",
+            Self::FailedToSet => "Could not write to the clipboard",
+            Self::NotAvailable => "The clipboard is unavailable",
+            Self::UnsupportedFormat => "The requested clipboard format is unavailable",
+        })
+    }
+}
+
+impl std::error::Error for ClipboardError {}
+
+pub type ClipboardFuture<T> = LocalBoxFuture<'static, Result<T, ClipboardError>>;
+
+/// Starts requests immediately and returns owned futures for their results.
+pub trait ClipboardProvider {
+    fn get(&self, format: DataFormat) -> ClipboardFuture<DataValue>;
+    fn set(&self, data: TransferData) -> ClipboardFuture<()>;
+}
+
+/// The clipboard provider registered by the renderer.
 #[derive(Clone, Copy, PartialEq)]
-pub struct Clipboard(State<Option<Box<dyn ClipboardProvider>>>);
+pub struct Clipboard(State<Option<Rc<dyn ClipboardProvider>>>);
 
 impl Clipboard {
     pub fn create(provider: Option<Box<dyn ClipboardProvider>>) -> Self {
-        Self(State::create_global(provider))
+        Self(State::create_global(provider.map(Rc::from)))
     }
 
-    /// Read from the clipboard.
-    #[track_caller]
-    pub fn get() -> Result<String, ClipboardError> {
-        Self::with_provider(|provider| provider.get_contents())?
-            .map_err(|_| ClipboardError::FailedToRead)
+    /// Reads the requested format from the clipboard.
+    pub fn get(format: DataFormat) -> ClipboardFuture<DataValue> {
+        match Self::provider() {
+            Ok(provider) => provider.get(format),
+            Err(error) => Box::pin(async move { Err(error) }),
+        }
     }
 
-    /// Write to the clipboard.
-    #[track_caller]
-    pub fn set(contents: String) -> Result<(), ClipboardError> {
-        Self::with_provider(|provider| provider.set_contents(contents))?
-            .map_err(|_| ClipboardError::FailedToSet)
+    /// Replaces the clipboard with data offered in one or more formats.
+    pub fn set(data: TransferData) -> ClipboardFuture<()> {
+        match Self::provider() {
+            Ok(provider) => provider.set(data),
+            Err(error) => Box::pin(async move { Err(error) }),
+        }
     }
 
-    fn with_provider<T>(
-        run: impl FnOnce(&mut dyn ClipboardProvider) -> T,
-    ) -> Result<T, ClipboardError> {
-        let mut clipboard = GlobalContexts::get().get_context::<Clipboard>();
-        let mut provider = clipboard.0.write();
-        let provider = provider.as_mut().ok_or(ClipboardError::NotAvailable)?;
-        Ok(run(provider.as_mut()))
+    /// Starts a text clipboard read and returns its asynchronous result.
+    pub fn get_text() -> ClipboardFuture<String> {
+        let read = Self::get(DataFormat::Text);
+        Box::pin(async move {
+            match read.await? {
+                DataValue::Text(text) => Ok(text),
+                DataValue::Bytes(bytes) => {
+                    String::from_utf8(bytes).map_err(|_| ClipboardError::FailedToRead)
+                }
+                DataValue::Files(_) => Err(ClipboardError::FailedToRead),
+            }
+        })
+    }
+
+    /// Starts a text clipboard write and returns its asynchronous result.
+    pub fn set_text(contents: String) -> ClipboardFuture<()> {
+        Self::set(TransferData::text(contents))
+    }
+
+    /// Writes without awaiting the result and discards any errors.
+    /// Requires an active Freya task context.
+    pub fn set_deferred(data: TransferData) {
+        let write = Self::set(data);
+        spawn_global(async move {
+            let _ = write.await;
+        });
+    }
+
+    /// Writes text without awaiting the result and discards any errors.
+    /// Requires an active Freya task context.
+    pub fn set_text_deferred(contents: String) {
+        Self::set_deferred(TransferData::text(contents));
+    }
+
+    fn provider() -> Result<Rc<dyn ClipboardProvider>, ClipboardError> {
+        let contexts = GlobalContexts::try_get().ok_or(ClipboardError::NotAvailable)?;
+        let clipboard = contexts
+            .try_get_context::<Self>()
+            .ok_or(ClipboardError::NotAvailable)?;
+        let provider = clipboard.0.peek().clone();
+        provider.ok_or(ClipboardError::NotAvailable)
     }
 }

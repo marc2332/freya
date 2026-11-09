@@ -47,6 +47,20 @@ impl UseEditable {
         &mut self.editor
     }
 
+    /// Processes an event and calls `on_processed` after the edit completes.
+    pub fn process_event_with(
+        &mut self,
+        edit_event: EditableEvent,
+        on_processed: impl FnOnce() + 'static,
+    ) {
+        edit_event.process_with(
+            self.editor.into_writable(),
+            self.dragging.into_writable(),
+            &self.config,
+            on_processed,
+        );
+    }
+
     /// Process a [`EditableEvent`] event.
     pub fn process_event(&mut self, edit_event: EditableEvent) {
         edit_event.process(
