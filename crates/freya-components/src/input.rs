@@ -497,6 +497,8 @@ impl Component for Input {
                 }
             })
         });
+        #[cfg(target_os = "linux")]
+        let mut primary_value = value.clone();
         let on_key_down = move |e: Event<KeyboardEventData>| {
             let key = e.key.clone();
             let modifiers = e.modifiers;
@@ -654,9 +656,52 @@ impl Component for Input {
             }
         };
 
+        #[cfg(target_os = "linux")]
+        let on_mouse_up = move |e: Event<MouseEventData>| {
+            if e.button == Some(MouseButton::Left)
+                && !is_masked
+                && let Some(text) = editable.editor().peek().get_selected_text()
+                && !text.is_empty()
+            {
+                let _ = Clipboard::set_primary(text);
+            }
+        };
+
         let on_pointer_press = move |e: Event<PointerEventData>| {
             e.stop_propagation();
             e.prevent_default();
+
+            #[cfg(target_os = "linux")]
+            if e.button() == Some(MouseButton::Middle) {
+                if let Ok(text) = Clipboard::get_primary()
+                    && !text.is_empty()
+                {
+                    let mut editor = editable.editor_mut().write();
+
+                    // Replace the current selection, like Ctrl+V.
+                    if let Some((start, end)) = editor.get_selection_range() {
+                        editor.remove(start..end);
+                        editor.selection_mut().set_as_cursor();
+                        editor.move_cursor_to(start);
+                    }
+
+                    let cursor_pos = editor.cursor_pos();
+                    editor.insert(&text, cursor_pos);
+                    let last_idx = text.encode_utf16().count() + cursor_pos;
+                    editor.move_cursor_to(last_idx);
+
+                    let next_value = editor.committed_text();
+                    drop(editor);
+
+                    primary_value.set(next_value);
+                    movement_timeout.reset();
+                    follow_cursor();
+                }
+
+                a11y_id.request_focus();
+                return;
+            }
+
             match *status.read() {
                 InputStatus::Idle if a11y_id.is_focused() => {
                     editable.process_event(EditableEvent::Release);
@@ -737,13 +782,19 @@ impl Component for Input {
             .a11y_alt(a11y_text)
             .a11y_role(a11_role)
             .maybe(self.enabled, |el| {
-                el.on_key_up(on_key_up)
+                let el = el
+                    .on_key_up(on_key_up)
                     .on_key_down(on_key_down)
                     .on_focus_press(on_input_focus_press)
                     .on_ime_preedit(on_ime_preedit)
                     .on_pointer_press(on_pointer_press)
                     .on_global_pointer_up(on_global_pointer_up)
-                    .on_global_pointer_move(on_global_pointer_move)
+                    .on_global_pointer_move(on_global_pointer_move);
+
+                #[cfg(target_os = "linux")]
+                let el = el.on_mouse_up(on_mouse_up);
+
+                el
             })
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)

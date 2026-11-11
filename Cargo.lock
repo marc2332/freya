@@ -2841,6 +2841,7 @@ dependencies = [
  "euclid",
  "freya",
  "freya-animation",
+ "freya-clipboard",
  "freya-core",
  "freya-edit",
  "freya-engine",

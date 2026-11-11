@@ -26,11 +26,22 @@ pub enum ClipboardError {
 /// Clipboard::set("Hello, Freya!".to_string());
 /// ```
 #[derive(Clone, Copy, PartialEq)]
-pub struct Clipboard(State<Option<Box<dyn ClipboardProvider>>>);
+pub struct Clipboard {
+    contents: State<Option<Box<dyn ClipboardProvider>>>,
+    primary: State<Option<Box<dyn ClipboardProvider>>>,
+}
 
 impl Clipboard {
     pub fn create(provider: Option<Box<dyn ClipboardProvider>>) -> Self {
-        Self(State::create_global(provider))
+        Self {
+            contents: State::create_global(provider),
+            primary: State::create_global(None),
+        }
+    }
+
+    pub fn set_primary_provider(&self, provider: Option<Box<dyn ClipboardProvider>>) {
+        let mut primary = self.primary;
+        *primary.write() = provider;
     }
 
     /// Read from the clipboard.
@@ -47,11 +58,34 @@ impl Clipboard {
             .map_err(|_| ClipboardError::FailedToSet)
     }
 
+    /// Read from the primary selection.
+    #[track_caller]
+    pub fn get_primary() -> Result<String, ClipboardError> {
+        Self::with_primary_provider(|provider| provider.get_contents())?
+            .map_err(|_| ClipboardError::FailedToRead)
+    }
+
+    /// Write to the primary selection.
+    #[track_caller]
+    pub fn set_primary(contents: String) -> Result<(), ClipboardError> {
+        Self::with_primary_provider(|provider| provider.set_contents(contents))?
+            .map_err(|_| ClipboardError::FailedToSet)
+    }
+
     fn with_provider<T>(
         run: impl FnOnce(&mut dyn ClipboardProvider) -> T,
     ) -> Result<T, ClipboardError> {
         let mut clipboard = GlobalContexts::get().get_context::<Clipboard>();
-        let mut provider = clipboard.0.write();
+        let mut provider = clipboard.contents.write();
+        let provider = provider.as_mut().ok_or(ClipboardError::NotAvailable)?;
+        Ok(run(provider.as_mut()))
+    }
+
+    fn with_primary_provider<T>(
+        run: impl FnOnce(&mut dyn ClipboardProvider) -> T,
+    ) -> Result<T, ClipboardError> {
+        let mut clipboard = GlobalContexts::get().get_context::<Clipboard>();
+        let mut provider = clipboard.primary.write();
         let provider = provider.as_mut().ok_or(ClipboardError::NotAvailable)?;
         Ok(run(provider.as_mut()))
     }

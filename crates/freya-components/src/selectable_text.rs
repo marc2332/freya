@@ -193,7 +193,14 @@ impl Component for SelectableText {
             *status.write() = SelectableTextStatus::default();
         };
 
-        let on_mouse_up = move |_| {
+        let on_mouse_up = move |e: Event<MouseEventData>| {
+            #[cfg(target_os = "linux")]
+            if e.button == Some(MouseButton::Left)
+                && let Some(text) = editable.editor().peek().get_selected_text()
+                && !text.is_empty()
+            {
+                let _ = Clipboard::set_primary(text);
+            }
             editable.process_event(EditableEvent::Release);
         };
 
