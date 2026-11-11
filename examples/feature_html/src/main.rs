@@ -107,10 +107,12 @@ const HTML: &str = r#"
 
 fn app() -> impl IntoElement {
     let handle = use_hook(|| {
-        HtmlHandle::create(HtmlSource::html(HTML)).resource_interceptor(|url| match url.path() {
+        let mut handle = HtmlHandle::create().resource_interceptor(|url| match url.path() {
             "/style.css" => Some(Bytes::from_static(CSS)),
             _ => None,
-        })
+        });
+        handle.load(HtmlSource::html(HTML));
+        handle
     });
 
     rect()

@@ -76,12 +76,14 @@ pub struct HtmlShowcase;
 impl Component for HtmlShowcase {
     fn render(&self) -> impl IntoElement {
         let handle = use_hook(|| {
-            HtmlHandle::create(HtmlSource::html(HTML))
+            let mut handle = HtmlHandle::create()
                 .fonts([Bytes::from_static(crate::NOTO_SANS)])
                 .resource_interceptor(|url| match url.path() {
                     "/style.css" => Some(Bytes::from_static(CSS)),
                     _ => None,
-                })
+                });
+            handle.load(HtmlSource::html(HTML));
+            handle
         });
 
         rect()

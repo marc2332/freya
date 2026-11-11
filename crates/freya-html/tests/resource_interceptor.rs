@@ -18,10 +18,7 @@ const CSS: &[u8] = include_bytes!("assets/style.css");
 const CACHED_CSS: &[u8] = b"body { margin: 0; background: rgb(255, 0, 0); }";
 
 fn assert_stylesheet_resolution(base_url: &str, intercept: bool) {
-    let stylesheet_url = Url::parse(base_url)
-        .unwrap()
-        .join("./style.css")
-        .unwrap();
+    let stylesheet_url = Url::parse(base_url).unwrap().join("./style.css").unwrap();
     let content = HtmlContent::new(
         r#"<html><head><link rel="stylesheet" href="./style.css"></head><body></body></html>"#,
     )
@@ -42,14 +39,16 @@ fn assert_stylesheet_resolution(base_url: &str, intercept: bool) {
             let requests = Rc::new(RefCell::new(Vec::<Url>::new()));
             let captured_requests = requests.clone();
             let handle = runner.provide_root_context(|| {
-                HtmlHandle::create(HtmlSource::html(content)).resource_interceptor(move |url| {
+                let mut handle = HtmlHandle::create().resource_interceptor(move |url| {
                     captured_requests.borrow_mut().push(url.clone());
                     if intercept && url.path() == "/style.css" {
                         Some(Bytes::from_static(CSS))
                     } else {
                         None
                     }
-                })
+                });
+                handle.load(HtmlSource::html(content));
+                handle
             });
             let visible = runner.provide_root_context(|| State::create(false));
             (handle, requests, visible)
@@ -101,4 +100,46 @@ fn embedded_stylesheet_supports_custom_schemes() {
 #[test]
 fn unhandled_stylesheet_falls_back_to_shared_cache() {
     assert_stylesheet_resolution("https://test.local/", false);
+}
+
+#[test]
+fn loading_documents_updates_history() {
+    let (mut runner, mut handle) = TestingRunner::new(
+        || HtmlViewer::new(use_consume::<HtmlHandle>()),
+        (100., 100.).into(),
+        |runner| runner.provide_root_context(HtmlHandle::create),
+        1.,
+    );
+    let contexts = GlobalContexts::get();
+    runner.sync_and_update();
+    assert!(!handle.can_go_back());
+    assert!(!handle.can_go_forward());
+    assert_eq!(handle.current_url(), None);
+
+    handle.load(HtmlSource::html("<body style='background:red'></body>"));
+    runner.sync_and_update();
+    let first = runner.render();
+    assert!(!handle.can_go_back());
+
+    handle.load(HtmlSource::html("<body style='background:blue'></body>"));
+    runner.sync_and_update();
+    let second = runner.render();
+    assert_ne!(first.as_bytes(), second.as_bytes());
+    assert!(handle.can_go_back());
+
+    handle.back();
+    runner.sync_and_update();
+    assert_eq!(first.as_bytes(), runner.render().as_bytes());
+    assert!(handle.can_go_forward());
+
+    handle.forward();
+    runner.sync_and_update();
+    assert_eq!(second.as_bytes(), runner.render().as_bytes());
+
+    handle.back();
+    handle.load(HtmlSource::html("<body style='background:green'></body>"));
+    runner.sync_and_update();
+    assert!(handle.can_go_back());
+    assert!(!handle.can_go_forward());
+    contexts.unregister();
 }

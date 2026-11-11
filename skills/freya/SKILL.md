@@ -910,11 +910,19 @@ Enable with `features = ["html"]`. Renders an HTML + CSS document with Blitz:
 use freya::html::*;
 // The view is driven by a handle, which also exposes history navigation
 // (back/forward) and the current URL. Sources can be remote or inline.
-let mut handle = use_hook(|| HtmlHandle::create(HtmlSource::url("https://example.com")));
+let mut handle = use_hook(|| {
+    let mut handle = HtmlHandle::create();
+    handle.load(HtmlSource::url("https://example.com"));
+    handle
+});
 HtmlView::new(handle).expanded();
 handle.back();
 handle.navigate("https://freyaui.dev");
-use_hook(|| HtmlHandle::create(HtmlSource::html("<h1>Hello</h1>")));
+use_hook(|| {
+    let mut handle = HtmlHandle::create();
+    handle.load(HtmlSource::html("<h1>Hello</h1>"));
+    handle
+});
 ```
 
 ## Terminal

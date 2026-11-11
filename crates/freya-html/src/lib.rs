@@ -5,7 +5,11 @@
 //! use freya_html::prelude::*;
 //!
 //! # fn app() -> impl IntoElement {
-//! let handle = use_hook(|| HtmlHandle::create(HtmlSource::html("<h1>Hello!</h1>")));
+//! let handle = use_hook(|| {
+//!     let mut handle = HtmlHandle::create();
+//!     handle.load(HtmlSource::html("<h1>Hello!</h1>"));
+//!     handle
+//! });
 //! HtmlViewer::new(handle)
 //! # }
 //! ```
@@ -22,13 +26,14 @@
 //! # use freya_html::prelude::*;
 //! # fn app() -> impl IntoElement {
 //! let handle = use_hook(|| {
-//!     HtmlHandle::create(HtmlSource::html(
-//!         r#"<link rel="stylesheet" href="https://freya.example/style.css">"#,
-//!     ))
-//!     .resource_interceptor(|url| match url.path() {
+//!     let mut handle = HtmlHandle::create().resource_interceptor(|url| match url.path() {
 //!         "/style.css" => Some(Bytes::from_static(b"body { margin: 0 }")),
 //!         _ => None,
-//!     })
+//!     });
+//!     handle.load(HtmlSource::html(
+//!         r#"<link rel="stylesheet" href="https://freya.example/style.css">"#,
+//!     ));
+//!     handle
 //! });
 //! HtmlViewer::new(handle)
 //! # }

@@ -12,10 +12,18 @@ use crate::{
 /// # use freya_html::prelude::*;
 /// # fn app() -> impl IntoElement {
 /// // Inline HTML
-/// let inline = use_hook(|| HtmlHandle::create(HtmlSource::html("<p>Hello <b>world</b></p>")));
+/// let inline = use_hook(|| {
+///     let mut handle = HtmlHandle::create();
+///     handle.load(HtmlSource::html("<p>Hello <b>world</b></p>"));
+///     handle
+/// });
 /// HtmlViewer::new(inline);
 /// // Or a remote document, sized explicitly
-/// let remote = use_hook(|| HtmlHandle::create(HtmlSource::url("https://example.com")));
+/// let remote = use_hook(|| {
+///     let mut handle = HtmlHandle::create();
+///     handle.load(HtmlSource::url("https://example.com"));
+///     handle
+/// });
 /// HtmlViewer::new(remote)
 ///     .width(Size::px(400.))
 ///     .height(Size::px(300.))

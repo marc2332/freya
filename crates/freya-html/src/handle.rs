@@ -51,7 +51,11 @@ struct HtmlHistory {
 /// # use freya::prelude::*;
 /// # use freya_html::prelude::*;
 /// # fn app() -> impl IntoElement {
-/// let mut handle = use_hook(|| HtmlHandle::create(HtmlSource::url("https://example.com")));
+/// let mut handle = use_hook(|| {
+///     let mut handle = HtmlHandle::create();
+///     handle.load(HtmlSource::url("https://example.com"));
+///     handle
+/// });
 ///
 /// rect()
 ///     .child(Button::new().child("Back").on_press(move |_| handle.back()))
@@ -66,21 +70,20 @@ pub struct HtmlHandle {
     interceptor: State<Option<ResourceInterceptor>>,
 }
 
-impl HtmlHandle {
-    /// A handle starting at `initial`.
-    pub fn create(initial: HtmlSource) -> Self {
-        let mut handle = Self::create_empty();
-        handle.push(initial);
-        handle
+impl Default for HtmlHandle {
+    fn default() -> Self {
+        Self::create()
     }
+}
 
-    /// A handle with an empty history.
-    pub fn create_empty() -> Self {
+impl HtmlHandle {
+    /// Creates an empty handle, configure it before calling [`Self::load`].
+    pub fn create() -> Self {
         Self::initialize(false)
     }
 
     /// A handle with an empty history, backed by global states.
-    pub fn create_global_empty() -> Self {
+    pub fn create_global() -> Self {
         Self::initialize(true)
     }
 
@@ -183,20 +186,34 @@ impl HtmlHandle {
         self
     }
 
+    /// Loads a document and adds it to history, discarding forward history.
+    pub fn load(&mut self, source: HtmlSource) {
+        self.load_source(&source);
+        let mut history = self.history.write();
+        let index = if history.entries.is_empty() {
+            0
+        } else {
+            history.index + 1
+        };
+        history.entries.truncate(index);
+        history.entries.push(source);
+        history.index = index;
+    }
+
     /// Load the URL, discarding any forward history.
     pub fn navigate(&mut self, url: impl Into<String>) {
-        self.push(HtmlSource::Url(url.into()));
+        self.load(HtmlSource::Url(url.into()));
     }
 
     /// Load inline HTML + CSS and its configuration, discarding any forward history.
     pub fn load_html(&mut self, html: impl Into<HtmlContent>) {
-        self.push(HtmlSource::Html(html.into()));
+        self.load(HtmlSource::Html(html.into()));
     }
 
     /// Replaces the current document, configuration, and history entry, discarding forward history.
     pub fn replace_html(&mut self, html: impl Into<HtmlContent>) {
         let source = HtmlSource::Html(html.into());
-        self.load(&source);
+        self.load_source(&source);
         let mut history = self.history.write();
         let index = history.index;
         history.entries.truncate(index);
@@ -226,7 +243,7 @@ impl HtmlHandle {
             history.entries.get(history.index).cloned()
         };
         if let Some(source) = source {
-            self.load(&source);
+            self.load_source(&source);
         }
     }
 
@@ -252,20 +269,7 @@ impl HtmlHandle {
         }
     }
 
-    fn push(&mut self, source: HtmlSource) {
-        self.load(&source);
-        let mut history = self.history.write();
-        let index = if history.entries.is_empty() {
-            0
-        } else {
-            history.index + 1
-        };
-        history.entries.truncate(index);
-        history.entries.push(source);
-        history.index = index;
-    }
-
-    fn load(&self, source: &HtmlSource) {
+    fn load_source(&self, source: &HtmlSource) {
         match source {
             HtmlSource::Url(url) => {
                 spawn((*self).load_url(url.clone()));
