@@ -674,14 +674,6 @@ impl AppWindow {
 
         for event in self.event_buffer.take(Instant::now()) {
             self.process_platform_event(event, plugins, handle.clone());
-            needs_redraw |= self.poll_runner(plugins, handle.clone());
-            self.measure_layout(
-                font_collection,
-                font_manager,
-                fallback_fonts,
-                plugins,
-                handle.clone(),
-            );
         }
 
         needs_redraw |= self.poll_runner(plugins, handle.clone());
