@@ -10,52 +10,60 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app).with_size(900., 700.)))
 }
 
+static CSS: &[u8] = br#"
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background: #ffffff;
+  color: #1a1a2e;
+}
+
+.card {
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #f2f2f7;
+}
+
+button, .button {
+  display: inline-block;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #e94560;
+  color: white;
+  font-size: 15px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+button:hover, .button:hover {
+  background: #c9314b;
+}
+
+button:active, .button:active {
+  background: #a02036;
+}
+
+form {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+input[type="text"] {
+  padding: 10px;
+  border: 1px solid #c5c5d2;
+  border-radius: 8px;
+  font-size: 15px;
+  width: 300px;
+}
+"#;
+
 const HTML: &str = r#"
 <html>
   <head>
-    <style>
-      body {
-        margin: 0;
-        font-family: sans-serif;
-        background: #ffffff;
-        color: #1a1a2e;
-      }
-      .card {
-        margin-top: 20px;
-        padding: 16px;
-        border-radius: 12px;
-        background: #f2f2f7;
-      }
-      button, .button {
-        display: inline-block;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 8px;
-        background: #e94560;
-        color: white;
-        font-size: 15px;
-        text-decoration: none;
-        cursor: pointer;
-      }
-      button:hover, .button:hover {
-        background: #c9314b;
-      }
-      button:active, .button:active {
-        background: #a02036;
-      }
-      form {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-      }
-      input[type="text"] {
-        padding: 10px;
-        border: 1px solid #c5c5d2;
-        border-radius: 8px;
-        font-size: 15px;
-        width: 300px;
-      }
-    </style>
+    <link rel="stylesheet" href="https://freya.example/style.css">
   </head>
   <body>
     <div style="padding: 32px;">
@@ -98,7 +106,12 @@ const HTML: &str = r#"
 "#;
 
 fn app() -> impl IntoElement {
-    let handle = use_html(|| HtmlSource::html(HTML));
+    let handle = use_hook(|| {
+        HtmlHandle::create(HtmlSource::html(HTML)).resource_interceptor(|url| match url.path() {
+            "/style.css" => Some(Bytes::from_static(CSS)),
+            _ => None,
+        })
+    });
 
     rect()
         .expanded()

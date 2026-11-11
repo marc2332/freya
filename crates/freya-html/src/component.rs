@@ -1,17 +1,8 @@
-use std::{
-    cell::RefCell,
-    rc::Rc,
-};
-
 use freya_core::prelude::*;
-use futures_lite::StreamExt;
 
 use crate::{
-    cache::ResourceCache,
     element::Html,
     handle::HtmlHandle,
-    net::FetchRequest,
-    state::BlitzState,
 };
 
 /// Embeds an HTML + CSS document rendered by [Blitz](https://github.com/DioxusLabs/blitz), driven by an [HtmlHandle].
@@ -21,10 +12,10 @@ use crate::{
 /// # use freya_html::prelude::*;
 /// # fn app() -> impl IntoElement {
 /// // Inline HTML
-/// let inline = use_html(|| HtmlSource::html("<p>Hello <b>world</b></p>"));
+/// let inline = use_hook(|| HtmlHandle::create(HtmlSource::html("<p>Hello <b>world</b></p>")));
 /// HtmlViewer::new(inline);
 /// // Or a remote document, sized explicitly
-/// let remote = use_html(|| HtmlSource::url("https://example.com"));
+/// let remote = use_hook(|| HtmlHandle::create(HtmlSource::url("https://example.com")));
 /// HtmlViewer::new(remote)
 ///     .width(Size::px(400.))
 ///     .height(Size::px(300.))
@@ -34,7 +25,7 @@ use crate::{
 pub struct HtmlViewer {
     handle: HtmlHandle,
     layout: LayoutData,
-    fonts: Vec<Bytes>,
+    key: DiffKey,
 }
 
 impl HtmlViewer {
@@ -43,15 +34,9 @@ impl HtmlViewer {
         Self {
             handle,
             layout: LayoutData::default(),
-            fonts: Vec::new(),
+            key: DiffKey::None,
         }
         .expanded()
-    }
-
-    /// Adds a font to the document's font collection.
-    pub fn font(mut self, font: impl Into<Bytes>) -> Self {
-        self.fonts.push(font.into());
-        self
     }
 }
 
@@ -63,58 +48,30 @@ impl LayoutExt for HtmlViewer {
 
 impl ContainerExt for HtmlViewer {}
 
+impl KeyExt for HtmlViewer {
+    fn key_mut(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
+}
+
 impl Component for HtmlViewer {
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
+    }
+
     fn render(&self) -> impl IntoElement {
         let platform = Platform::get().current_window();
-        let mut handle = self.handle;
-        let fonts = self.fonts.clone();
+        let handle = self.handle;
+        let state = handle.view();
 
-        let state = use_hook(move || {
+        use_hook(move || {
             let platform = Platform::get().current_window();
-            let resource_cache = ResourceCache::get();
-            let (wake_tx, mut wake_rx) = futures_channel::mpsc::unbounded::<()>();
-            let (nav_tx, mut nav_rx) = futures_channel::mpsc::unbounded::<String>();
-            let (fetch_tx, mut fetch_rx) = futures_channel::mpsc::unbounded::<FetchRequest>();
-
-            let state = Rc::new(RefCell::new(BlitzState::new(
-                wake_tx,
-                nav_tx,
-                fetch_tx,
-                resource_cache.clone(),
-                fonts,
-            )));
-            handle.attach(state.clone());
-
+            let wake = handle.wake.peek().clone();
             spawn(async move {
-                while wake_rx.next().await.is_some() {
+                while wake.recv().await.is_ok() {
                     platform.send(UserEvent::RequestRedraw);
                 }
             });
-
-            spawn(async move {
-                while let Some((url, handler)) = fetch_rx.next().await {
-                    let resource_cache = resource_cache.clone();
-
-                    spawn(async move {
-                        match freya_components::http::fetch(url.clone()).await {
-                            Ok(bytes) => {
-                                let resolved_url = url.to_string();
-                                resource_cache.set(url, bytes.clone());
-                                handler.bytes(resolved_url, bytes);
-                            }
-                            Err(err) => tracing::warn!("Failed to fetch resource {url}: {err}"),
-                        }
-                    });
-                }
-            });
-
-            spawn(async move {
-                while let Some(url) = nav_rx.next().await {
-                    handle.navigate(url);
-                }
-            });
-
-            state
         });
 
         let a11y_id = use_hook(AccessibilityId::new_unique);

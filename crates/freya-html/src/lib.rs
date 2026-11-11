@@ -5,17 +5,34 @@
 //! use freya_html::prelude::*;
 //!
 //! # fn app() -> impl IntoElement {
-//! let handle = use_html(|| HtmlSource::html("<h1>Hello!</h1>"));
-//! HtmlViewer::new(handle).expanded()
+//! let handle = use_hook(|| HtmlHandle::create(HtmlSource::html("<h1>Hello!</h1>")));
+//! HtmlViewer::new(handle)
 //! # }
 //! ```
 //!
-//! Configure inline documents with [`HtmlContent`], including a validated
-//! base URL through [`HtmlContent::with_base_url`].
+//! Set a base URL for relative links with [`HtmlContent::with_base_url`].
 //!
-//! Use [`HtmlSource::url`] to load a remote page. Add local fonts with
-//! [`HtmlViewer::font`]. On web, provide a font for inline documents or load one
-//! through CSS `@font-face`.
+//! Use [`HtmlSource::url`] for remote pages and [`HtmlHandle::fonts`] for local fonts.
+//! On web, provide a font for inline documents or load one through CSS `@font-face`.
+//!
+//! Resolve embedded CSS and other subresources with [`HtmlHandle::resource_interceptor`].
+//!
+//! ```rust,no_run
+//! # use freya_core::prelude::*;
+//! # use freya_html::prelude::*;
+//! # fn app() -> impl IntoElement {
+//! let handle = use_hook(|| {
+//!     HtmlHandle::create(HtmlSource::html(
+//!         r#"<link rel="stylesheet" href="https://freya.example/style.css">"#,
+//!     ))
+//!     .resource_interceptor(|url| match url.path() {
+//!         "/style.css" => Some(Bytes::from_static(b"body { margin: 0 }")),
+//!         _ => None,
+//!     })
+//! });
+//! HtmlViewer::new(handle)
+//! # }
+//! ```
 //!
 //! For HTTP requests outside the viewer,
 //! enable Freya's `remote-asset` feature and use [`freya_components::http::fetch`]:
@@ -46,7 +63,6 @@ pub use handle::{
     ElementHit,
     HtmlHandle,
     HtmlSource,
-    use_html,
 };
 
 pub mod prelude {
@@ -58,7 +74,6 @@ pub mod prelude {
             ElementHit,
             HtmlHandle,
             HtmlSource,
-            use_html,
         },
     };
 }

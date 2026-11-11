@@ -5,41 +5,52 @@ use freya::{
 
 use crate::showcases::heading;
 
+static CSS: &[u8] = br#"
+body {
+  margin: 0;
+  font-family: sans-serif;
+  color: #1a1a2e;
+}
+
+.card {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #f2f2f7;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #e94560, #903749);
+  color: white;
+  font-size: 13px;
+}
+
+button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #e94560;
+  color: white;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #c9314b;
+}
+
+button:active {
+  background: #a02036;
+}
+"#;
+
 const HTML: &str = r#"
 <html>
   <head>
-    <style>
-      body {
-        margin: 0;
-        font-family: sans-serif;
-        color: #1a1a2e;
-      }
-      .card {
-        margin-top: 16px;
-        padding: 16px;
-        border-radius: 12px;
-        background: #f2f2f7;
-      }
-      .badge {
-        display: inline-block;
-        padding: 4px 10px;
-        border-radius: 999px;
-        background: linear-gradient(90deg, #e94560, #903749);
-        color: white;
-        font-size: 13px;
-      }
-      button {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 8px;
-        background: #e94560;
-        color: white;
-        font-size: 15px;
-        cursor: pointer;
-      }
-      button:hover { background: #c9314b; }
-      button:active { background: #a02036; }
-    </style>
+    <link rel="stylesheet" href="https://freya.example/style.css">
   </head>
   <body>
     <h1 style="color: #e94560; margin: 0 0 8px 0;">Hello from Blitz</h1>
@@ -64,16 +75,19 @@ pub struct HtmlShowcase;
 
 impl Component for HtmlShowcase {
     fn render(&self) -> impl IntoElement {
-        let handle = use_html(|| HtmlSource::html(HTML));
+        let handle = use_hook(|| {
+            HtmlHandle::create(HtmlSource::html(HTML))
+                .fonts([Bytes::from_static(crate::NOTO_SANS)])
+                .resource_interceptor(|url| match url.path() {
+                    "/style.css" => Some(Bytes::from_static(CSS)),
+                    _ => None,
+                })
+        });
 
         rect()
             .expanded()
             .spacing(20.)
             .child(heading("HTML", "HTML + CSS rendered by Blitz"))
-            .child(
-                HtmlViewer::new(handle)
-                    .font(Bytes::from_static(crate::NOTO_SANS))
-                    .expanded(),
-            )
+            .child(HtmlViewer::new(handle))
     }
 }

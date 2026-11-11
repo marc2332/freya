@@ -681,7 +681,7 @@ use freya::prelude::*;
 use freya::html::*;
 
 fn app() -> impl IntoElement {
-    let handle = use_html(|| HtmlSource::url("https://example.com"));
+    let handle = use_hook(|| HtmlHandle::create(HtmlSource::url("https://example.com")));
 
     rect()
         .expanded()
