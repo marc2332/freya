@@ -10,7 +10,15 @@ use crate::prelude::Color;
 
 /// Width of each side of a [`Border`], in pixels.
 ///
-/// Implements `From<f32>`, applied to all sides.
+/// Use [`BorderWidth::new_all`] for uniform widths or [`BorderWidth::new_symmetric`]
+/// for vertical and horizontal widths, then override individual sides with builder methods.
+/// Also accepts a scalar or tuples in `(vertical, horizontal)` or `(top, right, bottom, left)` order.
+///
+/// ```
+/// # use freya::prelude::*;
+/// let width = BorderWidth::new_symmetric(1.0, 2.0).bottom(3.0);
+/// let divider = BorderWidth::default().bottom(1.0);
+/// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Default, Clone, Copy, Debug, PartialEq)]
 pub struct BorderWidth {
@@ -18,6 +26,52 @@ pub struct BorderWidth {
     pub right: f32,
     pub bottom: f32,
     pub left: f32,
+}
+
+impl BorderWidth {
+    /// Create widths in `(top, right, bottom, left)` order.
+    pub const fn new(top: f32, right: f32, bottom: f32, left: f32) -> Self {
+        Self {
+            top,
+            right,
+            bottom,
+            left,
+        }
+    }
+
+    /// Create the same width on all four sides.
+    pub const fn new_all(width: f32) -> Self {
+        Self::new(width, width, width, width)
+    }
+
+    /// Create widths for `(vertical, horizontal)` pairs of sides.
+    pub const fn new_symmetric(vertical: f32, horizontal: f32) -> Self {
+        Self::new(vertical, horizontal, vertical, horizontal)
+    }
+
+    /// Set the top width in pixels, keeping the other sides unchanged.
+    pub const fn top(mut self, width: f32) -> Self {
+        self.top = width;
+        self
+    }
+
+    /// Set the right width in pixels, keeping the other sides unchanged.
+    pub const fn right(mut self, width: f32) -> Self {
+        self.right = width;
+        self
+    }
+
+    /// Set the bottom width in pixels, keeping the other sides unchanged.
+    pub const fn bottom(mut self, width: f32) -> Self {
+        self.bottom = width;
+        self
+    }
+
+    /// Set the left width in pixels, keeping the other sides unchanged.
+    pub const fn left(mut self, width: f32) -> Self {
+        self.left = width;
+        self
+    }
 }
 
 impl Scaled for BorderWidth {
@@ -31,12 +85,19 @@ impl Scaled for BorderWidth {
 
 impl From<f32> for BorderWidth {
     fn from(value: f32) -> Self {
-        BorderWidth {
-            top: value,
-            right: value,
-            bottom: value,
-            left: value,
-        }
+        Self::new_all(value)
+    }
+}
+
+impl From<(f32, f32)> for BorderWidth {
+    fn from((vertical, horizontal): (f32, f32)) -> Self {
+        Self::new_symmetric(vertical, horizontal)
+    }
+}
+
+impl From<(f32, f32, f32, f32)> for BorderWidth {
+    fn from((top, right, bottom, left): (f32, f32, f32, f32)) -> Self {
+        Self::new(top, right, bottom, left)
     }
 }
 
@@ -71,7 +132,8 @@ pub enum BorderShape {
 /// An outline drawn around an element, with a [`fill`](Border::fill) color,
 /// a [`width`](Border::width) per side and an [`alignment`](Border::alignment).
 ///
-/// Start from [`Border::new`] and chain the methods you need:
+/// Start from [`Border::new`] or a single-side shortcut such as [`Border::bottom`],
+/// then chain the methods you need:
 ///
 /// ```
 /// # use freya::prelude::*;
@@ -92,6 +154,34 @@ impl Border {
     /// Create a new [`Border`] with default values.
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Create a border on only the top edge, with inner alignment.
+    pub fn top(color: impl Into<Color>, width: f32) -> Self {
+        Self::new()
+            .fill(color)
+            .width(BorderWidth::default().top(width))
+    }
+
+    /// Create a border on only the right edge, with inner alignment.
+    pub fn right(color: impl Into<Color>, width: f32) -> Self {
+        Self::new()
+            .fill(color)
+            .width(BorderWidth::default().right(width))
+    }
+
+    /// Create a border on only the bottom edge, with inner alignment.
+    pub fn bottom(color: impl Into<Color>, width: f32) -> Self {
+        Self::new()
+            .fill(color)
+            .width(BorderWidth::default().bottom(width))
+    }
+
+    /// Create a border on only the left edge, with inner alignment.
+    pub fn left(color: impl Into<Color>, width: f32) -> Self {
+        Self::new()
+            .fill(color)
+            .width(BorderWidth::default().left(width))
     }
 
     /// Set the [`Color`] the border is painted with.
