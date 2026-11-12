@@ -1,39 +1,34 @@
 use freya_core::prelude::*;
 use torin::geometry::{
     CursorPoint,
+    Size2D,
     Vector2D,
 };
 
-/// Distance a touch has to move before it becomes a drag, so taps can reach children
-/// (e.g. press a button) without being consumed by drag scrolling.
 const DRAG_THRESHOLD: f64 = 2.0;
 
-/// A scroll view under a touch, and the axes its content can be moved along.
 #[derive(Clone, Copy, PartialEq)]
 struct Candidate {
-    id: usize,
+    id: AccessibilityId,
     horizontal: bool,
     vertical: bool,
 }
 
-/// One touch, from when it lands on scroll views until it is lifted.
 #[derive(Clone, PartialEq)]
 struct Gesture {
     origin: CursorPoint,
-    /// Scroll views under the touch, innermost first: the order `pointerdown` bubbles in.
+    // Inner scroll views come first.
     candidates: Vec<Candidate>,
-    /// The scroll view the drag belongs to, once the touch moved far enough to tell.
-    owner: Option<usize>,
+    owner: Option<AccessibilityId>,
 }
 
 impl Gesture {
-    fn includes(&self, id: usize) -> bool {
+    fn includes(&self, id: AccessibilityId) -> bool {
         self.candidates.iter().any(|candidate| candidate.id == id)
     }
 
-    /// The innermost scroll view that scrolls along the axis the touch moved on. When none does,
-    /// the innermost one that scrolls along the other axis, if the touch moved on that one too.
-    fn owner_at(&self, coords: CursorPoint) -> Option<usize> {
+    // Try the main drag direction first, then the other direction.
+    fn owner_at(&self, coords: CursorPoint) -> Option<AccessibilityId> {
         let distance = (self.origin - coords).abs();
         let moved_x = distance.x > DRAG_THRESHOLD;
         let moved_y = distance.y > DRAG_THRESHOLD;
@@ -65,47 +60,49 @@ impl Gesture {
     }
 }
 
-/// The touch being dragged in a window, shared by all its scroll views.
+// The current touch, shared by the window's scroll views.
 #[derive(Clone, Copy, PartialEq)]
-struct WindowGesture(State<Option<Gesture>>);
+struct ScrollTouchGesture(State<Option<Gesture>>);
 
-/// Drag scrolling by touch of one scroll view.
-///
-/// A touch lands on every scroll view under it, and each of them hears every later movement, in no
-/// given order. Left to themselves they would all drag at once, and the one that hears a movement
-/// first cancels it for the others. So the scroll views of a window agree on one of them per touch:
-/// the innermost that can scroll the way the touch moves.
+/// Tracks touch scrolling. When views are nested, the inner view gets the drag
+/// if it can scroll in the drag direction.
 #[derive(Clone, Copy, PartialEq)]
-pub(crate) struct TouchDrag {
-    id: usize,
+pub struct TouchDrag {
+    id: AccessibilityId,
     gesture: State<Option<Gesture>>,
-    /// Where the touch was when this scroll view last followed it.
     last: State<Option<CursorPoint>>,
 }
 
-pub(crate) fn use_touch_drag() -> TouchDrag {
-    let id = use_id::<WindowGesture>();
-    let gesture = use_hook(|| match try_consume_root_context::<WindowGesture>() {
-        Some(WindowGesture(gesture)) => gesture,
-        None => {
-            let gesture = State::create_in_scope(None, ScopeId::ROOT);
-            provide_context_for_scope_id(WindowGesture(gesture), ScopeId::ROOT);
-            gesture
-        }
-    });
-    let last = use_state(|| None);
-    TouchDrag { id, gesture, last }
+/// Track touch scrolling with the scroll view's accessibility ID.
+pub fn use_touch_drag(id: AccessibilityId) -> TouchDrag {
+    use_hook(|| TouchDrag::create(id))
 }
 
 impl TouchDrag {
-    /// A touch landed on this scroll view, whose content can move along the given axes.
-    pub(crate) fn press(&mut self, origin: CursorPoint, horizontal: bool, vertical: bool) {
-        // `pointerdown` bubbles through the scroll views under the touch one after the other: the first
-        // to hear it starts the gesture and the rest join it. A gesture that already has an owner, or
-        // that started elsewhere, is a previous one that ended without this being told.
-        let joined = (*self.gesture.peek())
-            .clone()
-            .filter(|gesture| gesture.owner.is_none() && gesture.origin == origin);
+    fn create(id: AccessibilityId) -> Self {
+        let gesture = match try_consume_root_context::<ScrollTouchGesture>() {
+            Some(ScrollTouchGesture(gesture)) => gesture,
+            None => {
+                let gesture = State::create_in_scope(None, ScopeId::ROOT);
+                provide_context_for_scope_id(ScrollTouchGesture(gesture), ScopeId::ROOT);
+                gesture
+            }
+        };
+        Self {
+            id,
+            gesture,
+            last: State::create(None),
+        }
+    }
+
+    /// Start a touch using the content and view sizes to find which directions can scroll.
+    pub fn press(&mut self, origin: CursorPoint, content: Size2D, viewport: Size2D) {
+        let joined = self
+            .gesture
+            .peek()
+            .as_ref()
+            .filter(|gesture| gesture.owner.is_none() && gesture.origin == origin)
+            .cloned();
         let mut gesture = joined.unwrap_or(Gesture {
             origin,
             candidates: Vec::new(),
@@ -114,16 +111,16 @@ impl TouchDrag {
         if !gesture.includes(self.id) {
             gesture.candidates.push(Candidate {
                 id: self.id,
-                horizontal,
-                vertical,
+                horizontal: content.width - viewport.width >= 1.0,
+                vertical: content.height - viewport.height >= 1.0,
             });
         }
         self.gesture.set(Some(gesture));
         self.last.set(None);
     }
 
-    /// The touch moved. Returns how far, when this scroll view is the one being dragged by it.
-    pub(crate) fn movement(&mut self, coords: CursorPoint) -> Option<Vector2D> {
+    /// Return how far to scroll, or `None` if this view does not have the drag.
+    pub fn movement(&mut self, coords: CursorPoint) -> Option<Vector2D> {
         let (origin, owner, decided) = {
             let gesture = self.gesture.peek();
             let gesture = gesture
@@ -146,13 +143,12 @@ impl TouchDrag {
         Some((from - coords).to_f32())
     }
 
-    /// The touch was lifted. Returns whether this scroll view was being dragged by it.
-    pub(crate) fn release(&mut self) -> bool {
+    /// End the touch and return whether this view had the drag.
+    pub fn release(&mut self) -> bool {
         let (was_dragged, ends_gesture) = match self.gesture.peek().as_ref() {
             Some(gesture) if gesture.includes(self.id) => {
                 let was_dragged = gesture.owner == Some(self.id);
-                // The scroll view that was dragged cancels the lift for the others, so it is the one
-                // to end the gesture. A touch that dragged nothing is heard lifted by all of them.
+                // The view with the drag clears it. Other views may not receive the release.
                 (was_dragged, was_dragged || gesture.owner.is_none())
             }
             _ => (false, false),
@@ -165,9 +161,4 @@ impl TouchDrag {
         }
         was_dragged
     }
-}
-
-/// Whether content of size `content` can be moved in a viewport of size `viewport`, by a pixel or more.
-pub(crate) fn can_scroll(content: f32, viewport: f32) -> bool {
-    content - viewport >= 1.0
 }
