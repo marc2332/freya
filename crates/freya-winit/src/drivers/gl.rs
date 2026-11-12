@@ -25,6 +25,7 @@ use gl::{
 };
 use glutin::{
     config::{
+        ColorBufferType,
         Config,
         ConfigTemplateBuilder,
         GlConfig,
@@ -342,14 +343,20 @@ impl OpenGLDriver {
     /// Pick the OpenGL config.
     fn pick_config(configs: Box<dyn Iterator<Item = Config> + '_>, transparent: bool) -> Config {
         configs
-            .max_by_key(|config| {
+            .min_by_key(|config| {
                 let supports_transparency =
                     transparent && config.supports_transparency().unwrap_or(false);
 
                 (
-                    config.hardware_accelerated(),
-                    supports_transparency,
-                    -(config.num_samples() as i32),
+                    !config.hardware_accelerated(),
+                    !supports_transparency,
+                    config.num_samples(),
+                    config.color_buffer_type()
+                        != Some(ColorBufferType::Rgb {
+                            r_size: 8,
+                            g_size: 8,
+                            b_size: 8,
+                        }),
                 )
             })
             .expect("at least one OpenGL config")
