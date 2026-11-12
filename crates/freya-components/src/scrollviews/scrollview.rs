@@ -28,10 +28,7 @@ use crate::scrollviews::{
         handle_key_event,
         is_scrollbar_visible,
     },
-    touch_drag::{
-        can_scroll,
-        use_touch_drag,
-    },
+    touch_drag::use_touch_drag,
     use_scroll_controller,
 };
 
@@ -206,7 +203,7 @@ impl Component for ScrollView {
         let mut scroll_controller = self
             .scroll_controller
             .unwrap_or_else(|| use_scroll_controller(ScrollConfig::default));
-        let mut touch_drag = use_touch_drag();
+        let mut touch_drag = use_touch_drag(a11y_id);
         let (scrolled_x, scrolled_y) = scroll_controller.into();
         let layout = &self.layout.layout;
         let direction = layout.direction;
@@ -442,11 +439,7 @@ impl Component for ScrollView {
             if drag_scrolling && matches!(e.data(), PointerEventData::Touch(_)) {
                 scroll_controller.begin_drag();
                 let size = size.read();
-                touch_drag.press(
-                    e.global_location(),
-                    can_scroll(size.inner_sizes.width, size.area.width()),
-                    can_scroll(size.inner_sizes.height, size.area.height()),
-                );
+                touch_drag.press(e.global_location(), size.inner_sizes, size.area.size);
             }
         };
 

@@ -4,8 +4,8 @@ use freya::prelude::*;
 use freya_testing::prelude::*;
 
 #[test]
-fn scrolling_does_not_press_button_on_release() {
-    for virtualized in [false, true] {
+fn scroll_drag_only_cancels_press_when_content_overflows() {
+    for (virtualized, length) in [(false, 1usize), (false, 20), (true, 1), (true, 20)] {
         let (mut test, (presses, controller)) = TestingRunner::new(
             move || {
                 let mut presses = use_consume::<State<usize>>();
@@ -21,12 +21,12 @@ fn scrolling_does_not_press_button_on_release() {
 
                 if virtualized {
                     VirtualScrollView::new_controlled(move |item, _| button(item.index), controller)
-                        .length(20usize)
+                        .length(length)
                         .item_size(150.)
                         .into_element()
                 } else {
                     ScrollView::new_controlled(controller)
-                        .children((0..20).map(button))
+                        .children((0..length).map(button))
                         .into_element()
                 }
             },
@@ -42,9 +42,105 @@ fn scrolling_does_not_press_button_on_release() {
 
         test.press_touch((40., 80.));
         test.move_touch((40., 50.));
-        assert!(test.run_in(|| controller.position().y) < 0.);
+        assert_eq!(test.run_in(|| controller.position().y) < 0., length > 1);
         test.release_touch((40., 50.));
-        assert_eq!(*presses.peek(), 0);
+        assert_eq!(*presses.peek(), usize::from(length == 1));
+    }
+}
+
+#[test]
+fn nested_scroll_drag_ownership() {
+    for virtualized in [false, true] {
+        for (direction, content, movement, inner_scrolls) in [
+            (Direction::Horizontal, (200., 100.), (1., -10.), false),
+            (Direction::Horizontal, (1500., 100.), (1., -10.), false),
+            (Direction::Horizontal, (1500., 100.), (-10., -1.), true),
+            (Direction::Vertical, (200., 1000.), (0., -10.), true),
+        ] {
+            let (mut test, (page, inner)) = TestingRunner::new(
+                move || {
+                    let (page, inner) = use_consume::<(ScrollController, ScrollController)>();
+                    let row = move |index| {
+                        if index == 3 {
+                            ScrollView::new_controlled(inner)
+                                .key(index)
+                                .direction(direction)
+                                .width(Size::fill())
+                                .height(Size::px(100.))
+                                .child(
+                                    rect()
+                                        .width(Size::px(content.0))
+                                        .height(Size::px(content.1)),
+                                )
+                                .into_element()
+                        } else {
+                            rect()
+                                .key(index)
+                                .width(Size::fill())
+                                .height(Size::px(100.))
+                                .into_element()
+                        }
+                    };
+                    if virtualized {
+                        VirtualScrollView::new_controlled(move |item, _| row(item.index), page)
+                            .length(10usize)
+                            .item_size(100.)
+                            .into_element()
+                    } else {
+                        ScrollView::new_controlled(page)
+                            .children((0..10).map(row))
+                            .into_element()
+                    }
+                },
+                (500., 500.).into(),
+                |runner| {
+                    runner.provide_root_context(|| {
+                        (ScrollController::new(0, 0), ScrollController::new(0, 0))
+                    })
+                },
+                1.,
+            );
+            test.sync_and_update();
+            let position = |test: &TestingRunner, controller: ScrollController| {
+                test.run_in(|| {
+                    let position = controller.position();
+                    (position.x as i32, position.y as i32)
+                })
+            };
+
+            test.press_touch((400., 350.));
+            for step in 1..=3 {
+                test.move_touch((
+                    400. + movement.0 * step as f64,
+                    350. + movement.1 * step as f64,
+                ));
+                let expected_inner = if !inner_scrolls {
+                    (0, 0)
+                } else if direction == Direction::Horizontal {
+                    (-10 * step, 0)
+                } else {
+                    (0, -10 * step)
+                };
+                assert_eq!(position(&test, inner), expected_inner);
+                assert_eq!(
+                    position(&test, page),
+                    (0, if inner_scrolls { 0 } else { -10 * step })
+                );
+            }
+            test.release_touch((400. + movement.0 * 3., 350. + movement.1 * 3.));
+
+            // A later drag outside the inner view must not reuse its previous ownership.
+            let inner_before = position(&test, inner);
+            let page_before = position(&test, page);
+            test.press_touch((400., 450.));
+            test.move_touch((370., 450.));
+            assert_eq!(position(&test, inner), inner_before);
+            assert_eq!(position(&test, page).0, page_before.0);
+            test.move_touch((370., 420.));
+            assert_eq!(position(&test, inner), inner_before);
+            assert_eq!(position(&test, page).1, page_before.1 - 30);
+            test.release_touch((370., 420.));
+        }
     }
 }
 
