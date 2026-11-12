@@ -15,7 +15,7 @@ use crate::node_id::NodeId;
 /// Higher layers paint on top of lower layers, regardless of their position in the tree.
 /// Elements on the same layer have no guaranteed painting order.
 ///
-/// The default is [`Layer::Relative(0)`]. An `i16` converts into a
+/// The default is [`Layer::Relative(0)`](Layer::Relative). An `i16` converts into a
 /// [`Layer::Relative`] offset, so `.layer(1)` is equivalent to
 /// `.layer(Layer::Relative(1))`.
 ///
