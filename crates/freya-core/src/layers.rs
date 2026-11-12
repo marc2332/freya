@@ -10,19 +10,37 @@ use rustc_hash::{
 
 use crate::node_id::NodeId;
 
-/// The painting layer of an element, controlling what it draws on top of.
+/// Controls the painting order of an element and the base layer of its descendants.
 ///
-/// Converts from an `i16`, which becomes a [`Layer::Relative`] offset.
+/// Higher layers paint on top of lower layers, regardless of their position in the tree.
+/// Elements on the same layer have no guaranteed painting order.
+///
+/// The default is [`Layer::Relative(0)`]. An `i16` converts into a
+/// [`Layer::Relative`] offset, so `.layer(1)` is equivalent to
+/// `.layer(Layer::Relative(1))`.
+///
+/// Overlay variants also escape clipping inherited from ancestors. Use them for
+/// content such as menus, tooltips and dialogs.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Layer {
-    /// Relative layer to the parent's layer. `0` (the default) keeps the normal stacking order.
-    /// Negative values move behind siblings and positive values in front.
+    /// Offsets the normal layer, which is one above the parent's layer.
+    ///
+    /// `0` preserves this default. Among siblings, negative offsets paint below
+    /// the default layer and positive offsets paint above it. `-1` places an
+    /// element on its parent's layer, not below it. Descendants use the resulting
+    /// layer as their base.
     Relative(i16),
-    /// Adds a big layer jump relative to the parents layer.
-    /// You may stack multiple overlays on top of each other.
+    /// Raises the element by `i16::MAX / 16` layers relative to its parent.
+    ///
+    /// Nested overlays each add this jump.
+    /// Also clears inherited clipping, allowing the element and its descendants to
+    /// paint outside ancestor bounds.
     Overlay,
-    /// Paint on a specific, numbered overlay level, regardless of the parent's layer.
-    /// There are up to 16 levels you can use, anything above will be capped at 16.
+    /// Sets an absolute overlay level, independent of the parent's layer.
+    ///
+    /// Levels `1` through `16` are spaced by `i16::MAX / 16`.
+    /// A nested overlay level can therefore paint below its parent.
+    /// Like [`Layer::Overlay`], this clears inherited clipping.
     OverlayLevel(u8),
 }
 
