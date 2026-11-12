@@ -2,6 +2,7 @@ mod scrollbar;
 mod scrollthumb;
 mod scrollview;
 mod shared;
+mod touch_drag;
 mod use_scroll_controller;
 mod virtual_scrollview;
 
