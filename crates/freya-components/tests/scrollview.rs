@@ -57,7 +57,7 @@ fn nested_scroll_drag_ownership() {
             (Direction::Horizontal, (1500., 100.), (-10., -1.), true),
             (Direction::Vertical, (200., 1000.), (0., -10.), true),
         ] {
-            let (mut test, (page, inner)) = TestingRunner::new(
+            let (mut test, (mut page, mut inner)) = TestingRunner::new(
                 move || {
                     let (page, inner) = use_consume::<(ScrollController, ScrollController)>();
                     let row = move |index| {
@@ -129,7 +129,13 @@ fn nested_scroll_drag_ownership() {
             }
             test.release_touch((400. + movement.0 * 3., 350. + movement.1 * 3.));
 
-            // A later drag outside the inner view must not reuse its previous ownership.
+            test.run_in(|| {
+                page.stop();
+                inner.stop();
+            });
+            test.sync_and_update();
+
+            // Start a new drag outside the inner view.
             let inner_before = position(&test, inner);
             let page_before = position(&test, page);
             test.press_touch((400., 450.));
