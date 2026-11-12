@@ -34,6 +34,56 @@ fn line_text(line: &TestingNode) -> String {
 }
 
 #[test]
+fn code_editor_preserves_horizontal_scroll() {
+    let mut test = launch_test(|| {
+        let a11y_id = use_a11y();
+        let editor = use_state(|| {
+            let source = (0..200)
+                .map(|line| format!("line {line} {}", "long content ".repeat(30)))
+                .collect::<Vec<_>>()
+                .join("\n");
+            let mut editor = CodeEditorData::new(Rope::from_str(&source), None);
+            editor.parse();
+            editor.measure(14., "Jetbrains Mono");
+            editor
+        });
+        CodeEditor::new(editor, a11y_id).a11y_auto_focus(true)
+    });
+    test.sync_and_update();
+
+    let paragraph_x = |test: &TestingRunner| {
+        test.find(|node, element| Paragraph::try_downcast(element).map(|_| node))
+            .unwrap()
+            .layout()
+            .area
+            .min_x()
+    };
+    let initial_x = paragraph_x(&test);
+    test.scroll((150., 150.), (-200., 0.));
+    let horizontal_x = paragraph_x(&test);
+    assert!(horizontal_x < initial_x);
+
+    test.press_key(Key::Named(NamedKey::Shift));
+    assert_eq!(paragraph_x(&test), horizontal_x);
+    test.send_event(PlatformEvent::Keyboard {
+        name: KeyboardEventName::KeyUp,
+        key: Key::Named(NamedKey::Shift),
+        code: Code::Unidentified,
+        modifiers: Modifiers::default(),
+    });
+    test.sync_and_update();
+
+    test.scroll((150., 150.), (0., -300.));
+    assert_eq!(paragraph_x(&test), horizontal_x);
+
+    test.scroll((20., 150.), (0., -300.));
+    assert_eq!(paragraph_x(&test), horizontal_x);
+
+    test.write_text("x");
+    assert!(paragraph_x(&test) > horizontal_x);
+}
+
+#[test]
 pub fn code_editor_scrolls_to_cursor() {
     let mut test = launch_test(editor_app);
     test.sync_and_update();

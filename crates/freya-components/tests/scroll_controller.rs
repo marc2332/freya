@@ -44,6 +44,64 @@ fn position_label(scroll_controller: ScrollController) -> impl IntoElement {
 }
 
 #[test]
+fn follower_views_preserve_controller_bounds() {
+    for virtual_follower in [false, true] {
+        let (mut test, mut controller) = TestingRunner::new(
+            move || {
+                let controller = use_consume::<ScrollController>();
+                rect()
+                    .horizontal()
+                    .child(
+                        ScrollView::new()
+                            .scroll_controller(controller)
+                            .width(Size::px(400.))
+                            .show_scrollbar(false)
+                            .child(rect().width(Size::px(2000.)).height(Size::px(2000.))),
+                    )
+                    .child(if virtual_follower {
+                        VirtualScrollView::new(|item, _| {
+                            rect().key(item.index).height(Size::px(item.size)).into()
+                        })
+                        .length(1usize)
+                        .item_size(50.)
+                        .width(Size::px(100.))
+                        .show_scrollbar(false)
+                        .follow_scroll_controller(controller)
+                        .into_element()
+                    } else {
+                        ScrollView::new()
+                            .width(Size::px(100.))
+                            .show_scrollbar(false)
+                            .follow_scroll_controller(controller)
+                            .child(rect().height(Size::px(50.)))
+                            .into_element()
+                    })
+            },
+            (500., 500.).into(),
+            |runner| runner.provide_root_context(|| ScrollController::new(0, 0)),
+            1.,
+        );
+        test.sync_and_update();
+        let bounds = *controller.bounds.peek();
+        assert_eq!(bounds, Some(((2000., 2000.).into(), (400., 500.).into())));
+
+        controller.scroll_to_x(-200);
+        controller.scroll_to_y(-300);
+        test.sync_and_update();
+        assert_eq!(controller.position(), (-200., -300.).into());
+        assert_eq!(*controller.bounds.peek(), bounds);
+
+        test.scroll((450., 100.), (0., -100.));
+        assert_eq!(controller.position(), (-200., -400.).into());
+        assert_eq!(*controller.bounds.peek(), bounds);
+
+        test.scroll((450., 100.), (-100., 0.));
+        assert_eq!(controller.position(), (-300., -400.).into());
+        assert_eq!(*controller.bounds.peek(), bounds);
+    }
+}
+
+#[test]
 pub fn virtual_scroll_view_starts_at_the_end() {
     fn app() -> impl IntoElement {
         let scroll_controller = use_scroll_controller(end_config);

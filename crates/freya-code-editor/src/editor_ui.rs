@@ -316,7 +316,7 @@ impl Component for CodeEditor {
                         })
                         .width(Size::px(gutter_width))
                         .show_scrollbar(false)
-                        .scroll_controller(scroll_controller)
+                        .follow_scroll_controller(scroll_controller)
                         .length(lines_len)
                         .item_size(line_height)
                     }))
