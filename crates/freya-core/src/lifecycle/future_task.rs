@@ -29,7 +29,7 @@ impl<D> FutureState<D> {
         matches!(self, Self::Pending)
     }
 
-    pub fn is_fullfilled(&self) -> bool {
+    pub fn is_fulfilled(&self) -> bool {
         matches!(self, Self::Fulfilled(_))
     }
 }
