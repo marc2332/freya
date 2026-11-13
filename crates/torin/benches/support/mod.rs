@@ -68,6 +68,10 @@ impl BenchmarkConfig {
     }
 
     pub fn prepare(&self) -> BenchmarkInput {
+        if let BenchmarkMode::DistantBranches(branches) = self.mode {
+            return self.prepare_distant_branches(branches);
+        }
+
         let root_area = Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0));
         let mut measurer = Some(NoopMeasurer);
         let mut tree = TestingTree::default();
@@ -133,6 +137,7 @@ impl BenchmarkInput {
 enum BenchmarkMode {
     NoCache,
     InvalidatedCache,
+    DistantBranches(usize),
 }
 
 impl Display for BenchmarkMode {
@@ -140,6 +145,9 @@ impl Display for BenchmarkMode {
         match self {
             Self::NoCache => formatter.write_str("not cached"),
             Self::InvalidatedCache => formatter.write_str("cached"),
+            Self::DistantBranches(branches) => {
+                write!(formatter, "cached distant-branches={branches}")
+            }
         }
     }
 }
@@ -153,7 +161,7 @@ fn simple_node_generator(_depth: usize) -> Node {
 }
 
 impl BenchmarkConfig {
-    pub fn all() -> [Self; 11] {
+    pub fn all() -> [Self; 14] {
         [
             BenchmarkConfig {
                 depth: 2,
@@ -263,7 +271,85 @@ impl BenchmarkConfig {
                 },
                 prefix: "alignments=true ".to_string(),
             },
+            Self::distant_branches(1),
+            Self::distant_branches(2),
+            Self::distant_branches(8),
         ]
+    }
+
+    fn distant_branches(branches: usize) -> Self {
+        Self {
+            depth: 6,
+            wide: 8,
+            mode: BenchmarkMode::DistantBranches(branches),
+            sample: 100,
+            node_generator: simple_node_generator,
+            prefix: String::default(),
+        }
+    }
+
+    fn prepare_distant_branches(&self, branches: usize) -> BenchmarkInput {
+        let mut tree = TestingTree::default();
+        let size = self.size();
+        let mut level_start = 0;
+        let mut level_end = 1;
+
+        // Assign consecutive IDs per level so every branch has unique nodes and accurate heights.
+        for level in 0..self.depth {
+            for node_id in level_start..level_end {
+                let children_start = node_id * self.wide + 1;
+                let children_end = (children_start + self.wide).min(size);
+                let parent = if node_id == 0 {
+                    None
+                } else {
+                    Some((node_id - 1) / self.wide)
+                };
+                tree.mapper.insert(
+                    node_id,
+                    (
+                        parent,
+                        (children_start..children_end).collect(),
+                        level as u16,
+                        (self.node_generator)(level),
+                    ),
+                );
+            }
+            level_start = level_end;
+            level_end = (level_end * self.wide + 1).min(size);
+        }
+
+        let mut input = BenchmarkInput {
+            tree,
+            measurer: Some(NoopMeasurer),
+            layout: Torin::new(),
+            root_area: Rect::new(Point2D::new(0., 0.), Size2D::new(1000., 1000.)),
+        };
+        input.run();
+        assert_eq!(input.layout.results.len(), size);
+
+        // Spread mutations across root branches, including the first and last when changing several.
+        for branch in 0..branches {
+            let root_child = if branches == 1 {
+                0
+            } else {
+                branch * (self.wide - 1) / (branches - 1)
+            };
+            let mut node_id = root_child + 1;
+            for _ in 2..self.depth {
+                node_id = node_id * self.wide + 1 + self.wide / 2;
+            }
+            let node = &mut input
+                .tree
+                .mapper
+                .get_mut(&node_id)
+                .expect("Leaf must exist")
+                .3;
+            *node =
+                Node::from_size_and_direction(Size::px(40.), Size::px(35.), Direction::Vertical);
+            input.layout.invalidate(node_id);
+        }
+
+        input
     }
 
     fn build_branch(
