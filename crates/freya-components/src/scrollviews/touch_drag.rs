@@ -15,19 +15,13 @@ struct Candidate {
 }
 
 #[derive(Clone, PartialEq)]
-struct Gesture {
+struct PendingGesture {
     origin: CursorPoint,
     // Inner scroll views come first.
     candidates: Vec<Candidate>,
-    owner: Option<AccessibilityId>,
 }
 
-impl Gesture {
-    fn includes(&self, id: AccessibilityId) -> bool {
-        self.candidates.iter().any(|candidate| candidate.id == id)
-    }
-
-    // Try the main drag direction first, then the other direction.
+impl PendingGesture {
     fn owner_at(&self, coords: CursorPoint) -> Option<AccessibilityId> {
         let distance = (self.origin - coords).abs();
         let moved_x = distance.x > DRAG_THRESHOLD;
@@ -60,9 +54,28 @@ impl Gesture {
     }
 }
 
-// The current touch, shared by the window's scroll views.
+#[derive(Clone, PartialEq)]
+enum Gesture {
+    Pending(PendingGesture),
+    Scrolling(AccessibilityId),
+    TakenOver,
+}
+
 #[derive(Clone, Copy, PartialEq)]
 struct ScrollTouchGesture(State<Option<Gesture>>);
+
+impl ScrollTouchGesture {
+    fn get() -> Self {
+        match try_consume_root_context() {
+            Some(gesture) => gesture,
+            None => {
+                let gesture = Self(State::create_in_scope(None, ScopeId::ROOT));
+                provide_context_for_scope_id(gesture, ScopeId::ROOT);
+                gesture
+            }
+        }
+    }
+}
 
 /// Tracks touch scrolling. When views are nested, the inner view gets the drag
 /// if it can scroll in the drag direction.
@@ -78,85 +91,93 @@ pub struct TouchDrag {
 
 /// Track touch scrolling with the scroll view's accessibility ID.
 pub fn use_touch_drag(id: AccessibilityId) -> TouchDrag {
-    use_hook(|| TouchDrag::create(id))
+    use_hook(|| TouchDrag {
+        id,
+        gesture: ScrollTouchGesture::get().0,
+        last: State::create(None),
+    })
 }
 
 impl TouchDrag {
-    fn create(id: AccessibilityId) -> Self {
-        let gesture = match try_consume_root_context::<ScrollTouchGesture>() {
-            Some(ScrollTouchGesture(gesture)) => gesture,
-            None => {
-                let gesture = State::create_in_scope(None, ScopeId::ROOT);
-                provide_context_for_scope_id(ScrollTouchGesture(gesture), ScopeId::ROOT);
-                gesture
-            }
-        };
-        Self {
-            id,
-            gesture,
-            last: State::create(None),
+    /// Stop touch scrolling for the current gesture until release or cancellation.
+    /// Call from a touch handler or long-press callback, without a hook or scroll-view ID.
+    pub fn take_over() {
+        if let Some(ScrollTouchGesture(mut gesture)) = try_consume_root_context() {
+            gesture.set_if_modified(Some(Gesture::TakenOver));
         }
     }
 
     /// Start a touch using the content and view sizes to find which directions can scroll.
     pub fn press(&mut self, origin: CursorPoint, content: Size2D, viewport: Size2D) {
-        let joined = self
-            .gesture
-            .peek()
-            .as_ref()
-            .filter(|gesture| gesture.owner.is_none() && gesture.origin == origin)
-            .cloned();
-        let mut gesture = joined.unwrap_or(Gesture {
-            origin,
-            candidates: Vec::new(),
-            owner: None,
-        });
-        if !gesture.includes(self.id) {
-            gesture.candidates.push(Candidate {
-                id: self.id,
-                horizontal: content.width - viewport.width >= 1.0,
-                vertical: content.height - viewport.height >= 1.0,
-            });
+        let candidate = Candidate {
+            id: self.id,
+            horizontal: content.width - viewport.width >= 1.0,
+            vertical: content.height - viewport.height >= 1.0,
+        };
+        {
+            let mut gesture = self.gesture.write();
+            match gesture.as_mut() {
+                Some(Gesture::TakenOver) => {}
+                Some(Gesture::Pending(pending)) if pending.origin == origin => {
+                    if !pending
+                        .candidates
+                        .iter()
+                        .any(|candidate| candidate.id == self.id)
+                    {
+                        pending.candidates.push(candidate);
+                    }
+                }
+                _ => {
+                    *gesture = Some(Gesture::Pending(PendingGesture {
+                        origin,
+                        candidates: vec![candidate],
+                    }));
+                }
+            }
         }
-        self.gesture.set_if_modified(Some(gesture));
-        self.last.set_if_modified(None);
+        self.last.set_if_modified(Some(origin));
     }
 
     /// Return how far to scroll, or `None` if this view does not have the drag.
     pub fn movement(&mut self, coords: CursorPoint) -> Option<Vector2D> {
-        let (origin, owner) = {
+        let owner = {
             let mut gesture = self.gesture.write();
-            let gesture = gesture
-                .as_mut()
-                .filter(|gesture| gesture.includes(self.id))?;
-            let owner = match gesture.owner {
-                Some(owner) => owner,
-                None => {
-                    let owner = gesture.owner_at(coords)?;
-                    gesture.owner = Some(owner);
+            match gesture.as_ref()? {
+                Gesture::Pending(pending) => {
+                    if !pending
+                        .candidates
+                        .iter()
+                        .any(|candidate| candidate.id == self.id)
+                    {
+                        return None;
+                    }
+                    let owner = pending.owner_at(coords)?;
+                    *gesture = Some(Gesture::Scrolling(owner));
                     owner
                 }
-            };
-            (gesture.origin, owner)
+                Gesture::Scrolling(owner) => *owner,
+                Gesture::TakenOver => return None,
+            }
         };
         if owner != self.id {
             return None;
         }
 
-        let from = self.last.peek().unwrap_or(origin);
+        let from = (*self.last.peek())?;
         self.last.set_if_modified(Some(coords));
         Some((from - coords).to_f32())
     }
 
-    /// End the touch and return whether this view had the drag.
+    /// End the touch and return whether this view should release its scrolling drag.
     pub fn release(&mut self) -> bool {
         let (was_dragged, ends_gesture) = match self.gesture.peek().as_ref() {
-            Some(gesture) if gesture.includes(self.id) => {
-                let was_dragged = gesture.owner == Some(self.id);
-                // The view with the drag clears it. Other views may not receive the release.
-                (was_dragged, was_dragged || gesture.owner.is_none())
+            Some(Gesture::Scrolling(owner)) => {
+                let was_dragged = *owner == self.id;
+                // Only the scrolling owner clears it, since other views may not receive the release.
+                (was_dragged, was_dragged)
             }
-            _ => (false, false),
+            Some(Gesture::Pending(_) | Gesture::TakenOver) => (false, true),
+            None => (false, false),
         };
         if ends_gesture {
             self.gesture.set_if_modified(None);

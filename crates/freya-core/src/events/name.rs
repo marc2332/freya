@@ -139,7 +139,7 @@ impl EventName {
 impl ragnarok::NameOfEvent for EventName {
     fn get_global_events(&self) -> HashSet<Self> {
         match self {
-            Self::MouseUp | Self::TouchEnd => {
+            Self::MouseUp | Self::TouchEnd | Self::TouchCancel => {
                 HashSet::from([Self::GlobalPointerUp, Self::CaptureGlobalPointerUp])
             }
             Self::MouseDown | Self::TouchStart => HashSet::from([Self::GlobalPointerDown]),
