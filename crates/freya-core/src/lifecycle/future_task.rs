@@ -28,6 +28,10 @@ impl<D> FutureState<D> {
     pub fn is_pending(&self) -> bool {
         matches!(self, Self::Pending)
     }
+
+    pub fn is_fullfilled(&self) -> bool {
+        matches!(self, Self::Fulfilled(_))
+    }
 }
 
 pub struct FutureTask<D, F> {
@@ -90,8 +94,29 @@ impl<D: 'static, F: Future<Output = D> + 'static> FutureTask<D, F> {
     }
 
     /// Read the state of the [FutureTask]. See [FutureState].
-    pub fn state(&self) -> ReadRef<'_, FutureState<D>> {
+    pub fn read(&self) -> ReadRef<'_, FutureState<D>> {
         self.state.read()
+    }
+
+    /// Get read-only access to the state of the [FutureTask].
+    pub fn state(&self) -> Readable<FutureState<D>> {
+        self.state.into_readable()
+    }
+}
+
+impl<D: 'static, F: Future<Output = D> + 'static> From<FutureTask<D, F>>
+    for Readable<FutureState<D>>
+{
+    fn from(value: FutureTask<D, F>) -> Self {
+        value.state()
+    }
+}
+
+impl<D: 'static, F: Future<Output = D> + 'static> IntoReadable<FutureState<D>>
+    for FutureTask<D, F>
+{
+    fn into_readable(self) -> Readable<FutureState<D>> {
+        self.into()
     }
 }
 
@@ -113,7 +138,7 @@ impl<D: 'static, F: Future<Output = D> + 'static> FutureTask<D, F> {
 ///             "Hello!".to_string()
 ///         });
 ///
-///         match &*future.state() {
+///         match &*future.read() {
 ///             FutureState::Pending | FutureState::Loading => "Loading...".to_string(),
 ///             FutureState::Fulfilled(text) => text.clone(),
 ///         }
@@ -141,7 +166,7 @@ impl<D: 'static, F: Future<Output = D> + 'static> FutureTask<D, F> {
 /// # }
 /// ```
 ///
-/// To read its state use [FutureTask::state].
+/// To read its state use [FutureTask::read].
 /// You may restart/stop it using [FutureTask::start] and [FutureTask::cancel].
 pub fn use_future<D: 'static, F: Future<Output = D> + 'static>(
     future: impl FnMut() -> F + 'static,
