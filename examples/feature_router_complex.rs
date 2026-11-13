@@ -141,7 +141,7 @@ impl Component for Home {
                 .child(
                     Button::new()
                         .on_press(|_| {
-                            let _ = RouterContext::get().push(Route::UserDetail {
+                            RouterContext::get().push(Route::UserDetail {
                                 user_id: "alice".to_string(),
                             });
                         })
@@ -150,7 +150,7 @@ impl Component for Home {
                 .child(
                     Button::new()
                         .on_press(|_| {
-                            let _ = RouterContext::get().push(Route::UserDetail {
+                            RouterContext::get().push(Route::UserDetail {
                                 user_id: "bob".to_string(),
                             });
                         })
@@ -167,7 +167,7 @@ impl Component for About {
         rect().child(label().font_size(24.).text("About")).child(
             Button::new()
                 .on_press(|_| {
-                    let _ = RouterContext::get().replace(Route::Home);
+                    RouterContext::get().replace(Route::Home);
                 })
                 .child("Replace with Home"),
         )
