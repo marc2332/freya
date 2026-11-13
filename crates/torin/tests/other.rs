@@ -399,7 +399,7 @@ pub fn deep_tree() {
     layout.invalidate(4);
 
     layout.find_best_root(&mocked_tree);
-    assert_eq!(layout.get_root_candidate(), RootNodeCandidate::Valid(4));
+    assert_eq!(layout.get_root_candidate(), RootNodeCandidate::Valid(3));
 
     layout.measure(
         0,

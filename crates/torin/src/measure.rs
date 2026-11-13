@@ -202,7 +202,7 @@ where
             self.layout.get(&node_id).cloned()
         };
 
-        let Some(layout_node) = cached_layout_node else {
+        let Some(mut layout_node) = cached_layout_node else {
             // Create the initial Node area size
             let mut area_size = Size2D::new(node.padding.horizontal(), node.padding.vertical());
 
@@ -536,7 +536,25 @@ where
             );
         }
 
-        (false, layout_node)
+        let content_changed = measure_inner_children && layout_node.inner_sizes != inner_sizes;
+        if content_changed {
+            layout_node.inner_sizes = inner_sizes;
+            if must_cache_children
+                && phase == Phase::Final
+                && node.has_layout_references
+                && let Some(measurer) = self.measurer
+            {
+                let padding = Size2D::new(node.padding.horizontal(), node.padding.vertical());
+                measurer.notify_layout_references(
+                    node_id,
+                    layout_node.area,
+                    layout_node.visible_area(),
+                    inner_sizes + padding,
+                );
+            }
+        }
+
+        (content_changed && must_cache_children, layout_node)
     }
 
     /// Measure the children layouts of a Node.

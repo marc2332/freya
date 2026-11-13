@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 use core::mem;
 
 use itertools::Itertools;
@@ -28,11 +29,14 @@ pub struct LayoutMetadata {
     pub root_area: Area,
 }
 
-/// Contains the best Root node candidate from where to start measuringg
+/// Non-overlapping roots from which to start incremental measurement.
 #[derive(PartialEq, Debug, Clone)]
 pub enum RootNodeCandidate<Key: NodeKey> {
     /// A valid Node ID
     Valid(Key),
+
+    /// Independent branch roots.
+    Multiple(Vec<Key>),
 
     /// None
     None,
@@ -44,19 +48,37 @@ impl<Key: NodeKey> RootNodeCandidate<Key> {
         mem::replace(self, Self::None)
     }
 
-    /// Propose a new root candidate
+    /// Retain disjoint roots and collapse roots covered by an ancestor.
     pub fn propose_new_candidate(
         &mut self,
         proposed_candidate: &Key,
         tree_adapter: &impl TreeAdapter<Key>,
         dirty: &mut FxHashMap<Key, DirtyReason>,
     ) {
-        if let RootNodeCandidate::Valid(current_candidate) = self {
-            if current_candidate != proposed_candidate {
+        if matches!(self, Self::Valid(current) if *current == *proposed_candidate) {
+            return;
+        }
+
+        let candidates = match self.take() {
+            Self::None => {
+                *self = Self::Valid(*proposed_candidate);
+                return;
+            }
+            Self::Valid(candidate) => alloc::vec![candidate],
+            Self::Multiple(candidates) => candidates,
+        };
+        let mut roots = Vec::with_capacity(candidates.len() + 1);
+        let mut covered = false;
+
+        for current_candidate in candidates {
+            if current_candidate == *proposed_candidate {
+                covered = true;
+                roots.push(current_candidate);
+            } else {
                 let mut continue_walking = true;
                 let closest_parent = tree_adapter.closest_common_parent(
                     proposed_candidate,
-                    current_candidate,
+                    &current_candidate,
                     |id| {
                         if !continue_walking {
                             return;
@@ -64,15 +86,13 @@ impl<Key: NodeKey> RootNodeCandidate<Key> {
                         let reason = dirty.get(&id);
                         match reason {
                             Some(DirtyReason::InnerLayout) => {
-                                // Replace [DirtyReason::InnerLayout] with [DirtyReason::None]
-                                // for all the nodes between the proposed candidate and the current candidate
+                                // Remeasure intermediate nodes instead of only translating their children.
                                 dirty.insert(id, DirtyReason::None);
                             }
                             Some(DirtyReason::None | DirtyReason::Reorder)
                                 if id != *proposed_candidate =>
                             {
-                                // No need to continue checking if we encountered an ascendant
-                                // that is dirty but not with [DirtyReason::InnerLayout]
+                                // Stop updating dirty reasons once an ancestor already requires remeasurement.
                                 continue_walking = false;
                             }
                             _ => {}
@@ -80,13 +100,26 @@ impl<Key: NodeKey> RootNodeCandidate<Key> {
                     },
                 );
 
-                if let Some(closest_parent) = closest_parent {
-                    *self = RootNodeCandidate::Valid(closest_parent);
+                // Keep covering ancestors and independent branches, dropping covered descendants.
+                if closest_parent == Some(current_candidate) {
+                    covered = true;
+                    roots.push(current_candidate);
+                } else if closest_parent != Some(*proposed_candidate) {
+                    roots.push(current_candidate);
                 }
             }
-        } else {
-            *self = RootNodeCandidate::Valid(*proposed_candidate);
         }
+
+        // Add the proposed root only when no retained ancestor covers it.
+        if !covered {
+            roots.push(*proposed_candidate);
+        }
+
+        *self = if roots.len() == 1 {
+            Self::Valid(roots[0])
+        } else {
+            Self::Multiple(roots)
+        };
     }
 }
 
@@ -106,7 +139,7 @@ pub struct Torin<Key: NodeKey> {
     /// Invalid registered nodes since previous layout measurement
     pub dirty: FxHashMap<Key, DirtyReason>,
 
-    /// Best Root node candidate from where to start measuringg
+    /// Non-overlapping incremental measurement roots.
     pub root_node_candidate: RootNodeCandidate<Key>,
 }
 
@@ -151,10 +184,19 @@ impl<Key: NodeKey> Torin<Key> {
     pub fn raw_remove(&mut self, node_id: Key) {
         self.results.remove(&node_id);
         self.dirty.remove(&node_id);
-        if let RootNodeCandidate::Valid(id) = self.root_node_candidate
-            && id == node_id
-        {
-            self.root_node_candidate = RootNodeCandidate::None;
+        match &mut self.root_node_candidate {
+            RootNodeCandidate::Valid(id) if *id == node_id => {
+                self.root_node_candidate = RootNodeCandidate::None;
+            }
+            RootNodeCandidate::Multiple(roots) => {
+                roots.retain(|id| *id != node_id);
+                if roots.len() == 1 {
+                    self.root_node_candidate = RootNodeCandidate::Valid(roots[0]);
+                } else if roots.is_empty() {
+                    self.root_node_candidate = RootNodeCandidate::None;
+                }
+            }
+            _ => {}
         }
     }
 
@@ -234,8 +276,6 @@ impl<Key: NodeKey> Torin<Key> {
                     // Mark parent if it depends on it's inner children
                     self.check_dirty_dependants(parent_id, DirtyReason::None, tree_adapter, true);
                 } else {
-                    let multiple_children = parent_children.len() > 1;
-
                     let mut found_node = match reason {
                         DirtyReason::None | DirtyReason::InnerLayout => false,
                         // Invalidate all siblings if the node was reordered
@@ -250,25 +290,23 @@ impl<Key: NodeKey> Torin<Key> {
                         }
                     }
 
-                    // Try using the node's parent as root candidate if it has multiple children
-                    if multiple_children || parent.do_inner_depend_on_parent() {
-                        self.root_node_candidate.propose_new_candidate(
-                            &parent_id,
-                            tree_adapter,
-                            &mut self.dirty,
-                        );
-                    }
+                    // Refresh the parent's accumulated content sizes and sibling positions.
+                    self.root_node_candidate.propose_new_candidate(
+                        &parent_id,
+                        tree_adapter,
+                        &mut self.dirty,
+                    );
                 }
             });
         }
     }
 
-    /// Get the Root Node candidate
+    /// Get the non-overlapping measurement roots.
     pub fn get_root_candidate(&self) -> RootNodeCandidate<Key> {
         self.root_node_candidate.clone()
     }
 
-    /// Find the best root Node from where to start measuringg
+    /// Resolve independent measurement roots through layout dependencies.
     pub fn find_best_root(&mut self, tree_adapter: &impl TreeAdapter<Key>) {
         if self.results.is_empty() {
             return;
@@ -300,12 +338,30 @@ impl<Key: NodeKey> Torin<Key> {
             return;
         }
 
-        // Try the Root candidate otherwise use the provided Root
-        let root_id = if let RootNodeCandidate::Valid(id) = self.root_node_candidate.take() {
-            id
-        } else {
-            suggested_root_id
-        };
+        match self.root_node_candidate.take() {
+            RootNodeCandidate::Valid(id) => {
+                self.measure_root(id, root_area, measurer, tree_adapter);
+            }
+            RootNodeCandidate::Multiple(roots) => {
+                for root_id in roots {
+                    self.measure_root(root_id, root_area, measurer, tree_adapter);
+                }
+            }
+            RootNodeCandidate::None => {
+                self.measure_root(suggested_root_id, root_area, measurer, tree_adapter);
+            }
+        }
+
+        self.dirty.clear();
+    }
+
+    fn measure_root(
+        &mut self,
+        root_id: Key,
+        root_area: Area,
+        measurer: &mut Option<impl LayoutMeasurer<Key>>,
+        tree_adapter: &impl TreeAdapter<Key>,
+    ) {
         let root_parent_id = tree_adapter.parent_of(&root_id);
         let layout_node = root_parent_id
             .and_then(|root_parent_id| self.get(&root_parent_id).cloned())
@@ -319,17 +375,6 @@ impl<Key: NodeKey> Torin<Key> {
                 hidden: false,
                 data: None,
             });
-
-        #[cfg(debug_assertions)]
-        {
-            let root_height = tree_adapter.height(&root_id).unwrap();
-            tracing::info!(
-                "Processing {} dirty nodes and {} cached nodes from a height of {}",
-                self.dirty.len(),
-                self.results.len(),
-                root_height
-            );
-        }
 
         let layout_metadata = LayoutMetadata { root_area };
 
@@ -366,9 +411,6 @@ impl<Key: NodeKey> Torin<Key> {
                 }
             })
             .expect("Root node does not exist");
-
-        self.dirty.clear();
-        self.root_node_candidate = RootNodeCandidate::None;
     }
 
     /// Get a reference to [LayoutNode] of a Node

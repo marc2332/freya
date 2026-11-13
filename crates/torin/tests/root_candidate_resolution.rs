@@ -103,21 +103,16 @@ pub fn same_height_different_parent() {
         &mocked_tree,
     );
 
-    // 5 get 7 get invalidated, which will force Torin to find a root candidate that
-    // is ascendant of both Nodes, in this case, Node 1
-    //       0
-    //      (1)
-    //      / \
-    //     2   3
-    //    /     \
-    //  4-[5]   6-[7]
-
     layout.invalidate(5);
     layout.invalidate(7);
 
     layout.find_best_root(&mocked_tree);
 
-    assert_eq!(layout.get_root_candidate(), RootNodeCandidate::Valid(1));
+    let RootNodeCandidate::Multiple(mut roots) = layout.get_root_candidate() else {
+        panic!("Expected independent measurement roots");
+    };
+    roots.sort_unstable();
+    assert_eq!(roots, vec![2, 3]);
 }
 
 #[test]

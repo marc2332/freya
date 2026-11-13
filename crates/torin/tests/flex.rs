@@ -481,8 +481,8 @@ pub fn flex_root_candidate_resolution() {
 
     layout.find_best_root(&mocked_tree);
 
-    // It is Node 1 because it has a `flex` content
-    assert_eq!(layout.get_root_candidate(), RootNodeCandidate::Valid(1));
+    // Refresh the flex container and its parent's accumulated content sizes.
+    assert_eq!(layout.get_root_candidate(), RootNodeCandidate::Valid(0));
 
     layout.measure(
         0,
