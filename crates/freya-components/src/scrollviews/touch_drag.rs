@@ -68,8 +68,11 @@ struct ScrollTouchGesture(State<Option<Gesture>>);
 /// if it can scroll in the drag direction.
 #[derive(Clone, Copy, PartialEq)]
 pub struct TouchDrag {
+    // This scroll view's ID.
     id: AccessibilityId,
+    // The touch shared by the window's scroll views.
     gesture: State<Option<Gesture>>,
+    // The last touch position used by this view.
     last: State<Option<CursorPoint>>,
 }
 
@@ -115,31 +118,33 @@ impl TouchDrag {
                 vertical: content.height - viewport.height >= 1.0,
             });
         }
-        self.gesture.set(Some(gesture));
-        self.last.set(None);
+        self.gesture.set_if_modified(Some(gesture));
+        self.last.set_if_modified(None);
     }
 
     /// Return how far to scroll, or `None` if this view does not have the drag.
     pub fn movement(&mut self, coords: CursorPoint) -> Option<Vector2D> {
-        let (origin, owner, decided) = {
-            let gesture = self.gesture.peek();
+        let (origin, owner) = {
+            let mut gesture = self.gesture.write();
             let gesture = gesture
-                .as_ref()
+                .as_mut()
                 .filter(|gesture| gesture.includes(self.id))?;
-            match gesture.owner {
-                Some(owner) => (gesture.origin, owner, true),
-                None => (gesture.origin, gesture.owner_at(coords)?, false),
-            }
+            let owner = match gesture.owner {
+                Some(owner) => owner,
+                None => {
+                    let owner = gesture.owner_at(coords)?;
+                    gesture.owner = Some(owner);
+                    owner
+                }
+            };
+            (gesture.origin, owner)
         };
-        if !decided && let Some(gesture) = self.gesture.write().as_mut() {
-            gesture.owner = Some(owner);
-        }
         if owner != self.id {
             return None;
         }
 
         let from = self.last.peek().unwrap_or(origin);
-        self.last.set(Some(coords));
+        self.last.set_if_modified(Some(coords));
         Some((from - coords).to_f32())
     }
 
@@ -154,11 +159,9 @@ impl TouchDrag {
             _ => (false, false),
         };
         if ends_gesture {
-            self.gesture.set(None);
+            self.gesture.set_if_modified(None);
         }
-        if self.last.peek().is_some() {
-            self.last.set(None);
-        }
+        self.last.set_if_modified(None);
         was_dragged
     }
 }
