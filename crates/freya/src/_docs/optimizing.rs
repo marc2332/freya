@@ -60,10 +60,9 @@
 //! displays performance information without changing your application code. The performance
 //! overlay is hidden by default and can be enabled with `with_visible_performance(true)`.
 //!
-//! In debug builds, the stats overlay is also available. Enable it with `with_visible_stats(true)`.
+//! The stats overlay is available in both debug and release builds. Enable it with `with_visible_stats(true)`.
 //! The performance overlay toggles with `Ctrl+Shift+P`, or `Cmd+Shift+P` on macOS. The stats
-//! overlay toggles with `Ctrl+Shift+L`, or `Cmd+Shift+L` on macOS. Stats APIs are not available in
-//! release builds.
+//! overlay toggles with `Ctrl+Shift+L`, or `Cmd+Shift+L` on macOS.
 //!
 //! ```toml
 //! freya = { version = "...", features = ["metrics"] }
