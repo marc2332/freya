@@ -594,3 +594,159 @@ pub fn scroll_view_scrollbar_smaller_than_thumb() {
         .min_y();
     assert_eq!(scrolled_before, scrolled_after);
 }
+
+#[test]
+pub fn scroll_view_drag_taken_over_from_inside() {
+    fn app() -> impl IntoElement {
+        let mut moves = use_consume::<State<usize>>();
+        ScrollView::new()
+            .drag_scrolling(true)
+            .child(
+                rect()
+                    .height(Size::px(200.))
+                    .width(Size::px(200.))
+                    .on_pointer_move(move |_| *moves.write() += 1),
+            )
+            .child(rect().height(Size::px(200.)).width(Size::px(200.)))
+            .child(rect().height(Size::px(200.)).width(Size::px(200.)))
+            .child(rect().height(Size::px(200.)).width(Size::px(200.)))
+    }
+
+    let (mut test, moves) = TestingRunner::new(
+        app,
+        (500., 500.).into(),
+        |runner| runner.provide_root_context(|| State::create(0usize)),
+        1.,
+    );
+    test.sync_and_update();
+    let scrollview = test
+        .find(|node, element| {
+            Rect::try_downcast(element)
+                .filter(|rect| rect.accessibility.builder.role() == AccessibilityRole::ScrollView)
+                .map(move |_| node)
+        })
+        .unwrap();
+    let content = scrollview.children()[0].children()[0].children();
+
+    test.press_touch((100., 190.));
+    test.move_touch((100., 189.));
+    test.run_in(TouchDrag::take_over);
+    test.move_touch((100., 100.));
+    test.move_touch((100., 10.));
+    test.release_touch((100., 10.));
+    assert!(content[0].is_visible());
+    assert!(!content[3].is_visible());
+    assert!(*moves.peek() > 1);
+
+    // Once the finger lifted, drags scroll again.
+    test.press_touch((100., 400.));
+    test.move_touch((100., 100.));
+    test.release_touch((100., 100.));
+    assert!(content[3].is_visible());
+}
+
+#[test]
+fn nested_scroll_drag_taken_over_before_or_after_ownership() {
+    for outer_virtualized in [false, true] {
+        for inner_virtualized in [false, true] {
+            for (initial_movement, cancelled) in
+                [(0., false), (1., false), (10., false), (10., true)]
+            {
+                let (mut test, (page, inner)) = TestingRunner::new(
+                    move || {
+                        let (page, inner) = use_consume::<(ScrollController, ScrollController)>();
+                        let mut take_on_down = use_state(move || initial_movement == 0.);
+                        let row = move |index| {
+                            if index == 0 {
+                                let content = move |index| {
+                                    rect()
+                                        .key(index)
+                                        .width(Size::fill())
+                                        .height(Size::px(200.))
+                                        .on_pointer_down(move |_| {
+                                            if *take_on_down.peek() {
+                                                TouchDrag::take_over();
+                                                take_on_down.set(false);
+                                            }
+                                        })
+                                        .into_element()
+                                };
+                                if inner_virtualized {
+                                    VirtualScrollView::new_controlled(
+                                        move |item, _| content(item.index),
+                                        inner,
+                                    )
+                                    .key(index)
+                                    .length(4usize)
+                                    .item_size(200.)
+                                    .height(Size::px(200.))
+                                    .into_element()
+                                } else {
+                                    ScrollView::new_controlled(inner)
+                                        .key(index)
+                                        .height(Size::px(200.))
+                                        .children((0..4).map(content))
+                                        .into_element()
+                                }
+                            } else {
+                                rect().key(index).height(Size::px(200.)).into_element()
+                            }
+                        };
+                        if outer_virtualized {
+                            VirtualScrollView::new_controlled(move |item, _| row(item.index), page)
+                                .length(4usize)
+                                .item_size(200.)
+                                .into_element()
+                        } else {
+                            ScrollView::new_controlled(page)
+                                .children((0..4).map(row))
+                                .into_element()
+                        }
+                    },
+                    (500., 500.).into(),
+                    |runner| {
+                        runner.provide_root_context(|| {
+                            (ScrollController::new(0, 0), ScrollController::new(0, 0))
+                        })
+                    },
+                    1.,
+                );
+                test.sync_and_update();
+                assert_eq!(test.run_in(|| page.position().y), 0.);
+                assert_eq!(test.run_in(|| inner.position().y), 0.);
+
+                test.press_touch((100., 150.));
+                test.move_touch((100., 150. - initial_movement));
+                let inner_before = test.run_in(|| inner.position().y);
+                assert_eq!(inner_before < 0., initial_movement > 2.);
+                if initial_movement > 0. {
+                    test.run_in(TouchDrag::take_over);
+                    test.run_in(TouchDrag::take_over);
+                }
+                test.move_touch((100., 100.));
+                test.move_touch((100., 50.));
+                assert_eq!(test.run_in(|| page.position().y), 0.);
+                assert_eq!(test.run_in(|| inner.position().y), inner_before);
+                if cancelled {
+                    test.send_event(PlatformEvent::Touch {
+                        name: TouchEventName::TouchCancel,
+                        location: (100., 50.).into(),
+                        finger_id: 0,
+                        phase: TouchPhase::Cancelled,
+                        force: None,
+                    });
+                    test.sync_and_update();
+                } else {
+                    test.release_touch((100., 50.));
+                }
+                assert_eq!(test.run_in(|| inner.position().y), inner_before);
+
+                test.press_touch((100., 150.));
+                test.move_touch((100., 130.));
+                assert_eq!(test.run_in(|| page.position().y), 0.);
+                assert_eq!(test.run_in(|| inner.position().y), inner_before - 20.);
+                test.release_touch((100., 130.));
+            }
+        }
+    }
+}

@@ -182,6 +182,39 @@ fn touch_events() {
 }
 
 #[test]
+fn touch_cancel_releases_global_handlers_without_pressing() {
+    let (mut test, events) = TestingRunner::new(
+        || {
+            let mut events = use_consume::<State<(usize, usize, usize)>>();
+            rect()
+                .width(Size::px(100.))
+                .height(Size::px(100.))
+                .on_capture_global_pointer_up(move |_| events.write().0 += 1)
+                .on_global_pointer_up(move |_| events.write().1 += 1)
+                .on_pointer_press(move |_| events.write().2 += 1)
+        },
+        (500., 500.).into(),
+        |runner| runner.provide_root_context(|| State::create((0usize, 0usize, 0usize))),
+        1.,
+    );
+    test.sync_and_update();
+    test.press_touch((50., 50.));
+    test.send_event(PlatformEvent::Touch {
+        name: TouchEventName::TouchCancel,
+        location: (400., 400.).into(),
+        finger_id: 0,
+        phase: TouchPhase::Cancelled,
+        force: None,
+    });
+    test.sync_and_update();
+    assert_eq!(*events.peek(), (1, 1, 0));
+
+    test.press_touch((50., 50.));
+    test.release_touch((50., 50.));
+    assert_eq!(*events.peek(), (2, 2, 1));
+}
+
+#[test]
 fn pointer_events() {
     fn app() -> Element {
         let mut state = use_consume::<State<i32>>();
