@@ -54,20 +54,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "accesskit_ios"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28e539d64b27fd4c14de8f78ada8f7c944c092f52f7e49fb63316507a57f6937"
-dependencies = [
- "accesskit",
- "accesskit_consumer",
- "hashbrown 0.17.1",
- "objc2 0.5.2",
- "objc2-foundation 0.2.2",
- "objc2-ui-kit",
-]
-
-[[package]]
 name = "accesskit_macos"
 version = "0.27.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -114,18 +100,17 @@ dependencies = [
 ]
 
 [[package]]
-name = "accesskit_winit"
-version = "0.34.1"
+name = "accesskit_xplat"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee96dd150375c05912d8a473f98c2fb155fb3234fac88292d396548a2460fa77"
+checksum = "538784c169bebd349060eb5ceedc294c0b0e603a9862ff055f7572fd830980db"
 dependencies = [
  "accesskit",
- "accesskit_ios",
  "accesskit_macos",
  "accesskit_unix",
  "accesskit_windows",
+ "android-activity",
  "raw-window-handle",
- "winit",
 ]
 
 [[package]]
@@ -3220,7 +3205,7 @@ name = "freya-winit"
 version = "0.6.0-alpha.1"
 dependencies = [
  "accesskit",
- "accesskit_winit",
+ "accesskit_xplat",
  "ash",
  "ash-window",
  "bytes",

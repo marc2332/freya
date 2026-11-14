@@ -6,7 +6,7 @@ use std::{
 };
 
 #[cfg(feature = "accessibility")]
-use accesskit_winit::WindowEvent as AccessibilityWindowEvent;
+use accesskit_xplat::WindowEvent as AccessibilityWindowEvent;
 use freya_components::cache::AssetCacher;
 use freya_core::{
     integration::*,
@@ -288,12 +288,20 @@ pub enum NativeEvent {
 }
 
 #[cfg(feature = "accessibility")]
-impl From<accesskit_winit::Event> for NativeEvent {
-    fn from(event: accesskit_winit::Event) -> Self {
-        NativeEvent::Window(NativeWindowEvent {
-            window_id: event.window_id,
-            action: NativeWindowEventAction::Accessibility(event.window_event),
-        })
+pub(crate) struct AccessibilityEventHandler {
+    pub(crate) window_id: WindowId,
+    pub(crate) proxy: EventLoopProxy<NativeEvent>,
+}
+
+#[cfg(feature = "accessibility")]
+impl accesskit_xplat::EventHandler for AccessibilityEventHandler {
+    fn handle_accesskit_event(&self, event: AccessibilityWindowEvent) {
+        let _ = self
+            .proxy
+            .send_event(NativeEvent::Window(NativeWindowEvent {
+                window_id: self.window_id,
+                action: NativeWindowEventAction::Accessibility(event),
+            }));
     }
 }
 
@@ -529,13 +537,13 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         }
                         #[cfg(feature = "accessibility")]
                         NativeWindowEventAction::Accessibility(
-                            accesskit_winit::WindowEvent::AccessibilityDeactivated,
+                            AccessibilityWindowEvent::AccessibilityDeactivated,
                         ) => {
                             app.screen_reader.set(false);
                         }
                         #[cfg(feature = "accessibility")]
                         NativeWindowEventAction::Accessibility(
-                            accesskit_winit::WindowEvent::ActionRequested(request),
+                            AccessibilityWindowEvent::ActionRequested(request),
                         ) => {
                             if app.accessibility.handle_action(
                                 request,
@@ -549,7 +557,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         }
                         #[cfg(feature = "accessibility")]
                         NativeWindowEventAction::Accessibility(
-                            accesskit_winit::WindowEvent::InitialTreeRequested,
+                            AccessibilityWindowEvent::InitialTreeRequested,
                         ) => {
                             app.accessibility_tasks_for_next_render = AccessibilityTask::Init;
                             app.window.request_redraw();
@@ -612,7 +620,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
         let mut needs_recovery = false;
         if let Some(app) = &mut self.windows.get_mut(&window_id) {
             #[cfg(feature = "accessibility")]
-            app.accessibility_adapter.process_event(&app.window, &event);
+            app.process_accessibility_window_event(&event);
             match event {
                 WindowEvent::ThemeChanged(theme) => {
                     app.platform.preferred_theme.set(match theme {
