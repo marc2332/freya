@@ -83,7 +83,12 @@ where
             return;
         };
 
-        if let Some(measurer) = self.measurer {
+        if self
+            .tree_adapter
+            .read_node(&node_id, |node, _| node.has_layout_references)
+            .unwrap_or(false)
+            && let Some(measurer) = self.measurer
+        {
             measurer.notify_layout_references(node_id, area, visible_area, inner_sizes);
         }
     }
@@ -650,6 +655,7 @@ where
                             &mut initial_phase_inner_sizes,
                             &child_areas.area,
                             is_last_child,
+                            parent_is_dirty,
                             Phase::Initial,
                         );
 
@@ -948,6 +954,7 @@ where
                             inner_sizes,
                             &child_areas.area,
                             is_last_child,
+                            parent_is_dirty,
                             Phase::Final,
                         );
                     }
@@ -1112,6 +1119,7 @@ where
         inner_sizes: &mut Size2D,
         child_area: &Area,
         is_last_sibilin: bool,
+        parent_is_dirty: bool,
         phase: Phase,
     ) {
         // Only apply the spacing to elements after `i > 0` and `i < len - 1`
@@ -1134,7 +1142,7 @@ where
                 }
 
                 // Keep the biggest height
-                if parent_node.height.inner_sized() {
+                if parent_is_dirty && parent_node.height.inner_sized() {
                     parent_area.size.height = parent_area.size.height.max(
                         child_area.size.height
                             + parent_node.padding.vertical()
@@ -1147,7 +1155,7 @@ where
                 }
 
                 // Accumulate width
-                if parent_node.width.inner_sized() {
+                if parent_is_dirty && parent_node.width.inner_sized() {
                     parent_area.size.width += child_area.size.width + spacing.get();
                 }
             }
@@ -1163,7 +1171,7 @@ where
                 }
 
                 // Keep the biggest width
-                if parent_node.width.inner_sized() {
+                if parent_is_dirty && parent_node.width.inner_sized() {
                     parent_area.size.width = parent_area.size.width.max(
                         child_area.size.width
                             + parent_node.padding.horizontal()
@@ -1176,7 +1184,7 @@ where
                 }
 
                 // Accumulate height
-                if parent_node.height.inner_sized() {
+                if parent_is_dirty && parent_node.height.inner_sized() {
                     parent_area.size.height += child_area.size.height + spacing.get();
                 }
             }

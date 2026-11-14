@@ -58,19 +58,6 @@ pub fn heading(title: &str, subtitle: &str) -> impl IntoElement {
         .child(rect().opacity(0.6).child(subtitle))
 }
 
-fn inline_menu() -> Rect {
-    let colors = use_theme().read().colors.clone();
-    let a11y_id = use_a11y();
-    use_provide_context(move || MenuGroup { group_id: a11y_id });
-
-    rect()
-        .width(Size::px(180.))
-        .padding(4.)
-        .corner_radius(8.)
-        .background(colors.background)
-        .border(Border::new().width(1.).fill(colors.border))
-}
-
 pub struct Demo {
     pub title: &'static str,
     pub render: fn() -> Element,
@@ -98,7 +85,13 @@ impl Demo {
                             .opacity(0.6)
                             .child(label().text(self.title).font_size(13.)),
                     )
-                    .child(rect().expanded().center().child((self.render)())),
+                    .child(
+                        rect()
+                            .expanded()
+                            .padding((0., 12., 12., 12.))
+                            .center()
+                            .child((self.render)()),
+                    ),
             )
     }
 }

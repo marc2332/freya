@@ -9,9 +9,7 @@ use generational_box::{
 };
 
 use crate::{
-    lifecycle::writable_utils::WritableUtils,
     prelude::{
-        State,
         TaskHandle,
         spawn,
         spawn_global,
@@ -141,33 +139,6 @@ impl Effect {
         });
     }
 
-    /// Computes the initial value immediately and returns it as [`State<T>`].
-    /// Reactive changes rerun the callback in a task and update the value.
-    ///
-    /// ```rust,no_run
-    /// # use freya::prelude::*;
-    /// # fn app() -> impl IntoElement {
-    /// let count = use_state(|| 1);
-    /// let doubled = use_hook(move || Effect::create_value(move || *count.read() * 2));
-    /// rect().child(format!("Doubled: {}", *doubled.read()))
-    /// # }
-    /// ```
-    pub fn create_value<T: 'static>(mut callback: impl FnMut() -> T + 'static) -> State<T> {
-        let (rx, rc) = ReactiveContext::new_for_task();
-        let mut state = State::create(ReactiveContext::run(rc.clone(), &mut callback));
-        spawn(async move {
-            let mut current_gen = 0;
-            loop {
-                if current_gen > 0 {
-                    state.set(ReactiveContext::run(rc.clone(), &mut callback));
-                }
-                rx.notified().await;
-                current_gen += 1;
-            }
-        });
-        state
-    }
-
     /// Runs asynchronously and reruns when reactive values read by the callback change.
     /// Lives independently of components and windows.
     ///
@@ -231,21 +202,6 @@ pub fn use_side_effect(callback: impl FnMut() + 'static) {
 /// ```
 pub fn use_after_side_effect(callback: impl FnMut() + 'static) {
     use_hook(|| Effect::create_after(callback));
-}
-
-/// Hook for [`Effect::create_value`](Effect::create_value).
-/// Registers the effect once per component and returns its [`State<T>`].
-///
-/// ```rust,no_run
-/// # use freya::prelude::*;
-/// # fn app() -> impl IntoElement {
-/// let count = use_state(|| 1);
-/// let doubled = use_side_effect_value(move || *count.read() * 2);
-/// rect().child(format!("Doubled: {}", *doubled.read()))
-/// # }
-/// ```
-pub fn use_side_effect_value<T: 'static>(callback: impl FnMut() -> T + 'static) -> State<T> {
-    use_hook(|| Effect::create_value(callback))
 }
 
 /// Hook for [`Effect::create`](Effect::create) with reactive `deps`.

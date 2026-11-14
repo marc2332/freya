@@ -169,7 +169,7 @@ impl Component for NodesTree {
                             }
                             _ => Route::NodeInspectorStyle { node_id, window_id },
                         };
-                        let _ = RouterContext::get().push(route);
+                        RouterContext::get().push(route);
                     }),
                     on_hover: EventHandler::new(move |node_id| {
                         on_hover.call((window_id, node_id));

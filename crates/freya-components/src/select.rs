@@ -227,9 +227,13 @@ impl Component for Select {
 
         let opacity = if list_size().is_some() { opacity } else { 0. };
 
-        let background = match *status.read() {
-            SelectStatus::Hovering => theme.hover_background,
-            SelectStatus::Idle => theme.background_button,
+        let background = if open() {
+            theme.hover_background * 0.92
+        } else {
+            match *status.read() {
+                SelectStatus::Hovering => theme.hover_background,
+                SelectStatus::Idle => theme.background_button,
+            }
         };
 
         let border = if focus() == Focus::Keyboard {
@@ -238,10 +242,7 @@ impl Component for Select {
                 .width(2.)
                 .alignment(BorderAlignment::Inner)
         } else {
-            Border::new()
-                .fill(theme.border_fill)
-                .width(1.)
-                .alignment(BorderAlignment::Inner)
+            Border::new().width(0.)
         };
 
         rect()
@@ -263,18 +264,18 @@ impl Component for Select {
                     .width(theme.width)
                     .margin(theme.margin)
                     .background(background)
-                    .padding((8., 18., 8., 18.))
+                    .padding((8., 12., 8., 12.))
                     .border(border)
                     .horizontal()
                     .content(Content::flex())
                     .center()
                     .color(theme.color)
-                    .corner_radius(8.)
+                    .corner_radius(10.)
                     .maybe_child(self.selected_item.clone())
                     .child(
                         ArrowIcon::new()
-                            .margin((0., 0., 0., 8.))
-                            .rotate(0.)
+                            .margin((0., 0., 0., 12.))
+                            .rotate(if open() { 180. } else { 0. })
                             .fill(theme.arrow_fill),
                     ),
             )
@@ -295,6 +296,8 @@ impl Component for Select {
                             rect()
                                 .layer(Layer::Overlay)
                                 .maybe(self.list_match_width, |el| el.width(Size::fill()))
+                                .min_width(Size::px(button_area().map_or(0., |area| area.width())))
+                                .shadow(Shadow::new().y(6.).blur(18.).color((0, 0, 0, 0.25)))
                                 .border(
                                     Border::new()
                                         .fill(theme.border_fill)
@@ -302,7 +305,7 @@ impl Component for Select {
                                         .alignment(BorderAlignment::Inner),
                                 )
                                 .overflow(Overflow::Clip)
-                                .corner_radius(10.)
+                                .corner_radius(20.)
                                 .background(theme.select_background)
                                 .padding(6.)
                                 .maybe(!self.list_match_width, |el| el.content(Content::Fit))

@@ -92,6 +92,7 @@ impl RadioItem {
 
 impl Component for RadioItem {
     fn render(&self) -> impl IntoElement {
+        let mut hovering = use_state(|| false);
         let a11y_id = use_a11y();
         let focus = use_focus(a11y_id);
         let RadioItemTheme {
@@ -128,6 +129,7 @@ impl Component for RadioItem {
             unselected_fill
         };
 
+        let fill = fill.mul_if(hovering(), 0.85);
         let border = Border::new()
             .fill(fill)
             .width(2.)
@@ -152,6 +154,13 @@ impl Component for RadioItem {
             .main_align(Alignment::center())
             .cross_align(Alignment::center())
             .corner_radius(CornerRadius::new_all(99.))
+            .background(if hovering() {
+                fill.with_a(40)
+            } else {
+                Color::TRANSPARENT
+            })
+            .on_pointer_enter(move |_| hovering.set_if_modified(true))
+            .on_pointer_leave(move |_| hovering.set_if_modified(false))
             .on_key_down(move |e: Event<KeyboardEventData>| {
                 if !e.is_press_event() {
                     e.stop_propagation();

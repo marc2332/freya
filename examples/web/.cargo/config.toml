@@ -1,5 +1,11 @@
 [alias]
-web = ["run", "--target", "wasm32-unknown-emscripten", "--features", "web"]
+web = [
+  "run",
+  "--target",
+  "wasm32-unknown-emscripten",
+  "--features",
+  "freya/web",
+]
 desktop = ["run", "--features", "desktop"]
 
 [profile.dev.package.freya-skia-bindings]

@@ -164,10 +164,12 @@ impl<T: Clone + Eq + Hash + Debug + 'static> Component for Portal<T> {
         );
 
         // Rest the portal once the animation stops
-        use_side_effect(move || {
-            if !*animation.is_running().read() {
-                should_animate.set_if_modified(false);
-            }
+        use_hook(move || {
+            Effect::create_sync(move || {
+                if !*animation.is_running().read() {
+                    should_animate.set_if_modified(false);
+                }
+            });
         });
 
         // Area the children are placed at
