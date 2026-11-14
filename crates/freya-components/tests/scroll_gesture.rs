@@ -93,6 +93,34 @@ fn linux_scroll_gesture_pause_does_not_fling() {
 }
 
 #[test]
+fn android_batched_touch_moves_fling_without_snapping_to_an_edge() {
+    for virtualized in [false, true] {
+        for direction in [-1., 1.] {
+            let (mut test, mut controller) = setup(virtualized, TargetPlatform::Android);
+            controller.scroll_to_y(-2250);
+            test.sync_and_update();
+
+            test.press_touch((100., 250.));
+            for step in 1..=3 {
+                test.move_touch((100., 250. + direction * step as f64 * 10.));
+            }
+            let before_release = position(&test, controller).0;
+            test.release_touch((100., 250. + direction * 30.));
+
+            let (rendered, target) = position(&test, controller);
+            assert_eq!(rendered, before_release);
+            assert!(target > -4500 && target < 0);
+            assert!((target as f32 - rendered) * direction as f32 > 0.);
+
+            test.poll(Duration::from_millis(8), Duration::from_millis(32));
+            let animated = position(&test, controller).0;
+            assert!((animated - rendered) * direction as f32 > 0.);
+            assert!((target as f32 - animated) * direction as f32 > 0.);
+        }
+    }
+}
+
+#[test]
 fn other_platforms_keep_direct_pixel_scrolling() {
     for platform in [TargetPlatform::MacOs, TargetPlatform::Windows] {
         for virtualized in [false, true] {
