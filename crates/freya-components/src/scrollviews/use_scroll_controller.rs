@@ -360,13 +360,8 @@ impl Drag {
             .duration_since(self.last_move)
             .as_secs_f32()
             .max(DRAG_MIN_SAMPLE_TIME);
-        let velocity = -delta / elapsed_seconds;
-        let speed = velocity.length();
-        let velocity = if speed > FLING_MAX_SPEED {
-            velocity * (FLING_MAX_SPEED / speed)
-        } else {
-            velocity
-        };
+
+        let velocity = (-delta / elapsed_seconds).with_max_length(FLING_MAX_SPEED);
         self.velocity = self.velocity.lerp(velocity, 0.5);
         self.last_move = now;
     }
