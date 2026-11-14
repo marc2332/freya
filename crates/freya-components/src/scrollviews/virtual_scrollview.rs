@@ -849,26 +849,26 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                                 let follows_scroll_controller = self.follows_scroll_controller;
                                 move |e: Event<SizedEventData>| {
                                     size.set_if_modified(e.clone());
-                                    let content_size = match direction {
-                                        Direction::Vertical => Size2D::new(
-                                            e.inner_sizes.width,
-                                            item_size.total_size(
-                                                e.area.height(),
-                                                scrolled_y as f32,
-                                                length,
-                                            ),
-                                        ),
-                                        Direction::Horizontal => Size2D::new(
-                                            item_size.total_size(
-                                                e.area.width(),
-                                                scrolled_x as f32,
-                                                length,
-                                            ),
-                                            e.inner_sizes.height,
-                                        ),
-                                    };
-
                                     if !follows_scroll_controller {
+                                        let content_size = match direction {
+                                            Direction::Vertical => Size2D::new(
+                                                e.inner_sizes.width,
+                                                item_size.total_size(
+                                                    e.area.height(),
+                                                    scrolled_y as f32,
+                                                    length,
+                                                ),
+                                            ),
+                                            Direction::Horizontal => Size2D::new(
+                                                item_size.total_size(
+                                                    e.area.width(),
+                                                    scrolled_x as f32,
+                                                    length,
+                                                ),
+                                                e.inner_sizes.height,
+                                            ),
+                                        };
+
                                         scroll_controller.apply_layout(content_size, e.area.size);
                                     }
                                     if let Some(on_sized) = &on_sized {
