@@ -33,6 +33,8 @@ enum EventName {
 
     KeyboardDown,
 
+    TouchStart,
+    TouchMove,
     TouchReleased,
 
     CaptureGlobalMouseMove,
@@ -86,7 +88,10 @@ impl EventName {
 
 impl NameOfEvent for EventName {
     fn is_moved(&self) -> bool {
-        matches!(self, Self::MouseMove | Self::CaptureGlobalMouseMove)
+        matches!(
+            self,
+            Self::MouseMove | Self::TouchMove | Self::CaptureGlobalMouseMove
+        )
     }
 
     fn is_enter(&self) -> bool {
@@ -102,7 +107,7 @@ impl NameOfEvent for EventName {
     }
 
     fn is_pressed(&self) -> bool {
-        matches!(self, Self::MouseDown)
+        matches!(self, Self::MouseDown | Self::TouchStart)
     }
 
     fn is_released(&self) -> bool {
@@ -150,6 +155,12 @@ impl NameOfEvent for EventName {
                 events.insert(Self::MouseEnter);
                 events.insert(Self::MouseOver);
             }
+            Self::TouchStart => {
+                events.extend([Self::MouseDown, Self::MouseEnter, Self::MouseOver]);
+            }
+            Self::TouchMove => {
+                events.insert(Self::MouseMove);
+            }
             Self::MouseOut => {
                 events.insert(Self::MouseLeave);
             }
@@ -182,6 +193,8 @@ enum TestSourceEvent {
     MouseDown { cursor: CursorPoint },
     MouseMove { cursor: CursorPoint },
     MouseUp { cursor: CursorPoint },
+    TouchStart { cursor: CursorPoint },
+    TouchMove { cursor: CursorPoint },
     TouchReleased { cursor: CursorPoint },
     Wheel { cursor: CursorPoint, delta: f64 },
 }
@@ -190,11 +203,11 @@ impl SourceEvent for TestSourceEvent {
     type Name = EventName;
 
     fn is_pressed(&self) -> bool {
-        matches!(self, Self::MouseDown { .. })
+        matches!(self, Self::MouseDown { .. } | Self::TouchStart { .. })
     }
 
     fn is_moved(&self) -> bool {
-        matches!(self, Self::MouseMove { .. })
+        matches!(self, Self::MouseMove { .. } | Self::TouchMove { .. })
     }
 
     fn is_touch_released(&self) -> bool {
@@ -227,6 +240,7 @@ impl SourceEvent for TestSourceEvent {
             Self::MouseDown { cursor } => Some(*cursor),
             Self::MouseMove { cursor } => Some(*cursor),
             Self::MouseUp { cursor } => Some(*cursor),
+            Self::TouchStart { cursor } | Self::TouchMove { cursor } => Some(*cursor),
             Self::TouchReleased { cursor } => Some(*cursor),
             Self::Wheel { cursor, .. } => Some(*cursor),
         }
@@ -237,6 +251,8 @@ impl SourceEvent for TestSourceEvent {
             Self::MouseMove { .. } => EventName::MouseMove,
             Self::MouseDown { .. } => EventName::MouseDown,
             Self::MouseUp { .. } => EventName::MouseUp,
+            Self::TouchStart { .. } => EventName::TouchStart,
+            Self::TouchMove { .. } => EventName::TouchMove,
             Self::TouchReleased { .. } => EventName::TouchReleased,
             Self::Wheel { .. } => EventName::Wheel,
         }
@@ -398,6 +414,72 @@ impl EventsMeasurer for TestMeasurer {
             name,
             source: source.as_event_name(),
         }
+    }
+}
+
+#[test]
+fn touch_hover_only_starts_on_touch_start() {
+    let mut measurer = TestMeasurer::default();
+    let mut state = NodesState::default();
+    for (key, position) in [(0, 0.), (1, 110.)] {
+        measurer.add(
+            key,
+            None,
+            0,
+            Area::new((position, 0.).into(), (100., 100.).into()),
+        );
+        for name in [
+            EventName::MouseEnter,
+            EventName::MouseOver,
+            EventName::MouseLeave,
+            EventName::MouseMove,
+        ] {
+            measurer.listen_to(key, name);
+        }
+    }
+
+    let cursor = (20., 20.).into();
+    for (source, hovering, enters, leaves) in [
+        (TestSourceEvent::TouchStart { cursor }, true, 2, 0),
+        (
+            TestSourceEvent::TouchMove {
+                cursor: (21., 20.).into(),
+            },
+            true,
+            0,
+            0,
+        ),
+        (
+            TestSourceEvent::TouchMove {
+                cursor: (120., 20.).into(),
+            },
+            false,
+            0,
+            1,
+        ),
+        (TestSourceEvent::TouchMove { cursor }, false, 0, 0),
+        (TestSourceEvent::TouchReleased { cursor }, false, 0, 0),
+    ] {
+        let events = measurer.run(&mut vec![source], &mut state, None);
+        assert_eq!(
+            events
+                .emmitable_events
+                .iter()
+                .filter(|event| event.name.is_enter())
+                .count(),
+            enters
+        );
+        assert_eq!(
+            events
+                .emmitable_events
+                .iter()
+                .filter(|event| event.name == EventName::MouseLeave)
+                .count(),
+            leaves
+        );
+        TestExecutor::without_handler().run(&mut state, events);
+        assert_eq!(state.is_hovered(0), hovering);
+        assert!(!state.is_hovered(1));
     }
 }
 
