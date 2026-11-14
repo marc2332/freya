@@ -4,6 +4,10 @@ use std::{
         Ref,
         RefCell,
     },
+    hash::{
+        Hash,
+        Hasher,
+    },
     rc::Rc,
 };
 
@@ -128,6 +132,12 @@ impl InputValidator {
     }
 }
 
+#[derive(Clone, PartialEq)]
+enum InputValue {
+    Value(WritableSetter<String>),
+    Editor(UseEditable),
+}
+
 /// Small box to write some text.
 ///
 /// ## **Normal**
@@ -163,7 +173,7 @@ impl InputValidator {
 pub struct Input {
     pub(crate) theme_colors: Option<InputColorsThemePartial>,
     pub(crate) theme_layout: Option<InputLayoutThemePartial>,
-    value: WritableSetter<String>,
+    inner: InputValue,
     placeholder: Option<Cow<'static, str>>,
     on_validate: Option<EventHandler<InputValidator>>,
     on_submit: Option<EventHandler<String>>,
@@ -191,10 +201,28 @@ impl KeyExt for Input {
 
 impl Input {
     pub fn new(value: impl Into<WritableSetter<String>>) -> Self {
+        Self::with_inner(InputValue::Value(value.into()))
+    }
+
+    /// Use an external editor to control text, cursor, selection and history.
+    /// Keep the editor in a parent component to preserve it across input remounts.
+    ///
+    /// ```rust
+    /// # use freya::{prelude::*, text_edit::*};
+    /// fn app() -> impl IntoElement {
+    ///     let editor = use_editable(String::new, EditableConfig::new);
+    ///     Input::new_with_editor(editor)
+    /// }
+    /// ```
+    pub fn new_with_editor(editor: UseEditable) -> Self {
+        Self::with_inner(InputValue::Editor(editor))
+    }
+
+    fn with_inner(inner: InputValue) -> Self {
         Input {
             theme_colors: None,
             theme_layout: None,
-            value: value.into(),
+            inner,
             placeholder: None,
             on_validate: None,
             on_submit: None,
@@ -351,16 +379,21 @@ impl Component for Input {
         let mut scroll_controller = use_scroll_controller(ScrollConfig::default);
         let mut status = use_state(InputStatus::default);
         let is_masked = matches!(self.mode, InputMode::Hidden(_));
-        let mut editable = use_editable(
-            || self.value.read().to_string(),
-            move || {
-                EditableConfig::new()
-                    .with_allow_write_clipboard(!is_masked)
-                    .with_select_all_on_double_click(is_masked)
-            },
-        );
+        let (mut editable, mut value) = match &self.inner {
+            InputValue::Value(value) => (
+                use_editable(
+                    || value.read().to_string(),
+                    || {
+                        EditableConfig::new()
+                            .with_allow_write_clipboard(!is_masked)
+                            .with_select_all_on_double_click(is_masked)
+                    },
+                ),
+                Some(value.clone()),
+            ),
+            InputValue::Editor(editor) => (*editor, None),
+        };
         let mut is_dragging = use_state(|| false);
-        let mut value = self.value.clone();
 
         let theme_colors = match self.style_variant {
             InputStyleVariant::Normal => {
@@ -398,13 +431,12 @@ impl Component for Input {
 
         let enabled = use_reactive(&self.enabled);
 
-        let display_placeholder = value.read().is_empty()
-            && self.placeholder.is_some()
-            && !editable.editor().read().has_preedit();
         let on_validate = self.on_validate.clone();
         let on_submit = self.on_submit.clone();
 
-        if *value.read() != editable.editor().read().committed_text() {
+        if let Some(value) = &value
+            && *value.read() != editable.editor().read().committed_text()
+        {
             let mut editor = editable.editor_mut().write();
             editor.clear_preedit();
             editor.set(&value.read());
@@ -412,6 +444,9 @@ impl Component for Input {
             editor.clear_selection();
         }
 
+        let display_placeholder = editable.editor().read().committed_text().is_empty()
+            && self.placeholder.is_some()
+            && !editable.editor().read().has_preedit();
         let mode = self.mode;
         let text_align = self.text_align;
         let padding = theme_layout.padding;
@@ -546,7 +581,7 @@ impl Component for Input {
                         None => true,
                     };
 
-                    if apply_change {
+                    if apply_change && let Some(value) = &mut value {
                         value.set(text);
                     }
                     if editable.editor().peek().editor_history().version == previous_history_version
@@ -716,7 +751,7 @@ impl Component for Input {
             theme_colors.color
         };
 
-        let value = self.value.read();
+        let value = editable.editor().read().committed_text();
         let a11y_text: Cow<str> = match (self.mode, &self.placeholder) {
             (_, Some(ph)) if display_placeholder => Cow::Borrowed(ph.as_ref()),
             (InputMode::Hidden(ch), _) => Cow::Owned(ch.to_string().repeat(value.len())),
@@ -837,6 +872,13 @@ impl Component for Input {
     }
 
     fn render_key(&self) -> DiffKey {
-        self.key.clone().or(self.default_key())
+        let key = self.key.clone().or(self.default_key());
+        let mut hasher = std::hash::DefaultHasher::new();
+        key.hash(&mut hasher);
+        std::mem::discriminant(&self.inner).hash(&mut hasher);
+        match key {
+            DiffKey::DefaultU64(_) => DiffKey::DefaultU64(hasher.finish()),
+            _ => DiffKey::U64(hasher.finish()),
+        }
     }
 }
