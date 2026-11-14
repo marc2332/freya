@@ -270,6 +270,13 @@ const SETTLE_SPEED: f32 = 20.0;
 /// Slowest drag release speed that still starts a fling, in pixels per second.
 const FLING_MIN_SPEED: f32 = 50.0;
 
+/// Fastest drag release speed, in pixels per second.
+const FLING_MAX_SPEED: f32 = 8000.0;
+
+/// Minimum sample interval for touch events delivered together.
+/// 120 is rather a workaround right now, its requires an integration that winit doesnt expose yet.
+const DRAG_MIN_SAMPLE_TIME: f32 = 1.0 / 120.0;
+
 /// Maximum time since the last drag movement that still allows a fling.
 const FLING_RELEASE_TIMEOUT: Duration = Duration::from_millis(100);
 
@@ -349,10 +356,13 @@ impl Default for Drag {
 impl Drag {
     fn track(&mut self, delta: Vector2D) {
         let now = Instant::now();
-        let elapsed_seconds = now.duration_since(self.last_move).as_secs_f32();
-        if elapsed_seconds > 0.0 {
-            self.velocity = self.velocity.lerp(-delta / elapsed_seconds, 0.5);
-        }
+        let elapsed_seconds = now
+            .duration_since(self.last_move)
+            .as_secs_f32()
+            .max(DRAG_MIN_SAMPLE_TIME);
+
+        let velocity = (-delta / elapsed_seconds).with_max_length(FLING_MAX_SPEED);
+        self.velocity = self.velocity.lerp(velocity, 0.5);
         self.last_move = now;
     }
 }
