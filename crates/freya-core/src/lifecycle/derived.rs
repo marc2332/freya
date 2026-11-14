@@ -44,6 +44,9 @@ impl Derived {
 /// Computes a derived value immediately and returns its [`State<T>`].
 /// Recomputes asynchronously when reactive values read by the callback change.
 ///
+/// Similar to [`use_memo`](crate::prelude::use_memo), but does not require [`PartialEq`]
+/// or diff the value. Every recomputation updates the state and notifies its subscribers.
+///
 /// ```rust,no_run
 /// # use freya::prelude::*;
 /// # fn app() -> impl IntoElement {
