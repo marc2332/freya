@@ -91,6 +91,7 @@ pub struct EffectData {
     pub scale: Option<Scale>,
     pub transform_origin: TransformOrigin,
     pub opacity: Option<f32>,
+    pub mask: Option<Fill>,
     pub blur: Option<f32>,
     pub scrollable: bool,
     pub interactive: Interactive,
@@ -332,6 +333,8 @@ pub struct EffectState {
 
     pub opacities: Rc<[f32]>,
 
+    pub masks: Rc<[NodeId]>,
+
     pub blur: Option<f32>,
 
     pub scrollables: Rc<[NodeId]>,
@@ -400,6 +403,12 @@ impl EffectState {
                 if self.opacities.as_ref() != opacities {
                     self.opacities = Rc::from(opacities);
                 }
+            }
+
+            if effect_data.mask.is_some() {
+                let mut masks = parent_effect_state.masks.to_vec();
+                masks.push(node_id);
+                self.masks = Rc::from(masks);
             }
 
             if effect_data.scrollable {

@@ -61,7 +61,7 @@ pub enum Fill {
     RadialGradient(Box<RadialGradient>),
     /// A [`ConicGradient`].
     ConicGradient(Box<ConicGradient>),
-    /// Custom background or text paint.
+    /// Draw a background or mask, or set the text paint.
     Callback(#[cfg_attr(feature = "serde", serde(skip))] RenderCallback),
 }
 

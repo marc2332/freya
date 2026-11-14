@@ -718,6 +718,12 @@ impl Rect {
         self
     }
 
+    /// See [`EffectExt::mask`].
+    pub fn mask(mut self, mask: impl Into<Fill>) -> Self {
+        self.element.effect.get_or_insert_default().mask = Some(mask.into());
+        self
+    }
+
     /// Set the rect's opacity, from `0.0` (transparent) to `1.0` (opaque).
     pub fn opacity(mut self, opacity: f32) -> Self {
         self.element

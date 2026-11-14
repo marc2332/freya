@@ -1202,6 +1202,12 @@ pub trait EffectExt: Sized {
         self
     }
 
+    /// Mask this element and its children using the fill's opacity.
+    fn mask(mut self, mask: impl Into<Fill>) -> Self {
+        self.effect_mut().mask = Some(mask.into());
+        self
+    }
+
     /// Set the element's opacity, from `0.0` (transparent) to `1.0` (opaque).
     fn opacity(mut self, opacity: f32) -> Self {
         self.effect_mut().opacity = Some(opacity);
