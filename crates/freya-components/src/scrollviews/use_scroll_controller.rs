@@ -193,7 +193,8 @@ impl ScrollController {
 
     /// Updates the content and viewport bounds used to clamp scroll positions.
     pub fn apply_layout(&mut self, content_size: Size2D, viewport_size: Size2D) {
-        self.bounds.set(Some((content_size, viewport_size)));
+        self.bounds
+            .set_if_modified(Some((content_size, viewport_size)));
 
         let (x, y) = *self.scroll.peek();
         self.scroll_to_x(x);
@@ -489,9 +490,11 @@ impl ScrollController {
 
     /// Freezes the scroll where it is, returning the velocity it was moving at.
     pub fn stop(&mut self) -> Vector2D {
-        let task = self.task.write().take();
-        if let Some(task) = task {
-            task.cancel();
+        if self.task.peek().is_some() {
+            let task = self.task.write().take();
+            if let Some(task) = task {
+                task.cancel();
+            }
 
             let position = self.damp.peek().position.to_i32();
             self.scroll_to_x(position.x);
@@ -499,7 +502,9 @@ impl ScrollController {
         }
 
         let velocity = self.damp.peek().velocity;
-        self.damp.write().velocity = Vector2D::zero();
+        if velocity != Vector2D::zero() {
+            self.damp.write().velocity = Vector2D::zero();
+        }
         velocity
     }
 }
