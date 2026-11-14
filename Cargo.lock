@@ -2959,6 +2959,7 @@ name = "freya-html"
 version = "0.6.0-alpha.1"
 dependencies = [
  "anyrender",
+ "async-channel",
  "atomic_refcell",
  "blitz-dom",
  "blitz-html",

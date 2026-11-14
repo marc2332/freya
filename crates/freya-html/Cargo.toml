@@ -22,6 +22,7 @@ rustc-hash = { workspace = true }
 keyboard-types = "=0.7.0"
 smol_str = "0.3"
 
+async-channel = { workspace = true }
 futures-channel = { workspace = true }
 futures-lite = { workspace = true }
 parley = "0.12"
