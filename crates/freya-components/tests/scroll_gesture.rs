@@ -93,7 +93,7 @@ fn linux_scroll_gesture_pause_does_not_fling() {
 }
 
 #[test]
-fn android_batched_touch_moves_fling_without_snapping_to_an_edge() {
+fn android_touch_fling() {
     for virtualized in [false, true] {
         for direction in [-1., 1.] {
             let (mut test, mut controller) = setup(virtualized, TargetPlatform::Android);
