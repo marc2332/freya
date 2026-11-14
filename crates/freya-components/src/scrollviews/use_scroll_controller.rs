@@ -193,7 +193,8 @@ impl ScrollController {
 
     /// Updates the content and viewport bounds used to clamp scroll positions.
     pub fn apply_layout(&mut self, content_size: Size2D, viewport_size: Size2D) {
-        self.bounds.set(Some((content_size, viewport_size)));
+        self.bounds
+            .set_if_modified(Some((content_size, viewport_size)));
 
         let (x, y) = *self.scroll.peek();
         self.scroll_to_x(x);

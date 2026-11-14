@@ -62,6 +62,7 @@ pub struct ScrollView {
     auto_hide_scrollbars: bool,
     scroll_with_arrows: bool,
     scroll_controller: Option<ScrollController>,
+    follows_scroll_controller: bool,
     invert_scroll_wheel: bool,
     drag_scrolling: bool,
     on_sized: Option<EventHandler<Event<SizedEventData>>>,
@@ -95,6 +96,7 @@ impl Default for ScrollView {
             auto_hide_scrollbars: true,
             scroll_with_arrows: true,
             scroll_controller: None,
+            follows_scroll_controller: false,
             invert_scroll_wheel: false,
             drag_scrolling: true,
             on_sized: None,
@@ -116,6 +118,23 @@ impl ScrollView {
             scroll_controller: Some(scroll_controller),
             ..Default::default()
         }
+    }
+
+    /// Attaches a controller and updates its bounds from this view's layout.
+    pub fn scroll_controller(
+        mut self,
+        scroll_controller: impl Into<Option<ScrollController>>,
+    ) -> Self {
+        self.scroll_controller = scroll_controller.into();
+        self.follows_scroll_controller = false;
+        self
+    }
+
+    /// Attaches a controller without updating its bounds from this view's layout.
+    pub fn follow_scroll_controller(mut self, scroll_controller: ScrollController) -> Self {
+        self.scroll_controller = Some(scroll_controller);
+        self.follows_scroll_controller = true;
+        self
     }
 
     /// Toggles whether the scrollbars are shown when the content overflows.
@@ -211,6 +230,7 @@ impl Component for ScrollView {
         let layout = &self.layout.layout;
         let direction = layout.direction;
         let drag_scrolling = self.drag_scrolling;
+        let follows_scroll_controller = self.follows_scroll_controller;
 
         let corrected_scrolled_x = get_corrected_scroll_position(
             size.read().inner_sizes.width,
@@ -308,38 +328,50 @@ impl Component for ScrollView {
 
             let animate = e.source == WheelSource::Line || scroll_gesture;
             if animate {
-                scroll_controller.animate_from(rendered_position);
+                let position = scroll_controller.animated_position(scroll_controller.position());
+                scroll_controller.animate_from(position);
             } else {
                 scroll_controller.stop();
             }
-            let (base_x, base_y) = if animate {
-                let position = scroll_controller.position();
-                (position.x, position.y)
+            let position = if animate || follows_scroll_controller {
+                scroll_controller.position()
             } else {
-                (rendered_position.x, rendered_position.y)
+                rendered_position
+            };
+            let (content, viewport) = if follows_scroll_controller {
+                scroll_controller
+                    .bounds
+                    .read()
+                    .unwrap_or((size.read().inner_sizes, size.read().area.size))
+            } else {
+                (size.read().inner_sizes, size.read().area.size)
             };
 
             // Vertical scroll
             let scroll_position_y = get_scroll_position_from_wheel(
                 y_movement,
-                size.read().inner_sizes.height,
-                size.read().area.height(),
-                base_y,
+                content.height,
+                viewport.height,
+                position.y,
             );
-            scroll_controller.scroll_to_y(scroll_position_y).then(|| {
-                e.stop_propagation();
-            });
+            if y_movement != 0. {
+                scroll_controller.scroll_to_y(scroll_position_y).then(|| {
+                    e.stop_propagation();
+                });
+            }
 
             // Horizontal scroll
             let scroll_position_x = get_scroll_position_from_wheel(
                 x_movement,
-                size.read().inner_sizes.width,
-                size.read().area.width(),
-                base_x,
+                content.width,
+                viewport.width,
+                position.x,
             );
-            scroll_controller.scroll_to_x(scroll_position_x).then(|| {
-                e.stop_propagation();
-            });
+            if x_movement != 0. {
+                scroll_controller.scroll_to_x(scroll_position_x).then(|| {
+                    e.stop_propagation();
+                });
+            }
             timeout.reset();
         };
 
@@ -517,7 +549,9 @@ impl Component for ScrollView {
                             .overflow(Overflow::Clip)
                             .on_sized(move |e: Event<SizedEventData>| {
                                 size.set_if_modified(e.clone());
-                                scroll_controller.apply_layout(e.inner_sizes, e.area.size);
+                                if !follows_scroll_controller {
+                                    scroll_controller.apply_layout(e.inner_sizes, e.area.size);
+                                }
                             })
                             .children(self.children.clone()),
                     )
