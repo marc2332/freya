@@ -124,6 +124,7 @@ pub mod prelude {
         lifecycle::{
             base::*,
             context::*,
+            derived::*,
             effect::*,
             future_task::*,
             global_context::*,

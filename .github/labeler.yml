@@ -1,0 +1,46 @@
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.md'
+          - crates/freya/src/_docs/**
+          - skills/**
+
+'ci-cd 🤖':
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/workflows/**
+          - .github/labeler.yml
+
+'website🌐':
+  - changed-files:
+      - any-glob-to-any-file: website/**
+
+'layout 📐':
+  - changed-files:
+      - any-glob-to-any-file: crates/torin/**
+
+devtools:
+  - changed-files:
+      - any-glob-to-any-file:
+          - crates/freya-devtools/**
+          - crates/freya-devtools-app/**
+
+'skia 🖌️':
+  - changed-files:
+      - any-glob-to-any-file: crates/freya-engine/**
+
+'tests/benchs📦':
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/tests/**'
+          - '**/benches/**'
+          - crates/freya-testing/**
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/Cargo.toml'
+          - Cargo.lock
+          - website/package.json
+          - website/deno.lock
+          - renovate.json

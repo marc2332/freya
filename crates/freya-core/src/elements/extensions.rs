@@ -1101,7 +1101,25 @@ where
     /// Returns a mutable reference to the element's layer.
     fn layer_mut(&mut self) -> &mut Layer;
 
-    /// Set the painting layer of the element. See [`Layer`].
+    /// Sets the element's painting layer without changing its layout or position.
+    ///
+    /// Higher layers paint on top of lower layers. An integer is a [`Layer::Relative`]
+    /// offset from the normal layer, which is one above the parent's layer.
+    /// The default is `0`. Descendants use this element's resulting layer as their base.
+    ///
+    /// Use [`Layer::Overlay`] to raise content relative to its parent and escape
+    /// ancestor clipping, or [`Layer::OverlayLevel`] for an absolute overlay level.
+    /// Elements on the same layer have no guaranteed painting order.
+    ///
+    /// ```rust
+    /// # use freya_core::prelude::*;
+    /// rect()
+    ///     .child(rect().layer(-1).child("Below default siblings"))
+    ///     .child(rect().child("Default layer"))
+    ///     .child(rect().layer(1).child("Above default siblings"))
+    ///     .child(rect().layer(Layer::Overlay).child("Overlay"))
+    /// # ;
+    /// ```
     fn layer(mut self, layer: impl Into<Layer>) -> Self {
         *self.layer_mut() = layer.into();
         self
