@@ -26,7 +26,7 @@ use crate::{
 
 /// Custom fill target.
 pub enum RenderTarget<'a> {
-    /// Draw the background.
+    /// Draw the background or mask.
     Background {
         canvas: &'a Canvas,
         font_collection: &'a mut FontCollection,
@@ -35,7 +35,7 @@ pub enum RenderTarget<'a> {
     TextStyle(&'a mut TextStyle),
 }
 
-/// Context for drawing a background or configuring text paint.
+/// Data for drawing a background or mask, or setting the text paint.
 pub struct RenderContext<'a> {
     pub target: RenderTarget<'a>,
     /// Display scale factor for converting logical coordinates to physical pixels.
