@@ -1184,8 +1184,7 @@ pub trait EffectExt: Sized {
         self
     }
 
-    /// Mask this element and its children separately, using the fill's opacity and this element's bounds and transforms.
-    /// Mask colors are ignored, nested masks multiply, and content outside is hidden. Layout and input stay unchanged.
+    /// Mask this element and its children using the fill's opacity.
     fn mask(mut self, mask: impl Into<Fill>) -> Self {
         self.effect_mut().mask = Some(mask.into());
         self
