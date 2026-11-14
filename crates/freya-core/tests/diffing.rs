@@ -1,5 +1,7 @@
 use std::{
+    cell::Cell,
     collections::HashMap,
+    rc::Rc,
     sync::atomic::{
         AtomicI8,
         Ordering,
@@ -8,6 +10,7 @@ use std::{
 
 use freya::helpers::*;
 use freya_core::{
+    element::ElementExt,
     integration::*,
     path_element::PathElement,
     prelude::*,
@@ -15,10 +18,44 @@ use freya_core::{
         Diff,
         MutationRemove,
     },
+    tree::DiffModifies,
 };
 use rustc_hash::FxHashMap;
 use tiny_diff::DiffNode;
 use torin::size::Size;
+
+#[test]
+fn retained_children_reuse_requires_same_rc() {
+    struct DiffProbe(Rc<Cell<usize>>);
+
+    impl ElementExt for DiffProbe {
+        fn diff(&self, _previous: &Rc<dyn ElementExt>) -> DiffModifies {
+            self.0.set(self.0.get() + 1);
+            DiffModifies::empty()
+        }
+    }
+
+    let diffs = Rc::new(Cell::new(0));
+    let children = Rc::new(vec![Element::Element {
+        key: DiffKey::None,
+        element: Rc::new(DiffProbe(diffs.clone())),
+        elements: Vec::new().into(),
+    }]);
+    let mut runner = Runner::new(|| {
+        let children = use_consume::<State<Rc<Vec<Element>>>>();
+        rect().retained_children(children.read().clone()).into()
+    });
+    let mut state = runner.provide_root_context(|| State::create(children.clone()));
+    runner.sync_and_update();
+
+    state.set(children.clone());
+    runner.sync_and_update();
+    assert_eq!(diffs.get(), 0);
+
+    state.set(Rc::new(children.as_ref().clone()));
+    runner.sync_and_update();
+    assert_eq!(diffs.get(), 1);
+}
 
 struct RawIdMap(FxHashMap<u64, Vec<u64>>);
 
