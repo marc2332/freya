@@ -5,11 +5,27 @@ use std::{
 };
 
 use freya_core::prelude::*;
+use futures_lite::StreamExt;
 
 use crate::{
+    cache::ResourceCache,
     content::HtmlContent,
+    net::FetchRequest,
     state::BlitzState,
 };
+
+type ResourceInterceptor = Callback<url::Url, ResourceResponse>;
+
+/// How to resolve a resource requested by an HTML document.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ResourceResponse {
+    /// Use the provided content without consulting the cache or network.
+    Bytes(Bytes),
+    /// Ignore the resource without consulting the cache or network.
+    Block,
+    /// Use the shared cache or fetch HTTP and HTTPS resources.
+    Fetch,
+}
 
 /// A document for an [HtmlViewer](crate::HtmlViewer), either remote or inline.
 #[derive(Clone, PartialEq)]
@@ -46,7 +62,11 @@ struct HtmlHistory {
 /// # use freya::prelude::*;
 /// # use freya_html::prelude::*;
 /// # fn app() -> impl IntoElement {
-/// let mut handle = use_html(|| HtmlSource::url("https://example.com"));
+/// let mut handle = use_hook(|| {
+///     let mut handle = HtmlHandle::create();
+///     handle.load(HtmlSource::url("https://example.com"));
+///     handle
+/// });
 ///
 /// rect()
 ///     .child(Button::new().child("Back").on_press(move |_| handle.back()))
@@ -56,59 +76,164 @@ struct HtmlHistory {
 #[derive(PartialEq, Clone, Copy)]
 pub struct HtmlHandle {
     history: State<HtmlHistory>,
-    view: State<Option<Rc<RefCell<BlitzState>>>>,
+    view: State<Rc<RefCell<BlitzState>>>,
+    pub(crate) wake: State<async_channel::Receiver<()>>,
+    interceptor: State<Option<ResourceInterceptor>>,
+}
+
+impl Default for HtmlHandle {
+    fn default() -> Self {
+        Self::create()
+    }
 }
 
 impl HtmlHandle {
-    /// A handle starting at `initial`.
-    pub fn create(initial: HtmlSource) -> Self {
-        let mut handle = Self::create_empty();
-        handle.push(initial);
-        handle
-    }
-
-    /// A handle with an empty history.
-    pub fn create_empty() -> Self {
-        Self {
-            history: State::create(HtmlHistory {
-                entries: Vec::new(),
-                index: 0,
-            }),
-            view: State::create(None),
-        }
+    /// Creates an empty handle, configure it before calling [`Self::load`].
+    pub fn create() -> Self {
+        Self::initialize(false)
     }
 
     /// A handle with an empty history, backed by global states.
-    pub fn create_global_empty() -> Self {
-        Self {
-            history: State::create_global(HtmlHistory {
-                entries: Vec::new(),
-                index: 0,
-            }),
-            view: State::create_global(None),
-        }
+    pub fn create_global() -> Self {
+        Self::initialize(true)
     }
 
-    /// Attaches the view's document state and loads the current source into it.
-    pub(crate) fn attach(&mut self, view: Rc<RefCell<BlitzState>>) {
-        *self.view.write() = Some(view);
+    fn initialize(global: bool) -> Self {
+        let resource_cache = ResourceCache::get();
+        let (wake_tx, wake_rx) = async_channel::bounded(1);
+        let (nav_tx, mut nav_rx) = futures_channel::mpsc::unbounded::<String>();
+        let (fetch_tx, mut fetch_rx) = futures_channel::mpsc::unbounded::<FetchRequest>();
+        let view = Rc::new(RefCell::new(BlitzState::new(wake_tx, nav_tx, fetch_tx)));
+        let history = HtmlHistory {
+            entries: Vec::new(),
+            index: 0,
+        };
+        let mut handle = if global {
+            Self {
+                history: State::create_global(history),
+                view: State::create_global(view),
+                wake: State::create_global(wake_rx),
+                interceptor: State::create_global(None),
+            }
+        } else {
+            Self {
+                history: State::create(history),
+                view: State::create(view),
+                wake: State::create(wake_rx),
+                interceptor: State::create(None),
+            }
+        };
+
+        let interceptor = handle.interceptor;
+        let fetch_task = async move {
+            while let Some((url, handler)) = fetch_rx.next().await {
+                let resolver = interceptor.peek().clone();
+                let response = resolver.map_or(ResourceResponse::Fetch, |resolver| {
+                    resolver.call(url.clone())
+                });
+
+                match response {
+                    ResourceResponse::Bytes(bytes) => {
+                        handler.bytes(url.to_string(), bytes);
+                        continue;
+                    }
+                    ResourceResponse::Block => continue,
+                    ResourceResponse::Fetch => {}
+                }
+
+                if !matches!(url.scheme(), "http" | "https") {
+                    continue;
+                }
+
+                if let Some(bytes) = resource_cache.read(&url) {
+                    handler.bytes(url.to_string(), bytes);
+                    continue;
+                }
+
+                let resource_cache = resource_cache.clone();
+                let fetch = async move {
+                    match freya_components::http::fetch(url.clone()).await {
+                        Ok(bytes) => {
+                            let resolved_url = url.to_string();
+                            resource_cache.set(url, bytes.clone());
+                            handler.bytes(resolved_url, bytes);
+                        }
+                        Err(err) => tracing::warn!("Failed to fetch resource {url}: {err}"),
+                    }
+                };
+                if global {
+                    spawn_global(fetch);
+                } else {
+                    spawn(fetch);
+                }
+            }
+        };
+
+        let navigation_task = async move {
+            while let Some(url) = nav_rx.next().await {
+                handle.navigate(url);
+            }
+        };
+
+        if global {
+            spawn_global(fetch_task);
+            spawn_global(navigation_task);
+        } else {
+            spawn(fetch_task);
+            spawn(navigation_task);
+        }
+        handle
+    }
+
+    pub(crate) fn view(&self) -> Rc<RefCell<BlitzState>> {
+        self.view.peek().clone()
+    }
+
+    /// Replaces local fonts and reloads the current document, an empty collection restores defaults.
+    pub fn fonts(self, fonts: impl IntoIterator<Item = Bytes>) -> Self {
+        self.view().borrow_mut().set_fonts(fonts);
         self.reload();
+        self
+    }
+
+    /// Resolves absolute subresource URLs with local bytes, blocking, or cache and HTTP fallback.
+    /// This does not intercept the main document loaded with [`HtmlSource::Url`].
+    pub fn resource_interceptor(
+        mut self,
+        interceptor: impl FnMut(url::Url) -> ResourceResponse + 'static,
+    ) -> Self {
+        self.interceptor.set(Some(Callback::new(interceptor)));
+        self
+    }
+
+    /// Loads a document and adds it to history, discarding forward history.
+    pub fn load(&mut self, source: HtmlSource) {
+        self.load_source(&source);
+        let mut history = self.history.write();
+        let index = if history.entries.is_empty() {
+            0
+        } else {
+            history.index + 1
+        };
+        history.entries.truncate(index);
+        history.entries.push(source);
+        history.index = index;
     }
 
     /// Load the URL, discarding any forward history.
     pub fn navigate(&mut self, url: impl Into<String>) {
-        self.push(HtmlSource::Url(url.into()));
+        self.load(HtmlSource::Url(url.into()));
     }
 
     /// Load inline HTML + CSS and its configuration, discarding any forward history.
     pub fn load_html(&mut self, html: impl Into<HtmlContent>) {
-        self.push(HtmlSource::Html(html.into()));
+        self.load(HtmlSource::Html(html.into()));
     }
 
     /// Replaces the current document, configuration, and history entry, discarding forward history.
     pub fn replace_html(&mut self, html: impl Into<HtmlContent>) {
         let source = HtmlSource::Html(html.into());
-        self.load(&source);
+        self.load_source(&source);
         let mut history = self.history.write();
         let index = history.index;
         history.entries.truncate(index);
@@ -133,8 +258,12 @@ impl HtmlHandle {
 
     /// Load the current history entry again.
     pub fn reload(&self) {
-        if let Some(source) = self.current_source() {
-            self.load(&source);
+        let source = {
+            let history = self.history.peek();
+            history.entries.get(history.index).cloned()
+        };
+        if let Some(source) = source {
+            self.load_source(&source);
         }
     }
 
@@ -148,10 +277,7 @@ impl HtmlHandle {
     }
 
     pub fn elements_at(&self, x: f32, y: f32) -> Vec<ElementHit> {
-        let Some(view) = self.view.peek().clone() else {
-            return Vec::new();
-        };
-        view.borrow_mut().elements_at(x, y)
+        self.view().borrow_mut().elements_at(x, y)
     }
 
     /// The URL currently being displayed, `None` for inline documents.
@@ -163,55 +289,29 @@ impl HtmlHandle {
         }
     }
 
-    fn push(&mut self, source: HtmlSource) {
-        self.load(&source);
-        let mut history = self.history.write();
-        let index = if history.entries.is_empty() {
-            0
-        } else {
-            history.index + 1
-        };
-        history.entries.truncate(index);
-        history.entries.push(source);
-        history.index = index;
-    }
-
-    fn current_source(&self) -> Option<HtmlSource> {
-        let history = self.history.peek();
-        history.entries.get(history.index).cloned()
-    }
-
-    /// Loads `source` into the attached view.
-    fn load(&self, source: &HtmlSource) {
-        let Some(view) = self.view.peek().clone() else {
-            return;
-        };
+    fn load_source(&self, source: &HtmlSource) {
         match source {
             HtmlSource::Url(url) => {
-                spawn(load_url(view, url.clone()));
+                spawn((*self).load_url(url.clone()));
             }
-            HtmlSource::Html(content) => view.borrow_mut().load(
+            HtmlSource::Html(content) => self.view().borrow_mut().load(
                 &content.html,
                 content.base_url.as_ref().map(ToString::to_string),
             ),
         }
     }
-}
 
-async fn load_url(view: Rc<RefCell<BlitzState>>, url: String) {
-    let fetched = match url::Url::parse(&url) {
-        Ok(parsed) => freya_components::http::fetch(parsed).await,
-        Err(err) => Err(err.into()),
-    };
-    match fetched {
-        Ok(bytes) => view
-            .borrow_mut()
-            .load(&String::from_utf8_lossy(&bytes), Some(url)),
-        Err(err) => tracing::error!("Failed to load {url}: {err}"),
+    async fn load_url(self, url: String) {
+        let view = self.view();
+        let fetched = match url::Url::parse(&url) {
+            Ok(parsed) => freya_components::http::fetch(parsed).await,
+            Err(err) => Err(err.into()),
+        };
+        match fetched {
+            Ok(bytes) => view
+                .borrow_mut()
+                .load(&String::from_utf8_lossy(&bytes), Some(url)),
+            Err(err) => tracing::error!("Failed to load {url}: {err}"),
+        }
     }
-}
-
-/// Creates an [HtmlHandle] starting at the source returned by `init`.
-pub fn use_html(init: impl FnOnce() -> HtmlSource) -> HtmlHandle {
-    use_hook(move || HtmlHandle::create(init()))
 }
