@@ -112,7 +112,7 @@ fn android_touch_fling() {
             assert!(target > -4500 && target < 0);
             assert!((target as f32 - rendered) * direction as f32 > 0.);
 
-            test.poll(Duration::from_millis(8), Duration::from_millis(32));
+            test.poll_n(Duration::from_millis(8), 4);
             let animated = position(&test, controller).0;
             assert!((animated - rendered) * direction as f32 > 0.);
             assert!((target as f32 - animated) * direction as f32 > 0.);
