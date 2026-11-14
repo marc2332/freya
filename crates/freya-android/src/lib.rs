@@ -8,17 +8,14 @@ use freya_core::{
     integration::*,
     prelude::*,
 };
-use freya_winit::{
-    integration::is_ime_role,
-    plugins::{
-        FreyaPlugin,
-        PluginEvent,
-        PluginHandle,
-    },
+use freya_winit::plugins::{
+    FreyaPlugin,
+    PluginEvent,
+    PluginHandle,
 };
+use torin::prelude::Gaps;
 use winit::platform::android::activity::AndroidApp;
 
-mod keyboard;
 mod status_bar;
 
 /// Extension trait for [`Platform`] providing Android-specific APIs.
@@ -31,6 +28,10 @@ pub trait AndroidExt {
 
     /// Hide the Android soft keyboard.
     fn hide_keyboard(&self) -> Result<(), jni::errors::Error>;
+
+    /// Content padding in logical pixels for the current window.
+    /// Call during rendering to track size, scale, and focus changes.
+    fn content_padding(&self) -> Gaps;
 }
 
 impl AndroidExt for Platform {
@@ -44,26 +45,45 @@ impl AndroidExt for Platform {
 
     fn show_keyboard(&self) -> Result<(), jni::errors::Error> {
         if let Some(app) = GlobalContexts::get().try_get_context::<AndroidApp>() {
-            keyboard::show_keyboard(&app)
-        } else {
-            Ok(())
+            app.show_soft_input(false);
         }
+
+        Ok(())
     }
 
     fn hide_keyboard(&self) -> Result<(), jni::errors::Error> {
         if let Some(app) = GlobalContexts::get().try_get_context::<AndroidApp>() {
-            keyboard::hide_keyboard(&app)
-        } else {
-            Ok(())
+            app.hide_soft_input(false);
         }
+
+        Ok(())
+    }
+
+    fn content_padding(&self) -> Gaps {
+        let window = self.current_window();
+        let size = *window.root_size.read();
+        let scale_factor = *window.scale_factor.read() as f32;
+        // Refresh the content rectangle when the app regains focus.
+        let _ = *window.is_app_focused.read();
+
+        let Some(app) = GlobalContexts::get().try_get_context::<AndroidApp>() else {
+            return Gaps::default();
+        };
+        let content = app.content_rect();
+        if content.right <= content.left || content.bottom <= content.top {
+            return Gaps::default();
+        }
+
+        Gaps::new(
+            (content.top as f32 / scale_factor).clamp(0., size.height),
+            (size.width - content.right as f32 / scale_factor).clamp(0., size.width),
+            (size.height - content.bottom as f32 / scale_factor).clamp(0., size.height),
+            (content.left as f32 / scale_factor).clamp(0., size.width),
+        )
     }
 }
 
-/// Freya plugin for Android integration.
-///
-/// Stores the [`AndroidApp`] handle, provides it as root context,
-/// and registers a root component that syncs the status bar
-/// appearance with the app theme and manages the soft keyboard.
+/// Registers the Android context and syncs status-bar appearance with the app theme.
 pub struct AndroidPlugin {
     app: AndroidApp,
 }
@@ -112,21 +132,6 @@ impl Component for AndroidRoot {
             let is_light = theme.read().name == "light";
             if let Err(err) = platform.set_status_bar_light(is_light) {
                 tracing::error!("Failed to set status bar appearance: {err:?}");
-            }
-        });
-
-        // Show/hide keyboard based on focused node type
-        use_side_effect(move || {
-            let platform = Platform::get();
-            let window = platform.current_window();
-            let focused_node = window.focused_accessibility_node.read();
-            let result = if is_ime_role(focused_node.role()) {
-                platform.show_keyboard()
-            } else {
-                platform.hide_keyboard()
-            };
-            if let Err(err) = result {
-                tracing::error!("Failed to toggle soft keyboard: {err:?}");
             }
         });
 
