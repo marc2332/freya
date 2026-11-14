@@ -31,7 +31,7 @@ impl Component for Home {
         };
 
         let on_change_route = |_| {
-            let _ = RouterContext::get().push(Route::SecondPage);
+            RouterContext::get().push(Route::SecondPage);
         };
 
         rect()
@@ -54,7 +54,7 @@ impl Component for SecondPage {
         rect().expanded().center().child(
             Button::new()
                 .on_press(|_| {
-                    let _ = RouterContext::get().replace(Route::Home);
+                    RouterContext::get().replace(Route::Home);
                 })
                 .child("Go Home"),
         )

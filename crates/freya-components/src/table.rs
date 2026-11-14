@@ -105,10 +105,7 @@ impl Component for TableRow {
             .content(Content::Flex)
             .cross_align(Alignment::Center)
             .background(background)
-            .border(Border::new().fill(theme.divider_fill).width(BorderWidth {
-                bottom: 1.,
-                ..Default::default()
-            }))
+            .border(Border::bottom(theme.divider_fill, 1.))
             .on_pointer_enter(move |_| hovering.set(true))
             .on_pointer_leave(move |_| hovering.set(false))
             .children(self.children.iter().enumerate().map(|(index, child)| {
