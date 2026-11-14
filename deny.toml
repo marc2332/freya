@@ -67,7 +67,6 @@ allow-build-scripts = [
   { name = "gl" },
   { name = "glib-sys" },
   { name = "glutin" },
-  { name = "glutin-winit" },
   { name = "glutin_egl_sys" },
   { name = "glutin_glx_sys" },
   { name = "glutin_wgl_sys" },

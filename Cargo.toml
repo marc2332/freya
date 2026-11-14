@@ -163,7 +163,7 @@ rfd = "0.17"
 
 # Desktop renderer
 raw-window-handle = "0.6.0"
-winit = "0.30.13"
+winit = "0.31.0-beta.4"
 
 # Tray
 tray-icon = { version = "0.26.1", default-features = false, features = [
@@ -173,7 +173,6 @@ tray-icon = { version = "0.26.1", default-features = false, features = [
 # OpenGL
 gl = "0.14.0"
 glutin = "0.32.0"
-glutin-winit = "0.5.0"
 
 # Vulkan
 ash = "^0.38"

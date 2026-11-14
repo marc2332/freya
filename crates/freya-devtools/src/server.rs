@@ -8,6 +8,7 @@ use async_tungstenite::accept_async;
 use freya_core::integration::UserEvent;
 use freya_winit::{
     plugins::PluginHandle,
+    reexports::winit::window::WindowId,
     renderer::{
         NativeEvent,
         NativeWindowEvent,
@@ -54,19 +55,21 @@ async fn handle_connection(
                 if let Ok(incoming) = incoming {
                     match incoming.action {
                         IncomingMessageAction::HighlightNode { window_id, node_id } => {
+                            let window_id = WindowId::from_raw(window_id as usize);
                             plugin.highlighted_node.lock().unwrap().replace(node_id);
                             plugin_handle.send_event_loop_event(NativeEvent::Window(
                                 NativeWindowEvent {
-                                    window_id: window_id.into(),
+                                    window_id,
                                     action: NativeWindowEventAction::User(UserEvent::RequestRedraw),
                                 },
                             ));
                         }
                         IncomingMessageAction::HoverNode { window_id, node_id } => {
+                            let window_id = WindowId::from_raw(window_id as usize);
                             *plugin.hovered_node.lock().unwrap() = node_id;
                             plugin_handle.send_event_loop_event(NativeEvent::Window(
                                 NativeWindowEvent {
-                                    window_id: window_id.into(),
+                                    window_id,
                                     action: NativeWindowEventAction::User(UserEvent::RequestRedraw),
                                 },
                             ));

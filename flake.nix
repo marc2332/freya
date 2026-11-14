@@ -31,6 +31,7 @@
       libx11
       libxkbcommon
       libxcursor
+      libxfixes
       libxi
       libxrandr
       llvmPackages.bintools
