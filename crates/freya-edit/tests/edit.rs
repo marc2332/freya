@@ -1817,6 +1817,69 @@ fn arrow_down_clamps_to_last_line_end() {
 }
 
 #[test]
+fn clipboard_shortcuts() {
+    fn app() -> impl IntoElement {
+        let mut editable = use_editable(|| "Hello 🦀".to_string(), EditableConfig::new);
+        let text = editable.editor().read().text().into_owned();
+        rect()
+            .on_global_key_down(move |event: Event<KeyboardEventData>| {
+                editable.process_event(EditableEvent::KeyDown {
+                    key: &event.key,
+                    modifiers: event.modifiers,
+                    editor_line: None,
+                    holder: None,
+                });
+            })
+            .child(label().text(text))
+    }
+
+    let mut runner = launch_test(app);
+    let shortcut = |runner: &mut TestingRunner, character: &str| {
+        runner.send_event(PlatformEvent::Keyboard {
+            name: KeyboardEventName::KeyDown,
+            key: Key::Character(character.to_string()),
+            code: Code::Unidentified,
+            modifiers: Modifiers::ctrl_or_meta(),
+        });
+        runner.sync_and_update();
+        runner.handle_events_immediately();
+        runner.sync_and_update();
+    };
+    let content = |runner: &TestingRunner| {
+        runner.find(|_, element| Some(Label::try_downcast(element)?.text.to_string()))
+    };
+
+    shortcut(&mut runner, "a");
+    shortcut(&mut runner, "C");
+    assert_eq!(content(&runner).as_deref(), Some("Hello 🦀"));
+    shortcut(&mut runner, "X");
+    assert_eq!(content(&runner).as_deref(), Some(""));
+    shortcut(&mut runner, "V");
+    assert_eq!(content(&runner).as_deref(), Some("Hello 🦀"));
+    runner.write_text("!");
+    assert_eq!(content(&runner).as_deref(), Some("Hello 🦀!"));
+}
+
+#[test]
+fn paste_replaces_selection() {
+    let mut editor = RopeEditor::new(
+        "Hello world".to_string(),
+        TextSelection::new_cursor(0),
+        4,
+        EditorHistory::new(Duration::from_millis(10)),
+    );
+    editor.set_selection((6, 11));
+    assert!(editor.paste("🦀").contains(TextEvent::TEXT_CHANGED));
+    assert_eq!(editor.text(), "Hello 🦀");
+    assert_eq!(editor.cursor_pos(), 8);
+    assert_eq!(editor.get_selection_range(), None);
+    assert!(editor.paste("").is_empty());
+    editor.set_selection((0, 6));
+    assert!(editor.paste("").contains(TextEvent::TEXT_CHANGED));
+    assert_eq!(editor.text(), "🦀");
+}
+
+#[test]
 fn home_end_navigation() {
     let mut editor = RopeEditor::new(
         "Hello Rustaceans\nHello".to_string(),

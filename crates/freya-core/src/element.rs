@@ -57,7 +57,7 @@ use crate::{
     node_id::NodeId,
     prelude::{
         Color,
-        FileEventData,
+        DragEventData,
         ImePreeditEventData,
         MaybeExt,
     },
@@ -492,5 +492,5 @@ pub enum EventHandlerType {
     Touch(EventHandler<Event<TouchEventData>>),
     Pointer(EventHandler<Event<PointerEventData>>),
     ImePreedit(EventHandler<Event<ImePreeditEventData>>),
-    File(EventHandler<Event<FileEventData>>),
+    Drag(EventHandler<Event<DragEventData>>),
 }

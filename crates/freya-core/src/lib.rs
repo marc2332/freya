@@ -2,6 +2,7 @@ pub mod accessibility;
 pub mod animation_clock;
 pub mod current_context;
 pub mod data;
+pub mod data_transfer;
 pub mod debug;
 pub mod diff_key;
 pub mod element;
@@ -16,6 +17,7 @@ pub mod io;
 pub mod layers;
 pub mod lifecycle;
 pub mod metrics;
+pub mod native_drag;
 pub mod node_id;
 pub mod path_element;
 pub mod platform;
@@ -65,6 +67,7 @@ pub mod prelude {
         },
         animation_clock::AnimationClock,
         data::*,
+        data_transfer::*,
         debug::*,
         diff_key::DiffKey,
         element::{
@@ -137,6 +140,7 @@ pub mod prelude {
             writable_setter::*,
             writable_utils::*,
         },
+        native_drag::*,
         platform::*,
         reactive_context::ReactiveContext,
         rendering_ticker::RenderingTicker,
@@ -196,6 +200,7 @@ pub mod integration {
             New,
         },
         data::*,
+        data_transfer::*,
         element::*,
         elements::extensions::*,
         events::{
@@ -211,6 +216,7 @@ pub mod integration {
             state::State,
             writable_utils::WritableUtils,
         },
+        native_drag::*,
         node_id::NodeId,
         platform::*,
         render_pipeline::RenderPipeline,

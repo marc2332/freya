@@ -153,6 +153,7 @@ impl CodeEditorData {
         edit_event: EditableEvent,
     ) -> bool {
         let mut processed = false;
+        let mut text_changed = false;
         match edit_event {
             EditableEvent::Down {
                 location,
@@ -244,6 +245,10 @@ impl CodeEditorData {
                     }
                 }
             }
+            EditableEvent::Paste { contents } => {
+                text_changed = self.paste(contents).contains(TextEvent::TEXT_CHANGED);
+                processed = text_changed;
+            }
             EditableEvent::Release => {
                 self.dragging.clicked = false;
                 EventsCombos::<()>::released();
@@ -271,11 +276,7 @@ impl CodeEditorData {
                             true,
                             true,
                         );
-                        if event.contains(TextEvent::TEXT_CHANGED) {
-                            self.parse();
-                            self.measure(font_size, font_family);
-                            self.dragging = TextDragging::default();
-                        }
+                        text_changed = event.contains(TextEvent::TEXT_CHANGED);
                         if !event.is_empty() {
                             processed = true;
                         }
@@ -288,6 +289,11 @@ impl CodeEditorData {
                 }
             }
         };
+        if text_changed {
+            self.parse();
+            self.measure(font_size, font_family);
+            self.dragging = TextDragging::default();
+        }
         processed
     }
 }

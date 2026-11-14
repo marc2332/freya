@@ -1,30 +1,41 @@
-//! Clipboard utilities to read and write the system clipboard.
+//! Asynchronous clipboard access through a renderer-provided backend.
 //!
-//! This crate wraps [copypasta] and exposes a small, ergonomic API to access
-//! the clipboard from Freya applications and tests. See [Clipboard](clipboard::Clipboard) in
-//! `clipboard.rs` for usage examples.
+//! ```rust,no_run
+//! use freya::clipboard::{
+//!     Clipboard,
+//!     ClipboardError,
+//!     DataFormat,
+//!     DataValue,
+//!     TransferData,
+//! };
 //!
-//! This crate is reexported in `freya::clipboard`.
-//!
-//! # Examples
-//!
-//! ```rust, no_run
-//! use freya::clipboard::Clipboard;
-//!
-//! // Read the clipboard content
-//! if let Ok(text) = Clipboard::get() {
-//!     println!("clipboard: {}", text);
+//! async fn copy() -> Result<(), ClipboardError> {
+//!     Clipboard::set(
+//!         TransferData::text("Hello")
+//!             .with(DataFormat::Html, DataValue::Text("<b>Hello</b>".into())),
+//!     )
+//!     .await
 //! }
 //!
-//! // Write to the clipboard
-//! let _ = Clipboard::set("Hello, Freya!".to_string());
+//! async fn read_html() -> Result<DataValue, ClipboardError> {
+//!     Clipboard::get(DataFormat::Html).await
+//! }
 //! ```
 
 #[cfg(target_os = "android")]
 pub mod android;
 pub mod clipboard;
-pub use copypasta;
+pub mod memory;
 
 pub mod prelude {
-    pub use crate::clipboard::*;
+    pub use freya_core::data_transfer::{
+        DataFormat,
+        DataValue,
+        TransferData,
+    };
+
+    pub use crate::{
+        clipboard::*,
+        memory::MemoryClipboard,
+    };
 }

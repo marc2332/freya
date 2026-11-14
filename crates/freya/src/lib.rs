@@ -243,6 +243,7 @@ pub mod components {
         lazy::*,
         loader::*,
         menu::*,
+        native_drag::*,
         overflowed_content::*,
         popup::*,
         portal::*,

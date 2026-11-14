@@ -10,7 +10,10 @@ use freya_components::{
     },
 };
 use freya_core::prelude::*;
-use freya_edit::EditableEvent;
+use freya_edit::{
+    EditableConfig,
+    EditableEvent,
+};
 use torin::size::Size;
 
 use crate::{
@@ -162,7 +165,7 @@ impl Component for CodeEditor {
 
         let editor_data = editor.read_unchecked();
 
-        let scroll_controller =
+        let mut scroll_controller =
             scroll_controller.unwrap_or_else(|| use_scroll_controller(ScrollConfig::default));
         let line_height = (font_size * line_height).floor();
         let lines_len = editor_data.metrics.syntax_blocks.len();
@@ -182,8 +185,7 @@ impl Component for CodeEditor {
         };
 
         let on_key_down = {
-            let mut editor = editor.clone();
-            let mut scroll_controller = scroll_controller;
+            let editor = editor.clone();
             let font_family = font_family.clone();
             move |e: Event<KeyboardEventData>| {
                 const LINES_JUMP_ALT: usize = 5;
@@ -196,71 +198,65 @@ impl Component for CodeEditor {
                     return;
                 }
 
-                editor.write_if(|mut editor| {
-                    let lines_jump = (line_height * LINES_JUMP_ALT as f32).ceil() as i32;
-                    let content_height = lines_len as f32 * line_height;
-                    let viewport_height = editor.viewport.height;
-                    let min_scroll = -(content_height - viewport_height).max(0.) as i32;
-                    let max_scroll = 0;
-                    let (_, current_scroll) = scroll_controller.into();
+                let mut editor = editor.clone();
+                let font_family = font_family.clone();
+                EditableEvent::KeyDown {
+                    key: &key,
+                    modifiers,
+                    editor_line: None,
+                    holder: None,
+                }
+                .dispatch::<CodeEditorData>(
+                    editor.clone().into(),
+                    &EditableConfig::default().with_allow_changes(!read_only),
+                    move |event| {
+                        editor.write_if(|mut editor| {
+                            let lines_jump = (line_height * LINES_JUMP_ALT as f32).ceil() as i32;
+                            let content_height = lines_len as f32 * line_height;
+                            let viewport_height = editor.viewport.height;
+                            let min_scroll = -(content_height - viewport_height).max(0.) as i32;
+                            let max_scroll = 0;
+                            let (_, current_scroll) = scroll_controller.into();
 
-                    let events = match &key {
-                        Key::Named(NamedKey::ArrowUp) if modifiers.contains(Modifiers::ALT) => {
-                            let jump = (current_scroll + lines_jump).clamp(min_scroll, max_scroll);
-                            scroll_controller.scroll_to_y(jump);
-                            (0..LINES_JUMP_ALT)
-                                .map(|_| EditableEvent::KeyDown {
-                                    key: &key,
-                                    modifiers,
-                                    editor_line: None,
-                                    holder: None,
-                                })
-                                .collect::<Vec<EditableEvent>>()
-                        }
-                        Key::Named(NamedKey::ArrowDown) if modifiers.contains(Modifiers::ALT) => {
-                            let jump = (current_scroll - lines_jump).clamp(min_scroll, max_scroll);
-                            scroll_controller.scroll_to_y(jump);
-                            (0..LINES_JUMP_ALT)
-                                .map(|_| EditableEvent::KeyDown {
-                                    key: &key,
-                                    modifiers,
-                                    editor_line: None,
-                                    holder: None,
-                                })
-                                .collect::<Vec<EditableEvent>>()
-                        }
-                        Key::Named(NamedKey::ArrowDown) | Key::Named(NamedKey::ArrowUp)
-                            if modifiers.contains(Modifiers::CONTROL) =>
-                        {
-                            (0..LINES_JUMP_CONTROL)
-                                .map(|_| EditableEvent::KeyDown {
-                                    key: &key,
-                                    modifiers,
-                                    editor_line: None,
-                                    holder: None,
-                                })
-                                .collect::<Vec<EditableEvent>>()
-                        }
-                        _ => vec![EditableEvent::KeyDown {
-                            key: &key,
-                            modifiers,
-                            editor_line: None,
-                            holder: None,
-                        }],
-                    };
+                            let repetitions = match &event {
+                                EditableEvent::KeyDown {
+                                    key: Key::Named(NamedKey::ArrowUp),
+                                    ..
+                                } if modifiers.contains(Modifiers::ALT) => {
+                                    let jump =
+                                        (current_scroll + lines_jump).clamp(min_scroll, max_scroll);
+                                    scroll_controller.scroll_to_y(jump);
+                                    LINES_JUMP_ALT
+                                }
+                                EditableEvent::KeyDown {
+                                    key: Key::Named(NamedKey::ArrowDown),
+                                    ..
+                                } if modifiers.contains(Modifiers::ALT) => {
+                                    let jump =
+                                        (current_scroll - lines_jump).clamp(min_scroll, max_scroll);
+                                    scroll_controller.scroll_to_y(jump);
+                                    LINES_JUMP_ALT
+                                }
+                                EditableEvent::KeyDown {
+                                    key: Key::Named(NamedKey::ArrowDown | NamedKey::ArrowUp),
+                                    ..
+                                } if modifiers.contains(Modifiers::CONTROL) => LINES_JUMP_CONTROL,
+                                _ => 1,
+                            };
 
-                    let mut changed = false;
+                            let mut changed = false;
+                            for _ in 0..repetitions {
+                                changed |= editor.process(font_size, &font_family, event.clone());
+                            }
 
-                    for event in events {
-                        changed |= editor.process(font_size, &font_family, event);
-                    }
+                            if changed {
+                                editor.scroll_to_cursor(scroll_controller, line_height);
+                            }
 
-                    if changed {
-                        editor.scroll_to_cursor(scroll_controller, line_height);
-                    }
-
-                    changed
-                });
+                            changed
+                        });
+                    },
+                );
             }
         };
 

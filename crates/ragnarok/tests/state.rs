@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use std::{
+    cmp::Ordering,
     collections::HashMap,
     time::Duration,
 };
@@ -35,44 +36,49 @@ enum EventName {
 
     TouchReleased,
 
+    DragEnter,
+    DragOver,
+    DragLeave,
+    Drop,
+
     CaptureGlobalMouseMove,
 }
 
 impl PartialOrd for EventName {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
 impl Ord for EventName {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        match self {
-            // Capture events have max priority
-            e if e.is_capture() => std::cmp::Ordering::Less,
-            // Left events have more priority over non-left
-            e if e.is_left() => std::cmp::Ordering::Less,
-            // Exclusive left events have more priority over non-exclusive-left
-            e if e.is_exclusive_left() => std::cmp::Ordering::Less,
-            // Over events have priority over enter events
-            e if e.is_non_exclusive_enter() => std::cmp::Ordering::Less,
-            e => {
-                if e == other {
-                    std::cmp::Ordering::Equal
-                } else {
-                    std::cmp::Ordering::Greater
-                }
-            }
-        }
+    fn cmp(&self, other: &Self) -> Ordering {
+        (self.priority(), *self as usize).cmp(&(other.priority(), *other as usize))
     }
 }
 
 impl EventName {
+    fn priority(&self) -> u8 {
+        match self {
+            // Capture events have max priority.
+            event if event.is_capture() => 0,
+            // Exclusive left events precede non-exclusive left events.
+            event if event.is_exclusive_left() => 1,
+            // Left events have priority over non-left events.
+            event if event.is_left() => 2,
+            // Over events have priority over enter events.
+            event if event.is_non_exclusive_enter() => 3,
+            // Non-capture globals fire last.
+            event if event.is_global() => 5,
+            _ => 4,
+        }
+    }
+
     pub fn is_capture(&self) -> bool {
         matches!(self, Self::CaptureGlobalMouseMove)
     }
 
     pub fn is_left(&self) -> bool {
-        matches!(self, Self::MouseLeave | Self::MouseOut)
+        matches!(self, Self::MouseLeave | Self::MouseOut) || self.is_drag_leave()
     }
 
     pub fn is_exclusive_left(&self) -> bool {
@@ -80,7 +86,7 @@ impl EventName {
     }
 
     pub fn is_non_exclusive_enter(&self) -> bool {
-        matches!(&self, Self::MouseOver)
+        matches!(&self, Self::MouseOver) || self.is_drag_enter()
     }
 }
 
@@ -114,7 +120,8 @@ impl NameOfEvent for EventName {
     }
 
     fn does_bubble(&self) -> bool {
-        !self.is_moved()
+        !matches!(self, Self::DragEnter | Self::DragLeave)
+            && !self.is_moved()
             && !self.is_enter()
             && !self.is_left()
             && !self.is_global()
@@ -141,6 +148,30 @@ impl NameOfEvent for EventName {
         Self::MouseEnter
     }
 
+    fn is_drag_enter(&self) -> bool {
+        matches!(self, Self::DragEnter)
+    }
+
+    fn is_drag_over(&self) -> bool {
+        matches!(self, Self::DragOver)
+    }
+
+    fn is_drag_leave(&self) -> bool {
+        matches!(self, Self::DragLeave)
+    }
+
+    fn is_drop(&self) -> bool {
+        matches!(self, Self::Drop)
+    }
+
+    fn new_drag_enter() -> Option<Self> {
+        Some(Self::DragEnter)
+    }
+
+    fn new_drag_leave() -> Option<Self> {
+        Some(Self::DragLeave)
+    }
+
     fn get_derived_events(&self) -> HashSet<Self> {
         let mut events = HashSet::default();
         events.insert(*self);
@@ -153,6 +184,7 @@ impl NameOfEvent for EventName {
             Self::MouseOut => {
                 events.insert(Self::MouseLeave);
             }
+            Self::DragOver => events.extend(Self::new_drag_enter()),
             _ => {}
         }
 
@@ -179,15 +211,39 @@ impl NameOfEvent for EventName {
 #[allow(clippy::enum_variant_names)]
 #[derive(Clone, Copy, PartialEq, Debug)]
 enum TestSourceEvent {
-    MouseDown { cursor: CursorPoint },
-    MouseMove { cursor: CursorPoint },
-    MouseUp { cursor: CursorPoint },
-    TouchReleased { cursor: CursorPoint },
-    Wheel { cursor: CursorPoint, delta: f64 },
+    MouseDown {
+        cursor: CursorPoint,
+    },
+    MouseMove {
+        cursor: CursorPoint,
+    },
+    MouseUp {
+        cursor: CursorPoint,
+    },
+    TouchReleased {
+        cursor: CursorPoint,
+    },
+    Wheel {
+        cursor: CursorPoint,
+        delta: f64,
+    },
+    Drag {
+        name: EventName,
+        cursor: CursorPoint,
+        target: Option<usize>,
+    },
 }
 
 impl SourceEvent for TestSourceEvent {
     type Name = EventName;
+    type Key = usize;
+
+    fn drop_target(&self) -> Option<usize> {
+        match self {
+            Self::Drag { target, .. } => *target,
+            _ => None,
+        }
+    }
 
     fn is_pressed(&self) -> bool {
         matches!(self, Self::MouseDown { .. })
@@ -228,7 +284,7 @@ impl SourceEvent for TestSourceEvent {
             Self::MouseMove { cursor } => Some(*cursor),
             Self::MouseUp { cursor } => Some(*cursor),
             Self::TouchReleased { cursor } => Some(*cursor),
-            Self::Wheel { cursor, .. } => Some(*cursor),
+            Self::Wheel { cursor, .. } | Self::Drag { cursor, .. } => Some(*cursor),
         }
     }
 
@@ -239,6 +295,7 @@ impl SourceEvent for TestSourceEvent {
             Self::MouseUp { .. } => EventName::MouseUp,
             Self::TouchReleased { .. } => EventName::TouchReleased,
             Self::Wheel { .. } => EventName::Wheel,
+            Self::Drag { name, .. } => *name,
         }
     }
 }
@@ -398,6 +455,114 @@ impl EventsMeasurer for TestMeasurer {
             name,
             source: source.as_event_name(),
         }
+    }
+}
+
+#[test]
+fn drag_hover_is_separate_from_pointer_hover() {
+    let mut measurer = TestMeasurer::default();
+    let mut state = NodesState::default();
+    for (node, position) in [(0, (0., 0.)), (1, (100., 0.))] {
+        measurer.add(
+            node,
+            None,
+            0,
+            Area::new(position.into(), (100., 100.).into()),
+        );
+        for name in [
+            EventName::DragEnter,
+            EventName::DragOver,
+            EventName::DragLeave,
+        ] {
+            measurer.listen_to(node, name);
+        }
+    }
+
+    let pointer = measurer.run(
+        &mut vec![TestSourceEvent::MouseMove {
+            cursor: (10., 10.).into(),
+        }],
+        &mut state,
+        None,
+    );
+    state.apply_update(pointer.nodes_states_update);
+    assert!(state.is_hovered(0));
+
+    for (position, expected) in [
+        (
+            (10., 10.),
+            vec![(0, EventName::DragEnter), (0, EventName::DragOver)],
+        ),
+        ((20., 10.), vec![(0, EventName::DragOver)]),
+        (
+            (110., 10.),
+            vec![
+                (0, EventName::DragLeave),
+                (1, EventName::DragEnter),
+                (1, EventName::DragOver),
+            ],
+        ),
+    ] {
+        let events = measurer.run(
+            &mut vec![TestSourceEvent::Drag {
+                name: EventName::DragOver,
+                cursor: position.into(),
+                target: None,
+            }],
+            &mut state,
+            None,
+        );
+        assert_eq!(
+            events
+                .emmitable_events
+                .iter()
+                .map(|event| (event.key, event.name))
+                .collect::<Vec<_>>(),
+            expected
+        );
+        state.apply_update(events.nodes_states_update);
+        assert!(state.is_hovered(0));
+        assert!(!state.is_hovered(1));
+    }
+
+    let events = measurer.run(
+        &mut vec![TestSourceEvent::Drag {
+            name: EventName::DragLeave,
+            cursor: (110., 10.).into(),
+            target: None,
+        }],
+        &mut state,
+        None,
+    );
+    assert_eq!(
+        events
+            .emmitable_events
+            .iter()
+            .map(|event| (event.key, event.name))
+            .collect::<Vec<_>>(),
+        [(1, EventName::DragLeave)]
+    );
+    assert!(state.is_hovered(0));
+}
+
+#[test]
+fn drops_require_an_accepted_target_under_the_cursor() {
+    let mut measurer = TestMeasurer::default();
+    let mut state = NodesState::default();
+    measurer.add(0, None, 0, Area::new((0., 0.).into(), (100., 100.).into()));
+    measurer.listen_to(0, EventName::Drop);
+
+    for (target, count) in [(None, 0), (Some(1), 0), (Some(0), 1)] {
+        let events = measurer.run(
+            &mut vec![TestSourceEvent::Drag {
+                name: EventName::Drop,
+                cursor: (10., 10.).into(),
+                target,
+            }],
+            &mut state,
+            None,
+        );
+        assert_eq!(events.emmitable_events.len(), count);
     }
 }
 

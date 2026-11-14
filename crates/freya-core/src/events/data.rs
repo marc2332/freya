@@ -4,8 +4,11 @@ use std::{
         Deref,
         Div,
     },
-    path::PathBuf,
     rc::Rc,
+    sync::{
+        Arc,
+        OnceLock,
+    },
 };
 
 pub use accesskit::{
@@ -18,9 +21,16 @@ use torin::prelude::{
     Size2D,
 };
 
-use crate::data::{
-    StyleState,
-    TextStyleState,
+use crate::{
+    data::{
+        StyleState,
+        TextStyleState,
+    },
+    native_drag::{
+        DragDataHandle,
+        DropAction,
+    },
+    node_id::NodeId,
 };
 
 #[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
@@ -314,15 +324,40 @@ impl ImePreeditEventData {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct FileEventData {
-    pub cursor: CursorPoint,
-    pub file_paths: Vec<PathBuf>,
+/// The first accepting handler wins while a drag event bubbles.
+#[derive(Clone, Default, Debug)]
+pub struct DragDecision {
+    accepted: Arc<OnceLock<(NodeId, DropAction)>>,
 }
 
-impl FileEventData {
-    pub(crate) fn new(cursor: CursorPoint, file_paths: Vec<PathBuf>) -> Self {
-        Self { cursor, file_paths }
+impl PartialEq for DragDecision {
+    fn eq(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.accepted, &other.accepted)
+    }
+}
+
+impl DragDecision {
+    pub fn accepted(&self) -> Option<(NodeId, DropAction)> {
+        self.accepted.get().copied()
+    }
+}
+
+/// Drag data and its position in logical pixels.
+#[derive(Clone, Debug, PartialEq)]
+pub struct DragEventData {
+    pub data: DragDataHandle,
+    pub global_location: CursorPoint,
+    pub element_location: CursorPoint,
+    pub(crate) target: NodeId,
+    pub(crate) decision: Option<DragDecision>,
+}
+
+impl DragEventData {
+    /// Accepts this drag over the current element.
+    pub fn accept(&self, action: DropAction) {
+        if let Some(decision) = &self.decision {
+            let _ = decision.accepted.set((self.target, action));
+        }
     }
 }
 
@@ -338,5 +373,5 @@ pub enum EventType {
     Touch(TouchEventData),
     Pointer(PointerEventData),
     ImePreedit(ImePreeditEventData),
-    File(FileEventData),
+    Drag(DragEventData),
 }

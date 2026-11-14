@@ -23,6 +23,8 @@ torin = { workspace = true }
 ragnarok = { workspace = true }
 accesskit = { workspace = true }
 futures-channel = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
 tracing = { workspace = true }
 gl = { workspace = true }
 euclid = { workspace = true }

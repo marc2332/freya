@@ -1,12 +1,14 @@
 use std::{
     borrow::Cow,
     fmt,
+    io,
     rc::Rc,
     time::Instant,
 };
 
 #[cfg(feature = "accessibility")]
 use accesskit_xplat::WindowEvent as AccessibilityWindowEvent;
+use freya_clipboard::prelude::ClipboardError;
 use freya_components::cache::AssetCacher;
 use freya_core::{
     integration::*,
@@ -20,6 +22,7 @@ use freya_engine::prelude::{
     TypefaceFontProvider,
     register_font_typeface,
 };
+use futures_channel::oneshot;
 use rustc_hash::FxHashMap;
 use torin::prelude::CursorPoint;
 #[cfg(feature = "tray")]
@@ -43,7 +46,9 @@ use winit::{
     },
     event_loop::{
         ActiveEventLoop,
+        AsyncRequestSerial,
         ControlFlow,
+        DndAction,
         EventLoopProxy,
     },
     window::{
@@ -56,14 +61,20 @@ use winit::{
 use crate::integration::is_ime_role;
 use crate::{
     accessibility::AccessibilityTask,
+    clipboard::PendingClipboardRead,
     config::{
         CloseDecision,
         WindowConfig,
+    },
+    data_transfer::{
+        DataFormatExt,
+        TransferDataExt,
     },
     drivers::{
         GraphicsContext,
         GraphicsDriver,
     },
+    native_drag::IncomingDrag,
     plugins::{
         PluginEvent,
         PluginHandle,
@@ -116,6 +127,7 @@ pub struct WinitRenderer {
     pub global_contexts: GlobalContexts,
     pub proxy: NativeEventProxy,
     pub(crate) events: std::sync::mpsc::Receiver<NativeEvent>,
+    pub(crate) clipboard_reads: FxHashMap<AsyncRequestSerial, PendingClipboardRead>,
     pub plugins: PluginsManager,
     pub fallback_fonts: Vec<Cow<'static, str>>,
     pub font_provider: TypefaceFontProvider,
@@ -274,6 +286,14 @@ pub enum NativePlatformErasedEventAction {
     },
     CloseWindow(WindowId),
     RendererCallback(RendererCallback),
+    ReadClipboard {
+        format: DataFormat,
+        response: oneshot::Sender<Result<DataValue, ClipboardError>>,
+    },
+    WriteClipboard {
+        data: TransferData,
+        response: oneshot::Sender<Result<(), ClipboardError>>,
+    },
 }
 
 #[derive(Debug)]
@@ -443,6 +463,16 @@ impl ApplicationHandler for WinitRenderer {
 }
 
 impl WinitRenderer {
+    /// Processes buffered input, UI updates, and pending native drag requests.
+    fn process_pending_updates(&mut self, event_loop: &dyn ActiveEventLoop) {
+        self.clipboard_reads
+            .retain(|_, pending| !pending.response.is_canceled());
+        self.process_pending_events();
+        for app in self.windows.values_mut() {
+            app.native_drag.process_pending(event_loop);
+        }
+    }
+
     fn user_event(
         &mut self,
         active_event_loop: &dyn winit::event_loop::ActiveEventLoop,
@@ -513,6 +543,54 @@ impl WinitRenderer {
                         .downcast::<NativePlatformErasedEventAction>()
                         .expect("Expected NativePlatformErasedEventAction");
                     match *action {
+                        NativePlatformErasedEventAction::ReadClipboard { format, response } => {
+                            let transfer = match active_event_loop.clipboard() {
+                                Ok(Some(transfer)) => transfer,
+                                Ok(None) => {
+                                    let _ = response.send(Err(ClipboardError::UnsupportedFormat));
+                                    return;
+                                }
+                                Err(_) => {
+                                    let _ = response.send(Err(ClipboardError::NotAvailable));
+                                    return;
+                                }
+                            };
+                            if !active_event_loop
+                                .data_transfer(transfer)
+                                .is_ok_and(|data| data.has_type(&format.to_type_hint()))
+                            {
+                                let _ = response.send(Err(ClipboardError::UnsupportedFormat));
+                                return;
+                            }
+                            match active_event_loop
+                                .fetch_data_transfer(transfer, &format.to_type_hint())
+                            {
+                                Ok(serial) => {
+                                    self.clipboard_reads.insert(
+                                        serial,
+                                        PendingClipboardRead {
+                                            transfer,
+                                            format,
+                                            response,
+                                        },
+                                    );
+                                }
+                                Err(_) => {
+                                    let _ = response.send(Err(ClipboardError::FailedToRead));
+                                }
+                            }
+                        }
+                        NativePlatformErasedEventAction::WriteClipboard { data, response } => {
+                            let result = data
+                                .into_winit()
+                                .map_err(|_| ClipboardError::FailedToSet)
+                                .and_then(|data| {
+                                    active_event_loop
+                                        .set_clipboard(data)
+                                        .map_err(|_| ClipboardError::FailedToSet)
+                                });
+                            let _ = response.send(result);
+                        }
                         NativePlatformErasedEventAction::LaunchWindow { window_config, ack } => {
                             let app_window = AppWindow::new(
                                 *window_config,
@@ -631,6 +709,17 @@ impl WinitRenderer {
                             UserEvent::SetCustomScaleFactor(custom_scale_factor) => {
                                 app.set_custom_scale_factor(custom_scale_factor);
                             }
+                            UserEvent::Erased(command) => {
+                                if let Ok(command) = command.0.downcast::<NativeDragCommand>() {
+                                    app.handle_native_drag(
+                                        *command,
+                                        active_event_loop,
+                                        &mut self.font_collection,
+                                        &self.font_manager,
+                                        &self.fallback_fonts,
+                                    );
+                                }
+                            }
                         },
                         NativeWindowEventAction::PlatformEvent(platform_event) => {
                             app.queue_platform_events(vec![platform_event]);
@@ -642,7 +731,7 @@ impl WinitRenderer {
     }
 
     fn update_control_flow(&mut self, event_loop: &dyn ActiveEventLoop) {
-        self.process_pending_events();
+        self.process_pending_updates(event_loop);
         if !matches!(event_loop.control_flow(), ControlFlow::Poll) {
             let deadline = self
                 .windows
@@ -662,11 +751,163 @@ impl WinitRenderer {
         window_id: winit::window::WindowId,
         event: winit::event::WindowEvent,
     ) {
+        if let WindowEvent::DataTransferReceived { id, serial, value } = &event
+            && let Some(pending) = self.clipboard_reads.remove(serial)
+        {
+            let result = if pending.transfer == *id {
+                match pending.format.read(value.as_ref()) {
+                    Err(error) if error.kind() == io::ErrorKind::WouldBlock => {
+                        self.clipboard_reads.insert(*serial, pending);
+                        return;
+                    }
+                    result => result.map_err(|_| ClipboardError::FailedToRead),
+                }
+            } else {
+                Err(ClipboardError::FailedToRead)
+            };
+            let _ = pending.response.send(result);
+            return;
+        }
+
         let mut needs_recovery = false;
         if let Some(app) = &mut self.windows.get_mut(&window_id) {
             #[cfg(feature = "accessibility")]
             app.process_accessibility_window_event(&event);
             match event {
+                WindowEvent::DragEntered { id, position } => {
+                    if let Some(position) = position {
+                        app.position = CursorPoint::new(position.x, position.y);
+                    }
+                    app.native_drag.expire();
+                    let Ok(transfer) = event_loop.data_transfer(id) else {
+                        return;
+                    };
+                    let formats = [
+                        DataFormat::Files,
+                        DataFormat::Text,
+                        DataFormat::Html,
+                        DataFormat::Rtf,
+                        DataFormat::Image,
+                        DataFormat::Audio,
+                    ]
+                    .into_iter()
+                    .filter(|format| transfer.has_type(&format.to_type_hint()))
+                    .collect();
+                    let data = DragDataHandle::new(formats);
+                    app.native_drag.incoming = Some(IncomingDrag {
+                        id,
+                        data,
+                        decision: None,
+                        accepted: None,
+                        dropped: false,
+                    });
+                    if let Some(event) = app.native_drag.prepare_drag_over(app.position) {
+                        app.queue_platform_events(vec![event]);
+                    }
+                    self.process_pending_updates(event_loop);
+                }
+                WindowEvent::DragPosition { id, position, .. } => {
+                    app.position = CursorPoint::new(position.x, position.y);
+                    if !app
+                        .native_drag
+                        .incoming
+                        .as_ref()
+                        .is_some_and(|incoming| incoming.id == id)
+                    {
+                        return;
+                    }
+                    if let Some(event) = app.native_drag.prepare_drag_over(app.position) {
+                        app.queue_platform_events(vec![event]);
+                    }
+                    self.process_pending_updates(event_loop);
+                }
+                WindowEvent::DragDropped { id, .. } => {
+                    let Some(incoming) = app
+                        .native_drag
+                        .incoming
+                        .as_mut()
+                        .filter(|incoming| incoming.id == id)
+                    else {
+                        return;
+                    };
+                    incoming.dropped = true;
+                    let target = incoming.accepted;
+                    let events = vec![
+                        PlatformEvent::Drag {
+                            name: DragEventName::Drop,
+                            cursor: app.position,
+                            data: incoming.data.clone(),
+                            decision: None,
+                            target,
+                        },
+                        PlatformEvent::Drag {
+                            name: DragEventName::Leave,
+                            cursor: app.position,
+                            data: incoming.data.clone(),
+                            decision: None,
+                            target: None,
+                        },
+                    ];
+                    app.queue_platform_events(events);
+                    self.process_pending_updates(event_loop);
+                }
+                WindowEvent::DragLeft { id } => {
+                    let Some(incoming) = app
+                        .native_drag
+                        .incoming
+                        .as_ref()
+                        .filter(|incoming| incoming.id == id && !incoming.dropped)
+                    else {
+                        return;
+                    };
+                    let event = PlatformEvent::Drag {
+                        name: DragEventName::Leave,
+                        cursor: app.position,
+                        data: incoming.data.clone(),
+                        decision: None,
+                        target: None,
+                    };
+                    app.native_drag.expire();
+                    app.queue_platform_events(vec![event]);
+                    self.process_pending_updates(event_loop);
+                }
+                WindowEvent::DataTransferReceived { id, serial, value } => {
+                    app.native_drag.receive(id, serial, value.as_ref());
+                }
+                WindowEvent::OutgoingDragDropped { id, action } => {
+                    let Some((_, response)) = app
+                        .native_drag
+                        .outgoing
+                        .take_if(|(outgoing_id, _)| *outgoing_id == id)
+                    else {
+                        return;
+                    };
+                    let action = action.and_then(|action| match action {
+                        DndAction::Copy => Some(DropAction::Copy),
+                        DndAction::Move => Some(DropAction::Move),
+                        DndAction::Link => Some(DropAction::Link),
+                        _ => None,
+                    });
+                    let _ = response.send(Ok(NativeDragResult::Dropped(action)));
+                    app.mouse_state = ElementState::Released;
+                    app.queue_platform_events(vec![PlatformEvent::PointerCancel {
+                        cursor: app.position,
+                    }]);
+                }
+                WindowEvent::OutgoingDragCanceled { id } => {
+                    let Some((_, response)) = app
+                        .native_drag
+                        .outgoing
+                        .take_if(|(outgoing_id, _)| *outgoing_id == id)
+                    else {
+                        return;
+                    };
+                    let _ = response.send(Ok(NativeDragResult::Cancelled));
+                    app.mouse_state = ElementState::Released;
+                    app.queue_platform_events(vec![PlatformEvent::PointerCancel {
+                        cursor: app.position,
+                    }]);
+                }
                 WindowEvent::ThemeChanged(theme) => {
                     app.platform.preferred_theme.set(match theme {
                         Theme::Light => PreferredTheme::Light,
@@ -1124,97 +1365,6 @@ impl WinitRenderer {
                         name: ImeEventName::Preedit,
                         text,
                         cursor: pos,
-                    }]);
-                }
-                WindowEvent::DragEntered { id, position } => {
-                    use winit::{
-                        data_transfer::TypeHint,
-                        event_loop::DndAction,
-                    };
-                    if let Some(position) = position {
-                        app.position = (position.x, position.y).into();
-                    }
-                    let accepts_files = event_loop
-                        .data_transfer(id)
-                        .is_ok_and(|transfer| transfer.has_type(&TypeHint::UriList));
-                    if accepts_files {
-                        if let Err(error) = event_loop.set_valid_dnd_actions(id, &[DndAction::Copy])
-                        {
-                            tracing::warn!(?error, "Failed to accept file drag");
-                        }
-                        match event_loop.fetch_data_transfer(id, &TypeHint::UriList) {
-                            Ok(_) => app.drag = Some((id, Vec::new(), false)),
-                            Err(error) => tracing::warn!(?error, "Failed to fetch dragged files"),
-                        }
-                    }
-                }
-                WindowEvent::DragPosition { position, .. } => {
-                    app.position = (position.x, position.y).into();
-                }
-                WindowEvent::DataTransferReceived { id, value, .. } => {
-                    if app
-                        .drag
-                        .as_ref()
-                        .is_some_and(|(drag_id, _, _)| *drag_id == id)
-                    {
-                        match value.try_as_uris() {
-                            Ok(uris) => {
-                                let file_paths = uris
-                                    .iter()
-                                    .filter_map(|uri| {
-                                        url::Url::parse(uri).ok()?.to_file_path().ok()
-                                    })
-                                    .collect::<Vec<_>>();
-                                let dropped =
-                                    app.drag.as_ref().is_some_and(|(_, _, dropped)| *dropped);
-                                app.queue_platform_events(vec![PlatformEvent::File {
-                                    name: if dropped {
-                                        FileEventName::FileDrop
-                                    } else {
-                                        FileEventName::FileHover
-                                    },
-                                    file_paths: file_paths.clone(),
-                                    cursor: app.position,
-                                }]);
-                                app.drag = if dropped {
-                                    None
-                                } else {
-                                    Some((id, file_paths, false))
-                                };
-                            }
-                            Err(error) => {
-                                app.drag = None;
-                                tracing::warn!(?error, "Failed to read dragged files");
-                            }
-                        }
-                    }
-                }
-                WindowEvent::DragDropped { id, .. } => {
-                    if let Some((drag_id, file_paths, _)) = app.drag.take()
-                        && drag_id == id
-                    {
-                        if file_paths.is_empty() {
-                            app.drag = Some((id, file_paths, true));
-                        } else {
-                            app.queue_platform_events(vec![PlatformEvent::File {
-                                name: FileEventName::FileDrop,
-                                file_paths,
-                                cursor: app.position,
-                            }]);
-                        }
-                    }
-                }
-                WindowEvent::DragLeft { id }
-                    if app
-                        .drag
-                        .as_ref()
-                        .is_some_and(|(drag_id, _, dropped)| *drag_id == id && !dropped) =>
-                {
-                    app.drag = None;
-                    app.queue_platform_events(vec![PlatformEvent::File {
-                        name: FileEventName::FileHoverCancelled,
-                        file_paths: Vec::new(),
-                        cursor: app.position,
                     }]);
                 }
                 _ => {}

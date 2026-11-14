@@ -14,8 +14,8 @@ categories = ["gui"]
 workspace = true
 
 [dependencies]
-copypasta = "0.10"
 freya-core = { workspace = true }
+futures-util = { workspace = true }
 
 [target.'cfg(target_os = "android")'.dependencies]
 jni = "0.22"

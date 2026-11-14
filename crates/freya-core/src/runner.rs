@@ -269,6 +269,34 @@ impl Runner {
         }
     }
 
+    /// Creates a runner with the contexts visible from `scope_id` in `source`.
+    pub fn new_from(
+        source: &Self,
+        scope_id: ScopeId,
+        root: impl Fn() -> Element + 'static,
+    ) -> Self {
+        let runner = Self::new(root);
+        let source_storages = source.scopes_storages.borrow();
+
+        if let Some(root_storage) = runner.scopes_storages.borrow_mut().get_mut(&ScopeId::ROOT) {
+            let mut current = Some(scope_id);
+            while let Some(scope_id) = current {
+                let Some(storage) = source_storages.get(&scope_id) else {
+                    break;
+                };
+                for (context_type, context) in &storage.contexts {
+                    root_storage
+                        .contexts
+                        .entry(*context_type)
+                        .or_insert_with(|| context.clone());
+                }
+                current = storage.parent_id;
+            }
+        }
+
+        runner
+    }
+
     #[cfg(all(debug_assertions, feature = "debug-integrity"))]
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     pub fn verify_scopes_integrity(&self) {
@@ -507,13 +535,17 @@ impl Runner {
                                         }
                                     }
                                 }
-                                EventType::File(data) => {
+                                EventType::Drag(data) => {
                                     let event_handlers = element.events_handlers();
                                     if let Some(event_handlers) = event_handlers {
                                         match event_handlers.get(&event_name) {
-                                            Some(EventHandlerType::File(handler)) => {
+                                            Some(EventHandlerType::Drag(handler)) => {
+                                                let mut data = data.clone();
+                                                if let Some(node) = scope.borrow().nodes.get(&path) {
+                                                    data.target = node.node_id;
+                                                }
                                                 handler.call(Event {
-                                                    data: data.clone(),
+                                                    data,
                                                     propagate: propagate.clone(),
                                                     default: default.clone(),
                                                 });

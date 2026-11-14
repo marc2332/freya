@@ -62,7 +62,10 @@ const SETUP_SCRIPT: &str = r#"(function() {
     });
     input.addEventListener('paste', function(e) {
         var text = e.clipboardData && e.clipboardData.getData('text/plain');
-        if (text) window.__freyaClipboardPaste = text;
+        if (typeof text === 'string') {
+            window.__freyaClipboardPaste = text;
+            requestAnimationFrame(function() { delete window.__freyaClipboardPaste; });
+        }
         e.preventDefault();
     });
     canvas.addEventListener('mousedown', function(e) {
@@ -86,18 +89,6 @@ const SETUP_SCRIPT: &str = r#"(function() {
             input.style.top = rect.top + top + 'px';
             input.style.width = width + 'px';
             input.style.height = height + 'px';
-        },
-        copy: function(text) {
-            var active = document.activeElement;
-            input.value = text;
-            input.focus();
-            input.select();
-            try { document.execCommand('copy'); } catch (e) {}
-            input.value = '';
-            if (active !== input) {
-                input.blur();
-                if (active && active.focus) active.focus();
-            }
         },
     };
 })();"#;

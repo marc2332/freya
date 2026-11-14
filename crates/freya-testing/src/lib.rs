@@ -48,12 +48,9 @@ use std::{
 };
 
 use accesskit::TreeUpdate;
-use freya_clipboard::{
-    copypasta::{
-        ClipboardContext,
-        ClipboardProvider,
-    },
-    prelude::Clipboard,
+use freya_clipboard::prelude::{
+    Clipboard,
+    MemoryClipboard,
 };
 use freya_components::{
     cache::AssetCacher,
@@ -154,11 +151,9 @@ impl TestingRunner {
         let app = app.into();
         let mut runner = Runner::new(move || integration(app.clone()).into_element());
 
-        GlobalContexts::get().insert_context(Clipboard::create(
-            ClipboardContext::new()
-                .ok()
-                .map(|clipboard| Box::new(clipboard) as Box<dyn ClipboardProvider>),
-        ));
+        GlobalContexts::get().insert_context(Clipboard::create(Some(Box::new(
+            MemoryClipboard::default(),
+        ))));
 
         runner.provide_root_context(ScreenReader::new);
 
@@ -217,6 +212,11 @@ impl TestingRunner {
                     match user_event {
                         UserEvent::FocusAccessibilityNode(strategy) => {
                             requested_focus_strategy.borrow_mut().replace(strategy);
+                        }
+                        UserEvent::Erased(command) => {
+                            if let Ok(command) = command.0.downcast::<NativeDragCommand>() {
+                                let _ = command.response.send(Err(DragError::Unsupported));
+                            }
                         }
                         UserEvent::RequestRedraw | UserEvent::SetCustomScaleFactor(_) => {
                             // Nothing
