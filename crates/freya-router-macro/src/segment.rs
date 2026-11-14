@@ -92,7 +92,9 @@ impl RouteSegment {
                         let mut segments = segments.clone();
                         let segment = segments.next();
                         let parsed = if let Some(segment) = segment.as_deref() {
-                            <#ty as freya_router::routable::FromRouteSegment>::from_route_segment(segment).map_err(|err| #error_enum_name::#error_enum_variant(#inner_parse_enum::#error_name(err)))
+                            <#ty as freya_router::routable::FromRouteSegment>::from_route_segment(segment)
+                                .map_err(#inner_parse_enum::#error_name)
+                                .map_err(#error_enum_name::#error_enum_variant)
                         } else {
                             Err(#error_enum_name::#error_enum_variant(#inner_parse_enum::#missing_error_name))
                         };
@@ -116,7 +118,9 @@ impl RouteSegment {
                             for segment in &remaining_segments {
                                 new_segments.push(&*segment);
                             }
-                            <#ty as freya_router::routable::FromRouteSegments>::from_route_segments(&new_segments).map_err(|err| #error_enum_name::#error_enum_variant(#inner_parse_enum::#error_name(err)))
+                            <#ty as freya_router::routable::FromRouteSegments>::from_route_segments(&new_segments)
+                                .map_err(#inner_parse_enum::#error_name)
+                                .map_err(#error_enum_name::#error_enum_variant)
                         };
                         match parsed {
                             Ok(#name) => {

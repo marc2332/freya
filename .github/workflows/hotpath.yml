@@ -65,7 +65,7 @@ jobs:
       HOTPATH_BENCHMARK: ${{ matrix.benchmark }}
       HOTPATH_POLICY_PATH: ${{ github.workspace }}/${{ matrix.policy }}
       HOTPATH_OUTPUT_FORMAT: json
-      HOTPATH_USER_METADATA: runner=Linux-X64,toolchain=1.99.0,profile=optimized,valgrind=3.26.0
+      HOTPATH_USER_METADATA: runner=Linux-X64,toolchain=1.100.0,profile=optimized,valgrind=3.26.0
       # Blank (Criterion untouched) for the non-Criterion benchmarks.
       HOTPATH_CRITERION_ITERATIONS: ${{ matrix.iterations }}
     steps: &benchmark-steps
@@ -81,7 +81,7 @@ jobs:
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1
         with:
-          toolchain: "1.99.0"
+          toolchain: "1.100.0"
       - name: Install just
         uses: taiki-e/install-action@80e6af7a2ec7f280fffe2d0a9d3a12a9d11d86e9 # v2.75.1
         with:

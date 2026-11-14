@@ -386,7 +386,10 @@ impl RouteTreeSegmentData<'_> {
                                 trailing += &*seg;
                                 trailing += "/";
                             }
-                            match #ty::from_str(&trailing).map_err(|err| #error_enum_name::#enum_variant(#variant_parse_error::ChildRoute(err))) {
+                            match #ty::from_str(&trailing)
+                                .map_err(#variant_parse_error::ChildRoute)
+                                .map_err(#error_enum_name::#enum_variant)
+                            {
                                 Ok(#child_name) => {
                                     #print_route_segment
                                 }
