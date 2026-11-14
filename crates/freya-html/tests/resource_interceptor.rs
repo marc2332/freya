@@ -1,5 +1,7 @@
 use std::{
     cell::RefCell,
+    io::ErrorKind,
+    net::TcpListener,
     rc::Rc,
     time::Duration,
 };
@@ -10,6 +12,7 @@ use freya_html::{
     HtmlSource,
     HtmlViewer,
     ResourceCache,
+    ResourceResponse,
 };
 use freya_testing::prelude::*;
 use url::Url;
@@ -17,7 +20,16 @@ use url::Url;
 const CSS: &[u8] = include_bytes!("assets/style.css");
 const CACHED_CSS: &[u8] = b"body { margin: 0; background: rgb(255, 0, 0); }";
 
-fn assert_stylesheet_resolution(base_url: &str, intercept: bool) {
+fn assert_stylesheet_resolution(
+    base_url: &str,
+    response: ResourceResponse,
+    cache_stylesheet: bool,
+) {
+    let expected_css = match &response {
+        ResourceResponse::Bytes(bytes) => bytes.clone(),
+        ResourceResponse::Block => Bytes::new(),
+        ResourceResponse::Fetch => Bytes::from_static(CACHED_CSS),
+    };
     let stylesheet_url = Url::parse(base_url).unwrap().join("./style.css").unwrap();
     let content = HtmlContent::new(
         r#"<html><head><link rel="stylesheet" href="./style.css"></head><body></body></html>"#,
@@ -35,16 +47,18 @@ fn assert_stylesheet_resolution(base_url: &str, intercept: bool) {
         },
         (100., 100.).into(),
         |runner| {
-            ResourceCache::get().set(stylesheet_url.clone(), Bytes::from_static(CACHED_CSS));
+            if cache_stylesheet {
+                ResourceCache::get().set(stylesheet_url.clone(), Bytes::from_static(CACHED_CSS));
+            }
             let requests = Rc::new(RefCell::new(Vec::<Url>::new()));
             let captured_requests = requests.clone();
             let handle = runner.provide_root_context(|| {
                 let mut handle = HtmlHandle::create().resource_interceptor(move |url| {
                     captured_requests.borrow_mut().push(url.clone());
-                    if intercept && url.path() == "/style.css" {
-                        Some(Bytes::from_static(CSS))
+                    if url.path() == "/style.css" {
+                        response.clone()
                     } else {
-                        None
+                        ResourceResponse::Fetch
                     }
                 });
                 handle.load(HtmlSource::html(content));
@@ -72,34 +86,59 @@ fn assert_stylesheet_resolution(base_url: &str, intercept: bool) {
     assert_eq!(actual.as_bytes(), runner.render().as_bytes());
     assert_eq!(*requests.borrow(), vec![stylesheet_url.clone()]);
 
-    let expected_css = if intercept { CSS } else { CACHED_CSS };
     handle.load_html(format!(
         "<html><head><style>{}</style></head><body></body></html>",
-        std::str::from_utf8(expected_css).unwrap()
+        std::str::from_utf8(&expected_css).unwrap()
     ));
     runner.sync_and_update();
     runner.poll_n(Duration::ZERO, 8);
     assert_eq!(actual.as_bytes(), runner.render().as_bytes());
-    assert_eq!(
-        ResourceCache::get().read(&stylesheet_url).unwrap().as_ref(),
-        CACHED_CSS
-    );
+    if cache_stylesheet {
+        assert_eq!(
+            ResourceCache::get().read(&stylesheet_url).unwrap().as_ref(),
+            CACHED_CSS
+        );
+    } else {
+        assert!(ResourceCache::get().read(&stylesheet_url).is_none());
+    }
     contexts.unregister();
 }
 
 #[test]
 fn embedded_relative_stylesheet_overrides_shared_cache() {
-    assert_stylesheet_resolution("https://test.local/", true);
+    assert_stylesheet_resolution(
+        "https://test.local/",
+        ResourceResponse::Bytes(Bytes::from_static(CSS)),
+        true,
+    );
 }
 
 #[test]
 fn embedded_stylesheet_supports_custom_schemes() {
-    assert_stylesheet_resolution("asset://app/", true);
+    assert_stylesheet_resolution(
+        "asset://app/",
+        ResourceResponse::Bytes(Bytes::from_static(CSS)),
+        true,
+    );
 }
 
 #[test]
 fn unhandled_stylesheet_falls_back_to_shared_cache() {
-    assert_stylesheet_resolution("https://test.local/", false);
+    assert_stylesheet_resolution("https://test.local/", ResourceResponse::Fetch, true);
+}
+
+#[test]
+fn blocked_stylesheet_ignores_shared_cache() {
+    assert_stylesheet_resolution("https://test.local/", ResourceResponse::Block, true);
+}
+
+#[test]
+fn blocked_stylesheet_does_not_fetch() {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    listener.set_nonblocking(true).unwrap();
+    let base_url = format!("http://{}/", listener.local_addr().unwrap());
+    assert_stylesheet_resolution(&base_url, ResourceResponse::Block, false);
+    assert_eq!(listener.accept().unwrap_err().kind(), ErrorKind::WouldBlock);
 }
 
 #[test]

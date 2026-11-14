@@ -14,7 +14,18 @@ use crate::{
     state::BlitzState,
 };
 
-type ResourceInterceptor = Callback<url::Url, Option<Bytes>>;
+type ResourceInterceptor = Callback<url::Url, ResourceResponse>;
+
+/// How to resolve a resource requested by an HTML document.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ResourceResponse {
+    /// Use the provided content without consulting the cache or network.
+    Bytes(Bytes),
+    /// Ignore the resource without consulting the cache or network.
+    Block,
+    /// Use the shared cache or fetch HTTP and HTTPS resources.
+    Fetch,
+}
 
 /// A document for an [HtmlViewer](crate::HtmlViewer), either remote or inline.
 #[derive(Clone, PartialEq)]
@@ -117,9 +128,17 @@ impl HtmlHandle {
         let fetch_task = async move {
             while let Some((url, handler)) = fetch_rx.next().await {
                 let resolver = interceptor.peek().clone();
-                if let Some(bytes) = resolver.and_then(|resolver| resolver.call(url.clone())) {
-                    handler.bytes(url.to_string(), bytes);
-                    continue;
+                let response = resolver.map_or(ResourceResponse::Fetch, |resolver| {
+                    resolver.call(url.clone())
+                });
+
+                match response {
+                    ResourceResponse::Bytes(bytes) => {
+                        handler.bytes(url.to_string(), bytes);
+                        continue;
+                    }
+                    ResourceResponse::Block => continue,
+                    ResourceResponse::Fetch => {}
                 }
 
                 if !matches!(url.scheme(), "http" | "https") {
@@ -177,10 +196,11 @@ impl HtmlHandle {
         self
     }
 
-    /// Resolves absolute resource URLs locally, returning `None` to use the cache or HTTP.
+    /// Resolves absolute subresource URLs with local bytes, blocking, or cache and HTTP fallback.
+    /// This does not intercept the main document loaded with [`HtmlSource::Url`].
     pub fn resource_interceptor(
         mut self,
-        interceptor: impl FnMut(url::Url) -> Option<Bytes> + 'static,
+        interceptor: impl FnMut(url::Url) -> ResourceResponse + 'static,
     ) -> Self {
         self.interceptor.set(Some(Callback::new(interceptor)));
         self

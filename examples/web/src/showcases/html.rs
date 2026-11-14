@@ -79,8 +79,8 @@ impl Component for HtmlShowcase {
             let mut handle = HtmlHandle::create()
                 .fonts([Bytes::from_static(crate::NOTO_SANS)])
                 .resource_interceptor(|url| match url.path() {
-                    "/style.css" => Some(Bytes::from_static(CSS)),
-                    _ => None,
+                    "/style.css" => ResourceResponse::Bytes(Bytes::from_static(CSS)),
+                    _ => ResourceResponse::Fetch,
                 });
             handle.load(HtmlSource::html(HTML));
             handle

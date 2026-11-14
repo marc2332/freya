@@ -27,8 +27,8 @@
 //! # fn app() -> impl IntoElement {
 //! let handle = use_hook(|| {
 //!     let mut handle = HtmlHandle::create().resource_interceptor(|url| match url.path() {
-//!         "/style.css" => Some(Bytes::from_static(b"body { margin: 0 }")),
-//!         _ => None,
+//!         "/style.css" => ResourceResponse::Bytes(Bytes::from_static(b"body { margin: 0 }")),
+//!         _ => ResourceResponse::Fetch,
 //!     });
 //!     handle.load(HtmlSource::html(
 //!         r#"<link rel="stylesheet" href="https://freya.example/style.css">"#,
@@ -38,6 +38,8 @@
 //! HtmlViewer::new(handle)
 //! # }
 //! ```
+//!
+//! Return [`ResourceResponse::Block`] to skip a subresource without using the cache or network.
 //!
 //! For HTTP requests outside the viewer,
 //! enable Freya's `remote-asset` feature and use [`freya_components::http::fetch`]:
@@ -68,6 +70,7 @@ pub use handle::{
     ElementHit,
     HtmlHandle,
     HtmlSource,
+    ResourceResponse,
 };
 
 pub mod prelude {
@@ -79,6 +82,7 @@ pub mod prelude {
             ElementHit,
             HtmlHandle,
             HtmlSource,
+            ResourceResponse,
         },
     };
 }
