@@ -114,7 +114,7 @@ impl Component for Link {
                 if let Some(url) = &url {
                     Platform::get().open_url(url.clone());
                 } else {
-                    let _ = RouterContext::get().push(to.clone());
+                    RouterContext::get().push(to.clone());
                 }
             }
         };
