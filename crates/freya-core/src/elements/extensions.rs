@@ -4,6 +4,7 @@ use std::{
         Hash,
         Hasher,
     },
+    rc::Rc,
 };
 
 use paste::paste;
@@ -127,6 +128,13 @@ pub trait ChildrenExt: Sized {
         self.children_mut().push(child.into_element());
         self
     }
+}
+
+/// Reuses unchanged children by Rc identity.
+/// It is an alternative to [ChildrenExt].
+pub trait RetainedChildrenExt: ChildrenExt {
+    /// Replaces existing children with retained children.
+    fn retained_children(self, children: Rc<Vec<Element>>) -> Self;
 }
 
 /// Trait for giving an element a stable identity across renders.

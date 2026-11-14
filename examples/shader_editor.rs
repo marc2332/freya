@@ -331,7 +331,7 @@ impl From<Shader> for Element {
         Element::Element {
             key: DiffKey::None,
             element: Rc::new(value),
-            elements: vec![],
+            elements: vec![].into(),
         }
     }
 }

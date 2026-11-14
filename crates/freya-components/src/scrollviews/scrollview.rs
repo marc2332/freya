@@ -1,4 +1,7 @@
-use std::time::Duration;
+use std::{
+    rc::Rc,
+    time::Duration,
+};
 
 use freya_core::prelude::*;
 use freya_sdk::timeout::use_timeout;
@@ -56,7 +59,7 @@ use crate::scrollviews::{
 /// See the [interactive components demo](https://freyaui.dev/demo).
 #[derive(Clone, PartialEq)]
 pub struct ScrollView {
-    children: Vec<Element>,
+    children: Rc<Vec<Element>>,
     layout: LayoutData,
     show_scrollbar: bool,
     auto_hide_scrollbars: bool,
@@ -71,7 +74,7 @@ pub struct ScrollView {
 
 impl ChildrenExt for ScrollView {
     fn children_mut(&mut self) -> &mut Vec<Element> {
-        &mut self.children
+        Rc::make_mut(&mut self.children)
     }
 }
 
@@ -84,7 +87,7 @@ impl KeyExt for ScrollView {
 impl Default for ScrollView {
     fn default() -> Self {
         Self {
-            children: Vec::default(),
+            children: Rc::default(),
             layout: Node {
                 width: Size::fill(),
                 height: Size::fill(),
@@ -519,7 +522,7 @@ impl Component for ScrollView {
                                 size.set_if_modified(e.clone());
                                 scroll_controller.apply_layout(e.inner_sizes, e.area.size);
                             })
-                            .children(self.children.clone()),
+                            .retained_children(self.children.clone()),
                     )
                     .maybe_child(vertical_scrollbar_is_visible.then_some({
                         rect().child(self.scrollbar.call(ScrollBarContext {

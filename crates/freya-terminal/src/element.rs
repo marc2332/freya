@@ -346,7 +346,7 @@ impl From<Terminal> for Element {
         Element::Element {
             key: DiffKey::None,
             element: Rc::new(value),
-            elements: Vec::new(),
+            elements: Vec::new().into(),
         }
     }
 }

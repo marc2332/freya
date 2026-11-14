@@ -39,6 +39,11 @@ pub trait DiffNode: Sized {
     fn path(&self) -> &[u32];
     fn children(&self) -> &[Self];
 
+    /// Whether the entire child trees can be reused without reconciliation.
+    fn same_children(&self, _previous: &Self) -> bool {
+        false
+    }
+
     /// Whether these nodes have compatible kinds, independently of their keys.
     fn compatible(&self, previous: &Self) -> bool;
 
@@ -114,6 +119,10 @@ fn diff_inner<Node: DiffNode>(
                 .or_default()
                 .push((old_index, new_index));
         }
+    }
+
+    if !removed_here && current.same_children(previous) {
+        return;
     }
 
     #[cfg(debug_assertions)]
