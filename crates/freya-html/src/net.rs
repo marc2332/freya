@@ -21,26 +21,14 @@ use blitz_traits::{
 use futures_channel::mpsc::UnboundedSender;
 use url::Url;
 
-use crate::cache::ResourceCache;
-
 pub(crate) type FetchRequest = (Url, Box<dyn NetHandler>);
 
 pub(crate) struct HttpNetProvider {
     pub fetch: UnboundedSender<FetchRequest>,
-    pub cache: ResourceCache,
 }
 
 impl NetProvider for HttpNetProvider {
     fn fetch(&self, _doc_id: usize, request: Request, handler: Box<dyn NetHandler>) {
-        if !matches!(request.url.scheme(), "http" | "https") {
-            return;
-        }
-
-        if let Some(bytes) = self.cache.read(&request.url) {
-            handler.bytes(request.url.to_string(), bytes);
-            return;
-        }
-
         let _ = self.fetch.unbounded_send((request.url, handler));
     }
 }
@@ -48,13 +36,13 @@ impl NetProvider for HttpNetProvider {
 /// Signals Freya to re-render when the document requests a redraw.
 pub(crate) struct FreyaShellProvider {
     pub redraw: Arc<AtomicBool>,
-    pub wake: UnboundedSender<()>,
+    pub wake: async_channel::Sender<()>,
 }
 
 impl ShellProvider for FreyaShellProvider {
     fn request_redraw(&self) {
         self.redraw.store(true, Ordering::Relaxed);
-        let _ = self.wake.unbounded_send(());
+        let _ = self.wake.try_send(());
     }
 }
 
