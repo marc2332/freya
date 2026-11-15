@@ -73,6 +73,7 @@ pub mod prelude {
             ComponentKey,
             ComponentOwned,
             Element,
+            ElementChildren,
             EventHandlers,
             IntoElement,
             RenderContext,
@@ -124,6 +125,7 @@ pub mod prelude {
         lifecycle::{
             base::*,
             context::*,
+            derived::*,
             effect::*,
             future_task::*,
             global_context::*,

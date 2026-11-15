@@ -30,7 +30,7 @@ impl Component for Home {
     fn render(&self) -> impl IntoElement {
         Button::new()
             .on_press(|_| {
-                let _ = RouterContext::get().replace(Route::Settings);
+                RouterContext::get().replace(Route::Settings);
             })
             .child("Go Settings")
     }
@@ -42,7 +42,7 @@ impl Component for Settings {
     fn render(&self) -> impl IntoElement {
         Button::new()
             .on_press(|_| {
-                let _ = RouterContext::get().replace(Route::Home);
+                RouterContext::get().replace(Route::Home);
             })
             .child("Go Home")
     }

@@ -35,7 +35,7 @@ fn app() -> impl IntoElement {
                 .on_press(move |_| future.start())
                 .child("Restart"),
         )
-        .child(match *future.state() {
+        .child(match *future.read() {
             FutureState::Fulfilled(d) => d.to_string(),
             FutureState::Pending => "Pending".to_string(),
             FutureState::Loading => "Loading".to_string(),

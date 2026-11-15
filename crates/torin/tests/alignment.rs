@@ -5,6 +5,76 @@ use torin::{
 };
 
 #[test]
+fn space_between_preserves_cached_parent_bounds() {
+    let (mut layout, mut measurer) = test_utils();
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
+        0,
+        None,
+        vec![1],
+        Node::from_size_and_direction(Size::px(500.), Size::px(450.), Direction::Vertical),
+    );
+    mocked_tree.add(
+        1,
+        Some(0),
+        vec![2, 3],
+        Node {
+            direction: Direction::Horizontal,
+            main_alignment: Alignment::SpaceBetween,
+            cross_alignment: Alignment::Center,
+            ..Node::default()
+        },
+    );
+    mocked_tree.add(
+        2,
+        Some(1),
+        vec![],
+        Node::from_size_and_direction(Size::px(118.), Size::px(16.), Direction::Vertical),
+    );
+    let mut container = Node {
+        width: Size::px(48.),
+        height: Size::px(28.),
+        padding: Gaps::new_all(4.),
+        main_alignment: Alignment::Center,
+        offset_x: Length::new(2.),
+        ..Node::default()
+    };
+    mocked_tree.add(3, Some(1), vec![4], container.clone());
+    mocked_tree.add(
+        4,
+        Some(3),
+        vec![],
+        Node::from_size_and_direction(Size::px(16.), Size::px(16.), Direction::Vertical),
+    );
+    let root_area = Rect::new(Point2D::new(0., 0.), Size2D::new(500., 450.));
+    layout.measure(0, root_area, &mut measurer, &mocked_tree);
+    assert_eq!(layout.get(&1).unwrap().area.width(), 166.);
+    assert_eq!(layout.get(&3).unwrap().area.min_x(), 118.);
+
+    container.offset_x = Length::new(3.);
+    mocked_tree.set_node(3, container);
+    mocked_tree.set_node(
+        4,
+        Node::from_size_and_direction(Size::px(17.), Size::px(17.), Direction::Vertical),
+    );
+    layout.invalidate_with_reason(3, DirtyReason::InnerLayout);
+    layout.invalidate(4);
+    layout.find_best_root(&mocked_tree);
+    layout.measure(0, root_area, &mut measurer, &mocked_tree);
+    let incremental_areas: Vec<_> = (0..=4)
+        .map(|node_id| layout.get(&node_id).unwrap().area)
+        .collect();
+    assert_eq!(incremental_areas[1].width(), 166.);
+    assert_eq!(incremental_areas[3].min_x(), 118.);
+
+    layout.reset();
+    layout.measure(0, root_area, &mut measurer, &mocked_tree);
+    for (node_id, incremental_area) in incremental_areas.into_iter().enumerate() {
+        assert_eq!(incremental_area, layout.get(&node_id).unwrap().area);
+    }
+}
+
+#[test]
 pub fn display_horizontal() {
     let (mut layout, mut measurer) = test_utils();
 
