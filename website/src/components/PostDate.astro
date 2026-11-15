@@ -1,17 +1,17 @@
 ---
 interface Props {
-    date: Date | string;
-    class?: string;
+  date: Date | string;
+  class?: string;
 }
 
 const { date, class: className } = Astro.props;
 const publicationDate = new Date(date);
 const dateOnly = publicationDate.toISOString().slice(0, 10);
 const formattedDate = new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: "UTC",
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  timeZone: "UTC",
 }).format(publicationDate);
 ---
 

@@ -15,6 +15,9 @@
 //! in an event handler, obtain the context in an event handler and
 //! call [`RouterContext::push`](prelude::RouterContext::push) or
 //! [`RouterContext::replace`](prelude::RouterContext::replace).
+//! These ignore external navigation failures. Use
+//! [`RouterContext::try_push`](prelude::RouterContext::try_push) or
+//! [`RouterContext::try_replace`](prelude::RouterContext::try_replace) to handle them.
 //!
 //! ```rust,no_run
 //! # use freya::{components::Button, prelude::*, router::*};
@@ -30,7 +33,7 @@
 //! let router = RouterContext::get();
 //! Button::new()
 //!     .on_press(move |_| {
-//!         let _ = router.push(Route::Home);
+//!         router.push(Route::Home);
 //!     })
 //!     .child("Save")
 //! #     }

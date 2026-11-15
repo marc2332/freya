@@ -16,7 +16,7 @@ fn future_restarts_when_subscribed_state_changes() {
             .width(Size::fill())
             .height(Size::fill())
             .on_mouse_up(move |_| value.set(value() + 1))
-            .child(match &*future.state() {
+            .child(match &*future.read() {
                 FutureState::Fulfilled(doubled) => doubled.to_string(),
                 _ => "loading".to_string(),
             })

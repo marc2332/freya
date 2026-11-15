@@ -32,7 +32,11 @@ fn runner() -> (TestingRunner, (HtmlHandle, State<bool>)) {
         },
         (300., 100.).into(),
         |runner| {
-            let handle = runner.provide_root_context(|| HtmlHandle::create(HtmlSource::html(HTML)));
+            let handle = runner.provide_root_context(|| {
+                let mut handle = HtmlHandle::create();
+                handle.load(HtmlSource::html(HTML));
+                handle
+            });
             let visible = runner.provide_root_context(|| State::create(true));
             (handle, visible)
         },

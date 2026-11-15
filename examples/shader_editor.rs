@@ -210,7 +210,7 @@ impl Component for ShaderView {
             });
         });
 
-        let runtime_effect = use_side_effect_value(move || {
+        let runtime_effect = use_derived(move || {
             RuntimeEffect::make_for_shader(editable.editor().read().rope().to_string(), None)
                 .map(Rc::from)
         });
@@ -331,7 +331,7 @@ impl From<Shader> for Element {
         Element::Element {
             key: DiffKey::None,
             element: Rc::new(value),
-            elements: vec![],
+            elements: vec![].into(),
         }
     }
 }

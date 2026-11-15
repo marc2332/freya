@@ -71,7 +71,6 @@ use crate::{
         SkiaSceneCache,
         SkiaScenePainter,
     },
-    cache::ResourceCache,
     fonts::font_context,
     handle::ElementHit,
     net::{
@@ -102,20 +101,15 @@ pub(crate) struct BlitzState {
 
 impl BlitzState {
     pub fn new(
-        wake: UnboundedSender<()>,
+        wake: async_channel::Sender<()>,
         navigate: UnboundedSender<String>,
         fetch: UnboundedSender<FetchRequest>,
-        resource_cache: ResourceCache,
-        fonts: Vec<Bytes>,
     ) -> Self {
         let redraw = Arc::new(AtomicBool::new(true));
         Self {
             document: None,
-            font_context: font_context(&fonts),
-            net_provider: Arc::new(HttpNetProvider {
-                fetch,
-                cache: resource_cache,
-            }),
+            font_context: font_context(&[]),
+            net_provider: Arc::new(HttpNetProvider { fetch }),
             shell_provider: Arc::new(FreyaShellProvider {
                 redraw: redraw.clone(),
                 wake,
@@ -129,6 +123,11 @@ impl BlitzState {
             active_pointers: Arc::new(AtomicRefCell::new(Vec::new())),
             created: Instant::now(),
         }
+    }
+
+    pub fn set_fonts(&mut self, fonts: impl IntoIterator<Item = Bytes>) {
+        let fonts = fonts.into_iter().collect::<Vec<_>>();
+        self.font_context = font_context(&fonts);
     }
 
     pub fn load(&mut self, html: &str, base_url: Option<String>) {

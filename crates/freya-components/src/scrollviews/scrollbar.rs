@@ -269,13 +269,7 @@ impl ComponentOwned for ScrollBar {
                             .height(bar_height)
                             .margin(bar_margin)
                             .background(scrollbar_theme.background.with_a(opacity as u8))
-                            .corner_radius(8.)
-                            .shadow(Shadow::new().blur(6.).color((
-                                0,
-                                0,
-                                0,
-                                (opacity * 0.28) as u8,
-                            ))),
+                            .corner_radius(8.),
                     )
                     .child(
                         rect()

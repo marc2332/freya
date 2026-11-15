@@ -14,6 +14,10 @@ use torin::{
 use crate::{
     define_theme,
     get_theme,
+    icons::{
+        IconThemePartialExt,
+        arrow::ArrowIcon,
+    },
 };
 
 define_theme! {
@@ -136,7 +140,7 @@ impl ComponentOwned for Menu {
         // Provide this the ROOT Menu ID
         use_provide_context(|| ROOT_MENU);
 
-        let on_escape = self.on_escape.clone().or(self.on_close.clone());
+        let on_escape = self.on_escape.or_else(|| self.on_close.clone());
         let on_global_key_down = move |e: Event<KeyboardEventData>| {
             if e.key == Key::Named(NamedKey::Escape) {
                 if menus.read().len() > 1 {
@@ -165,6 +169,7 @@ impl ComponentOwned for Menu {
                     .children(self.children),
             )
     }
+
     fn render_key(&self) -> DiffKey {
         self.key.clone().or(self.default_key())
     }
@@ -182,11 +187,29 @@ impl ComponentOwned for Menu {
 ///         .child(MenuItem::new().child("Item 2"))
 /// }
 /// ```
-#[derive(Default, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct MenuContainer {
     pub(crate) theme: Option<MenuContainerThemePartial>,
     children: Vec<Element>,
+    layer: Layer,
     key: DiffKey,
+}
+
+impl Default for MenuContainer {
+    fn default() -> Self {
+        Self {
+            theme: None,
+            children: Vec::new(),
+            layer: Layer::Overlay,
+            key: DiffKey::None,
+        }
+    }
+}
+
+impl LayerExt for MenuContainer {
+    fn layer_mut(&mut self) -> &mut Layer {
+        &mut self.layer
+    }
 }
 
 impl KeyExt for MenuContainer {
@@ -220,7 +243,9 @@ impl ComponentOwned for MenuContainer {
 
         use_provide_context(move || MenuGroup { group_id: a11y_id });
 
+        let floating = matches!(self.layer, Layer::Overlay | Layer::OverlayLevel(_));
         let (offset_x, offset_y, opacity) = match measured() {
+            _ if !floating => (0.0, 0.0, 1.0),
             None => (0.0, 0.0, 0.0),
             Some((area, root_size)) => (
                 overflow_offset(area.origin.x, area.size.width, root_size.width),
@@ -230,16 +255,18 @@ impl ComponentOwned for MenuContainer {
         };
 
         rect()
-            .layer(Layer::Overlay)
+            .layer(self.layer)
             .content(Content::fit())
             .opacity(opacity)
             .offset_x(offset_x)
             .offset_y(offset_y)
-            .on_sized(move |e: Event<SizedEventData>| {
-                if measured.peek().is_none() {
-                    let root_size = *Platform::get().current_window().root_size.peek();
-                    measured.set(Some((e.area, root_size)));
-                }
+            .maybe(floating, |el| {
+                el.on_sized(move |e: Event<SizedEventData>| {
+                    if measured.peek().is_none() {
+                        let root_size = *Platform::get().current_window().root_size.peek();
+                        measured.set(Some((e.area, root_size)));
+                    }
+                })
             })
             .child(
                 rect()
@@ -247,7 +274,7 @@ impl ComponentOwned for MenuContainer {
                     .a11y_member_of(a11y_id)
                     .a11y_focusable(true)
                     .a11y_role(AccessibilityRole::Menu)
-                    .shadow((0.0, 4.0, 10.0, 0., theme.shadow))
+                    .shadow(Shadow::new().y(6.).blur(18.).color(theme.shadow))
                     .background(theme.background)
                     .corner_radius(theme.corner_radius)
                     .padding(theme.padding)
@@ -288,6 +315,7 @@ pub struct MenuItem {
     on_press: Option<EventHandler<Event<PressEventData>>>,
     on_pointer_enter: Option<EventHandler<Event<PointerEventData>>>,
     selected: bool,
+    submenu: bool,
     padding: Gaps,
     key: DiffKey,
 }
@@ -300,6 +328,7 @@ impl Default for MenuItem {
             on_press: None,
             on_pointer_enter: None,
             selected: false,
+            submenu: false,
             padding: (8.0, 14.0).into(),
             key: DiffKey::None,
         }
@@ -335,6 +364,11 @@ impl MenuItem {
 
     pub fn selected(mut self, selected: bool) -> Self {
         self.selected = selected;
+        self
+    }
+
+    pub fn submenu(mut self, submenu: bool) -> Self {
+        self.submenu = submenu;
         self
     }
 
@@ -441,6 +475,16 @@ impl ComponentOwned for MenuItem {
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
             .on_press(on_press)
+            .maybe(self.submenu, |el| {
+                el.child(
+                    rect()
+                        .position(Position::new_absolute().right(0.).top(0.))
+                        .width(Size::px(10.))
+                        .height(Size::fill())
+                        .main_align(Alignment::Center)
+                        .child(ArrowIcon::new().rotate(270.).fill(color.with_a(180))),
+                )
+            })
             .children(self.children)
     }
 
@@ -590,9 +634,14 @@ impl ComponentOwned for SubMenu {
         };
 
         MenuItem::new()
+            .submenu(true)
             .on_pointer_enter(on_pointer_enter)
             .on_press(on_press)
-            .child(rect().horizontal().maybe_child(self.label.clone()))
+            .child(
+                rect()
+                    .margin(Gaps::new(0., 22., 0., 0.))
+                    .maybe_child(self.label),
+            )
             .maybe_child(show_submenu.then(|| {
                 rect()
                     .position(Position::new_absolute().top(-8.).right(-10.))

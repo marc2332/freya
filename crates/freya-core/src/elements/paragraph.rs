@@ -798,12 +798,12 @@ impl From<Paragraph> for Element {
                     .child(child)
                     .into_element()
             })
-            .collect();
+            .collect::<Vec<_>>();
 
         Element::Element {
             key: value.key,
             element: Rc::new(value.element),
-            elements,
+            elements: elements.into(),
         }
     }
 }
