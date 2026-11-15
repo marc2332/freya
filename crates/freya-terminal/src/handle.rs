@@ -254,8 +254,7 @@ impl TerminalHandle {
         })
     }
 
-    /// Set a callback for all handle clones. PTY replies are sent first.
-    /// The terminal is borrowed during callbacks. Do not borrow it again there.
+    /// Set a callback to hook into terminal events.
     ///
     /// ```no_run
     /// use freya::prelude::*;
