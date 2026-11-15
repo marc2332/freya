@@ -1,10 +1,51 @@
 use std::time::Duration;
 
-use freya::prelude::*;
+use freya::{
+    prelude::*,
+    text_edit::*,
+};
 use freya_testing::prelude::*;
 
 #[test]
-fn input_setter_reducer_test() {
+fn input_external_editor_control() {
+    fn app() -> impl IntoElement {
+        Input::new_with_editor(use_consume::<UseEditable>()).auto_focus(true)
+    }
+
+    let (mut test, mut editor) = TestingRunner::new(
+        app,
+        (300., 300.).into(),
+        |runner| {
+            runner.provide_root_context(|| {
+                UseEditable::create("abcdef".to_string(), EditableConfig::new())
+            })
+        },
+        1.,
+    );
+    test.sync_and_update();
+    editor.editor_mut().write().move_cursor_to(3);
+    test.sync_and_update();
+    test.write_text("X");
+    assert_eq!(editor.editor().peek().committed_text(), "abcXdef");
+
+    editor.editor_mut().write().set_selection((0, 7));
+    test.sync_and_update();
+    test.write_text("replacement");
+    assert_eq!(editor.editor().peek().committed_text(), "replacement");
+
+    editor.editor_mut().write().set("external");
+    test.sync_and_update();
+    assert!(
+        test.find(|_, element| {
+            Paragraph::try_downcast(element)
+                .filter(|paragraph| paragraph.spans.iter().any(|span| span.text == "external"))
+        })
+        .is_some()
+    );
+}
+
+#[test]
+fn input_setter_reducer() {
     use freya::radio::*;
 
     #[derive(Default)]
