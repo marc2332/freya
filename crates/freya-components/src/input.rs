@@ -173,7 +173,7 @@ enum InputValue {
 pub struct Input {
     pub(crate) theme_colors: Option<InputColorsThemePartial>,
     pub(crate) theme_layout: Option<InputLayoutThemePartial>,
-    inner: InputValue,
+    value: InputValue,
     placeholder: Option<Cow<'static, str>>,
     on_validate: Option<EventHandler<InputValidator>>,
     on_submit: Option<EventHandler<String>>,
@@ -205,7 +205,6 @@ impl Input {
     }
 
     /// Use an external editor to control text, cursor, selection and history.
-    /// Keep the editor in a parent component to preserve it across input remounts.
     ///
     /// ```rust
     /// # use freya::{prelude::*, text_edit::*};
@@ -218,11 +217,11 @@ impl Input {
         Self::with_inner(InputValue::Editor(editor))
     }
 
-    fn with_inner(inner: InputValue) -> Self {
+    fn with_inner(value: InputValue) -> Self {
         Input {
             theme_colors: None,
             theme_layout: None,
-            inner,
+            value,
             placeholder: None,
             on_validate: None,
             on_submit: None,
@@ -379,7 +378,7 @@ impl Component for Input {
         let mut scroll_controller = use_scroll_controller(ScrollConfig::default);
         let mut status = use_state(InputStatus::default);
         let is_masked = matches!(self.mode, InputMode::Hidden(_));
-        let (mut editable, mut value) = match &self.inner {
+        let (mut editable, mut value) = match &self.value {
             InputValue::Value(value) => (
                 use_editable(
                     || value.read().to_string(),
@@ -875,7 +874,7 @@ impl Component for Input {
         let key = self.key.clone().or(self.default_key());
         let mut hasher = std::hash::DefaultHasher::new();
         key.hash(&mut hasher);
-        std::mem::discriminant(&self.inner).hash(&mut hasher);
+        std::mem::discriminant(&self.value).hash(&mut hasher);
         match key {
             DiffKey::DefaultU64(_) => DiffKey::DefaultU64(hasher.finish()),
             _ => DiffKey::U64(hasher.finish()),
