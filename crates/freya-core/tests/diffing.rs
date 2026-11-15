@@ -1,5 +1,7 @@
 use std::{
+    cell::Cell,
     collections::HashMap,
+    rc::Rc,
     sync::atomic::{
         AtomicI8,
         Ordering,
@@ -8,6 +10,7 @@ use std::{
 
 use freya::helpers::*;
 use freya_core::{
+    element::ElementExt,
     integration::*,
     path_element::PathElement,
     prelude::*,
@@ -15,10 +18,44 @@ use freya_core::{
         Diff,
         MutationRemove,
     },
+    tree::DiffModifies,
 };
 use rustc_hash::FxHashMap;
 use tiny_diff::DiffNode;
 use torin::size::Size;
+
+#[test]
+fn retained_children_reuse_requires_same_rc() {
+    struct DiffProbe(Rc<Cell<usize>>);
+
+    impl ElementExt for DiffProbe {
+        fn diff(&self, _previous: &Rc<dyn ElementExt>) -> DiffModifies {
+            self.0.set(self.0.get() + 1);
+            DiffModifies::empty()
+        }
+    }
+
+    let diffs = Rc::new(Cell::new(0));
+    let children = Rc::new(vec![Element::Element {
+        key: DiffKey::None,
+        element: Rc::new(DiffProbe(diffs.clone())),
+        elements: Vec::new().into(),
+    }]);
+    let mut runner = Runner::new(|| {
+        let children = use_consume::<State<Rc<Vec<Element>>>>();
+        rect().retained_children(children.read().clone()).into()
+    });
+    let mut state = runner.provide_root_context(|| State::create(children.clone()));
+    runner.sync_and_update();
+
+    state.set(children.clone());
+    runner.sync_and_update();
+    assert_eq!(diffs.get(), 0);
+
+    state.set(Rc::new(children.as_ref().clone()));
+    runner.sync_and_update();
+    assert_eq!(diffs.get(), 1);
+}
 
 struct RawIdMap(FxHashMap<u64, Vec<u64>>);
 
@@ -234,8 +271,8 @@ fn state_reconcillation() {
     let second_render: Element = rect()
         .children([from_fn_standalone(first), from_fn_standalone(second)])
         .into();
-    let first_render = PathElement::from_element(vec![0], first_render);
-    let second_render = PathElement::from_element(vec![0], second_render);
+    let first_render = PathElement::from_element(vec![0], first_render, None);
+    let second_render = PathElement::from_element(vec![0], second_render, None);
     let mut diff = Diff::default();
     second_render.diff(Some(&first_render), &mut diff);
     assert_eq!(diff.added, vec![vec![0, 0].into_boxed_slice()]);
@@ -246,8 +283,8 @@ fn state_reconcillation() {
         .children([from_fn_standalone(first), from_fn_standalone(second)])
         .into();
     let second_render: Element = rect().children([from_fn_standalone(second)]).into();
-    let first_render = PathElement::from_element(vec![0], first_render);
-    let second_render = PathElement::from_element(vec![0], second_render);
+    let first_render = PathElement::from_element(vec![0], first_render, None);
+    let second_render = PathElement::from_element(vec![0], second_render, None);
     let mut diff = Diff::default();
     second_render.diff(Some(&first_render), &mut diff);
     assert!(diff.added.is_empty());
@@ -257,7 +294,7 @@ fn state_reconcillation() {
     let first_render: Element = rect()
         .children([from_fn_standalone(first), from_fn_standalone(second)])
         .into();
-    let first_render = PathElement::from_element(vec![0], first_render);
+    let first_render = PathElement::from_element(vec![0], first_render, None);
     let mut diff = Diff::default();
     first_render.diff(None, &mut diff);
     assert!(!diff.added.is_empty());
@@ -472,8 +509,8 @@ fn scopes_smart_rerun() {
 fn element_diffing() {
     let first_render: Element = rect().children([rect(), rect(), rect()]).into();
     let second_render: Element = rect().children([rect(), rect()]).into();
-    let first_render = PathElement::from_element(vec![0], first_render);
-    let second_render = PathElement::from_element(vec![0], second_render);
+    let first_render = PathElement::from_element(vec![0], first_render, None);
+    let second_render = PathElement::from_element(vec![0], second_render, None);
     let mut diff = Diff::default();
     second_render.diff(Some(&first_render), &mut diff);
     assert!(diff.added.is_empty());
@@ -486,8 +523,8 @@ fn element_diffing() {
         .children([rect().key(1), rect().key(2), rect().key(3)])
         .into();
     let second_render: Element = rect().children([rect().key(1), rect().key(3)]).into();
-    let first_render = PathElement::from_element(vec![0], first_render);
-    let second_render = PathElement::from_element(vec![0], second_render);
+    let first_render = PathElement::from_element(vec![0], first_render, None);
+    let second_render = PathElement::from_element(vec![0], second_render, None);
     let mut diff = Diff::default();
     second_render.diff(Some(&first_render), &mut diff);
     assert!(diff.added.is_empty());
@@ -499,8 +536,8 @@ fn element_diffing() {
 fn element_diffing3() {
     let first_render: Element = rect().key(1).into();
     let second_render: Element = rect().key(2).into();
-    let first_render = PathElement::from_element(vec![], first_render);
-    let second_render = PathElement::from_element(vec![], second_render);
+    let first_render = PathElement::from_element(vec![], first_render, None);
+    let second_render = PathElement::from_element(vec![], second_render, None);
     let mut diff = Diff::default();
     second_render.diff(Some(&first_render), &mut diff);
     assert_eq!(diff.added, vec![vec![].into_boxed_slice()]);
@@ -517,8 +554,8 @@ fn element_diffing3() {
 
     let first_render: Element = from_fn_standalone(first);
     let second_render: Element = from_fn_standalone(second);
-    let first_render = PathElement::from_element(vec![], first_render);
-    let second_render = PathElement::from_element(vec![], second_render);
+    let first_render = PathElement::from_element(vec![], first_render, None);
+    let second_render = PathElement::from_element(vec![], second_render, None);
     let mut diff = Diff::default();
     second_render.diff(Some(&first_render), &mut diff);
     assert_eq!(diff.added, vec![vec![].into_boxed_slice()]);
@@ -629,8 +666,8 @@ fn element_diffing5() {
         .child(from_fn_standalone_borrowed_keyed(2, (), container))
         .child(from_fn_standalone_borrowed_keyed(1, (), container))
         .into();
-    let first_render = PathElement::from_element(vec![], first_render);
-    let second_render = PathElement::from_element(vec![], second_render);
+    let first_render = PathElement::from_element(vec![], first_render, None);
+    let second_render = PathElement::from_element(vec![], second_render, None);
     let mut diff = Diff::default();
     second_render.diff(Some(&first_render), &mut diff);
     assert!(diff.added.is_empty());
@@ -643,8 +680,8 @@ fn element_diffing5() {
 
     let first_render: Element = rect().child(rect().key(1)).child(rect().key(0)).into();
     let second_render: Element = rect().child(rect().key(0)).child(rect().key(1)).into();
-    let first_render = PathElement::from_element(vec![], first_render);
-    let second_render = PathElement::from_element(vec![], second_render);
+    let first_render = PathElement::from_element(vec![], first_render, None);
+    let second_render = PathElement::from_element(vec![], second_render, None);
     let mut diff = Diff::default();
     second_render.diff(Some(&first_render), &mut diff);
     assert!(diff.added.is_empty());
@@ -669,8 +706,8 @@ fn element_diffing6() {
     let second_render: Element = rect()
         .child(rect().child(from_fn_standalone_borrowed_keyed(2, (), container)))
         .into();
-    let first_render = PathElement::from_element(vec![], first_render);
-    let second_render = PathElement::from_element(vec![], second_render);
+    let first_render = PathElement::from_element(vec![], first_render, None);
+    let second_render = PathElement::from_element(vec![], second_render, None);
     let mut diff = Diff::default();
     second_render.diff(Some(&first_render), &mut diff);
     assert_eq!(
@@ -898,8 +935,8 @@ fn element_diffing13() {
         .child(rect().child(rect()))
         .child(rect())
         .into();
-    let first_render = PathElement::from_element(vec![], first_render);
-    let second_render = PathElement::from_element(vec![], second_render);
+    let first_render = PathElement::from_element(vec![], first_render, None);
+    let second_render = PathElement::from_element(vec![], second_render, None);
     let mut diff = Diff::default();
     second_render.diff(Some(&first_render), &mut diff);
 
@@ -948,8 +985,8 @@ fn element_diffing13() {
     let second_render: Element = rect()
         .child(rect().child(rect().key(3)).child(rect()))
         .into();
-    let first_render = PathElement::from_element(vec![], first_render);
-    let second_render = PathElement::from_element(vec![], second_render);
+    let first_render = PathElement::from_element(vec![], first_render, None);
+    let second_render = PathElement::from_element(vec![], second_render, None);
     let mut diff = Diff::default();
     second_render.diff(Some(&first_render), &mut diff);
 
