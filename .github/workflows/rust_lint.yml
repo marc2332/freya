@@ -14,7 +14,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     concurrency:
       group: rust-lint-${{ github.ref_name }}
       cancel-in-progress: true
@@ -55,7 +55,7 @@ jobs:
       run: just f-check
 
   build-macos:
-    runs-on: macos-latest
+    runs-on: blacksmith-6vcpu-macos-15
     concurrency:
       group: rust-lint-macos-${{ github.ref_name }}
       cancel-in-progress: true

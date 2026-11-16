@@ -14,7 +14,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     concurrency:
       group: rust-build-${{ github.ref_name }}
       cancel-in-progress: true
@@ -49,7 +49,7 @@ jobs:
       run: cargo build --package freya --features devtools
 
   build-macos:
-    runs-on: macos-latest
+    runs-on: blacksmith-6vcpu-macos-15
     concurrency:
       group: rust-build-macos-${{ github.ref_name }}
       cancel-in-progress: true

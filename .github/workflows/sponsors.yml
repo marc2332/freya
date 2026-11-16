@@ -14,10 +14,10 @@ concurrency:
 jobs:
   deploy:
     if: github.repository == 'marc2332/freya'
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
       - name: Checkout 🛎️
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: useblacksmith/checkout@v1 # v6.0.2
         with:
           ref: main
           persist-credentials: false
