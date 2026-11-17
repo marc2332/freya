@@ -65,6 +65,9 @@
 //! });
 //! ```
 //!
+//! Use [`TerminalHandle::on_event`](handle::TerminalHandle::on_event) to handle terminal events
+//! with your own state and notifications.
+//!
 //! ## Advance usage
 //!
 //! Check the `feature_terminal.rs` example in the repository, and `feature_terminal_custom.rs`
@@ -83,7 +86,13 @@ mod url;
 pub mod prelude {
     #[cfg(feature = "pty")]
     pub use portable_pty::CommandBuilder;
-    pub use rio_vt::selection::SelectionType;
+    pub use rio_vt::{
+        event::{
+            RioEvent,
+            WindowId,
+        },
+        selection::SelectionType,
+    };
 
     #[cfg(feature = "pty")]
     pub use crate::backends::pty::PtyBackend;
