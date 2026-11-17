@@ -75,7 +75,9 @@ fn custom_viewer_removal_restores_fallback() {
         rect()
             .expanded()
             .font_size(30.)
-            .maybe(*custom_viewer.read(), |el| el.child(ContextMenuViewer::new()))
+            .maybe(*custom_viewer.read(), |el| {
+                el.child(ContextMenuViewer::new())
+            })
             .child(
                 rect()
                     .expanded()
@@ -83,7 +85,8 @@ fn custom_viewer_removal_restores_fallback() {
                         ContextMenu::open_from_down(Menu::new().child(
                             MenuButton::new().child(label().text("Item").on_styled(
                                 move |event: Event<StyledEventData>| {
-                                    menu_font.set_if_modified(Some(event.text_style.font_size.into()));
+                                    menu_font
+                                        .set_if_modified(Some(event.text_style.font_size.into()));
                                 },
                             )),
                         ));

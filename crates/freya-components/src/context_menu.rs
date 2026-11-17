@@ -92,11 +92,9 @@ impl ContextMenu {
     /// ```rust
     /// # use freya::prelude::*;
     /// fn app() -> impl IntoElement {
-    ///     rect().child(
-    ///         rect().child("Right click here").on_secondary_down(|_| {
-    ///             ContextMenu::open_from_down(Menu::new().child(MenuButton::new().child("Copy")));
-    ///         }),
-    ///     )
+    ///     rect().child(rect().child("Right click here").on_secondary_down(|_| {
+    ///         ContextMenu::open_from_down(Menu::new().child(MenuButton::new().child("Copy")));
+    ///     }))
     /// }
     /// ```
     pub fn open_from_down(menu: Menu) {
