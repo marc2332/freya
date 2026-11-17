@@ -396,6 +396,49 @@ pub fn input_multiline_test() {
 }
 
 #[test]
+fn input_multiline_unicode_navigation() {
+    fn app() -> impl IntoElement {
+        Input::new_with_editor(use_consume::<UseEditable>())
+            .multiline(true)
+            .width(Size::px(500.))
+            .height(Size::px(400.))
+            .auto_focus(true)
+    }
+
+    for text in [
+        "Hello, world!\nThis is an editable multiline text box.\n\n한국어도 돼요\n\nok what\nis going on",
+        "Hello\n한국어도 돼요\n\n🦀🦀\n한글\nok\n",
+    ] {
+        let (mut test, editor) = TestingRunner::new(
+            app,
+            (500., 400.).into(),
+            |runner| {
+                runner.provide_root_context(|| {
+                    UseEditable::create(text.to_string(), EditableConfig::new())
+                })
+            },
+            1.,
+        );
+        test.sync_and_update();
+
+        let line_count = editor.editor().peek().len_lines();
+        for row in 1..line_count {
+            test.press_key(Key::Named(NamedKey::ArrowDown));
+            let editor = editor.editor().peek();
+            assert_eq!(editor.cursor_row(), row, "moving down in {text:?}");
+            assert_eq!(editor.cursor_col(), 0);
+        }
+
+        for row in (0..line_count - 1).rev() {
+            test.press_key(Key::Named(NamedKey::ArrowUp));
+            let editor = editor.editor().peek();
+            assert_eq!(editor.cursor_row(), row, "moving up in {text:?}");
+            assert_eq!(editor.cursor_col(), 0);
+        }
+    }
+}
+
+#[test]
 pub fn input_multiline_fixed_height_follows_cursor_test() {
     fn multiline_app() -> impl IntoElement {
         let value = use_state(String::new);
