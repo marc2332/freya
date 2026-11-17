@@ -25,7 +25,6 @@ fn app() -> impl IntoElement {
     rect()
         .expanded()
         .center()
-        .child(ContextMenuViewer::new())
         .child(
             label()
                 .text("Right click to copy")

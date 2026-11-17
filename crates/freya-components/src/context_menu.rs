@@ -23,14 +23,15 @@ pub(crate) enum ClosePhase {
 
 /// Global context menu state.
 ///
-/// Requires a [`ContextMenuViewer`] in an ancestor scope.
+/// A default viewer is provided automatically.
+/// Mount a [`ContextMenuViewer`] locally to inherit custom text styles and theme changes.
 ///
 /// # Example
 ///
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     rect().child(ContextMenuViewer::new()).child(
+///     rect().child(
 ///         rect()
 ///             .on_secondary_down(move |_| {
 ///                 ContextMenu::open_from_down(
@@ -46,6 +47,7 @@ pub struct ContextMenu {
     pub(crate) location: State<CursorPoint>,
     pub(crate) menu: State<Option<(CursorPoint, Menu)>>,
     pub(crate) close_phase: State<ClosePhase>,
+    viewers: State<Vec<ScopeId>>,
 }
 
 impl ContextMenu {
@@ -56,13 +58,11 @@ impl ContextMenu {
     /// ```rust
     /// # use freya::prelude::*;
     /// fn app() -> impl IntoElement {
-    ///     rect()
-    ///         .child(ContextMenuViewer::new())
-    ///         .child(if ContextMenu::is_open() {
-    ///             "Menu open"
-    ///         } else {
-    ///             "Menu closed"
-    ///         })
+    ///     rect().child(if ContextMenu::is_open() {
+    ///         "Menu open"
+    ///     } else {
+    ///         "Menu closed"
+    ///     })
     /// }
     /// ```
     pub fn is_open() -> bool {
@@ -76,11 +76,9 @@ impl ContextMenu {
     /// ```rust
     /// # use freya::prelude::*;
     /// fn app() -> impl IntoElement {
-    ///     rect()
-    ///         .child(ContextMenuViewer::new())
-    ///         .child(Button::new().child("Open menu").on_press(|_| {
-    ///             ContextMenu::open(Menu::new().child(MenuButton::new().child("Copy")));
-    ///         }))
+    ///     rect().child(Button::new().child("Open menu").on_press(|_| {
+    ///         ContextMenu::open(Menu::new().child(MenuButton::new().child("Copy")));
+    ///     }))
     /// }
     /// ```
     pub fn open(menu: Menu) {
@@ -94,7 +92,7 @@ impl ContextMenu {
     /// ```rust
     /// # use freya::prelude::*;
     /// fn app() -> impl IntoElement {
-    ///     rect().child(ContextMenuViewer::new()).child(
+    ///     rect().child(
     ///         rect().child("Right click here").on_secondary_down(|_| {
     ///             ContextMenu::open_from_down(Menu::new().child(MenuButton::new().child("Copy")));
     ///         }),
@@ -105,10 +103,8 @@ impl ContextMenu {
         Self::open_with_phase(menu, ClosePhase::PendingPress);
     }
 
-    /// Opens the menu at the current pointer location with the given closing phase.
     fn open_with_phase(menu: Menu, phase: ClosePhase) {
-        let mut this = try_consume_root_context::<Self>()
-            .expect("ContextMenu requires a `ContextMenuViewer` in an ancestor scope");
+        let mut this = consume_root_context::<Self>();
         this.menu.set(Some(((this.location)(), menu)));
         this.close_phase.set(phase);
     }
@@ -120,7 +116,7 @@ impl ContextMenu {
     /// ```rust
     /// # use freya::prelude::*;
     /// fn app() -> impl IntoElement {
-    ///     rect().child(ContextMenuViewer::new()).child(
+    ///     rect().child(
     ///         Button::new()
     ///             .child("Close menu")
     ///             .on_press(|_| ContextMenu::close()),
@@ -129,26 +125,38 @@ impl ContextMenu {
     /// ```
     pub fn close() {
         if let Some(mut this) = try_consume_root_context::<Self>() {
-            this.menu.set(None);
+            this.menu.set_if_modified(None);
         }
     }
 }
 
-/// Provides the [`ContextMenu`] state and renders the floating menu overlay.
+/// Overrides the automatic context menu viewer to inherit local text styles and theme changes.
 ///
-/// Mount this as high up in your tree as possible (typically in your `app`
-/// component) so the rendered menu inherits styling like `font_size` from
-/// the app's root element.
+/// Place it under styled elements or within a component providing a custom theme.
+/// This changes menu styling for the whole window, not just the surrounding content.
+///
+/// The most recently mounted viewer renders the menu. Removing it restores the previous viewer.
 ///
 /// # Example
 ///
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
+///     use_init_theme(dark_theme);
+///
 ///     rect()
+///         .theme_background()
 ///         .font_size(18.)
 ///         .child(ContextMenuViewer::new())
-///         .child("Your app content here")
+///         .child(Button::new().child("Open menu").on_press(|_| {
+///             ContextMenu::open(
+///                 Menu::new().child(
+///                     MenuButton::new()
+///                         .child("Close")
+///                         .on_press(|_| ContextMenu::close()),
+///                 ),
+///             );
+///         }))
 /// }
 /// ```
 #[derive(Default, Clone, PartialEq)]
@@ -170,26 +178,35 @@ impl ContextMenuViewer {
 
 impl ComponentOwned for ContextMenuViewer {
     fn render(self) -> impl IntoElement {
+        let scope_id = current_scope_id();
         let mut context = use_hook(|| {
-            try_consume_root_context::<ContextMenu>().unwrap_or_else(|| {
+            let mut context = try_consume_root_context::<ContextMenu>().unwrap_or_else(|| {
                 let state = ContextMenu {
                     location: State::create_in_scope(CursorPoint::default(), ScopeId::ROOT),
                     menu: State::create_in_scope(None, ScopeId::ROOT),
                     close_phase: State::create_in_scope(ClosePhase::Idle, ScopeId::ROOT),
+                    viewers: State::create_in_scope(Vec::new(), ScopeId::ROOT),
                 };
                 provide_context_for_scope_id(state, ScopeId::ROOT);
                 state
-            })
+            });
+            context.viewers.write().push(scope_id);
+            context
+        });
+        use_drop(move || {
+            context.viewers.write().retain(|viewer| *viewer != scope_id);
         });
 
         use_side_effect(move || {
             if !*Platform::get().current_window().is_app_focused.read() {
-                context.menu.set(None);
+                context.menu.set_if_modified(None);
             }
         });
 
-        rect()
-            .on_global_pointer_move(move |e: Event<PointerEventData>| {
+        let is_active = context.viewers.read().last() == Some(&scope_id);
+
+        rect().maybe(is_active, |el| {
+            el.on_global_pointer_move(move |e: Event<PointerEventData>| {
                 context.location.set(e.global_location());
             })
             .on_global_pointer_down(move |_: Event<PointerEventData>| {
@@ -221,6 +238,7 @@ impl ComponentOwned for ContextMenuViewer {
                         }),
                     )
             }))
+        })
     }
 
     fn render_key(&self) -> DiffKey {

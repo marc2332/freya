@@ -36,7 +36,6 @@ fn app() -> impl IntoElement {
         .theme_background()
         .center()
         .expanded()
-        .child(ContextMenuViewer::new())
         .child(
             Button::new()
                 .on_press(move |_: Event<PressEventData>| {

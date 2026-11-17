@@ -3,6 +3,8 @@ use freya_core::{
     prelude::*,
 };
 
+use crate::context_menu::ContextMenuViewer;
+
 #[cfg(feature = "zoom-shortcuts")]
 const ZOOM_STEP: f64 = 0.10;
 
@@ -43,5 +45,8 @@ pub fn integration(app: AppComponent) -> impl IntoElement {
         _ => {}
     };
 
-    rect().on_global_key_down(on_global_key_down).child(app)
+    rect()
+        .on_global_key_down(on_global_key_down)
+        .child(ContextMenuViewer::new())
+        .child(app)
 }
