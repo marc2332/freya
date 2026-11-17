@@ -2,7 +2,19 @@ use std::time::Duration;
 
 use freya::prelude::*;
 use freya_animation::prelude::*;
-use freya_testing::prelude::*;
+use freya_testing::{
+    TestingNode,
+    prelude::*,
+};
+
+fn animated_rect(test: &TestingRunner, name: &str) -> TestingNode {
+    test.find(|node, element| {
+        Rect::try_downcast(element)
+            .filter(|rect| rect.accessibility.builder.label() == Some(name))
+            .map(|_| node)
+    })
+    .unwrap()
+}
 
 #[test]
 pub fn track_progress() {
@@ -15,20 +27,20 @@ pub fn track_progress() {
 
         let progress = animation.get().value();
 
-        rect().width(Size::px(progress))
+        rect().a11y_alt("animation").width(Size::px(progress))
     }
 
     let mut test = launch_test(use_animation_app);
 
-    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    let rect = animated_rect(&test, "animation").layout();
     assert_eq!(rect.area.width(), 0.0);
 
     test.poll(Duration::from_millis(1), Duration::from_millis(15));
-    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    let rect = animated_rect(&test, "animation").layout();
     assert!(rect.area.width() > 0.0);
 
     test.poll(Duration::from_millis(1), Duration::from_millis(85));
-    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    let rect = animated_rect(&test, "animation").layout();
     assert_eq!(rect.area.width(), 100.0);
 }
 
@@ -44,6 +56,7 @@ pub fn reverse_progress() {
         let progress = animation.get().value();
 
         rect()
+            .a11y_alt("animation")
             .on_press(move |_| animation.reverse())
             .width(Size::px(progress))
             .height(Size::fill())
@@ -52,22 +65,22 @@ pub fn reverse_progress() {
 
     let mut test = launch_test(use_animation_app);
 
-    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    let rect = animated_rect(&test, "animation").layout();
     assert_eq!(rect.area.width(), 0.0);
 
     test.poll(Duration::from_millis(1), Duration::from_millis(100));
-    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    let rect = animated_rect(&test, "animation").layout();
     assert_eq!(rect.area.width(), 100.0);
 
     test.click_cursor((5., 5.));
     test.sync_and_update();
 
     test.poll(Duration::from_millis(1), Duration::from_millis(50));
-    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    let rect = animated_rect(&test, "animation").layout();
     assert!(rect.area.width() < 100.0);
 
     test.poll(Duration::from_millis(1), Duration::from_millis(50));
-    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    let rect = animated_rect(&test, "animation").layout();
     assert_eq!(rect.area.width(), 0.0);
 }
 
@@ -83,6 +96,7 @@ pub fn animate_color() {
         let background = animation.get().value();
 
         rect()
+            .a11y_alt("animation")
             .width(Size::fill())
             .height(Size::fill())
             .background(background)
@@ -90,12 +104,18 @@ pub fn animate_color() {
 
     let mut test = launch_test(use_animation_app);
 
-    let background = &test.find_many(|_, e| Rect::try_downcast(e).map(|e| e.style.background))[2];
-    assert_eq!(background, &Fill::Color(Color::RED));
+    let background = Rect::try_downcast(&*animated_rect(&test, "animation").element())
+        .unwrap()
+        .style
+        .background;
+    assert_eq!(background, Fill::Color(Color::RED));
 
     test.poll(Duration::from_millis(1), Duration::from_millis(100));
-    let background = &test.find_many(|_, e| Rect::try_downcast(e).map(|e| e.style.background))[2];
-    assert_eq!(background, &Fill::Color((50, 100, 200).into()));
+    let background = Rect::try_downcast(&*animated_rect(&test, "animation").element())
+        .unwrap()
+        .style
+        .background;
+    assert_eq!(background, Fill::Color((50, 100, 200).into()));
 }
 
 #[test]
@@ -114,11 +134,13 @@ pub fn sequential() {
         let progress_b = animation.get()[1].value();
 
         rect()
+            .a11y_alt("animation")
             .background(Color::WHITE)
             .height(Size::fill())
             .width(Size::px(progress_a))
             .child(
                 rect()
+                    .a11y_alt("second animation")
                     .background(Color::WHITE)
                     .height(Size::fill())
                     .width(Size::px(progress_b)),
@@ -127,32 +149,32 @@ pub fn sequential() {
 
     let mut test = launch_test(use_animation_app);
 
-    let rect_a = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
-    let rect_b = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[3];
+    let rect_a = animated_rect(&test, "animation").layout();
+    let rect_b = animated_rect(&test, "second animation").layout();
     assert_eq!(rect_a.area.width(), 0.0);
     assert_eq!(rect_b.area.width(), 0.0);
 
     test.poll(Duration::from_millis(1), Duration::from_millis(15));
-    let rect_a = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
-    let rect_b = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[3];
+    let rect_a = animated_rect(&test, "animation").layout();
+    let rect_b = animated_rect(&test, "second animation").layout();
     assert!(rect_a.area.width() > 0.0);
     assert_eq!(rect_b.area.width(), 0.0);
 
     test.poll(Duration::from_millis(1), Duration::from_millis(85));
-    let rect_a = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
-    let rect_b = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[3];
+    let rect_a = animated_rect(&test, "animation").layout();
+    let rect_b = animated_rect(&test, "second animation").layout();
     assert_eq!(rect_a.area.width(), 100.0);
     assert!(rect_b.area.width() > 0.0);
 
     test.poll(Duration::from_millis(1), Duration::from_millis(15));
-    let rect_a = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
-    let rect_b = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[3];
+    let rect_a = animated_rect(&test, "animation").layout();
+    let rect_b = animated_rect(&test, "second animation").layout();
     assert_eq!(rect_a.area.width(), 100.0);
     assert!(rect_b.area.width() > 0.0);
 
     test.poll(Duration::from_millis(1), Duration::from_millis(85));
-    let rect_a = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
-    let rect_b = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[3];
+    let rect_a = animated_rect(&test, "animation").layout();
+    let rect_b = animated_rect(&test, "second animation").layout();
     assert_eq!(rect_a.area.width(), 100.0);
     assert_eq!(rect_b.area.width(), 100.0);
 }
@@ -171,6 +193,7 @@ pub fn animation_with_dependencies() {
         let progress = animation.get().value();
 
         rect()
+            .a11y_alt("animation")
             .width(Size::px(progress))
             .height(Size::fill())
             .background(Color::WHITE)
@@ -183,11 +206,11 @@ pub fn animation_with_dependencies() {
 
     let mut test = launch_test(use_animation_app);
 
-    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    let rect = animated_rect(&test, "animation").layout();
     assert_eq!(rect.area.width(), 0.0);
 
     test.poll(Duration::from_millis(1), Duration::from_millis(100));
-    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    let rect = animated_rect(&test, "animation").layout();
     assert_eq!(rect.area.width(), 100.0);
 
     // Click button to change target to 200
@@ -199,7 +222,7 @@ pub fn animation_with_dependencies() {
     test.sync_and_update();
 
     // Animation should reset to 0 when dependencies change (default OnChange::Reset)
-    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    let rect = animated_rect(&test, "animation").layout();
     assert_eq!(rect.area.width(), 0.0);
 }
 
@@ -218,6 +241,7 @@ pub fn animation_with_dependencies_on_change_finish() {
         let progress = animation.get().value();
 
         rect()
+            .a11y_alt("animation")
             .width(Size::px(progress))
             .height(Size::fill())
             .background(Color::WHITE)
@@ -230,11 +254,11 @@ pub fn animation_with_dependencies_on_change_finish() {
 
     let mut test = launch_test(use_animation_app);
 
-    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    let rect = animated_rect(&test, "animation").layout();
     assert_eq!(rect.area.width(), 0.0);
 
     test.poll(Duration::from_millis(1), Duration::from_millis(25));
-    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    let rect = animated_rect(&test, "animation").layout();
     let width_mid = rect.area.width();
     assert!(width_mid > 0.0 && width_mid < 100.0);
 
@@ -247,7 +271,7 @@ pub fn animation_with_dependencies_on_change_finish() {
     test.sync_and_update();
     test.sync_and_update();
 
-    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[1];
+    let rect = animated_rect(&test, "animation").layout();
     assert_eq!(rect.area.width(), 200.0);
 }
 
@@ -266,6 +290,7 @@ pub fn animation_with_dependencies_on_change_rerun() {
         let progress = animation.get().value();
 
         rect()
+            .a11y_alt("animation")
             .width(Size::px(progress))
             .height(Size::fill())
             .background(Color::WHITE)
@@ -278,11 +303,11 @@ pub fn animation_with_dependencies_on_change_rerun() {
 
     let mut test = launch_test(use_animation_app);
 
-    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    let rect = animated_rect(&test, "animation").layout();
     assert_eq!(rect.area.width(), 0.0);
 
     test.poll(Duration::from_millis(1), Duration::from_millis(100));
-    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    let rect = animated_rect(&test, "animation").layout();
     assert_eq!(rect.area.width(), 100.0);
 
     // Click button to change target to 200
@@ -294,15 +319,15 @@ pub fn animation_with_dependencies_on_change_rerun() {
     test.sync_and_update();
     test.sync_and_update();
 
-    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    let rect = animated_rect(&test, "animation").layout();
     assert_eq!(rect.area.width(), 0.0);
 
     test.poll(Duration::from_millis(1), Duration::from_millis(25));
-    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    let rect = animated_rect(&test, "animation").layout();
     assert!(rect.area.width() > 0.0 && rect.area.width() < 200.0);
 
     test.poll(Duration::from_millis(1), Duration::from_millis(75));
-    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    let rect = animated_rect(&test, "animation").layout();
     assert_eq!(rect.area.width(), 200.0);
 }
 
@@ -321,6 +346,7 @@ pub fn animation_with_dependencies_reruns_in_same_render() {
         let progress = animation.get().value();
 
         rect()
+            .a11y_alt("animation")
             .width(Size::px(progress))
             .height(Size::fill())
             .background(Color::WHITE)
@@ -333,17 +359,17 @@ pub fn animation_with_dependencies_reruns_in_same_render() {
 
     let mut test = launch_test(use_animation_app);
 
-    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    let rect = animated_rect(&test, "animation").layout();
     assert_eq!(rect.area.width(), 100.0);
 
     // The rerun must be reflected in the first render after the change
     test.click_cursor((15.0, 15.0));
     test.sync_and_update();
 
-    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    let rect = animated_rect(&test, "animation").layout();
     assert_eq!(rect.area.width(), 0.0);
 
     test.poll(Duration::from_millis(1), Duration::from_millis(100));
-    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    let rect = animated_rect(&test, "animation").layout();
     assert_eq!(rect.area.width(), 200.0);
 }
