@@ -281,6 +281,11 @@ impl ElementExt for ParagraphElement {
             diff.insert(DiffModifies::LAYOUT);
         }
 
+        // If holder is different and there is a change,  rerun layout
+        if !diff.is_empty() && self.sk_paragraph != paragraph.sk_paragraph {
+            diff.insert(DiffModifies::LAYOUT);
+        }
+
         diff
     }
 
@@ -472,7 +477,9 @@ impl ElementExt for ParagraphElement {
 
     fn render(&self, context: RenderContext) {
         let paragraph = self.sk_paragraph.0.borrow();
-        let ParagraphHolderInner { paragraph, .. } = paragraph.as_ref().unwrap();
+        let ParagraphHolderInner { paragraph, .. } = paragraph
+            .as_ref()
+            .expect("Paragraph has not been measured yet");
         let inner_area = context.layout_node.inner_area;
 
         let cursor_area = match self.cursor_mode {
