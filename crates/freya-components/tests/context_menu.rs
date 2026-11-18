@@ -70,7 +70,6 @@ pub fn context_menu_closes_with_a_single_click_after_a_fast_open() {
 fn custom_viewer_removal_restores_fallback() {
     fn app() -> impl IntoElement {
         let custom_viewer = use_consume::<State<bool>>();
-        let mut menu_font = use_consume::<State<Option<f32>>>();
 
         rect()
             .expanded()
@@ -81,49 +80,43 @@ fn custom_viewer_removal_restores_fallback() {
             .child(
                 rect()
                     .expanded()
-                    .on_secondary_down(move |_| {
-                        ContextMenu::open_from_down(Menu::new().child(
-                            MenuButton::new().child(label().text("Item").on_styled(
-                                move |event: Event<StyledEventData>| {
-                                    menu_font
-                                        .set_if_modified(Some(event.text_style.font_size.into()));
-                                },
-                            )),
-                        ));
+                    .on_secondary_down(|_| {
+                        ContextMenu::open_from_down(
+                            Menu::new().child(MenuButton::new().child("Item")),
+                        );
                     })
                     .child("Area"),
             )
     }
 
-    let (mut test, (mut custom_viewer, menu_font)) = TestingRunner::new(
+    let (mut test, mut custom_viewer) = TestingRunner::new(
         app,
         (500., 500.).into(),
-        |runner| {
-            (
-                runner.provide_root_context(|| State::create(true)),
-                runner.provide_root_context(|| State::create(None::<f32>)),
-            )
-        },
+        |runner| runner.provide_root_context(|| State::create(true)),
         1.,
     );
+    let item_width = |test: &TestingRunner| {
+        let items = test.find_many(|node, element| {
+            Label::try_downcast(element)
+                .filter(|label| label.text.as_ref() == "Item")
+                .map(|_| node.layout().area.width())
+        });
+        assert_eq!(items.len(), 1);
+        items[0]
+    };
 
     right_click(&mut test, (100., 100.));
-    assert_eq!(*menu_font.peek(), Some(30.));
+    let custom_width = item_width(&test);
 
     for visible in [false, true, false] {
         custom_viewer.set(visible);
         test.sync_and_update();
-        assert_eq!(
-            test.find_many(|_, element| {
-                Label::try_downcast(element).filter(|label| label.text.as_ref() == "Item")
-            })
-            .len(),
-            1
-        );
+        test.sync_and_update();
+        let width = item_width(&test);
         if visible {
-            assert_eq!(*menu_font.peek(), Some(30.));
+            assert_eq!(width, custom_width);
         } else {
-            assert!(menu_font.peek().is_some_and(|font_size| font_size < 30.));
+            assert!(width < custom_width);
         }
     }
 

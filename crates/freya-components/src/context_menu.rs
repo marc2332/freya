@@ -205,10 +205,13 @@ impl ComponentOwned for ContextMenuViewer {
 
         rect().maybe(is_active, |el| {
             el.on_global_pointer_move(move |e: Event<PointerEventData>| {
-                context.location.set(e.global_location());
+                if context.viewers.peek().last() == Some(&scope_id) {
+                    context.location.set(e.global_location());
+                }
             })
             .on_global_pointer_down(move |_: Event<PointerEventData>| {
-                if context.menu.read().is_some() {
+                if context.viewers.peek().last() == Some(&scope_id) && context.menu.read().is_some()
+                {
                     let phase = match (context.close_phase)() {
                         ClosePhase::PendingPress => ClosePhase::Idle,
                         _ => ClosePhase::CloseAllowed,

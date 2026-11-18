@@ -104,18 +104,16 @@ pub fn animate_color() {
 
     let mut test = launch_test(use_animation_app);
 
-    let background = Rect::try_downcast(&*animated_rect(&test, "animation").element())
-        .unwrap()
-        .style
-        .background;
-    assert_eq!(background, Fill::Color(Color::RED));
+    let background = |test: &TestingRunner| {
+        Rect::try_downcast(&*animated_rect(test, "animation").element())
+            .unwrap()
+            .style
+            .background
+    };
+    assert_eq!(background(&test), Fill::Color(Color::RED));
 
     test.poll(Duration::from_millis(1), Duration::from_millis(100));
-    let background = Rect::try_downcast(&*animated_rect(&test, "animation").element())
-        .unwrap()
-        .style
-        .background;
-    assert_eq!(background, Fill::Color((50, 100, 200).into()));
+    assert_eq!(background(&test), Fill::Color((50, 100, 200).into()));
 }
 
 #[test]
