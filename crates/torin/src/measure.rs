@@ -188,6 +188,9 @@ where
 
             layout_node.offset_x = node.offset_x;
             layout_node.offset_y = node.offset_y;
+            layout_node
+                .inner_area
+                .move_with_offsets(&offset_x, &offset_y);
 
             let layout_node = layout_node.clone();
 
