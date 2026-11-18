@@ -97,6 +97,7 @@ pub fn offset_change() {
         layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(0.0, 150.0), Size2D::new(50.0, 50.0)),
     );
+    assert_eq!(layout.get(&1).unwrap().inner_area.min_y(), 150.);
 }
 
 #[test]
