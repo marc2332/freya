@@ -375,6 +375,13 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 Platform::get().register_window(app_window.platform.clone());
                 app_window.driver = new_driver;
                 app_window.window = new_window;
+                self.plugins.send(
+                    PluginEvent::WindowResumed {
+                        window: &app_window.window,
+                        tree: &mut app_window.tree,
+                    },
+                    PluginHandle::new(&self.proxy),
+                );
                 app_window.process_layout_on_next_render = true;
                 app_window.tree.layout.reset();
 
@@ -610,7 +617,16 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
         event: winit::event::WindowEvent,
     ) {
         let mut needs_recovery = false;
-        if let Some(app) = &mut self.windows.get_mut(&window_id) {
+        if let Some(app) = self.windows.get_mut(&window_id) {
+            self.plugins.send(
+                PluginEvent::WindowEvent {
+                    window: &app.window,
+                    raw: &event,
+                    tree: &mut app.tree,
+                },
+                PluginHandle::new(&self.proxy),
+            );
+
             #[cfg(feature = "accessibility")]
             app.accessibility_adapter.process_event(&app.window, &event);
             match event {

@@ -293,6 +293,13 @@ impl AppWindow {
         let scale_factor = window.scale_factor() * custom_scale_factor;
 
         let mut tree = Tree::default();
+        plugins.send(
+            PluginEvent::TreeCreated {
+                window: &window,
+                tree: &mut tree,
+            },
+            PluginHandle::new(event_loop_proxy),
+        );
 
         let window_size = window.inner_size().to_logical::<f32>(scale_factor);
         let accent_color_preference = accent_color_preference();
