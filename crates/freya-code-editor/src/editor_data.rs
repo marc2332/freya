@@ -100,11 +100,11 @@ impl CodeEditorData {
         let mut changed = false;
 
         if let Some(target) = horizontal_target {
-            changed |= scroll_controller.scroll_to_x(-target as i32);
+            changed |= scroll_controller.scroll_to_x((-target).into());
         }
 
         if let Some(target) = vertical_target {
-            changed |= scroll_controller.scroll_to_y(-target as i32);
+            changed |= scroll_controller.scroll_to_y((-target).into());
         }
 
         changed

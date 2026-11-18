@@ -37,7 +37,7 @@ fn end_config() -> ScrollConfig {
 }
 
 fn position_label(scroll_controller: ScrollController) -> impl IntoElement {
-    let (_, scrolled_y): (i32, i32) = scroll_controller.into();
+    let (_, scrolled_y): (f64, f64) = scroll_controller.into();
     label()
         .height(Size::px(0.))
         .text(format!("position {scrolled_y}"))
@@ -78,15 +78,15 @@ fn follower_views_preserve_controller_bounds() {
                     })
             },
             (500., 500.).into(),
-            |runner| runner.provide_root_context(|| ScrollController::new(0, 0)),
+            |runner| runner.provide_root_context(|| ScrollController::new(0., 0.)),
             1.,
         );
         test.sync_and_update();
         let bounds = *controller.bounds.peek();
         assert_eq!(bounds, Some(((2000., 2000.).into(), (400., 500.).into())));
 
-        controller.scroll_to_x(-200);
-        controller.scroll_to_y(-300);
+        controller.scroll_to_x(-200.);
+        controller.scroll_to_y(-300.);
         test.sync_and_update();
         assert_eq!(controller.position(), (-200., -300.).into());
         assert_eq!(*controller.bounds.peek(), bounds);
@@ -141,7 +141,7 @@ pub fn controlled_scroll_view_clamps_programmatic_scrolls() {
     fn app() -> impl IntoElement {
         let mut scroll_controller = use_scroll_controller(ScrollConfig::default);
         let scroll_to_end = move |_| {
-            scroll_controller.scroll_to_y(-10_000);
+            scroll_controller.scroll_to_y(-10_000.);
         };
 
         rect()

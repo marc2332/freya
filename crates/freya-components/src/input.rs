@@ -491,10 +491,10 @@ impl Component for Input {
 
             // Minimally reveal the cursor
             if visible_cursor_location.x < visible_start_x {
-                scroll_controller.scroll_to_x(-cursor_location.x as i32);
+                scroll_controller.scroll_to_x((-cursor_location.x).into());
             } else if visible_cursor_location.x > visible_start_x + viewport.width() {
                 scroll_controller.scroll_to_x(
-                    -(visible_cursor_location.x + padding.right() - viewport.width()) as i32,
+                    (viewport.width() - (visible_cursor_location.x + padding.right())).into(),
                 );
             }
 
@@ -503,9 +503,9 @@ impl Component for Input {
                 let visible_start_y = viewport.min_y() - area.peek().min_y();
 
                 if visible_cursor_location.y < visible_start_y {
-                    scroll_controller.scroll_to_y(-cursor_location.y as i32);
+                    scroll_controller.scroll_to_y((-cursor_location.y).into());
                 } else if cursor_bottom > visible_start_y + viewport.height() {
-                    scroll_controller.scroll_to_y(-(cursor_bottom - viewport.height()) as i32);
+                    scroll_controller.scroll_to_y((viewport.height() - cursor_bottom).into());
                 }
             }
         };
@@ -709,7 +709,7 @@ impl Component for Input {
         let on_paragraph_sized = move |e: Event<SizedEventData>| {
             let viewport = viewport_area();
             if viewport.width() > 0. {
-                scroll_controller.apply_layout(e.area.size, viewport.size);
+                scroll_controller.apply_layout(e.area.size.to_f64(), viewport.size.to_f64());
             }
 
             let text_size_changed = area.peek().size != e.area.size;
