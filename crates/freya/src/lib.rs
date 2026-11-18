@@ -1,6 +1,6 @@
 #![doc(
-    html_logo_url = "https://freyaui.dev/logo.svg",
-    html_favicon_url = "https://freyaui.dev/logo.svg"
+    html_logo_url = "https://cdn.jsdelivr.net/gh/marc2332/freya@main/logo.svg",
+    html_favicon_url = "https://cdn.jsdelivr.net/gh/marc2332/freya@main/logo.svg"
 )]
 #![cfg_attr(feature = "docs", feature(doc_cfg))]
 //! # Freya
