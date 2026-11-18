@@ -80,7 +80,7 @@ pub const SCROLLBAR_MARGIN: f32 = 3.0;
 
 /// Thumb size, scrollable content range and thumb travel range inside the track.
 fn get_thumb_ranges(inner_size: f64, viewport_size: f64) -> (f64, f64, f64) {
-    let track_size = viewport_size - f64::from(SCROLLBAR_MARGIN) * 2.0;
+    let track_size = viewport_size - SCROLLBAR_MARGIN as f64 * 2.0;
     let viewable_ratio = viewport_size / inner_size;
     let minimum_thumb_size = if track_size > MIN_SCROLLBAR_SIZE {
         MIN_SCROLLBAR_SIZE
@@ -132,7 +132,7 @@ pub fn get_scroll_position_from_cursor(
         get_thumb_ranges(inner_size, viewport_size);
 
     let cursor_clamped =
-        (cursor_position - f64::from(SCROLLBAR_MARGIN)).clamp(0.0, available_thumb_range);
+        (cursor_position - SCROLLBAR_MARGIN as f64).clamp(0.0, available_thumb_range);
 
     let normalized_scroll = cursor_clamped / available_thumb_range;
     -(normalized_scroll * available_scroll_range)
@@ -205,11 +205,11 @@ mod tests {
         for viewport_size in 51..=56 {
             let viewport_size = viewport_size as f64;
             let inner_size = viewport_size * 2.;
-            let track_size = viewport_size - f64::from(SCROLLBAR_MARGIN) * 2.;
+            let track_size = viewport_size - SCROLLBAR_MARGIN as f64 * 2.;
 
             let (_, thumb_size) = get_scrollbar_pos_and_size(inner_size, viewport_size, 0.);
 
-            assert!(f64::from(thumb_size) < track_size);
+            assert!((thumb_size as f64) < track_size);
             assert_eq!(
                 get_scroll_position_from_cursor(viewport_size, inner_size, viewport_size),
                 -viewport_size

@@ -197,9 +197,9 @@ impl Component for CodeEditor {
                 }
 
                 editor.write_if(|mut editor| {
-                    let lines_jump = (f64::from(line_height) * LINES_JUMP_ALT as f64).ceil();
-                    let content_height = lines_len as f64 * f64::from(line_height);
-                    let viewport_height = f64::from(editor.viewport.height);
+                    let lines_jump = (line_height as f64 * LINES_JUMP_ALT as f64).ceil();
+                    let content_height = lines_len as f64 * line_height as f64;
+                    let viewport_height = editor.viewport.height as f64;
                     let min_scroll = -(content_height - viewport_height).max(0.);
                     let max_scroll = 0.;
                     let (_, current_scroll) = scroll_controller.into();

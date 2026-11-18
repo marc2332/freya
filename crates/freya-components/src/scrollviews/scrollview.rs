@@ -425,8 +425,8 @@ impl Component for ScrollView {
 
                 let scroll_position = get_scroll_position_from_cursor(
                     cursor_y,
-                    f64::from(size.read().inner_sizes.height),
-                    f64::from(size.read().area.height()),
+                    size.read().inner_sizes.height.into(),
+                    size.read().area.height().into(),
                 );
 
                 scroll_controller.scroll_to_y(scroll_position);
@@ -436,8 +436,8 @@ impl Component for ScrollView {
 
                 let scroll_position = get_scroll_position_from_cursor(
                     cursor_x,
-                    f64::from(size.read().inner_sizes.width),
-                    f64::from(size.read().area.width()),
+                    size.read().inner_sizes.width.into(),
+                    size.read().area.width().into(),
                 );
 
                 scroll_controller.scroll_to_x(scroll_position);
@@ -461,10 +461,10 @@ impl Component for ScrollView {
             }
             let x = corrected_scrolled_x;
             let y = corrected_scrolled_y;
-            let inner_height = f64::from(size.read().inner_sizes.height);
-            let inner_width = f64::from(size.read().inner_sizes.width);
-            let viewport_height = f64::from(size.read().area.height());
-            let viewport_width = f64::from(size.read().area.width());
+            let inner_height = size.read().inner_sizes.height.into();
+            let inner_width = size.read().inner_sizes.width.into();
+            let viewport_height = size.read().area.height().into();
+            let viewport_width = size.read().area.width().into();
             if let Some((x, y)) = handle_key_event(
                 &e.key,
                 (x, y),

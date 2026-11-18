@@ -67,7 +67,7 @@ impl ItemSize {
                 if *size <= 0.0 {
                     return (0..0, 0.0);
                 }
-                let size = f64::from(*size);
+                let size = *size as f64;
                 let start = scroll_distance / size;
                 let potentially_visible = (viewport_size / size) + 1.0;
                 let start_index = (start as usize).min(length);
@@ -81,7 +81,7 @@ impl ItemSize {
                 let mut start = 0;
                 let mut cumulative = 0.0;
                 while start < length {
-                    let item = f64::from(callback.call(start));
+                    let item = callback.call(start) as f64;
                     if cumulative + item > scroll_distance {
                         break;
                     }
@@ -91,7 +91,7 @@ impl ItemSize {
                 let offset = cumulative - scroll_distance;
                 let mut end = start;
                 while end < length && cumulative < scroll_distance + viewport_size {
-                    cumulative += f64::from(callback.call(end));
+                    cumulative += callback.call(end) as f64;
                     end += 1;
                 }
                 (start..end, offset as f32)
@@ -102,16 +102,16 @@ impl ItemSize {
     /// Total content size, estimated from measured items when sizes are dynamic.
     fn total_size(&self, viewport_size: f64, scroll_position: f64, length: usize) -> f64 {
         match self {
-            Self::Fixed(size) => f64::from(*size) * length as f64,
+            Self::Fixed(size) => *size as f64 * length as f64,
             Self::Dynamic(callback) => {
                 if length == 0 {
                     return 0.0;
                 }
                 let viewport_bottom = (-scroll_position).max(0.0) + viewport_size;
-                let mut measured = f64::from(callback.call(0));
+                let mut measured = callback.call(0) as f64;
                 let mut count = 1;
                 while count < length && measured < viewport_bottom {
-                    measured += f64::from(callback.call(count));
+                    measured += callback.call(count) as f64;
                     count += 1;
                 }
                 (measured / count as f64) * length as f64
@@ -487,19 +487,19 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
         let direction = layout.direction;
         let drag_scrolling = self.drag_scrolling;
 
-        let viewport_width = f64::from(size.read().area.width());
-        let viewport_height = f64::from(size.read().area.height());
+        let viewport_width = size.read().area.width().into();
+        let viewport_height = size.read().area.height().into();
 
         let (inner_width, inner_height) = match direction {
             Direction::Vertical => (
-                f64::from(size.read().inner_sizes.width),
+                size.read().inner_sizes.width.into(),
                 self.item_size
                     .total_size(viewport_height, scrolled_y, self.length),
             ),
             Direction::Horizontal => (
                 self.item_size
                     .total_size(viewport_width, scrolled_x, self.length),
-                f64::from(size.read().inner_sizes.height),
+                size.read().inner_sizes.height.into(),
             ),
         };
 
@@ -820,20 +820,20 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                                     if !follows_scroll_controller {
                                         let content_size = match direction {
                                             Direction::Vertical => ScrollSize::new(
-                                                f64::from(e.inner_sizes.width),
+                                                e.inner_sizes.width.into(),
                                                 item_size.total_size(
-                                                    f64::from(e.area.height()),
+                                                    e.area.height().into(),
                                                     scrolled_y,
                                                     length,
                                                 ),
                                             ),
                                             Direction::Horizontal => ScrollSize::new(
                                                 item_size.total_size(
-                                                    f64::from(e.area.width()),
+                                                    e.area.width().into(),
                                                     scrolled_x,
                                                     length,
                                                 ),
-                                                f64::from(e.inner_sizes.height),
+                                                e.inner_sizes.height.into(),
                                             ),
                                         };
 

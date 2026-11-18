@@ -74,7 +74,7 @@ fn virtual_scroll_view_large_offsets() {
 
             test.run_in(|| {
                 let target = controller.position();
-                assert_eq!(target.y, start - f64::from(step) * 128.);
+                assert_eq!(target.y, start - step as f64 * 128.);
                 assert_eq!(controller.animated_position(target), target);
 
                 let probe = target + ScrollVector::new(0., 1024.);
