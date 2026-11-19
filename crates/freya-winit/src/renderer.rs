@@ -298,6 +298,13 @@ impl From<accesskit_winit::Event> for NativeEvent {
 }
 
 impl ApplicationHandler<NativeEvent> for WinitRenderer {
+    #[cfg(target_os = "android")]
+    fn suspended(&mut self, _active_event_loop: &winit::event_loop::ActiveEventLoop) {
+        for app in self.windows.values_mut() {
+            drop(app.driver.take());
+        }
+    }
+
     fn resumed(&mut self, active_event_loop: &winit::event_loop::ActiveEventLoop) {
         if !self.resumed {
             #[cfg(feature = "tray")]
@@ -345,10 +352,14 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 .proxy
                 .send_event(NativeEvent::Generic(NativeGenericEvent::PollFutures));
         } else {
-            // [Android] Recreate the GraphicsDriver when the app gets brought into the foreground after being suspended,
-            // so we don't end up with a completely black surface with broken rendering.
             let old_windows: Vec<_> = self.windows.drain().collect();
             for (old_id, mut app_window) in old_windows {
+                #[cfg(target_os = "android")]
+                if app_window.driver.is_some() {
+                    self.windows.insert(old_id, app_window);
+                    continue;
+                }
+
                 let (new_driver, new_window) = GraphicsDriver::new(
                     active_event_loop,
                     app_window.window_attributes.clone(),
@@ -373,10 +384,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     .runner
                     .provide_root_context(|| CurrentWindowId(app_window.platform.id));
                 Platform::get().register_window(app_window.platform.clone());
-                app_window.driver = new_driver;
+                app_window.driver = Some(new_driver);
                 app_window.window = new_window;
-                app_window.process_layout_on_next_render = true;
-                app_window.tree.layout.reset();
+                app_window.scale_factor_changed();
 
                 self.windows.insert(new_id, app_window);
 
@@ -706,6 +716,10 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     }
                 }
                 WindowEvent::RedrawRequested => {
+                    if app.driver.is_none() {
+                        return;
+                    }
+
                     let scale_factor = app.effective_scale_factor();
                     hotpath::measure_block!("RedrawRequested", {
                         app.measure_layout(
@@ -716,8 +730,11 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             PluginHandle::new(&self.proxy),
                         );
 
-                        let resource_cache = app.driver.resource_cache_usage();
-                        let present_result = app.driver.present(
+                        let Some(driver) = app.driver.as_mut() else {
+                            return;
+                        };
+                        let resource_cache = driver.resource_cache_usage();
+                        let present_result = driver.present(
                             app.window.inner_size().cast(),
                             &app.window,
                             |surface| {
@@ -866,7 +883,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     });
                 }
                 WindowEvent::Resized(size) => {
-                    if let Err(error) = app.driver.resize(size) {
+                    if let Some(driver) = &mut app.driver
+                        && let Err(error) = driver.resize(size)
+                    {
                         tracing::warn!(
                             "Graphics driver lost while resizing ({error:?}), rebuilding on the same window"
                         );
@@ -1058,27 +1077,25 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
             }
         }
 
-        // Rebuild on the same window.
-        if needs_recovery && let Some(mut app) = self.windows.remove(&window_id) {
-            // Drop the lost driver first to release its GPU surface.
-            drop(app.driver);
-            app.driver = GraphicsDriver::recover_reusing_window(
+        if needs_recovery && let Some(app) = self.windows.get_mut(&window_id) {
+            drop(app.driver.take());
+            let driver = GraphicsDriver::recover_reusing_window(
                 event_loop,
                 &app.window,
                 self.gpu_resource_cache_limit,
                 app.window_attributes.transparent,
             );
-            tracing::info!("Recovered onto the {} driver", app.driver.name());
+            tracing::info!("Recovered onto the {} driver", driver.name());
             self.plugins.send(
                 PluginEvent::GraphicsDriverChanged {
                     window: &app.window,
-                    graphics_driver: app.driver.name(),
-                    gpu_name: app.driver.gpu_name(),
+                    graphics_driver: driver.name(),
+                    gpu_name: driver.gpu_name(),
                 },
                 PluginHandle::new(&self.proxy),
             );
+            app.driver = Some(driver);
             app.window.request_redraw();
-            self.windows.insert(window_id, app);
         }
     }
 }
