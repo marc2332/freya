@@ -42,7 +42,7 @@ use crate::scrollviews::{
 /// It renders all of its children and scrolls over them, which makes it a good fit for small or
 /// medium amounts of content. For large data sets prefer
 /// [`VirtualScrollView`](crate::scrollviews::VirtualScrollView), which only renders the visible
-/// items. It scrolls vertically by default, use [`direction`](ScrollView::direction) for a
+/// items. It scrolls vertically by default, use [`horizontal`](DirectionExt::horizontal) for a
 /// horizontal layout. To drive the scroll position from code, build it with
 /// [`new_controlled`](ScrollView::new_controlled) and a [`ScrollController`].
 ///
@@ -153,12 +153,6 @@ impl ScrollView {
         self
     }
 
-    /// Sets the layout direction the children flow and scroll in.
-    pub fn direction(mut self, direction: Direction) -> Self {
-        self.layout.direction = direction;
-        self
-    }
-
     /// Sets the gap between children along the scroll direction.
     pub fn spacing(mut self, spacing: f32) -> Self {
         self.layout.spacing = Length::new(spacing);
@@ -211,6 +205,14 @@ impl ScrollView {
 impl LayoutExt for ScrollView {
     fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
+    }
+}
+
+impl DirectionExt for ScrollView {
+    /// Sets the layout direction the children flow and scroll in.
+    fn direction(mut self, direction: Direction) -> Self {
+        self.layout.direction = direction;
+        self
     }
 }
 

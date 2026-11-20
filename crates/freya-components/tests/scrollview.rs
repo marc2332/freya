@@ -408,7 +408,7 @@ pub fn scroll_view_drag_scrolling_horizontal() {
     fn scroll_view_drag_horizontal_app() -> impl IntoElement {
         ScrollView::new()
             .drag_scrolling(true)
-            .direction(Direction::Horizontal)
+            .horizontal()
             .child(rect().height(Size::px(200.)).width(Size::px(200.)))
             .child(rect().height(Size::px(200.)).width(Size::px(200.)))
             .child(rect().height(Size::px(200.)).width(Size::px(200.)))

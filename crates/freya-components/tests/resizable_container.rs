@@ -57,7 +57,7 @@ pub fn resizable_container_layout() {
 pub fn resizable_container_horizontal() {
     fn resizable_container_horizontal_app() -> impl IntoElement {
         ResizableContainer::new()
-            .direction(Direction::Horizontal)
+            .horizontal()
             .panel(ResizablePanel::new(PanelSize::percent(50.)).child(label().text("Left")))
             .panel(ResizablePanel::new(PanelSize::percent(50.)).child(label().text("Right")))
     }
