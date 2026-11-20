@@ -475,7 +475,12 @@ impl Component for ScrollView {
             if drag_scrolling && matches!(e.data(), PointerEventData::Touch(_)) {
                 scroll_controller.begin_drag();
                 let size = size.read();
-                touch_drag.press(e.global_location(), size.inner_sizes, size.area.size);
+                touch_drag.press(
+                    e.global_location(),
+                    rendered_position,
+                    size.inner_sizes,
+                    size.area.size,
+                );
             }
         };
 

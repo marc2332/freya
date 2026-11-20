@@ -1,6 +1,7 @@
 use freya_core::prelude::*;
 use torin::geometry::{
     CursorPoint,
+    Point2D,
     Size2D,
     Vector2D,
 };
@@ -10,8 +11,9 @@ const DRAG_THRESHOLD: f64 = 2.0;
 #[derive(Clone, Copy, PartialEq)]
 struct Candidate {
     id: AccessibilityId,
-    horizontal: bool,
-    vertical: bool,
+    // Room to scroll towards each end.
+    to_start: Vector2D,
+    to_end: Vector2D,
 }
 
 #[derive(Clone, PartialEq)]
@@ -27,9 +29,10 @@ impl Gesture {
         self.candidates.iter().any(|candidate| candidate.id == id)
     }
 
-    // Try the main drag direction first, then the other direction.
+    // Try views with room in the drag direction before falling back to either axis.
     fn owner_at(&self, coords: CursorPoint) -> Option<AccessibilityId> {
-        let distance = (self.origin - coords).abs();
+        let delta = self.origin - coords;
+        let distance = delta.abs();
         let moved_x = distance.x > DRAG_THRESHOLD;
         let moved_y = distance.y > DRAG_THRESHOLD;
         if !moved_x && !moved_y {
@@ -37,24 +40,36 @@ impl Gesture {
         }
 
         let mostly_vertical = distance.y >= distance.x;
-        let along = |candidate: &&Candidate| {
-            if mostly_vertical {
-                candidate.vertical
+        let towards_end = if mostly_vertical {
+            delta.y > 0.0
+        } else {
+            delta.x > 0.0
+        };
+        let towards = |candidate: &&Candidate| {
+            let room = if towards_end {
+                candidate.to_end
             } else {
-                candidate.horizontal
-            }
+                candidate.to_start
+            };
+            (if mostly_vertical { room.y } else { room.x }) >= 1.0
+        };
+        let along = |candidate: &&Candidate| {
+            let room = candidate.to_start + candidate.to_end;
+            (if mostly_vertical { room.y } else { room.x }) >= 1.0
         };
         let across = |candidate: &&Candidate| {
+            let room = candidate.to_start + candidate.to_end;
             if mostly_vertical {
-                candidate.horizontal && moved_x
+                room.x >= 1.0 && moved_x
             } else {
-                candidate.vertical && moved_y
+                room.y >= 1.0 && moved_y
             }
         };
 
         self.candidates
             .iter()
-            .find(along)
+            .find(towards)
+            .or_else(|| self.candidates.iter().find(along))
             .or_else(|| self.candidates.iter().find(across))
             .map(|candidate| candidate.id)
     }
@@ -98,8 +113,14 @@ impl TouchDrag {
         }
     }
 
-    /// Start a touch using the content and view sizes to find which directions can scroll.
-    pub fn press(&mut self, origin: CursorPoint, content: Size2D, viewport: Size2D) {
+    /// Start a touch using the scroll position and sizes to check where this view can scroll.
+    pub fn press(
+        &mut self,
+        origin: CursorPoint,
+        position: Point2D,
+        content: Size2D,
+        viewport: Size2D,
+    ) {
         let joined = self
             .gesture
             .peek()
@@ -112,10 +133,11 @@ impl TouchDrag {
             owner: None,
         });
         if !gesture.includes(self.id) {
+            let room = content - viewport;
             gesture.candidates.push(Candidate {
                 id: self.id,
-                horizontal: content.width - viewport.width >= 1.0,
-                vertical: content.height - viewport.height >= 1.0,
+                to_start: (-position.x, -position.y).into(),
+                to_end: (room.width + position.x, room.height + position.y).into(),
             });
         }
         self.gesture.set_if_modified(Some(gesture));

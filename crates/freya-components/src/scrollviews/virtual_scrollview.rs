@@ -768,6 +768,7 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                 scroll_controller.begin_drag();
                 touch_drag.press(
                     e.global_location(),
+                    rendered_position,
                     (inner_width, inner_height).into(),
                     (viewport_width, viewport_height).into(),
                 );
