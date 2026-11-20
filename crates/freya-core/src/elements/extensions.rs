@@ -539,16 +539,34 @@ pub enum PressEventData {
     Touch(TouchEventData),
 }
 
+/// Methods for setting the direction.
+pub trait DirectionExt: Sized {
+    /// Set the direction.
+    fn direction(self, direction: Direction) -> Self;
+
+    /// Set the direction to [`Direction::Vertical`].
+    fn vertical(self) -> Self {
+        self.direction(Direction::vertical())
+    }
+
+    /// Set the direction to [`Direction::Horizontal`].
+    fn horizontal(self) -> Self {
+        self.direction(Direction::horizontal())
+    }
+}
+
+impl<T: ContainerWithContentExt> DirectionExt for T {
+    fn direction(mut self, direction: Direction) -> Self {
+        self.layout_mut().layout.direction = direction;
+        self
+    }
+}
+
 /// Layout methods for containers that arrange children along a direction axis.
 pub trait ContainerWithContentExt
 where
     Self: LayoutExt,
 {
-    /// Set the axis children are stacked along. See [`Direction`].
-    fn direction(mut self, direction: Direction) -> Self {
-        self.layout_mut().layout.direction = direction;
-        self
-    }
     /// Set how children are aligned along the direction axis. See [`Alignment`].
     fn main_align(mut self, main_align: impl Into<Alignment>) -> Self {
         self.layout_mut().layout.main_alignment = main_align.into();
@@ -589,18 +607,6 @@ where
     /// Shift the element's children vertically by the given pixels.
     fn offset_y(mut self, offset_y: f32) -> Self {
         self.layout_mut().layout.offset_y = Length::new(offset_y);
-        self
-    }
-
-    /// Stack children vertically. Shorthand for [`direction`](Self::direction) set to [`Direction::Vertical`].
-    fn vertical(mut self) -> Self {
-        self.layout_mut().layout.direction = Direction::vertical();
-        self
-    }
-
-    /// Stack children horizontally. Shorthand for [`direction`](Self::direction) set to [`Direction::Horizontal`].
-    fn horizontal(mut self) -> Self {
-        self.layout_mut().layout.direction = Direction::horizontal();
         self
     }
 }

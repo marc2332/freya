@@ -674,7 +674,7 @@ pub fn virtual_scroll_view_keyboard_navigation_horizontal() {
         })
         .length(30usize)
         .item_size(50.)
-        .direction(Direction::Horizontal)
+        .horizontal()
     }
 
     let mut test = launch_test(virtual_scroll_view_horizontal_app);

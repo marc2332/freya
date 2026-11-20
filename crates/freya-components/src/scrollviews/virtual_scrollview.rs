@@ -214,6 +214,14 @@ impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> LayoutExt for VirtualScrol
     }
 }
 
+impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> DirectionExt for VirtualScrollView<D, B> {
+    /// Sets the axis the items flow and scroll in.
+    fn direction(mut self, direction: Direction) -> Self {
+        self.layout.direction = direction;
+        self
+    }
+}
+
 impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> ContainerSizeExt for VirtualScrollView<D, B> {}
 
 impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> KeyExt for VirtualScrollView<D, B> {
@@ -382,12 +390,6 @@ impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
     /// When disabled, scrollbars remain visible while the content overflows.
     pub fn auto_hide_scrollbars(mut self, auto_hide_scrollbars: bool) -> Self {
         self.auto_hide_scrollbars = auto_hide_scrollbars;
-        self
-    }
-
-    /// Sets the axis the items flow and scroll in.
-    pub fn direction(mut self, direction: Direction) -> Self {
-        self.layout.direction = direction;
         self
     }
 

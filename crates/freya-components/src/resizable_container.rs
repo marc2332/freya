@@ -267,6 +267,13 @@ impl LayoutExt for ResizableContainer {
     }
 }
 
+impl DirectionExt for ResizableContainer {
+    fn direction(mut self, direction: Direction) -> Self {
+        self.layout.direction = direction;
+        self
+    }
+}
+
 impl ContainerExt for ResizableContainer {}
 
 impl KeyExt for ResizableContainer {
@@ -289,11 +296,6 @@ impl ResizableContainer {
             panels: vec![],
             controller: None,
         }
-    }
-
-    pub fn direction(mut self, direction: Direction) -> Self {
-        self.layout.direction = direction;
-        self
     }
 
     pub fn panel(mut self, panel: impl Into<Option<ResizablePanel>>) -> Self {
