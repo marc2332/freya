@@ -1,5 +1,6 @@
 use std::{
     fmt,
+    future::Future,
     rc::Rc,
 };
 
@@ -61,9 +62,9 @@ impl Clipboard {
     }
 
     /// Starts a text clipboard read and returns its asynchronous result.
-    pub fn get_text() -> ClipboardFuture<String> {
+    pub fn get_text() -> impl Future<Output = Result<String, ClipboardError>> {
         let read = Self::get(DataFormat::Text);
-        Box::pin(async move {
+        async move {
             match read.await? {
                 DataValue::Text(text) => Ok(text),
                 DataValue::Bytes(bytes) => {
@@ -71,7 +72,7 @@ impl Clipboard {
                 }
                 DataValue::Files(_) => Err(ClipboardError::FailedToRead),
             }
-        })
+        }
     }
 
     /// Starts a text clipboard write and returns its asynchronous result.

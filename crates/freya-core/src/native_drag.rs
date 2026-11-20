@@ -15,10 +15,7 @@ use std::{
 use futures_channel::oneshot;
 use futures_util::{
     FutureExt,
-    future::{
-        BoxFuture,
-        Shared,
-    },
+    future::Shared,
 };
 use rustc_hash::FxHashMap;
 use torin::prelude::{
@@ -76,7 +73,7 @@ impl fmt::Display for DragError {
 
 impl std::error::Error for DragError {}
 
-type DragRead = Shared<BoxFuture<'static, Result<DataValue, DragError>>>;
+type DragRead = Shared<oneshot::Receiver<Result<DataValue, DragError>>>;
 
 /// A read request waiting for the platform to handle it.
 pub struct DragReadRequest {
@@ -174,9 +171,7 @@ impl DragDataHandle {
                 }
 
                 let (sender, receiver) = oneshot::channel();
-                let read = async move { receiver.await.map_err(|_| DragError::Expired)? }
-                    .boxed()
-                    .shared();
+                let read = receiver.shared();
                 reads.cached.insert(format, read.clone());
                 reads.pending.push(DragReadRequest {
                     format,
@@ -186,7 +181,7 @@ impl DragDataHandle {
             }
         };
 
-        read.await
+        read.await.map_err(|_| DragError::Expired)?
     }
 
     pub async fn read_files(&self) -> Result<Vec<PathBuf>, DragError> {
