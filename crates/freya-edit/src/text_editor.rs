@@ -608,7 +608,6 @@ pub trait TextEditor {
         holder: Option<&ParagraphHolder>,
         allow_tabs: bool,
         allow_changes: bool,
-        _allow_read_clipboard: bool,
         allow_write_clipboard: bool,
     ) -> TextEvent {
         let mut event = TextEvent::empty();

@@ -241,7 +241,6 @@ impl EditableEvent<'_> {
                                 holder,
                                 config.allow_tabs,
                                 config.allow_changes,
-                                config.allow_read_clipboard,
                                 config.allow_write_clipboard,
                             );
                             if event.contains(TextEvent::TEXT_CHANGED) {

@@ -274,7 +274,6 @@ impl CodeEditorData {
                             true,
                             true,
                             true,
-                            true,
                         );
                         text_changed = event.contains(TextEvent::TEXT_CHANGED);
                         if !event.is_empty() {

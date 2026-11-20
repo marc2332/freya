@@ -1897,7 +1897,6 @@ fn home_end_navigation() {
             false,
             true,
             true,
-            true,
         );
     };
 
