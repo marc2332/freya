@@ -14,9 +14,15 @@ use freya_winit::plugins::{
     PluginHandle,
 };
 use torin::prelude::Gaps;
-use winit::platform::android::activity::AndroidApp;
+use winit::{
+    event::WindowEvent,
+    platform::android::activity::AndroidApp,
+};
+
+use crate::window_insets::WindowInsets;
 
 mod status_bar;
+mod window_insets;
 
 /// Extension trait for [`Platform`] providing Android-specific APIs.
 pub trait AndroidExt {
@@ -29,8 +35,8 @@ pub trait AndroidExt {
     /// Hide the Android soft keyboard.
     fn hide_keyboard(&self) -> Result<(), jni::errors::Error>;
 
-    /// Content padding in logical pixels for the current window.
-    /// Call during rendering to track size, scale, and focus changes.
+    /// System bar and cutout padding in logical pixels for edge-to-edge layouts on API 30+.
+    /// Call during rendering to track inset and scale changes.
     fn content_padding(&self) -> Gaps;
 }
 
@@ -60,37 +66,39 @@ impl AndroidExt for Platform {
     }
 
     fn content_padding(&self) -> Gaps {
-        let window = self.current_window();
-        let size = *window.root_size.read();
-        let scale_factor = *window.scale_factor.read() as f32;
-        // Refresh the content rectangle when the app regains focus.
-        let _ = *window.is_app_focused.read();
-
-        let Some(app) = GlobalContexts::get().try_get_context::<AndroidApp>() else {
+        let Some(insets) = try_consume_root_context::<State<WindowInsets>>() else {
             return Gaps::default();
         };
-        let content = app.content_rect();
-        if content.right <= content.left || content.bottom <= content.top {
-            return Gaps::default();
-        }
+        let insets = insets.read();
+        let scale_factor = *self.current_window().scale_factor.read() as f32;
 
         Gaps::new(
-            (content.top as f32 / scale_factor).clamp(0., size.height),
-            (size.width - content.right as f32 / scale_factor).clamp(0., size.width),
-            (size.height - content.bottom as f32 / scale_factor).clamp(0., size.height),
-            (content.left as f32 / scale_factor).clamp(0., size.width),
+            insets.top as f32 / scale_factor,
+            insets.right as f32 / scale_factor,
+            insets.bottom as f32 / scale_factor,
+            insets.left as f32 / scale_factor,
         )
     }
 }
 
-/// Registers the Android context and syncs status-bar appearance with the app theme.
+/// Provides Android window insets and syncs status-bar appearance with the app theme.
 pub struct AndroidPlugin {
     app: AndroidApp,
+    insets: Option<State<WindowInsets>>,
 }
 
 impl AndroidPlugin {
     pub fn new(app: AndroidApp) -> Self {
-        Self { app }
+        Self { app, insets: None }
+    }
+
+    fn refresh_insets(&mut self) {
+        if let Some(insets) = &mut self.insets {
+            match WindowInsets::read(&self.app) {
+                Ok(value) => insets.set_if_modified(value),
+                Err(error) => tracing::warn!(?error, "Failed to read Android window insets"),
+            }
+        }
     }
 }
 
@@ -100,8 +108,23 @@ impl FreyaPlugin for AndroidPlugin {
     }
 
     fn on_event(&mut self, event: &mut PluginEvent, _handle: PluginHandle) {
-        if let PluginEvent::RunnerCreated { .. } = event {
-            GlobalContexts::get().insert_context(self.app.clone());
+        match event {
+            PluginEvent::RunnerCreated { runner } => {
+                GlobalContexts::get().insert_context(self.app.clone());
+                self.insets =
+                    Some(runner.provide_root_context(|| State::create(WindowInsets::default())));
+                self.refresh_insets();
+            }
+            // TODO(marc2332): Refresh on inset changes that do not resize the surface.
+            PluginEvent::WindowResumed { .. }
+            | PluginEvent::WindowEvent {
+                raw: WindowEvent::Focused(true)
+                    | WindowEvent::SurfaceResized(_)
+                    | WindowEvent::ScaleFactorChanged { .. },
+                ..
+            } => self.refresh_insets(),
+            PluginEvent::WindowClosed { .. } => self.insets = None,
+            _ => {}
         }
     }
 
