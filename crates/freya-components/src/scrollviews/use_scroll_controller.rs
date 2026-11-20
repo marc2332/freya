@@ -228,7 +228,7 @@ impl ScrollController {
     }
 
     fn bounded_position(&self, position: i32, direction: Direction) -> i32 {
-        let Some((content_size, viewport_size)) = *self.bounds.read() else {
+        let Some((content_size, viewport_size)) = *self.bounds.peek() else {
             return position;
         };
 
@@ -393,7 +393,7 @@ impl ScrollController {
     }
 
     fn start(&mut self, current: Point2D, velocity: Option<Vector2D>, smooth_time: f32) {
-        let is_animating = self.task.read().is_some();
+        let is_animating = self.task.peek().is_some();
         {
             let mut damp = self.damp.write();
             damp.smooth_time = smooth_time;
