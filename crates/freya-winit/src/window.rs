@@ -97,7 +97,7 @@ pub type RenderCallback = Box<dyn FnOnce(&mut SkiaSurface)>;
 pub struct AppWindow {
     pub(crate) runner: Runner,
     pub(crate) tree: Tree,
-    pub(crate) driver: GraphicsDriver,
+    pub(crate) driver: Option<GraphicsDriver>,
     pub(crate) window: Window,
     pub(crate) nodes_state: NodesState<NodeId>,
 
@@ -425,7 +425,7 @@ impl AppWindow {
         AppWindow {
             runner,
             tree,
-            driver,
+            driver: Some(driver),
             window,
             nodes_state,
 
