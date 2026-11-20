@@ -118,7 +118,8 @@ impl FreyaPlugin for AndroidPlugin {
             // TODO(marc2332): Refresh on inset changes that do not resize the surface.
             PluginEvent::WindowResumed { .. }
             | PluginEvent::WindowEvent {
-                raw: WindowEvent::Focused(true)
+                raw:
+                    WindowEvent::Focused(true)
                     | WindowEvent::SurfaceResized(_)
                     | WindowEvent::ScaleFactorChanged { .. },
                 ..
