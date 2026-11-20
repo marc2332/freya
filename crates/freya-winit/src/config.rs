@@ -30,7 +30,7 @@ use crate::{
         FreyaPlugin,
         PluginsManager,
     },
-    renderer::LaunchProxy,
+    renderer::LaunchHandle,
 };
 
 pub type WindowBuilderHook =
@@ -339,7 +339,7 @@ pub type TrayHandler =
     Box<dyn FnMut(crate::tray_icon::TrayEvent, crate::renderer::RendererContext)>;
 
 pub type TaskHandler =
-    Box<dyn FnOnce(crate::renderer::LaunchProxy) -> Pin<Box<dyn Future<Output = ()>>> + 'static>;
+    Box<dyn FnOnce(crate::renderer::LaunchHandle) -> Pin<Box<dyn Future<Output = ()>>> + 'static>;
 
 pub type GlobalContextInserter = Box<dyn FnOnce(&GlobalContexts)>;
 
@@ -512,7 +512,7 @@ impl LaunchConfig {
     /// ```
     pub fn with_task<F, Fut>(mut self, task: F) -> Self
     where
-        F: FnOnce(LaunchProxy) -> Fut + 'static,
+        F: FnOnce(LaunchHandle) -> Fut + 'static,
         Fut: Future<Output = ()> + 'static,
     {
         self.tasks

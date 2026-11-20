@@ -268,7 +268,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
         *runs.write() += 1;
 
         let animation_task = spawn(async move {
-            platform.send(UserEvent::RequestRedraw);
+            platform.request_redraw();
 
             let mut index = 0u128;
             let mut prev_frame = Instant::now();
@@ -315,7 +315,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
                 }
 
                 // Request another redraw to move the animation forward
-                platform.send(UserEvent::RequestRedraw);
+                platform.request_redraw();
 
                 prev_frame = Instant::now();
             }

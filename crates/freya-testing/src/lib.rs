@@ -182,7 +182,7 @@ impl TestingRunner {
         GlobalContexts::get().insert_context(Platform::new({
             let pending_fonts = pending_fonts.clone();
             move |event| {
-                if let GlobalUserEvent::LoadFont {
+                if let AppCommand::LoadFont {
                     font_name,
                     font_data,
                 } = event
@@ -208,17 +208,17 @@ impl TestingRunner {
                 preferred_theme: State::create(PreferredTheme::Light),
                 is_app_focused: State::create(true),
                 accent_color: State::create(AccentColor::default()),
-                sender: Rc::new(move |user_event| {
-                    match user_event {
-                        UserEvent::FocusAccessibilityNode(strategy) => {
+                sender: Rc::new(move |command| {
+                    match command {
+                        WindowCommand::FocusAccessibilityNode(strategy) => {
                             requested_focus_strategy.borrow_mut().replace(strategy);
                         }
-                        UserEvent::Erased(command) => {
+                        WindowCommand::Erased(command) => {
                             if let Ok(command) = command.0.downcast::<PlatformDragCommand>() {
                                 let _ = command.response.send(Err(DragError::Unsupported));
                             }
                         }
-                        UserEvent::RequestRedraw | UserEvent::SetCustomScaleFactor(_) => {
+                        WindowCommand::RequestRedraw | WindowCommand::SetCustomScaleFactor(_) => {
                             // Nothing
                         }
                     }

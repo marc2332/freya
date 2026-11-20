@@ -1,5 +1,6 @@
 pub mod accessibility;
 pub mod animation_clock;
+pub mod command;
 pub mod current_context;
 pub mod data;
 pub mod data_transfer;
@@ -31,7 +32,6 @@ pub mod style;
 pub mod text_cache;
 pub mod tree;
 pub mod tree_layout_adapter;
-pub mod user_event;
 
 pub use tiny_cache::{
     fifo_cache,
@@ -66,6 +66,10 @@ pub mod prelude {
             screen_reader::*,
         },
         animation_clock::AnimationClock,
+        command::{
+            AppCommand,
+            WindowCommand,
+        },
         data::*,
         data_transfer::*,
         debug::*,
@@ -175,10 +179,6 @@ pub mod prelude {
             transform_origin::*,
             vertical_align::*,
         },
-        user_event::{
-            GlobalUserEvent,
-            UserEvent,
-        },
     };
 }
 
@@ -200,6 +200,7 @@ pub mod integration {
             AnimationClock,
             New,
         },
+        command::*,
         data::*,
         data_transfer::*,
         element::*,
@@ -235,6 +236,5 @@ pub mod integration {
             DiffModifies,
             Tree,
         },
-        user_event::*,
     };
 }
