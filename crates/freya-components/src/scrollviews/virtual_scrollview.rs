@@ -699,28 +699,21 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
         };
 
         let on_key_down = move |e: Event<KeyboardEventData>| {
-            if !scroll_with_arrows
-                && (e.key == Key::Named(NamedKey::ArrowUp)
-                    || e.key == Key::Named(NamedKey::ArrowRight)
-                    || e.key == Key::Named(NamedKey::ArrowDown)
-                    || e.key == Key::Named(NamedKey::ArrowLeft))
-            {
-                return;
-            }
-            if let Some((x, y)) = handle_key_event(
-                &e.key,
-                (corrected_scrolled_x, corrected_scrolled_y),
-                inner_height,
-                inner_width,
-                viewport_height,
-                viewport_width,
+            let position = ScrollPoint::new(corrected_scrolled_x, corrected_scrolled_y);
+            if let Some(target) = handle_key_event(
+                e.data(),
+                a11y_id,
+                position,
+                ScrollSize::new(inner_width, inner_height),
+                ScrollSize::new(viewport_width, viewport_height),
                 direction,
+                scroll_with_arrows,
             ) {
-                if x != corrected_scrolled_x || y != corrected_scrolled_y {
+                if target != position {
                     scroll_controller.animate_from(rendered_position);
                 }
-                scroll_controller.scroll_to_x(x);
-                scroll_controller.scroll_to_y(y);
+                scroll_controller.scroll_to_x(target.x);
+                scroll_controller.scroll_to_y(target.y);
                 e.stop_propagation();
                 timeout.reset();
             }
