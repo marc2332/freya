@@ -11,7 +11,7 @@ name: Run Benchmarks
 jobs:
   runBenchmark:
     name: run benchmark
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     permissions:
       pull-requests: write
       contents: read
@@ -19,7 +19,7 @@ jobs:
       group: benchmarks-${{ github.ref_name }}
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: useblacksmith/checkout@v1 # v6.0.2
         with:
           submodules: true
       - uses: boa-dev/criterion-compare-action@59f4d964c5f19d7f13d36f5c0944b18ce6652cb0
