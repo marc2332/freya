@@ -21,14 +21,15 @@ pub fn get_scroll_position_from_wheel(
         return 0.;
     }
 
-    let new_position = scroll_position + wheel_movement;
+    let new_position = scroll_position - wheel_movement;
 
-    if new_position >= 0.0 && wheel_movement > 0.0 {
+    if new_position <= 0.0 && wheel_movement > 0.0 {
         return 0.;
     }
 
-    if new_position <= -(inner_size - viewport_size) && wheel_movement < 0.0 {
-        return -(inner_size - viewport_size);
+    let max_position = inner_size - viewport_size;
+    if new_position >= max_position && wheel_movement < 0.0 {
+        return max_position;
     }
 
     new_position
@@ -40,20 +41,7 @@ pub fn get_corrected_scroll_position(
     viewport_size: f64,
     scroll_position: f64,
 ) -> f64 {
-    let overscrolled_start = scroll_position > 0.0;
-    let overscrolled_end = (-scroll_position + viewport_size) > inner_size;
-
-    if overscrolled_start {
-        0.
-    } else if overscrolled_end {
-        if viewport_size < inner_size {
-            -(inner_size - viewport_size)
-        } else {
-            0.
-        }
-    } else {
-        scroll_position
-    }
+    scroll_position.clamp(0., (inner_size - viewport_size).max(0.))
 }
 
 #[doc(hidden)]
@@ -112,7 +100,7 @@ pub fn get_scrollbar_pos_and_size(
     let (scrollbar_size, available_scroll_range, available_thumb_range) =
         get_thumb_ranges(inner_size, viewport_size);
 
-    let normalized_scroll = -scroll_position / available_scroll_range;
+    let normalized_scroll = scroll_position / available_scroll_range;
     let scrollbar_position = normalized_scroll * available_thumb_range;
 
     (scrollbar_position as f32, scrollbar_size as f32)
@@ -135,7 +123,7 @@ pub fn get_scroll_position_from_cursor(
         (cursor_position - SCROLLBAR_MARGIN as f64).clamp(0.0, available_thumb_range);
 
     let normalized_scroll = cursor_clamped / available_thumb_range;
-    -(normalized_scroll * available_scroll_range)
+    normalized_scroll * available_scroll_range
 }
 
 pub fn handle_key_event(
@@ -156,22 +144,22 @@ pub fn handle_key_event(
 
     match key {
         Key::Named(NamedKey::ArrowUp) => {
-            y = get_corrected_scroll_position(inner_height, viewport_height, y + y_line_delta)
+            y = get_corrected_scroll_position(inner_height, viewport_height, y - y_line_delta)
         }
         Key::Named(NamedKey::ArrowDown) => {
-            y = get_corrected_scroll_position(inner_height, viewport_height, y - y_line_delta)
-        }
-        Key::Named(NamedKey::PageUp) => {
             y = get_corrected_scroll_position(inner_height, viewport_height, y + y_line_delta)
         }
-        Key::Named(NamedKey::PageDown) => {
+        Key::Named(NamedKey::PageUp) => {
             y = get_corrected_scroll_position(inner_height, viewport_height, y - y_line_delta)
         }
+        Key::Named(NamedKey::PageDown) => {
+            y = get_corrected_scroll_position(inner_height, viewport_height, y + y_line_delta)
+        }
         Key::Named(NamedKey::ArrowLeft) => {
-            x = get_corrected_scroll_position(inner_width, viewport_width, x + x_line_delta)
+            x = get_corrected_scroll_position(inner_width, viewport_width, x - x_line_delta)
         }
         Key::Named(NamedKey::ArrowRight) => {
-            x = get_corrected_scroll_position(inner_width, viewport_width, x - x_line_delta)
+            x = get_corrected_scroll_position(inner_width, viewport_width, x + x_line_delta)
         }
         Key::Named(NamedKey::Home) => {
             if direction == Direction::Vertical {
@@ -182,9 +170,9 @@ pub fn handle_key_event(
         }
         Key::Named(NamedKey::End) => {
             if direction == Direction::Vertical {
-                y = -inner_height;
+                y = inner_height;
             } else {
-                x = -inner_width;
+                x = inner_width;
             }
         }
         _ => return None,
@@ -212,7 +200,7 @@ mod tests {
             assert!((thumb_size as f64) < track_size);
             assert_eq!(
                 get_scroll_position_from_cursor(viewport_size, inner_size, viewport_size),
-                -viewport_size
+                viewport_size
             );
         }
     }

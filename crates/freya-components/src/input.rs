@@ -491,10 +491,10 @@ impl Component for Input {
 
             // Minimally reveal the cursor
             if visible_cursor_location.x < visible_start_x {
-                scroll_controller.scroll_to_x((-cursor_location.x).into());
+                scroll_controller.scroll_to_x(cursor_location.x.into());
             } else if visible_cursor_location.x > visible_start_x + viewport.width() {
                 scroll_controller.scroll_to_x(
-                    (viewport.width() - (visible_cursor_location.x + padding.right())).into(),
+                    (visible_cursor_location.x + padding.right() - viewport.width()).into(),
                 );
             }
 
@@ -503,9 +503,9 @@ impl Component for Input {
                 let visible_start_y = viewport.min_y() - area.peek().min_y();
 
                 if visible_cursor_location.y < visible_start_y {
-                    scroll_controller.scroll_to_y((-cursor_location.y).into());
+                    scroll_controller.scroll_to_y(cursor_location.y.into());
                 } else if cursor_bottom > visible_start_y + viewport.height() {
-                    scroll_controller.scroll_to_y((viewport.height() - cursor_bottom).into());
+                    scroll_controller.scroll_to_y((cursor_bottom - viewport.height()).into());
                 }
             }
         };

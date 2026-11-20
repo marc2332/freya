@@ -37,10 +37,10 @@ fn virtual_scroll_view_large_offsets() {
                     .map(|_| node)
             })
             .unwrap();
-        let end = -(length as f64 * 25. - 500.);
+        let end = length as f64 * 25. - 500.;
 
         if length <= 100_000_000 {
-            test.run_in(|| controller.scroll_to_y(end + 1.));
+            test.run_in(|| controller.scroll_to_y(end - 1.));
             test.sync_and_update();
 
             for _ in 0..2 {
@@ -57,7 +57,7 @@ fn virtual_scroll_view_large_offsets() {
             assert_eq!(test.run_in(|| controller.position().y), end);
         }
 
-        let start = end + 4096.;
+        let start = end - 4096.;
         test.run_in(|| controller.scroll_to_y(start));
         test.sync_and_update();
 
@@ -74,10 +74,10 @@ fn virtual_scroll_view_large_offsets() {
 
             test.run_in(|| {
                 let target = controller.position();
-                assert_eq!(target.y, start - step as f64 * 128.);
+                assert_eq!(target.y, start + step as f64 * 128.);
                 assert_eq!(controller.animated_position(target), target);
 
-                let probe = target + ScrollVector::new(0., 1024.);
+                let probe = target - ScrollVector::new(0., 1024.);
                 assert_eq!(controller.animated_position(probe), probe);
             });
         }

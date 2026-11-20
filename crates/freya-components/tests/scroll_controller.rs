@@ -85,18 +85,18 @@ fn follower_views_preserve_controller_bounds() {
         let bounds = *controller.bounds.peek();
         assert_eq!(bounds, Some(((2000., 2000.).into(), (400., 500.).into())));
 
-        controller.scroll_to_x(-200.);
-        controller.scroll_to_y(-300.);
+        controller.scroll_to_x(200.);
+        controller.scroll_to_y(300.);
         test.sync_and_update();
-        assert_eq!(controller.position(), (-200., -300.).into());
+        assert_eq!(controller.position(), (200., 300.).into());
         assert_eq!(*controller.bounds.peek(), bounds);
 
         test.scroll((450., 100.), (0., -100.));
-        assert_eq!(controller.position(), (-200., -400.).into());
+        assert_eq!(controller.position(), (200., 400.).into());
         assert_eq!(*controller.bounds.peek(), bounds);
 
         test.scroll((450., 100.), (-100., 0.));
-        assert_eq!(controller.position(), (-300., -400.).into());
+        assert_eq!(controller.position(), (300., 400.).into());
         assert_eq!(*controller.bounds.peek(), bounds);
     }
 }
@@ -133,7 +133,7 @@ pub fn virtual_scroll_view_starts_at_the_end() {
         Label::try_downcast(&*content[0].element()).unwrap().text,
         "20 Hello, World!"
     );
-    assert_eq!(reported_position(&test), "position -1000");
+    assert_eq!(reported_position(&test), "position 1000");
 }
 
 #[test]
@@ -141,7 +141,7 @@ pub fn controlled_scroll_view_clamps_programmatic_scrolls() {
     fn app() -> impl IntoElement {
         let mut scroll_controller = use_scroll_controller(ScrollConfig::default);
         let scroll_to_end = move |_| {
-            scroll_controller.scroll_to_y(-10_000.);
+            scroll_controller.scroll_to_y(10_000.);
         };
 
         rect()
@@ -162,7 +162,7 @@ pub fn controlled_scroll_view_clamps_programmatic_scrolls() {
     test.click_cursor((10., 10.));
     test.sync_and_update();
 
-    assert_ne!(reported_position(&test), "position -10000");
+    assert_ne!(reported_position(&test), "position 10000");
 }
 
 #[test]
@@ -184,5 +184,5 @@ pub fn scroll_view_starts_at_the_end() {
     test.sync_and_update();
     test.sync_and_update();
 
-    assert_eq!(reported_position(&test), "position -1000");
+    assert_eq!(reported_position(&test), "position 1000");
 }
