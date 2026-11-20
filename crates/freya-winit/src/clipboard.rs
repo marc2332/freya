@@ -21,8 +21,8 @@ use freya_core::data_transfer::{
 #[cfg(not(target_os = "android"))]
 use freya_core::{
     integration::{
-        GlobalUserEvent,
-        SingleThreadErasedEvent,
+        AppCommand,
+        ErasedCommand,
     },
     prelude::timer,
 };
@@ -37,12 +37,12 @@ use futures_util::{
 };
 use winit::data_transfer::DataTransferId;
 
-use crate::renderer::NativeEventProxy;
+use crate::renderer::RendererSender;
 #[cfg(not(target_os = "android"))]
 use crate::renderer::{
-    NativeEvent,
-    NativeGenericEvent,
-    NativePlatformErasedEventAction,
+    RendererAppMessage,
+    RendererMessage,
+    WinitCommand,
 };
 
 pub(crate) struct PendingClipboardRead {
@@ -51,7 +51,7 @@ pub(crate) struct PendingClipboardRead {
     pub(crate) response: oneshot::Sender<Result<DataValue, ClipboardError>>,
 }
 
-pub(crate) fn create_clipboard(proxy: NativeEventProxy) -> Clipboard {
+pub(crate) fn create_clipboard(proxy: RendererSender) -> Clipboard {
     #[cfg(target_os = "android")]
     {
         let _ = proxy;
@@ -65,18 +65,18 @@ pub(crate) fn create_clipboard(proxy: NativeEventProxy) -> Clipboard {
 
 #[cfg(not(target_os = "android"))]
 struct WinitClipboard {
-    proxy: NativeEventProxy,
+    proxy: RendererSender,
 }
 
 #[cfg(not(target_os = "android"))]
 impl ClipboardProvider for WinitClipboard {
     fn get(&self, format: DataFormat) -> ClipboardFuture<DataValue> {
         let (response, receiver) = oneshot::channel();
-        let command = NativePlatformErasedEventAction::ReadClipboard { format, response };
+        let command = WinitCommand::ReadClipboard { format, response };
         let _ = self
             .proxy
-            .send_event(NativeEvent::Generic(NativeGenericEvent::User(
-                GlobalUserEvent::Erased(SingleThreadErasedEvent(Box::new(command))),
+            .send_message(RendererMessage::App(RendererAppMessage::Command(
+                AppCommand::Erased(ErasedCommand(Box::new(command))),
             )));
 
         Box::pin(async move {
@@ -94,11 +94,11 @@ impl ClipboardProvider for WinitClipboard {
 
     fn set(&self, data: TransferData) -> ClipboardFuture<()> {
         let (response, receiver) = oneshot::channel();
-        let command = NativePlatformErasedEventAction::WriteClipboard { data, response };
+        let command = WinitCommand::WriteClipboard { data, response };
         let _ = self
             .proxy
-            .send_event(NativeEvent::Generic(NativeGenericEvent::User(
-                GlobalUserEvent::Erased(SingleThreadErasedEvent(Box::new(command))),
+            .send_message(RendererMessage::App(RendererAppMessage::Command(
+                AppCommand::Erased(ErasedCommand(Box::new(command))),
             )));
         Box::pin(async move { receiver.await.map_err(|_| ClipboardError::FailedToSet)? })
     }

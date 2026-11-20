@@ -93,21 +93,24 @@ use crate::{
 };
 
 #[derive(Clone)]
-pub struct NativeEventProxy {
+pub struct RendererSender {
     proxy: EventLoopProxy,
-    sender: std::sync::mpsc::Sender<NativeEvent>,
+    sender: std::sync::mpsc::Sender<RendererMessage>,
 }
 
-impl NativeEventProxy {
-    pub(crate) fn new(proxy: EventLoopProxy, sender: std::sync::mpsc::Sender<NativeEvent>) -> Self {
+impl RendererSender {
+    pub(crate) fn new(
+        proxy: EventLoopProxy,
+        sender: std::sync::mpsc::Sender<RendererMessage>,
+    ) -> Self {
         Self { proxy, sender }
     }
 
-    pub fn send_event(
+    pub fn send_message(
         &self,
-        event: NativeEvent,
-    ) -> Result<(), std::sync::mpsc::SendError<NativeEvent>> {
-        self.sender.send(event)?;
+        message: RendererMessage,
+    ) -> Result<(), std::sync::mpsc::SendError<RendererMessage>> {
+        self.sender.send(message)?;
         self.proxy.wake_up();
         Ok(())
     }
@@ -125,8 +128,8 @@ pub struct WinitRenderer {
     pub resumed: bool,
     pub windows: FxHashMap<WindowId, AppWindow>,
     pub global_contexts: GlobalContexts,
-    pub proxy: NativeEventProxy,
-    pub(crate) events: std::sync::mpsc::Receiver<NativeEvent>,
+    pub proxy: RendererSender,
+    pub(crate) messages: std::sync::mpsc::Receiver<RendererMessage>,
     pub(crate) clipboard_reads: FxHashMap<AsyncRequestSerial, PendingClipboardRead>,
     pub plugins: PluginsManager,
     pub fallback_fonts: Vec<Cow<'static, str>>,
@@ -155,7 +158,7 @@ impl Drop for WinitRenderer {
 pub struct RendererContext<'a> {
     pub windows: &'a mut FxHashMap<WindowId, AppWindow>,
     pub global_contexts: &'a GlobalContexts,
-    pub proxy: &'a mut NativeEventProxy,
+    pub proxy: &'a mut RendererSender,
     pub plugins: &'a mut PluginsManager,
     pub fallback_fonts: &'a mut Vec<Cow<'static, str>>,
     pub font_manager: &'a mut FontMgr,
@@ -182,9 +185,9 @@ impl RendererContext<'_> {
         let window_id = app_window.window.id();
 
         self.proxy
-            .send_event(NativeEvent::Window(NativeWindowEvent {
+            .send_message(RendererMessage::Window(RendererWindowMessage {
                 window_id,
-                action: NativeWindowEventAction::PollRunner,
+                payload: RendererWindowPayload::PollRunner,
             }))
             .ok();
 
@@ -207,7 +210,7 @@ impl RendererContext<'_> {
 }
 
 #[derive(Debug)]
-pub enum NativeWindowEventAction {
+pub enum RendererWindowPayload {
     PollRunner,
 
     #[cfg(feature = "accessibility")]
@@ -215,14 +218,14 @@ pub enum NativeWindowEventAction {
 
     PlatformEvent(PlatformEvent),
 
-    User(UserEvent),
+    Command(WindowCommand),
 }
 
-/// Proxy wrapper provided to launch tasks so they can post callbacks executed inside the renderer.
+/// Handle for posting renderer callbacks from launch tasks.
 #[derive(Clone)]
-pub struct LaunchProxy(pub NativeEventProxy);
+pub struct LaunchHandle(pub RendererSender);
 
-impl LaunchProxy {
+impl LaunchHandle {
     /// Queue a callback to be run on the renderer thread with access to a [`RendererContext`].
     ///
     /// The call dispatches an event to the winit event loop and returns right away. The
@@ -242,10 +245,8 @@ impl LaunchProxy {
         });
         let _ = self
             .0
-            .send_event(NativeEvent::Generic(NativeGenericEvent::User(
-                GlobalUserEvent::Erased(SingleThreadErasedEvent(Box::new(
-                    NativePlatformErasedEventAction::RendererCallback(cb),
-                ))),
+            .send_message(RendererMessage::App(RendererAppMessage::Command(
+                AppCommand::Erased(ErasedCommand(Box::new(WinitCommand::RendererCallback(cb)))),
             )));
         rx
     }
@@ -253,7 +254,7 @@ impl LaunchProxy {
 
 pub type RendererCallback = Box<dyn FnOnce(&mut RendererContext) + 'static>;
 
-pub enum NativePlatformErasedEventAction {
+pub enum WinitCommand {
     LaunchWindow {
         window_config: Box<WindowConfig>,
         ack: futures_channel::oneshot::Sender<WindowId>,
@@ -271,21 +272,21 @@ pub enum NativePlatformErasedEventAction {
 }
 
 #[derive(Debug)]
-pub struct NativeWindowEvent {
+pub struct RendererWindowMessage {
     pub window_id: WindowId,
-    pub action: NativeWindowEventAction,
+    pub payload: RendererWindowPayload,
 }
 
-pub enum NativeGenericEvent {
+pub enum RendererAppMessage {
     PollFutures,
-    User(GlobalUserEvent),
+    Command(AppCommand),
 }
 
-impl fmt::Debug for NativeGenericEvent {
+impl fmt::Debug for RendererAppMessage {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            NativeGenericEvent::PollFutures => f.write_str("PollFutures"),
-            NativeGenericEvent::User(event) => f.debug_tuple("User").field(event).finish(),
+            RendererAppMessage::PollFutures => f.write_str("PollFutures"),
+            RendererAppMessage::Command(event) => f.debug_tuple("Command").field(event).finish(),
         }
     }
 }
@@ -293,22 +294,22 @@ impl fmt::Debug for NativeGenericEvent {
 /// # Safety
 /// The values are never sent, received or accessed by other threads other than the main thread.
 /// This is needed to send `Rc<T>` and other non-Send and non-Sync values.
-unsafe impl Send for NativeGenericEvent {}
-unsafe impl Sync for NativeGenericEvent {}
+unsafe impl Send for RendererAppMessage {}
+unsafe impl Sync for RendererAppMessage {}
 
 #[derive(Debug)]
-pub enum NativeEvent {
-    Window(NativeWindowEvent),
+pub enum RendererMessage {
+    Window(RendererWindowMessage),
     #[cfg(feature = "tray")]
     Tray(crate::tray_icon::TrayEvent),
-    Generic(NativeGenericEvent),
+    App(RendererAppMessage),
     Preferences(mundy::Preferences),
 }
 
 #[cfg(feature = "accessibility")]
 pub(crate) struct AccessibilityEventHandler {
     pub(crate) window_id: WindowId,
-    pub(crate) proxy: NativeEventProxy,
+    pub(crate) proxy: RendererSender,
 }
 
 #[cfg(feature = "accessibility")]
@@ -316,9 +317,9 @@ impl accesskit_xplat::EventHandler for AccessibilityEventHandler {
     fn handle_accesskit_event(&self, event: AccessibilityWindowEvent) {
         let _ = self
             .proxy
-            .send_event(NativeEvent::Window(NativeWindowEvent {
+            .send_message(RendererMessage::Window(RendererWindowMessage {
                 window_id: self.window_id,
-                action: NativeWindowEventAction::Accessibility(event),
+                payload: RendererWindowPayload::Accessibility(event),
             }));
     }
 }
@@ -362,9 +363,9 @@ impl ApplicationHandler for WinitRenderer {
                 );
 
                 self.proxy
-                    .send_event(NativeEvent::Window(NativeWindowEvent {
+                    .send_message(RendererMessage::Window(RendererWindowMessage {
                         window_id: app_window.window.id(),
-                        action: NativeWindowEventAction::PollRunner,
+                        payload: RendererWindowPayload::PollRunner,
                     }))
                     .ok();
 
@@ -376,7 +377,7 @@ impl ApplicationHandler for WinitRenderer {
 
             let _ = self
                 .proxy
-                .send_event(NativeEvent::Generic(NativeGenericEvent::PollFutures));
+                .send_message(RendererMessage::App(RendererAppMessage::PollFutures));
         } else {
             let old_windows: Vec<_> = self.windows.drain().collect();
             for (old_id, mut app_window) in old_windows {
@@ -400,10 +401,11 @@ impl ApplicationHandler for WinitRenderer {
                 app_window.platform.sender = Rc::new({
                     let proxy = self.proxy.clone();
                     move |event| {
-                        let _ = proxy.send_event(NativeEvent::Window(NativeWindowEvent {
-                            window_id: new_id,
-                            action: NativeWindowEventAction::User(event),
-                        }));
+                        let _ =
+                            proxy.send_message(RendererMessage::Window(RendererWindowMessage {
+                                window_id: new_id,
+                                payload: RendererWindowPayload::Command(event),
+                            }));
                     }
                 });
                 app_window
@@ -424,9 +426,9 @@ impl ApplicationHandler for WinitRenderer {
                 self.windows.insert(new_id, app_window);
 
                 self.proxy
-                    .send_event(NativeEvent::Window(NativeWindowEvent {
+                    .send_message(RendererMessage::Window(RendererWindowMessage {
                         window_id: new_id,
-                        action: NativeWindowEventAction::PollRunner,
+                        payload: RendererWindowPayload::PollRunner,
                     }))
                     .ok();
             }
@@ -434,8 +436,8 @@ impl ApplicationHandler for WinitRenderer {
     }
 
     fn proxy_wake_up(&mut self, active_event_loop: &dyn ActiveEventLoop) {
-        while let Ok(event) = self.events.try_recv() {
-            self.user_event(active_event_loop, event);
+        while let Ok(message) = self.messages.try_recv() {
+            self.dispatch_message(active_event_loop, message);
         }
     }
 
@@ -488,16 +490,16 @@ impl WinitRenderer {
         }
     }
 
-    fn user_event(
+    fn dispatch_message(
         &mut self,
         active_event_loop: &dyn winit::event_loop::ActiveEventLoop,
-        event: NativeEvent,
+        message: RendererMessage,
     ) {
-        match event {
-            NativeEvent::Generic(NativeGenericEvent::PollFutures) => {
+        match message {
+            RendererMessage::App(RendererAppMessage::PollFutures) => {
                 GlobalTasks::get().poll();
             }
-            NativeEvent::Preferences(prefs) => {
+            RendererMessage::Preferences(prefs) => {
                 for app in self.windows.values_mut() {
                     app.platform
                         .accent_color
@@ -505,7 +507,7 @@ impl WinitRenderer {
                 }
             }
             #[cfg(feature = "tray")]
-            NativeEvent::Tray(event) => {
+            RendererMessage::Tray(event) => {
                 let renderer_context = RendererContext {
                     fallback_fonts: &mut self.fallback_fonts,
                     active_event_loop,
@@ -522,7 +524,7 @@ impl WinitRenderer {
                     (tray_handler)(event, renderer_context);
                 }
             }
-            NativeEvent::Generic(NativeGenericEvent::User(GlobalUserEvent::LoadFont {
+            RendererMessage::App(RendererAppMessage::Command(AppCommand::LoadFont {
                 font_name,
                 font_data,
             })) => {
@@ -544,21 +546,21 @@ impl WinitRenderer {
                     app.window.request_redraw();
                 }
             }
-            NativeEvent::Generic(NativeGenericEvent::User(event)) => match event {
-                GlobalUserEvent::OpenUrl(url) => {
+            RendererMessage::App(RendererAppMessage::Command(event)) => match event {
+                AppCommand::OpenUrl(url) => {
                     if let Err(error) = open::that(&url) {
                         tracing::error!(%error, %url, "Failed to open URL");
                     }
                 }
-                GlobalUserEvent::Exit => active_event_loop.exit(),
-                GlobalUserEvent::LoadFont { .. } => unreachable!(),
-                GlobalUserEvent::Erased(data) => {
+                AppCommand::Exit => active_event_loop.exit(),
+                AppCommand::LoadFont { .. } => unreachable!(),
+                AppCommand::Erased(data) => {
                     let action = data
                         .0
-                        .downcast::<NativePlatformErasedEventAction>()
-                        .expect("Expected NativePlatformErasedEventAction");
+                        .downcast::<WinitCommand>()
+                        .expect("Expected WinitCommand");
                     match *action {
-                        NativePlatformErasedEventAction::ReadClipboard { format, response } => {
+                        WinitCommand::ReadClipboard { format, response } => {
                             let transfer = match active_event_loop.clipboard() {
                                 Ok(Some(transfer)) => transfer,
                                 Ok(None) => {
@@ -595,7 +597,7 @@ impl WinitRenderer {
                                 }
                             }
                         }
-                        NativePlatformErasedEventAction::WriteClipboard { data, response } => {
+                        WinitCommand::WriteClipboard { data, response } => {
                             let result = data
                                 .into_winit()
                                 .map_err(|_| ClipboardError::FailedToSet)
@@ -606,7 +608,7 @@ impl WinitRenderer {
                                 });
                             let _ = response.send(result);
                         }
-                        NativePlatformErasedEventAction::LaunchWindow { window_config, ack } => {
+                        WinitCommand::LaunchWindow { window_config, ack } => {
                             let app_window = AppWindow::new(
                                 *window_config,
                                 active_event_loop,
@@ -619,16 +621,16 @@ impl WinitRenderer {
                                 &mut self.graphics_context,
                             );
                             let window_id = app_window.window.id();
-                            let _ = self
-                                .proxy
-                                .send_event(NativeEvent::Window(NativeWindowEvent {
+                            let _ = self.proxy.send_message(RendererMessage::Window(
+                                RendererWindowMessage {
                                     window_id,
-                                    action: NativeWindowEventAction::PollRunner,
-                                }));
+                                    payload: RendererWindowPayload::PollRunner,
+                                },
+                            ));
                             self.windows.insert(window_id, app_window);
                             let _ = ack.send(window_id);
                         }
-                        NativePlatformErasedEventAction::CloseWindow(window_id) => {
+                        WinitCommand::CloseWindow(window_id) => {
                             Platform::get().unregister_window(window_id.into_raw() as u64);
                             if let Some(app) = self.windows.remove(&window_id) {
                                 self.plugins.send(
@@ -647,7 +649,7 @@ impl WinitRenderer {
                                 active_event_loop.exit();
                             }
                         }
-                        NativePlatformErasedEventAction::RendererCallback(callback) => {
+                        WinitCommand::RendererCallback(callback) => {
                             let mut renderer_context = RendererContext {
                                 fallback_fonts: &mut self.fallback_fonts,
                                 active_event_loop,
@@ -665,22 +667,22 @@ impl WinitRenderer {
                     }
                 }
             },
-            NativeEvent::Window(NativeWindowEvent { action, window_id }) => {
+            RendererMessage::Window(RendererWindowMessage { payload, window_id }) => {
                 if let Some(app) = &mut self.windows.get_mut(&window_id) {
-                    match action {
-                        NativeWindowEventAction::PollRunner => {
+                    match payload {
+                        RendererWindowPayload::PollRunner => {
                             if app.poll_runner(&mut self.plugins, PluginHandle::new(&self.proxy)) {
                                 app.window.request_redraw();
                             }
                         }
                         #[cfg(feature = "accessibility")]
-                        NativeWindowEventAction::Accessibility(
+                        RendererWindowPayload::Accessibility(
                             AccessibilityWindowEvent::AccessibilityDeactivated,
                         ) => {
                             app.screen_reader.set(false);
                         }
                         #[cfg(feature = "accessibility")]
-                        NativeWindowEventAction::Accessibility(
+                        RendererWindowPayload::Accessibility(
                             AccessibilityWindowEvent::ActionRequested(request),
                         ) => {
                             if app.accessibility.handle_action(
@@ -694,17 +696,17 @@ impl WinitRenderer {
                             }
                         }
                         #[cfg(feature = "accessibility")]
-                        NativeWindowEventAction::Accessibility(
+                        RendererWindowPayload::Accessibility(
                             AccessibilityWindowEvent::InitialTreeRequested,
                         ) => {
                             app.accessibility_tasks_for_next_render = AccessibilityTask::Init;
                             app.window.request_redraw();
                         }
-                        NativeWindowEventAction::User(user_event) => match user_event {
-                            UserEvent::RequestRedraw => {
+                        RendererWindowPayload::Command(command) => match command {
+                            WindowCommand::RequestRedraw => {
                                 app.window.request_redraw();
                             }
-                            UserEvent::FocusAccessibilityNode(strategy) => {
+                            WindowCommand::FocusAccessibilityNode(strategy) => {
                                 let task = match strategy {
                                     AccessibilityFocusStrategy::Backward(_)
                                     | AccessibilityFocusStrategy::Forward(_) => {
@@ -721,10 +723,10 @@ impl WinitRenderer {
                                 app.accessibility_tasks_for_next_render |= task;
                                 app.window.request_redraw();
                             }
-                            UserEvent::SetCustomScaleFactor(custom_scale_factor) => {
+                            WindowCommand::SetCustomScaleFactor(custom_scale_factor) => {
                                 app.set_custom_scale_factor(custom_scale_factor);
                             }
-                            UserEvent::Erased(command) => {
+                            WindowCommand::Erased(command) => {
                                 if let Ok(command) = command.0.downcast::<PlatformDragCommand>() {
                                     app.handle_platform_drag(
                                         *command,
@@ -736,7 +738,7 @@ impl WinitRenderer {
                                 }
                             }
                         },
-                        NativeWindowEventAction::PlatformEvent(platform_event) => {
+                        RendererWindowPayload::PlatformEvent(platform_event) => {
                             app.queue_platform_events(vec![platform_event]);
                         }
                     }
@@ -1427,9 +1429,9 @@ impl WinitRenderer {
     }
 }
 
-fn subscribe_preferences(proxy: NativeEventProxy) {
+fn subscribe_preferences(proxy: RendererSender) {
     let subscription = mundy::Preferences::subscribe(mundy::Interest::AccentColor, move |prefs| {
-        let _ = proxy.send_event(NativeEvent::Preferences(prefs));
+        let _ = proxy.send_message(RendererMessage::Preferences(prefs));
     });
     std::mem::forget(subscription);
 }

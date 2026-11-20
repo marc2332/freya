@@ -417,7 +417,7 @@ impl ScrollController {
         let mut task = self.task;
 
         let animation_task = spawn(async move {
-            platform.send(UserEvent::RequestRedraw);
+            platform.request_redraw();
             let mut previous_frame = Instant::now();
 
             loop {
@@ -433,7 +433,7 @@ impl ScrollController {
                     break;
                 }
 
-                platform.send(UserEvent::RequestRedraw);
+                platform.request_redraw();
             }
 
             task.write().take();

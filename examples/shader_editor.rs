@@ -205,7 +205,7 @@ impl Component for ShaderView {
             spawn(async move {
                 loop {
                     ticker.tick().await;
-                    platform.send(UserEvent::RequestRedraw);
+                    platform.request_redraw();
                 }
             });
         });

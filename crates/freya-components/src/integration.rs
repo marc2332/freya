@@ -13,22 +13,22 @@ pub fn integration(app: AppComponent) -> impl IntoElement {
 
     let on_global_key_down = move |e: Event<KeyboardEventData>| match &e.key {
         Key::Named(NamedKey::Tab) if e.modifiers == Modifiers::SHIFT => {
-            platform.send(UserEvent::FocusAccessibilityNode(
+            platform.send(WindowCommand::FocusAccessibilityNode(
                 AccessibilityFocusStrategy::Backward(AccessibilityFocusMovement::OutsideGroup),
             ));
         }
         Key::Named(NamedKey::Tab) if e.modifiers.is_empty() => {
-            platform.send(UserEvent::FocusAccessibilityNode(
+            platform.send(WindowCommand::FocusAccessibilityNode(
                 AccessibilityFocusStrategy::Forward(AccessibilityFocusMovement::OutsideGroup),
             ));
         }
         Key::Named(NamedKey::ArrowUp) if e.modifiers.is_empty() => {
-            platform.send(UserEvent::FocusAccessibilityNode(
+            platform.send(WindowCommand::FocusAccessibilityNode(
                 AccessibilityFocusStrategy::Backward(AccessibilityFocusMovement::InsideGroup),
             ));
         }
         Key::Named(NamedKey::ArrowDown) if e.modifiers.is_empty() => {
-            platform.send(UserEvent::FocusAccessibilityNode(
+            platform.send(WindowCommand::FocusAccessibilityNode(
                 AccessibilityFocusStrategy::Forward(AccessibilityFocusMovement::InsideGroup),
             ));
         }

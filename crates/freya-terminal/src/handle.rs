@@ -12,7 +12,6 @@ use freya_core::prelude::{
     Platform,
     TaskHandle,
     UseId,
-    UserEvent,
     spawn_in_window,
 };
 use futures_lite::StreamExt;
@@ -228,12 +227,12 @@ impl TerminalHandle {
                 while let Some(bytes) = receiver.next().await {
                     processor.advance(&mut *term.borrow_mut(), &bytes);
                     output_notifier.notify();
-                    platform.send(UserEvent::RequestRedraw);
+                    platform.request_redraw();
                 }
                 // Output ended, drop the backend and notify observers.
                 *backend.borrow_mut() = None;
                 closer_notifier.notify();
-                platform.send(UserEvent::RequestRedraw);
+                platform.request_redraw();
             }
         });
 
