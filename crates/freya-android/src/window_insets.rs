@@ -64,10 +64,18 @@ impl WindowInsets {
                 .l()?;
 
             Ok(Self {
-                top: env.get_field(&safe_area, jni_str!("top"), jni_sig!("I"))?.i()?,
-                right: env.get_field(&safe_area, jni_str!("right"), jni_sig!("I"))?.i()?,
-                bottom: env.get_field(&safe_area, jni_str!("bottom"), jni_sig!("I"))?.i()?,
-                left: env.get_field(&safe_area, jni_str!("left"), jni_sig!("I"))?.i()?,
+                top: env
+                    .get_field(&safe_area, jni_str!("top"), jni_sig!("I"))?
+                    .i()?,
+                right: env
+                    .get_field(&safe_area, jni_str!("right"), jni_sig!("I"))?
+                    .i()?,
+                bottom: env
+                    .get_field(&safe_area, jni_str!("bottom"), jni_sig!("I"))?
+                    .i()?,
+                left: env
+                    .get_field(&safe_area, jni_str!("left"), jni_sig!("I"))?
+                    .i()?,
             })
         })
     }
