@@ -200,6 +200,7 @@ pub struct VirtualScrollView<D, B: Fn(VirtualItem, &D) -> Element> {
     auto_hide_scrollbars: bool,
     scroll_with_arrows: bool,
     scroll_controller: Option<ScrollController>,
+    follows_scroll_controller: bool,
     on_sized: Option<EventHandler<Event<SizedEventData>>>,
     invert_scroll_wheel: bool,
     drag_scrolling: bool,
@@ -210,6 +211,14 @@ pub struct VirtualScrollView<D, B: Fn(VirtualItem, &D) -> Element> {
 impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> LayoutExt for VirtualScrollView<D, B> {
     fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
+    }
+}
+
+impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> DirectionExt for VirtualScrollView<D, B> {
+    /// Sets the axis the items flow and scroll in.
+    fn direction(mut self, direction: Direction) -> Self {
+        self.layout.direction = direction;
+        self
     }
 }
 
@@ -231,6 +240,7 @@ impl<D: PartialEq, B: Fn(VirtualItem, &D) -> Element> PartialEq for VirtualScrol
             && self.auto_hide_scrollbars == other.auto_hide_scrollbars
             && self.scroll_with_arrows == other.scroll_with_arrows
             && self.scroll_controller == other.scroll_controller
+            && self.follows_scroll_controller == other.follows_scroll_controller
             && self.invert_scroll_wheel == other.invert_scroll_wheel
             && self.scrollbar == other.scrollbar
     }
@@ -254,6 +264,7 @@ impl<B: Fn(VirtualItem, &()) -> Element> VirtualScrollView<(), B> {
             auto_hide_scrollbars: true,
             scroll_with_arrows: true,
             scroll_controller: None,
+            follows_scroll_controller: false,
             on_sized: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
@@ -279,6 +290,7 @@ impl<B: Fn(VirtualItem, &()) -> Element> VirtualScrollView<(), B> {
             auto_hide_scrollbars: true,
             scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
+            follows_scroll_controller: false,
             on_sized: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
@@ -328,6 +340,7 @@ impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
             auto_hide_scrollbars: true,
             scroll_with_arrows: true,
             scroll_controller: None,
+            follows_scroll_controller: false,
             on_sized: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
@@ -358,6 +371,7 @@ impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
             auto_hide_scrollbars: true,
             scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
+            follows_scroll_controller: false,
             on_sized: None,
             invert_scroll_wheel: false,
             drag_scrolling: true,
@@ -376,12 +390,6 @@ impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
     /// When disabled, scrollbars remain visible while the content overflows.
     pub fn auto_hide_scrollbars(mut self, auto_hide_scrollbars: bool) -> Self {
         self.auto_hide_scrollbars = auto_hide_scrollbars;
-        self
-    }
-
-    /// Sets the axis the items flow and scroll in.
-    pub fn direction(mut self, direction: Direction) -> Self {
-        self.layout.direction = direction;
         self
     }
 
@@ -430,6 +438,14 @@ impl<D, B: Fn(VirtualItem, &D) -> Element> VirtualScrollView<D, B> {
         scroll_controller: impl Into<Option<ScrollController>>,
     ) -> Self {
         self.scroll_controller = scroll_controller.into();
+        self.follows_scroll_controller = false;
+        self
+    }
+
+    /// Attaches a controller without updating its bounds from this view's layout.
+    pub fn follow_scroll_controller(mut self, scroll_controller: ScrollController) -> Self {
+        self.scroll_controller = Some(scroll_controller);
+        self.follows_scroll_controller = true;
         self
     }
 
@@ -537,11 +553,12 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
 
         let scroll_with_arrows = self.scroll_with_arrows;
         let invert_scroll_wheel = self.invert_scroll_wheel;
+        let follows_scroll_controller = self.follows_scroll_controller;
 
         let on_capture_global_pointer_up = move |e: Event<PointerEventData>| {
             if clicking_scrollbar.read().is_some() {
                 e.prevent_default();
-                clicking_scrollbar.set(None);
+                clicking_scrollbar.set_if_modified(None);
             }
 
             if drag_scrolling && (dragging_content().is_some() || drag_origin().is_some()) {
@@ -554,8 +571,8 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                         size.read().area.size,
                     );
                 }
-                dragging_content.set(None);
-                drag_origin.set(None);
+                dragging_content.set_if_modified(None);
+                drag_origin.set_if_modified(None);
             }
         };
 
@@ -581,39 +598,53 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
             }
 
             let animate = e.source == WheelSource::Line || scroll_gesture;
-            if animate {
-                scroll_controller.animate_from(rendered_position);
-            } else {
+            if !animate {
                 scroll_controller.stop();
             }
-            let (base_x, base_y) = if animate {
-                let position = scroll_controller.position();
-                (position.x, position.y)
+            let position = if animate || follows_scroll_controller {
+                scroll_controller.position()
             } else {
-                (rendered_position.x, rendered_position.y)
+                rendered_position
+            };
+            let (content, viewport) = if follows_scroll_controller {
+                scroll_controller.bounds.read().unwrap_or((
+                    Size2D::new(inner_width, inner_height),
+                    size.read().area.size,
+                ))
+            } else {
+                (
+                    Size2D::new(inner_width, inner_height),
+                    size.read().area.size,
+                )
             };
 
             // Vertical scroll
             let scroll_position_y = get_scroll_position_from_wheel(
                 y_movement,
-                inner_height,
-                size.read().area.height(),
-                base_y,
+                content.height,
+                viewport.height,
+                position.y,
             );
-            scroll_controller.scroll_to_y(scroll_position_y).then(|| {
-                e.stop_propagation();
-            });
 
             // Horizontal scroll
             let scroll_position_x = get_scroll_position_from_wheel(
                 x_movement,
-                inner_width,
-                size.read().area.width(),
-                base_x,
+                content.width,
+                viewport.width,
+                position.x,
             );
-            scroll_controller.scroll_to_x(scroll_position_x).then(|| {
+            if animate
+                && ((x_movement != 0. && scroll_position_x as f32 != position.x)
+                    || (y_movement != 0. && scroll_position_y as f32 != position.y))
+            {
+                let position = scroll_controller.animated_position(scroll_controller.position());
+                scroll_controller.animate_from(position);
+            }
+            let changed_y = y_movement != 0. && scroll_controller.scroll_to_y(scroll_position_y);
+            let changed_x = x_movement != 0. && scroll_controller.scroll_to_x(scroll_position_x);
+            if changed_x || changed_y {
                 e.stop_propagation();
-            });
+            }
             timeout.reset();
         };
 
@@ -631,7 +662,7 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                     scroll_controller.scroll_to_y((rendered_position.y - delta.y as f32) as i32);
                     scroll_controller.scroll_to_x((rendered_position.x - delta.x as f32) as i32);
 
-                    dragging_content.set(Some(coords));
+                    dragging_content.set_if_modified(Some(coords));
                     e.prevent_default();
                     timeout.reset();
                     a11y_id.request_focus();
@@ -653,7 +684,7 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                         scroll_controller
                             .scroll_to_x((rendered_position.x - delta.x as f32) as i32);
 
-                        dragging_content.set(Some(coords));
+                        dragging_content.set_if_modified(Some(coords));
                         e.prevent_default();
                         timeout.reset();
                         a11y_id.request_focus();
@@ -723,7 +754,9 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                 viewport_width,
                 direction,
             ) {
-                scroll_controller.animate_from(rendered_position);
+                if x != corrected_scrolled_x || y != corrected_scrolled_y {
+                    scroll_controller.animate_from(rendered_position);
+                }
                 scroll_controller.scroll_to_x(x as i32);
                 scroll_controller.scroll_to_y(y as i32);
                 e.stop_propagation();
@@ -734,14 +767,14 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
         let on_global_key_down = move |e: Event<KeyboardEventData>| {
             let data = e;
             if data.key == Key::Named(NamedKey::Shift) {
-                pressing_shift.set(true);
+                pressing_shift.set_if_modified(true);
             }
         };
 
         let on_global_key_up = move |e: Event<KeyboardEventData>| {
             let data = e;
             if data.key == Key::Named(NamedKey::Shift) {
-                pressing_shift.set(false);
+                pressing_shift.set_if_modified(false);
             }
         };
 
@@ -773,7 +806,7 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
         let on_pointer_down = move |e: Event<PointerEventData>| {
             if drag_scrolling && matches!(e.data(), PointerEventData::Touch(_)) {
                 scroll_controller.begin_drag();
-                drag_origin.set(Some(e.global_location()));
+                drag_origin.set_if_modified(Some(e.global_location()));
             }
         };
 
@@ -816,28 +849,31 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                                 let item_size = self.item_size.clone();
                                 let length = self.length;
                                 let on_sized = self.on_sized.clone();
+                                let follows_scroll_controller = self.follows_scroll_controller;
                                 move |e: Event<SizedEventData>| {
                                     size.set_if_modified(e.clone());
-                                    let content_size = match direction {
-                                        Direction::Vertical => Size2D::new(
-                                            e.inner_sizes.width,
-                                            item_size.total_size(
-                                                e.area.height(),
-                                                scrolled_y as f32,
-                                                length,
+                                    if !follows_scroll_controller {
+                                        let content_size = match direction {
+                                            Direction::Vertical => Size2D::new(
+                                                e.inner_sizes.width,
+                                                item_size.total_size(
+                                                    e.area.height(),
+                                                    scrolled_y as f32,
+                                                    length,
+                                                ),
                                             ),
-                                        ),
-                                        Direction::Horizontal => Size2D::new(
-                                            item_size.total_size(
-                                                e.area.width(),
-                                                scrolled_x as f32,
-                                                length,
+                                            Direction::Horizontal => Size2D::new(
+                                                item_size.total_size(
+                                                    e.area.width(),
+                                                    scrolled_x as f32,
+                                                    length,
+                                                ),
+                                                e.inner_sizes.height,
                                             ),
-                                            e.inner_sizes.height,
-                                        ),
-                                    };
+                                        };
 
-                                    scroll_controller.apply_layout(content_size, e.area.size);
+                                        scroll_controller.apply_layout(content_size, e.area.size);
+                                    }
                                     if let Some(on_sized) = &on_sized {
                                         on_sized.call(e);
                                     }

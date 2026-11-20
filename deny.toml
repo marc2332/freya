@@ -56,6 +56,7 @@ allow-build-scripts = [
   { name = "drm-fourcc" },
   { name = "drm-sys" },
   { name = "field-offset" },
+  { name = "filetime" },
   { name = "freya-icons" },
   { name = "freya-skia-bindings" },
   { name = "gdk-pixbuf-sys" },

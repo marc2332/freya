@@ -55,9 +55,6 @@
     rust = rust-overlay.lib.mkRustBin {} pkgs;
     stableRust = rust.stable."1.99.0".default.override {
       extensions = ["rust-src" "rust-analyzer"];
-      targets = ["wasm32-unknown-emscripten"];
-    };
-    androidRust = stableRust.override {
       targets = [
         "wasm32-unknown-emscripten"
         "aarch64-linux-android"
@@ -156,7 +153,7 @@
     formatter.${system} = pkgs.alejandra;
     devShells.${system} = {
       default = mkDevShell stableRust [];
-      android = (mkDevShell androidRust [androidSdk pkgs.cargo-ndk pkgs.jdk17]).overrideAttrs (_: {
+      android = (mkDevShell stableRust [androidSdk pkgs.cargo-ndk pkgs.jdk17]).overrideAttrs (_: {
         ANDROID_HOME = androidSdkPath;
         ANDROID_SDK_ROOT = androidSdkPath;
         ANDROID_NDK_HOME = androidNdkPath;

@@ -123,8 +123,20 @@ impl<Key: NodeKey> NodesState<Key> {
             let new_deepest = emmitable_events
                 .iter()
                 .find(|e| e.name().is_exclusive_enter())
-                .or_else(|| emmitable_events.iter().rev().find(|e| e.name().is_moved()))
-                .map(|e| e.key());
+                .or_else(|| {
+                    emmitable_events.iter().rev().find(|e| {
+                        e.name().is_moved()
+                            && e.source()
+                                .get_derived_events()
+                                .iter()
+                                .any(NameOfEvent::is_enter)
+                    })
+                })
+                .map(|e| e.key())
+                .or_else(|| {
+                    self.entered_node
+                        .filter(|node| !removed_from_hovered.contains(node))
+                });
 
             if let Some(old_entered) = self.entered_node {
                 let deepest_changed = new_deepest != Some(old_entered);
@@ -160,7 +172,15 @@ impl<Key: NodeKey> NodesState<Key> {
         let entered_node = emmitable_events
             .iter()
             .find(|e| e.name().is_exclusive_enter())
-            .or_else(|| emmitable_events.iter().rev().find(|e| e.name().is_moved()))
+            .or_else(|| {
+                emmitable_events.iter().rev().find(|e| {
+                    e.name().is_moved()
+                        && e.source()
+                            .get_derived_events()
+                            .iter()
+                            .any(NameOfEvent::is_enter)
+                })
+            })
             .map(|e| e.key());
 
         emmitable_events.retain(|ev| match ev.name() {
@@ -175,7 +195,10 @@ impl<Key: NodeKey> NodesState<Key> {
             _ => true,
         });
 
-        self.entered_node = entered_node;
+        self.entered_node = entered_node.or_else(|| {
+            self.entered_node
+                .filter(|node| self.hovered_nodes.contains(node))
+        });
     }
 
     /// Create the nodes states given the [PotentialEvent]s.
@@ -187,7 +210,8 @@ impl<Key: NodeKey> NodesState<Key> {
         let mut hovered_nodes = FxHashSet::default();
         let mut pressed_nodes = FxHashSet::default();
 
-        for events in potential_events.values() {
+        for (name, events) in potential_events {
+            let tracks_hover = name.get_derived_events().iter().any(NameOfEvent::is_enter);
             let mut child_node: Option<Key> = None;
 
             for PotentialEvent { node_key, name, .. } in events.iter().rev() {
@@ -205,7 +229,7 @@ impl<Key: NodeKey> NodesState<Key> {
                 }
 
                 match name {
-                    name if name.is_moved() => {
+                    name if name.is_moved() && tracks_hover => {
                         hovered_nodes.insert(*node_key);
 
                         #[cfg(debug_assertions)]

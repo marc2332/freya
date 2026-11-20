@@ -4,6 +4,7 @@ use std::{
         Hash,
         Hasher,
     },
+    rc::Rc,
 };
 
 use paste::paste;
@@ -127,6 +128,13 @@ pub trait ChildrenExt: Sized {
         self.children_mut().push(child.into_element());
         self
     }
+}
+
+/// Reuses unchanged children by Rc identity.
+/// It is an alternative to [ChildrenExt].
+pub trait RetainedChildrenExt: ChildrenExt {
+    /// Replaces existing children with retained children.
+    fn retained_children(self, children: Rc<Vec<Element>>) -> Self;
 }
 
 /// Trait for giving an element a stable identity across renders.
@@ -531,16 +539,34 @@ pub enum PressEventData {
     Touch(TouchEventData),
 }
 
+/// Methods for setting the direction.
+pub trait DirectionExt: Sized {
+    /// Set the direction.
+    fn direction(self, direction: Direction) -> Self;
+
+    /// Set the direction to [`Direction::Vertical`].
+    fn vertical(self) -> Self {
+        self.direction(Direction::vertical())
+    }
+
+    /// Set the direction to [`Direction::Horizontal`].
+    fn horizontal(self) -> Self {
+        self.direction(Direction::horizontal())
+    }
+}
+
+impl<T: ContainerWithContentExt> DirectionExt for T {
+    fn direction(mut self, direction: Direction) -> Self {
+        self.layout_mut().layout.direction = direction;
+        self
+    }
+}
+
 /// Layout methods for containers that arrange children along a direction axis.
 pub trait ContainerWithContentExt
 where
     Self: LayoutExt,
 {
-    /// Set the axis children are stacked along. See [`Direction`].
-    fn direction(mut self, direction: Direction) -> Self {
-        self.layout_mut().layout.direction = direction;
-        self
-    }
     /// Set how children are aligned along the direction axis. See [`Alignment`].
     fn main_align(mut self, main_align: impl Into<Alignment>) -> Self {
         self.layout_mut().layout.main_alignment = main_align.into();
@@ -581,18 +607,6 @@ where
     /// Shift the element's children vertically by the given pixels.
     fn offset_y(mut self, offset_y: f32) -> Self {
         self.layout_mut().layout.offset_y = Length::new(offset_y);
-        self
-    }
-
-    /// Stack children vertically. Shorthand for [`direction`](Self::direction) set to [`Direction::Vertical`].
-    fn vertical(mut self) -> Self {
-        self.layout_mut().layout.direction = Direction::vertical();
-        self
-    }
-
-    /// Stack children horizontally. Shorthand for [`direction`](Self::direction) set to [`Direction::Horizontal`].
-    fn horizontal(mut self) -> Self {
-        self.layout_mut().layout.direction = Direction::horizontal();
         self
     }
 }
@@ -1101,7 +1115,25 @@ where
     /// Returns a mutable reference to the element's layer.
     fn layer_mut(&mut self) -> &mut Layer;
 
-    /// Set the painting layer of the element. See [`Layer`].
+    /// Sets the element's painting layer without changing its layout or position.
+    ///
+    /// Higher layers paint on top of lower layers. An integer is a [`Layer::Relative`]
+    /// offset from the normal layer, which is one above the parent's layer.
+    /// The default is `0`. Descendants use this element's resulting layer as their base.
+    ///
+    /// Use [`Layer::Overlay`] to raise content relative to its parent and escape
+    /// ancestor clipping, or [`Layer::OverlayLevel`] for an absolute overlay level.
+    /// Elements on the same layer have no guaranteed painting order.
+    ///
+    /// ```rust
+    /// # use freya_core::prelude::*;
+    /// rect()
+    ///     .child(rect().layer(-1).child("Below default siblings"))
+    ///     .child(rect().child("Default layer"))
+    ///     .child(rect().layer(1).child("Above default siblings"))
+    ///     .child(rect().layer(Layer::Overlay).child("Overlay"))
+    /// # ;
+    /// ```
     fn layer(mut self, layer: impl Into<Layer>) -> Self {
         *self.layer_mut() = layer.into();
         self

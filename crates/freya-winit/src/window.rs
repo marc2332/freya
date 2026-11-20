@@ -97,7 +97,7 @@ pub type RenderCallback = Box<dyn FnOnce(&mut SkiaSurface)>;
 pub struct AppWindow {
     pub(crate) runner: Runner,
     pub(crate) tree: Tree,
-    pub(crate) driver: GraphicsDriver,
+    pub(crate) driver: Option<GraphicsDriver>,
     pub(crate) window: Window,
     pub(crate) nodes_state: NodesState<NodeId>,
 
@@ -157,12 +157,22 @@ fn clamp_custom_scale_factor(custom_scale_factor: f64) -> f64 {
 impl AppWindow {
     pub(crate) fn process_accessibility_update(&mut self, mode: Option<NavigationMode>) {
         let title = self.window.title();
-        let update =
-            self.accessibility
-                .process_updates(&mut self.tree, &self.events_sender, &title);
+        let updated_nodes = self
+            .accessibility
+            .prepare_updates(&mut self.tree, &self.events_sender);
+        #[cfg(feature = "accessibility")]
+        if self.screen_reader.is_on() {
+            self.accessibility_adapter.update_if_active(|| {
+                self.accessibility
+                    .build_update(&self.tree, &title, updated_nodes)
+            });
+        }
+        #[cfg(not(feature = "accessibility"))]
+        let _ = updated_nodes;
+
         self.platform
             .focused_accessibility_id
-            .set_if_modified(update.focus);
+            .set_if_modified(self.accessibility.focused_id);
         let node_id = self.accessibility.focused_node_id().unwrap();
         let layout_node = self.tree.layout.get(&node_id).unwrap();
         let focused_node = AccessibilityTree::create_node(node_id, layout_node, &self.tree, &title);
@@ -180,11 +190,6 @@ impl AppWindow {
             LogicalPosition::new(area.min_x(), area.min_y()),
             LogicalSize::new(area.width(), area.height()),
         );
-
-        #[cfg(feature = "accessibility")]
-        if self.screen_reader.is_on() {
-            self.accessibility_adapter.update_if_active(|| update);
-        }
     }
 
     /// Set the window title and refresh the accessibility label of the root node.
@@ -288,6 +293,13 @@ impl AppWindow {
         let scale_factor = window.scale_factor() * custom_scale_factor;
 
         let mut tree = Tree::default();
+        plugins.send(
+            PluginEvent::TreeCreated {
+                window: &window,
+                tree: &mut tree,
+            },
+            PluginHandle::new(event_loop_proxy),
+        );
 
         let window_size = window.inner_size().to_logical::<f32>(scale_factor);
         let accent_color_preference = accent_color_preference();
@@ -413,7 +425,7 @@ impl AppWindow {
         AppWindow {
             runner,
             tree,
-            driver,
+            driver: Some(driver),
             window,
             nodes_state,
 

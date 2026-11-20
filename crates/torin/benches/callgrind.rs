@@ -9,7 +9,7 @@ const ITERATIONS: usize = 3;
 
 #[hotpath::main(functions_limit = 0)]
 fn main() {
-    let measurements: [fn(&mut BenchmarkInput); 11] = [
+    let measurements: [fn(&mut BenchmarkInput); 14] = [
         flat_1000,
         flat_10000,
         flat_100000,
@@ -21,6 +21,9 @@ fn main() {
         wide_depth_7,
         wide_depth_7_invalidated,
         aligned_depth_8,
+        distant_branches_1,
+        distant_branches_2,
+        distant_branches_8,
     ];
     let configs = BenchmarkConfig::all();
     assert_eq!(configs.len(), measurements.len());
@@ -85,5 +88,20 @@ fn wide_depth_7_invalidated(input: &mut BenchmarkInput) {
 
 #[hotpath::measure]
 fn aligned_depth_8(input: &mut BenchmarkInput) {
+    input.run();
+}
+
+#[hotpath::measure]
+fn distant_branches_1(input: &mut BenchmarkInput) {
+    input.run();
+}
+
+#[hotpath::measure]
+fn distant_branches_2(input: &mut BenchmarkInput) {
+    input.run();
+}
+
+#[hotpath::measure]
+fn distant_branches_8(input: &mut BenchmarkInput) {
     input.run();
 }

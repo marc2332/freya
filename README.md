@@ -681,7 +681,11 @@ use freya::prelude::*;
 use freya::html::*;
 
 fn app() -> impl IntoElement {
-    let handle = use_html(|| HtmlSource::url("https://example.com"));
+    let handle = use_hook(|| {
+        let mut handle = HtmlHandle::create();
+        handle.load(HtmlSource::url("https://example.com"));
+        handle
+    });
 
     rect()
         .expanded()
@@ -759,7 +763,7 @@ If you are interested in supporting the development of this project feel free to
 
 Thanks to my sponsors for supporting this project! 😄 
 
-<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;github.com&#x2F;piny4man.png" width="60px" alt="User avatar: " /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;github.com&#x2F;gqf2008.png" width="60px" alt="User avatar: 高庆丰" /></a><a href="https://github.com/DrigsterI"><img src="https:&#x2F;&#x2F;github.com&#x2F;DrigsterI.png" width="60px" alt="User avatar: Gabriel Jõe" /></a><a href="https://github.com/markalexander"><img src="https:&#x2F;&#x2F;github.com&#x2F;markalexander.png" width="60px" alt="User avatar: Mark" /></a><a href="https://github.com/FracturaApp"><img src="https:&#x2F;&#x2F;github.com&#x2F;FracturaApp.png" width="60px" alt="User avatar: Fractura" /></a><a href="https://github.com/LevitskyStudio"><img src="https:&#x2F;&#x2F;github.com&#x2F;LevitskyStudio.png" width="60px" alt="User avatar: Senary Domain" /></a><!-- sponsors -->
+<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;github.com&#x2F;piny4man.png" width="60px" alt="User avatar: " /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;github.com&#x2F;gqf2008.png" width="60px" alt="User avatar: 高庆丰" /></a><a href="https://github.com/DrigsterI"><img src="https:&#x2F;&#x2F;github.com&#x2F;DrigsterI.png" width="60px" alt="User avatar: Gabriel Jõe" /></a><a href="https://github.com/markalexander"><img src="https:&#x2F;&#x2F;github.com&#x2F;markalexander.png" width="60px" alt="User avatar: Mark" /></a><a href="https://github.com/LevitskyStudio"><img src="https:&#x2F;&#x2F;github.com&#x2F;LevitskyStudio.png" width="60px" alt="User avatar: Senary Domain" /></a><!-- sponsors -->
 
 ### Special thanks 💪
 
