@@ -18,6 +18,7 @@ pub use keyboard_types::{
     Modifiers,
 };
 use winit::{
+    event::WindowEvent,
     event_loop::EventLoopProxy,
     window::{
         Window,
@@ -110,6 +111,25 @@ pub enum PluginEvent<'a> {
     RunnerCreated {
         runner: &'a mut Runner,
     },
+    /// A window tree was created.
+    TreeCreated {
+        window: &'a Window,
+        tree: &'a mut Tree,
+    },
+
+    /// A raw Winit window event before Freya handles it.
+    WindowEvent {
+        window: &'a Window,
+        raw: &'a WindowEvent,
+        tree: &'a mut Tree,
+    },
+
+    /// A window resumed.
+    WindowResumed {
+        window: &'a Window,
+        tree: &'a mut Tree,
+    },
+
     /// A Window just got created.
     WindowCreated {
         window: &'a Window,
