@@ -381,8 +381,8 @@ impl Component for ScrollView {
                     let delta = prev - coords;
 
                     scroll_controller.drag(delta);
-                    scroll_controller.scroll_to_y(rendered_position.y - delta.y);
-                    scroll_controller.scroll_to_x(rendered_position.x - delta.x);
+                    scroll_controller.scroll_to_y(rendered_position.y + delta.y);
+                    scroll_controller.scroll_to_x(rendered_position.x + delta.x);
 
                     dragging_content.set_if_modified(Some(coords));
                     e.prevent_default();
@@ -401,8 +401,8 @@ impl Component for ScrollView {
                         let delta = origin - coords;
 
                         scroll_controller.drag(delta);
-                        scroll_controller.scroll_to_y(rendered_position.y - delta.y);
-                        scroll_controller.scroll_to_x(rendered_position.x - delta.x);
+                        scroll_controller.scroll_to_y(rendered_position.y + delta.y);
+                        scroll_controller.scroll_to_x(rendered_position.x + delta.x);
 
                         dragging_content.set_if_modified(Some(coords));
                         e.prevent_default();
@@ -538,8 +538,8 @@ impl Component for ScrollView {
                             .height(content_height)
                             .max_width(layout.maximum_width.clone())
                             .max_height(layout.maximum_height.clone())
-                            .offset_x(rendered_position.x as f32)
-                            .offset_y(rendered_position.y as f32)
+                            .offset_x(-rendered_position.x as f32)
+                            .offset_y(-rendered_position.y as f32)
                             .spacing(layout.spacing.get())
                             .overflow(Overflow::Clip)
                             .on_sized(move |e: Event<SizedEventData>| {

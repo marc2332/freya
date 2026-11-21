@@ -74,8 +74,8 @@ impl CodeEditorData {
         }
 
         let (scroll_x, scroll_y) = scroll_controller.into();
-        let scrolled_x = -scroll_x as f32;
-        let scrolled_y = -scroll_y as f32;
+        let scrolled_x = scroll_x as f32;
+        let scrolled_y = scroll_y as f32;
         let cursor_left = self.cursor_col() as f32 * self.metrics.char_width;
         let cursor_right = cursor_left + self.metrics.char_width;
         let cursor_top = self.cursor_row() as f32 * line_height;
@@ -100,11 +100,11 @@ impl CodeEditorData {
         let mut changed = false;
 
         if let Some(target) = horizontal_target {
-            changed |= scroll_controller.scroll_to_x((-target).into());
+            changed |= scroll_controller.scroll_to_x(target.into());
         }
 
         if let Some(target) = vertical_target {
-            changed |= scroll_controller.scroll_to_y((-target).into());
+            changed |= scroll_controller.scroll_to_y(target.into());
         }
 
         changed

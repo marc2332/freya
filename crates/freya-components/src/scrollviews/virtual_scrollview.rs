@@ -61,7 +61,7 @@ impl ItemSize {
         scroll_position: f64,
         length: usize,
     ) -> (Range<usize>, f32) {
-        let scroll_distance = (-scroll_position).max(0.0);
+        let scroll_distance = scroll_position.max(0.0);
         match self {
             Self::Fixed(size) => {
                 if *size <= 0.0 {
@@ -107,7 +107,7 @@ impl ItemSize {
                 if length == 0 {
                     return 0.0;
                 }
-                let viewport_bottom = (-scroll_position).max(0.0) + viewport_size;
+                let viewport_bottom = scroll_position.max(0.0) + viewport_size;
                 let mut measured = callback.call(0) as f64;
                 let mut count = 1;
                 while count < length && measured < viewport_bottom {
@@ -635,8 +635,8 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                     let delta = prev - coords;
 
                     scroll_controller.drag(delta);
-                    scroll_controller.scroll_to_y(rendered_position.y - delta.y);
-                    scroll_controller.scroll_to_x(rendered_position.x - delta.x);
+                    scroll_controller.scroll_to_y(rendered_position.y + delta.y);
+                    scroll_controller.scroll_to_x(rendered_position.x + delta.x);
 
                     dragging_content.set_if_modified(Some(coords));
                     e.prevent_default();
@@ -655,8 +655,8 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                         let delta = origin - coords;
 
                         scroll_controller.drag(delta);
-                        scroll_controller.scroll_to_y(rendered_position.y - delta.y);
-                        scroll_controller.scroll_to_x(rendered_position.x - delta.x);
+                        scroll_controller.scroll_to_y(rendered_position.y + delta.y);
+                        scroll_controller.scroll_to_x(rendered_position.x + delta.x);
 
                         dragging_content.set_if_modified(Some(coords));
                         e.prevent_default();
@@ -764,8 +764,8 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
             .collect::<Vec<Element>>();
 
         let (offset_x, offset_y) = match direction {
-            Direction::Vertical => (rendered_position.x as f32, item_offset),
-            Direction::Horizontal => (item_offset, rendered_position.y as f32),
+            Direction::Vertical => (-rendered_position.x as f32, item_offset),
+            Direction::Horizontal => (item_offset, -rendered_position.y as f32),
         };
 
         let on_pointer_down = move |e: Event<PointerEventData>| {

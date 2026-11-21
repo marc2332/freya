@@ -42,7 +42,7 @@ fn scrolling_does_not_press_button_on_release() {
 
         test.press_touch((40., 80.));
         test.move_touch((40., 50.));
-        assert!(test.run_in(|| controller.position().y) < 0.);
+        assert!(test.run_in(|| controller.position().y) > 0.);
         test.release_touch((40., 50.));
         assert_eq!(*presses.peek(), 0);
     }

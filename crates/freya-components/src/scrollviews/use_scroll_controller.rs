@@ -85,7 +85,7 @@ pub struct ScrollConfig {
 /// }
 /// ```
 ///
-/// For an exact pixel offset use [`scroll_to_y`](ScrollController::scroll_to_y) or
+/// For an exact pixel position use [`scroll_to_y`](ScrollController::scroll_to_y) or
 /// [`scroll_to_x`](ScrollController::scroll_to_x). The current position is available by converting
 /// the controller into a `(f64, f64)` tuple of `(x, y)` pixels, or calling
 /// [`position`](ScrollController::position).
@@ -107,7 +107,7 @@ pub struct ScrollConfig {
 ///                 .on_press(move |_| {
 ///                     let current = scroll_controller.position();
 ///                     scroll_controller.animate_from(current);
-///                     scroll_controller.scroll_to_y(-500.);
+///                     scroll_controller.scroll_to_y(500.);
 ///                 })
 ///                 .child("Animate scroll"),
 ///         )
@@ -180,7 +180,7 @@ impl From<ScrollController> for (f64, f64) {
 
 impl ScrollController {
     /// Offset of an axis scrolled to its end, resolved against the content size on the next layout.
-    const END: f64 = f64::NEG_INFINITY;
+    const END: f64 = f64::INFINITY;
 
     /// Creates a controller starting at the scroll position `(x, y)`.
     pub fn new(x: f64, y: f64) -> Self {
@@ -370,7 +370,7 @@ impl Drag {
             .as_secs_f64()
             .max(DRAG_MIN_SAMPLE_TIME);
 
-        let velocity = (-delta / elapsed_seconds).with_max_length(FLING_MAX_SPEED);
+        let velocity = (delta / elapsed_seconds).with_max_length(FLING_MAX_SPEED);
         self.velocity = self.velocity.lerp(velocity, 0.5);
         self.last_move = now;
     }
@@ -477,7 +477,7 @@ impl ScrollController {
         });
     }
 
-    /// Feeds a drag movement into the tracked velocity.
+    /// Tracks a drag delta in scroll coordinates, positive toward the end.
     pub fn drag(&mut self, delta: ScrollVector) {
         self.stop();
         self.drag.write().track(delta);

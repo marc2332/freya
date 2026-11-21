@@ -200,13 +200,12 @@ impl Component for CodeEditor {
                     let lines_jump = (line_height as f64 * LINES_JUMP_ALT as f64).ceil();
                     let content_height = lines_len as f64 * line_height as f64;
                     let viewport_height = editor.viewport.height as f64;
-                    let min_scroll = -(content_height - viewport_height).max(0.);
-                    let max_scroll = 0.;
+                    let max_scroll = (content_height - viewport_height).max(0.);
                     let (_, current_scroll) = scroll_controller.into();
 
                     let events = match &key {
                         Key::Named(NamedKey::ArrowUp) if modifiers.contains(Modifiers::ALT) => {
-                            let jump = (current_scroll + lines_jump).clamp(min_scroll, max_scroll);
+                            let jump = (current_scroll - lines_jump).clamp(0., max_scroll);
                             scroll_controller.scroll_to_y(jump);
                             (0..LINES_JUMP_ALT)
                                 .map(|_| EditableEvent::KeyDown {
@@ -218,7 +217,7 @@ impl Component for CodeEditor {
                                 .collect::<Vec<EditableEvent>>()
                         }
                         Key::Named(NamedKey::ArrowDown) if modifiers.contains(Modifiers::ALT) => {
-                            let jump = (current_scroll - lines_jump).clamp(min_scroll, max_scroll);
+                            let jump = (current_scroll + lines_jump).clamp(0., max_scroll);
                             scroll_controller.scroll_to_y(jump);
                             (0..LINES_JUMP_ALT)
                                 .map(|_| EditableEvent::KeyDown {
