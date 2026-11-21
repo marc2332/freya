@@ -114,6 +114,7 @@ impl fmt::Debug for DragDataHandle {
 }
 
 impl DragDataHandle {
+    /// Creates a handle for the formats offered by the drag.
     pub fn new(formats: Vec<DataFormat>) -> Self {
         Self(Arc::new(IncomingData {
             formats,
@@ -128,18 +129,22 @@ impl DragDataHandle {
         Ok(std::mem::take(&mut reads.pending))
     }
 
+    /// Lists the offered formats without reading their data.
     pub fn types(&self) -> &[DataFormat] {
         &self.0.formats
     }
 
+    /// Checks whether the drag offers the given format.
     pub fn has(&self, format: DataFormat) -> bool {
         self.types().contains(&format)
     }
 
+    /// Checks whether the drag offers file paths.
     pub fn has_files(&self) -> bool {
         self.has(DataFormat::Files)
     }
 
+    /// Checks whether the drag offers plain text.
     pub fn has_text(&self) -> bool {
         self.has(DataFormat::Text)
     }
@@ -184,6 +189,7 @@ impl DragDataHandle {
         read.await.map_err(|_| DragError::Expired)?
     }
 
+    /// Reads the offered file paths, not the file contents.
     pub async fn read_files(&self) -> Result<Vec<PathBuf>, DragError> {
         match self.read(DataFormat::Files).await? {
             DataValue::Files(paths) => Ok(paths),
@@ -191,6 +197,7 @@ impl DragDataHandle {
         }
     }
 
+    /// Reads the plain-text payload.
     pub async fn read_text(&self) -> Result<String, DragError> {
         match self.read(DataFormat::Text).await? {
             DataValue::Text(text) => Ok(text),
@@ -198,6 +205,7 @@ impl DragDataHandle {
         }
     }
 
+    /// Reads a format as bytes, encoding text as UTF-8.
     pub async fn read_bytes(&self, format: DataFormat) -> Result<Vec<u8>, DragError> {
         match self.read(format).await? {
             DataValue::Bytes(bytes) => Ok(bytes),
