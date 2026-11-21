@@ -33,7 +33,13 @@ fn input_external_editor_control() {
     test.write_text("replacement");
     assert_eq!(editor.editor().peek().committed_text(), "replacement");
 
-    editor.editor_mut().write().set("external");
+    {
+        let mut editor = editor.editor_mut().write();
+        editor.set_selection((11, 3));
+        editor.set("😀");
+        assert_eq!(editor.get_selection(), Some((2, 2)));
+        editor.set("external");
+    }
     test.sync_and_update();
     assert!(
         test.find(|_, element| {

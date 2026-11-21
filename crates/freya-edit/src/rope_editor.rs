@@ -278,9 +278,7 @@ impl TextEditor for RopeEditor {
     fn set(&mut self, text: &str) {
         self.rope.remove(0..);
         self.rope.insert(0, text);
-        if self.cursor_pos() > text.len() {
-            self.move_cursor_to(text.len());
-        }
+        self.selection.clamp(&self.rope);
     }
 
     fn clear_selection(&mut self) {
