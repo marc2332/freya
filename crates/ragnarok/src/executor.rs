@@ -1,4 +1,7 @@
-use alloc::vec::Vec;
+use alloc::{
+    collections::VecDeque,
+    vec::Vec,
+};
 
 use crate::{
     EmmitableEvent,
@@ -61,19 +64,18 @@ impl<T: EventsExecutor + private::Sealed> EventsExecutorRunner for T {
         mut self,
         nodes_state: &mut NodesState<Self::Key>,
         ProcessedEvents {
-            mut emmitable_events,
+            emmitable_events,
             flattened_potential_events,
             mut nodes_states_update,
         }: ProcessedEvents<Self::Key, Self::Name, Self::Emmitable, Self::Source>,
     ) {
+        let mut emmitable_events: VecDeque<Self::Emmitable> = emmitable_events.into();
         let mut processed_events = Vec::<Self::Emmitable>::new();
 
         #[cfg(debug_assertions)]
         tracing::info!("Processing {} Tree events", emmitable_events.len());
 
-        while !emmitable_events.is_empty() {
-            let emmitable_event = emmitable_events.remove(0);
-
+        while let Some(emmitable_event) = emmitable_events.pop_front() {
             let default_action_enabled = self.emit_event(emmitable_event.clone());
 
             if !default_action_enabled {

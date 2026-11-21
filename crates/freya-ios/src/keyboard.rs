@@ -88,7 +88,7 @@ pub(crate) struct SoftKeyboard {
 
 impl SoftKeyboard {
     pub(crate) fn attach(
-        window: &Window,
+        window: &dyn Window,
         handle: PluginHandle,
     ) -> Result<Self, KeyboardAttachError> {
         let mtm = MainThreadMarker::new().ok_or(KeyboardAttachError::NotMainThread)?;

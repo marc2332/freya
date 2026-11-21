@@ -38,7 +38,10 @@ use crate::{
     prelude::*,
     style::{
         font_size::FontSize,
-        render_callback::RenderContext as FillRenderContext,
+        render_callback::{
+            RenderContext as FillRenderContext,
+            RenderTarget,
+        },
         scale::Scale,
         shadow::{
             Shadow,
@@ -484,56 +487,89 @@ impl ElementExt for RectElement {
             .clip_rrect(rounded_rect, ClipOp::Intersect, true);
     }
 
+    fn paints_content(&self) -> bool {
+        self.style
+            .background
+            .as_color()
+            .is_none_or(|color| color.a() != 0)
+            || self
+                .style
+                .shadows
+                .iter()
+                .any(|shadow| shadow.color.a() != 0)
+            || self.style.borders.iter().any(Border::is_visible)
+    }
+
     fn render(&self, context: RenderContext) {
+        if !self.paints_content() {
+            return;
+        }
         let style = self.style();
+        let paints_background = style
+            .background
+            .as_color()
+            .is_none_or(|color| color.a() != 0);
+        let paints_shadows = style.shadows.iter().any(|shadow| shadow.color.a() != 0);
 
         let area = context.layout_node.visible_area();
         let corner_radius = style.corner_radius.with_scale(context.scale_factor as f32);
-
-        let mut path = PathBuilder::new();
-        let mut paint = Paint::default();
-        paint.set_anti_alias(true);
-        paint.set_style(PaintStyle::Fill);
-        if style.background.render_callback().is_none() {
-            style.background.apply_to_paint(&mut paint, area);
-        }
-
-        // Container
         let rounded_rect = self.render_rect(&area, context.scale_factor as f32);
-        if corner_radius.smoothing() > 0.0 {
-            path.add_path(&corner_radius.smoothed_path(rounded_rect), None);
+        let mut path = if corner_radius.smoothing() > 0.0 || paints_shadows {
+            let mut path = PathBuilder::new();
+            if corner_radius.smoothing() > 0.0 {
+                path.add_path(&corner_radius.smoothed_path(rounded_rect), None);
+            } else {
+                path.add_rrect(rounded_rect, None, None);
+            }
+            Some(path.detach())
         } else {
-            path.add_rrect(rounded_rect, None, None);
-        }
+            None
+        };
 
-        let mut path = path.detach();
         if let Some(callback) = style.background.render_callback() {
             let layer = context.canvas.save();
-            context.canvas.clip_path(&path, ClipOp::Intersect, true);
+            if let Some(path) = &path {
+                context.canvas.clip_path(path, ClipOp::Intersect, true);
+            } else {
+                context
+                    .canvas
+                    .clip_rrect(rounded_rect, ClipOp::Intersect, true);
+            }
             context.canvas.translate((area.min_x(), area.min_y()));
             context
                 .canvas
                 .scale((context.scale_factor as f32, context.scale_factor as f32));
             callback.call(&mut FillRenderContext {
-                canvas: context.canvas,
-                font_collection: context.font_collection,
+                target: RenderTarget::Background {
+                    canvas: context.canvas,
+                    font_collection: context.font_collection,
+                },
+                scale_factor: context.scale_factor,
                 origin: area.origin / context.scale_factor as f32,
                 size: area.size / context.scale_factor as f32,
                 text_style_state: context.text_style_state,
             });
             context.canvas.restore_to_count(layer);
-        } else {
-            context.canvas.draw_path(&path, &paint);
+        } else if paints_background {
+            let mut paint = Paint::default();
+            paint.set_anti_alias(true);
+            paint.set_style(PaintStyle::Fill);
+            style.background.apply_to_paint(&mut paint, area);
+            if let Some(path) = &path {
+                context.canvas.draw_path(path, &paint);
+            } else if rounded_rect.is_rect() {
+                context.canvas.draw_rect(rounded_rect.rect(), &paint);
+            } else {
+                context.canvas.draw_rrect(rounded_rect, &paint);
+            }
         }
 
-        // Shadows
-        for shadow in style.shadows.iter() {
-            if shadow.color != Color::TRANSPARENT {
+        if let Some(path) = &mut path {
+            for shadow in style.shadows.iter().filter(|shadow| shadow.color.a() != 0) {
                 let shadow = shadow.with_scale(context.scale_factor as f32);
-
                 Self::render_shadow(
                     context.canvas,
-                    &mut path,
+                    path,
                     rounded_rect,
                     area,
                     &shadow,
@@ -556,13 +592,23 @@ impl ElementExt for RectElement {
 #[derive(Default, Clone)]
 pub struct Rect {
     element: RectElement,
-    elements: Vec<Element>,
+    elements: ElementChildren,
     key: DiffKey,
 }
 
 impl ChildrenExt for Rect {
     fn children_mut(&mut self) -> &mut Vec<Element> {
-        &mut self.elements
+        match &mut self.elements {
+            ElementChildren::Owned(children) => children,
+            ElementChildren::Retained(children) => Rc::make_mut(children),
+        }
+    }
+}
+
+impl RetainedChildrenExt for Rect {
+    fn retained_children(mut self, children: Rc<Vec<Element>>) -> Self {
+        self.elements = ElementChildren::Retained(children);
+        self
     }
 }
 
@@ -709,6 +755,12 @@ impl Rect {
             .effect
             .get_or_insert_with(Default::default)
             .transform_origin = transform_origin.into();
+        self
+    }
+
+    /// See [`EffectExt::mask`].
+    pub fn mask(mut self, mask: impl Into<Fill>) -> Self {
+        self.element.effect.get_or_insert_default().mask = Some(mask.into());
         self
     }
 

@@ -13,10 +13,10 @@ use generational_box::{
     Owner,
 };
 use rustc_hash::FxHashSet;
+use tiny_notify::Notify;
 
 use crate::{
     current_context::CurrentContext,
-    notify::Notify,
     runner::Message,
     scope_id::ScopeId,
 };

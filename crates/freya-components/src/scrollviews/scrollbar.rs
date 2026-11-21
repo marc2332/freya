@@ -15,9 +15,7 @@ use torin::{
         Alignment,
         Direction,
         Gaps,
-        Point2D,
         Position,
-        Size2D,
     },
     size::Size,
 };
@@ -27,6 +25,8 @@ use crate::{
     get_theme,
     scrollviews::{
         ScrollController,
+        ScrollPoint,
+        ScrollSize,
         ScrollThumb,
         shared::{
             Axis,
@@ -56,9 +56,9 @@ define_theme! {
 #[derive(Clone, PartialEq)]
 pub struct ScrollBarContext {
     pub axis: Axis,
-    pub scroll_position: Point2D,
-    pub viewport_size: Size2D,
-    pub content_size: Size2D,
+    pub scroll_position: ScrollPoint,
+    pub viewport_size: ScrollSize,
+    pub content_size: ScrollSize,
     pub scroll_controller: ScrollController,
     pub timeout: Timeout,
     /// Whether idle scrollbars should hide when the timeout elapses.
@@ -269,13 +269,7 @@ impl ComponentOwned for ScrollBar {
                             .height(bar_height)
                             .margin(bar_margin)
                             .background(scrollbar_theme.background.with_a(opacity as u8))
-                            .corner_radius(8.)
-                            .shadow(Shadow::new().blur(6.).color((
-                                0,
-                                0,
-                                0,
-                                (opacity * 0.28) as u8,
-                            ))),
+                            .corner_radius(8.),
                     )
                     .child(
                         rect()

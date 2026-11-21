@@ -1,6 +1,7 @@
-#![cfg(debug_assertions)]
-
-use freya_core::metrics::Metrics;
+use freya_core::{
+    integration::default_fonts,
+    metrics::Metrics,
+};
 use freya_engine::prelude::{
     Canvas,
     Color,
@@ -68,12 +69,12 @@ pub(crate) fn draw_stats_overlay(
     values.paint(canvas, (left + 8.0, top + 2.0));
 }
 
-#[cfg(debug_assertions)]
 fn add_debug_text(paragraph_builder: &mut ParagraphBuilder, text: String, font_size: f32) {
     let mut text_style = TextStyle::default();
     text_style.set_color(Color::from_rgb(115, 190, 255));
     text_style.set_font_style(FontStyle::new(Weight::BOLD, Width::NORMAL, Slant::Upright));
     text_style.set_font_size(font_size);
+    text_style.set_font_families(&default_fonts());
     text_style.add_shadow(TextShadow::new(
         Color::from_argb(120, 115, 190, 255),
         (0.0, 0.0),

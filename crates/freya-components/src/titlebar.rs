@@ -98,6 +98,7 @@ impl Component for TitlebarButton {
         rect()
             .width(theme.width)
             .height(theme.height)
+            .corner_radius(theme.corner_radius)
             .background(background)
             .center()
             .on_pointer_enter(move |_| {

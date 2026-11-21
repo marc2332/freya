@@ -31,9 +31,6 @@ pub enum EventName {
     GlobalKeyDown,
     GlobalKeyUp,
 
-    GlobalFileHover,
-    GlobalFileHoverCancelled,
-
     CaptureGlobalPointerMove,
     CaptureGlobalPointerUp,
 
@@ -47,50 +44,52 @@ pub enum EventName {
 
     Styled,
 
-    FileDrop,
+    DragEnter,
+    DragOver,
+    DragLeave,
+    Drop,
 
     ImePreedit,
 
     AccessibilityAction,
 }
 
-use std::collections::HashSet;
+use std::{
+    cmp::Ordering,
+    collections::HashSet,
+};
 
 use ragnarok::NameOfEvent as _;
 
 impl PartialOrd for EventName {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
 impl Ord for EventName {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        match self {
-            // Capture events have max priority
-            e if e.is_capture() => std::cmp::Ordering::Less,
-            // Left events have more priority over non-left
-            e if e.is_left() => std::cmp::Ordering::Less,
-            // Exclusive left events have more priority over non-exclusive-left
-            e if e.is_exclusive_left() => std::cmp::Ordering::Less,
-            // Over events have priority over enter events
-            e if e.is_non_exclusive_enter() => std::cmp::Ordering::Less,
-            // Non-capture globals fire last
-            e if e.is_global() => std::cmp::Ordering::Greater,
-            e => {
-                if other.is_global() {
-                    std::cmp::Ordering::Less
-                } else if e == other {
-                    std::cmp::Ordering::Equal
-                } else {
-                    std::cmp::Ordering::Greater
-                }
-            }
-        }
+    fn cmp(&self, other: &Self) -> Ordering {
+        (self.priority(), *self as usize).cmp(&(other.priority(), *other as usize))
     }
 }
 
 impl EventName {
+    fn priority(&self) -> u8 {
+        match self {
+            // Capture events have max priority.
+            event if event.is_capture() => 0,
+            // Exclusive left events precede non-exclusive left events.
+            event if event.is_exclusive_left() => 1,
+            // Left events have priority over non-left events.
+            event if event.is_left() => 2,
+            // Over events have priority over enter events.
+            event if event.is_non_exclusive_enter() => 3,
+            // Non-capture globals fire last.
+            event if event.is_global() => 5,
+            _ => 4,
+        }
+    }
+
     /// Check if this even captures others or not
     pub fn is_capture(&self) -> bool {
         matches!(
@@ -112,7 +111,10 @@ impl EventName {
     }
 
     pub fn is_left(&self) -> bool {
-        matches!(&self, Self::PointerLeave | Self::PointerOut)
+        matches!(
+            self,
+            Self::PointerLeave | Self::PointerOut | Self::DragLeave
+        )
     }
 
     pub fn is_exclusive_left(&self) -> bool {
@@ -120,7 +122,7 @@ impl EventName {
     }
 
     pub fn is_non_exclusive_enter(&self) -> bool {
-        matches!(&self, Self::PointerOver)
+        matches!(self, Self::PointerOver | Self::DragEnter)
     }
 
     pub fn is_down(&self) -> bool {
@@ -150,8 +152,6 @@ impl ragnarok::NameOfEvent for EventName {
             Self::KeyDown => HashSet::from([Self::GlobalKeyDown]),
             Self::KeyUp => HashSet::from([Self::GlobalKeyUp]),
 
-            Self::GlobalFileHover => HashSet::from([Self::GlobalFileHover]),
-            Self::GlobalFileHoverCancelled => HashSet::from([Self::GlobalFileHoverCancelled]),
             _ => HashSet::new(),
         }
     }
@@ -162,12 +162,20 @@ impl ragnarok::NameOfEvent for EventName {
         events.insert(*self);
 
         match self {
-            Self::MouseMove | Self::TouchMove => {
+            Self::MouseMove => {
                 events.insert(Self::PointerMove);
                 events.insert(Self::PointerEnter);
                 events.insert(Self::PointerOver);
             }
-            Self::MouseDown | Self::TouchStart => {
+            Self::TouchMove => {
+                events.insert(Self::PointerMove);
+            }
+            Self::TouchStart => {
+                events.insert(Self::PointerDown);
+                events.insert(Self::PointerEnter);
+                events.insert(Self::PointerOver);
+            }
+            Self::MouseDown => {
                 events.insert(Self::PointerDown);
             }
             Self::MouseUp | Self::TouchEnd => {
@@ -176,6 +184,7 @@ impl ragnarok::NameOfEvent for EventName {
             Self::PointerOut => {
                 events.insert(Self::PointerLeave);
             }
+            Self::DragOver => events.extend(Self::new_drag_enter()),
             _ => {}
         }
 
@@ -235,8 +244,6 @@ impl ragnarok::NameOfEvent for EventName {
                 | Self::GlobalPointerUp
                 | Self::GlobalPointerDown
                 | Self::GlobalPointerMove
-                | Self::GlobalFileHover
-                | Self::GlobalFileHoverCancelled
         )
     }
 
@@ -268,7 +275,7 @@ impl ragnarok::NameOfEvent for EventName {
         false
     }
 
-    fn is_enter(&self) -> bool {
+    fn is_pointer_enter(&self) -> bool {
         matches!(&self, Self::PointerEnter | Self::PointerOver)
     }
 
@@ -298,5 +305,29 @@ impl ragnarok::NameOfEvent for EventName {
 
     fn new_exclusive_enter() -> Self {
         Self::PointerEnter
+    }
+
+    fn is_drag_enter(&self) -> bool {
+        matches!(self, Self::DragEnter)
+    }
+
+    fn is_drag_over(&self) -> bool {
+        matches!(self, Self::DragOver)
+    }
+
+    fn is_drag_leave(&self) -> bool {
+        matches!(self, Self::DragLeave)
+    }
+
+    fn is_drop(&self) -> bool {
+        matches!(self, Self::Drop)
+    }
+
+    fn new_drag_enter() -> Option<Self> {
+        Some(Self::DragEnter)
+    }
+
+    fn new_drag_leave() -> Option<Self> {
+        Some(Self::DragLeave)
     }
 }

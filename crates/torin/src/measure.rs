@@ -83,7 +83,12 @@ where
             return;
         };
 
-        if let Some(measurer) = self.measurer {
+        if self
+            .tree_adapter
+            .read_node(&node_id, |node, _| node.has_layout_references)
+            .unwrap_or(false)
+            && let Some(measurer) = self.measurer
+        {
             measurer.notify_layout_references(node_id, area, visible_area, inner_sizes);
         }
     }
@@ -183,6 +188,9 @@ where
 
             layout_node.offset_x = node.offset_x;
             layout_node.offset_y = node.offset_y;
+            layout_node
+                .inner_area
+                .move_with_offsets(&offset_x, &offset_y);
 
             let layout_node = layout_node.clone();
 
@@ -197,7 +205,7 @@ where
             self.layout.get(&node_id).cloned()
         };
 
-        let Some(layout_node) = cached_layout_node else {
+        let Some(mut layout_node) = cached_layout_node else {
             // Create the initial Node area size
             let mut area_size = Size2D::new(node.padding.horizontal(), node.padding.vertical());
 
@@ -531,7 +539,25 @@ where
             );
         }
 
-        (false, layout_node)
+        let content_changed = measure_inner_children && layout_node.inner_sizes != inner_sizes;
+        if content_changed {
+            layout_node.inner_sizes = inner_sizes;
+            if must_cache_children
+                && phase == Phase::Final
+                && node.has_layout_references
+                && let Some(measurer) = self.measurer
+            {
+                let padding = Size2D::new(node.padding.horizontal(), node.padding.vertical());
+                measurer.notify_layout_references(
+                    node_id,
+                    layout_node.area,
+                    layout_node.visible_area(),
+                    inner_sizes + padding,
+                );
+            }
+        }
+
+        (content_changed && must_cache_children, layout_node)
     }
 
     /// Measure the children layouts of a Node.
@@ -650,6 +676,7 @@ where
                             &mut initial_phase_inner_sizes,
                             &child_areas.area,
                             is_last_child,
+                            parent_is_dirty,
                             Phase::Initial,
                         );
 
@@ -948,6 +975,7 @@ where
                             inner_sizes,
                             &child_areas.area,
                             is_last_child,
+                            parent_is_dirty,
                             Phase::Final,
                         );
                     }
@@ -1112,6 +1140,7 @@ where
         inner_sizes: &mut Size2D,
         child_area: &Area,
         is_last_sibilin: bool,
+        parent_is_dirty: bool,
         phase: Phase,
     ) {
         // Only apply the spacing to elements after `i > 0` and `i < len - 1`
@@ -1134,7 +1163,7 @@ where
                 }
 
                 // Keep the biggest height
-                if parent_node.height.inner_sized() {
+                if parent_is_dirty && parent_node.height.inner_sized() {
                     parent_area.size.height = parent_area.size.height.max(
                         child_area.size.height
                             + parent_node.padding.vertical()
@@ -1147,7 +1176,7 @@ where
                 }
 
                 // Accumulate width
-                if parent_node.width.inner_sized() {
+                if parent_is_dirty && parent_node.width.inner_sized() {
                     parent_area.size.width += child_area.size.width + spacing.get();
                 }
             }
@@ -1163,7 +1192,7 @@ where
                 }
 
                 // Keep the biggest width
-                if parent_node.width.inner_sized() {
+                if parent_is_dirty && parent_node.width.inner_sized() {
                     parent_area.size.width = parent_area.size.width.max(
                         child_area.size.width
                             + parent_node.padding.horizontal()
@@ -1176,7 +1205,7 @@ where
                 }
 
                 // Accumulate height
-                if parent_node.height.inner_sized() {
+                if parent_is_dirty && parent_node.height.inner_sized() {
                     parent_area.size.height += child_area.size.height + spacing.get();
                 }
             }

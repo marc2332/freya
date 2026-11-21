@@ -3,6 +3,8 @@ use freya_core::{
     prelude::*,
 };
 
+use crate::context_menu::ContextMenuViewer;
+
 #[cfg(feature = "zoom-shortcuts")]
 const ZOOM_STEP: f64 = 0.10;
 
@@ -11,22 +13,22 @@ pub fn integration(app: AppComponent) -> impl IntoElement {
 
     let on_global_key_down = move |e: Event<KeyboardEventData>| match &e.key {
         Key::Named(NamedKey::Tab) if e.modifiers == Modifiers::SHIFT => {
-            platform.send(UserEvent::FocusAccessibilityNode(
+            platform.send(WindowCommand::FocusAccessibilityNode(
                 AccessibilityFocusStrategy::Backward(AccessibilityFocusMovement::OutsideGroup),
             ));
         }
         Key::Named(NamedKey::Tab) if e.modifiers.is_empty() => {
-            platform.send(UserEvent::FocusAccessibilityNode(
+            platform.send(WindowCommand::FocusAccessibilityNode(
                 AccessibilityFocusStrategy::Forward(AccessibilityFocusMovement::OutsideGroup),
             ));
         }
         Key::Named(NamedKey::ArrowUp) if e.modifiers.is_empty() => {
-            platform.send(UserEvent::FocusAccessibilityNode(
+            platform.send(WindowCommand::FocusAccessibilityNode(
                 AccessibilityFocusStrategy::Backward(AccessibilityFocusMovement::InsideGroup),
             ));
         }
         Key::Named(NamedKey::ArrowDown) if e.modifiers.is_empty() => {
-            platform.send(UserEvent::FocusAccessibilityNode(
+            platform.send(WindowCommand::FocusAccessibilityNode(
                 AccessibilityFocusStrategy::Forward(AccessibilityFocusMovement::InsideGroup),
             ));
         }
@@ -43,5 +45,8 @@ pub fn integration(app: AppComponent) -> impl IntoElement {
         _ => {}
     };
 
-    rect().on_global_key_down(on_global_key_down).child(app)
+    rect()
+        .on_global_key_down(on_global_key_down)
+        .child(ContextMenuViewer::new())
+        .child(app)
 }

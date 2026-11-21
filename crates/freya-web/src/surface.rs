@@ -81,7 +81,9 @@ impl WebSurface {
 
     /// Submits the recorded commands, the browser presents the buffer itself.
     pub fn present(&mut self) {
-        self.context.flush_and_submit();
+        if let Err(error) = self.context.flush_and_submit() {
+            tracing::error!(?error, "Failed to submit WebGL rendering commands");
+        }
     }
 
     fn create_webgl_context() -> bool {

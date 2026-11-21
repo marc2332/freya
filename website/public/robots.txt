@@ -1,8 +1,7 @@
 User-agent: *
 Allow: /
 
-User-agent: facebookexternalhit
-Disallow: /
+Sitemap: https://freyaui.dev/sitemap-index.xml
 
 User-agent: meta-externalagent
 Disallow: /

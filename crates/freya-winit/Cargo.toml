@@ -1,6 +1,6 @@
 [package]
 name = "freya-winit"
-version = "0.5.0-rc.10"
+version.workspace = true
 description = "Winit renderer for Freya"
 edition = "2024"
 license = "MIT"
@@ -26,6 +26,7 @@ bytes = { workspace = true }
 # Window
 raw-window-handle = { workspace = true }
 winit = { workspace = true }
+url = { workspace = true }
 freya-engine = { workspace = true }
 
 # Software rendering
@@ -39,11 +40,10 @@ ragnarok = { workspace = true }
 keyboard-types = { workspace = true }
 
 # Accessibility
-accesskit_winit = { workspace = true, optional = true }
+accesskit_xplat = { workspace = true, optional = true }
 accesskit = { workspace = true }
 
 # Other
-futures-lite = { workspace = true }
 futures-channel = { workspace = true }
 futures-util = { workspace = true }
 rustc-hash = { workspace = true }
@@ -68,7 +68,12 @@ open = { workspace = true }
 rfd = { workspace = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-gtk = { version = "0.18.2", optional = true }
+libc = { version = "0.2", optional = true }
+wayland-client = { version = "0.31", features = [
+  "system",
+  "dlopen",
+], optional = true }
+wayland-protocols = { version = "0.32", features = ["client"], optional = true }
 freya-engine = { workspace = true, features = [
   "gl",
   "vulkan",
@@ -87,7 +92,6 @@ windows-sys = { version = "0.60", features = ["Win32_Graphics_Dwm"] }
 [target.'cfg(any(target_os = "linux", target_os = "windows"))'.dependencies]
 gl = { workspace = true, optional = true }
 glutin = { workspace = true, optional = true }
-glutin-winit = { workspace = true, optional = true }
 ash = { workspace = true, optional = true }
 ash-window = { workspace = true, optional = true }
 
@@ -95,7 +99,6 @@ ash-window = { workspace = true, optional = true }
 [target.'cfg(target_os = "android")'.dependencies]
 gl = { workspace = true, optional = true }
 glutin = { workspace = true, optional = true }
-glutin-winit = { workspace = true, optional = true }
 freya-engine = { workspace = true, features = ["gl"], optional = true }
 
 # Metal rendering
@@ -129,17 +132,19 @@ gpu = [
   "dep:freya-engine",
   "dep:gl",
   "dep:glutin",
-  "dep:glutin-winit",
   "dep:ash",
   "dep:ash-window",
+  "dep:libc",
+  "dep:wayland-client",
+  "dep:wayland-protocols",
   "dep:objc2",
   "dep:objc2-metal",
   "dep:objc2-quartz-core",
   "dep:objc2-app-kit",
   "dep:objc2-ui-kit",
 ]
-accessibility = ["dep:accesskit_winit"]
+accessibility = ["dep:accesskit_xplat"]
 hotpath = ["hotpath/hotpath"]
 hotreload = ["freya-core/hotreload"]
-tray = ["dep:tray-icon", "dep:gtk"]
+tray = ["dep:tray-icon"]
 tracing = []

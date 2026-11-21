@@ -13,14 +13,14 @@
 //!
 //! Install these packages:
 //! ```sh
-//! sudo apt install build-essential libssl-dev pkg-config cmake libgtk-3-dev libclang-dev
+//! sudo apt install build-essential libssl-dev pkg-config cmake libclang-dev libudev-dev libasound2-dev liblzma-dev libfontconfig1-dev libfreetype6-dev libegl1-mesa-dev libgl1-mesa-dev libgles2-mesa-dev libwayland-dev
 //! ```
 //!
 //! #### Arch Linux
 //!
 //! Install these packages:
 //! ```sh
-//! sudo pacman -S base-devel openssl cmake gtk3 clang
+//! sudo pacman -S base-devel openssl cmake clang
 //! ```
 //!
 //! #### Fedora
@@ -28,7 +28,7 @@
 //! Install these packages:
 //!
 //! ```sh
-//! sudo dnf install openssl-devel clang-devel systemd-devel gtk3-devel @development-tools -y
+//! sudo dnf install openssl-devel clang-devel systemd-devel @development-tools -y
 //! ```
 //!
 //! ### MacOS
@@ -52,3 +52,13 @@
 //! - `mold`
 //!
 //! If there is another one not supported don't hesitate to add it here.
+//!
+//! ## Build your first app
+//!
+//! Follow [Building your first app](crate::_docs::building_an_app) to create a small todo app,
+//! from its first window to testing user interactions. The guide explains layout, components,
+//! state ownership, and stable list keys as you need them.
+//!
+//! For individual APIs, browse [UI and Components](crate::_docs::ui_and_components),
+//! [State Management](crate::_docs::state_management), and the
+//! [runnable examples](https://github.com/marc2332/freya/tree/main/examples).

@@ -75,18 +75,18 @@ impl MetalDriver {
     }
 
     pub fn new(
-        event_loop: &ActiveEventLoop,
+        event_loop: &dyn ActiveEventLoop,
         window_attributes: WindowAttributes,
         gpu_resource_cache_limit: usize,
-    ) -> (Self, Window) {
-        let transparent = window_attributes.transparent;
+    ) -> (Self, Box<dyn Window>) {
+        let transparent = window_attributes.transparent();
         let window = event_loop
             .create_window(window_attributes)
             .expect("Could not create window with Metal context");
 
         let device = MTLCreateSystemDefaultDevice().expect("No Metal-capable device found");
 
-        let size = AppWindow::drawable_size(&window);
+        let size = AppWindow::drawable_size(window.as_ref());
 
         let metal_layer = {
             let layer = CAMetalLayer::new();
@@ -177,7 +177,7 @@ impl MetalDriver {
     pub fn present(
         &mut self,
         size: PhysicalSize<u32>,
-        window: &Window,
+        window: &dyn Window,
         render: impl FnOnce(&mut SkiaSurface),
     ) {
         #[cfg(target_os = "ios")]
@@ -215,7 +215,10 @@ impl MetalDriver {
         render(&mut surface);
 
         window.pre_present_notify();
-        self.gr_context.flush_and_submit();
+        if let Err(error) = self.gr_context.flush_and_submit() {
+            tracing::error!(?error, "Failed to submit Metal rendering commands");
+            return;
+        }
         drop(surface);
 
         let command_buffer = self

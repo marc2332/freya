@@ -3,7 +3,7 @@ use std::{
     rc::Rc,
 };
 
-use freya_clipboard::copypasta::ClipboardProvider;
+use freya_clipboard::prelude::Clipboard;
 use freya_components::{
     cache::AssetCacher,
     integration::integration,
@@ -39,6 +39,7 @@ pub struct WebApp {
     runner: Runner,
     tree: Tree,
     surface: WebSurface,
+    physical_size: Size2D,
 
     nodes_state: NodesState<NodeId>,
     accessibility: AccessibilityTree,
@@ -46,8 +47,8 @@ pub struct WebApp {
     events_receiver: futures_channel::mpsc::UnboundedReceiver<EventsChunk>,
     events_sender: futures_channel::mpsc::UnboundedSender<EventsChunk>,
 
-    user_events: Rc<RefCell<Vec<UserEvent>>>,
-    global_events: Rc<RefCell<Vec<GlobalUserEvent>>>,
+    window_commands: Rc<RefCell<Vec<WindowCommand>>>,
+    app_commands: Rc<RefCell<Vec<AppCommand>>>,
 
     fonts: Fonts,
 
@@ -59,6 +60,7 @@ pub struct WebApp {
     cursor_visible: bool,
     needs_render: bool,
     ime: WebIme,
+    clipboard: WebClipboard,
 }
 
 impl WebApp {
@@ -84,37 +86,37 @@ impl WebApp {
         runner.provide_root_context(AssetCacher::create);
         runner.provide_root_context(TargetPlatform::detect);
 
-        let user_events = Rc::new(RefCell::new(Vec::new()));
-        let global_events = Rc::new(RefCell::new(Vec::new()));
+        let window_commands = Rc::new(RefCell::new(Vec::new()));
+        let app_commands = Rc::new(RefCell::new(Vec::new()));
         GlobalContexts::get().insert_context(Platform::new({
-            let global_events = global_events.clone();
-            move |event| global_events.borrow_mut().push(event)
+            let app_commands = app_commands.clone();
+            move |event| app_commands.borrow_mut().push(event)
         }));
 
         let platform = runner.run_in({
-            let user_events = user_events.clone();
+            let window_commands = window_commands.clone();
             move || PlatformWindow {
                 id: 0,
                 focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
                 focused_accessibility_node: State::create(accesskit::Node::new(
                     accesskit::Role::Window,
                 )),
-                root_size: State::create(size),
+                root_size: State::create(size / pixel_ratio as f32),
                 scale_factor: State::create(pixel_ratio),
                 custom_scale_factor: State::create(1.),
                 navigation_mode: State::create(NavigationMode::NotKeyboard),
                 preferred_theme: State::create(PreferredTheme::Light),
                 is_app_focused: State::create(true),
                 accent_color: State::create(AccentColor::default()),
-                sender: Rc::new(move |user_event| user_events.borrow_mut().push(user_event)),
+                sender: Rc::new(move |command| window_commands.borrow_mut().push(command)),
             }
         });
 
         Platform::get().register_window(platform.clone());
         runner.provide_root_context(|| CurrentWindowId(platform.id));
 
-        let clipboard: Option<Box<dyn ClipboardProvider>> = Some(Box::new(WebClipboard));
-        runner.provide_root_context(|| State::create(clipboard));
+        let clipboard = WebClipboard::new();
+        GlobalContexts::get().insert_context(Clipboard::create(Box::new(clipboard.clone())));
 
         let mut tree = Tree::default();
         runner.provide_root_context(|| tree.accessibility_generator.clone());
@@ -143,12 +145,13 @@ impl WebApp {
             runner,
             tree,
             surface,
+            physical_size: size,
             nodes_state,
             accessibility: AccessibilityTree::default(),
             events_receiver,
             events_sender,
-            user_events,
-            global_events,
+            window_commands,
+            app_commands,
             fonts,
             platform,
             ticker_sender,
@@ -157,11 +160,12 @@ impl WebApp {
             cursor_visible: true,
             needs_render: true,
             ime: WebIme::new(),
+            clipboard,
         })
     }
 
     fn size(&self) -> Size2D {
-        *self.platform.root_size.peek()
+        self.physical_size
     }
 
     fn scale_factor(&self) -> f64 {
@@ -170,6 +174,7 @@ impl WebApp {
 
     /// Advances the app by one browser frame.
     pub fn frame(&mut self) {
+        self.clipboard.poll();
         let mut browser = BrowserState::take();
 
         if ime_focused() {
@@ -180,7 +185,10 @@ impl WebApp {
 
         if let Some((size, pixel_ratio)) = browser.resized {
             self.surface.resize(size.to_i32());
-            self.platform.root_size.set_if_modified(size);
+            self.physical_size = size;
+            self.platform
+                .root_size
+                .set_if_modified(size / pixel_ratio as f32);
             self.needs_render = true;
 
             if (pixel_ratio - self.scale_factor()).abs() > f64::EPSILON {
@@ -264,12 +272,10 @@ impl WebApp {
 
     /// Fulfills the requests made by the app and measures the layout.
     fn finish(&mut self) {
-        for event in self.global_events.borrow_mut().drain(..) {
+        for event in self.app_commands.borrow_mut().drain(..) {
             match event {
-                GlobalUserEvent::OpenUrl(url) => {
-                    run_script(&format!("window.open({url:?}, '_blank');"))
-                }
-                GlobalUserEvent::LoadFont {
+                AppCommand::OpenUrl(url) => run_script(&format!("window.open({url:?}, '_blank');")),
+                AppCommand::LoadFont {
                     font_name,
                     font_data,
                 } => {
@@ -278,17 +284,22 @@ impl WebApp {
                     self.tree.text_cache.reset();
                     self.needs_render = true;
                 }
-                GlobalUserEvent::Exit => run_script("window.close();"),
-                GlobalUserEvent::Erased(_) => {}
+                AppCommand::Exit => run_script("window.close();"),
+                AppCommand::Erased(_) => {}
             }
         }
-        for user_event in self.user_events.borrow_mut().drain(..) {
-            match user_event {
-                UserEvent::FocusAccessibilityNode(strategy) => {
+        for command in self.window_commands.borrow_mut().drain(..) {
+            match command {
+                WindowCommand::FocusAccessibilityNode(strategy) => {
                     self.tree.accessibility_diff.request_focus(strategy);
                 }
-                UserEvent::RequestRedraw => self.needs_render = true,
-                UserEvent::SetCustomScaleFactor(_) => {}
+                WindowCommand::RequestRedraw => self.needs_render = true,
+                WindowCommand::SetCustomScaleFactor(_) => {}
+                WindowCommand::Erased(command) => {
+                    if let Ok(command) = command.0.downcast::<PlatformDragCommand>() {
+                        let _ = command.response.send(Err(DragError::Unsupported));
+                    }
+                }
             }
         }
 

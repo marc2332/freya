@@ -51,6 +51,8 @@ impl AccessibilityExt for SelectableText {
     }
 }
 
+impl TextOverflowExt for SelectableText {}
+
 impl TextStyleExt for SelectableText {
     fn text_style_data_mut(&mut self) -> &mut TextStyleData {
         &mut self.text_style_data

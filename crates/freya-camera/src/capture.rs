@@ -8,7 +8,6 @@ use std::sync::{
 
 use blocking::unblock;
 use bytes::Bytes;
-use freya_core::notify::ArcNotify;
 use nokhwa::{
     Camera,
     pixel_format::RgbAFormat,
@@ -20,6 +19,7 @@ use nokhwa::{
         Resolution,
     },
 };
+use tiny_notify::ArcNotify;
 
 use crate::camera::{
     CameraConfig,

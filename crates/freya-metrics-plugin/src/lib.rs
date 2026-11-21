@@ -8,7 +8,7 @@ use std::{
 
 use freya_core::prelude::{
     ModifiersExt,
-    UserEvent,
+    WindowCommand,
 };
 use freya_engine::prelude::{
     Color,
@@ -29,14 +29,13 @@ use freya_winit::{
     },
     reexports::winit::window::WindowId,
     renderer::{
-        NativeEvent,
-        NativeWindowEvent,
-        NativeWindowEventAction,
+        RendererMessage,
+        RendererWindowMessage,
+        RendererWindowPayload,
     },
 };
 
 mod performance;
-#[cfg(debug_assertions)]
 mod stats;
 
 use performance::{
@@ -46,7 +45,6 @@ use performance::{
     draw_axis_label,
     format_bytes,
 };
-#[cfg(debug_assertions)]
 use stats::draw_stats_overlay;
 
 /// Metrics plugin that displays performance and stats overlays on top of the
@@ -54,9 +52,7 @@ use stats::draw_stats_overlay;
 pub struct MetricsPlugin {
     performance_enabled: bool,
     performance_toggle_shortcut: (Key, Modifiers),
-    #[cfg(debug_assertions)]
     stats_enabled: bool,
-    #[cfg(debug_assertions)]
     stats_toggle_shortcut: (Key, Modifiers),
     metrics: HashMap<WindowId, WindowMetrics>,
 }
@@ -69,9 +65,7 @@ impl Default for MetricsPlugin {
                 Key::Character("p".into()),
                 Modifiers::ctrl_or_meta() | Modifiers::SHIFT,
             ),
-            #[cfg(debug_assertions)]
             stats_enabled: false,
-            #[cfg(debug_assertions)]
             stats_toggle_shortcut: (
                 Key::Character("l".into()),
                 Modifiers::ctrl_or_meta() | Modifiers::SHIFT,
@@ -94,14 +88,12 @@ impl MetricsPlugin {
         self
     }
 
-    #[cfg(debug_assertions)]
     /// Set whether the stats overlay is visible by default.
     pub fn with_visible_stats(mut self, visible: bool) -> Self {
         self.stats_enabled = visible;
         self
     }
 
-    #[cfg(debug_assertions)]
     /// Set the keyboard shortcut that toggles the stats overlay.
     pub fn with_stats_toggle_shortcut(mut self, key: Key, modifiers: Modifiers) -> Self {
         self.stats_toggle_shortcut = (key, modifiers);
@@ -112,14 +104,8 @@ impl MetricsPlugin {
         self.metrics.entry(id).or_default()
     }
 
-    #[cfg(debug_assertions)]
     fn overlay_visible(&self) -> bool {
         self.performance_enabled || self.stats_enabled
-    }
-
-    #[cfg(not(debug_assertions))]
-    fn overlay_visible(&self) -> bool {
-        self.performance_enabled
     }
 }
 
@@ -148,27 +134,32 @@ impl FreyaPlugin for MetricsPlugin {
                 if performance_toggled {
                     self.performance_enabled = !self.performance_enabled;
                 }
-                #[cfg(debug_assertions)]
-                let debug_toggled = matches_shortcut(&self.stats_toggle_shortcut);
-                #[cfg(debug_assertions)]
-                if debug_toggled {
+                let stats_toggled = matches_shortcut(&self.stats_toggle_shortcut);
+                if stats_toggled {
                     self.stats_enabled = !self.stats_enabled;
                 }
                 if performance_toggled {
                     for window_id in self.metrics.keys() {
-                        handle.send_event_loop_event(NativeEvent::Window(NativeWindowEvent {
-                            window_id: *window_id,
-                            action: NativeWindowEventAction::User(UserEvent::RequestRedraw),
-                        }));
+                        handle.send_renderer_message(RendererMessage::Window(
+                            RendererWindowMessage {
+                                window_id: *window_id,
+                                payload: RendererWindowPayload::Command(
+                                    WindowCommand::RequestRedraw,
+                                ),
+                            },
+                        ));
                     }
                 }
-                #[cfg(debug_assertions)]
-                if debug_toggled {
+                if stats_toggled {
                     for window_id in self.metrics.keys() {
-                        handle.send_event_loop_event(NativeEvent::Window(NativeWindowEvent {
-                            window_id: *window_id,
-                            action: NativeWindowEventAction::User(UserEvent::RequestRedraw),
-                        }));
+                        handle.send_renderer_message(RendererMessage::Window(
+                            RendererWindowMessage {
+                                window_id: *window_id,
+                                payload: RendererWindowPayload::Command(
+                                    WindowCommand::RequestRedraw,
+                                ),
+                            },
+                        ));
                     }
                 }
             }
@@ -205,6 +196,7 @@ impl FreyaPlugin for MetricsPlugin {
                 // Reset frame accumulators.
                 metrics.tasks_poll_time = Duration::ZERO;
                 metrics.events_time = Duration::ZERO;
+                metrics.events_batches = 0;
                 metrics.finished_layout = None;
             }
             PluginEvent::BeforePresenting { window, .. } => {
@@ -240,9 +232,9 @@ impl FreyaPlugin for MetricsPlugin {
                     metrics.tasks_poll_time += started.elapsed();
                 }
                 if self.overlay_visible() {
-                    handle.send_event_loop_event(NativeEvent::Window(NativeWindowEvent {
+                    handle.send_renderer_message(RendererMessage::Window(RendererWindowMessage {
                         window_id: window.id(),
-                        action: NativeWindowEventAction::User(UserEvent::RequestRedraw),
+                        payload: RendererWindowPayload::Command(WindowCommand::RequestRedraw),
                     }));
                 }
             }
@@ -253,11 +245,12 @@ impl FreyaPlugin for MetricsPlugin {
                 let metrics = self.get_metrics(window.id());
                 if let Some(started) = metrics.started_events.take() {
                     metrics.events_time += started.elapsed();
+                    metrics.events_batches += 1;
                 }
                 if self.overlay_visible() {
-                    handle.send_event_loop_event(NativeEvent::Window(NativeWindowEvent {
+                    handle.send_renderer_message(RendererMessage::Window(RendererWindowMessage {
                         window_id: window.id(),
-                        action: NativeWindowEventAction::User(UserEvent::RequestRedraw),
+                        payload: RendererWindowPayload::Command(WindowCommand::RequestRedraw),
                     }));
                 }
             }
@@ -292,12 +285,7 @@ impl FreyaPlugin for MetricsPlugin {
                     metrics = ?metrics,
                 );
 
-                #[cfg(debug_assertions)]
-                if !self.performance_enabled && !self.stats_enabled {
-                    return;
-                }
-                #[cfg(not(debug_assertions))]
-                if !self.performance_enabled {
+                if !self.overlay_visible() {
                     return;
                 }
                 canvas.save();
@@ -316,6 +304,7 @@ impl FreyaPlugin for MetricsPlugin {
                         performance_state.finished_tree_updates.unwrap_or_default();
                     let tasks_poll_time = performance_state.tasks_poll_time;
                     let events_time = performance_state.events_time;
+                    let events_batches = performance_state.events_batches;
                     let finished_accessibility_updates = performance_state
                         .finished_accessibility_updates
                         .unwrap_or_default();
@@ -362,7 +351,11 @@ impl FreyaPlugin for MetricsPlugin {
                         ),
                         (
                             "Events",
-                            format!("{:.3}ms", events_time.as_secs_f64() * 1000.0),
+                            format!(
+                                "{}x {:.3}ms",
+                                events_batches,
+                                events_time.as_secs_f64() * 1000.0
+                            ),
                         ),
                         (
                             "Overlay",
@@ -388,8 +381,8 @@ impl FreyaPlugin for MetricsPlugin {
                             "Window Size",
                             format!(
                                 "{}x{}",
-                                window.inner_size().width,
-                                window.inner_size().height
+                                window.surface_size().width,
+                                window.surface_size().height
                             ),
                         ),
                         ("Scale Factor", format!("{}x", window.scale_factor())),
@@ -534,13 +527,12 @@ impl FreyaPlugin for MetricsPlugin {
                     performance_state.overlay_time = overlay_started.elapsed();
                 }
 
-                #[cfg(debug_assertions)]
                 if self.stats_enabled {
                     draw_stats_overlay(
                         canvas,
                         font_collection,
                         window.scale_factor() as f32,
-                        window.inner_size().width,
+                        window.surface_size().width,
                         *metrics,
                     );
                 }

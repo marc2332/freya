@@ -14,15 +14,15 @@ use torin::prelude::Size2D;
 
 use crate::{
     accessibility::id::AccessibilityId,
+    command::{
+        AppCommand,
+        WindowCommand,
+    },
     current_context::CurrentContext,
     prelude::{
         GlobalContexts,
         State,
         try_consume_root_context,
-    },
-    user_event::{
-        GlobalUserEvent,
-        UserEvent,
     },
 };
 
@@ -102,12 +102,12 @@ impl TargetPlatform {
 /// Application-wide platform api.
 #[derive(Clone)]
 pub struct Platform {
-    sender: Rc<dyn Fn(GlobalUserEvent)>,
+    sender: Rc<dyn Fn(AppCommand)>,
     windows: Rc<RefCell<FxHashMap<u64, PlatformWindow>>>,
 }
 
 impl Platform {
-    pub fn new(sender: impl Fn(GlobalUserEvent) + 'static) -> Self {
+    pub fn new(sender: impl Fn(AppCommand) + 'static) -> Self {
         Self {
             sender: Rc::new(sender),
             windows: Rc::default(),
@@ -153,18 +153,18 @@ impl Platform {
         let _removed_window = self.windows.borrow_mut().remove(&window_id.into());
     }
 
-    pub fn send(&self, event: GlobalUserEvent) {
-        (self.sender)(event)
+    pub fn send(&self, command: AppCommand) {
+        (self.sender)(command)
     }
 
     /// Open a URL with the system's default browser.
     pub fn open_url(&self, url: impl Into<String>) {
-        self.send(GlobalUserEvent::OpenUrl(url.into()));
+        self.send(AppCommand::OpenUrl(url.into()));
     }
 
     /// Request application exit.
     pub fn exit(&self) {
-        self.send(GlobalUserEvent::Exit);
+        self.send(AppCommand::Exit);
     }
 
     /// Load a font at runtime in every window.
@@ -180,7 +180,7 @@ impl Platform {
     /// }
     /// ```
     pub fn load_font(&self, font_name: impl Into<Cow<'static, str>>, font_data: impl Into<Bytes>) {
-        self.send(GlobalUserEvent::LoadFont {
+        self.send(AppCommand::LoadFont {
             font_name: font_name.into(),
             font_data: font_data.into(),
         });
@@ -216,7 +216,7 @@ pub struct PlatformWindow {
     pub focused_accessibility_id: State<AccessibilityId>,
     /// Accessibility data for this window's currently focused node.
     pub focused_accessibility_node: State<accesskit::Node>,
-    /// This window's logical size.
+    /// This window's size in logical pixels.
     pub root_size: State<Size2D>,
     /// This window's effective rendering scale factor.
     pub scale_factor: State<f64>,
@@ -230,22 +230,22 @@ pub struct PlatformWindow {
     pub is_app_focused: State<bool>,
     /// The operating system's accent color, when available.
     pub accent_color: State<AccentColor>,
-    /// Dispatches [`UserEvent`]s to this window's renderer.
-    pub sender: Rc<dyn Fn(UserEvent)>,
+    /// Dispatches [`WindowCommand`]s to this window's renderer.
+    pub sender: Rc<dyn Fn(WindowCommand)>,
 }
 
 impl PlatformWindow {
-    pub fn send(&self, event: UserEvent) {
-        (self.sender)(event)
+    pub fn send(&self, command: WindowCommand) {
+        (self.sender)(command)
     }
 
     /// Request a render of this window.
     pub fn request_redraw(&self) {
-        self.send(UserEvent::RequestRedraw);
+        self.send(WindowCommand::RequestRedraw);
     }
 
     /// Request a custom rendering scale factor for this window.
     pub fn set_custom_scale_factor(&self, custom_scale_factor: f64) {
-        self.send(UserEvent::SetCustomScaleFactor(custom_scale_factor));
+        self.send(WindowCommand::SetCustomScaleFactor(custom_scale_factor));
     }
 }

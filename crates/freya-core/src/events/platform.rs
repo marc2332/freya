@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use keyboard_types::{
     Code,
     Key,
@@ -10,11 +8,14 @@ use torin::prelude::CursorPoint;
 use crate::{
     events::{
         data::{
+            DragDecision,
             MouseButton,
             WheelSource,
         },
         name::EventName,
     },
+    node_id::NodeId,
+    platform_drag::DragDataHandle,
     prelude::{
         Force,
         TouchPhase,
@@ -66,19 +67,19 @@ impl From<KeyboardEventName> for EventName {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Copy, Eq, Hash)]
-pub enum FileEventName {
-    FileDrop,
-    FileHover,
-    FileHoverCancelled,
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum DragEventName {
+    Over,
+    Leave,
+    Drop,
 }
 
-impl From<FileEventName> for EventName {
-    fn from(value: FileEventName) -> Self {
+impl From<DragEventName> for EventName {
+    fn from(value: DragEventName) -> Self {
         match value {
-            FileEventName::FileDrop => EventName::FileDrop,
-            FileEventName::FileHover => EventName::GlobalFileHover,
-            FileEventName::FileHoverCancelled => EventName::GlobalFileHoverCancelled,
+            DragEventName::Over => EventName::DragOver,
+            DragEventName::Leave => EventName::DragLeave,
+            DragEventName::Drop => EventName::Drop,
         }
     }
 }
@@ -94,6 +95,8 @@ pub enum PlatformEvent {
     },
     /// The pointer exited the window at its last known position.
     PointerExit { cursor: CursorPoint },
+    /// Ends a pointer gesture without clicking an element.
+    PointerCancel { cursor: CursorPoint },
     /// A Keyboard Event.
     Keyboard {
         name: KeyboardEventName,
@@ -107,6 +110,7 @@ pub enum PlatformEvent {
         scroll: CursorPoint,
         cursor: CursorPoint,
         source: WheelSource,
+        phase: TouchPhase,
     },
     /// A Touch Event.
     Touch {
@@ -122,11 +126,13 @@ pub enum PlatformEvent {
         text: String,
         cursor: Option<(usize, usize)>,
     },
-    /// A File event.
-    File {
-        name: FileEventName,
+    /// A platform drag event.
+    Drag {
+        name: DragEventName,
         cursor: CursorPoint,
-        file_paths: Vec<PathBuf>,
+        data: DragDataHandle,
+        decision: Option<DragDecision>,
+        target: Option<NodeId>,
     },
 }
 
@@ -164,6 +170,64 @@ impl From<TouchEventName> for EventName {
 
 impl ragnarok::SourceEvent for PlatformEvent {
     type Name = EventName;
+    type Key = NodeId;
+
+    fn drop_target(&self) -> Option<NodeId> {
+        match self {
+            Self::Drag { target, .. } => *target,
+            _ => None,
+        }
+    }
+
+    fn can_coalesce_with(&self, next: &Self) -> bool {
+        match (self, next) {
+            (
+                Self::Mouse {
+                    name: MouseEventName::MouseMove,
+                    button: previous,
+                    ..
+                },
+                Self::Mouse {
+                    name: MouseEventName::MouseMove,
+                    button,
+                    ..
+                },
+            ) => previous == button,
+            (
+                Self::Wheel {
+                    scroll: previous,
+                    cursor: previous_cursor,
+                    source: WheelSource::Line,
+                    phase: TouchPhase::Moved,
+                    ..
+                },
+                Self::Wheel {
+                    scroll,
+                    cursor,
+                    source: WheelSource::Line,
+                    phase: TouchPhase::Moved,
+                    ..
+                },
+            ) => {
+                previous_cursor == cursor
+                    && previous.x.partial_cmp(&0.0) == scroll.x.partial_cmp(&0.0)
+                    && previous.y.partial_cmp(&0.0) == scroll.y.partial_cmp(&0.0)
+                    && (previous.x + scroll.x).is_finite()
+                    && (previous.y + scroll.y).is_finite()
+            }
+            _ => false,
+        }
+    }
+
+    fn coalesce_with(&mut self, next: Self) {
+        match (self, next) {
+            (Self::Wheel { scroll, .. }, Self::Wheel { scroll: next, .. }) => {
+                scroll.x += next.x;
+                scroll.y += next.y;
+            }
+            (event, next) => *event = next,
+        }
+    }
 
     /// Check if the event means the cursor was moved.
     fn is_moved(&self) -> bool {
@@ -197,12 +261,16 @@ impl ragnarok::SourceEvent for PlatformEvent {
         matches!(self, Self::PointerExit { .. })
     }
 
-    /// Check if this event is a touch released event.
+    fn is_pointer_cancelled(&self) -> bool {
+        matches!(self, Self::PointerCancel { .. })
+    }
+
+    /// Check if this event ends or cancels a touch.
     fn is_touch_released(&self) -> bool {
         matches!(
             &self,
             Self::Touch {
-                phase: TouchPhase::Ended,
+                phase: TouchPhase::Ended | TouchPhase::Cancelled,
                 ..
             }
         )
@@ -212,11 +280,12 @@ impl ragnarok::SourceEvent for PlatformEvent {
         match self {
             Self::Mouse { name, .. } => (*name).into(),
             Self::PointerExit { .. } => EventName::MouseMove,
+            Self::PointerCancel { .. } => EventName::MouseUp,
             Self::Keyboard { name, .. } => (*name).into(),
             Self::Wheel { name, .. } => (*name).into(),
             Self::ImePreedit { name, .. } => (*name).into(),
             Self::Touch { name, .. } => (*name).into(),
-            Self::File { name, .. } => (*name).into(),
+            Self::Drag { name, .. } => (*name).into(),
         }
     }
 
@@ -225,7 +294,7 @@ impl ragnarok::SourceEvent for PlatformEvent {
             PlatformEvent::Mouse { cursor, .. } => Some(*cursor),
             PlatformEvent::Wheel { cursor, .. } => Some(*cursor),
             PlatformEvent::Touch { location, .. } => Some(*location),
-            PlatformEvent::File { cursor, .. } => Some(*cursor),
+            PlatformEvent::Drag { cursor, .. } => Some(*cursor),
             _ => None,
         }
     }

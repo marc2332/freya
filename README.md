@@ -5,6 +5,7 @@
 [![Discord Server](https://img.shields.io/discord/1015005816094478347.svg?logo=discord&style=flat-square)](https://discord.gg/sYejxCdewG)
 [![Github Sponsors](https://img.shields.io/github/sponsors/marc2332?style=social)](https://github.com/sponsors/marc2332)
 [![codecov](https://codecov.io/github/marc2332/freya/branch/main/graph/badge.svg?token=APSGEC84B8)](https://codecov.io/github/marc2332/freya)
+[![hotpath-rs](https://img.shields.io/endpoint?url=https://hotpath.rs/badge-cloud.json)](https://hotpath.rs/app/repos/marc2332/freya)
 
 [Website](https://freyaui.dev) | [Documentation](https://docs.rs/freya/) | [Discord](https://discord.gg/sYejxCdewG) | [Contact](#contact)
 
@@ -14,19 +15,19 @@
 Latest stable release:
 
 ```toml
-freya = "0.4"
-```
-
-Next release:
-
-```toml
-freya = "0.5.0-rc.10"
+freya = "0.5"
 ```
 
 `main` branch:
 
 ```toml
 freya = { git = "https://github.com/marc2332/freya", branch = "main" }
+```
+
+Pre-release:
+
+```toml
+freya = "0.6.0-alpha.2"
 ```
 
 ### Trying it out 🚀
@@ -586,8 +587,7 @@ fn app() -> impl IntoElement {
         // Dont move when the cursor goes outside the window
         if e.global_location().to_tuple() != (-1., -1.) {
             cursor_position.set(e.global_location());
-            let platform = Platform::get();
-            platform.send(UserEvent::RequestRedraw);
+            Platform::get().current_window().request_redraw();
         }
     };
 
@@ -686,7 +686,11 @@ use freya::prelude::*;
 use freya::html::*;
 
 fn app() -> impl IntoElement {
-    let handle = use_html(|| HtmlSource::url("https://example.com"));
+    let handle = use_hook(|| {
+        let mut handle = HtmlHandle::create();
+        handle.load(HtmlSource::url("https://example.com"));
+        handle
+    });
 
     rect()
         .expanded()
@@ -764,7 +768,7 @@ If you are interested in supporting the development of this project feel free to
 
 Thanks to my sponsors for supporting this project! 😄 
 
-<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;github.com&#x2F;piny4man.png" width="60px" alt="User avatar: " /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;github.com&#x2F;gqf2008.png" width="60px" alt="User avatar: 高庆丰" /></a><a href="https://github.com/d3rpp"><img src="https:&#x2F;&#x2F;github.com&#x2F;d3rpp.png" width="60px" alt="User avatar: Huddy Buddy" /></a><a href="https://github.com/DrigsterI"><img src="https:&#x2F;&#x2F;github.com&#x2F;DrigsterI.png" width="60px" alt="User avatar: Gabriel Jõe" /></a><a href="https://github.com/markalexander"><img src="https:&#x2F;&#x2F;github.com&#x2F;markalexander.png" width="60px" alt="User avatar: Mark" /></a><!-- sponsors -->
+<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;github.com&#x2F;piny4man.png" width="60px" alt="User avatar: " /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;github.com&#x2F;gqf2008.png" width="60px" alt="User avatar: 高庆丰" /></a><a href="https://github.com/DrigsterI"><img src="https:&#x2F;&#x2F;github.com&#x2F;DrigsterI.png" width="60px" alt="User avatar: Gabriel Jõe" /></a><a href="https://github.com/markalexander"><img src="https:&#x2F;&#x2F;github.com&#x2F;markalexander.png" width="60px" alt="User avatar: Mark" /></a><a href="https://github.com/LevitskyStudio"><img src="https:&#x2F;&#x2F;github.com&#x2F;LevitskyStudio.png" width="60px" alt="User avatar: Senary Domain" /></a><!-- sponsors -->
 
 ### Special thanks 💪
 
@@ -780,16 +784,15 @@ Thanks to my sponsors for supporting this project! 😄
 ### History with Dioxus
 Freya 0.1, 0.2 and 0.3 were based on the core crates of Dioxus. Starting 0.4 Freya does no longer use Dioxus, instead it uses its own reactive core, partially inspired by Dioxus but yet with lots of differences.
 
-### Claude Code Skill
+### AI Skill
 
-A Claude Code skill with Freya best practices and patterns is available. Install it with:
+A skill with Freya best practices and patterns is available for AI coding agents. Install it with [skills](https://skills.sh):
 
+```sh
+npx skills add marc2332/freya --skill freya
 ```
-/plugin marketplace add marc2332/freya
-/plugin install freya@freya-marketplace
-```
 
-For other AI coding agents, you can use the skill document directly as context: [plugins/freya/skills/freya/SKILL.md](plugins/freya/skills/freya/SKILL.md)
+Choose your coding agent when prompted. You can also use the [skill document](skills/freya/SKILL.md) directly as context.
 
 ### License
 

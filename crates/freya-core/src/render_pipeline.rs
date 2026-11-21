@@ -1,57 +1,42 @@
 use freya_engine::prelude::{
     BlendMode,
     Canvas,
-    Colors,
-    Gradient,
-    Interpolation,
-    SkColor4f,
-    Paint,
-    SkRect,
-    TileMode,
-    shaders,
     ClipOp,
+    Colors,
     FontCollection,
     FontMgr,
+    Gradient,
+    Interpolation,
+    Paint,
     SaveLayerRec,
+    SkColor4f,
     SkMatrix,
     SkPoint,
+    SkRect,
+    TileMode,
     blur,
+    shaders,
 };
 use rustc_hash::FxHashMap;
 use torin::prelude::Area;
 
 use crate::{
+    data::EffectState,
     element::{
         ClipContext,
         RenderContext,
     },
     node_id::NodeId,
     prelude::Color,
-    style::shadow::ShadowPosition,
+    style::{
+        render_callback::{
+            RenderContext as FillRenderContext,
+            RenderTarget,
+        },
+        shadow::ShadowPosition,
+    },
     tree::Tree,
 };
-
-/// Whether `element` is a rect that draws nothing of its own (no fill, border or shadow): a
-/// fade needs no layer for it, each layer being a render pass of its own on the GPU.
-fn paints_nothing(element: &dyn crate::element::ElementExt) -> bool {
-    use crate::style::fill::Fill;
-    let Some(rect) =
-        (element as &dyn std::any::Any).downcast_ref::<crate::elements::rect::RectElement>()
-    else {
-        return false;
-    };
-    let style = &rect.style;
-    style.background == Fill::Color(Color::TRANSPARENT)
-        && style.shadows.is_empty()
-        && style
-            .borders
-            .iter()
-            .all(|border| {
-                let width = border.width;
-                border.fill == Color::TRANSPARENT
-                    || width.top + width.right + width.bottom + width.left == 0.
-            })
-}
 
 pub struct RenderPipeline<'a> {
     pub font_collection: &'a mut FontCollection,
@@ -63,7 +48,6 @@ pub struct RenderPipeline<'a> {
 }
 
 impl RenderPipeline<'_> {
-    /// Transform an area with the accumulated scale effects of the given nodes.
     fn scale_transformed_area(&self, mut area: Area, scale_node_ids: &[NodeId]) -> Area {
         for node_id in scale_node_ids {
             let layout_node = self.tree.layout.get(node_id).unwrap();
@@ -143,19 +127,102 @@ impl RenderPipeline<'_> {
         let mut paint = Paint::default();
         paint.set_shader(shader);
         paint.set_blend_mode(BlendMode::DstIn);
-        self.canvas.draw_rect(self.canvas.local_clip_bounds().unwrap_or(SkRect::new(
-            area.min_x(),
-            area.min_y(),
-            area.max_x(),
-            area.max_y(),
-        )), &paint);
+        self.canvas.draw_rect(
+            self.canvas.local_clip_bounds().unwrap_or(SkRect::new(
+                area.min_x(),
+                area.min_y(),
+                area.max_x(),
+                area.max_y(),
+            )),
+            &paint,
+        );
+    }
+
+    fn apply_rotations(&self, effect_state: &EffectState) {
+        for node_id in effect_state.rotations.iter() {
+            let Some(layout_node) = self.tree.layout.get(node_id) else {
+                continue;
+            };
+            let Some(effect) = self.tree.effect_state.get(node_id) else {
+                continue;
+            };
+            let Some(rotation) = effect.rotation else {
+                continue;
+            };
+
+            let origin = effect.transform_origin.origin(&layout_node.visible_area());
+            let mut matrix = SkMatrix::new_identity();
+            matrix.set_rotate(rotation, Some(SkPoint::new(origin.x, origin.y)));
+            self.canvas.concat(&matrix);
+        }
+    }
+
+    fn apply_scales(&self, effect_state: &EffectState) {
+        for node_id in effect_state.scales.iter() {
+            let Some(layout_node) = self.tree.layout.get(node_id) else {
+                continue;
+            };
+            let Some(effect) = self.tree.effect_state.get(node_id) else {
+                continue;
+            };
+            let Some(scale) = effect.scale else { continue };
+
+            let origin = effect.transform_origin.origin(&layout_node.visible_area());
+            self.canvas.translate((origin.x, origin.y));
+            self.canvas.scale((scale.x, scale.y));
+            self.canvas.translate((-origin.x, -origin.y));
+        }
+    }
+
+    fn apply_mask(&mut self, node_id: NodeId) {
+        let Some(layout_node) = self.tree.layout.get(&node_id) else {
+            return;
+        };
+        let Some(element) = self.tree.elements.get(&node_id) else {
+            return;
+        };
+        let Some(effect) = element.effect() else {
+            return;
+        };
+        let Some(mask) = &effect.mask else { return };
+
+        let area = layout_node.visible_area();
+        let bounds = SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
+        let mut paint = Paint::default();
+        paint.set_blend_mode(BlendMode::DstIn);
+
+        let layer = self.canvas.save();
+        self.canvas
+            .save_layer(&SaveLayerRec::default().bounds(&bounds).paint(&paint));
+        self.canvas.clip_rect(bounds, ClipOp::Intersect, true);
+
+        if let Some(callback) = mask.render_callback() {
+            if let Some(text_style_state) = self.tree.text_style_state.get(&node_id) {
+                callback.call(&mut FillRenderContext {
+                    target: RenderTarget::Background {
+                        canvas: self.canvas,
+                        font_collection: self.font_collection,
+                    },
+                    scale_factor: self.scale_factor,
+                    origin: area.origin,
+                    size: area.size,
+                    text_style_state,
+                });
+            }
+        } else {
+            let mut paint = Paint::default();
+            mask.apply_to_paint(&mut paint, area);
+            self.canvas.draw_rect(bounds, &paint);
+        }
+
+        self.canvas.restore_to_count(layer);
     }
 
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
-    pub fn render(self) {
+    pub fn render(mut self) {
         self.canvas.clear(self.background);
+        let base_matrix = self.canvas.local_to_device();
 
-        // Clip areas are deterministic no matter what node inherits them
         let mut clip_areas: FxHashMap<NodeId, Area> = FxHashMap::default();
 
         // TODO: Use incremental rendering
@@ -169,13 +236,18 @@ impl RenderPipeline<'_> {
                 }
 
                 let effect_state = self.tree.effect_state.get(node_id);
+                let element = self.tree.elements.get(node_id).unwrap();
+                if !element.paints_content()
+                    && effect_state.is_none_or(|effect| effect.blur.is_none())
+                {
+                    continue 'rendering;
+                }
 
                 let mut visible_area = layout_node.visible_area();
 
                 if let Some(effect_state) = effect_state {
                     visible_area = self.scale_transformed_area(visible_area, &effect_state.scales);
 
-                    // No need to render this element if it is completely clipped
                     for clip_node_id in effect_state.clips.iter() {
                         let clip_area = *clip_areas.entry(*clip_node_id).or_insert_with(|| {
                             let clip_layout_node = self.tree.layout.get(clip_node_id).unwrap();
@@ -194,7 +266,6 @@ impl RenderPipeline<'_> {
 
                 let layer = self.canvas.save();
 
-                let element = self.tree.elements.get(node_id).unwrap();
                 let text_style_state = self.tree.text_style_state.get(node_id).unwrap();
 
                 if let Some(effect_state) = effect_state {
@@ -213,41 +284,13 @@ impl RenderPipeline<'_> {
                         }
                     });
 
-                    // Pass rotate effect to children
-                    for id in effect_state.rotations.iter() {
-                        let layout_node = self.tree.layout.get(id).unwrap();
-                        let effect = self.tree.effect_state.get(id).unwrap();
-                        let area = layout_node.visible_area();
-                        let origin = effect.transform_origin.origin(&area);
-                        let mut matrix = SkMatrix::new_identity();
-                        matrix.set_rotate(
-                            effect.rotation.unwrap(),
-                            Some(SkPoint {
-                                x: origin.x,
-                                y: origin.y,
-                            }),
-                        );
-                        self.canvas.concat(&matrix);
-                    }
+                    self.apply_rotations(effect_state);
 
-                    let render_rect = element.render_rect(&visible_area, self.scale_factor as f32);
-
-                    // Apply inherited opacity effects with bounds expanded
-                    // to accommodate outset shadows
-                    let mut layer_bounds = *render_rect.rect();
                     let scale_factor = self.scale_factor as f32;
 
-                    for shadow in element.style().shadows.iter() {
-                        if shadow.position == ShadowPosition::Normal {
-                            let outset_x = shadow.x.abs() + shadow.spread + shadow.blur;
-                            let outset_y = shadow.y.abs() + shadow.spread + shadow.blur;
-                            layer_bounds = layer_bounds
-                                .with_outset((outset_x * scale_factor, outset_y * scale_factor));
-                        }
-                    }
-
-                    // Composite the blur before the opacity layers so it samples the real content underneath.
+                    // Blur the content underneath before applying opacity.
                     if let Some(blur_radius) = effect_state.blur {
+                        let render_rect = element.render_rect(&visible_area, scale_factor);
                         let style = element.style();
 
                         let image_filter = blur(
@@ -275,21 +318,46 @@ impl RenderPipeline<'_> {
                         .iter()
                         .fold(1., |acc, opacity| acc * opacity);
                     if opacity < 1. {
+                        let render_rect = element.render_rect(&visible_area, scale_factor);
+                        let mut layer_bounds = *render_rect.rect();
+                        for shadow in element.style().shadows.iter() {
+                            if shadow.position == ShadowPosition::Normal {
+                                let outset_x = shadow.x.abs() + shadow.spread + shadow.blur;
+                                let outset_y = shadow.y.abs() + shadow.spread + shadow.blur;
+                                layer_bounds = layer_bounds.with_outset((
+                                    outset_x * scale_factor,
+                                    outset_y * scale_factor,
+                                ));
+                            }
+                        }
                         self.canvas.save_layer_alpha_f(layer_bounds, opacity);
                     }
 
-                    // Transform the canvas area given the scale effects
-                    for id in effect_state.scales.iter() {
-                        let layout_node = self.tree.layout.get(id).unwrap();
-                        let effect = self.tree.effect_state.get(id).unwrap();
-                        let area = layout_node.visible_area();
-                        let origin = effect.transform_origin.origin(&area);
-                        let scale = effect.scale.unwrap();
+                    self.apply_scales(effect_state);
+                }
 
-                        self.canvas.translate((origin.x, origin.y));
-                        self.canvas.scale((scale.x, scale.y));
-                        self.canvas.translate((-origin.x, -origin.y));
+                let masks = effect_state
+                    .map(|effect| effect.masks.as_ref())
+                    .unwrap_or_default();
+                if !masks.is_empty() {
+                    let render_rect =
+                        element.render_rect(&layout_node.visible_area(), self.scale_factor as f32);
+                    let mut bounds = *render_rect.rect();
+
+                    for shadow in element.style().shadows.iter() {
+                        if shadow.position == ShadowPosition::Normal {
+                            let outset_x = shadow.x.abs() + shadow.spread + shadow.blur;
+                            let outset_y = shadow.y.abs() + shadow.spread + shadow.blur;
+                            bounds = bounds.with_outset((
+                                outset_x * self.scale_factor as f32,
+                                outset_y * self.scale_factor as f32,
+                            ));
+                        }
                     }
+
+                    // Keep masks from erasing content behind this element.
+                    self.canvas
+                        .save_layer(&SaveLayerRec::default().bounds(&bounds));
                 }
 
                 // Under a fade, the element draws into a layer of its own that the fades' masks
@@ -297,7 +365,7 @@ impl RenderPipeline<'_> {
                 // Only the fades whose edges this element reaches into: one wholly inside a
                 // fade's opaque middle needs no layer and no mask.
                 let fades: Vec<NodeId> = effect_state
-                    .filter(|_| !paints_nothing(element.as_ref()))
+                    .filter(|_| element.paints_content())
                     .map(|effect_state| {
                         effect_state
                             .fades
@@ -307,7 +375,7 @@ impl RenderPipeline<'_> {
                             .collect()
                     })
                     .unwrap_or_default();
-                if !fades.is_empty() {
+                if !fades.is_empty() && masks.is_empty() {
                     self.canvas.save_layer(&SaveLayerRec::default());
                 }
 
@@ -315,7 +383,6 @@ impl RenderPipeline<'_> {
                     font_collection: self.font_collection,
                     canvas: self.canvas,
                     layout_node,
-                    tree: self.tree,
                     text_style_state,
                     scale_factor: self.scale_factor,
                 };
@@ -326,6 +393,18 @@ impl RenderPipeline<'_> {
 
                 for fade_id in fades.iter() {
                     self.apply_fade(*fade_id);
+                }
+                for mask_id in masks.iter() {
+                    let mask_layer = self.canvas.save();
+                    self.canvas.set_matrix(&base_matrix);
+
+                    if let Some(effect) = self.tree.effect_state.get(mask_id) {
+                        self.apply_rotations(effect);
+                        self.apply_scales(effect);
+                    }
+
+                    self.apply_mask(*mask_id);
+                    self.canvas.restore_to_count(mask_layer);
                 }
 
                 self.canvas.restore_to_count(layer);

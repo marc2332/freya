@@ -61,11 +61,9 @@ pub enum SwitchLayoutVariant {
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     let mut toggled = use_state(|| false);
+///     let toggled = use_state(|| false);
 ///
-///     Switch::new()
-///         .toggled(toggled())
-///         .on_toggle(move |_| toggled.toggle())
+///     Switch::new(toggled)
 /// }
 /// ```
 /// See the [interactive components demo](https://freyaui.dev/demo).
@@ -74,8 +72,7 @@ pub struct Switch {
     pub(crate) theme_colors: Option<SwitchColorsThemePartial>,
     pub(crate) theme_layout: Option<SwitchLayoutThemePartial>,
     layout_variant: SwitchLayoutVariant,
-    toggled: Readable<bool>,
-    on_toggle: Option<EventHandler<()>>,
+    value: WritableSetter<bool>,
     enabled: bool,
     cursor_icon: Option<CursorIcon>,
     key: DiffKey,
@@ -87,17 +84,10 @@ impl KeyExt for Switch {
     }
 }
 
-impl Default for Switch {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Switch {
-    pub fn new() -> Self {
+    pub fn new(value: impl Into<WritableSetter<bool>>) -> Self {
         Self {
-            toggled: false.into(),
-            on_toggle: None,
+            value: value.into(),
             theme_colors: None,
             theme_layout: None,
             layout_variant: SwitchLayoutVariant::Normal,
@@ -105,16 +95,6 @@ impl Switch {
             cursor_icon: None,
             key: DiffKey::None,
         }
-    }
-
-    pub fn toggled(mut self, toggled: impl Into<Readable<bool>>) -> Self {
-        self.toggled = toggled.into();
-        self
-    }
-
-    pub fn on_toggle(mut self, on_toggle: impl Into<EventHandler<()>>) -> Self {
-        self.on_toggle = Some(on_toggle.into());
-        self
     }
 
     pub fn enabled(mut self, enabled: impl Into<bool>) -> Self {
@@ -166,10 +146,11 @@ impl Component for Switch {
         };
 
         let mut pressing = use_state(|| false);
+        let mut hovering = use_state(|| false);
         let a11y_id = use_a11y();
         let focus = use_focus(a11y_id);
 
-        let toggled = *self.toggled.read();
+        let toggled = *self.value.read();
 
         let anim_toggle = use_animation_with_dependencies(
             &(theme_colors.clone(), theme_layout.clone(), toggled),
@@ -243,20 +224,24 @@ impl Component for Switch {
             .a11y_builder(|builder| builder.set_toggled(Toggled::from(toggled)))
             .width(Size::px(theme_layout.width))
             .height(Size::px(theme_layout.height))
+            .margin(theme_layout.margin)
             .padding(Gaps::new_all(theme_layout.padding))
             .main_align(Alignment::center())
             .offset_x(offset_x - press_size / 2.0)
             .corner_radius(CornerRadius::new_all(50.))
-            .background(background.mul_if(!self.enabled, 0.85))
+            .background(
+                background
+                    .mul_if(self.enabled && hovering(), 0.94)
+                    .mul_if(!self.enabled, 0.85),
+            )
             .border(border)
             .maybe(self.enabled, |rect| {
                 rect.on_press({
-                    let on_toggle = self.on_toggle.clone();
+                    let mut value = self.value.clone();
                     move |event: Event<PressEventData>| {
-                        if let Some(on_toggle) = &on_toggle {
-                            event.stop_propagation();
-                            on_toggle.call(())
-                        }
+                        event.stop_propagation();
+                        let toggled = !*value.peek();
+                        value.set(toggled);
                         a11y_id.request_focus();
                     }
                 })
@@ -267,7 +252,11 @@ impl Component for Switch {
                 })
             })
             .on_global_pointer_up(move |_| pressing.set_if_modified(false))
-            .on_pointer_leave(move |_| pressing.set_if_modified(false))
+            .on_pointer_enter(move |_| hovering.set_if_modified(true))
+            .on_pointer_leave(move |_| {
+                hovering.set_if_modified(false);
+                pressing.set_if_modified(false);
+            })
             .cursor(if self.enabled {
                 self.cursor_icon
             } else {

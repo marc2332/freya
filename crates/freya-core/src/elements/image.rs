@@ -66,7 +66,6 @@ use crate::{
         MaybeExt,
         StyleExt,
     },
-    style::color::Color,
     tree::DiffModifies,
 };
 
@@ -405,16 +404,26 @@ impl ElementExt for ImageElement {
             .style
             .corner_radius
             .with_scale(context.scale_factor as f32);
-        let mut path = PathBuilder::new();
-        if corner_radius.smoothing() > 0. {
-            path.add_path(&corner_radius.smoothed_path(clip_rrect), None);
-        } else {
-            path.add_rrect(clip_rrect, None, None);
-        }
-        let mut path = path.detach();
+        if self
+            .style
+            .shadows
+            .iter()
+            .any(|shadow| shadow.color.a() != 0)
+        {
+            let mut path = PathBuilder::new();
+            if corner_radius.smoothing() > 0. {
+                path.add_path(&corner_radius.smoothed_path(clip_rrect), None);
+            } else {
+                path.add_rrect(clip_rrect, None, None);
+            }
+            let mut path = path.detach();
 
-        for shadow in &self.style.shadows {
-            if shadow.color != Color::TRANSPARENT {
+            for shadow in self
+                .style
+                .shadows
+                .iter()
+                .filter(|shadow| shadow.color.a() != 0)
+            {
                 let shadow = shadow.with_scale(context.scale_factor as f32);
                 RectElement::render_shadow(
                     context.canvas,
@@ -446,7 +455,7 @@ impl From<Image> for Element {
         Element::Element {
             key: value.key,
             element: Rc::new(value.element),
-            elements: value.elements,
+            elements: value.elements.into(),
         }
     }
 }

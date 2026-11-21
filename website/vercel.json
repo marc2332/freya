@@ -1,15 +1,123 @@
 {
+  "trailingSlash": true,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)\\.(avif|gif|ico|jpg|jpeg|png|svg|webp|mp4|webm|woff|woff2)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/_astro/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ],
   "redirects": [
+    {
+      "source": "/:page(setup|getting_started).html",
+      "has": [{ "type": "host", "value": "book.freyaui.dev" }],
+      "destination": "https://docs.rs/freya/latest/freya/_docs/development_setup/index.html",
+      "permanent": true
+    },
+    {
+      "source": "/:page(differences_with_dioxus|dioxus).html",
+      "has": [{ "type": "host", "value": "book.freyaui.dev" }],
+      "destination": "https://freyaui.dev/posts/0.4/#why-the-rewrite",
+      "permanent": true
+    },
+    {
+      "source": "/guides/devtools.html",
+      "has": [{ "type": "host", "value": "book.freyaui.dev" }],
+      "destination": "https://docs.rs/freya/latest/freya/_docs/devtools/index.html",
+      "permanent": true
+    },
+    {
+      "source": "/guides/publishing.html",
+      "has": [{ "type": "host", "value": "book.freyaui.dev" }],
+      "destination": "https://github.com/marc2332/freya/blob/v0.3.0/book/src/guides/publishing.md",
+      "permanent": true
+    },
+    {
+      "source": "/faq.html",
+      "has": [{ "type": "host", "value": "book.freyaui.dev" }],
+      "destination": "https://github.com/marc2332/freya/blob/v0.3.0/book/src/faq.md",
+      "permanent": true
+    },
+    {
+      "source": "/contact.html",
+      "has": [{ "type": "host", "value": "book.freyaui.dev" }],
+      "destination": "https://freyaui.dev/support/",
+      "permanent": true
+    },
+    {
+      "source": "/freya/:path*",
+      "has": [{ "type": "host", "value": "docs.freyaui.dev" }],
+      "destination": "https://docs.rs/freya/latest/freya/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/freya_core/:path*",
+      "has": [{ "type": "host", "value": "docs.freyaui.dev" }],
+      "destination": "https://docs.rs/freya-core/latest/freya_core/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/freya_components/:path*",
+      "has": [{ "type": "host", "value": "docs.freyaui.dev" }],
+      "destination": "https://docs.rs/freya-components/latest/freya_components/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/freya_hooks/:path*",
+      "has": [{ "type": "host", "value": "docs.freyaui.dev" }],
+      "destination": "https://docs.rs/freya-hooks/latest/freya_hooks/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/freya_elements/:path*",
+      "has": [{ "type": "host", "value": "docs.freyaui.dev" }],
+      "destination": "https://docs.rs/freya-elements/latest/freya_elements/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/freya_testing/:path*",
+      "has": [{ "type": "host", "value": "docs.freyaui.dev" }],
+      "destination": "https://docs.rs/freya-testing/latest/freya_testing/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/freya_animation/:path*",
+      "has": [{ "type": "host", "value": "docs.freyaui.dev" }],
+      "destination": "https://docs.rs/freya-animation/latest/freya_animation/:path*",
+      "permanent": true
+    },
     {
       "source": "/(.*)",
       "has": [{ "type": "host", "value": "book.freyaui.dev" }],
-      "destination": "https://docs.rs/freya",
+      "destination": "https://docs.rs/freya/latest/freya/",
       "permanent": true
     },
     {
       "source": "/(.*)",
       "has": [{ "type": "host", "value": "docs.freyaui.dev" }],
-      "destination": "https://docs.rs/freya",
+      "destination": "https://docs.rs/freya/latest/freya/",
       "permanent": true
     }
   ]

@@ -1,4 +1,5 @@
 target
+callgrind.out.*
 .idea
 snapshot_before.png
 snapshot_after.png

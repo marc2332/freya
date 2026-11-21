@@ -1,3 +1,9 @@
+use ragnarok::{
+    Area,
+    CursorPoint,
+    EventsMeasurer,
+};
+
 use crate::{
     data::Interactive,
     element::EventMeasurementContext,
@@ -15,7 +21,7 @@ pub struct EventsMeasurerAdapter<'a> {
     pub scale_factor: f64,
 }
 
-impl ragnarok::EventsMeasurer for EventsMeasurerAdapter<'_> {
+impl EventsMeasurer for EventsMeasurerAdapter<'_> {
     type Key = NodeId;
     type Name = EventName;
     type Source = PlatformEvent;
@@ -44,8 +50,7 @@ impl ragnarok::EventsMeasurer for EventsMeasurerAdapter<'_> {
             .map(|(layer, nodes)| (layer, nodes.iter()))
     }
 
-    fn is_point_inside(&self, key: &Self::Key, cursor: ragnarok::CursorPoint) -> bool {
-        let element = self.tree.elements.get(key).unwrap();
+    fn is_point_inside(&self, key: &Self::Key, cursor: CursorPoint) -> bool {
         let Some(layout_node) = self.tree.layout.get(key) else {
             return false;
         };
@@ -53,6 +58,14 @@ impl ragnarok::EventsMeasurer for EventsMeasurerAdapter<'_> {
         if layout_node.hidden {
             return false;
         }
+
+        if !layout_node.visible_area().contains(cursor.to_f32()) {
+            return false;
+        }
+
+        let Some(element) = self.tree.elements.get(key) else {
+            return false;
+        };
 
         // Make sure the cursor is inside the element
         if !element.is_point_inside(EventMeasurementContext {
@@ -110,7 +123,7 @@ impl ragnarok::EventsMeasurer for EventsMeasurerAdapter<'_> {
             .unwrap_or(true)
     }
 
-    fn try_area_of(&self, key: &Self::Key) -> Option<ragnarok::Area> {
+    fn try_area_of(&self, key: &Self::Key) -> Option<Area> {
         self.tree
             .layout
             .get(key)
@@ -122,7 +135,7 @@ impl ragnarok::EventsMeasurer for EventsMeasurerAdapter<'_> {
         key: Self::Key,
         name: Self::Name,
         source: Self::Source,
-        area: Option<ragnarok::Area>,
+        area: Option<Area>,
     ) -> Self::Emmitable {
         EmmitableEvent::new(key, name, source, area, self.scale_factor)
     }

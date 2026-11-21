@@ -4,10 +4,7 @@ use freya::{
     prelude::*,
 };
 
-use crate::showcases::{
-    DemoGrid,
-    inline_menu,
-};
+use crate::showcases::DemoGrid;
 
 const RUST_LOGO: &[u8] = include_bytes!("../rust_logo.png");
 const PREVIEW_URL: &str =
@@ -34,18 +31,14 @@ demos! {
     }
 
     SwitchDemo => "Switch" {
-        let mut toggled = use_state(|| true);
+        let toggled = use_state(|| true);
 
         rect()
             .spacing(12.)
             .cross_align(Alignment::center())
-            .child(
-                Switch::new()
-                    .toggled(toggled())
-                    .on_toggle(move |_| toggled.toggle()),
-            )
+            .child(Switch::new(toggled))
             .child(if toggled() { "On" } else { "Off" })
-            .child(Switch::new().toggled(false).enabled(false))
+            .child(Switch::new(WritableSetter::new(false, |_| {})).enabled(false))
             .child("Disabled")
     }
 
@@ -185,7 +178,8 @@ demos! {
     MenuDemo => "Menu" {
         let mut selected = use_state(|| 0usize);
 
-        inline_menu()
+        MenuContainer::new()
+            .layer(0)
             .children(["Open", "Save", "Export"].into_iter().enumerate().map(
                 |(index, name)| {
                     MenuItem::new()
@@ -389,10 +383,10 @@ demos! {
                             .horizontal()
                             .cross_align(Alignment::Center)
                             .on_press(move |_| ascending.toggle())
-                            .child(ArrowIcon::new().margin(Gaps::new(0., 10., 0., 0.)).rotate(
+                            .child("Name")
+                            .child(ArrowIcon::new().margin((0., 0., 0., 8.)).rotate(
                                 if ascending() { 0. } else { 180. },
-                            ))
-                            .child("Name"),
+                            )),
                     )
                     .child("Type"),
             )

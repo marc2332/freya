@@ -100,16 +100,10 @@ impl Component for WidgetsDemo {
                     .spacing(20.)
                     .child(
                         rect().spacing(8.).child("Dark Theme").child(
-                            Switch::new()
-                                .expanded()
-                                .toggled(is_dark)
-                                .on_toggle(move |_| {
-                                    if is_dark {
-                                        theme.set(light_theme());
-                                    } else {
-                                        theme.set(dark_theme());
-                                    }
-                                }),
+                            Switch::new(WritableSetter::new(is_dark, move |is_dark| {
+                                theme.set(if is_dark { dark_theme() } else { light_theme() });
+                            }))
+                            .expanded(),
                         ),
                     )
                     .child(
@@ -247,6 +241,32 @@ impl Component for WidgetsDemo {
                             .spacing(8.)
                             .child("Color Picker")
                             .child(ColorPicker::new(move |c| color.set(c)).value(color())),
+                    )
+                    .child(
+                        rect()
+                            .width(Size::fill())
+                            .spacing(8.)
+                            .child("Backdrop Blur")
+                            .child(
+                                ImageViewer::new((
+                                    "blur-demo",
+                                    include_bytes!("../../../../rust_logo.png"),
+                                ))
+                                .width(Size::fill())
+                                .height(Size::px(180.))
+                                .image_cover(ImageCover::Center)
+                                .horizontal()
+                                .main_align(Alignment::end())
+                                .child(
+                                    rect()
+                                        .width(Size::percent(50.))
+                                        .height(Size::fill())
+                                        .center()
+                                        .background((255, 255, 255, 0.30))
+                                        .color((0, 0, 0))
+                                        .backdrop_blur(12.),
+                                ),
+                            ),
                     )
                     .child(
                         rect().spacing(8.).child("Remote Image").child(

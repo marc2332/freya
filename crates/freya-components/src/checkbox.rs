@@ -98,6 +98,7 @@ impl Checkbox {
 
 impl Component for Checkbox {
     fn render(&self) -> impl IntoElement {
+        let mut hovering = use_state(|| false);
         let a11y_id = use_a11y();
         let focus = use_focus(a11y_id);
         let CheckboxTheme {
@@ -130,14 +131,21 @@ impl Component for Checkbox {
         let (scale, opacity) = animation.read().value();
 
         let (background, fill) = if self.selected {
-            (selected_fill, selected_fill)
+            (selected_fill.mul_if(hovering(), 0.85), selected_fill)
         } else {
-            (Color::TRANSPARENT, unselected_fill)
+            (
+                if hovering() {
+                    unselected_fill.with_a(40)
+                } else {
+                    Color::TRANSPARENT
+                },
+                unselected_fill.mul_if(hovering(), 0.85),
+            )
         };
 
         let border = Border::new()
             .fill(fill)
-            .width(2.)
+            .width(if self.selected { 0. } else { 2. })
             .alignment(BorderAlignment::Inner);
 
         let focused_border = (focus() == Focus::Keyboard).then(|| {
@@ -160,6 +168,8 @@ impl Component for Checkbox {
             .border(border)
             .border(focused_border)
             .background(background)
+            .on_pointer_enter(move |_| hovering.set_if_modified(true))
+            .on_pointer_leave(move |_| hovering.set_if_modified(false))
             .on_key_down({
                 move |e: Event<KeyboardEventData>| {
                     if !e.is_press_event() {

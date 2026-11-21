@@ -73,7 +73,7 @@ fn app() -> impl IntoElement {
 
 ## Docs
 
-- [Stable Documentation](https://docs.rs/freya/): Official Rust API documentation
+- [Stable Documentation](https://docs.rs/freya/latest/freya/): Official Rust API documentation
 - [Development Setup](https://docs.rs/freya/latest/freya/_docs/development_setup/index.html): Getting started guide
 
 ## Release Candidate docs
@@ -84,7 +84,7 @@ fn app() -> impl IntoElement {
 - [State Management](https://docs.rs/freya/0.4.0/freya/_docs/state_management/index.html): State management guide
 - [Development Setup](https://docs.rs/freya/0.4.0/freya/_docs/development_setup/index.html): Getting started guide
 - [Built-in Components](https://docs.rs/freya/0.4.0/freya/components/index.html): Available components
-- [Built-in Components Gallery](https://docs.rs/freya/0.4.0/freya/components/gallery/index.html): Component examples
+- [Built-in Components Gallery](https://docs.rs/freya/0.4.0/freya/components/fn.gallery.html): Component examples
 - [i18n](https://docs.rs/freya-i18n/0.4.0/freya_i18n/): Internationalization support
 - [Animation](https://docs.rs/freya-animation/0.4.0/freya_animation/): Animation utilities
 - [Routing](https://docs.rs/freya-router/0.4.0/freya_router/): Navigation routing
@@ -107,7 +107,7 @@ fn app() -> impl IntoElement {
 
 ## Community
 
-- [Website](https://freyaui.dev): Official website with tutorials and guides
+- [Website](https://freyaui.dev/): Official website with release notes and demos
 - [Discord Server](https://discord.gg/sYejxCdewG): Community chat and support
 
 ## Optional

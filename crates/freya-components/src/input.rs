@@ -4,6 +4,10 @@ use std::{
         Ref,
         RefCell,
     },
+    hash::{
+        Hash,
+        Hasher,
+    },
     rc::Rc,
 };
 
@@ -128,6 +132,12 @@ impl InputValidator {
     }
 }
 
+#[derive(Clone, PartialEq)]
+enum InputValue {
+    Value(WritableSetter<String>),
+    Editor(UseEditable),
+}
+
 /// Small box to write some text.
 ///
 /// ## **Normal**
@@ -163,7 +173,7 @@ impl InputValidator {
 pub struct Input {
     pub(crate) theme_colors: Option<InputColorsThemePartial>,
     pub(crate) theme_layout: Option<InputLayoutThemePartial>,
-    value: Writable<String>,
+    value: InputValue,
     placeholder: Option<Cow<'static, str>>,
     on_validate: Option<EventHandler<InputValidator>>,
     on_submit: Option<EventHandler<String>>,
@@ -190,11 +200,28 @@ impl KeyExt for Input {
 }
 
 impl Input {
-    pub fn new(value: impl Into<Writable<String>>) -> Self {
+    pub fn new(value: impl Into<WritableSetter<String>>) -> Self {
+        Self::with_inner(InputValue::Value(value.into()))
+    }
+
+    /// Use an external editor to control text, cursor, selection and history.
+    ///
+    /// ```rust
+    /// # use freya::{prelude::*, text_edit::*};
+    /// fn app() -> impl IntoElement {
+    ///     let editor = use_editable(String::new, EditableConfig::new);
+    ///     Input::new_with_editor(editor)
+    /// }
+    /// ```
+    pub fn new_with_editor(editor: UseEditable) -> Self {
+        Self::with_inner(InputValue::Editor(editor))
+    }
+
+    fn with_inner(value: InputValue) -> Self {
         Input {
             theme_colors: None,
             theme_layout: None,
-            value: value.into(),
+            value,
             placeholder: None,
             on_validate: None,
             on_submit: None,
@@ -351,16 +378,21 @@ impl Component for Input {
         let mut scroll_controller = use_scroll_controller(ScrollConfig::default);
         let mut status = use_state(InputStatus::default);
         let is_masked = matches!(self.mode, InputMode::Hidden(_));
-        let mut editable = use_editable(
-            || self.value.read().to_string(),
-            move || {
-                EditableConfig::new()
-                    .with_allow_write_clipboard(!is_masked)
-                    .with_select_all_on_double_click(is_masked)
-            },
-        );
+        let (mut editable, value) = match &self.value {
+            InputValue::Value(value) => (
+                use_editable(
+                    || value.read().to_string(),
+                    || {
+                        EditableConfig::new()
+                            .with_allow_write_clipboard(!is_masked)
+                            .with_select_all_on_double_click(is_masked)
+                    },
+                ),
+                Some(value.clone()),
+            ),
+            InputValue::Editor(editor) => (*editor, None),
+        };
         let mut is_dragging = use_state(|| false);
-        let mut value = self.value.clone();
 
         let theme_colors = match self.style_variant {
             InputStyleVariant::Normal => {
@@ -398,13 +430,12 @@ impl Component for Input {
 
         let enabled = use_reactive(&self.enabled);
 
-        let display_placeholder = value.read().is_empty()
-            && self.placeholder.is_some()
-            && !editable.editor().read().has_preedit();
         let on_validate = self.on_validate.clone();
         let on_submit = self.on_submit.clone();
 
-        if *value.read() != editable.editor().read().committed_text() {
+        if let Some(value) = &value
+            && *value.read() != editable.editor().read().committed_text()
+        {
             let mut editor = editable.editor_mut().write();
             editor.clear_preedit();
             editor.set(&value.read());
@@ -412,6 +443,9 @@ impl Component for Input {
             editor.clear_selection();
         }
 
+        let display_placeholder = editable.editor().read().committed_text().is_empty()
+            && self.placeholder.is_some()
+            && !editable.editor().read().has_preedit();
         let mode = self.mode;
         let text_align = self.text_align;
         let padding = theme_layout.padding;
@@ -457,10 +491,11 @@ impl Component for Input {
 
             // Minimally reveal the cursor
             if visible_cursor_location.x < visible_start_x {
-                scroll_controller.scroll_to_x(-cursor_location.x as i32);
+                scroll_controller.scroll_to_x(cursor_location.x.into());
             } else if visible_cursor_location.x > visible_start_x + viewport.width() {
-                scroll_controller
-                    .scroll_to_x(-(area.peek().width() - viewport.width()).max(0.0) as i32);
+                scroll_controller.scroll_to_x(
+                    (visible_cursor_location.x + padding.right() - viewport.width()).into(),
+                );
             }
 
             if multiline {
@@ -468,9 +503,9 @@ impl Component for Input {
                 let visible_start_y = viewport.min_y() - area.peek().min_y();
 
                 if visible_cursor_location.y < visible_start_y {
-                    scroll_controller.scroll_to_y(-cursor_location.y as i32);
+                    scroll_controller.scroll_to_y(cursor_location.y.into());
                 } else if cursor_bottom > visible_start_y + viewport.height() {
-                    scroll_controller.scroll_to_y(-(cursor_bottom - viewport.height()) as i32);
+                    scroll_controller.scroll_to_y((cursor_bottom - viewport.height()).into());
                 }
             }
         };
@@ -521,37 +556,44 @@ impl Component for Input {
                     movement_timeout.reset();
                     let previous_history_version =
                         editable.editor().peek().editor_history().version;
-                    editable.process_event(EditableEvent::KeyDown {
-                        key: &key,
-                        modifiers,
-                        editor_line: Some(EditorLine::SingleParagraph),
-                        holder: Some(&holder.read()),
-                    });
-                    let text = editable.editor().read().committed_text();
+                    let mut value = value.clone();
+                    let on_validate = on_validate.clone();
+                    editable.process_event_and_then(
+                        EditableEvent::KeyDown {
+                            key: &key,
+                            modifiers,
+                            editor_line: Some(EditorLine::SingleParagraph),
+                            holder: Some(&holder.read()),
+                        },
+                        move || {
+                            let text = editable.editor().read().committed_text();
 
-                    let apply_change = match &on_validate {
-                        Some(on_validate) => {
-                            let mut editor = editable.editor_mut().write();
-                            let validator = InputValidator::new(text.clone());
-                            on_validate.call(validator.clone());
-                            if !validator.is_valid() {
-                                if let Some(selection) = editor.undo() {
-                                    *editor.selection_mut() = selection;
+                            let apply_change = match &on_validate {
+                                Some(on_validate) => {
+                                    let mut editor = editable.editor_mut().write();
+                                    let validator = InputValidator::new(text.clone());
+                                    on_validate.call(validator.clone());
+                                    if !validator.is_valid() {
+                                        if let Some(selection) = editor.undo() {
+                                            *editor.selection_mut() = selection;
+                                        }
+                                        editor.editor_history_mut().clear_redos();
+                                    }
+                                    validator.is_valid()
                                 }
-                                editor.editor_history_mut().clear_redos();
-                            }
-                            validator.is_valid()
-                        }
-                        None => true,
-                    };
+                                None => true,
+                            };
 
-                    if apply_change {
-                        *value.write() = text;
-                    }
-                    if editable.editor().peek().editor_history().version == previous_history_version
-                    {
-                        follow_cursor();
-                    }
+                            if apply_change && let Some(value) = &mut value {
+                                value.set(text);
+                            }
+                            if editable.editor().peek().editor_history().version
+                                == previous_history_version
+                            {
+                                follow_cursor();
+                            }
+                        },
+                    );
                 }
             }
         };
@@ -674,7 +716,7 @@ impl Component for Input {
         let on_paragraph_sized = move |e: Event<SizedEventData>| {
             let viewport = viewport_area();
             if viewport.width() > 0. {
-                scroll_controller.apply_layout(e.area.size, viewport.size);
+                scroll_controller.apply_layout(e.area.size.to_f64(), viewport.size.to_f64());
             }
 
             let text_size_changed = area.peek().size != e.area.size;
@@ -715,7 +757,7 @@ impl Component for Input {
             theme_colors.color
         };
 
-        let value = self.value.read();
+        let value = editable.editor().read().committed_text();
         let a11y_text: Cow<str> = match (self.mode, &self.placeholder) {
             (_, Some(ph)) if display_placeholder => Cow::Borrowed(ph.as_ref()),
             (InputMode::Hidden(ch), _) => Cow::Owned(ch.to_string().repeat(value.len())),
@@ -836,6 +878,13 @@ impl Component for Input {
     }
 
     fn render_key(&self) -> DiffKey {
-        self.key.clone().or(self.default_key())
+        let key = self.key.clone().or(self.default_key());
+        let mut hasher = std::hash::DefaultHasher::new();
+        key.hash(&mut hasher);
+        std::mem::discriminant(&self.value).hash(&mut hasher);
+        match key {
+            DiffKey::DefaultU64(_) => DiffKey::DefaultU64(hasher.finish()),
+            _ => DiffKey::U64(hasher.finish()),
+        }
     }
 }

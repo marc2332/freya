@@ -177,6 +177,7 @@ impl BrowserState {
             scroll: CursorPoint::new(-event.delta_x * scale, -event.delta_y * scale),
             cursor: event.mouse.position(),
             source,
+            phase: TouchPhase::Moved,
         });
 
         true

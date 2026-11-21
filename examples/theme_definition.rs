@@ -70,7 +70,7 @@ fn main() {
 
 fn app() -> impl IntoElement {
     use_init_theme(custom_theme);
-    let mut toggled = use_state(|| false);
+    let toggled = use_state(|| false);
 
     rect()
         .theme_background()
@@ -78,10 +78,6 @@ fn app() -> impl IntoElement {
         .center()
         .expanded()
         .spacing(12.)
-        .child(
-            Switch::new()
-                .toggled(toggled)
-                .on_toggle(move |_| toggled.toggle()),
-        )
+        .child(Switch::new(toggled))
         .child(StatusBadge::new().background((123, 123, 123)))
 }

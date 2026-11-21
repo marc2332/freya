@@ -119,7 +119,6 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
     fn render(&self) -> impl IntoElement {
         let mut drags = use_drag::<T>();
         let mut phase = use_state(|| DragPhase::Idle);
-        let mut drag_element_size = use_state(|| None::<Size2D>);
         let data = self.data.clone();
         let drag_threshold = self.drag_threshold;
 
@@ -178,23 +177,20 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
             .maybe(self.enabled, |el| el.on_pointer_down(on_pointer_down))
             .maybe_child((dragging.zip(self.drag_element.clone())).map(
                 |((position, offset), drag_element)| {
-                    let size = *drag_element_size.read();
-                    let anchor = size.map_or(offset, |size| {
-                        offset.min(CursorPoint::new(size.width as f64, size.height as f64))
-                    });
-                    let (x, y) = (position - anchor).to_f32().to_tuple();
+                    let (x, y) = (position - offset).to_f32().to_tuple();
                     rect()
-                        .position(Position::new_global())
+                        .position(Position::new_global().left(x + 1.).top(y + 1.))
                         .layer(Layer::Overlay)
                         .interactive(false)
-                        .opacity(if size.is_some() { 1. } else { 0. })
-                        // Extend by 1. so that the cursor click can reach the drop zone
-                        .offset_x(x + 1.)
-                        .offset_y(y + 1.)
-                        .on_sized(move |e: Event<SizedEventData>| {
-                            drag_element_size.set_if_modified(Some(e.area.size))
-                        })
-                        .child(drag_element)
+                        .min_width(Size::px(offset.x as f32))
+                        .cross_align(Alignment::End)
+                        .child(
+                            rect()
+                                .horizontal()
+                                .min_height(Size::px(offset.y as f32))
+                                .cross_align(Alignment::End)
+                                .child(drag_element),
+                        )
                 },
             ))
             .maybe(self.show_while_dragging || dragging.is_none(), |el| {

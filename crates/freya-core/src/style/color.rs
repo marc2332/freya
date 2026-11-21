@@ -7,6 +7,24 @@ use freya_engine::prelude::{
     SkRGB,
 };
 
+/// A color's classification for choosing black or white foreground text.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum Brightness {
+    Dark,
+    Light,
+}
+
+impl Brightness {
+    pub fn is_dark(self) -> bool {
+        self == Self::Dark
+    }
+
+    pub fn is_light(self) -> bool {
+        self == Self::Light
+    }
+}
+
 /// Represents one color.
 /// You may create [Color]s using
 /// - [Color::from_rgb],
@@ -244,6 +262,41 @@ impl Color {
         self.to_rgb_string()
     }
 
+    /// Relative luminance of this color as defined by WCAG, in `0.0..=1.0`,
+    /// where `0.0` is black and `1.0` is white. Alpha is ignored.
+    pub fn luminance(self) -> f32 {
+        let channel = |value: u8| {
+            let value = value as f32 / 255.0;
+            if value <= 0.04045 {
+                value / 12.92
+            } else {
+                ((value + 0.055) / 1.055).powf(2.4)
+            }
+        };
+
+        0.2126 * channel(self.r()) + 0.7152 * channel(self.g()) + 0.0722 * channel(self.b())
+    }
+
+    /// Dark favors white text and light favors black text by WCAG contrast, not arbitrary theme colors.
+    /// Alpha is ignored. Composite translucent colors against their background first.
+    pub fn brightness(self) -> Brightness {
+        if self.luminance() > 0.17912878 {
+            Brightness::Light
+        } else {
+            Brightness::Dark
+        }
+    }
+
+    /// Ignores alpha, as with [Color::brightness].
+    pub fn is_dark(self) -> bool {
+        self.brightness().is_dark()
+    }
+
+    /// Ignores alpha, as with [Color::brightness].
+    pub fn is_light(self) -> bool {
+        self.brightness().is_light()
+    }
+
     /// Linearly interpolates between two colors per channel. `t` is clamped
     /// to `0.0..=1.0`, where `0.0` returns `start` and `1.0` returns `end`.
     pub fn lerp(start: Color, end: Color, t: f32) -> Color {
@@ -260,7 +313,65 @@ impl Color {
 
 #[cfg(test)]
 mod test {
-    use crate::prelude::Color;
+    use crate::style::color::{
+        Brightness,
+        Color,
+    };
+
+    #[test]
+    fn luminance() {
+        assert_eq!(Color::BLACK.luminance(), 0.0);
+        assert!((Color::WHITE.luminance() - 1.0).abs() < f32::EPSILON);
+        for (color, expected) in [
+            (Color::RED, 0.2126),
+            (Color::GREEN, 0.7152),
+            (Color::BLUE, 0.0722),
+        ] {
+            assert!((color.luminance() - expected).abs() < f32::EPSILON);
+        }
+    }
+
+    #[test]
+    fn brightness() {
+        assert_eq!(Color::WHITE.brightness(), Brightness::Light);
+        assert_eq!(Color::BLACK.brightness(), Brightness::Dark);
+        assert_eq!(Color::LIGHT_GRAY.brightness(), Brightness::Light);
+        assert_eq!(Color::DARK_GRAY.brightness(), Brightness::Dark);
+        assert_eq!(
+            Color::from_rgb(117, 117, 117).brightness(),
+            Brightness::Dark
+        );
+        assert_eq!(
+            Color::from_rgb(118, 118, 118).brightness(),
+            Brightness::Light
+        );
+
+        assert!(Color::BLUE.is_dark());
+        assert!(Color::YELLOW.is_light());
+    }
+
+    #[test]
+    fn brightness_predicates_are_complementary() {
+        for value in 0..=255 {
+            let color = Color::from_rgb(value, value, value);
+            assert_ne!(color.is_dark(), color.is_light());
+            assert_eq!(color.is_dark(), color.brightness().is_dark());
+            assert_eq!(color.is_light(), color.brightness().is_light());
+        }
+    }
+
+    #[test]
+    fn luminance_and_brightness_ignore_alpha() {
+        for color in [Color::BLACK, Color::WHITE, Color::RED, Color::BLUE] {
+            for alpha in 0..=255 {
+                let translucent = color.with_a(alpha);
+                assert_eq!(translucent.luminance(), color.luminance());
+                assert_eq!(translucent.brightness(), color.brightness());
+                assert_eq!(translucent.is_dark(), color.is_dark());
+                assert_eq!(translucent.is_light(), color.is_light());
+            }
+        }
+    }
 
     #[test]
     fn with_a_scales_existing_alpha() {

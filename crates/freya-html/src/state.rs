@@ -43,9 +43,12 @@ use blitz_traits::{
 use freya_core::prelude::{
     Bytes,
     Code as FreyaCode,
+    Force,
     Key as FreyaKey,
     Modifiers as FreyaModifiers,
     MouseButton as FreyaMouseButton,
+    TouchEventData,
+    TouchPhase,
 };
 use freya_engine::prelude::{
     Canvas,
@@ -68,7 +71,7 @@ use crate::{
         SkiaSceneCache,
         SkiaScenePainter,
     },
-    cache::ResourceCache,
+    fonts::font_context,
     handle::ElementHit,
     net::{
         FetchRequest,
@@ -81,7 +84,7 @@ use crate::{
 /// Owns a parsed Blitz document and paints it directly into Freya's Skia canvas.
 pub(crate) struct BlitzState {
     document: Option<HtmlDocument>,
-    fonts: Vec<Bytes>,
+    font_context: blitz_dom::FontContext,
     net_provider: Arc<dyn NetProvider>,
     shell_provider: Arc<dyn ShellProvider>,
     navigation_provider: Arc<dyn NavigationProvider>,
@@ -98,20 +101,15 @@ pub(crate) struct BlitzState {
 
 impl BlitzState {
     pub fn new(
-        wake: UnboundedSender<()>,
+        wake: async_channel::Sender<()>,
         navigate: UnboundedSender<String>,
         fetch: UnboundedSender<FetchRequest>,
-        resource_cache: ResourceCache,
-        fonts: Vec<Bytes>,
     ) -> Self {
         let redraw = Arc::new(AtomicBool::new(true));
         Self {
             document: None,
-            fonts,
-            net_provider: Arc::new(HttpNetProvider {
-                fetch,
-                cache: resource_cache,
-            }),
+            font_context: font_context(&[]),
+            net_provider: Arc::new(HttpNetProvider { fetch }),
             shell_provider: Arc::new(FreyaShellProvider {
                 redraw: redraw.clone(),
                 wake,
@@ -127,16 +125,22 @@ impl BlitzState {
         }
     }
 
+    pub fn set_fonts(&mut self, fonts: impl IntoIterator<Item = Bytes>) {
+        let fonts = fonts.into_iter().collect::<Vec<_>>();
+        self.font_context = font_context(&fonts);
+    }
+
     pub fn load(&mut self, html: &str, base_url: Option<String>) {
         let config = DocumentConfig {
             base_url,
             net_provider: Some(self.net_provider.clone()),
             shell_provider: Some(self.shell_provider.clone()),
             navigation_provider: Some(self.navigation_provider.clone()),
-            font_ctx: font_context(&self.fonts),
+            font_ctx: Some(self.font_context.clone()),
             ..Default::default()
         };
         self.document = Some(HtmlDocument::from_html(html, config));
+        self.active_pointers.borrow_mut().clear();
         self.paint_key = None;
         self.shell_provider.request_redraw();
     }
@@ -233,6 +237,63 @@ impl BlitzState {
         self.shell_provider.request_redraw();
     }
 
+    pub fn touch(&mut self, data: &TouchEventData, phase: TouchPhase) {
+        let id = BlitzPointerId::Finger(data.finger_id);
+        let pressed = matches!(phase, TouchPhase::Started | TouchPhase::Moved);
+        let mut event = self.pointer_event(
+            data.element_location.x as f32,
+            data.element_location.y as f32,
+            MouseEventButton::Main,
+        );
+        event.id = id;
+        event.coords.screen_x = data.global_location.x as f32;
+        event.coords.screen_y = data.global_location.y as f32;
+        event.buttons = if pressed {
+            MouseEventButtons::from(MouseEventButton::Main)
+        } else {
+            MouseEventButtons::empty()
+        };
+        event.details.pressure = if pressed {
+            match data.force {
+                Some(Force::Normalized(force)) => force,
+                Some(Force::Calibrated {
+                    force,
+                    max_possible_force,
+                    ..
+                }) if max_possible_force > 0.0 => force / max_possible_force,
+                _ => 0.5,
+            }
+            .clamp(0.0, 1.0)
+        } else {
+            0.0
+        };
+        {
+            let mut pointers = self.active_pointers.borrow_mut();
+            let position = pointers.iter().position(|pointer| pointer.id == id);
+            event.is_primary = position
+                .map(|position| pointers[position].is_primary)
+                .unwrap_or(pointers.is_empty() && phase == TouchPhase::Started);
+            if pressed {
+                let mut snapshot = event.clone();
+                snapshot.active_pointers = Arc::new(AtomicRefCell::new(Vec::new()));
+                if let Some(position) = position {
+                    pointers[position] = snapshot;
+                } else {
+                    pointers.push(snapshot);
+                }
+            } else if let Some(position) = position {
+                pointers.remove(position);
+            }
+        }
+        self.dispatch(match phase {
+            TouchPhase::Started => UiEvent::PointerDown(event),
+            TouchPhase::Moved => UiEvent::PointerMove(event),
+            TouchPhase::Ended => UiEvent::PointerUp(event),
+            TouchPhase::Cancelled => UiEvent::PointerCancel(event),
+        });
+        self.shell_provider.request_redraw();
+    }
+
     pub fn wheel(&mut self, x: f32, y: f32, delta_x: f64, delta_y: f64) {
         let coords = self.coords(x, y);
         self.dispatch(UiEvent::Wheel(BlitzWheelEvent {
@@ -318,47 +379,6 @@ impl BlitzState {
             document.handle_ui_event(event);
         }
     }
-}
-
-fn font_context(fonts: &[Bytes]) -> Option<blitz_dom::FontContext> {
-    use parley::fontique::{
-        Blob,
-        Collection,
-        CollectionOptions,
-        GenericFamily,
-        SourceCache,
-    };
-
-    if fonts.is_empty() {
-        return None;
-    }
-
-    let mut context = blitz_dom::FontContext {
-        source_cache: SourceCache::new_shared(),
-        collection: Collection::new(CollectionOptions {
-            shared: false,
-            system_fonts: !cfg!(target_os = "emscripten"),
-        }),
-    };
-    let mut family_ids = Vec::new();
-    for data in fonts {
-        let decoded = blitz_dom::decode_font_bytes(data).into_owned();
-        let registered = context
-            .collection
-            .register_fonts(Blob::new(Arc::new(decoded) as _), None);
-        family_ids.extend(registered.into_iter().map(|(family_id, _)| family_id));
-    }
-    for generic in [
-        GenericFamily::SansSerif,
-        GenericFamily::Serif,
-        GenericFamily::Monospace,
-        GenericFamily::SystemUi,
-    ] {
-        context
-            .collection
-            .append_generic_families(generic, family_ids.iter().copied());
-    }
-    Some(context)
 }
 
 fn map_button(button: Option<FreyaMouseButton>) -> MouseEventButton {

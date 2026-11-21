@@ -1,7 +1,6 @@
-use crate::{
-    notify::BroadcastNotify,
-    prelude::consume_root_context,
-};
+use tiny_notify::BroadcastNotify;
+
+use crate::prelude::consume_root_context;
 
 pub type RenderingTickerSender = BroadcastNotify;
 

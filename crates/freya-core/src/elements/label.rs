@@ -49,9 +49,9 @@ use crate::{
         MaybeExt,
         Span,
         TextAlign,
+        TextOverflowExt,
         TextStyleExt,
     },
-    style::render_callback::RenderContext as FillRenderContext,
     text_cache::CachedParagraph,
     tree::DiffModifies,
 };
@@ -300,21 +300,6 @@ impl ElementExt for LabelElement {
 
         let origin = context.layout_node.inner_area.origin;
         paragraph.paint_at(context.canvas, origin.cast_unit());
-        if let Some(callback) = context.text_style_state.color.render_callback() {
-            let layer = context.canvas.save();
-            context.canvas.translate(origin.to_tuple());
-            context
-                .canvas
-                .scale((context.scale_factor as f32, context.scale_factor as f32));
-            callback.call(&mut FillRenderContext {
-                canvas: context.canvas,
-                font_collection: context.font_collection,
-                origin: (origin / context.scale_factor as f32).cast_unit(),
-                size: paragraph.fill_area().size / context.scale_factor as f32,
-                text_style_state: context.text_style_state,
-            });
-            context.canvas.restore_to_count(layer);
-        }
     }
 }
 
@@ -323,7 +308,7 @@ impl From<Label> for Element {
         Element::Element {
             key: value.key,
             element: Rc::new(value.element),
-            elements: vec![],
+            elements: vec![].into(),
         }
     }
 }
@@ -345,6 +330,8 @@ impl AccessibilityExt for Label {
         &mut self.element.accessibility
     }
 }
+
+impl TextOverflowExt for Label {}
 
 impl TextStyleExt for Label {
     fn text_style_data_mut(&mut self) -> &mut TextStyleData {

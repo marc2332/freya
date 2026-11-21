@@ -1,6 +1,6 @@
 [package]
 name = "freya-android"
-version = "0.5.0-rc.10"
+version.workspace = true
 description = "Android integration for Freya"
 edition = "2024"
 license = "MIT"
@@ -17,6 +17,7 @@ workspace = true
 freya-core = { workspace = true }
 freya-components = { workspace = true }
 freya-winit = { workspace = true }
+torin = { workspace = true }
 jni = "0.22"
 winit = { workspace = true }
 tracing = { workspace = true }

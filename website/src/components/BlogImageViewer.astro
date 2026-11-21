@@ -1,0 +1,91 @@
+<dialog class="blog-image-viewer" aria-label="Enlarged blog image">
+    <button type="button" aria-label="Close image" autofocus>Close ✕</button>
+    <img alt="" />
+</dialog>
+
+<script>
+    const viewer = document.querySelector<HTMLDialogElement>(".blog-image-viewer");
+    const preview = viewer?.querySelector("img");
+
+    if (viewer && preview) {
+        for (const image of document.querySelectorAll<HTMLImageElement>("article img")) {
+            image.tabIndex = 0;
+            image.setAttribute("role", "button");
+            image.setAttribute("aria-haspopup", "dialog");
+            image.setAttribute("aria-label", `Enlarge image: ${image.alt || "Blog image"}`);
+
+            const open = () => {
+                preview.src = image.currentSrc || image.src;
+                preview.alt = image.alt;
+                viewer.showModal();
+            };
+
+            image.addEventListener("click", (event) => {
+                event.preventDefault();
+                open();
+            });
+            image.addEventListener("keydown", (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    open();
+                }
+            });
+        }
+
+        viewer.querySelector("button")?.addEventListener("click", () => viewer.close());
+        viewer.addEventListener("click", (event) => {
+            if (event.target === viewer) viewer.close();
+        });
+    }
+</script>
+
+<style>
+    .blog-image-viewer {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100dvh;
+        max-width: none;
+        max-height: none;
+        margin: 0;
+        padding: 3.5rem 1rem 1rem;
+        border: 0;
+        background: transparent;
+    }
+
+    .blog-image-viewer::backdrop {
+        background: rgba(0, 0, 0, 0.9);
+    }
+
+    .blog-image-viewer img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        pointer-events: none;
+    }
+
+    .blog-image-viewer button {
+        position: absolute;
+        top: 0.75rem;
+        right: 1rem;
+        padding: 0.25rem 0.75rem;
+        border: 1px solid rgb(120, 113, 108);
+        border-radius: 0.5rem;
+        color: white;
+        background: rgb(28, 25, 23);
+        cursor: pointer;
+    }
+
+    :global(html:has(.blog-image-viewer[open])) {
+        overflow: hidden;
+    }
+
+    :global(article img[role="button"]) {
+        cursor: zoom-in;
+    }
+
+    :global(article img[role="button"]:focus-visible) {
+        outline: 2px solid rgb(167, 139, 250);
+        outline-offset: 4px;
+    }
+</style>

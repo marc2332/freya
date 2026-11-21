@@ -1,16 +1,19 @@
 #![doc(
-    html_logo_url = "https://freyaui.dev/logo.svg",
-    html_favicon_url = "https://freyaui.dev/logo.svg"
+    html_logo_url = "https://cdn.jsdelivr.net/gh/marc2332/freya@main/logo.svg",
+    html_favicon_url = "https://cdn.jsdelivr.net/gh/marc2332/freya@main/logo.svg"
 )]
 #![cfg_attr(feature = "docs", feature(doc_cfg))]
 //! # Freya
 //!
 //! **Freya** is a declarative, cross-platform GUI 🦀 Rust library, powered by 🎨 [Skia](https://skia.org/).
 //!
+//! New to Freya? Follow [Building your first app](self::_docs::building_an_app) to build and test a todo app.
+//!
 //! #### Example
 //!
 //! ```rust, no_run
-//! # use freya::prelude::*;
+//! use freya::prelude::*;
+//!
 //! fn main() {
 //!     // *Start* your app with a window and its root component
 //!     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
@@ -38,9 +41,11 @@
 //! - [Events](self::_docs::events)
 //! - [Hooks](self::_docs::hooks)
 //! - [State](self::_docs::state_management)
+//! - [Context](self::_docs::context)
+//! - [Global Contexts](self::_docs::global_context)
 //! - [Async](self::_docs::_async)
 //! - [Fonts](self::_docs::fonts)
-//! - [Layers](self::_docs::layers)
+//! - [Layers](freya_core::prelude::Layer)
 //! - [Optimizing](self::_docs::optimizing)
 //! - [Platform Integration](freya_core::platform::Platform)
 //! - [Platforms](self::_docs::platforms)
@@ -52,6 +57,7 @@
 //! - [Working with AI](self::_docs::ai)
 //!
 //! ### Learn
+//! - [Building an app](self::_docs::building_an_app)
 //! - [Built-in Components](crate::components)
 //! - [Built-in Components Gallery](crate::components::gallery)
 //! - [i18n](freya_i18n)
@@ -82,7 +88,7 @@
 //! - `router`: Reexport [freya_router] under [router]
 //! - `i18n`: Reexport [freya_i18n] under [i18n]
 //! - `remote-asset`: Enables [HTTP requests](freya_components::http) and remote sources for [ImageViewer](components::ImageViewer) and [GifViewer](components::GifViewer).
-//! - `tray`: Enables tray support using the [tray_icon] crate.
+//! - `tray`: Enables system tray support through the [tray] module.
 //! - `sdk`: Reexport [freya_sdk] under [sdk].
 //! - `sdk-tokio`: Enables the Tokio utilities from [freya_sdk]. Implies `sdk`.
 //! - `gif`: Enables the [GifViewer](components::GifViewer) component.
@@ -134,9 +140,9 @@ pub mod prelude {
             WindowConfig,
         },
         renderer::{
-            LaunchProxy,
-            NativeEvent,
+            LaunchHandle,
             RendererContext,
+            RendererMessage,
         },
     };
 
@@ -218,6 +224,7 @@ pub mod components {
         chip::*,
         color_picker::*,
         context_menu::*,
+        cursor_blink::*,
         define_theme,
         docking::*,
         drag_drop::*,
@@ -237,6 +244,7 @@ pub mod components {
         loader::*,
         menu::*,
         overflowed_content::*,
+        platform_drag::*,
         popup::*,
         portal::*,
         progressbar::*,

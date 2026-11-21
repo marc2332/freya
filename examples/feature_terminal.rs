@@ -3,7 +3,6 @@ use freya::{
     prelude::*,
     terminal::*,
 };
-use futures_util::FutureExt;
 
 fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
@@ -15,7 +14,26 @@ fn app() -> impl IntoElement {
         cmd.env("TERM", "xterm-256color");
         cmd.env("COLORTERM", "truecolor");
         cmd.env("LANG", "en_GB.UTF-8");
-        TerminalHandle::new(TerminalId::new(), PtyBackend::new(cmd), None).ok()
+        TerminalHandle::new(TerminalId::new(), PtyBackend::new(cmd), None)
+            .map(|handle| {
+                handle.on_event(move |event, _| match event {
+                    RioEvent::Title(_, title) => {
+                        Platform::get().with_window(Platform::window_id(), move |window| {
+                            window.set_title(&title);
+                        });
+                    }
+                    RioEvent::ResetTitle => {
+                        Platform::get().with_window(Platform::window_id(), move |window| {
+                            window.set_title("Freya Terminal");
+                        });
+                    }
+                    RioEvent::ClipboardStore(_, text) => {
+                        Clipboard::set_text_deferred(text);
+                    }
+                    _ => {}
+                })
+            })
+            .ok()
     });
 
     use_future(move || async move {
@@ -23,26 +41,8 @@ fn app() -> impl IntoElement {
         let Some(terminal_handle) = terminal_handle else {
             return;
         };
-        loop {
-            futures_util::select! {
-                _ = terminal_handle.closed().fuse() => {
-                    let _ = handle.write().take();
-                    break;
-                }
-                _ = terminal_handle.title_changed().fuse() => {
-                    if let Some(new_title) = terminal_handle.title() {
-                        Platform::get().with_window(Platform::window_id(), move |window| {
-                            window.set_title(&new_title);
-                        });
-                    }
-                }
-                _ = terminal_handle.clipboard_changed().fuse() => {
-                    if let Some(text) = terminal_handle.clipboard_content() {
-                        let _ = Clipboard::set(text);
-                    }
-                }
-            }
-        }
+        terminal_handle.closed().await;
+        let _ = handle.write().take();
     });
 
     let a11y_id = use_a11y();
@@ -159,15 +159,19 @@ fn app() -> impl IntoElement {
                                     if ctrl_shift && ch.eq_ignore_ascii_case("c") =>
                                 {
                                     if let Some(text) = handle.get_selected_text() {
-                                        let _ = Clipboard::set(text);
+                                        Clipboard::set_text_deferred(text);
                                     }
                                 }
                                 Key::Character(ch)
                                     if ctrl_shift && ch.eq_ignore_ascii_case("v") =>
                                 {
-                                    if let Ok(text) = Clipboard::get() {
-                                        let _ = handle.paste(&text);
-                                    }
+                                    let read = Clipboard::get_text();
+                                    let handle = handle.clone();
+                                    spawn(async move {
+                                        if let Ok(text) = read.await {
+                                            let _ = handle.paste(&text);
+                                        }
+                                    });
                                 }
                                 _ => {
                                     let _ = handle.write_key(&e.key, e.modifiers);

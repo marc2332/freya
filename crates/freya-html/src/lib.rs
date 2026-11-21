@@ -5,14 +5,41 @@
 //! use freya_html::prelude::*;
 //!
 //! # fn app() -> impl IntoElement {
-//! let handle = use_html(|| HtmlSource::html("<h1>Hello!</h1>"));
-//! HtmlViewer::new(handle).expanded()
+//! let handle = use_hook(|| {
+//!     let mut handle = HtmlHandle::create();
+//!     handle.load(HtmlSource::html("<h1>Hello!</h1>"));
+//!     handle
+//! });
+//! HtmlViewer::new(handle)
 //! # }
 //! ```
 //!
-//! Use [`HtmlSource::url`] to load a remote page. Add local fonts with
-//! [`HtmlViewer::font`]. On web, provide a font for inline documents or load one
-//! through CSS `@font-face`.
+//! Set a base URL for relative links with [`HtmlContent::with_base_url`].
+//!
+//! Use [`HtmlSource::url`] for remote pages and [`HtmlHandle::fonts`] for local fonts.
+//! On web, provide a font for inline documents or load one through CSS `@font-face`.
+//!
+//! Resolve embedded CSS and other subresources with [`HtmlHandle::resource_interceptor`].
+//!
+//! ```rust,no_run
+//! # use freya_core::prelude::*;
+//! # use freya_html::prelude::*;
+//! # fn app() -> impl IntoElement {
+//! let handle = use_hook(|| {
+//!     let mut handle = HtmlHandle::create().resource_interceptor(|url| match url.path() {
+//!         "/style.css" => ResourceResponse::Bytes(Bytes::from_static(b"body { margin: 0 }")),
+//!         _ => ResourceResponse::Fetch,
+//!     });
+//!     handle.load(HtmlSource::html(
+//!         r#"<link rel="stylesheet" href="https://freya.example/style.css">"#,
+//!     ));
+//!     handle
+//! });
+//! HtmlViewer::new(handle)
+//! # }
+//! ```
+//!
+//! Return [`ResourceResponse::Block`] to skip a subresource without using the cache or network.
 //!
 //! For HTTP requests outside the viewer,
 //! enable Freya's `remote-asset` feature and use [`freya_components::http::fetch`]:
@@ -29,29 +56,33 @@
 pub mod anyrender;
 mod cache;
 mod component;
+mod content;
 mod element;
+mod fonts;
 mod handle;
 mod net;
 mod state;
 
 pub use cache::ResourceCache;
 pub use component::HtmlViewer;
+pub use content::HtmlContent;
 pub use handle::{
     ElementHit,
     HtmlHandle,
     HtmlSource,
-    use_html,
+    ResourceResponse,
 };
 
 pub mod prelude {
     pub use crate::{
         cache::ResourceCache,
         component::HtmlViewer,
+        content::HtmlContent,
         handle::{
             ElementHit,
             HtmlHandle,
             HtmlSource,
-            use_html,
+            ResourceResponse,
         },
     };
 }

@@ -5,7 +5,7 @@ use std::{
     ops::Range,
 };
 
-use freya_clipboard::clipboard::Clipboard;
+use freya_clipboard::prelude::Clipboard;
 use freya_core::{
     elements::paragraph::{
         ParagraphCursorExt,
@@ -19,6 +19,7 @@ use keyboard_types::{
     Modifiers,
     NamedKey,
 };
+use ropey::Rope;
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::editor_history::EditorHistory;
@@ -89,6 +90,23 @@ impl TextSelection {
             Self::Cursor(pos) => *pos = position,
             Self::Range { to, .. } => {
                 *to = position;
+            }
+        }
+    }
+
+    /// Clamps UTF-16 offsets to the text length and rounds down to character boundaries.
+    pub fn clamp(&mut self, rope: &Rope) {
+        let len = rope.len_utf16_cu();
+        let clamp = |position: usize| {
+            let position = position.min(len);
+            rope.char_to_utf16_cu(rope.utf16_cu_to_char(position))
+        };
+
+        match self {
+            Self::Cursor(position) => *position = clamp(*position),
+            Self::Range { from, to } => {
+                *from = clamp(*from);
+                *to = clamp(*to);
             }
         }
     }
@@ -323,9 +341,11 @@ pub trait TextEditor {
         let cursor_rect = paragraph.measured_cursor_rect(&self.text(), self.cursor_pos())?;
 
         let lines = paragraph.get_line_metrics();
-        let current = lines
-            .iter()
-            .position(|line| (cursor_rect.top as f64) < line.baseline + line.descent)?;
+        let current = if self.cursor_pos() == self.len_utf16_cu() {
+            lines.len().checked_sub(1)?
+        } else {
+            paragraph.get_line_number_at_utf16_offset(self.cursor_pos())?
+        };
         let line = lines.get(current.checked_add_signed(line_offset)?)?;
 
         Some(paragraph.cursor_index_at_point((cursor_rect.left as f64, line.baseline)))
@@ -563,7 +583,22 @@ pub trait TextEditor {
         selection
     }
 
-    // Process a Keyboard event
+    /// Replaces the current selection with pasted text.
+    fn paste(&mut self, contents: &str) -> TextEvent {
+        if contents.is_empty() && self.get_selection_range().is_none() {
+            return TextEvent::empty();
+        }
+        if let Some((start, end)) = self.get_selection_range() {
+            self.remove(start..end);
+            self.move_cursor_to(start);
+        }
+        let position = self.cursor_pos();
+        let inserted = self.insert(contents, position);
+        self.move_cursor_to(position + inserted);
+        self.clear_selection();
+        TextEvent::TEXT_CHANGED | TextEvent::SELECTION_CHANGED
+    }
+
     #[allow(clippy::too_many_arguments)]
     fn process_key(
         &mut self,
@@ -573,7 +608,6 @@ pub trait TextEditor {
         holder: Option<&ParagraphHolder>,
         allow_tabs: bool,
         allow_changes: bool,
-        allow_read_clipboard: bool,
         allow_write_clipboard: bool,
     ) -> TextEvent {
         let mut event = TextEvent::empty();
@@ -755,41 +789,21 @@ pub trait TextEditor {
                         self.set_selection((0, len));
                     }
 
-                    // Copy selected text
-                    "c" if meta_or_ctrl && allow_write_clipboard => {
-                        let selected = self.get_selected_text();
-                        if let Some(selected) = selected {
-                            Clipboard::set(selected).ok();
-                        }
-                    }
-
-                    // Cut selected text
-                    "x" if meta_or_ctrl && allow_changes && allow_write_clipboard => {
-                        let selection = self.get_selection_range();
-                        if let Some((start, end)) = selection {
-                            let text = self.get_selected_text().unwrap();
-                            self.remove(start..end);
-                            Clipboard::set(text).ok();
-                            self.move_cursor_to(start);
-                            event.insert(TextEvent::TEXT_CHANGED);
-                        }
-                    }
-
-                    // Paste copied text
-                    "v" if meta_or_ctrl && allow_changes && allow_read_clipboard => {
-                        if let Ok(copied_text) = Clipboard::get() {
-                            let selection = self.get_selection_range();
-                            if let Some((start, end)) = selection {
+                    "c" | "C" | "x" | "X" if meta_or_ctrl => {
+                        let cut = matches!(character.as_str(), "x" | "X");
+                        if allow_write_clipboard
+                            && (!cut || allow_changes)
+                            && let Some(selected) = self.get_selected_text()
+                        {
+                            Clipboard::set_text_deferred(selected);
+                            if cut && let Some((start, end)) = self.get_selection_range() {
                                 self.remove(start..end);
                                 self.move_cursor_to(start);
+                                event.insert(TextEvent::TEXT_CHANGED);
                             }
-                            let cursor_pos = self.cursor_pos();
-                            self.insert(&copied_text, cursor_pos);
-                            let last_idx = copied_text.encode_utf16().count() + cursor_pos;
-                            self.move_cursor_to(last_idx);
-                            event.insert(TextEvent::TEXT_CHANGED);
                         }
                     }
+                    "v" | "V" if meta_or_ctrl => {}
 
                     // Undo last change
                     "z" if meta_or_ctrl && allow_changes => {

@@ -1,14 +1,16 @@
 use std::{
     borrow::Cow,
-    cell::Cell,
-    path::PathBuf,
     rc::Rc,
     sync::Arc,
     task::Waker,
+    time::{
+        Duration,
+        Instant,
+    },
 };
 
 #[cfg(feature = "accessibility")]
-use accesskit_winit::Adapter;
+use accesskit_xplat::Adapter;
 use freya_components::{
     cache::AssetCacher,
     integration::integration,
@@ -25,22 +27,31 @@ use freya_engine::prelude::{
     FontMgr,
     Surface as SkiaSurface,
 };
-use futures_util::task::{
-    ArcWake,
-    waker,
+use futures_util::{
+    StreamExt,
+    task::{
+        ArcWake,
+        waker,
+    },
 };
 use keyboard_types::{
     Code,
     Key,
 };
 use ragnarok::{
+    EventBuffer,
+    EventsExecutorRunner,
     EventsMeasurerRunner,
     NodesState,
 };
+#[cfg(all(feature = "accessibility", not(target_os = "android")))]
+use raw_window_handle::HasWindowHandle;
 use torin::prelude::{
     CursorPoint,
     Size2D,
 };
+#[cfg(all(feature = "accessibility", target_os = "android"))]
+use winit::platform::android::ActiveEventLoopExtAndroid;
 use winit::{
     dpi::{
         LogicalPosition,
@@ -48,10 +59,7 @@ use winit::{
         PhysicalSize,
     },
     event::ElementState,
-    event_loop::{
-        ActiveEventLoop,
-        EventLoopProxy,
-    },
+    event_loop::ActiveEventLoop,
     keyboard::ModifiersState,
     window::{
         Theme,
@@ -63,6 +71,8 @@ use winit::{
 
 #[cfg(target_os = "android")]
 use crate::config::RendererPreference;
+#[cfg(feature = "accessibility")]
+use crate::renderer::AccessibilityEventHandler;
 use crate::{
     accessibility::AccessibilityTask,
     config::{
@@ -74,15 +84,17 @@ use crate::{
         GraphicsDriver,
     },
     integration::is_ime_role,
+    platform_drag::PlatformDragState,
     plugins::{
         PluginEvent,
         PluginHandle,
         PluginsManager,
     },
     renderer::{
-        NativeEvent,
-        NativeWindowEvent,
-        NativeWindowEventAction,
+        RendererMessage,
+        RendererSender,
+        RendererWindowMessage,
+        RendererWindowPayload,
     },
 };
 
@@ -91,8 +103,8 @@ pub type RenderCallback = Box<dyn FnOnce(&mut SkiaSurface)>;
 pub struct AppWindow {
     pub(crate) runner: Runner,
     pub(crate) tree: Tree,
-    pub(crate) driver: GraphicsDriver,
-    pub(crate) window: Window,
+    pub(crate) driver: Option<GraphicsDriver>,
+    pub(crate) window: Box<dyn Window>,
     pub(crate) nodes_state: NodesState<NodeId>,
 
     pub(crate) position: CursorPoint,
@@ -108,7 +120,7 @@ pub struct AppWindow {
 
     pub(crate) accessibility: AccessibilityTree,
     #[cfg(feature = "accessibility")]
-    pub(crate) accessibility_adapter: accesskit_winit::Adapter,
+    pub(crate) accessibility_adapter: Adapter,
     pub(crate) accessibility_tasks_for_next_render: AccessibilityTask,
     #[cfg(feature = "accessibility")]
     pub(crate) screen_reader: ScreenReader,
@@ -116,7 +128,7 @@ pub struct AppWindow {
     pub(crate) process_layout_on_next_render: bool,
     pub(crate) send_mouse_move_on_next_layout: bool,
     pub(crate) last_render_size: PhysicalSize<u32>,
-    ime_allowed: Cell<bool>,
+    pub(crate) event_buffer: EventBuffer<PlatformEvent, Instant>,
 
     pub(crate) render_callbacks: Vec<RenderCallback>,
 
@@ -130,7 +142,8 @@ pub struct AppWindow {
 
     pub(crate) background: Color,
 
-    pub(crate) dropped_file_paths: Vec<PathBuf>,
+    pub(crate) active_touches: rustc_hash::FxHashMap<u64, CursorPoint>,
+    pub(crate) platform_drag: PlatformDragState,
 
     pub(crate) on_close: Option<OnCloseHook>,
 
@@ -151,34 +164,110 @@ fn clamp_custom_scale_factor(custom_scale_factor: f64) -> f64 {
 }
 
 impl AppWindow {
-    /// Returns the physical size used for layout and rendering, including the iOS safe-area insets.
-    pub(crate) fn drawable_size(window: &Window) -> PhysicalSize<u32> {
+    pub(crate) fn drawable_size(window: &dyn Window) -> PhysicalSize<u32> {
         #[cfg(target_os = "ios")]
         return window.outer_size();
         #[cfg(not(target_os = "ios"))]
-        return window.inner_size();
+        return window.surface_size();
     }
 
-    /// Forward the IME state to winit only when it changes. On iOS every call moves the first
-    /// responder, which would steal the keyboard from views that manage text input themselves.
-    pub(crate) fn set_ime_allowed(&self, allowed: bool) {
-        if self.ime_allowed.replace(allowed) != allowed {
-            self.window.set_ime_allowed(allowed);
+    pub(crate) fn handle_platform_drag(
+        &mut self,
+        command: PlatformDragCommand,
+        event_loop: &dyn ActiveEventLoop,
+        font_collection: &mut FontCollection,
+        font_manager: &FontMgr,
+        fallback_fonts: &[Cow<'static, str>],
+    ) {
+        let PlatformDragCommand {
+            data,
+            actions,
+            preview,
+            scope_id,
+            response,
+        } = command;
+        let icon = preview
+            .map(|preview| {
+                self.render_drag_preview(
+                    preview,
+                    scope_id,
+                    font_collection,
+                    font_manager,
+                    fallback_fonts,
+                )
+            })
+            .transpose();
+        match icon {
+            Ok(icon) => self.platform_drag.start(
+                event_loop,
+                self.window.id(),
+                data,
+                actions,
+                icon,
+                response,
+            ),
+            Err(error) => {
+                let _ = response.send(Err(error));
+            }
+        }
+    }
+
+    #[cfg(feature = "accessibility")]
+    pub(crate) fn process_accessibility_window_event(&mut self, event: &winit::event::WindowEvent) {
+        use winit::event::WindowEvent;
+
+        match event {
+            WindowEvent::Focused(is_focused) => {
+                self.accessibility_adapter.set_focus(*is_focused);
+            }
+            WindowEvent::Moved(_) | WindowEvent::SurfaceResized(_) => {
+                let outer_position = match event {
+                    WindowEvent::Moved(position) => *position,
+                    _ => self.window.outer_position().unwrap_or_default(),
+                };
+                let inner_size = match event {
+                    WindowEvent::SurfaceResized(size) => *size,
+                    _ => self.window.surface_size(),
+                };
+                let surface_position = self.window.surface_position();
+                let inner_position = (
+                    f64::from(outer_position.x) + f64::from(surface_position.x),
+                    f64::from(outer_position.y) + f64::from(surface_position.y),
+                );
+                let outer_position: (_, _) = outer_position.cast::<f64>().into();
+                let outer_size: (_, _) = self.window.outer_size().cast::<f64>().into();
+                let inner_size: (_, _) = inner_size.cast::<f64>().into();
+                self.accessibility_adapter.set_window_bounds(
+                    accesskit::Rect::from_origin_size(outer_position, outer_size),
+                    accesskit::Rect::from_origin_size(inner_position, inner_size),
+                );
+            }
+            _ => {}
         }
     }
 
     pub(crate) fn process_accessibility_update(&mut self, mode: Option<NavigationMode>) {
         let title = self.window.title();
-        let update =
-            self.accessibility
-                .process_updates(&mut self.tree, &self.events_sender, &title);
+        let updated_nodes = self
+            .accessibility
+            .prepare_updates(&mut self.tree, &self.events_sender);
+        #[cfg(feature = "accessibility")]
+        if self.screen_reader.is_on() {
+            self.accessibility_adapter.update_if_active(|| {
+                self.accessibility
+                    .build_update(&self.tree, &title, updated_nodes)
+            });
+        }
+        #[cfg(not(feature = "accessibility"))]
+        let _ = updated_nodes;
+
         self.platform
             .focused_accessibility_id
-            .set_if_modified(update.focus);
+            .set_if_modified(self.accessibility.focused_id);
         let node_id = self.accessibility.focused_node_id().unwrap();
         let layout_node = self.tree.layout.get(&node_id).unwrap();
         let focused_node = AccessibilityTree::create_node(node_id, layout_node, &self.tree, &title);
-        self.set_ime_allowed(is_ime_role(focused_node.role()));
+        let ime_allowed = is_ime_role(focused_node.role());
         self.platform
             .focused_accessibility_node
             .set_if_modified(focused_node);
@@ -187,15 +276,12 @@ impl AppWindow {
         }
 
         let area = layout_node.visible_area();
-        self.window.set_ime_cursor_area(
+        crate::integration::update_ime(
+            self.window.as_ref(),
+            ime_allowed,
             LogicalPosition::new(area.min_x(), area.min_y()),
             LogicalSize::new(area.width(), area.height()),
         );
-
-        #[cfg(feature = "accessibility")]
-        if self.screen_reader.is_on() {
-            self.accessibility_adapter.update_if_active(|| update);
-        }
     }
 
     /// Set the window title and refresh the accessibility label of the root node.
@@ -212,8 +298,8 @@ impl AppWindow {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         mut window_config: WindowConfig,
-        active_event_loop: &ActiveEventLoop,
-        event_loop_proxy: &EventLoopProxy<NativeEvent>,
+        active_event_loop: &dyn ActiveEventLoop,
+        event_loop_proxy: &RendererSender,
         plugins: &mut PluginsManager,
         font_collection: &mut FontCollection,
         font_manager: &FontMgr,
@@ -223,7 +309,7 @@ impl AppWindow {
     ) -> Self {
         #[cfg(feature = "hotreload")]
         let hot_reload_pending = Arc::new(std::sync::atomic::AtomicBool::new(false));
-        let mut window_attributes = Window::default_attributes()
+        let mut window_attributes = WindowAttributes::default()
             .with_resizable(window_config.resizable)
             .with_window_icon(window_config.icon.take())
             .with_visible(false)
@@ -240,21 +326,35 @@ impl AppWindow {
         )))]
         {
             window_attributes =
-                window_attributes.with_inner_size(LogicalSize::<f64>::from(window_config.size));
+                window_attributes.with_surface_size(LogicalSize::<f64>::from(window_config.size));
         }
 
         if let Some(min_size) = window_config.min_size {
             window_attributes =
-                window_attributes.with_min_inner_size(LogicalSize::<f64>::from(min_size));
+                window_attributes.with_min_surface_size(LogicalSize::<f64>::from(min_size));
         }
         if let Some(max_size) = window_config.max_size {
             window_attributes =
-                window_attributes.with_max_inner_size(LogicalSize::<f64>::from(max_size));
+                window_attributes.with_max_surface_size(LogicalSize::<f64>::from(max_size));
         }
         #[cfg(target_os = "linux")]
         if let Some(app_id) = window_config.app_id.take() {
-            use winit::platform::wayland::WindowAttributesExtWayland;
-            window_attributes = window_attributes.with_name(&app_id, &app_id);
+            use winit::platform::{
+                wayland::WindowAttributesWayland,
+                x11::{
+                    ActiveEventLoopExtX11,
+                    WindowAttributesX11,
+                },
+            };
+            window_attributes = if active_event_loop.is_x11() {
+                window_attributes.with_platform_attributes(Box::new(
+                    WindowAttributesX11::default().with_name(&app_id, &app_id),
+                ))
+            } else {
+                window_attributes.with_platform_attributes(Box::new(
+                    WindowAttributesWayland::default().with_name(&app_id, &app_id),
+                ))
+            };
         }
         if let Some(window_attributes_hook) = window_config.window_attributes_hook.take() {
             window_attributes = window_attributes_hook(window_attributes, active_event_loop);
@@ -273,13 +373,13 @@ impl AppWindow {
             target_os = "visionos",
         ))]
         window.set_fullscreen(Some(winit::window::Fullscreen::Borderless(None)));
-        let initial_render_size = Self::drawable_size(&window);
+        let initial_render_size = Self::drawable_size(window.as_ref());
 
         tracing::info!(
             "Using the {} graphics driver on {}, transparency is {}",
             driver.name(),
             driver.gpu_name().unwrap_or("an unknown GPU"),
-            if window_attributes.transparent {
+            if window_attributes.transparent() {
                 "enabled"
             } else {
                 "disabled"
@@ -287,7 +387,7 @@ impl AppWindow {
         );
 
         if let Some(window_handle_hook) = window_config.window_handle_hook.take() {
-            window_handle_hook(&mut window);
+            window_handle_hook(window.as_mut());
         }
 
         let on_close = window_config.on_close.take();
@@ -318,8 +418,15 @@ impl AppWindow {
         let scale_factor = window.scale_factor() * custom_scale_factor;
 
         let mut tree = Tree::default();
+        plugins.send(
+            PluginEvent::TreeCreated {
+                window: window.as_ref(),
+                tree: &mut tree,
+            },
+            PluginHandle::new(event_loop_proxy),
+        );
 
-        let window_size = Self::drawable_size(&window);
+        let window_size = initial_render_size.to_logical::<f32>(scale_factor);
         let accent_color_preference = accent_color_preference();
         runner.provide_root_context(TargetPlatform::detect);
         let platform = runner.run_in({
@@ -331,26 +438,25 @@ impl AppWindow {
             };
             let is_app_focused = window.has_focus();
             move || PlatformWindow {
-                id: u64::from(window_id),
+                id: window_id.into_raw() as u64,
                 focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
                 focused_accessibility_node: State::create(accesskit::Node::new(
                     accesskit::Role::Window,
                 )),
-                root_size: State::create(Size2D::new(
-                    window_size.width as f32,
-                    window_size.height as f32,
-                )),
+                root_size: State::create(Size2D::new(window_size.width, window_size.height)),
                 scale_factor: State::create(scale_factor),
                 custom_scale_factor: State::create(custom_scale_factor),
                 navigation_mode: State::create(NavigationMode::NotKeyboard),
                 preferred_theme: State::create(theme),
                 is_app_focused: State::create(is_app_focused),
                 accent_color: State::create(accent_color_preference.accent_color),
-                sender: Rc::new(move |user_event| {
-                    let _ = event_loop_proxy.send_event(NativeEvent::Window(NativeWindowEvent {
-                        window_id,
-                        action: NativeWindowEventAction::User(user_event),
-                    }));
+                sender: Rc::new(move |command| {
+                    let _ = event_loop_proxy.send_message(RendererMessage::Window(
+                        RendererWindowMessage {
+                            window_id,
+                            payload: RendererWindowPayload::Command(command),
+                        },
+                    ));
                 }),
             }
         });
@@ -361,7 +467,7 @@ impl AppWindow {
 
         runner.provide_root_context(|| font_collection.clone());
 
-        if let Some(root_context) = window_config.root_context {
+        for root_context in window_config.root_contexts {
             runner.run_in(root_context);
         }
 
@@ -381,8 +487,8 @@ impl AppWindow {
         }
         tree.measure_layout(
             (
-                Self::drawable_size(&window).width as f32,
-                Self::drawable_size(&window).height as f32,
+                initial_render_size.width as f32,
+                initial_render_size.height as f32,
             )
                 .into(),
             font_collection,
@@ -394,20 +500,31 @@ impl AppWindow {
         );
 
         #[cfg(feature = "accessibility")]
-        let accessibility_adapter =
-            Adapter::with_event_loop_proxy(active_event_loop, &window, event_loop_proxy.clone());
+        let accessibility_adapter = Adapter::with_combined_handler(
+            #[cfg(target_os = "android")]
+            active_event_loop.android_app(),
+            #[cfg(not(target_os = "android"))]
+            window
+                .window_handle()
+                .expect("The newly created window must have a window handle")
+                .as_raw(),
+            Arc::new(AccessibilityEventHandler {
+                window_id: window.id(),
+                proxy: event_loop_proxy.clone(),
+            }),
+        );
 
         window.set_visible(true);
 
-        struct TreeHandle(EventLoopProxy<NativeEvent>, WindowId);
+        struct TreeHandle(RendererSender, WindowId);
 
         impl ArcWake for TreeHandle {
             fn wake_by_ref(arc_self: &Arc<Self>) {
                 _ = arc_self
                     .0
-                    .send_event(NativeEvent::Window(NativeWindowEvent {
+                    .send_message(RendererMessage::Window(RendererWindowMessage {
                         window_id: arc_self.1,
-                        action: NativeWindowEventAction::PollRunner,
+                        payload: RendererWindowPayload::PollRunner,
                     }));
             }
         }
@@ -421,16 +538,17 @@ impl AppWindow {
             let hot_reload_pending_handler = hot_reload_pending.clone();
             freya_core::hotreload::subsecond::register_handler(Arc::new(move || {
                 hot_reload_pending_handler.store(true, std::sync::atomic::Ordering::Release);
-                let _ = event_loop_proxy.send_event(NativeEvent::Window(NativeWindowEvent {
-                    window_id,
-                    action: NativeWindowEventAction::PollRunner,
-                }));
+                let _ =
+                    event_loop_proxy.send_message(RendererMessage::Window(RendererWindowMessage {
+                        window_id,
+                        payload: RendererWindowPayload::PollRunner,
+                    }));
             }));
         }
 
         plugins.send(
             PluginEvent::WindowCreated {
-                window: &window,
+                window: window.as_ref(),
                 font_collection,
                 tree: &tree,
                 animation_clock: &animation_clock,
@@ -441,10 +559,12 @@ impl AppWindow {
             PluginHandle::new(event_loop_proxy),
         );
 
+        let input_interval = frame_interval(window.as_ref());
+
         AppWindow {
             runner,
             tree,
-            driver,
+            driver: Some(driver),
             window,
             nodes_state,
 
@@ -469,7 +589,7 @@ impl AppWindow {
             process_layout_on_next_render: true,
             send_mouse_move_on_next_layout: false,
             last_render_size: initial_render_size,
-            ime_allowed: Cell::new(false),
+            event_buffer: EventBuffer::new(input_interval),
 
             render_callbacks: Vec::new(),
 
@@ -483,7 +603,8 @@ impl AppWindow {
 
             background: window_config.background,
 
-            dropped_file_paths: Vec::new(),
+            active_touches: Default::default(),
+            platform_drag: Default::default(),
 
             on_close,
 
@@ -505,7 +626,7 @@ impl AppWindow {
         let cursor_icon = self.tree.cursor_icon(&self.nodes_state);
         if cursor_icon != self.cursor_icon {
             self.cursor_icon = cursor_icon;
-            self.window.set_cursor(cursor_icon);
+            self.window.set_cursor(cursor_icon.into());
         }
         let cursor_visible = self.tree.cursor_visible(&self.nodes_state);
         if cursor_visible != self.cursor_visible {
@@ -514,12 +635,12 @@ impl AppWindow {
         }
     }
 
-    pub fn window(&self) -> &Window {
-        &self.window
+    pub fn window(&self) -> &dyn Window {
+        self.window.as_ref()
     }
 
-    pub fn window_mut(&mut self) -> &mut Window {
-        &mut self.window
+    pub fn window_mut(&mut self) -> &mut dyn Window {
+        self.window.as_mut()
     }
 
     pub fn effective_scale_factor(&self) -> f64 {
@@ -528,39 +649,218 @@ impl AppWindow {
 
     /// Syncs the effective scale factor on [`PlatformWindow`] and invalidates layout.
     pub fn scale_factor_changed(&mut self) {
+        let scale_factor = self.effective_scale_factor();
+        let size = Self::drawable_size(self.window.as_ref()).to_logical::<f32>(scale_factor);
+        self.platform.scale_factor.set(scale_factor);
         self.platform
-            .scale_factor
-            .set(self.effective_scale_factor());
+            .root_size
+            .set_if_modified(Size2D::new(size.width, size.height));
         self.process_layout_on_next_render = true;
-        self.tree
-            .set_scale_factor(self.effective_scale_factor() as f32);
+        self.tree.set_scale_factor(scale_factor as f32);
         self.tree.layout.reset();
         self.tree.text_cache.reset();
         self.window.request_redraw();
     }
 
-    /// Measures the given platform events and emits the results.
-    /// Wheel events schedule a mouse move to refresh hover states.
-    pub(crate) fn process_platform_events(
+    pub(crate) fn poll_runner(
         &mut self,
-        mut platform_events: Vec<PlatformEvent>,
         plugins: &mut PluginsManager,
         handle: PluginHandle,
-    ) {
+    ) -> bool {
+        let mut context = std::task::Context::from_waker(&self.waker);
+
+        #[cfg(feature = "hotreload")]
+        let hotreload_triggered = self
+            .hot_reload_pending
+            .swap(false, std::sync::atomic::Ordering::AcqRel);
+        #[cfg(feature = "hotreload")]
+        if hotreload_triggered {
+            self.runner.reload();
+        }
+
+        while let std::task::Poll::Ready(Some(chunk)) =
+            self.events_receiver.poll_next_unpin(&mut context)
+        {
+            match chunk {
+                EventsChunk::Processed(processed) => {
+                    EventsExecutorAdapter {
+                        runner: &mut self.runner,
+                    }
+                    .run(&mut self.nodes_state, processed);
+                }
+                EventsChunk::Batch(events) => {
+                    for event in events {
+                        self.runner.handle_event(
+                            event.node_id,
+                            event.name,
+                            event.data,
+                            event.bubbles,
+                        );
+                    }
+                }
+            }
+        }
+
+        {
+            let mut observer = plugins.tasks_poll_observer(self.window.as_ref(), handle.clone());
+            let future = std::pin::pin!(self.runner.handle_events_with(&mut observer));
+            if future.poll(&mut context).is_ready() {
+                self.waker.wake_by_ref();
+            }
+        }
+        self.runner.handle_events_immediately_with(
+            &mut plugins.tasks_poll_observer(self.window.as_ref(), handle.clone()),
+        );
+
         plugins.send(
-            PluginEvent::StartedMeasuringEvents {
-                window: &self.window,
+            PluginEvent::StartedUpdatingTree {
+                window: self.window.as_ref(),
                 tree: &self.tree,
             },
             handle.clone(),
         );
-
-        if platform_events
-            .iter()
-            .any(|platform_event| matches!(platform_event, PlatformEvent::Wheel { .. }))
-        {
-            self.send_mouse_move_on_next_layout = true;
+        let mutations = self.runner.sync_and_update();
+        let scale_factor = self.effective_scale_factor() as f32;
+        let result = self
+            .runner
+            .run_in(|| self.tree.apply_mutations(mutations, scale_factor));
+        self.update_cursor_icon();
+        let needs_redraw = result.needs_render || result.needs_accessibility;
+        self.process_layout_on_next_render |= result.needs_render;
+        #[cfg(feature = "hotreload")]
+        let needs_redraw = {
+            self.process_layout_on_next_render |= hotreload_triggered;
+            needs_redraw || hotreload_triggered
+        };
+        if result.needs_accessibility {
+            self.accessibility_tasks_for_next_render |=
+                AccessibilityTask::ProcessUpdate { mode: None };
         }
+        if let Some(strategy) = result.auto_focus {
+            handle.send_renderer_message(RendererMessage::Window(RendererWindowMessage {
+                window_id: self.window.id(),
+                payload: RendererWindowPayload::Command(WindowCommand::FocusAccessibilityNode(
+                    strategy,
+                )),
+            }));
+        }
+        plugins.send(
+            PluginEvent::FinishedUpdatingTree {
+                window: self.window.as_ref(),
+                tree: &self.tree,
+            },
+            handle,
+        );
+        needs_redraw
+    }
+
+    pub(crate) fn measure_layout(
+        &mut self,
+        font_collection: &mut FontCollection,
+        font_manager: &FontMgr,
+        fallback_fonts: &[Cow<'static, str>],
+        plugins: &mut PluginsManager,
+        handle: PluginHandle,
+    ) {
+        if !self.process_layout_on_next_render {
+            return;
+        }
+        plugins.send(
+            PluginEvent::StartedMeasuringLayout {
+                window: self.window.as_ref(),
+                tree: &self.tree,
+            },
+            handle.clone(),
+        );
+        let size = Self::drawable_size(self.window.as_ref());
+        let size = Size2D::new(size.width as f32, size.height as f32);
+        let scale_factor = self.effective_scale_factor();
+        self.tree.measure_layout(
+            size,
+            font_collection,
+            font_manager,
+            &self.events_sender,
+            &mut self.nodes_state,
+            scale_factor,
+            fallback_fonts,
+        );
+        self.platform
+            .root_size
+            .set_if_modified(size / scale_factor as f32);
+        self.process_layout_on_next_render = false;
+        plugins.send(
+            PluginEvent::FinishedMeasuringLayout {
+                window: self.window.as_ref(),
+                tree: &self.tree,
+            },
+            handle,
+        );
+        if std::mem::take(&mut self.send_mouse_move_on_next_layout) && self.cursor_in_window {
+            self.event_buffer.push(
+                [PlatformEvent::Mouse {
+                    name: MouseEventName::MouseMove,
+                    cursor: self.position,
+                    button: None,
+                }],
+                Instant::now(),
+            );
+        }
+    }
+
+    /// Applies buffered input and synchronizes its UI updates and layout.
+    pub(crate) fn process_buffered_events(
+        &mut self,
+        font_collection: &mut FontCollection,
+        font_manager: &FontMgr,
+        fallback_fonts: &[Cow<'static, str>],
+        plugins: &mut PluginsManager,
+        handle: PluginHandle,
+    ) -> bool {
+        let mut needs_redraw = self.poll_runner(plugins, handle.clone());
+        self.measure_layout(
+            font_collection,
+            font_manager,
+            fallback_fonts,
+            plugins,
+            handle.clone(),
+        );
+
+        for event in self.event_buffer.take(Instant::now()) {
+            self.process_platform_event(event, plugins, handle.clone());
+        }
+
+        needs_redraw |= self.poll_runner(plugins, handle.clone());
+        self.measure_layout(
+            font_collection,
+            font_manager,
+            fallback_fonts,
+            plugins,
+            handle,
+        );
+        needs_redraw
+    }
+
+    /// Queues input for the next update, preserving discrete event boundaries.
+    pub(crate) fn queue_platform_events(&mut self, platform_events: Vec<PlatformEvent>) {
+        self.event_buffer.push(platform_events, Instant::now());
+    }
+
+    fn process_platform_event(
+        &mut self,
+        platform_event: PlatformEvent,
+        plugins: &mut PluginsManager,
+        handle: PluginHandle,
+    ) {
+        self.send_mouse_move_on_next_layout |=
+            matches!(platform_event, PlatformEvent::Wheel { .. });
+        let mut platform_events = vec![platform_event];
+        plugins.send(
+            PluginEvent::StartedMeasuringEvents {
+                window: self.window.as_ref(),
+                tree: &self.tree,
+            },
+            handle.clone(),
+        );
 
         let mut events_measurer_adapter = EventsMeasurerAdapter {
             scale_factor: self.effective_scale_factor(),
@@ -571,17 +871,18 @@ impl AppWindow {
             &mut self.nodes_state,
             self.accessibility.focused_node_id(),
         );
-        self.events_sender
-            .unbounded_send(EventsChunk::Processed(processed_events))
-            .unwrap();
-
         plugins.send(
             PluginEvent::FinishedMeasuringEvents {
-                window: &self.window,
+                window: self.window.as_ref(),
                 tree: &self.tree,
             },
             handle,
         );
+
+        EventsExecutorAdapter {
+            runner: &mut self.runner,
+        }
+        .run(&mut self.nodes_state, processed_events);
     }
 
     /// Sets the custom scale factor, clamped to a reasonable range.
@@ -593,6 +894,17 @@ impl AppWindow {
         self.platform.custom_scale_factor.set(clamped);
         self.scale_factor_changed();
     }
+}
+
+pub(crate) fn frame_interval(window: &dyn Window) -> Duration {
+    let refresh_rate = window
+        .current_monitor()
+        .and_then(|monitor| monitor.current_video_mode())
+        .and_then(|mode| mode.refresh_rate_millihertz())
+        .map(|refresh_rate| refresh_rate.get())
+        .filter(|refresh_rate| *refresh_rate > 1_000)
+        .unwrap_or(60_000);
+    Duration::from_secs_f64(1000.0 / refresh_rate as f64)
 }
 
 fn accent_color_preference() -> mundy::Preferences {

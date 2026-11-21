@@ -1,5 +1,228 @@
-use freya::prelude::*;
+use std::time::Duration;
+
+use freya::{
+    prelude::*,
+    text_edit::*,
+};
 use freya_testing::prelude::*;
+
+#[test]
+fn input_external_editor_control() {
+    fn app() -> impl IntoElement {
+        Input::new_with_editor(use_consume::<UseEditable>()).auto_focus(true)
+    }
+
+    let (mut test, mut editor) = TestingRunner::new(
+        app,
+        (300., 300.).into(),
+        |runner| {
+            runner.provide_root_context(|| {
+                UseEditable::create("abcdef".to_string(), EditableConfig::new())
+            })
+        },
+        1.,
+    );
+    test.sync_and_update();
+    editor.editor_mut().write().move_cursor_to(3);
+    test.sync_and_update();
+    test.write_text("X");
+    assert_eq!(editor.editor().peek().committed_text(), "abcXdef");
+
+    editor.editor_mut().write().set_selection((0, 7));
+    test.sync_and_update();
+    test.write_text("replacement");
+    assert_eq!(editor.editor().peek().committed_text(), "replacement");
+
+    {
+        let mut editor = editor.editor_mut().write();
+        editor.set_selection((11, 3));
+        editor.set("😀");
+        assert_eq!(editor.get_selection(), Some((2, 2)));
+        editor.set("external");
+    }
+    test.sync_and_update();
+    assert!(
+        test.find(|_, element| {
+            Paragraph::try_downcast(element)
+                .filter(|paragraph| paragraph.spans.iter().any(|span| span.text == "external"))
+        })
+        .is_some()
+    );
+}
+
+#[test]
+fn input_setter_reducer() {
+    use freya::radio::*;
+
+    #[derive(Default)]
+    struct AppState {
+        equation: String,
+        result: usize,
+        edits: usize,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+    enum AppChannel {
+        Equation,
+    }
+
+    impl RadioChannel<AppState> for AppChannel {}
+
+    enum AppAction {
+        SetEquation(String),
+    }
+
+    impl DataReducer for AppState {
+        type Channel = AppChannel;
+        type Action = AppAction;
+
+        fn reduce(&mut self, action: AppAction) -> ChannelSelection<AppChannel> {
+            match action {
+                AppAction::SetEquation(equation) => {
+                    self.result = equation.len();
+                    self.equation = equation;
+                    self.edits += 1;
+                }
+            }
+
+            ChannelSelection::Current
+        }
+    }
+
+    fn app() -> impl IntoElement {
+        use_init_radio_station::<AppState, AppChannel>(AppState::default);
+        let mut radio = use_radio(AppChannel::Equation);
+
+        rect()
+            .child(
+                Input::new(WritableSetter::new(
+                    radio.slice_current(|state| &state.equation),
+                    move |equation| {
+                        radio.apply(AppAction::SetEquation(equation));
+                    },
+                ))
+                .height(Size::px(40.)),
+            )
+            .child(
+                rect()
+                    .height(Size::px(40.))
+                    .on_press(move |_| {
+                        radio.apply(AppAction::SetEquation("external".to_string()));
+                    })
+                    .child("Replace"),
+            )
+            .child(format!(
+                "{}:{}:{}",
+                radio.read().equation,
+                radio.read().result,
+                radio.read().edits,
+            ))
+    }
+
+    let mut test = launch_test(app);
+    test.click_cursor((15., 15.));
+    test.write_text("123");
+
+    assert!(
+        test.find(|_, element| {
+            Label::try_downcast(element).filter(|label| label.text.as_ref() == "123:3:1")
+        })
+        .is_some()
+    );
+
+    test.click_cursor((15., 60.));
+
+    assert!(
+        test.find(|_, element| {
+            Paragraph::try_downcast(element)
+                .filter(|paragraph| paragraph.spans.iter().any(|span| span.text == "external"))
+        })
+        .is_some()
+    );
+    assert!(
+        test.find(|_, element| {
+            Label::try_downcast(element).filter(|label| label.text.as_ref() == "external:8:2")
+        })
+        .is_some()
+    );
+}
+
+#[test]
+fn input_setter_transform_and_reject_test() {
+    fn app() -> impl IntoElement {
+        let mut value = use_state(String::new);
+
+        Input::new(WritableSetter::new(value, move |text: String| {
+            if text
+                .chars()
+                .all(|character| character.is_ascii_alphabetic())
+            {
+                value.set(text.to_uppercase());
+            }
+        }))
+    }
+
+    let mut test = launch_test(app);
+    test.click_cursor((15., 15.));
+    test.write_text("a");
+    test.write_text("1");
+
+    assert!(
+        test.find(|_, element| {
+            Paragraph::try_downcast(element)
+                .filter(|paragraph| paragraph.spans.iter().any(|span| span.text == "A"))
+        })
+        .is_some()
+    );
+
+    test.press_key(Key::Named(NamedKey::End));
+    test.write_text("b");
+
+    assert!(
+        test.find(|_, element| {
+            Paragraph::try_downcast(element)
+                .filter(|paragraph| paragraph.spans.iter().any(|span| span.text == "AB"))
+        })
+        .is_some()
+    );
+}
+
+#[test]
+fn input_mutable_radio_slice_test() {
+    use freya::radio::*;
+
+    #[derive(Default)]
+    struct AppState {
+        text: String,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+    enum AppChannel {
+        Text,
+    }
+
+    impl RadioChannel<AppState> for AppChannel {}
+
+    fn app() -> impl IntoElement {
+        use_init_radio_station::<AppState, AppChannel>(AppState::default);
+        let radio = use_radio(AppChannel::Text);
+
+        rect()
+            .child(Input::new(radio.slice_mut_current(|state| &mut state.text)))
+            .child(format!("text={}", radio.read().text))
+    }
+
+    let mut test = launch_test(app);
+    test.click_cursor((15., 15.));
+    test.write_text("radio");
+
+    assert!(
+        test.find(|_, element| {
+            Label::try_downcast(element).filter(|label| label.text.as_ref() == "text=radio")
+        })
+        .is_some()
+    );
+}
 
 #[test]
 pub fn input_test() {
@@ -110,6 +333,80 @@ pub fn input_validator_test() {
 }
 
 #[test]
+fn input_clipboard_paste_updates_value_and_validates() {
+    use freya::clipboard::Clipboard;
+    use freya_core::events::modifiers::ModifiersExt;
+
+    fn app() -> impl IntoElement {
+        let value = use_state(String::new);
+        rect()
+            .child(
+                Input::new(value)
+                    .on_pre_key_down(move |event: Event<KeyboardEventData>| {
+                        if matches!(&event.key, Key::Character(character) if character == "v") {
+                            let contents = if value.peek().is_empty() {
+                                "123"
+                            } else {
+                                "invalid"
+                            };
+                            Clipboard::set_text_deferred(contents.to_string());
+                        }
+                        true
+                    })
+                    .on_validate(move |validator: InputValidator| {
+                        validator.set_valid(
+                            validator
+                                .text()
+                                .chars()
+                                .all(|character| character.is_ascii_digit()),
+                        );
+                    }),
+            )
+            .child(format!("value={}", value.read()))
+    }
+
+    let mut runner = launch_test(app);
+    runner.click_cursor((15., 15.));
+    let shortcut = |runner: &mut TestingRunner, character: &str| {
+        runner.send_event(PlatformEvent::Keyboard {
+            name: KeyboardEventName::KeyDown,
+            key: Key::Character(character.to_string()),
+            code: Code::Unidentified,
+            modifiers: Modifiers::ctrl_or_meta(),
+        });
+        runner.sync_and_update();
+        runner.handle_events_immediately();
+        runner.sync_and_update();
+    };
+    shortcut(&mut runner, "v");
+    assert!(
+        runner
+            .find(|_, element| {
+                Label::try_downcast(element).filter(|label| label.text.as_ref() == "value=123")
+            })
+            .is_some()
+    );
+
+    shortcut(&mut runner, "a");
+    shortcut(&mut runner, "v");
+    assert!(
+        runner
+            .find(|_, element| {
+                Label::try_downcast(element).filter(|label| label.text.as_ref() == "value=123")
+            })
+            .is_some()
+    );
+    assert!(
+        runner
+            .find(|_, element| {
+                Paragraph::try_downcast(element)
+                    .filter(|paragraph| paragraph.spans.iter().any(|span| span.text == "123"))
+            })
+            .is_some()
+    );
+}
+
+#[test]
 pub fn input_submit_test() {
     fn submit_app() -> impl IntoElement {
         let value = use_state(String::new);
@@ -176,6 +473,49 @@ pub fn input_multiline_test() {
             .filter(|label| label.text.as_ref() == "value=\"hello\\nworld\" submitted=false")
     });
     assert!(label.is_some());
+}
+
+#[test]
+fn input_multiline_unicode_navigation() {
+    fn app() -> impl IntoElement {
+        Input::new_with_editor(use_consume::<UseEditable>())
+            .multiline(true)
+            .width(Size::px(500.))
+            .height(Size::px(400.))
+            .auto_focus(true)
+    }
+
+    for text in [
+        "Hello, world!\nThis is an editable multiline text box.\n\n한국어도 돼요\n\nok what\nis going on",
+        "Hello\n한국어도 돼요\n\n🦀🦀\n한글\nok\n",
+    ] {
+        let (mut test, editor) = TestingRunner::new(
+            app,
+            (500., 400.).into(),
+            |runner| {
+                runner.provide_root_context(|| {
+                    UseEditable::create(text.to_string(), EditableConfig::new())
+                })
+            },
+            1.,
+        );
+        test.sync_and_update();
+
+        let line_count = editor.editor().peek().len_lines();
+        for row in 1..line_count {
+            test.press_key(Key::Named(NamedKey::ArrowDown));
+            let editor = editor.editor().peek();
+            assert_eq!(editor.cursor_row(), row, "moving down in {text:?}");
+            assert_eq!(editor.cursor_col(), 0);
+        }
+
+        for row in (0..line_count - 1).rev() {
+            test.press_key(Key::Named(NamedKey::ArrowUp));
+            let editor = editor.editor().peek();
+            assert_eq!(editor.cursor_row(), row, "moving up in {text:?}");
+            assert_eq!(editor.cursor_col(), 0);
+        }
+    }
 }
 
 #[test]
@@ -343,9 +683,12 @@ pub fn input_shift_wheel_scroll_test() {
         name: WheelEventName::Wheel,
         scroll: (0.0, -50.0).into(),
         cursor: (75.0, 15.0).into(),
-        source: WheelSource::Pixel,
+        source: WheelSource::Line,
+        phase: TouchPhase::Moved,
     });
     test.sync_and_update();
+
+    test.poll(Duration::from_millis(16), Duration::from_millis(500));
 
     let scrolled_x = paragraph_x(&test);
     assert!(scrolled_x < initial_x);
@@ -371,14 +714,14 @@ pub fn input_drag_scrolls_to_cursor_test() {
     };
     let initial_x = paragraph_x(&test);
 
-    // Start dragging inside the input and move past its right edge
     test.press_cursor((100.0, 15.0));
     test.sync_and_update();
-    test.move_cursor((400.0, 15.0));
+    test.move_cursor((170.0, 15.0));
     test.sync_and_update();
 
     let dragged_x = paragraph_x(&test);
     assert!(dragged_x < initial_x);
+    assert!(initial_x - dragged_x < 100.0);
 
     // Dragging back past the left edge scrolls back to the beginning
     test.move_cursor((-500.0, 15.0));

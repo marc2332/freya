@@ -35,6 +35,7 @@ pub struct Portal<T> {
     layout: LayoutData,
     show: bool,
     dependency: Option<u64>,
+    animation_layer: Layer,
 }
 
 impl<T> ChildrenExt for Portal<T> {
@@ -55,6 +56,7 @@ impl<T> Portal<T> {
             layout: LayoutData::default(),
             show: true,
             dependency: None,
+            animation_layer: Layer::default(),
         }
     }
 
@@ -76,6 +78,12 @@ impl<T> Portal<T> {
 
     pub fn show(mut self, show: bool) -> Self {
         self.show = show;
+        self
+    }
+
+    /// Layer used while the element is animating.
+    pub fn animation_layer(mut self, layer: impl Into<Layer>) -> Self {
+        self.animation_layer = layer.into();
         self
     }
 
@@ -164,10 +172,12 @@ impl<T: Clone + Eq + Hash + Debug + 'static> Component for Portal<T> {
         );
 
         // Rest the portal once the animation stops
-        use_side_effect(move || {
-            if !*animation.is_running().read() {
-                should_animate.set_if_modified(false);
-            }
+        use_hook(move || {
+            Effect::create_sync(move || {
+                if !*animation.is_running().read() {
+                    should_animate.set_if_modified(false);
+                }
+            });
         });
 
         // Area the children are placed at
@@ -223,6 +233,11 @@ impl<T: Clone + Eq + Hash + Debug + 'static> Component for Portal<T> {
             .height(self.layout.height.clone())
             .child(
                 rect()
+                    .layer(if should_animate() {
+                        self.animation_layer
+                    } else {
+                        Layer::default()
+                    })
                     .map(global_area, |el, area| {
                         el.offset_x(area.min_x())
                             .offset_y(area.min_y())

@@ -4,6 +4,7 @@ use std::{
         Hash,
         Hasher,
     },
+    rc::Rc,
 };
 
 use paste::paste;
@@ -127,6 +128,13 @@ pub trait ChildrenExt: Sized {
         self.children_mut().push(child.into_element());
         self
     }
+}
+
+/// Reuses unchanged children by Rc identity.
+/// It is an alternative to [ChildrenExt].
+pub trait RetainedChildrenExt: ChildrenExt {
+    /// Replaces existing children with retained children.
+    fn retained_children(self, children: Rc<Vec<Element>>) -> Self;
 }
 
 /// Trait for giving an element a stable identity across renders.
@@ -296,15 +304,17 @@ pub trait EventHandlersExt: Sized {
     }
 
     event_handlers! {
-        File,
-        FileEventData;
+        Drag,
+        DragEventData;
 
-        /// Fires when a file is dropped onto the element.
-        file_drop => EventName::FileDrop;
-        /// Fires when a dragged file hovers anywhere over the window.
-        global_file_hover => EventName::GlobalFileHover;
-        /// Fires when a dragged file stops hovering over the window.
-        global_file_hover_cancelled => EventName::GlobalFileHoverCancelled;
+        /// Fires when a platform drag enters the element's area.
+        drag_enter => EventName::DragEnter;
+        /// Fires on entry and movement over the element and bubbles to ancestors.
+        drag_over => EventName::DragOver;
+        /// Fires when a platform drag leaves the element's area.
+        drag_leave => EventName::DragLeave;
+        /// Fires when accepted drag data is dropped onto the element.
+        drop => EventName::Drop;
     }
 
     event_handlers! {
@@ -531,16 +541,34 @@ pub enum PressEventData {
     Touch(TouchEventData),
 }
 
+/// Methods for setting the direction.
+pub trait DirectionExt: Sized {
+    /// Set the direction.
+    fn direction(self, direction: Direction) -> Self;
+
+    /// Set the direction to [`Direction::Vertical`].
+    fn vertical(self) -> Self {
+        self.direction(Direction::vertical())
+    }
+
+    /// Set the direction to [`Direction::Horizontal`].
+    fn horizontal(self) -> Self {
+        self.direction(Direction::horizontal())
+    }
+}
+
+impl<T: ContainerWithContentExt> DirectionExt for T {
+    fn direction(mut self, direction: Direction) -> Self {
+        self.layout_mut().layout.direction = direction;
+        self
+    }
+}
+
 /// Layout methods for containers that arrange children along a direction axis.
 pub trait ContainerWithContentExt
 where
     Self: LayoutExt,
 {
-    /// Set the axis children are stacked along. See [`Direction`].
-    fn direction(mut self, direction: Direction) -> Self {
-        self.layout_mut().layout.direction = direction;
-        self
-    }
     /// Set how children are aligned along the direction axis. See [`Alignment`].
     fn main_align(mut self, main_align: impl Into<Alignment>) -> Self {
         self.layout_mut().layout.main_alignment = main_align.into();
@@ -581,18 +609,6 @@ where
     /// Shift the element's children vertically by the given pixels.
     fn offset_y(mut self, offset_y: f32) -> Self {
         self.layout_mut().layout.offset_y = Length::new(offset_y);
-        self
-    }
-
-    /// Stack children vertically. Shorthand for [`direction`](Self::direction) set to [`Direction::Vertical`].
-    fn vertical(mut self) -> Self {
-        self.layout_mut().layout.direction = Direction::vertical();
-        self
-    }
-
-    /// Stack children horizontally. Shorthand for [`direction`](Self::direction) set to [`Direction::Horizontal`].
-    fn horizontal(mut self) -> Self {
-        self.layout_mut().layout.direction = Direction::horizontal();
         self
     }
 }
@@ -932,23 +948,33 @@ where
         self
     }
 
-    /// Set how text that does not fit its bounds is truncated. See [`TextOverflow`].
-    fn text_overflow(mut self, text_overflow: impl Into<TextOverflow>) -> Self {
-        self.text_style_data_mut().text_overflow = Some(text_overflow.into());
-        self
-    }
-
-    /// Add a shadow cast behind the text. See [`TextShadow`].
+    /// Add a shadow cast behind the text, replacing inherited shadows. See [`TextShadow`].
     fn text_shadow(mut self, text_shadow: impl Into<TextShadow>) -> Self {
         self.text_style_data_mut()
             .text_shadows
+            .get_or_insert_default()
             .push(text_shadow.into());
+        self
+    }
+
+    /// Replace the text shadows. An empty list clears inherited shadows.
+    fn text_shadows(mut self, text_shadows: impl IntoIterator<Item = TextShadow>) -> Self {
+        self.text_style_data_mut().text_shadows = Some(text_shadows.into_iter().collect());
         self
     }
 
     /// Set a line drawn through, under or over the text. See [`TextDecoration`].
     fn text_decoration(mut self, text_decoration: impl Into<TextDecoration>) -> Self {
         self.text_style_data_mut().text_decoration = Some(text_decoration.into());
+        self
+    }
+}
+
+/// Methods for truncating text within an element's bounds.
+pub trait TextOverflowExt: TextStyleExt {
+    /// Set how text that does not fit its bounds is truncated. See [`TextOverflow`].
+    fn text_overflow(mut self, text_overflow: impl Into<TextOverflow>) -> Self {
+        self.text_style_data_mut().text_overflow = Some(text_overflow.into());
         self
     }
 }
@@ -1091,7 +1117,25 @@ where
     /// Returns a mutable reference to the element's layer.
     fn layer_mut(&mut self) -> &mut Layer;
 
-    /// Set the painting layer of the element. See [`Layer`].
+    /// Sets the element's painting layer without changing its layout or position.
+    ///
+    /// Higher layers paint on top of lower layers. An integer is a [`Layer::Relative`]
+    /// offset from the normal layer, which is one above the parent's layer.
+    /// The default is `0`. Descendants use this element's resulting layer as their base.
+    ///
+    /// Use [`Layer::Overlay`] to raise content relative to its parent and escape
+    /// ancestor clipping, or [`Layer::OverlayLevel`] for an absolute overlay level.
+    /// Elements on the same layer have no guaranteed painting order.
+    ///
+    /// ```rust
+    /// # use freya_core::prelude::*;
+    /// rect()
+    ///     .child(rect().layer(-1).child("Below default siblings"))
+    ///     .child(rect().child("Default layer"))
+    ///     .child(rect().layer(1).child("Above default siblings"))
+    ///     .child(rect().layer(Layer::Overlay).child("Overlay"))
+    /// # ;
+    /// ```
     fn layer(mut self, layer: impl Into<Layer>) -> Self {
         *self.layer_mut() = layer.into();
         self
@@ -1177,6 +1221,12 @@ pub trait EffectExt: Sized {
     /// Rotate the element by the given angle in degrees.
     fn rotation(mut self, rotation: f32) -> Self {
         self.effect_mut().rotation = Some(rotation);
+        self
+    }
+
+    /// Mask this element and its children using the fill's opacity.
+    fn mask(mut self, mask: impl Into<Fill>) -> Self {
+        self.effect_mut().mask = Some(mask.into());
         self
     }
 
