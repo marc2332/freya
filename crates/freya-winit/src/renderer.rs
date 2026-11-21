@@ -138,32 +138,6 @@ pub struct WinitRenderer {
     pub graphics_context: GraphicsContext,
 }
 
-impl WinitRenderer {
-    /// Processes buffered input when its deadline is due and requests redraws for UI changes.
-    fn process_pending_events(&mut self) {
-        let now = Instant::now();
-        for app in self.windows.values_mut() {
-            if !app
-                .event_buffer
-                .deadline()
-                .is_some_and(|deadline| deadline <= now)
-            {
-                continue;
-            }
-            app.event_buffer.interval = frame_interval(app.window.as_ref());
-            if app.process_buffered_events(
-                &mut self.font_collection,
-                &self.font_manager,
-                &self.fallback_fonts,
-                &mut self.plugins,
-                PluginHandle::new(&self.proxy),
-            ) {
-                app.window.request_redraw();
-            }
-        }
-    }
-}
-
 impl Drop for WinitRenderer {
     fn drop(&mut self) {
         let tasks = self.global_contexts.get_context::<GlobalTasks>();
@@ -480,6 +454,30 @@ impl ApplicationHandler for WinitRenderer {
 }
 
 impl WinitRenderer {
+    /// Processes buffered input when due.
+    fn process_pending_events(&mut self) {
+        let now = Instant::now();
+        for app in self.windows.values_mut() {
+            if !app
+                .event_buffer
+                .deadline()
+                .is_some_and(|deadline| deadline <= now)
+            {
+                continue;
+            }
+            app.event_buffer.interval = frame_interval(app.window.as_ref());
+            if app.process_buffered_events(
+                &mut self.font_collection,
+                &self.font_manager,
+                &self.fallback_fonts,
+                &mut self.plugins,
+                PluginHandle::new(&self.proxy),
+            ) {
+                app.window.request_redraw();
+            }
+        }
+    }
+
     /// Processes buffered input, UI updates, and pending platform drag requests.
     fn process_pending_updates(&mut self, event_loop: &dyn ActiveEventLoop) {
         self.clipboard_reads
