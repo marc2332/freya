@@ -35,12 +35,24 @@ pub enum DataValue {
 }
 
 /// Data offered in one or more formats during a transfer.
+///
+/// # Example
+///
+/// Offer the same content as plain text and HTML:
+///
+/// ```
+/// use freya_core::data_transfer::{DataFormat, DataValue, TransferData};
+///
+/// let data = TransferData::text("Hello")
+///     .with(DataFormat::Html, DataValue::Text("<strong>Hello</strong>".into()));
+/// ```
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct TransferData {
     pub formats: Vec<(DataFormat, DataValue)>,
 }
 
 impl TransferData {
+    /// Creates a transfer containing file paths, not file contents.
     pub fn files(paths: impl IntoIterator<Item = PathBuf>) -> Self {
         Self::default().with(
             DataFormat::Files,
@@ -48,6 +60,7 @@ impl TransferData {
         )
     }
 
+    /// Creates a transfer containing plain text.
     pub fn text(text: impl Into<String>) -> Self {
         Self::default().with(DataFormat::Text, DataValue::Text(text.into()))
     }
