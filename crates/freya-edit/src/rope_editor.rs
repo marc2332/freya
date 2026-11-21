@@ -278,9 +278,7 @@ impl TextEditor for RopeEditor {
     fn set(&mut self, text: &str) {
         self.rope.remove(0..);
         self.rope.insert(0, text);
-        if self.cursor_pos() > text.len() {
-            self.move_cursor_to(text.len());
-        }
+        self.selection.clamp(&self.rope);
     }
 
     fn clear_selection(&mut self) {
@@ -394,6 +392,22 @@ mod test {
             false,
             false,
         );
+    }
+
+    #[test]
+    fn replacing_text_clamps_utf16_selection() {
+        let mut editor = editor("replacement");
+        editor.set_selection((11, 3));
+        editor.set("😀");
+        assert_eq!(editor.get_selection(), Some((2, 2)));
+    }
+
+    #[test]
+    fn replacing_text_rounds_cursor_down_to_character_boundary() {
+        let mut editor = editor("abc");
+        editor.move_cursor_to(1);
+        editor.set("😀");
+        assert_eq!(editor.cursor_pos(), 0);
     }
 
     #[test]
