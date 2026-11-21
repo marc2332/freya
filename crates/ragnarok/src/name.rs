@@ -5,8 +5,14 @@ pub trait NameOfEvent:
 {
     /// Check if this event means that the pointer device as moved while hovering a node.
     fn is_moved(&self) -> bool;
-    /// Check if this event means that the pointer device started hovering a node.
-    fn is_enter(&self) -> bool;
+    /// Whether a pointer or drag entered a node.
+    fn is_enter(&self) -> bool {
+        self.is_pointer_enter() || self.is_drag_enter()
+    }
+
+    /// Whether a pointer entered a node.
+    fn is_pointer_enter(&self) -> bool;
+
     /// Check if this enter event should only fire on the deepest (most specific) node,
     /// not on all nodes under the cursor simultaneously.
     fn is_exclusive_enter(&self) -> bool {

@@ -256,8 +256,7 @@ impl ragnarok::NameOfEvent for EventName {
     }
 
     fn does_bubble(&self) -> bool {
-        !matches!(self, Self::DragEnter | Self::DragLeave)
-            && !self.is_moved()
+        !self.is_moved()
             && !self.is_enter()
             && !self.is_left()
             && !self.is_global()
@@ -273,7 +272,7 @@ impl ragnarok::NameOfEvent for EventName {
         false
     }
 
-    fn is_enter(&self) -> bool {
+    fn is_pointer_enter(&self) -> bool {
         matches!(&self, Self::PointerEnter | Self::PointerOver)
     }
 

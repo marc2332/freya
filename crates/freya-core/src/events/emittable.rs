@@ -104,7 +104,7 @@ impl EmmitableEvent {
                 cursor,
                 button,
                 ..
-            } if name.is_enter()
+            } if name.is_pointer_enter()
                 || name.is_left()
                 || name.is_press()
                 || name.is_down()
@@ -138,7 +138,7 @@ impl EmmitableEvent {
                 phase,
                 force,
                 ..
-            } if name.is_enter()
+            } if name.is_pointer_enter()
                 || name.is_left()
                 || name.is_press()
                 || name.is_down()

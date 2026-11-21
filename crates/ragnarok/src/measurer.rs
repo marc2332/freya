@@ -81,11 +81,7 @@ impl<T: EventsMeasurer + private::Sealed> EventsMeasurerRunner for T {
         // Get potential collateral events, e.g. mousemove -> mouseleave.
         let collateral_emmitable_events =
             nodes_state.retain_states(self, &emmitable_events, source_events, &nodes_states_update);
-        let update_pointer_hover = source_events.iter().any(|event| !event.is_drag());
-        nodes_state.filter_emmitable_events::<Self::Emmitable, Self::Name>(
-            &mut emmitable_events,
-            update_pointer_hover,
-        );
+        nodes_state.filter_emmitable_events(&mut emmitable_events, source_events);
 
         // Get the global events
         measure_source_global_events::<Self::Key, Self::Name, Self::Source, Self::Emmitable>(

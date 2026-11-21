@@ -173,7 +173,7 @@ impl<Key: NodeKey> NodesState<Key> {
                             && e.source()
                                 .get_derived_events()
                                 .iter()
-                                .any(NameOfEvent::is_enter)
+                                .any(NameOfEvent::is_pointer_enter)
                     })
                 })
                 .map(|e| e.key())
@@ -211,7 +211,7 @@ impl<Key: NodeKey> NodesState<Key> {
     >(
         &mut self,
         emmitable_events: &mut Vec<Emmitable>,
-        update_pointer_hover: bool,
+        source_events: &[impl SourceEvent<Key = Key, Name = Name>],
     ) {
         // The exclusive enter event identifies the entered node
         let entered_node = emmitable_events
@@ -223,7 +223,7 @@ impl<Key: NodeKey> NodesState<Key> {
                         && e.source()
                             .get_derived_events()
                             .iter()
-                            .any(NameOfEvent::is_enter)
+                            .any(NameOfEvent::is_pointer_enter)
                 })
             })
             .map(|e| e.key());
@@ -236,13 +236,14 @@ impl<Key: NodeKey> NodesState<Key> {
                 entered_node.as_ref() == Some(&ev.key()) && entered_node != self.entered_node
             }
             // Deduplicate non-exclusive enter against `hovered_nodes`
-            _ if ev.name().is_enter() => !self.hovered_nodes.contains(&ev.key()),
+            _ if ev.name().is_pointer_enter() => !self.hovered_nodes.contains(&ev.key()),
             // Only emit release events for already-pressed nodes
             _ if ev.name().is_released() => self.pressed_nodes.contains(&ev.key()),
             _ => true,
         });
 
-        if update_pointer_hover {
+        // Keep the pointer's entered node unchanged for drag-only batches.
+        if source_events.iter().any(|event| !event.is_drag()) {
             self.entered_node = entered_node.or_else(|| {
                 self.entered_node
                     .filter(|node| self.hovered_nodes.contains(node))
@@ -261,7 +262,10 @@ impl<Key: NodeKey> NodesState<Key> {
         let mut pressed_nodes = FxHashSet::default();
 
         for (name, events) in potential_events {
-            let tracks_hover = name.get_derived_events().iter().any(NameOfEvent::is_enter);
+            let tracks_hover = name
+                .get_derived_events()
+                .iter()
+                .any(NameOfEvent::is_pointer_enter);
             let mut child_node: Option<Key> = None;
 
             for PotentialEvent { node_key, name, .. } in events.iter().rev() {

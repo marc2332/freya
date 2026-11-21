@@ -100,7 +100,7 @@ impl NameOfEvent for EventName {
         )
     }
 
-    fn is_enter(&self) -> bool {
+    fn is_pointer_enter(&self) -> bool {
         matches!(self, Self::MouseEnter | Self::MouseOver)
     }
 
@@ -125,8 +125,7 @@ impl NameOfEvent for EventName {
     }
 
     fn does_bubble(&self) -> bool {
-        !matches!(self, Self::DragEnter | Self::DragLeave)
-            && !self.is_moved()
+        !self.is_moved()
             && !self.is_enter()
             && !self.is_left()
             && !self.is_global()
@@ -526,7 +525,7 @@ fn touch_hover_only_starts_on_touch_start() {
             events
                 .emmitable_events
                 .iter()
-                .filter(|event| event.name.is_enter())
+                .filter(|event| event.name.is_pointer_enter())
                 .count(),
             enters
         );
