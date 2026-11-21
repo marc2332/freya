@@ -111,7 +111,7 @@ impl EventName {
     }
 
     pub fn is_left(&self) -> bool {
-        matches!(&self, Self::PointerLeave | Self::PointerOut) || self.is_drag_leave()
+        matches!(self, Self::PointerLeave | Self::PointerOut | Self::DragLeave)
     }
 
     pub fn is_exclusive_left(&self) -> bool {
@@ -119,7 +119,7 @@ impl EventName {
     }
 
     pub fn is_non_exclusive_enter(&self) -> bool {
-        matches!(&self, Self::PointerOver) || self.is_drag_enter()
+        matches!(self, Self::PointerOver | Self::DragEnter)
     }
 
     pub fn is_down(&self) -> bool {

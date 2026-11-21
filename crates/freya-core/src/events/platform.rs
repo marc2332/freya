@@ -126,7 +126,7 @@ pub enum PlatformEvent {
         text: String,
         cursor: Option<(usize, usize)>,
     },
-    /// A platform drag event with its own hover tracking.
+    /// A platform drag event.
     Drag {
         name: DragEventName,
         cursor: CursorPoint,
