@@ -115,6 +115,7 @@ impl fmt::Debug for DragDataHandle {
 
 impl DragDataHandle {
     /// Creates a handle for the formats offered by the drag.
+    #[doc(hidden)]
     pub fn new(formats: Vec<DataFormat>) -> Self {
         Self(Arc::new(IncomingData {
             formats,
@@ -151,6 +152,7 @@ impl DragDataHandle {
 
     /// Stops new reads and cancels queued requests.
     /// Started reads and saved results stay available.
+    #[doc(hidden)]
     pub fn expire(&self) {
         self.0.expired.store(true, Ordering::Relaxed);
         if let Ok(requests) = self.take_read_requests() {
