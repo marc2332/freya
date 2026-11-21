@@ -116,7 +116,7 @@ impl WebApp {
         runner.provide_root_context(|| CurrentWindowId(platform.id));
 
         let clipboard = WebClipboard::new();
-        GlobalContexts::get().insert_context(Clipboard::create(Some(Box::new(clipboard.clone()))));
+        GlobalContexts::get().insert_context(Clipboard::create(Box::new(clipboard.clone())));
 
         let mut tree = Tree::default();
         runner.provide_root_context(|| tree.accessibility_generator.clone());

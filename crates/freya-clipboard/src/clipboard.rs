@@ -38,11 +38,11 @@ pub trait ClipboardProvider {
 
 /// The clipboard provider registered by the renderer.
 #[derive(Clone, Copy, PartialEq)]
-pub struct Clipboard(State<Option<Rc<dyn ClipboardProvider>>>);
+pub struct Clipboard(State<Rc<dyn ClipboardProvider>>);
 
 impl Clipboard {
-    pub fn create(provider: Option<Box<dyn ClipboardProvider>>) -> Self {
-        Self(State::create_global(provider.map(Rc::from)))
+    pub fn create(provider: Box<dyn ClipboardProvider>) -> Self {
+        Self(State::create_global(Rc::from(provider)))
     }
 
     /// Reads the requested format from the clipboard.
@@ -98,7 +98,6 @@ impl Clipboard {
         let clipboard = contexts
             .try_get_context::<Self>()
             .ok_or(ClipboardError::NotAvailable)?;
-        let provider = clipboard.0.peek().clone();
-        provider.ok_or(ClipboardError::NotAvailable)
+        Ok(clipboard.0.peek().clone())
     }
 }

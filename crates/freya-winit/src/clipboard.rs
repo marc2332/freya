@@ -55,11 +55,11 @@ pub(crate) fn create_clipboard(proxy: NativeEventProxy) -> Clipboard {
     #[cfg(target_os = "android")]
     {
         let _ = proxy;
-        Clipboard::create(Some(Box::new(AndroidClipboard)))
+        Clipboard::create(Box::new(AndroidClipboard))
     }
     #[cfg(not(target_os = "android"))]
     {
-        Clipboard::create(Some(Box::new(WinitClipboard { proxy })))
+        Clipboard::create(Box::new(WinitClipboard { proxy }))
     }
 }
 

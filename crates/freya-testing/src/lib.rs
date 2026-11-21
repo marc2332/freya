@@ -151,9 +151,8 @@ impl TestingRunner {
         let app = app.into();
         let mut runner = Runner::new(move || integration(app.clone()).into_element());
 
-        GlobalContexts::get().insert_context(Clipboard::create(Some(Box::new(
-            MemoryClipboard::default(),
-        ))));
+        GlobalContexts::get()
+            .insert_context(Clipboard::create(Box::new(MemoryClipboard::default())));
 
         runner.provide_root_context(ScreenReader::new);
 
