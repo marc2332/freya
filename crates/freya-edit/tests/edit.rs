@@ -1889,15 +1889,7 @@ fn home_end_navigation() {
     );
 
     let press = |editor: &mut RopeEditor, key: NamedKey, modifiers: Modifiers| {
-        editor.process_key(
-            &Key::Named(key),
-            &modifiers,
-            None,
-            None,
-            false,
-            true,
-            true,
-        );
+        editor.process_key(&Key::Named(key), &modifiers, None, None, false, true, true);
     };
 
     press(&mut editor, NamedKey::End, Modifiers::empty());
