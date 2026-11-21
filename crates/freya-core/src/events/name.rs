@@ -111,7 +111,10 @@ impl EventName {
     }
 
     pub fn is_left(&self) -> bool {
-        matches!(self, Self::PointerLeave | Self::PointerOut | Self::DragLeave)
+        matches!(
+            self,
+            Self::PointerLeave | Self::PointerOut | Self::DragLeave
+        )
     }
 
     pub fn is_exclusive_left(&self) -> bool {

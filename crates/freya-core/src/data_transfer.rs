@@ -41,10 +41,16 @@ pub enum DataValue {
 /// Offer the same content as plain text and HTML:
 ///
 /// ```
-/// use freya_core::data_transfer::{DataFormat, DataValue, TransferData};
+/// use freya_core::data_transfer::{
+///     DataFormat,
+///     DataValue,
+///     TransferData,
+/// };
 ///
-/// let data = TransferData::text("Hello")
-///     .with(DataFormat::Html, DataValue::Text("<strong>Hello</strong>".into()));
+/// let data = TransferData::text("Hello").with(
+///     DataFormat::Html,
+///     DataValue::Text("<strong>Hello</strong>".into()),
+/// );
 /// ```
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct TransferData {

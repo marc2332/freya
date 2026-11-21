@@ -72,9 +72,27 @@ fn app() -> impl IntoElement {
                 .on_drop(move |event: Event<DragEventData>| {
                     hovering.set_if_modified(false);
                     let data = event.data.clone();
+                    let format = if data.has_files() {
+                        DataFormat::Files
+                    } else {
+                        DataFormat::Text
+                    };
                     spawn(async move {
-                        message.set_if_modified(match read_drop(&data).await {
-                            Ok(content) => content,
+                        let dropped = data.read(format).await;
+                        let content = match dropped {
+                            Ok(DataValue::Text(text)) => format!("Dropped text:\n{text}"),
+                            Ok(DataValue::Files(paths)) => {
+                                let count = paths.len();
+                                let paths = paths
+                                    .iter()
+                                    .map(|path| path.display().to_string())
+                                    .collect::<Vec<_>>()
+                                    .join("\n");
+                                format!("Dropped files ({count}):\n{paths}")
+                            }
+                            Ok(DataValue::Bytes(bytes)) => {
+                                format!("Dropped {} bytes.", bytes.len())
+                            }
                             Err(DragError::Unsupported) => {
                                 "Dropping data is not supported on this platform".into()
                             }
@@ -83,35 +101,11 @@ fn app() -> impl IntoElement {
                                     .into()
                             }
                             Err(error) => format!("Could not read the dropped data: {error}"),
-                        });
+                        };
+                        message.set(content);
                     });
                 })
                 .child(message.read().clone()),
         )
         .child(status.read().clone())
-}
-
-async fn read_drop(data: &DragDataHandle) -> Result<String, DragError> {
-    let (files, text) = futures_lite::future::zip(data.read_files(), data.read_text()).await;
-    match files {
-        Ok(paths) => {
-            let count = paths.len();
-            let paths = paths
-                .iter()
-                .map(|path| path.display().to_string())
-                .collect::<Vec<_>>()
-                .join("\n");
-            Ok(format!("Dropped files ({count}):\n{paths}"))
-        }
-        Err(file_error) => {
-            text.map(|text| format!("Dropped text:\n{text}"))
-                .map_err(|text_error| {
-                    if data.has_files() {
-                        file_error
-                    } else {
-                        text_error
-                    }
-                })
-        }
-    }
 }

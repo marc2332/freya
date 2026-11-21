@@ -56,7 +56,6 @@ fn app() -> impl IntoElement {
         .expanded()
         .padding(24.)
         .spacing(16.)
-        .child(label().text("Clipboard").font_size(24.))
         .child(Input::new(text).expanded().placeholder("Text to copy"))
         .child(
             rect()
@@ -98,7 +97,5 @@ fn app() -> impl IntoElement {
                         .child("Paste files"),
                 ),
         )
-        .child("To paste files, copy them in a desktop file manager first.")
-        .child("Copying text replaces the clipboard. File paste reads paths, not file contents.")
         .child(ScrollView::new().child(label().width(Size::fill()).text(output.read().clone())))
 }
