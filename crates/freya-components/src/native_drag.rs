@@ -119,10 +119,6 @@ impl ComponentOwned for NativeDrag {
         let on_finished = self.on_finished;
         let actions = self.actions;
 
-        if !self.enabled {
-            press.set_if_modified(None);
-        }
-
         rect()
             .layout(self.layout)
             .children(self.children)
@@ -136,7 +132,6 @@ impl ComponentOwned for NativeDrag {
                         )));
                     }
                 })
-                .on_global_pointer_up(move |_| press.set_if_modified(None))
                 .on_global_pointer_move(move |event: Event<PointerEventData>| {
                     if *dragging.peek() {
                         return;
@@ -178,6 +173,7 @@ impl ComponentOwned for NativeDrag {
                     });
                 })
             })
+            .on_global_pointer_up(move |_| press.set_if_modified(None))
     }
 
     fn render_key(&self) -> DiffKey {
