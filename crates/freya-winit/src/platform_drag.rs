@@ -58,9 +58,7 @@ impl PlatformDragState {
         response: oneshot::Sender<Result<PlatformDragResult, DragError>>,
     ) {
         if self.outgoing.is_some() {
-            let _ = response.send(Err(DragError::Platform(
-                "A drag is already active".into(),
-            )));
+            let _ = response.send(Err(DragError::Platform("A drag is already active".into())));
             return;
         }
 
