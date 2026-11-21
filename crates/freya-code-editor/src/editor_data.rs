@@ -490,6 +490,7 @@ impl TextEditor for CodeEditorData {
     fn set(&mut self, text: &str) {
         self.rope.remove(0..);
         self.rope.insert(0, text);
+        self.selection.clamp(&self.rope);
     }
 
     fn clear_selection(&mut self) {

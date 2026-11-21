@@ -19,6 +19,7 @@ use keyboard_types::{
     Modifiers,
     NamedKey,
 };
+use ropey::Rope;
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::editor_history::EditorHistory;
@@ -89,6 +90,23 @@ impl TextSelection {
             Self::Cursor(pos) => *pos = position,
             Self::Range { to, .. } => {
                 *to = position;
+            }
+        }
+    }
+
+    /// Clamps UTF-16 offsets to the text length and rounds down to character boundaries.
+    pub fn clamp(&mut self, rope: &Rope) {
+        let len = rope.len_utf16_cu();
+        let clamp = |position: usize| {
+            let position = position.min(len);
+            rope.char_to_utf16_cu(rope.utf16_cu_to_char(position))
+        };
+
+        match self {
+            Self::Cursor(position) => *position = clamp(*position),
+            Self::Range { from, to } => {
+                *from = clamp(*from);
+                *to = clamp(*to);
             }
         }
     }
