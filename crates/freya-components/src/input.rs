@@ -378,7 +378,7 @@ impl Component for Input {
         let mut scroll_controller = use_scroll_controller(ScrollConfig::default);
         let mut status = use_state(InputStatus::default);
         let is_masked = matches!(self.mode, InputMode::Hidden(_));
-        let (mut editable, value) = match &self.value {
+        let (mut editable, mut value) = match &self.value {
             InputValue::Value(value) => (
                 use_editable(
                     || value.read().to_string(),
