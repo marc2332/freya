@@ -2630,7 +2630,7 @@ dependencies = [
 
 [[package]]
 name = "freya"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "cfg-if 1.0.4",
  "freya-android",
@@ -2667,7 +2667,7 @@ dependencies = [
 
 [[package]]
 name = "freya-android"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "freya-components",
  "freya-core",
@@ -2680,7 +2680,7 @@ dependencies = [
 
 [[package]]
 name = "freya-animation"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "easer",
  "freya",
@@ -2690,7 +2690,7 @@ dependencies = [
 
 [[package]]
 name = "freya-borderless-plugin"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "freya-core",
  "freya-engine",
@@ -2700,7 +2700,7 @@ dependencies = [
 
 [[package]]
 name = "freya-camera"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "blocking",
  "bytes",
@@ -2714,7 +2714,7 @@ dependencies = [
 
 [[package]]
 name = "freya-clipboard"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "freya",
  "freya-core",
@@ -2725,7 +2725,7 @@ dependencies = [
 
 [[package]]
 name = "freya-code-editor"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "freya-components",
  "freya-core",
@@ -2742,7 +2742,7 @@ dependencies = [
 
 [[package]]
 name = "freya-components"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "accesskit",
  "anyhow",
@@ -2770,7 +2770,7 @@ dependencies = [
 
 [[package]]
 name = "freya-core"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "accesskit",
  "async-io",
@@ -2809,7 +2809,7 @@ dependencies = [
 
 [[package]]
 name = "freya-devtools"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "accesskit",
  "anyhow",
@@ -2828,7 +2828,7 @@ dependencies = [
 
 [[package]]
 name = "freya-devtools-app"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "async-lock",
  "async-tungstenite",
@@ -2846,7 +2846,7 @@ dependencies = [
 
 [[package]]
 name = "freya-edit"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "bitflags 2.13.1",
  "freya",
@@ -2861,14 +2861,14 @@ dependencies = [
 
 [[package]]
 name = "freya-engine"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "freya-skia-safe",
 ]
 
 [[package]]
 name = "freya-html"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "anyrender",
  "async-channel",
@@ -2899,7 +2899,7 @@ dependencies = [
 
 [[package]]
 name = "freya-i18n"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "fluent",
  "freya",
@@ -2913,7 +2913,7 @@ dependencies = [
 
 [[package]]
 name = "freya-icons"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "bytes",
  "freya",
@@ -2921,7 +2921,7 @@ dependencies = [
 
 [[package]]
 name = "freya-markdown"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "freya",
  "freya-code-editor",
@@ -2933,7 +2933,7 @@ dependencies = [
 
 [[package]]
 name = "freya-material-design"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "freya",
  "freya-animation",
@@ -2944,7 +2944,7 @@ dependencies = [
 
 [[package]]
 name = "freya-metrics-plugin"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "freya-core",
  "freya-engine",
@@ -2954,7 +2954,7 @@ dependencies = [
 
 [[package]]
 name = "freya-plotters-backend"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "freya-engine",
  "plotters-backend",
@@ -2962,7 +2962,7 @@ dependencies = [
 
 [[package]]
 name = "freya-query"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "freya",
  "freya-core",
@@ -2972,7 +2972,7 @@ dependencies = [
 
 [[package]]
 name = "freya-radio"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "freya",
  "freya-core",
@@ -2983,7 +2983,7 @@ dependencies = [
 
 [[package]]
 name = "freya-router"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "freya",
  "freya-core",
@@ -2995,7 +2995,7 @@ dependencies = [
 
 [[package]]
 name = "freya-router-macro"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "freya",
  "freya-router",
@@ -3007,7 +3007,7 @@ dependencies = [
 
 [[package]]
 name = "freya-sdk"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "freya-core",
  "tokio",
@@ -3056,7 +3056,7 @@ dependencies = [
 
 [[package]]
 name = "freya-terminal"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "freya",
  "freya-core",
@@ -3077,7 +3077,7 @@ dependencies = [
 
 [[package]]
 name = "freya-testing"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "accesskit",
  "freya",
@@ -3092,7 +3092,7 @@ dependencies = [
 
 [[package]]
 name = "freya-video"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "anyhow",
  "async-channel",
@@ -3113,7 +3113,7 @@ dependencies = [
 
 [[package]]
 name = "freya-web"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "accesskit",
  "euclid",
@@ -3132,7 +3132,7 @@ dependencies = [
 
 [[package]]
 name = "freya-winit"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "accesskit",
  "accesskit_xplat",
@@ -5542,7 +5542,7 @@ checksum = "2ee67f1008b1ba2321834326597b8e186293b049a023cdef258527550b9935b4"
 
 [[package]]
 name = "pathgraph"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 
 [[package]]
 name = "peeking_take_while"
@@ -6078,7 +6078,7 @@ checksum = "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf"
 
 [[package]]
 name = "ragnarok"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "euclid",
  "hashbrown 0.16.1",
@@ -7781,7 +7781,7 @@ dependencies = [
 
 [[package]]
 name = "tiny-cache"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "rustc-hash 2.1.3",
  "smallvec",
@@ -7789,7 +7789,7 @@ dependencies = [
 
 [[package]]
 name = "tiny-diff"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "hashbrown 0.16.1",
  "hotpath",
@@ -7798,7 +7798,7 @@ dependencies = [
 
 [[package]]
 name = "tiny-notify"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "futures-lite",
 ]
@@ -8007,7 +8007,7 @@ checksum = "7d56353a2a665ad0f41a421187180aab746c8c325620617ad883a99a1cbe66d2"
 
 [[package]]
 name = "torin"
-version = "0.6.0-alpha.1"
+version = "0.6.0-alpha.2"
 dependencies = [
  "criterion",
  "euclid",
