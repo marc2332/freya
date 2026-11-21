@@ -1,4 +1,4 @@
-//! Asynchronous clipboard access through a renderer-provided backend.
+//! Clipboard integration for Freya apps.
 //!
 //! ```rust,no_run
 //! use freya::clipboard::{

@@ -30,7 +30,7 @@ impl std::error::Error for ClipboardError {}
 
 pub type ClipboardFuture<T> = LocalBoxFuture<'static, Result<T, ClipboardError>>;
 
-/// Starts requests immediately and returns owned futures for their results.
+/// Methods for reading from and writing to the clipboard.
 pub trait ClipboardProvider {
     fn get(&self, format: DataFormat) -> ClipboardFuture<DataValue>;
     fn set(&self, data: TransferData) -> ClipboardFuture<()>;
@@ -81,7 +81,6 @@ impl Clipboard {
     }
 
     /// Writes without awaiting the result and discards any errors.
-    /// Requires an active Freya task context.
     pub fn set_deferred(data: TransferData) {
         let write = Self::set(data);
         spawn_global(async move {
@@ -90,7 +89,6 @@ impl Clipboard {
     }
 
     /// Writes text without awaiting the result and discards any errors.
-    /// Requires an active Freya task context.
     pub fn set_text_deferred(contents: String) {
         Self::set_deferred(TransferData::text(contents));
     }

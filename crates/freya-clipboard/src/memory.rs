@@ -12,7 +12,7 @@ use crate::clipboard::{
     ClipboardProvider,
 };
 
-/// An isolated clipboard for headless renderers.
+/// In-memory clipboard provider, useful for testing with `freya-testing`.
 pub struct MemoryClipboard {
     contents: RefCell<TransferData>,
 }
