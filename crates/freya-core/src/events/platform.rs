@@ -126,7 +126,7 @@ pub enum PlatformEvent {
         text: String,
         cursor: Option<(usize, usize)>,
     },
-    /// A native data transfer, independent of pointer hover state.
+    /// A platform drag event with its own hover tracking.
     Drag {
         name: DragEventName,
         cursor: CursorPoint,

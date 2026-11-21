@@ -307,13 +307,13 @@ pub trait EventHandlersExt: Sized {
         Drag,
         DragEventData;
 
-        /// Fires when native dragged data enters the element's area.
+        /// Fires when a platform drag enters the element's area.
         drag_enter => EventName::DragEnter;
         /// Fires on entry and movement over the element and bubbles to ancestors.
         drag_over => EventName::DragOver;
-        /// Fires when native dragged data leaves the element's area.
+        /// Fires when a platform drag leaves the element's area.
         drag_leave => EventName::DragLeave;
-        /// Fires when accepted native data is dropped onto the element.
+        /// Fires when accepted drag data is dropped onto the element.
         drop => EventName::Drop;
     }
 

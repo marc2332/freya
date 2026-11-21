@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-/// A clipboard or native drag data format.
+/// A data format for the clipboard or a platform drag.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum DataFormat {
     Files,
@@ -26,7 +26,7 @@ impl DataFormat {
     }
 }
 
-/// A payload transferred through the clipboard or native drag-and-drop.
+/// A payload transferred through the clipboard or platform drag and drop.
 /// Text formats are read as strings, image and audio formats as bytes.
 #[derive(Clone, Debug, PartialEq)]
 pub enum DataValue {

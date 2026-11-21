@@ -6,7 +6,7 @@ use torin::prelude::{
     Vector2D,
 };
 
-/// Starts native drag-and-drop from its children.
+/// Starts a platform drag from its children.
 ///
 /// ```rust
 /// # use freya::prelude::*;
@@ -31,7 +31,7 @@ pub struct PlatformDrag {
 }
 
 impl PlatformDrag {
-    /// Creates a drag source with a data factory called when dragging starts.
+    /// Creates a drag source that calls `data` when dragging starts.
     pub fn new(data: impl Into<NoArgCallback<TransferData>>) -> Self {
         Self {
             children: Vec::new(),
@@ -74,7 +74,7 @@ impl PlatformDrag {
         self
     }
 
-    /// Enables native dragging. Defaults to true.
+    /// Enables dragging. Defaults to true.
     pub fn enabled(mut self, enabled: bool) -> Self {
         self.enabled = enabled;
         self

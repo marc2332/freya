@@ -47,7 +47,7 @@
 //! - Layout: [`on_sized`](freya_core::prelude::EventHandlersExt::on_sized),
 //!   [`on_visible`](freya_core::prelude::EventHandlersExt::on_visible),
 //!   [`on_hidden`](freya_core::prelude::EventHandlersExt::on_hidden).
-//! - Native drag and drop: [`on_drag_enter`](freya_core::prelude::EventHandlersExt::on_drag_enter),
+//! - Platform drag and drop: [`on_drag_enter`](freya_core::prelude::EventHandlersExt::on_drag_enter),
 //!   [`on_drag_over`](freya_core::prelude::EventHandlersExt::on_drag_over),
 //!   [`on_drag_leave`](freya_core::prelude::EventHandlersExt::on_drag_leave),
 //!   [`on_drop`](freya_core::prelude::EventHandlersExt::on_drop).

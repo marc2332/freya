@@ -8,7 +8,7 @@ fn main() {
     launch(
         LaunchConfig::new().with_window(
             WindowConfig::new(app)
-                .with_title("Native Drag and Drop")
+                .with_title("Platform Drag and Drop")
                 .with_size(560., 420.),
         ),
     )

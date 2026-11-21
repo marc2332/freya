@@ -48,7 +48,7 @@ pub enum DropAction {
     Link,
 }
 
-/// An error when starting a native drag or reading its data.
+/// An error when starting a platform drag or reading its data.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DragError {
     Unsupported,
@@ -62,7 +62,7 @@ impl fmt::Display for DragError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Unsupported => {
-                formatter.write_str("Native dragging is not supported on this platform")
+                formatter.write_str("Drag and drop is not supported on this platform")
             }
             Self::Expired => formatter.write_str("The drag data is no longer available"),
             Self::Unavailable => formatter.write_str("The requested data format is not available"),
@@ -207,7 +207,7 @@ impl DragDataHandle {
     }
 }
 
-/// How a native drag ended. Moving data does not delete the original.
+/// How a platform drag ended. Moving data does not delete the original.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum PlatformDragResult {
     Dropped(Option<DropAction>),
@@ -237,7 +237,7 @@ pub struct PlatformDragCommand {
 }
 
 pub trait PlatformDragWindow {
-    /// Starts a native drag while the pointer is held down and waits until it ends.
+    /// Starts a platform drag while the pointer is held down and waits until it ends.
     fn start_drag(
         &self,
         data: TransferData,

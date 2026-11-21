@@ -59,7 +59,7 @@ impl PlatformDragState {
     ) {
         if self.outgoing.is_some() {
             let _ = response.send(Err(DragError::Platform(
-                "A native drag is already active".into(),
+                "A drag is already active".into(),
             )));
             return;
         }
@@ -70,7 +70,7 @@ impl PlatformDragState {
             .and_then(|data| {
                 if actions.is_empty() {
                     return Err(DragError::InvalidData(
-                        "A native drag needs an allowed action".into(),
+                        "A drag needs an allowed action".into(),
                     ));
                 }
                 let actions: Vec<_> = actions

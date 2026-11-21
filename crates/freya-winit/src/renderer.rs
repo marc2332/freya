@@ -480,7 +480,7 @@ impl ApplicationHandler for WinitRenderer {
 }
 
 impl WinitRenderer {
-    /// Processes buffered input, UI updates, and pending native drag requests.
+    /// Processes buffered input, UI updates, and pending platform drag requests.
     fn process_pending_updates(&mut self, event_loop: &dyn ActiveEventLoop) {
         self.clipboard_reads
             .retain(|_, pending| !pending.response.is_canceled());

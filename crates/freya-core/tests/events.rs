@@ -407,7 +407,7 @@ fn text_blocks_events_to_lower_layers() {
 }
 
 #[test]
-fn native_drop_with_multiple_files() {
+fn platform_drop_with_multiple_files() {
     fn app() -> Element {
         let mut state = use_consume::<State<Vec<PathBuf>>>();
         rect()
