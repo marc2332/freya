@@ -47,17 +47,24 @@ impl UseEditable {
         &mut self.editor
     }
 
-    /// Processes an event and calls `on_processed` after the edit completes.
-    pub fn process_event_with(
+    /// Processes a [`EditableEvent`] event and calls `then` once the event has been applied.
+    pub fn process_event_and_then(
         &mut self,
         edit_event: EditableEvent,
-        on_processed: impl FnOnce() + 'static,
+        then: impl FnOnce() + 'static,
     ) {
-        edit_event.process_with(
-            self.editor.into_writable(),
-            self.dragging.into_writable(),
-            &self.config,
-            on_processed,
+        let editable = *self;
+        edit_event.resolve_and_then::<RopeEditor>(
+            editable.editor.into_readable(),
+            &editable.config,
+            move |event| {
+                event.process_inner(
+                    editable.editor.into_writable(),
+                    editable.dragging.into_writable(),
+                    &editable.config,
+                );
+                then();
+            },
         );
     }
 

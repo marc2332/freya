@@ -206,7 +206,7 @@ impl Component for CodeEditor {
                     editor_line: None,
                     holder: None,
                 }
-                .dispatch::<CodeEditorData>(
+                .resolve_and_then::<CodeEditorData>(
                     editor.clone().into(),
                     &EditableConfig::default().with_allow_changes(!read_only),
                     move |event| {

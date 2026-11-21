@@ -49,8 +49,8 @@ pub enum EditableEvent<'a> {
 }
 
 impl EditableEvent<'_> {
-    /// Routes paste shortcuts back through the event handler after reading the clipboard.
-    pub fn dispatch<T: TextEditor>(
+    /// Passes events through immediately, except paste shortcuts wait for the clipboard.
+    pub fn resolve_and_then<T: TextEditor>(
         self,
         editor: Readable<T>,
         config: &EditableConfig,
@@ -91,25 +91,13 @@ impl EditableEvent<'_> {
         dragging: Writable<TextDragging>,
         config: &EditableConfig,
     ) {
-        self.process_with(editor, dragging, config, || {});
-    }
-
-    /// Processes an event and calls `on_processed` after synchronous or asynchronous editing.
-    pub fn process_with<T: TextEditor>(
-        self,
-        editor: Writable<T>,
-        dragging: Writable<TextDragging>,
-        config: &EditableConfig,
-        on_processed: impl FnOnce() + 'static,
-    ) {
         let config = *config;
-        self.dispatch::<T>(editor.clone().into(), &config, move |event| {
+        self.resolve_and_then::<T>(editor.clone().into(), &config, move |event| {
             event.process_inner(editor, dragging, &config);
-            on_processed();
         });
     }
 
-    fn process_inner<T: TextEditor>(
+    pub(crate) fn process_inner<T: TextEditor>(
         self,
         mut editor: Writable<T>,
         mut dragging: Writable<TextDragging>,

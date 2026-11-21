@@ -558,7 +558,7 @@ impl Component for Input {
                         editable.editor().peek().editor_history().version;
                     let mut value = value.clone();
                     let on_validate = on_validate.clone();
-                    editable.process_event_with(
+                    editable.process_event_and_then(
                         EditableEvent::KeyDown {
                             key: &key,
                             modifiers,
