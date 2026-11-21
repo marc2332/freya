@@ -4,6 +4,11 @@ use torin::{
     size::Size,
 };
 
+use crate::scrollviews::{
+    ScrollPoint,
+    ScrollSize,
+};
+
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Axis {
     X,
@@ -127,57 +132,57 @@ pub fn get_scroll_position_from_cursor(
 }
 
 pub fn handle_key_event(
-    key: &Key,
-    (mut x, mut y): (f64, f64),
-    inner_height: f64,
-    inner_width: f64,
-    viewport_height: f64,
-    viewport_width: f64,
+    event: &KeyboardEventData,
+    a11y_id: AccessibilityId,
+    mut position: ScrollPoint,
+    content: ScrollSize,
+    viewport: ScrollSize,
     direction: Direction,
-) -> Option<(f64, f64)> {
-    let y_page_delta = viewport_height;
-    let y_line_delta = y_page_delta / 5.0;
-    let x_page_delta = viewport_width;
-    let x_line_delta = x_page_delta / 5.0;
+    scroll_with_arrows: bool,
+) -> Option<ScrollPoint> {
+    let key = match &event.key {
+        Key::Named(key) => *key,
+        Key::Character(text) if text == " " && a11y_id.is_focused() => match event.modifiers {
+            modifiers if modifiers.is_empty() => NamedKey::PageDown,
+            Modifiers::SHIFT => NamedKey::PageUp,
+            _ => return None,
+        },
+        _ => return None,
+    };
 
-    // TODO(tropix126): Handle spacebar and spacebar + shift as Home and End
-
-    match key {
-        Key::Named(NamedKey::ArrowUp) => {
-            y = get_corrected_scroll_position(inner_height, viewport_height, y - y_line_delta)
-        }
-        Key::Named(NamedKey::ArrowDown) => {
-            y = get_corrected_scroll_position(inner_height, viewport_height, y + y_line_delta)
-        }
-        Key::Named(NamedKey::PageUp) => {
-            y = get_corrected_scroll_position(inner_height, viewport_height, y - y_line_delta)
-        }
-        Key::Named(NamedKey::PageDown) => {
-            y = get_corrected_scroll_position(inner_height, viewport_height, y + y_line_delta)
-        }
-        Key::Named(NamedKey::ArrowLeft) => {
-            x = get_corrected_scroll_position(inner_width, viewport_width, x - x_line_delta)
-        }
-        Key::Named(NamedKey::ArrowRight) => {
-            x = get_corrected_scroll_position(inner_width, viewport_width, x + x_line_delta)
-        }
-        Key::Named(NamedKey::Home) => {
-            if direction == Direction::Vertical {
-                y = 0.0;
-            } else {
-                x = 0.0;
-            }
-        }
-        Key::Named(NamedKey::End) => {
-            if direction == Direction::Vertical {
-                y = inner_height;
-            } else {
-                x = inner_width;
+    let axis = match key {
+        NamedKey::ArrowLeft | NamedKey::ArrowRight if scroll_with_arrows => Axis::X,
+        NamedKey::ArrowUp | NamedKey::ArrowDown if scroll_with_arrows => Axis::Y,
+        NamedKey::PageUp | NamedKey::PageDown | NamedKey::Home | NamedKey::End => {
+            match (
+                content.width > viewport.width,
+                content.height > viewport.height,
+            ) {
+                (true, false) => Axis::X,
+                (false, true) => Axis::Y,
+                _ if direction == Direction::Horizontal => Axis::X,
+                _ => Axis::Y,
             }
         }
         _ => return None,
     };
-    Some((x, y))
+
+    let (offset, content_size, viewport_size) = match axis {
+        Axis::X => (&mut position.x, content.width, viewport.width),
+        Axis::Y => (&mut position.y, content.height, viewport.height),
+    };
+    let line = viewport_size / 5.0;
+    let target = match key {
+        NamedKey::ArrowUp | NamedKey::ArrowLeft => *offset - line,
+        NamedKey::ArrowDown | NamedKey::ArrowRight => *offset + line,
+        NamedKey::PageUp => *offset - viewport_size,
+        NamedKey::PageDown => *offset + viewport_size,
+        NamedKey::Home => 0.,
+        NamedKey::End => content_size - viewport_size,
+        _ => return None,
+    };
+    *offset = get_corrected_scroll_position(content_size, viewport_size, target);
+    Some(position)
 }
 
 #[cfg(test)]

@@ -323,6 +323,108 @@ pub fn scroll_view_scrollbar() {
 }
 
 #[test]
+fn scroll_views_page_and_jump_along_the_scrollable_axis() {
+    for virtualized in [false, true] {
+        for horizontal in [false, true] {
+            let direction = if horizontal {
+                Direction::Horizontal
+            } else {
+                Direction::Vertical
+            };
+            let (mut test, controller) = TestingRunner::new(
+                move || {
+                    let controller = use_consume::<ScrollController>();
+                    if virtualized {
+                        VirtualScrollView::new_controlled(
+                            move |item, _| {
+                                rect()
+                                    .key(item.index)
+                                    .width(if horizontal {
+                                        Size::px(item.size)
+                                    } else {
+                                        Size::fill()
+                                    })
+                                    .height(if horizontal {
+                                        Size::fill()
+                                    } else {
+                                        Size::px(item.size)
+                                    })
+                                    .into()
+                            },
+                            controller,
+                        )
+                        .length(12usize)
+                        .item_size(60.)
+                        .direction(direction)
+                        .into_element()
+                    } else {
+                        ScrollView::new_controlled(controller)
+                            .child(
+                                rect()
+                                    .width(if horizontal {
+                                        Size::px(720.)
+                                    } else {
+                                        Size::fill()
+                                    })
+                                    .height(if horizontal {
+                                        Size::fill()
+                                    } else {
+                                        Size::px(720.)
+                                    }),
+                            )
+                            .into_element()
+                    }
+                },
+                (300., 200.).into(),
+                |runner| runner.provide_root_context(|| ScrollController::new(0., 0.)),
+                1.,
+            );
+            test.animation_clock().disable();
+            test.sync_and_update();
+
+            let thumb = if horizontal { (20., 195.) } else { (295., 20.) };
+            test.press_cursor(thumb);
+            test.move_cursor(thumb);
+            test.release_cursor(thumb);
+
+            let (arrow, line, page) = if horizontal {
+                (NamedKey::ArrowRight, 60., 300.)
+            } else {
+                (NamedKey::ArrowDown, 40., 200.)
+            };
+            let end = 720. - page;
+            let space = Key::Character(" ".into());
+            let no_modifiers = Modifiers::empty();
+            for (key, modifiers, offset) in [
+                (Key::Named(arrow), no_modifiers, line),
+                (Key::Named(NamedKey::PageDown), no_modifiers, line + page),
+                (Key::Named(NamedKey::PageUp), no_modifiers, line),
+                (space.clone(), no_modifiers, line + page),
+                (space.clone(), Modifiers::CONTROL, line + page),
+                (space, Modifiers::SHIFT, line),
+                (Key::Named(NamedKey::End), no_modifiers, end),
+                (Key::Named(NamedKey::PageDown), no_modifiers, end),
+                (Key::Named(NamedKey::Home), no_modifiers, 0.),
+            ] {
+                test.send_event(PlatformEvent::Keyboard {
+                    name: KeyboardEventName::KeyDown,
+                    key,
+                    code: Code::Unidentified,
+                    modifiers,
+                });
+                test.sync_and_update();
+                let expected = if horizontal {
+                    (offset, 0.)
+                } else {
+                    (0., offset)
+                };
+                assert_eq!(test.run_in(|| controller.position()), expected.into());
+            }
+        }
+    }
+}
+
+#[test]
 pub fn scroll_view_drag_scrolling() {
     fn scroll_view_drag_scrolling_app() -> impl IntoElement {
         ScrollView::new()
