@@ -93,7 +93,6 @@ pub struct EffectData {
     pub opacity: Option<f32>,
     pub mask: Option<Fill>,
     pub blur: Option<f32>,
-    pub fade: Option<crate::style::fade::Fade>,
     pub scrollable: bool,
     pub interactive: Interactive,
 }
@@ -338,10 +337,6 @@ pub struct EffectState {
 
     pub blur: Option<f32>,
 
-    /// The elements, this one or its ancestors, whose fade masks this one.
-    pub fades: Rc<[NodeId]>,
-    pub fade: Option<crate::style::fade::Fade>,
-
     pub scrollables: Rc<[NodeId]>,
 
     pub interactive: Interactive,
@@ -359,7 +354,6 @@ impl EffectState {
         *self = Self {
             overflow: Overflow::default(),
             blur: None,
-            fade: None,
             rotation: None,
             scale: None,
             transform_origin: TransformOrigin::default(),
@@ -408,15 +402,6 @@ impl EffectState {
                 opacities.push(opacity);
                 if self.opacities.as_ref() != opacities {
                     self.opacities = Rc::from(opacities);
-                }
-            }
-
-            if let Some(fade) = effect_data.fade {
-                let mut fades = parent_effect_state.fades.to_vec();
-                fades.push(node_id);
-                self.fade = Some(fade);
-                if self.fades.as_ref() != fades {
-                    self.fades = Rc::from(fades);
                 }
             }
 

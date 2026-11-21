@@ -155,7 +155,6 @@ pub mod prelude {
             color::*,
             corner_radius::*,
             cursor::*,
-            fade::*,
             fill::*,
             font_feature::*,
             font_size::*,

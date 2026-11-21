@@ -3,7 +3,6 @@ pub mod color;
 pub mod corner_radius;
 pub mod cursor;
 pub mod default_fonts;
-pub mod fade;
 pub mod fill;
 pub mod font_feature;
 pub mod font_size;
