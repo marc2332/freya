@@ -155,6 +155,12 @@ impl RenderPipeline<'_> {
                 }
 
                 let effect_state = self.tree.effect_state.get(node_id);
+                let element = self.tree.elements.get(node_id).unwrap();
+                if !element.paints_content()
+                    && effect_state.is_none_or(|effect| effect.blur.is_none())
+                {
+                    continue 'rendering;
+                }
 
                 let mut visible_area = layout_node.visible_area();
 
@@ -179,7 +185,6 @@ impl RenderPipeline<'_> {
 
                 let layer = self.canvas.save();
 
-                let element = self.tree.elements.get(node_id).unwrap();
                 let text_style_state = self.tree.text_style_state.get(node_id).unwrap();
 
                 if let Some(effect_state) = effect_state {
@@ -200,22 +205,11 @@ impl RenderPipeline<'_> {
 
                     self.apply_rotations(effect_state);
 
-                    let render_rect = element.render_rect(&visible_area, self.scale_factor as f32);
-
-                    let mut layer_bounds = *render_rect.rect();
                     let scale_factor = self.scale_factor as f32;
-
-                    for shadow in element.style().shadows.iter() {
-                        if shadow.position == ShadowPosition::Normal {
-                            let outset_x = shadow.x.abs() + shadow.spread + shadow.blur;
-                            let outset_y = shadow.y.abs() + shadow.spread + shadow.blur;
-                            layer_bounds = layer_bounds
-                                .with_outset((outset_x * scale_factor, outset_y * scale_factor));
-                        }
-                    }
 
                     // Blur the content underneath before applying opacity.
                     if let Some(blur_radius) = effect_state.blur {
+                        let render_rect = element.render_rect(&visible_area, scale_factor);
                         let style = element.style();
 
                         let image_filter = blur(
@@ -243,6 +237,18 @@ impl RenderPipeline<'_> {
                         .iter()
                         .fold(1., |acc, opacity| acc * opacity);
                     if opacity < 1. {
+                        let render_rect = element.render_rect(&visible_area, scale_factor);
+                        let mut layer_bounds = *render_rect.rect();
+                        for shadow in element.style().shadows.iter() {
+                            if shadow.position == ShadowPosition::Normal {
+                                let outset_x = shadow.x.abs() + shadow.spread + shadow.blur;
+                                let outset_y = shadow.y.abs() + shadow.spread + shadow.blur;
+                                layer_bounds = layer_bounds.with_outset((
+                                    outset_x * scale_factor,
+                                    outset_y * scale_factor,
+                                ));
+                            }
+                        }
                         self.canvas.save_layer_alpha_f(layer_bounds, opacity);
                     }
 
