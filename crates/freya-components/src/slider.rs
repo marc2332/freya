@@ -52,6 +52,13 @@ impl KeyExt for Slider {
     }
 }
 
+impl DirectionExt for Slider {
+    fn direction(mut self, direction: Direction) -> Self {
+        self.direction = direction;
+        self
+    }
+}
+
 impl Slider {
     pub fn new(on_moved: impl Into<EventHandler<f64>>) -> Self {
         Self {
@@ -93,11 +100,6 @@ impl Slider {
 
     pub fn size(mut self, size: Size) -> Self {
         self.size = size;
-        self
-    }
-
-    pub fn direction(mut self, direction: Direction) -> Self {
-        self.direction = direction;
         self
     }
 

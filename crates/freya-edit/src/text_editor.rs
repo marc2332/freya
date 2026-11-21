@@ -323,9 +323,11 @@ pub trait TextEditor {
         let cursor_rect = paragraph.measured_cursor_rect(&self.text(), self.cursor_pos())?;
 
         let lines = paragraph.get_line_metrics();
-        let current = lines
-            .iter()
-            .position(|line| (cursor_rect.top as f64) < line.baseline + line.descent)?;
+        let current = if self.cursor_pos() == self.len_utf16_cu() {
+            lines.len().checked_sub(1)?
+        } else {
+            paragraph.get_line_number_at_utf16_offset(self.cursor_pos())?
+        };
         let line = lines.get(current.checked_add_signed(line_offset)?)?;
 
         Some(paragraph.cursor_index_at_point((cursor_rect.left as f64, line.baseline)))

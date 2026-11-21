@@ -103,39 +103,25 @@ impl From<std::io::Error> for TerminalError {
 
 type SharedBackend = Rc<RefCell<Option<Box<dyn TerminalBackend>>>>;
 
-/// Listener proxy passed into rio-vt's `Crosswords`. Routes its side-effects
-/// (PtyWrite, Title, ClipboardStore) into the freya-side state.
+type TerminalEventHandler = Rc<dyn Fn(RioEvent, WindowId)>;
+
+/// Sends terminal events to the backend and callback.
 #[derive(Clone)]
-pub struct EventProxy {
+pub struct TerminalEvents {
     backend: SharedBackend,
-    title: Rc<RefCell<Option<String>>>,
-    title_notifier: ArcNotify,
-    clipboard_content: Rc<RefCell<Option<String>>>,
-    clipboard_notifier: ArcNotify,
+    on_event: Rc<RefCell<Option<TerminalEventHandler>>>,
 }
 
-impl EventListener for EventProxy {
-    fn send_event(&self, event: RioEvent, _window_id: WindowId) {
-        match event {
-            RioEvent::PtyWrite(_route, text) => {
-                if let Some(backend) = &mut *self.backend.borrow_mut() {
-                    let _ = backend.write(text.as_bytes());
-                }
-            }
-            RioEvent::Title(_, t) => {
-                *self.title.borrow_mut() = Some(t);
-                self.title_notifier.notify();
-            }
-            RioEvent::ResetTitle => {
-                *self.title.borrow_mut() = None;
-                self.title_notifier.notify();
-            }
-            RioEvent::ClipboardStore(_, text) => {
-                *self.clipboard_content.borrow_mut() = Some(text);
-                self.clipboard_notifier.notify();
-            }
-            // Bell, Wakeup, ColorRequest, etc.
-            _ => {}
+impl EventListener for TerminalEvents {
+    fn send_event(&self, event: RioEvent, window_id: WindowId) {
+        if let RioEvent::PtyWrite(_, text) = &event
+            && let Some(backend) = &mut *self.backend.borrow_mut()
+        {
+            let _ = backend.write(text.as_bytes());
+        }
+        let on_event = self.on_event.borrow().clone();
+        if let Some(on_event) = on_event {
+            on_event(event, window_id);
         }
     }
 }
@@ -172,15 +158,14 @@ pub struct TerminalHandle {
     pub(crate) id: TerminalId,
     /// rio-vt's terminal model: grid, modes, scrollback. The renderer
     /// borrows this directly during paint, so there is no parallel snapshot.
-    pub(crate) term: Rc<RefCell<Crosswords<EventProxy>>>,
+    pub(crate) term: Rc<RefCell<Crosswords<TerminalEvents>>>,
+    events: TerminalEvents,
     /// Keeps row drawing results alive across layout measurements.
     pub(crate) row_cache: Rc<RefCell<FifoCache<u64, CachedRow>>>,
     /// Program the terminal is attached to, `None` once it has closed.
     pub(crate) backend: SharedBackend,
     /// Handle-local state (input tracking).
     pub(crate) inner: Rc<RefCell<TerminalInner>>,
-    /// Window title reported by the shell via OSC 0 or OSC 2.
-    pub(crate) title: Rc<RefCell<Option<String>>>,
     /// Notifier that signals when the terminal closes.
     pub(crate) closer_notifier: ArcNotify,
     /// Kept alive purely so its `Drop` runs when the last handle dies.
@@ -188,12 +173,6 @@ pub struct TerminalHandle {
     pub(crate) cleaner: Rc<TerminalCleaner>,
     /// Notifier that signals each time new output is received from the backend.
     pub(crate) output_notifier: ArcNotify,
-    /// Notifier that signals when the window title changes via OSC 0 or OSC 2.
-    pub(crate) title_notifier: ArcNotify,
-    /// Clipboard content set by the terminal app via OSC 52.
-    pub(crate) clipboard_content: Rc<RefCell<Option<String>>>,
-    /// Notifier that signals when clipboard content changes via OSC 52.
-    pub(crate) clipboard_notifier: ArcNotify,
 }
 
 impl PartialEq for TerminalHandle {
@@ -203,8 +182,8 @@ impl PartialEq for TerminalHandle {
 }
 
 impl TerminalHandle {
-    /// Start `backend` and return a handle driving it. Defaults to 1000 lines
-    /// of scrollback when `scrollback_length` is `None`.
+    /// Start `backend`, using 1000 scrollback lines by default.
+    /// Use [`Self::on_event`] to handle title and clipboard requests.
     pub fn new(
         id: TerminalId,
         mut backend: impl TerminalBackend + 'static,
@@ -216,23 +195,15 @@ impl TerminalHandle {
 
         let closer_notifier = ArcNotify::new();
         let output_notifier = ArcNotify::new();
-        let title_notifier = ArcNotify::new();
-        let title: Rc<RefCell<Option<String>>> = Rc::new(RefCell::new(None));
-        let clipboard_content: Rc<RefCell<Option<String>>> = Rc::new(RefCell::new(None));
-        let clipboard_notifier = ArcNotify::new();
-
-        let event_proxy = EventProxy {
+        let events = TerminalEvents {
             backend: backend.clone(),
-            title: title.clone(),
-            title_notifier: title_notifier.clone(),
-            clipboard_content: clipboard_content.clone(),
-            clipboard_notifier: clipboard_notifier.clone(),
+            on_event: Rc::new(RefCell::new(None)),
         };
 
         let term = Rc::new(RefCell::new(Crosswords::new(
             CrosswordsSize::new(80, 24),
             CursorShape::Block,
-            event_proxy,
+            events.clone(),
             WindowId::from(0),
             0,
             scrollback_length.unwrap_or(1000),
@@ -276,14 +247,33 @@ impl TerminalHandle {
             id,
             term,
             row_cache,
+            events,
             backend,
             inner,
-            title,
-            title_notifier,
-            clipboard_content,
-            clipboard_notifier,
             output_notifier,
         })
+    }
+
+    /// Set a callback to hook into terminal events.
+    ///
+    /// ```no_run
+    /// use freya::prelude::*;
+    /// use freya_terminal::prelude::*;
+    ///
+    /// # fn configure(handle: TerminalHandle, title: State<Option<String>>) {
+    /// let handle = handle.on_event(move |event, _| {
+    ///     let mut title = title;
+    ///     match event {
+    ///         RioEvent::Title(_, value) => title.set(Some(value)),
+    ///         RioEvent::ResetTitle => title.set(None),
+    ///         _ => {}
+    ///     }
+    /// });
+    /// # }
+    /// ```
+    pub fn on_event(self, on_event: impl Fn(RioEvent, WindowId) + 'static) -> Self {
+        *self.events.on_event.borrow_mut() = Some(Rc::new(on_event));
+        self
     }
 
     /// Write data to the backend. Drops any selection and snaps the viewport to the bottom.
@@ -444,16 +434,6 @@ impl TerminalHandle {
         self.term.borrow().current_directory.clone()
     }
 
-    /// Window title reported via OSC 0 / 2.
-    pub fn title(&self) -> Option<String> {
-        self.title.borrow().clone()
-    }
-
-    /// Latest clipboard content set via OSC 52.
-    pub fn clipboard_content(&self) -> Option<String> {
-        self.clipboard_content.borrow().clone()
-    }
-
     /// Snapshot of the active terminal mode bits.
     fn mode(&self) -> Mode {
         self.term.borrow().mode()
@@ -568,23 +548,13 @@ impl TerminalHandle {
     }
 
     /// Borrow the underlying rio-vt `Crosswords` for direct read access.
-    pub fn term(&self) -> std::cell::Ref<'_, Crosswords<EventProxy>> {
+    pub fn term(&self) -> std::cell::Ref<'_, Crosswords<TerminalEvents>> {
         self.term.borrow()
     }
 
     /// Future that completes each time new output is received from the backend.
     pub fn output_received(&self) -> impl std::future::Future<Output = ()> + '_ {
         self.output_notifier.notified()
-    }
-
-    /// Future that completes when the window title changes (OSC 0 / OSC 2).
-    pub fn title_changed(&self) -> impl std::future::Future<Output = ()> + '_ {
-        self.title_notifier.notified()
-    }
-
-    /// Future that completes when clipboard content changes (OSC 52).
-    pub fn clipboard_changed(&self) -> impl std::future::Future<Output = ()> + '_ {
-        self.clipboard_notifier.notified()
     }
 
     /// Future that completes when the terminal closes.

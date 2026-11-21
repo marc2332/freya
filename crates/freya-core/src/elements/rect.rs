@@ -562,13 +562,23 @@ impl ElementExt for RectElement {
 #[derive(Default, Clone)]
 pub struct Rect {
     element: RectElement,
-    elements: Vec<Element>,
+    elements: ElementChildren,
     key: DiffKey,
 }
 
 impl ChildrenExt for Rect {
     fn children_mut(&mut self) -> &mut Vec<Element> {
-        &mut self.elements
+        match &mut self.elements {
+            ElementChildren::Owned(children) => children,
+            ElementChildren::Retained(children) => Rc::make_mut(children),
+        }
+    }
+}
+
+impl RetainedChildrenExt for Rect {
+    fn retained_children(mut self, children: Rc<Vec<Element>>) -> Self {
+        self.elements = ElementChildren::Retained(children);
+        self
     }
 }
 
@@ -715,6 +725,12 @@ impl Rect {
             .effect
             .get_or_insert_with(Default::default)
             .transform_origin = transform_origin.into();
+        self
+    }
+
+    /// See [`EffectExt::mask`].
+    pub fn mask(mut self, mask: impl Into<Fill>) -> Self {
+        self.element.effect.get_or_insert_default().mask = Some(mask.into());
         self
     }
 

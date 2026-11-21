@@ -329,7 +329,7 @@ impl Default for MenuItem {
             on_pointer_enter: None,
             selected: false,
             submenu: false,
-            padding: (8.0, 14.0).into(),
+            padding: (6.0, 14.0).into(),
             key: DiffKey::None,
         }
     }
@@ -461,7 +461,7 @@ impl ComponentOwned for MenuItem {
             .a11y_id(a11y_id)
             .a11y_focusable(true)
             .a11y_member_of(group_id)
-            .min_width(Size::px(105.))
+            .min_width(Size::px(120.))
             .width(Size::fill_minimum())
             .content(Content::fit())
             .padding(self.padding)

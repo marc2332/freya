@@ -228,7 +228,7 @@ impl ScrollController {
     }
 
     fn bounded_position(&self, position: i32, direction: Direction) -> i32 {
-        let Some((content_size, viewport_size)) = *self.bounds.read() else {
+        let Some((content_size, viewport_size)) = *self.bounds.peek() else {
             return position;
         };
 
@@ -269,6 +269,13 @@ const SETTLE_SPEED: f32 = 20.0;
 
 /// Slowest drag release speed that still starts a fling, in pixels per second.
 const FLING_MIN_SPEED: f32 = 50.0;
+
+/// Fastest drag release speed, in pixels per second.
+const FLING_MAX_SPEED: f32 = 8000.0;
+
+/// Minimum sample interval for touch events delivered together.
+/// 120 is rather a workaround right now, its requires an integration that winit doesnt expose yet.
+const DRAG_MIN_SAMPLE_TIME: f32 = 1.0 / 120.0;
 
 /// Maximum time since the last drag movement that still allows a fling.
 const FLING_RELEASE_TIMEOUT: Duration = Duration::from_millis(100);
@@ -349,10 +356,13 @@ impl Default for Drag {
 impl Drag {
     fn track(&mut self, delta: Vector2D) {
         let now = Instant::now();
-        let elapsed_seconds = now.duration_since(self.last_move).as_secs_f32();
-        if elapsed_seconds > 0.0 {
-            self.velocity = self.velocity.lerp(-delta / elapsed_seconds, 0.5);
-        }
+        let elapsed_seconds = now
+            .duration_since(self.last_move)
+            .as_secs_f32()
+            .max(DRAG_MIN_SAMPLE_TIME);
+
+        let velocity = (-delta / elapsed_seconds).with_max_length(FLING_MAX_SPEED);
+        self.velocity = self.velocity.lerp(velocity, 0.5);
         self.last_move = now;
     }
 }
@@ -383,7 +393,7 @@ impl ScrollController {
     }
 
     fn start(&mut self, current: Point2D, velocity: Option<Vector2D>, smooth_time: f32) {
-        let is_animating = self.task.read().is_some();
+        let is_animating = self.task.peek().is_some();
         {
             let mut damp = self.damp.write();
             damp.smooth_time = smooth_time;
@@ -490,9 +500,11 @@ impl ScrollController {
 
     /// Freezes the scroll where it is, returning the velocity it was moving at.
     pub fn stop(&mut self) -> Vector2D {
-        let task = self.task.write().take();
-        if let Some(task) = task {
-            task.cancel();
+        if self.task.peek().is_some() {
+            let task = self.task.write().take();
+            if let Some(task) = task {
+                task.cancel();
+            }
 
             let position = self.damp.peek().position.to_i32();
             self.scroll_to_x(position.x);
@@ -500,7 +512,9 @@ impl ScrollController {
         }
 
         let velocity = self.damp.peek().velocity;
-        self.damp.write().velocity = Vector2D::zero();
+        if velocity != Vector2D::zero() {
+            self.damp.write().velocity = Vector2D::zero();
+        }
         velocity
     }
 }

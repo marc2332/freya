@@ -50,6 +50,13 @@ jobs:
     - name: Run Linux tests
       if: runner.os == 'Linux'
       run: just t
+    - name: Install FFmpeg on Windows
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        choco install ffmpeg --yes --no-progress
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        ffmpeg -version
     - name: Run MacOS and Windows tests
       if: runner.os != 'Linux'
       run: just t
