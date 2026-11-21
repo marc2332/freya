@@ -505,6 +505,9 @@ impl TextEditor for CodeEditorData {
 
     fn get_selected_text(&self) -> Option<String> {
         let (start, end) = self.get_selection_range()?;
+        // The selection counts UTF-16 code units, Rope::get_slice counts chars.
+        let start = self.rope.try_utf16_cu_to_char(start).ok()?;
+        let end = self.rope.try_utf16_cu_to_char(end).ok()?;
 
         Some(self.rope.get_slice(start..end)?.to_string())
     }
