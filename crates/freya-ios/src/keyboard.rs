@@ -95,8 +95,7 @@ impl SoftKeyboard {
         let RawWindowHandle::UiKit(uikit) = window.window_handle()?.as_raw() else {
             return Err(KeyboardAttachError::NotUiKit);
         };
-        // SAFETY: winit guarantees `ui_view` points to the live UIView backing `window`, and
-        // retaining it keeps it valid for as long as the text field needs it.
+        // SAFETY: The window handle provides a live UIView pointer.
         let view = unsafe { Retained::retain(uikit.ui_view.as_ptr().cast::<UIView>()) }
             .ok_or(KeyboardAttachError::NotUiKit)?;
 
@@ -110,15 +109,13 @@ impl SoftKeyboard {
         })
     }
 
-    /// Show a keyboard matching `role` while an input is focused, and hide it otherwise.
     pub(crate) fn update(&self, id: AccessibilityId, role: AccessibilityRole) {
         if !is_ime_role(role) {
             self.focused.set(None);
             if self.text_field.isFirstResponder() {
                 self.text_field.reset();
                 self.text_field.resignFirstResponder();
-                // UIKit hands the first responder back to winit's view, which would then show
-                // its own keyboard.
+                // Dismiss winit's keyboard if UIKit returns focus to its view.
                 self.view.resignFirstResponder();
             }
             return;
@@ -126,11 +123,17 @@ impl SoftKeyboard {
 
         if self.focused.replace(Some(id)) != Some(id) {
             self.text_field.reset();
-            self.text_field.set_traits(KeyboardTraits::from(role));
         }
 
+        self.text_field.set_traits(KeyboardTraits::from(role));
         if !self.text_field.isFirstResponder() {
             self.text_field.becomeFirstResponder();
         }
+    }
+}
+
+impl Drop for SoftKeyboard {
+    fn drop(&mut self) {
+        self.text_field.removeFromSuperview();
     }
 }

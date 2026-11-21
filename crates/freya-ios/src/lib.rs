@@ -1,16 +1,13 @@
 #![cfg(target_os = "ios")]
 
-use std::{
-    cell::RefCell,
-    rc::Rc,
-};
+use std::collections::HashMap;
 
-use freya_core::prelude::*;
 use freya_winit::plugins::{
     FreyaPlugin,
     PluginEvent,
     PluginHandle,
 };
+use winit::window::WindowId;
 
 mod keyboard;
 mod text_field;
@@ -18,19 +15,11 @@ mod text_field;
 pub use keyboard::KeyboardAttachError;
 use keyboard::SoftKeyboard;
 
-/// Freya plugin for iOS integration.
-///
-/// Attaches an invisible native text field to every window and registers a root component that
-/// shows it while an input is focused. This enables IME composition and keyboards that match the
-/// accessibility role of the input, which winit's own keyboard support does not provide.
+/// Provides native iOS keyboard layouts and IME composition for Freya inputs.
 #[derive(Default)]
 pub struct IosPlugin {
-    keyboard: KeyboardSlot,
+    keyboards: HashMap<WindowId, SoftKeyboard>,
 }
-
-/// The soft keyboard of the window, available once the window is created.
-#[derive(Clone, Default)]
-struct KeyboardSlot(Rc<RefCell<Option<SoftKeyboard>>>);
 
 impl FreyaPlugin for IosPlugin {
     fn plugin_id(&self) -> &'static str {
@@ -39,52 +28,27 @@ impl FreyaPlugin for IosPlugin {
 
     fn on_event(&mut self, event: &mut PluginEvent, handle: PluginHandle) {
         match event {
-            PluginEvent::RunnerCreated { runner } => {
-                let keyboard = self.keyboard.clone();
-                runner.provide_root_context(move || keyboard);
-            }
             PluginEvent::WindowCreated { window, .. } => {
                 match SoftKeyboard::attach(window, handle) {
-                    Ok(keyboard) => *self.keyboard.0.borrow_mut() = Some(keyboard),
-                    Err(err) => tracing::error!("Failed to attach the soft keyboard: {err:?}"),
+                    Ok(keyboard) => {
+                        self.keyboards.insert(window.id(), keyboard);
+                    }
+                    Err(err) => tracing::error!(?err, "Failed to attach the soft keyboard"),
                 }
+            }
+            PluginEvent::ImeUpdate {
+                window,
+                focused_id,
+                role,
+                handled,
+            } if !**handled && let Some(keyboard) = self.keyboards.get(&window.id()) => {
+                keyboard.update(*focused_id, *role);
+                **handled = true;
+            }
+            PluginEvent::WindowClosed { window, .. } => {
+                self.keyboards.remove(&window.id());
             }
             _ => {}
         }
-    }
-
-    fn root_component(&self, root: Element) -> Element {
-        IosRoot { inner: root }.into_element()
-    }
-}
-
-/// Root component that manages iOS platform integration.
-#[derive(Clone)]
-struct IosRoot {
-    inner: Element,
-}
-
-impl PartialEq for IosRoot {
-    fn eq(&self, _other: &Self) -> bool {
-        true
-    }
-}
-
-impl Component for IosRoot {
-    fn render(&self) -> impl IntoElement {
-        let keyboard = use_consume::<KeyboardSlot>();
-
-        use_side_effect(move || {
-            let window = Platform::get().current_window();
-            // The focused id changes one frame before the focused node, so only the node is
-            // subscribed to. Otherwise the keyboard would be configured with the previous role.
-            let role = window.focused_accessibility_node.read().role();
-            let id = *window.focused_accessibility_id.peek();
-            if let Some(keyboard) = keyboard.0.borrow().as_ref() {
-                keyboard.update(id, role);
-            }
-        });
-
-        self.inner.clone()
     }
 }

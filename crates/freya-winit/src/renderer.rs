@@ -28,11 +28,6 @@ use rustc_hash::FxHashMap;
 use torin::prelude::CursorPoint;
 #[cfg(feature = "tray")]
 use tray_icon::TrayIcon;
-#[cfg(feature = "accessibility")]
-use winit::dpi::{
-    LogicalPosition,
-    LogicalSize,
-};
 use winit::{
     application::ApplicationHandler,
     event::{
@@ -58,8 +53,6 @@ use winit::{
     },
 };
 
-#[cfg(feature = "accessibility")]
-use crate::integration::is_ime_role;
 use crate::{
     accessibility::AccessibilityTask,
     clipboard::PendingClipboardRead,
@@ -1150,41 +1143,25 @@ impl WinitRenderer {
 
                         match app.accessibility_tasks_for_next_render.take() {
                             AccessibilityTask::ProcessUpdate { mode } => {
-                                app.process_accessibility_update(mode);
+                                app.process_accessibility_update(
+                                    mode,
+                                    &mut self.plugins,
+                                    PluginHandle::new(&self.proxy),
+                                );
                             }
                             #[cfg(feature = "accessibility")]
                             AccessibilityTask::Init => {
                                 let title = app.window.title();
                                 let update = app.accessibility.init(&mut app.tree, &title);
-                                app.platform
-                                    .focused_accessibility_id
-                                    .set_if_modified(update.focus);
-                                let node_id = app.accessibility.focused_node_id().unwrap();
-                                let layout_node = app.tree.layout.get(&node_id).unwrap();
-                                let focused_node = AccessibilityTree::create_node(
-                                    node_id,
-                                    layout_node,
-                                    &app.tree,
+                                app.process_accessibility_focus(
                                     &title,
-                                );
-                                let ime_allowed = is_ime_role(focused_node.role());
-                                app.platform
-                                    .focused_accessibility_node
-                                    .set_if_modified(focused_node);
-
-                                let area = layout_node.visible_area();
-                                crate::integration::update_ime(
-                                    app.window.as_ref(),
-                                    ime_allowed,
-                                    LogicalPosition::new(area.min_x(), area.min_y()),
-                                    LogicalSize::new(area.width(), area.height()),
+                                    None,
+                                    &mut self.plugins,
+                                    PluginHandle::new(&self.proxy),
                                 );
 
-                                #[cfg(feature = "accessibility")]
-                                {
-                                    app.screen_reader.set(true);
-                                    app.accessibility_adapter.update_if_active(|| update);
-                                }
+                                app.screen_reader.set(true);
+                                app.accessibility_adapter.update_if_active(|| update);
                             }
                             AccessibilityTask::None => {}
                         }

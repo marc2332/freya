@@ -83,7 +83,10 @@ use crate::{
         GraphicsContext,
         GraphicsDriver,
     },
-    integration::is_ime_role,
+    integration::{
+        is_ime_role,
+        update_ime,
+    },
     platform_drag::PlatformDragState,
     plugins::{
         PluginEvent,
@@ -246,7 +249,12 @@ impl AppWindow {
         }
     }
 
-    pub(crate) fn process_accessibility_update(&mut self, mode: Option<NavigationMode>) {
+    pub(crate) fn process_accessibility_update(
+        &mut self,
+        mode: Option<NavigationMode>,
+        plugins: &mut PluginsManager,
+        handle: PluginHandle,
+    ) {
         let title = self.window.title();
         let updated_nodes = self
             .accessibility
@@ -261,13 +269,29 @@ impl AppWindow {
         #[cfg(not(feature = "accessibility"))]
         let _ = updated_nodes;
 
+        self.process_accessibility_focus(&title, mode, plugins, handle);
+    }
+
+    pub(crate) fn process_accessibility_focus(
+        &mut self,
+        title: &str,
+        mode: Option<NavigationMode>,
+        plugins: &mut PluginsManager,
+        handle: PluginHandle,
+    ) {
+        let Some(node_id) = self.accessibility.focused_node_id() else {
+            return;
+        };
+        let Some(layout_node) = self.tree.layout.get(&node_id) else {
+            return;
+        };
+
+        let focused_id = self.accessibility.focused_id;
+        let focused_node = AccessibilityTree::create_node(node_id, layout_node, &self.tree, title);
+        let role = focused_node.role();
         self.platform
             .focused_accessibility_id
-            .set_if_modified(self.accessibility.focused_id);
-        let node_id = self.accessibility.focused_node_id().unwrap();
-        let layout_node = self.tree.layout.get(&node_id).unwrap();
-        let focused_node = AccessibilityTree::create_node(node_id, layout_node, &self.tree, &title);
-        let ime_allowed = is_ime_role(focused_node.role());
+            .set_if_modified(focused_id);
         self.platform
             .focused_accessibility_node
             .set_if_modified(focused_node);
@@ -275,13 +299,26 @@ impl AppWindow {
             self.platform.navigation_mode.set(mode);
         }
 
-        let area = layout_node.visible_area();
-        crate::integration::update_ime(
-            self.window.as_ref(),
-            ime_allowed,
-            LogicalPosition::new(area.min_x(), area.min_y()),
-            LogicalSize::new(area.width(), area.height()),
+        let mut handled = false;
+        plugins.send(
+            PluginEvent::ImeUpdate {
+                window: self.window.as_ref(),
+                focused_id,
+                role,
+                handled: &mut handled,
+            },
+            handle,
         );
+
+        if !handled {
+            let area = layout_node.visible_area();
+            update_ime(
+                self.window.as_ref(),
+                is_ime_role(role),
+                LogicalPosition::new(area.min_x(), area.min_y()),
+                LogicalSize::new(area.width(), area.height()),
+            );
+        }
     }
 
     /// Set the window title and refresh the accessibility label of the root node.
@@ -372,7 +409,7 @@ impl AppWindow {
             target_os = "watchos",
             target_os = "visionos",
         ))]
-        window.set_fullscreen(Some(winit::window::Fullscreen::Borderless(None)));
+        window.set_fullscreen(Some(winit::monitor::Fullscreen::Borderless(None)));
         let initial_render_size = Self::drawable_size(window.as_ref());
 
         tracing::info!(
