@@ -462,34 +462,22 @@ impl Component for ScrollView {
         };
 
         let on_key_down = move |e: Event<KeyboardEventData>| {
-            if !scroll_with_arrows
-                && (e.key == Key::Named(NamedKey::ArrowUp)
-                    || e.key == Key::Named(NamedKey::ArrowRight)
-                    || e.key == Key::Named(NamedKey::ArrowDown)
-                    || e.key == Key::Named(NamedKey::ArrowLeft))
-            {
-                return;
-            }
-            let x = corrected_scrolled_x;
-            let y = corrected_scrolled_y;
-            let inner_height = size.read().inner_sizes.height;
-            let inner_width = size.read().inner_sizes.width;
-            let viewport_height = size.read().area.height();
-            let viewport_width = size.read().area.width();
-            if let Some((x, y)) = handle_key_event(
-                &e.key,
-                (x, y),
-                inner_height,
-                inner_width,
-                viewport_height,
-                viewport_width,
+            let position = Point2D::new(corrected_scrolled_x, corrected_scrolled_y);
+            let size = size.read();
+            if let Some(target) = handle_key_event(
+                e.data(),
+                a11y_id,
+                position,
+                size.inner_sizes,
+                size.area.size,
                 direction,
+                scroll_with_arrows,
             ) {
-                if x != corrected_scrolled_x || y != corrected_scrolled_y {
+                if target != position {
                     scroll_controller.animate_from(rendered_position);
                 }
-                scroll_controller.scroll_to_x(x as i32);
-                scroll_controller.scroll_to_y(y as i32);
+                scroll_controller.scroll_to_x(target.x as i32);
+                scroll_controller.scroll_to_y(target.y as i32);
                 e.stop_propagation();
                 timeout.reset();
             }
