@@ -90,10 +90,6 @@ pub struct ScrollConfig {
 /// the controller into a `(f64, f64)` tuple of `(x, y)` pixels, or calling
 /// [`position`](ScrollController::position).
 ///
-/// Positions are measured from the start of each axis and increase toward the end.
-/// If migrating from the old negative offset convention, replace `scroll_to_y(-500)`
-/// with `scroll_to_y(500.)` and update any code that reads or sets scroll positions.
-///
 /// # Animated scrolling
 ///
 /// Scrolling to a position is instant by default. To animate, call
