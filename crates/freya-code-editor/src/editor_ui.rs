@@ -161,6 +161,15 @@ impl Component for CodeEditor {
         });
 
         let editor_data = editor.read_unchecked();
+        // The caret follows the window focus: another application having focus should
+        // not leave a caret behind in this editor.
+        let app_focused = Platform::get().current_window().is_app_focused;
+        let focused = !read_only && a11y_id.is_focused() && *app_focused.read();
+        let cursor_color = if focused {
+            theme.cursor
+        } else {
+            Color::TRANSPARENT
+        };
 
         let scroll_controller =
             scroll_controller.unwrap_or_else(|| use_scroll_controller(ScrollConfig::default));
@@ -331,6 +340,7 @@ impl Component for CodeEditor {
                                 show_whitespace,
                                 font_family: font_family.clone(),
                                 cursor_mode,
+                                cursor_color,
                                 theme: theme.clone(),
                                 a11y_id,
                                 scroll_controller,

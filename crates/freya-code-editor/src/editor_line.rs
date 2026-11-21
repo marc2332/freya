@@ -25,6 +25,8 @@ pub struct EditorLineUI {
     pub(crate) show_whitespace: bool,
     pub(crate) font_family: Cow<'static, str>,
     pub(crate) cursor_mode: CursorMode,
+    // The colour is decided by the editor so a single row can hide the caret.
+    pub(crate) cursor_color: Color,
     pub(crate) theme: EditorTheme,
     pub(crate) a11y_id: AccessibilityId,
     pub(crate) scroll_controller: ScrollController,
@@ -44,6 +46,7 @@ impl Component for EditorLineUI {
             show_whitespace,
             font_family,
             cursor_mode,
+            cursor_color,
             theme,
             a11y_id,
             scroll_controller,
@@ -130,7 +133,7 @@ impl Component for EditorLineUI {
                     .holder(holder.read().clone())
                     .on_pointer_move(on_pointer_move)
                     .on_focus_press(on_tap)
-                    .cursor_color(theme.cursor)
+                    .cursor_color(cursor_color)
                     .cursor_style(CursorStyle::Block)
                     .cursor_index(cursor_index)
                     .cursor_mode(cursor_mode)
