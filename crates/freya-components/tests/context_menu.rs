@@ -67,6 +67,64 @@ pub fn context_menu_closes_with_a_single_click_after_a_fast_open() {
 }
 
 #[test]
+fn custom_viewer_removal_restores_fallback() {
+    fn app() -> impl IntoElement {
+        let custom_viewer = use_consume::<State<bool>>();
+
+        rect()
+            .expanded()
+            .font_size(30.)
+            .maybe(*custom_viewer.read(), |el| {
+                el.child(ContextMenuViewer::new())
+            })
+            .child(
+                rect()
+                    .expanded()
+                    .on_secondary_down(|_| {
+                        ContextMenu::open_from_down(
+                            Menu::new().child(MenuButton::new().child("Item")),
+                        );
+                    })
+                    .child("Area"),
+            )
+    }
+
+    let (mut test, mut custom_viewer) = TestingRunner::new(
+        app,
+        (500., 500.).into(),
+        |runner| runner.provide_root_context(|| State::create(true)),
+        1.,
+    );
+    let item_width = |test: &TestingRunner| {
+        let items = test.find_many(|node, element| {
+            Label::try_downcast(element)
+                .filter(|label| label.text.as_ref() == "Item")
+                .map(|_| node.layout().area.width())
+        });
+        assert_eq!(items.len(), 1);
+        items[0]
+    };
+
+    right_click(&mut test, (100., 100.));
+    let custom_width = item_width(&test);
+
+    for visible in [false, true, false] {
+        custom_viewer.set(visible);
+        test.sync_and_update();
+        test.sync_and_update();
+        let width = item_width(&test);
+        if visible {
+            assert_eq!(width, custom_width);
+        } else {
+            assert!(width < custom_width);
+        }
+    }
+
+    test.click_cursor((400., 400.));
+    assert!(!menu_is_open(&mut test));
+}
+
+#[test]
 pub fn context_menu_closes_with_escape() {
     let mut test = launch_test(context_menu_app);
     test.sync_and_update();
