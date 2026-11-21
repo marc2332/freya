@@ -378,7 +378,7 @@ impl Component for Input {
         let mut scroll_controller = use_scroll_controller(ScrollConfig::default);
         let mut status = use_state(InputStatus::default);
         let is_masked = matches!(self.mode, InputMode::Hidden(_));
-        let (mut editable, mut value) = match &self.value {
+        let (mut editable, value) = match &self.value {
             InputValue::Value(value) => (
                 use_editable(
                     || value.read().to_string(),
@@ -556,37 +556,44 @@ impl Component for Input {
                     movement_timeout.reset();
                     let previous_history_version =
                         editable.editor().peek().editor_history().version;
-                    editable.process_event(EditableEvent::KeyDown {
-                        key: &key,
-                        modifiers,
-                        editor_line: Some(EditorLine::SingleParagraph),
-                        holder: Some(&holder.read()),
-                    });
-                    let text = editable.editor().read().committed_text();
+                    let mut value = value.clone();
+                    let on_validate = on_validate.clone();
+                    editable.process_event_and_then(
+                        EditableEvent::KeyDown {
+                            key: &key,
+                            modifiers,
+                            editor_line: Some(EditorLine::SingleParagraph),
+                            holder: Some(&holder.read()),
+                        },
+                        move || {
+                            let text = editable.editor().read().committed_text();
 
-                    let apply_change = match &on_validate {
-                        Some(on_validate) => {
-                            let mut editor = editable.editor_mut().write();
-                            let validator = InputValidator::new(text.clone());
-                            on_validate.call(validator.clone());
-                            if !validator.is_valid() {
-                                if let Some(selection) = editor.undo() {
-                                    *editor.selection_mut() = selection;
+                            let apply_change = match &on_validate {
+                                Some(on_validate) => {
+                                    let mut editor = editable.editor_mut().write();
+                                    let validator = InputValidator::new(text.clone());
+                                    on_validate.call(validator.clone());
+                                    if !validator.is_valid() {
+                                        if let Some(selection) = editor.undo() {
+                                            *editor.selection_mut() = selection;
+                                        }
+                                        editor.editor_history_mut().clear_redos();
+                                    }
+                                    validator.is_valid()
                                 }
-                                editor.editor_history_mut().clear_redos();
-                            }
-                            validator.is_valid()
-                        }
-                        None => true,
-                    };
+                                None => true,
+                            };
 
-                    if apply_change && let Some(value) = &mut value {
-                        value.set(text);
-                    }
-                    if editable.editor().peek().editor_history().version == previous_history_version
-                    {
-                        follow_cursor();
-                    }
+                            if apply_change && let Some(value) = &mut value {
+                                value.set(text);
+                            }
+                            if editable.editor().peek().editor_history().version
+                                == previous_history_version
+                            {
+                                follow_cursor();
+                            }
+                        },
+                    );
                 }
             }
         };

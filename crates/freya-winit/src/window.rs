@@ -1,6 +1,5 @@
 use std::{
     borrow::Cow,
-    path::PathBuf,
     rc::Rc,
     sync::Arc,
     task::Waker,
@@ -83,6 +82,7 @@ use crate::{
         GraphicsDriver,
     },
     integration::is_ime_role,
+    platform_drag::PlatformDragState,
     plugins::{
         PluginEvent,
         PluginHandle,
@@ -140,7 +140,7 @@ pub struct AppWindow {
     pub(crate) background: Color,
 
     pub(crate) active_touches: rustc_hash::FxHashMap<u64, CursorPoint>,
-    pub(crate) drag: Option<(winit::data_transfer::DataTransferId, Vec<PathBuf>, bool)>,
+    pub(crate) platform_drag: PlatformDragState,
 
     pub(crate) on_close: Option<OnCloseHook>,
 
@@ -160,6 +160,47 @@ fn clamp_custom_scale_factor(custom_scale_factor: f64) -> f64 {
 }
 
 impl AppWindow {
+    pub(crate) fn handle_platform_drag(
+        &mut self,
+        command: PlatformDragCommand,
+        event_loop: &dyn ActiveEventLoop,
+        font_collection: &mut FontCollection,
+        font_manager: &FontMgr,
+        fallback_fonts: &[Cow<'static, str>],
+    ) {
+        let PlatformDragCommand {
+            data,
+            actions,
+            preview,
+            scope_id,
+            response,
+        } = command;
+        let icon = preview
+            .map(|preview| {
+                self.render_drag_preview(
+                    preview,
+                    scope_id,
+                    font_collection,
+                    font_manager,
+                    fallback_fonts,
+                )
+            })
+            .transpose();
+        match icon {
+            Ok(icon) => self.platform_drag.start(
+                event_loop,
+                self.window.id(),
+                data,
+                actions,
+                icon,
+                response,
+            ),
+            Err(error) => {
+                let _ = response.send(Err(error));
+            }
+        }
+    }
+
     #[cfg(feature = "accessibility")]
     pub(crate) fn process_accessibility_window_event(&mut self, event: &winit::event::WindowEvent) {
         use winit::event::WindowEvent;
@@ -529,7 +570,7 @@ impl AppWindow {
             background: window_config.background,
 
             active_touches: Default::default(),
-            drag: None,
+            platform_drag: Default::default(),
 
             on_close,
 

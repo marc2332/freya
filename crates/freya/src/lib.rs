@@ -244,6 +244,7 @@ pub mod components {
         loader::*,
         menu::*,
         overflowed_content::*,
+        platform_drag::*,
         popup::*,
         portal::*,
         progressbar::*,

@@ -1,4 +1,7 @@
-use std::path::PathBuf;
+use std::{
+    path::PathBuf,
+    time::Duration,
+};
 
 use freya::helpers::*;
 use freya_core::{
@@ -404,13 +407,19 @@ fn text_blocks_events_to_lower_layers() {
 }
 
 #[test]
-fn file_drop_with_multiple_files() {
+fn native_drop_with_multiple_files() {
     fn app() -> Element {
         let mut state = use_consume::<State<Vec<PathBuf>>>();
         rect()
             .expanded()
             .background((255, 255, 255))
-            .on_file_drop(move |e: Event<FileEventData>| *state.write() = e.file_paths.clone())
+            .on_drag_over(|event: Event<DragEventData>| event.accept(DropAction::Copy))
+            .on_drop(move |event: Event<DragEventData>| {
+                let data = event.data.clone();
+                spawn(async move {
+                    state.set_if_modified(data.read_files().await.unwrap());
+                });
+            })
             .into()
     }
 
@@ -422,12 +431,38 @@ fn file_drop_with_multiple_files() {
     );
     test.sync_and_update();
 
-    test.send_event(PlatformEvent::File {
-        name: FileEventName::FileDrop,
+    let data = DragDataHandle::new(vec![DataFormat::Files]);
+    let decision = DragDecision::default();
+    test.send_event(PlatformEvent::Drag {
+        name: DragEventName::Over,
         cursor: (15., 15.).into(),
-        file_paths: vec![PathBuf::from("first.txt"), PathBuf::from("second.txt")],
+        data: data.clone(),
+        decision: Some(decision.clone()),
+        target: None,
     });
     test.sync_and_update();
+    test.send_event(PlatformEvent::Drag {
+        name: DragEventName::Drop,
+        cursor: (15., 15.).into(),
+        data: data.clone(),
+        decision: None,
+        target: Some(decision.accepted().unwrap().0),
+    });
+    test.sync_and_update();
+    test.poll_n(Duration::ZERO, 2);
+    let requests = data.take_read_requests().unwrap();
+    assert_eq!(requests.len(), 1);
+    for request in requests {
+        assert_eq!(request.format, DataFormat::Files);
+        request
+            .response
+            .send(Ok(DataValue::Files(vec![
+                PathBuf::from("first.txt"),
+                PathBuf::from("second.txt"),
+            ])))
+            .unwrap();
+    }
+    test.poll_n(Duration::ZERO, 2);
 
     assert_eq!(
         *state.peek(),

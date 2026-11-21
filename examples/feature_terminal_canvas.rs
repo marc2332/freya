@@ -269,15 +269,19 @@ impl Component for TerminalPanel {
                                                 if ctrl_shift && ch.eq_ignore_ascii_case("c") =>
                                             {
                                                 if let Some(text) = handle.get_selected_text() {
-                                                    let _ = Clipboard::set(text);
+                                                    Clipboard::set_text_deferred(text);
                                                 }
                                             }
                                             Key::Character(ch)
                                                 if ctrl_shift && ch.eq_ignore_ascii_case("v") =>
                                             {
-                                                if let Ok(text) = Clipboard::get() {
-                                                    let _ = handle.paste(&text);
-                                                }
+                                                let read = Clipboard::get_text();
+                                                let handle = handle.clone();
+                                                spawn(async move {
+                                                    if let Ok(text) = read.await {
+                                                        let _ = handle.paste(&text);
+                                                    }
+                                                });
                                             }
                                             _ => {
                                                 let _ = handle.write_key(&e.key, e.modifiers);

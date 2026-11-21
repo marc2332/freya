@@ -9,6 +9,7 @@ use crate::{
         data::{
             EventType,
             KeyboardEventData,
+            MouseButton,
             MouseEventData,
             PointerEventData,
             TouchEventData,
@@ -20,7 +21,7 @@ use crate::{
     integration::PlatformEvent,
     node_id::NodeId,
     prelude::{
-        FileEventData,
+        DragEventData,
         ImePreeditEventData,
     },
 };
@@ -76,6 +77,17 @@ impl EmmitableEvent {
         let bubbles = name.does_bubble();
 
         match platform_event {
+            PlatformEvent::PointerCancel { cursor } => Self::new(
+                node_id,
+                name,
+                PlatformEvent::Mouse {
+                    name: MouseEventName::MouseUp,
+                    cursor,
+                    button: Some(MouseButton::Left),
+                },
+                node_area,
+                scale_factor,
+            ),
             PlatformEvent::PointerExit { cursor } => Self::new(
                 node_id,
                 name,
@@ -267,18 +279,35 @@ impl EmmitableEvent {
                 data: EventType::ImePreedit(ImePreeditEventData::new(text, cursor)),
                 bubbles,
             },
-            PlatformEvent::File {
+            PlatformEvent::Drag {
                 name: platform_event_name,
                 cursor,
-                file_paths,
-            } => Self {
-                node_id,
-                name,
-
-                source_event: platform_event_name.into(),
-                data: EventType::File(FileEventData::new(cursor, file_paths)),
-                bubbles,
-            },
+                data,
+                decision,
+                ..
+            } => {
+                let global_location = cursor / scale_factor;
+                let element_location = node_area.map_or(global_location, |area| {
+                    (cursor - area.origin.to_f64()).to_point() / scale_factor
+                });
+                Self {
+                    node_id,
+                    name,
+                    source_event: platform_event_name.into(),
+                    data: EventType::Drag(DragEventData {
+                        data,
+                        global_location,
+                        element_location,
+                        target: node_id,
+                        decision: if name == EventName::DragOver {
+                            decision
+                        } else {
+                            None
+                        },
+                    }),
+                    bubbles,
+                }
+            }
         }
     }
 }
