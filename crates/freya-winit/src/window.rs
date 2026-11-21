@@ -89,10 +89,10 @@ use crate::{
         PluginsManager,
     },
     renderer::{
-        NativeEvent,
-        NativeEventProxy,
-        NativeWindowEvent,
-        NativeWindowEventAction,
+        RendererMessage,
+        RendererSender,
+        RendererWindowMessage,
+        RendererWindowPayload,
     },
 };
 
@@ -288,7 +288,7 @@ impl AppWindow {
     pub fn new(
         mut window_config: WindowConfig,
         active_event_loop: &dyn ActiveEventLoop,
-        event_loop_proxy: &NativeEventProxy,
+        event_loop_proxy: &RendererSender,
         plugins: &mut PluginsManager,
         font_collection: &mut FontCollection,
         font_manager: &FontMgr,
@@ -420,11 +420,13 @@ impl AppWindow {
                 preferred_theme: State::create(theme),
                 is_app_focused: State::create(is_app_focused),
                 accent_color: State::create(accent_color_preference.accent_color),
-                sender: Rc::new(move |user_event| {
-                    let _ = event_loop_proxy.send_event(NativeEvent::Window(NativeWindowEvent {
-                        window_id,
-                        action: NativeWindowEventAction::User(user_event),
-                    }));
+                sender: Rc::new(move |command| {
+                    let _ = event_loop_proxy.send_message(RendererMessage::Window(
+                        RendererWindowMessage {
+                            window_id,
+                            payload: RendererWindowPayload::Command(command),
+                        },
+                    ));
                 }),
             }
         });
@@ -484,15 +486,15 @@ impl AppWindow {
 
         window.set_visible(true);
 
-        struct TreeHandle(NativeEventProxy, WindowId);
+        struct TreeHandle(RendererSender, WindowId);
 
         impl ArcWake for TreeHandle {
             fn wake_by_ref(arc_self: &Arc<Self>) {
                 _ = arc_self
                     .0
-                    .send_event(NativeEvent::Window(NativeWindowEvent {
+                    .send_message(RendererMessage::Window(RendererWindowMessage {
                         window_id: arc_self.1,
-                        action: NativeWindowEventAction::PollRunner,
+                        payload: RendererWindowPayload::PollRunner,
                     }));
             }
         }
@@ -506,10 +508,11 @@ impl AppWindow {
             let hot_reload_pending_handler = hot_reload_pending.clone();
             freya_core::hotreload::subsecond::register_handler(Arc::new(move || {
                 hot_reload_pending_handler.store(true, std::sync::atomic::Ordering::Release);
-                let _ = event_loop_proxy.send_event(NativeEvent::Window(NativeWindowEvent {
-                    window_id,
-                    action: NativeWindowEventAction::PollRunner,
-                }));
+                let _ =
+                    event_loop_proxy.send_message(RendererMessage::Window(RendererWindowMessage {
+                        window_id,
+                        payload: RendererWindowPayload::PollRunner,
+                    }));
             }));
         }
 
@@ -702,9 +705,11 @@ impl AppWindow {
                 AccessibilityTask::ProcessUpdate { mode: None };
         }
         if let Some(strategy) = result.auto_focus {
-            handle.send_event_loop_event(NativeEvent::Window(NativeWindowEvent {
+            handle.send_renderer_message(RendererMessage::Window(RendererWindowMessage {
                 window_id: self.window.id(),
-                action: NativeWindowEventAction::User(UserEvent::FocusAccessibilityNode(strategy)),
+                payload: RendererWindowPayload::Command(WindowCommand::FocusAccessibilityNode(
+                    strategy,
+                )),
             }));
         }
         plugins.send(
