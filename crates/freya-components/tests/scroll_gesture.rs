@@ -24,7 +24,7 @@ fn setup(virtualized: bool, platform: TargetPlatform) -> (TestingRunner, ScrollC
         (500., 500.).into(),
         |runner| {
             runner.provide_root_context(|| platform);
-            runner.provide_root_context(|| ScrollController::new(0, 0))
+            runner.provide_root_context(|| ScrollController::new(0., 0.))
         },
         1.,
     );
@@ -43,10 +43,10 @@ fn wheel(test: &mut TestingRunner, phase: TouchPhase, delta: f64) {
     test.sync_and_update();
 }
 
-fn position(test: &TestingRunner, controller: ScrollController) -> (f32, i32) {
+fn position(test: &TestingRunner, controller: ScrollController) -> (f64, f64) {
     test.run_in(|| {
-        let (horizontal, vertical): (i32, i32) = controller.into();
-        let rendered = controller.animated_position((horizontal as f32, vertical as f32).into());
+        let (horizontal, vertical): (f64, f64) = controller.into();
+        let rendered = controller.animated_position((horizontal, vertical).into());
         (rendered.y, vertical)
     })
 }
@@ -58,14 +58,14 @@ fn linux_scroll_gesture_smoothing_momentum_and_interruption() {
         wheel(&mut test, TouchPhase::Started, -40.);
         let (rendered, target) = position(&test, controller);
         assert_eq!(rendered, 0.);
-        assert_eq!(target, -40);
+        assert_eq!(target, -40.);
 
         test.poll(Duration::from_millis(8), Duration::from_millis(32));
         wheel(&mut test, TouchPhase::Moved, -40.);
         test.poll(Duration::from_millis(8), Duration::from_millis(32));
         wheel(&mut test, TouchPhase::Moved, -40.);
         let (rendered, target) = position(&test, controller);
-        assert!(rendered < 0. && rendered > target as f32);
+        assert!(rendered < 0. && rendered > target);
         wheel(&mut test, TouchPhase::Ended, 0.);
         assert!(position(&test, controller).1 < target);
 
@@ -97,7 +97,7 @@ fn android_touch_fling() {
     for virtualized in [false, true] {
         for direction in [-1., 1.] {
             let (mut test, mut controller) = setup(virtualized, TargetPlatform::Android);
-            controller.scroll_to_y(-2250);
+            controller.scroll_to_y(-2250.);
             test.sync_and_update();
 
             test.press_touch((100., 250.));
@@ -109,13 +109,13 @@ fn android_touch_fling() {
 
             let (rendered, target) = position(&test, controller);
             assert_eq!(rendered, before_release);
-            assert!(target > -4500 && target < 0);
-            assert!((target as f32 - rendered) * direction as f32 > 0.);
+            assert!(target > -4500. && target < 0.);
+            assert!((target - rendered) * direction > 0.);
 
             test.poll_n(Duration::from_millis(8), 4);
             let animated = position(&test, controller).0;
-            assert!((animated - rendered) * direction as f32 > 0.);
-            assert!((target as f32 - animated) * direction as f32 > 0.);
+            assert!((animated - rendered) * direction > 0.);
+            assert!((target - animated) * direction > 0.);
         }
     }
 }
@@ -126,10 +126,10 @@ fn other_platforms_keep_direct_pixel_scrolling() {
         for virtualized in [false, true] {
             let (mut test, controller) = setup(virtualized, platform);
             wheel(&mut test, TouchPhase::Started, -40.);
-            assert_eq!(position(&test, controller), (-40., -40));
+            assert_eq!(position(&test, controller), (-40., -40.));
             wheel(&mut test, TouchPhase::Moved, -40.);
             wheel(&mut test, TouchPhase::Ended, 0.);
-            assert_eq!(position(&test, controller), (-80., -80));
+            assert_eq!(position(&test, controller), (-80., -80.));
         }
     }
 }

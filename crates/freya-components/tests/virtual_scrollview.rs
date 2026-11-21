@@ -5,6 +5,86 @@ use freya_core::prelude::Label;
 use freya_testing::prelude::*;
 
 #[test]
+fn virtual_scroll_view_large_offsets() {
+    for length in [10_000_000usize, 100_000_000, 1_000_000_000_000_000] {
+        let (mut test, mut controller) = TestingRunner::new(
+            move || {
+                VirtualScrollView::new_controlled(
+                    |item, _| {
+                        label()
+                            .key(item.index)
+                            .height(Size::px(item.size))
+                            .text(item.index.to_string())
+                            .into()
+                    },
+                    use_consume::<ScrollController>(),
+                )
+                .length(length)
+                .item_size(25.)
+            },
+            (500., 500.).into(),
+            |runner| runner.provide_root_context(|| ScrollController::new(0., 0.)),
+            1.,
+        );
+        test.sync_and_update();
+
+        let scrollview = test
+            .find(|node, element| {
+                Rect::try_downcast(element)
+                    .filter(|rect| {
+                        rect.accessibility.builder.role() == AccessibilityRole::ScrollView
+                    })
+                    .map(|_| node)
+            })
+            .unwrap();
+        let end = -(length as f64 * 25. - 500.);
+
+        if length <= 100_000_000 {
+            test.run_in(|| controller.scroll_to_y(end + 1.));
+            test.sync_and_update();
+
+            for _ in 0..2 {
+                test.scroll((5., 5.), (0., -0.5));
+            }
+
+            let children = scrollview.children()[0].children()[0].children();
+            assert_eq!(children.len(), 20);
+            assert_eq!(children[0].layout().area.min_y(), 0.);
+            assert_eq!(
+                Label::try_downcast(&*children[19].element()).unwrap().text,
+                (length - 1).to_string()
+            );
+            assert_eq!(test.run_in(|| controller.position().y), end);
+        }
+
+        let start = end + 4096.;
+        test.run_in(|| controller.scroll_to_y(start));
+        test.sync_and_update();
+
+        for step in 1..=2 {
+            test.send_event(PlatformEvent::Wheel {
+                name: WheelEventName::Wheel,
+                scroll: (0., -128.).into(),
+                cursor: (5., 5.).into(),
+                source: WheelSource::Line,
+                phase: TouchPhase::Moved,
+            });
+            test.sync_and_update();
+            test.poll(Duration::from_millis(16), Duration::from_secs(1));
+
+            test.run_in(|| {
+                let target = controller.position();
+                assert_eq!(target.y, start - step as f64 * 128.);
+                assert_eq!(controller.animated_position(target), target);
+
+                let probe = target + ScrollVector::new(0., 1024.);
+                assert_eq!(controller.animated_position(probe), probe);
+            });
+        }
+    }
+}
+
+#[test]
 fn virtual_scroll_view_auto_hide_scrollbars() {
     for auto_hide_scrollbars in [true, false] {
         let mut test = launch_test(move || {

@@ -12,45 +12,44 @@ pub enum Axis {
 
 #[doc(hidden)]
 pub fn get_scroll_position_from_wheel(
-    wheel_movement: f32,
-    inner_size: f32,
-    viewport_size: f32,
-    scroll_position: f32,
-) -> i32 {
+    wheel_movement: f64,
+    inner_size: f64,
+    viewport_size: f64,
+    scroll_position: f64,
+) -> f64 {
     if viewport_size >= inner_size {
-        return 0;
+        return 0.;
     }
 
     let new_position = scroll_position + wheel_movement;
 
     if new_position >= 0.0 && wheel_movement > 0.0 {
-        return 0;
+        return 0.;
     }
 
     if new_position <= -(inner_size - viewport_size) && wheel_movement < 0.0 {
-        return -(inner_size - viewport_size) as i32;
+        return -(inner_size - viewport_size);
     }
 
-    new_position as i32
+    new_position
 }
 
 #[doc(hidden)]
 pub fn get_corrected_scroll_position(
-    inner_size: f32,
-    viewport_size: f32,
-    scroll_position: f32,
-) -> f32 {
-    // Considering it was a vertical scroll view, the start would be on top and the end on bottom.
+    inner_size: f64,
+    viewport_size: f64,
+    scroll_position: f64,
+) -> f64 {
     let overscrolled_start = scroll_position > 0.0;
     let overscrolled_end = (-scroll_position + viewport_size) > inner_size;
 
     if overscrolled_start {
-        0f32
+        0.
     } else if overscrolled_end {
         if viewport_size < inner_size {
             -(inner_size - viewport_size)
         } else {
-            0f32
+            0.
         }
     } else {
         scroll_position
@@ -69,19 +68,19 @@ pub fn get_container_sizes(size: Size) -> (Size, Size) {
 #[doc(hidden)]
 pub fn is_scrollbar_visible(
     is_scrollbar_enabled: bool,
-    inner_size: f32,
-    viewport_size: f32,
+    inner_size: f64,
+    viewport_size: f64,
 ) -> bool {
     is_scrollbar_enabled && viewport_size > MIN_SCROLLBAR_SIZE && viewport_size < inner_size
 }
 
-const MIN_SCROLLBAR_SIZE: f32 = 50.0;
+const MIN_SCROLLBAR_SIZE: f64 = 50.0;
 
 pub const SCROLLBAR_MARGIN: f32 = 3.0;
 
 /// Thumb size, scrollable content range and thumb travel range inside the track.
-fn get_thumb_ranges(inner_size: f32, viewport_size: f32) -> (f32, f32, f32) {
-    let track_size = viewport_size - SCROLLBAR_MARGIN * 2.0;
+fn get_thumb_ranges(inner_size: f64, viewport_size: f64) -> (f64, f64, f64) {
+    let track_size = viewport_size - SCROLLBAR_MARGIN as f64 * 2.0;
     let viewable_ratio = viewport_size / inner_size;
     let minimum_thumb_size = if track_size > MIN_SCROLLBAR_SIZE {
         MIN_SCROLLBAR_SIZE
@@ -102,9 +101,9 @@ fn get_thumb_ranges(inner_size: f32, viewport_size: f32) -> (f32, f32, f32) {
 
 #[doc(hidden)]
 pub fn get_scrollbar_pos_and_size(
-    inner_size: f32,
-    viewport_size: f32,
-    scroll_position: f32,
+    inner_size: f64,
+    viewport_size: f64,
+    scroll_position: f64,
 ) -> (f32, f32) {
     if viewport_size <= MIN_SCROLLBAR_SIZE || viewport_size >= inner_size {
         return (0.0, 0.0);
@@ -116,39 +115,38 @@ pub fn get_scrollbar_pos_and_size(
     let normalized_scroll = -scroll_position / available_scroll_range;
     let scrollbar_position = normalized_scroll * available_thumb_range;
 
-    (scrollbar_position, scrollbar_size)
+    (scrollbar_position as f32, scrollbar_size as f32)
 }
+
 #[doc(hidden)]
 pub fn get_scroll_position_from_cursor(
-    cursor_position: f32,
-    inner_size: f32,
-    viewport_size: f32,
-) -> i32 {
+    cursor_position: f64,
+    inner_size: f64,
+    viewport_size: f64,
+) -> f64 {
     if viewport_size <= MIN_SCROLLBAR_SIZE || viewport_size >= inner_size {
-        return 0;
+        return 0.;
     }
 
     let (_, available_scroll_range, available_thumb_range) =
         get_thumb_ranges(inner_size, viewport_size);
 
-    // Clamp cursor position
-    let cursor_clamped = (cursor_position - SCROLLBAR_MARGIN).clamp(0.0, available_thumb_range);
+    let cursor_clamped =
+        (cursor_position - SCROLLBAR_MARGIN as f64).clamp(0.0, available_thumb_range);
 
     let normalized_scroll = cursor_clamped / available_thumb_range;
-    let new_position = -(normalized_scroll * available_scroll_range);
-
-    new_position as i32
+    -(normalized_scroll * available_scroll_range)
 }
 
 pub fn handle_key_event(
     key: &Key,
-    (mut x, mut y): (f32, f32),
-    inner_height: f32,
-    inner_width: f32,
-    viewport_height: f32,
-    viewport_width: f32,
+    (mut x, mut y): (f64, f64),
+    inner_height: f64,
+    inner_width: f64,
+    viewport_height: f64,
+    viewport_width: f64,
     direction: Direction,
-) -> Option<(f32, f32)> {
+) -> Option<(f64, f64)> {
     let y_page_delta = viewport_height;
     let y_line_delta = y_page_delta / 5.0;
     let x_page_delta = viewport_width;
@@ -205,16 +203,16 @@ mod tests {
     #[test]
     fn scrollbar_can_drag_when_the_track_is_smaller_than_the_minimum_thumb() {
         for viewport_size in 51..=56 {
-            let viewport_size = viewport_size as f32;
+            let viewport_size = viewport_size as f64;
             let inner_size = viewport_size * 2.;
-            let track_size = viewport_size - SCROLLBAR_MARGIN * 2.;
+            let track_size = viewport_size - SCROLLBAR_MARGIN as f64 * 2.;
 
             let (_, thumb_size) = get_scrollbar_pos_and_size(inner_size, viewport_size, 0.);
 
-            assert!(thumb_size < track_size);
+            assert!((thumb_size as f64) < track_size);
             assert_eq!(
                 get_scroll_position_from_cursor(viewport_size, inner_size, viewport_size),
-                -viewport_size as i32
+                -viewport_size
             );
         }
     }

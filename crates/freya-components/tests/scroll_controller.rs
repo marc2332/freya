@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use freya::prelude::*;
 use freya_core::prelude::Label;
 use freya_testing::{
@@ -37,10 +39,53 @@ fn end_config() -> ScrollConfig {
 }
 
 fn position_label(scroll_controller: ScrollController) -> impl IntoElement {
-    let (_, scrolled_y): (i32, i32) = scroll_controller.into();
+    let (_, scrolled_y): (f64, f64) = scroll_controller.into();
     label()
         .height(Size::px(0.))
         .text(format!("position {scrolled_y}"))
+}
+
+#[test]
+fn smooth_scroll_settles_at_large_offsets() {
+    for offset in [
+        2_500_000_000.,
+        25_000_000_000_000_000.,
+        2_500_000_000_000_000_000.,
+    ] {
+        let start = ScrollPoint::new(0., -offset);
+        let target = ScrollPoint::new(0., -offset - 1024.);
+        let (mut test, mut controller) = TestingRunner::new(
+            rect,
+            (500., 500.).into(),
+            |runner| runner.provide_root_context(|| ScrollController::new(start.x, start.y)),
+            1.,
+        );
+        test.sync_and_update();
+
+        test.run_in(|| {
+            controller.animate_from(start);
+            assert!(controller.scroll_to_y(target.y));
+            assert_eq!(controller.animated_position(target), start);
+        });
+
+        // The fallback distinguishes completion from positions that round to the target.
+        let fallback = ScrollPoint::zero();
+        let mut previous_position = start.y;
+        let mut settled = false;
+        for _ in 0..120 {
+            test.poll_n(Duration::from_millis(8), 1);
+            let position = test.run_in(|| controller.animated_position(fallback));
+            if position == fallback {
+                settled = true;
+                break;
+            }
+            assert!((target.y..=previous_position).contains(&position.y));
+            previous_position = position.y;
+        }
+
+        assert!(settled, "scroll did not settle from {offset}");
+        assert_eq!(test.run_in(|| controller.animated_position(target)), target);
+    }
 }
 
 #[test]
@@ -78,15 +123,15 @@ fn follower_views_preserve_controller_bounds() {
                     })
             },
             (500., 500.).into(),
-            |runner| runner.provide_root_context(|| ScrollController::new(0, 0)),
+            |runner| runner.provide_root_context(|| ScrollController::new(0., 0.)),
             1.,
         );
         test.sync_and_update();
         let bounds = *controller.bounds.peek();
         assert_eq!(bounds, Some(((2000., 2000.).into(), (400., 500.).into())));
 
-        controller.scroll_to_x(-200);
-        controller.scroll_to_y(-300);
+        controller.scroll_to_x(-200.);
+        controller.scroll_to_y(-300.);
         test.sync_and_update();
         assert_eq!(controller.position(), (-200., -300.).into());
         assert_eq!(*controller.bounds.peek(), bounds);
@@ -141,7 +186,7 @@ pub fn controlled_scroll_view_clamps_programmatic_scrolls() {
     fn app() -> impl IntoElement {
         let mut scroll_controller = use_scroll_controller(ScrollConfig::default);
         let scroll_to_end = move |_| {
-            scroll_controller.scroll_to_y(-10_000);
+            scroll_controller.scroll_to_y(-10_000.);
         };
 
         rect()

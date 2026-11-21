@@ -4,16 +4,18 @@ use std::time::{
 };
 
 use freya_core::prelude::*;
-use torin::{
-    geometry::{
-        Point2D,
-        Size2D,
-        Vector2D,
-    },
-    prelude::Direction,
-};
+use torin::prelude::Direction;
 
 use crate::scrollviews::shared::get_corrected_scroll_position;
+
+/// Logical scroll position in pixels.
+pub type ScrollPoint = euclid::Point2D<f64, ()>;
+
+/// Logical content or viewport size in pixels.
+pub type ScrollSize = euclid::Size2D<f64, ()>;
+
+/// Logical scroll movement or velocity.
+pub type ScrollVector = euclid::Vector2D<f64, ()>;
 
 /// Where along an axis a scroll should land, the beginning or the end.
 #[derive(Default, PartialEq, Eq)]
@@ -25,9 +27,9 @@ pub enum ScrollPosition {
 
 impl ScrollPosition {
     /// Scroll offset in pixels of this position.
-    fn offset(&self) -> i32 {
+    fn offset(&self) -> f64 {
         match self {
-            Self::Start => 0,
+            Self::Start => 0.,
             Self::End => ScrollController::END,
         }
     }
@@ -85,7 +87,7 @@ pub struct ScrollConfig {
 ///
 /// For an exact pixel offset use [`scroll_to_y`](ScrollController::scroll_to_y) or
 /// [`scroll_to_x`](ScrollController::scroll_to_x). The current position is available by converting
-/// the controller into a `(i32, i32)` tuple of `(x, y)` pixels, or calling
+/// the controller into a `(f64, f64)` tuple of `(x, y)` pixels, or calling
 /// [`position`](ScrollController::position).
 ///
 /// # Animated scrolling
@@ -105,7 +107,7 @@ pub struct ScrollConfig {
 ///                 .on_press(move |_| {
 ///                     let current = scroll_controller.position();
 ///                     scroll_controller.animate_from(current);
-///                     scroll_controller.scroll_to_y(-500);
+///                     scroll_controller.scroll_to_y(-500.);
 ///                 })
 ///                 .child("Animate scroll"),
 ///         )
@@ -162,14 +164,14 @@ pub struct ScrollConfig {
 /// ```
 #[derive(PartialEq, Clone, Copy)]
 pub struct ScrollController {
-    pub(crate) scroll: State<(i32, i32)>,
-    pub bounds: State<Option<(Size2D, Size2D)>>,
+    pub(crate) scroll: State<(f64, f64)>,
+    pub bounds: State<Option<(ScrollSize, ScrollSize)>>,
     pub(crate) damp: State<SmoothDamp>,
     pub(crate) drag: State<Drag>,
     pub(crate) task: State<Option<TaskHandle>>,
 }
 
-impl From<ScrollController> for (i32, i32) {
+impl From<ScrollController> for (f64, f64) {
     /// Reads the current `(x, y)` scroll position in pixels.
     fn from(val: ScrollController) -> Self {
         *val.scroll.read()
@@ -178,10 +180,10 @@ impl From<ScrollController> for (i32, i32) {
 
 impl ScrollController {
     /// Offset of an axis scrolled to its end, resolved against the content size on the next layout.
-    const END: i32 = i32::MIN;
+    const END: f64 = f64::NEG_INFINITY;
 
     /// Creates a controller starting at the scroll position `(x, y)`.
-    pub fn new(x: i32, y: i32) -> Self {
+    pub fn new(x: f64, y: f64) -> Self {
         Self {
             scroll: State::create((x, y)),
             bounds: State::create(None),
@@ -192,7 +194,7 @@ impl ScrollController {
     }
 
     /// Updates the content and viewport bounds used to clamp scroll positions.
-    pub fn apply_layout(&mut self, content_size: Size2D, viewport_size: Size2D) {
+    pub fn apply_layout(&mut self, content_size: ScrollSize, viewport_size: ScrollSize) {
         self.bounds
             .set_if_modified(Some((content_size, viewport_size)));
 
@@ -202,13 +204,13 @@ impl ScrollController {
     }
 
     /// Reads the current scroll position in pixels.
-    pub fn position(self) -> Point2D {
-        let (x, y): (i32, i32) = self.into();
-        Point2D::new(x as f32, y as f32)
+    pub fn position(self) -> ScrollPoint {
+        let (x, y) = self.into();
+        ScrollPoint::new(x, y)
     }
 
     /// Scrolls the horizontal axis to `to` pixels. Returns whether the position actually changed.
-    pub fn scroll_to_x(&mut self, to: i32) -> bool {
+    pub fn scroll_to_x(&mut self, to: f64) -> bool {
         let to = self.bounded_position(to, Direction::Horizontal);
         let changed = self.scroll.peek().0 != to;
         if changed {
@@ -218,7 +220,7 @@ impl ScrollController {
     }
 
     /// Scrolls the vertical axis to `to` pixels. Returns whether the position actually changed.
-    pub fn scroll_to_y(&mut self, to: i32) -> bool {
+    pub fn scroll_to_y(&mut self, to: f64) -> bool {
         let to = self.bounded_position(to, Direction::Vertical);
         let changed = self.scroll.peek().1 != to;
         if changed {
@@ -227,7 +229,7 @@ impl ScrollController {
         changed
     }
 
-    fn bounded_position(&self, position: i32, direction: Direction) -> i32 {
+    fn bounded_position(&self, position: f64, direction: Direction) -> f64 {
         let Some((content_size, viewport_size)) = *self.bounds.peek() else {
             return position;
         };
@@ -236,7 +238,7 @@ impl ScrollController {
             Direction::Horizontal => (content_size.width, viewport_size.width),
             Direction::Vertical => (content_size.height, viewport_size.height),
         };
-        get_corrected_scroll_position(content_size, viewport_size, position as f32) as i32
+        get_corrected_scroll_position(content_size, viewport_size, position)
     }
 
     /// Scrolls `scroll_direction` to `scroll_position`.
@@ -262,20 +264,20 @@ pub fn use_scroll_controller(config: impl FnOnce() -> ScrollConfig) -> ScrollCon
 }
 
 /// Distance under which the animation is close enough to snap, in pixels.
-const SETTLE_DISTANCE: f32 = 0.5;
+const SETTLE_DISTANCE: f64 = 0.5;
 
 /// Speed under which the animation is slow enough to stop, in pixels per second.
-const SETTLE_SPEED: f32 = 20.0;
+const SETTLE_SPEED: f64 = 20.0;
 
 /// Slowest drag release speed that still starts a fling, in pixels per second.
-const FLING_MIN_SPEED: f32 = 50.0;
+const FLING_MIN_SPEED: f64 = 50.0;
 
 /// Fastest drag release speed, in pixels per second.
-const FLING_MAX_SPEED: f32 = 8000.0;
+const FLING_MAX_SPEED: f64 = 8000.0;
 
 /// Minimum sample interval for touch events delivered together.
 /// 120 is rather a workaround right now, its requires an integration that winit doesnt expose yet.
-const DRAG_MIN_SAMPLE_TIME: f32 = 1.0 / 120.0;
+const DRAG_MIN_SAMPLE_TIME: f64 = 1.0 / 120.0;
 
 /// Maximum time since the last drag movement that still allows a fling.
 const FLING_RELEASE_TIMEOUT: Duration = Duration::from_millis(100);
@@ -283,17 +285,17 @@ const FLING_RELEASE_TIMEOUT: Duration = Duration::from_millis(100);
 /// Scrolling feel of a [`TargetPlatform`].
 pub(crate) trait ScrollFeel {
     /// Seconds wheel and keyboard scrolls take to reach their destination.
-    fn scroll_smoothing_time(&self) -> f32;
+    fn scroll_smoothing_time(&self) -> f64;
     /// Seconds a fling takes to stop, which also scales how far it travels.
-    fn scroll_fling_time(&self) -> f32;
+    fn scroll_fling_time(&self) -> f64;
 }
 
 impl ScrollFeel for TargetPlatform {
-    fn scroll_smoothing_time(&self) -> f32 {
+    fn scroll_smoothing_time(&self) -> f64 {
         if self.is_mobile() { 0.1 } else { 0.06 }
     }
 
-    fn scroll_fling_time(&self) -> f32 {
+    fn scroll_fling_time(&self) -> f64 {
         if self.is_mobile() { 0.35 } else { 0.5 }
     }
 }
@@ -301,22 +303,29 @@ impl ScrollFeel for TargetPlatform {
 /// Moves a value towards a target with a smooth and continuous animation.
 #[derive(Clone, Copy, Default)]
 pub(crate) struct SmoothDamp {
-    position: Point2D,
-    velocity: Vector2D,
-    smooth_time: f32,
+    origin: ScrollPoint,
+    position: ScrollPoint,
+    velocity: ScrollVector,
+    smooth_time: f64,
 }
 
 impl SmoothDamp {
     pub(crate) fn new() -> Self {
         Self {
-            position: Point2D::zero(),
-            velocity: Vector2D::zero(),
+            origin: ScrollPoint::zero(),
+            position: ScrollPoint::zero(),
+            velocity: ScrollVector::zero(),
             smooth_time: TargetPlatform::Unknown.scroll_smoothing_time(),
         }
     }
 
+    fn absolute_position(&self) -> ScrollPoint {
+        self.origin + self.position.to_vector()
+    }
+
     /// Returns whether it has settled onto `target`.
-    fn advance(&mut self, target: Point2D, elapsed_seconds: f32) -> bool {
+    fn advance(&mut self, target: ScrollPoint, elapsed_seconds: f64) -> bool {
+        let target = (target - self.origin).to_point();
         let omega = 2.0 / self.smooth_time;
         let decay = (-omega * elapsed_seconds).exp();
         let change = self.position - target;
@@ -327,7 +336,7 @@ impl SmoothDamp {
 
         if (target - position).length() < SETTLE_DISTANCE && velocity.length() < SETTLE_SPEED {
             self.position = target;
-            self.velocity = Vector2D::zero();
+            self.velocity = ScrollVector::zero();
             return true;
         }
 
@@ -340,25 +349,25 @@ impl SmoothDamp {
 /// Velocity tracked while the content is dragged, to fling with on release.
 #[derive(Clone, Copy)]
 pub(crate) struct Drag {
-    velocity: Vector2D,
+    velocity: ScrollVector,
     last_move: Instant,
 }
 
 impl Default for Drag {
     fn default() -> Self {
         Self {
-            velocity: Vector2D::zero(),
+            velocity: ScrollVector::zero(),
             last_move: Instant::now(),
         }
     }
 }
 
 impl Drag {
-    fn track(&mut self, delta: Vector2D) {
+    fn track(&mut self, delta: ScrollVector) {
         let now = Instant::now();
         let elapsed_seconds = now
             .duration_since(self.last_move)
-            .as_secs_f32()
+            .as_secs_f64()
             .max(DRAG_MIN_SAMPLE_TIME);
 
         let velocity = (-delta / elapsed_seconds).with_max_length(FLING_MAX_SPEED);
@@ -370,29 +379,20 @@ impl Drag {
 /// Follows the target held by a [`ScrollController`].
 impl ScrollController {
     /// Position to render, the animated one while a scroll animation is running.
-    pub fn animated_position(&self, target: Point2D) -> Point2D {
+    pub fn animated_position(&self, target: ScrollPoint) -> ScrollPoint {
         if self.task.read().is_some() {
-            self.damp.read().position
+            self.damp.read().absolute_position()
         } else {
             target
         }
     }
 
     /// Chases the controller position from `current`, keeping the current velocity.
-    pub fn animate_from(&mut self, current: Point2D) {
+    pub fn animate_from(&mut self, current: ScrollPoint) {
         self.start(current, None, TargetPlatform::get().scroll_smoothing_time());
     }
 
-    /// Like [`Self::animate_from`] but launched at `velocity` and slower to stop.
-    fn fling_from(&mut self, current: Point2D, velocity: Vector2D) {
-        self.start(
-            current,
-            Some(velocity),
-            TargetPlatform::get().scroll_fling_time(),
-        );
-    }
-
-    fn start(&mut self, current: Point2D, velocity: Option<Vector2D>, smooth_time: f32) {
+    fn start(&mut self, current: ScrollPoint, velocity: Option<ScrollVector>, smooth_time: f64) {
         let is_animating = self.task.peek().is_some();
         {
             let mut damp = self.damp.write();
@@ -401,7 +401,8 @@ impl ScrollController {
                 damp.velocity = velocity;
             }
             if !is_animating {
-                damp.position = current;
+                damp.origin = current;
+                damp.position = ScrollPoint::zero();
             }
         }
         if is_animating {
@@ -424,7 +425,7 @@ impl ScrollController {
 
                 let elapsed_seconds = animation_clock
                     .correct_elapsed_duration(previous_frame.elapsed())
-                    .as_secs_f32();
+                    .as_secs_f64();
                 previous_frame = Instant::now();
 
                 let target = scroll_controller.position();
@@ -441,7 +442,7 @@ impl ScrollController {
     }
 
     /// Returns whether the gesture ended or was cancelled, so callers skip applying the scroll delta.
-    pub(crate) fn scroll_gesture_phase(&mut self, phase: TouchPhase, delta: Vector2D) -> bool {
+    pub(crate) fn scroll_gesture_phase(&mut self, phase: TouchPhase, delta: ScrollVector) -> bool {
         match phase {
             TouchPhase::Started => {
                 self.stop();
@@ -477,13 +478,13 @@ impl ScrollController {
     }
 
     /// Feeds a drag movement into the tracked velocity.
-    pub fn drag(&mut self, delta: Vector2D) {
+    pub fn drag(&mut self, delta: ScrollVector) {
         self.stop();
         self.drag.write().track(delta);
     }
 
     /// Ends a drag, flinging when it was fast enough to be a flick.
-    pub fn release_drag(&mut self, from: Point2D, content: Size2D, viewport: Size2D) {
+    pub fn release_drag(&mut self, from: ScrollPoint, content: ScrollSize, viewport: ScrollSize) {
         let velocity = self.drag.peek().velocity;
         if velocity.length() < FLING_MIN_SPEED {
             return;
@@ -493,27 +494,31 @@ impl ScrollController {
         let target_x = get_corrected_scroll_position(content.width, viewport.width, projected.x);
         let target_y = get_corrected_scroll_position(content.height, viewport.height, projected.y);
 
-        self.fling_from(from, velocity);
-        self.scroll_to_x(target_x as i32);
-        self.scroll_to_y(target_y as i32);
+        self.start(
+            from,
+            Some(velocity),
+            TargetPlatform::get().scroll_fling_time(),
+        );
+        self.scroll_to_x(target_x);
+        self.scroll_to_y(target_y);
     }
 
     /// Freezes the scroll where it is, returning the velocity it was moving at.
-    pub fn stop(&mut self) -> Vector2D {
+    pub fn stop(&mut self) -> ScrollVector {
         if self.task.peek().is_some() {
             let task = self.task.write().take();
             if let Some(task) = task {
                 task.cancel();
             }
 
-            let position = self.damp.peek().position.to_i32();
+            let position = self.damp.peek().absolute_position();
             self.scroll_to_x(position.x);
             self.scroll_to_y(position.y);
         }
 
         let velocity = self.damp.peek().velocity;
-        if velocity != Vector2D::zero() {
-            self.damp.write().velocity = Vector2D::zero();
+        if velocity != ScrollVector::zero() {
+            self.damp.write().velocity = ScrollVector::zero();
         }
         velocity
     }

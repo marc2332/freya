@@ -33,7 +33,7 @@ fn scrolling_does_not_press_button_on_release() {
             (500., 500.).into(),
             |runner| {
                 let presses = runner.provide_root_context(|| State::create(0usize));
-                let controller = runner.provide_root_context(|| ScrollController::new(0, 0));
+                let controller = runner.provide_root_context(|| ScrollController::new(0., 0.));
                 (presses, controller)
             },
             1.,
