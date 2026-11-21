@@ -1,7 +1,7 @@
 use freya_code_editor::prelude::*;
 use freya_edit::{
-    TextSelection,
     TextEditor,
+    TextSelection,
 };
 
 // `TextSelection` stores UTF-16 code units while `Rope::get_slice` takes char
