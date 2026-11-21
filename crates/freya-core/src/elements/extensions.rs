@@ -304,15 +304,17 @@ pub trait EventHandlersExt: Sized {
     }
 
     event_handlers! {
-        File,
-        FileEventData;
+        Drag,
+        DragEventData;
 
-        /// Fires when a file is dropped onto the element.
-        file_drop => EventName::FileDrop;
-        /// Fires when a dragged file hovers anywhere over the window.
-        global_file_hover => EventName::GlobalFileHover;
-        /// Fires when a dragged file stops hovering over the window.
-        global_file_hover_cancelled => EventName::GlobalFileHoverCancelled;
+        /// Fires when a platform drag enters the element's area.
+        drag_enter => EventName::DragEnter;
+        /// Fires on entry and movement over the element and bubbles to ancestors.
+        drag_over => EventName::DragOver;
+        /// Fires when a platform drag leaves the element's area.
+        drag_leave => EventName::DragLeave;
+        /// Fires when accepted drag data is dropped onto the element.
+        drop => EventName::Drop;
     }
 
     event_handlers! {
