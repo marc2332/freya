@@ -6,6 +6,8 @@ use crate::{
     EditableConfig,
     EditableEvent,
     TextDragging,
+    TouchEditEvent,
+    TouchSelection,
     editor_history::EditorHistory,
     rope_editor::RopeEditor,
     text_editor::TextSelection,
@@ -16,6 +18,7 @@ use crate::{
 pub struct UseEditable {
     pub(crate) editor: State<RopeEditor>,
     pub(crate) dragging: State<TextDragging>,
+    pub(crate) touch: State<TouchSelection>,
     pub(crate) config: EditableConfig,
 }
 
@@ -29,10 +32,12 @@ impl UseEditable {
             EditorHistory::new(Duration::from_millis(10)),
         ));
         let dragging = State::create(TextDragging::default());
+        let touch = State::create(TouchSelection::default());
 
         UseEditable {
             editor,
             dragging,
+            touch,
             config,
         }
     }
@@ -47,13 +52,36 @@ impl UseEditable {
         &mut self.editor
     }
 
+    /// Touch state: the selection handles and toolbar to show.
+    pub fn touch(&self) -> &State<TouchSelection> {
+        &self.touch
+    }
+
+    /// Mutable touch state.
+    pub fn touch_mut(&mut self) -> &mut State<TouchSelection> {
+        &mut self.touch
+    }
+
     /// Process a [`EditableEvent`] event.
     pub fn process_event(&mut self, edit_event: EditableEvent) {
+        // Typing or using a mouse puts touch controls away.
+        if matches!(
+            edit_event,
+            EditableEvent::Down { .. } | EditableEvent::KeyDown { .. }
+        ) && self.touch.peek().handles_visible()
+        {
+            self.touch.write().hide();
+        }
         edit_event.process(
             self.editor.into_writable(),
             self.dragging.into_writable(),
             &self.config,
         );
+    }
+
+    /// Process a [`TouchEditEvent`] event.
+    pub fn process_touch(&mut self, touch_event: TouchEditEvent) {
+        touch_event.process(self.editor.into_writable(), self.touch.into_writable());
     }
 }
 
