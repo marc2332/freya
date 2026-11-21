@@ -25,6 +25,10 @@ use torin::prelude::{
 };
 
 use crate::{
+    command::{
+        ErasedCommand,
+        WindowCommand,
+    },
     data_transfer::{
         DataFormat,
         DataValue,
@@ -34,10 +38,6 @@ use crate::{
     platform::PlatformWindow,
     prelude::current_scope_id,
     scope_id::ScopeId,
-    user_event::{
-        SingleThreadErasedEvent,
-        UserEvent,
-    },
 };
 
 /// What the drop target does with the dragged data.
@@ -271,9 +271,7 @@ impl PlatformDragWindow for PlatformWindow {
             scope_id: current_scope_id(),
             response,
         };
-        self.send(UserEvent::Erased(SingleThreadErasedEvent(Box::new(
-            command,
-        ))));
+        self.send(WindowCommand::Erased(ErasedCommand(Box::new(command))));
 
         receiver.await.map_err(|_| DragError::Expired)?
     }

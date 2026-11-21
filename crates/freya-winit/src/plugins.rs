@@ -26,19 +26,19 @@ use winit::{
 };
 
 use crate::renderer::{
-    NativeEvent,
-    NativeEventProxy,
-    NativeWindowEvent,
-    NativeWindowEventAction,
+    RendererMessage,
+    RendererSender,
+    RendererWindowMessage,
+    RendererWindowPayload,
 };
 
 #[derive(Clone)]
 pub struct PluginHandle {
-    pub proxy: NativeEventProxy,
+    pub proxy: RendererSender,
 }
 
 impl PluginHandle {
-    pub fn new(proxy: &NativeEventProxy) -> Self {
+    pub fn new(proxy: &RendererSender) -> Self {
         Self {
             proxy: proxy.clone(),
         }
@@ -47,16 +47,16 @@ impl PluginHandle {
     /// Emit a [PlatformEvent]. Useful to simulate certain events.
     pub fn send_platform_event(&self, event: PlatformEvent, window_id: WindowId) {
         self.proxy
-            .send_event(NativeEvent::Window(NativeWindowEvent {
+            .send_message(RendererMessage::Window(RendererWindowMessage {
                 window_id,
-                action: NativeWindowEventAction::PlatformEvent(event),
+                payload: RendererWindowPayload::PlatformEvent(event),
             }))
             .ok();
     }
 
-    /// Emit a [NativeEvent].
-    pub fn send_event_loop_event(&self, event: NativeEvent) {
-        self.proxy.send_event(event).ok();
+    /// Queue a message for the renderer.
+    pub fn send_renderer_message(&self, message: RendererMessage) {
+        self.proxy.send_message(message).ok();
     }
 }
 

@@ -140,9 +140,9 @@ pub mod prelude {
             WindowConfig,
         },
         renderer::{
-            LaunchProxy,
-            NativeEvent,
+            LaunchHandle,
             RendererContext,
+            RendererMessage,
         },
     };
 

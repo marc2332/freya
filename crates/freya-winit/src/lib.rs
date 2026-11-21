@@ -16,9 +16,9 @@ use crate::{
     config::LaunchConfig,
     drivers::GraphicsContext,
     renderer::{
-        LaunchProxy,
-        NativeEvent,
-        NativeGenericEvent,
+        LaunchHandle,
+        RendererAppMessage,
+        RendererMessage,
         WinitRenderer,
     },
 };
@@ -44,7 +44,7 @@ use futures_util::task::{
     waker,
 };
 
-use crate::renderer::NativeEventProxy;
+use crate::renderer::RendererSender;
 
 pub mod winit {
     pub use winit::*;
@@ -105,7 +105,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
     });
 
     let (sender, receiver) = std::sync::mpsc::channel();
-    let proxy = NativeEventProxy::new(event_loop.create_proxy(), sender);
+    let proxy = RendererSender::new(event_loop.create_proxy(), sender);
 
     let mut font_collection = FontCollection::new();
     let def_mgr = FontMgr::default();
@@ -122,13 +122,13 @@ fn launch_inner(mut launch_config: LaunchConfig) {
     font_collection.set_dynamic_font_manager(font_mgr.clone());
     font_collection.paragraph_cache_mut().turn_on(false);
 
-    struct FuturesWaker(NativeEventProxy);
+    struct FuturesWaker(RendererSender);
 
     impl ArcWake for FuturesWaker {
         fn wake_by_ref(arc_self: &Arc<Self>) {
             _ = arc_self
                 .0
-                .send_event(NativeEvent::Generic(NativeGenericEvent::PollFutures));
+                .send_message(RendererMessage::App(RendererAppMessage::PollFutures));
         }
     }
 
@@ -141,7 +141,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
     global_contexts.insert_context(Platform::new({
         let proxy = proxy.clone();
         move |event| {
-            let _ = proxy.send_event(NativeEvent::Generic(NativeGenericEvent::User(event)));
+            let _ = proxy.send_message(RendererMessage::App(RendererAppMessage::Command(event)));
         }
     }));
     global_contexts.insert_context(crate::clipboard::create_clipboard(proxy.clone()));
@@ -151,7 +151,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
 
     let global_tasks = global_contexts.insert_context(GlobalTasks::new(waker));
     for task in launch_config.tasks {
-        global_tasks.spawn(task(LaunchProxy(proxy.clone())));
+        global_tasks.spawn(task(LaunchHandle(proxy.clone())));
     }
 
     let renderer = WinitRenderer {
@@ -163,7 +163,7 @@ fn launch_inner(mut launch_config: LaunchConfig) {
         tray_icon: None,
         resumed: false,
         proxy,
-        events: receiver,
+        messages: receiver,
         clipboard_reads: HashMap::default(),
         font_provider: provider,
         font_manager: font_mgr,
@@ -186,11 +186,11 @@ fn launch_inner(mut launch_config: LaunchConfig) {
 
         let proxy = renderer.proxy.clone();
         MenuEvent::set_event_handler(Some(move |event| {
-            let _ = proxy.send_event(NativeEvent::Tray(TrayEvent::Menu(event)));
+            let _ = proxy.send_message(RendererMessage::Tray(TrayEvent::Menu(event)));
         }));
         let proxy = renderer.proxy.clone();
         TrayIconEvent::set_event_handler(Some(move |event| {
-            let _ = proxy.send_event(NativeEvent::Tray(TrayEvent::Icon(event)));
+            let _ = proxy.send_message(RendererMessage::Tray(TrayEvent::Icon(event)));
         }));
     }
 
