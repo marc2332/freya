@@ -121,7 +121,7 @@ pub trait WinitPlatformExt {
     ///     });
     /// }
     /// ```
-    fn with_window(&self, window_id: WindowId, callback: impl FnOnce(&mut Window) + 'static);
+    fn with_window(&self, window_id: WindowId, callback: impl FnOnce(&mut dyn Window) + 'static);
 
     /// Queue a renderer callback without an originating window.
     /// The returned receiver can be awaited for its result or dropped.
@@ -189,7 +189,7 @@ impl WindowDragExt for Rect {
 
 impl WinitPlatformExt for Platform {
     fn window_id() -> WindowId {
-        Platform::get().current_window().id.into()
+        WindowId::from_raw(Platform::get().current_window().id as usize)
     }
 
     async fn launch_window(&self, window_config: WindowConfig) -> WindowId {
@@ -224,11 +224,11 @@ impl WinitPlatformExt for Platform {
         ))));
     }
 
-    fn with_window(&self, window_id: WindowId, callback: impl FnOnce(&mut Window) + 'static) {
+    fn with_window(&self, window_id: WindowId, callback: impl FnOnce(&mut dyn Window) + 'static) {
         self.send(GlobalUserEvent::Erased(SingleThreadErasedEvent(Box::new(
             NativePlatformErasedEventAction::RendererCallback(Box::new(move |context| {
                 if let Some(app) = context.windows.get_mut(&window_id) {
-                    callback(&mut app.window);
+                    callback(app.window.as_mut());
                 }
             })),
         ))));
@@ -256,7 +256,7 @@ impl WinitPlatformWindowExt for PlatformWindow {
     where
         F: FnOnce(&mut SkiaSurface) -> T + 'static,
     {
-        let window_id = self.id.into();
+        let window_id = WindowId::from_raw(self.id as usize);
         let (sender, receiver) = futures_channel::oneshot::channel();
         Platform::get().send(GlobalUserEvent::Erased(SingleThreadErasedEvent(Box::new(
             NativePlatformErasedEventAction::RendererCallback(Box::new(move |context| {

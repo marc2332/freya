@@ -114,7 +114,7 @@ impl DevtoolsPlugin {
     ) {
         let Ok(snapshot) = serde_json::to_string(&OutgoingMessage {
             action: OutgoingMessageAction::Update {
-                window_id: window_id.into(),
+                window_id: window_id.into_raw() as u64,
                 nodes: vec![],
             },
         }) else {
@@ -124,7 +124,7 @@ impl DevtoolsPlugin {
             let mut windows = self.windows.lock().unwrap();
             let start_server = windows.is_empty();
             windows.insert(
-                window_id.into(),
+                window_id.into_raw() as u64,
                 WindowState {
                     snapshot,
                     animation_clock: animation_clock.clone(),
@@ -144,7 +144,7 @@ impl DevtoolsPlugin {
         }
     }
     pub fn sync(&mut self, window_id: WindowId, scale_factor: f32, tree: &Tree) {
-        let window_id: u64 = window_id.into();
+        let window_id = window_id.into_raw() as u64;
         let mut new_nodes = Vec::new();
 
         tree.traverse_depth(|node_id| {
@@ -204,7 +204,7 @@ impl FreyaPlugin for DevtoolsPlugin {
     fn on_event(&mut self, event: &mut PluginEvent, plugin_handle: PluginHandle) {
         match event {
             PluginEvent::WindowClosed { window, .. } => {
-                let window_id: u64 = window.id().into();
+                let window_id = window.id().into_raw() as u64;
                 self.windows.lock().unwrap().remove(&window_id);
                 if let Ok(message) = serde_json::to_string(&OutgoingMessage {
                     action: OutgoingMessageAction::Update {
