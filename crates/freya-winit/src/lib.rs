@@ -30,7 +30,7 @@ mod drag_preview;
 mod drivers;
 pub mod extensions;
 pub mod integration;
-mod native_drag;
+mod platform_drag;
 pub mod plugins;
 pub mod renderer;
 #[cfg(feature = "tray")]

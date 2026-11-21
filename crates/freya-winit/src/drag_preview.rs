@@ -26,7 +26,7 @@ use crate::window::AppWindow;
 impl AppWindow {
     pub(crate) fn render_drag_preview(
         &self,
-        preview: NativeDragPreview,
+        preview: PlatformDragPreview,
         scope_id: ScopeId,
         font_collection: &mut FontCollection,
         font_manager: &FontMgr,
@@ -34,8 +34,8 @@ impl AppWindow {
     ) -> Result<DragIcon, DragError> {
         let scale_factor = self.effective_scale_factor();
         let (size, offset) = match &preview {
-            NativeDragPreview::Snapshot { area, offset } => (area.size, *offset),
-            NativeDragPreview::Element { size, offset, .. } => (*size, *offset),
+            PlatformDragPreview::Snapshot { area, offset } => (area.size, *offset),
+            PlatformDragPreview::Element { size, offset, .. } => (*size, *offset),
         };
         if !size.is_finite() || !size.is_positive() || !offset.is_finite() {
             return Err(DragError::InvalidData(
@@ -52,7 +52,7 @@ impl AppWindow {
             .ok_or_else(|| DragError::Platform("Could not allocate drag preview".into()))?;
 
         match preview {
-            NativeDragPreview::Snapshot { area, .. } => {
+            PlatformDragPreview::Snapshot { area, .. } => {
                 surface
                     .canvas()
                     .scale((thumbnail_scale as f32, thumbnail_scale as f32));
@@ -69,7 +69,7 @@ impl AppWindow {
                 }
                 .render();
             }
-            NativeDragPreview::Element { element, .. } => {
+            PlatformDragPreview::Element { element, .. } => {
                 let mut runner = Runner::new_from(&self.runner, scope_id, move || element.clone());
 
                 let mut tree = Tree::default();

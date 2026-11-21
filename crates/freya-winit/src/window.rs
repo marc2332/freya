@@ -82,7 +82,7 @@ use crate::{
         GraphicsDriver,
     },
     integration::is_ime_role,
-    native_drag::NativeDragState,
+    platform_drag::PlatformDragState,
     plugins::{
         PluginEvent,
         PluginHandle,
@@ -140,7 +140,7 @@ pub struct AppWindow {
     pub(crate) background: Color,
 
     pub(crate) active_touches: rustc_hash::FxHashMap<u64, CursorPoint>,
-    pub(crate) native_drag: NativeDragState,
+    pub(crate) platform_drag: PlatformDragState,
 
     pub(crate) on_close: Option<OnCloseHook>,
 
@@ -160,15 +160,15 @@ fn clamp_custom_scale_factor(custom_scale_factor: f64) -> f64 {
 }
 
 impl AppWindow {
-    pub(crate) fn handle_native_drag(
+    pub(crate) fn handle_platform_drag(
         &mut self,
-        command: NativeDragCommand,
+        command: PlatformDragCommand,
         event_loop: &dyn ActiveEventLoop,
         font_collection: &mut FontCollection,
         font_manager: &FontMgr,
         fallback_fonts: &[Cow<'static, str>],
     ) {
-        let NativeDragCommand {
+        let PlatformDragCommand {
             data,
             actions,
             preview,
@@ -187,10 +187,14 @@ impl AppWindow {
             })
             .transpose();
         match icon {
-            Ok(icon) => {
-                self.native_drag
-                    .start(event_loop, self.window.id(), data, actions, icon, response)
-            }
+            Ok(icon) => self.platform_drag.start(
+                event_loop,
+                self.window.id(),
+                data,
+                actions,
+                icon,
+                response,
+            ),
             Err(error) => {
                 let _ = response.send(Err(error));
             }
@@ -566,7 +570,7 @@ impl AppWindow {
             background: window_config.background,
 
             active_touches: Default::default(),
-            native_drag: Default::default(),
+            platform_drag: Default::default(),
 
             on_close,
 

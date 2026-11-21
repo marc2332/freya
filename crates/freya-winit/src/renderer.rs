@@ -74,7 +74,7 @@ use crate::{
         GraphicsContext,
         GraphicsDriver,
     },
-    native_drag::IncomingDrag,
+    platform_drag::IncomingDrag,
     plugins::{
         PluginEvent,
         PluginHandle,
@@ -486,7 +486,7 @@ impl WinitRenderer {
             .retain(|_, pending| !pending.response.is_canceled());
         self.process_pending_events();
         for app in self.windows.values_mut() {
-            app.native_drag.process_pending(event_loop);
+            app.platform_drag.process_pending(event_loop);
         }
     }
 
@@ -727,8 +727,8 @@ impl WinitRenderer {
                                 app.set_custom_scale_factor(custom_scale_factor);
                             }
                             UserEvent::Erased(command) => {
-                                if let Ok(command) = command.0.downcast::<NativeDragCommand>() {
-                                    app.handle_native_drag(
+                                if let Ok(command) = command.0.downcast::<PlatformDragCommand>() {
+                                    app.handle_platform_drag(
                                         *command,
                                         active_event_loop,
                                         &mut self.font_collection,
@@ -804,7 +804,7 @@ impl WinitRenderer {
                     if let Some(position) = position {
                         app.position = CursorPoint::new(position.x, position.y);
                     }
-                    app.native_drag.expire();
+                    app.platform_drag.expire();
                     let Ok(transfer) = event_loop.data_transfer(id) else {
                         return;
                     };
@@ -820,14 +820,14 @@ impl WinitRenderer {
                     .filter(|format| transfer.has_type(&format.to_type_hint()))
                     .collect();
                     let data = DragDataHandle::new(formats);
-                    app.native_drag.incoming = Some(IncomingDrag {
+                    app.platform_drag.incoming = Some(IncomingDrag {
                         id,
                         data,
                         decision: None,
                         accepted: None,
                         dropped: false,
                     });
-                    if let Some(event) = app.native_drag.prepare_drag_over(app.position) {
+                    if let Some(event) = app.platform_drag.prepare_drag_over(app.position) {
                         app.queue_platform_events(vec![event]);
                     }
                     self.process_pending_updates(event_loop);
@@ -835,21 +835,21 @@ impl WinitRenderer {
                 WindowEvent::DragPosition { id, position, .. } => {
                     app.position = CursorPoint::new(position.x, position.y);
                     if !app
-                        .native_drag
+                        .platform_drag
                         .incoming
                         .as_ref()
                         .is_some_and(|incoming| incoming.id == id)
                     {
                         return;
                     }
-                    if let Some(event) = app.native_drag.prepare_drag_over(app.position) {
+                    if let Some(event) = app.platform_drag.prepare_drag_over(app.position) {
                         app.queue_platform_events(vec![event]);
                     }
                     self.process_pending_updates(event_loop);
                 }
                 WindowEvent::DragDropped { id, .. } => {
                     let Some(incoming) = app
-                        .native_drag
+                        .platform_drag
                         .incoming
                         .as_mut()
                         .filter(|incoming| incoming.id == id)
@@ -879,7 +879,7 @@ impl WinitRenderer {
                 }
                 WindowEvent::DragLeft { id } => {
                     let Some(incoming) = app
-                        .native_drag
+                        .platform_drag
                         .incoming
                         .as_ref()
                         .filter(|incoming| incoming.id == id && !incoming.dropped)
@@ -893,16 +893,16 @@ impl WinitRenderer {
                         decision: None,
                         target: None,
                     };
-                    app.native_drag.expire();
+                    app.platform_drag.expire();
                     app.queue_platform_events(vec![event]);
                     self.process_pending_updates(event_loop);
                 }
                 WindowEvent::DataTransferReceived { id, serial, value } => {
-                    app.native_drag.receive(id, serial, value.as_ref());
+                    app.platform_drag.receive(id, serial, value.as_ref());
                 }
                 WindowEvent::OutgoingDragDropped { id, action } => {
                     let Some((_, response)) = app
-                        .native_drag
+                        .platform_drag
                         .outgoing
                         .take_if(|(outgoing_id, _)| *outgoing_id == id)
                     else {
@@ -914,7 +914,7 @@ impl WinitRenderer {
                         DndAction::Link => Some(DropAction::Link),
                         _ => None,
                     });
-                    let _ = response.send(Ok(NativeDragResult::Dropped(action)));
+                    let _ = response.send(Ok(PlatformDragResult::Dropped(action)));
                     app.mouse_state = ElementState::Released;
                     app.queue_platform_events(vec![PlatformEvent::PointerCancel {
                         cursor: app.position,
@@ -922,13 +922,13 @@ impl WinitRenderer {
                 }
                 WindowEvent::OutgoingDragCanceled { id } => {
                     let Some((_, response)) = app
-                        .native_drag
+                        .platform_drag
                         .outgoing
                         .take_if(|(outgoing_id, _)| *outgoing_id == id)
                     else {
                         return;
                     };
-                    let _ = response.send(Ok(NativeDragResult::Cancelled));
+                    let _ = response.send(Ok(PlatformDragResult::Cancelled));
                     app.mouse_state = ElementState::Released;
                     app.queue_platform_events(vec![PlatformEvent::PointerCancel {
                         cursor: app.position,

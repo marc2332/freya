@@ -214,7 +214,7 @@ impl TestingRunner {
                             requested_focus_strategy.borrow_mut().replace(strategy);
                         }
                         UserEvent::Erased(command) => {
-                            if let Ok(command) = command.0.downcast::<NativeDragCommand>() {
+                            if let Ok(command) = command.0.downcast::<PlatformDragCommand>() {
                                 let _ = command.response.send(Err(DragError::Unsupported));
                             }
                         }

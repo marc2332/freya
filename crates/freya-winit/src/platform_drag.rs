@@ -38,16 +38,16 @@ pub(crate) struct PendingRead {
 }
 
 #[derive(Default)]
-pub(crate) struct NativeDragState {
+pub(crate) struct PlatformDragState {
     pub(crate) incoming: Option<IncomingDrag>,
     pub(crate) reads: FxHashMap<AsyncRequestSerial, PendingRead>,
     pub(crate) outgoing: Option<(
         DataTransferId,
-        oneshot::Sender<Result<NativeDragResult, DragError>>,
+        oneshot::Sender<Result<PlatformDragResult, DragError>>,
     )>,
 }
 
-impl NativeDragState {
+impl PlatformDragState {
     pub(crate) fn start(
         &mut self,
         event_loop: &dyn ActiveEventLoop,
@@ -55,7 +55,7 @@ impl NativeDragState {
         data: TransferData,
         actions: Vec<DropAction>,
         icon: Option<DragIcon>,
-        response: oneshot::Sender<Result<NativeDragResult, DragError>>,
+        response: oneshot::Sender<Result<PlatformDragResult, DragError>>,
     ) {
         if self.outgoing.is_some() {
             let _ = response.send(Err(DragError::Platform(
@@ -193,7 +193,7 @@ impl NativeDragState {
     }
 }
 
-impl Drop for NativeDragState {
+impl Drop for PlatformDragState {
     fn drop(&mut self) {
         self.expire();
         if let Some((_, response)) = self.outgoing.take() {

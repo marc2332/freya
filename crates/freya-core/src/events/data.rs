@@ -26,11 +26,11 @@ use crate::{
         StyleState,
         TextStyleState,
     },
-    native_drag::{
+    node_id::NodeId,
+    platform_drag::{
         DragDataHandle,
         DropAction,
     },
-    node_id::NodeId,
 };
 
 #[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]

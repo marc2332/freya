@@ -209,14 +209,14 @@ impl DragDataHandle {
 
 /// How a native drag ended. Moving data does not delete the original.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum NativeDragResult {
+pub enum PlatformDragResult {
     Dropped(Option<DropAction>),
     Cancelled,
 }
 
 /// A preview drawn once by Freya and shown by the operating system.
 #[derive(Clone, PartialEq)]
-pub enum NativeDragPreview {
+pub enum PlatformDragPreview {
     Snapshot {
         area: Area,
         offset: Vector2D,
@@ -228,33 +228,33 @@ pub enum NativeDragPreview {
     },
 }
 
-pub struct NativeDragCommand {
+pub struct PlatformDragCommand {
     pub data: TransferData,
     pub actions: Vec<DropAction>,
-    pub preview: Option<NativeDragPreview>,
+    pub preview: Option<PlatformDragPreview>,
     pub scope_id: ScopeId,
-    pub response: oneshot::Sender<Result<NativeDragResult, DragError>>,
+    pub response: oneshot::Sender<Result<PlatformDragResult, DragError>>,
 }
 
-pub trait NativeDragPlatformWindow {
+pub trait PlatformDragWindow {
     /// Starts a native drag while the pointer is held down and waits until it ends.
     fn start_drag(
         &self,
         data: TransferData,
         actions: Vec<DropAction>,
-        preview: Option<NativeDragPreview>,
-    ) -> impl Future<Output = Result<NativeDragResult, DragError>>;
+        preview: Option<PlatformDragPreview>,
+    ) -> impl Future<Output = Result<PlatformDragResult, DragError>>;
 }
 
-impl NativeDragPlatformWindow for PlatformWindow {
+impl PlatformDragWindow for PlatformWindow {
     async fn start_drag(
         &self,
         data: TransferData,
         actions: Vec<DropAction>,
-        preview: Option<NativeDragPreview>,
-    ) -> Result<NativeDragResult, DragError> {
+        preview: Option<PlatformDragPreview>,
+    ) -> Result<PlatformDragResult, DragError> {
         let (response, receiver) = oneshot::channel();
-        let command = NativeDragCommand {
+        let command = PlatformDragCommand {
             data,
             actions,
             preview,

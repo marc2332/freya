@@ -14,8 +14,8 @@ use crate::{
         },
         name::EventName,
     },
-    native_drag::DragDataHandle,
     node_id::NodeId,
+    platform_drag::DragDataHandle,
     prelude::{
         Force,
         TouchPhase,

@@ -298,7 +298,7 @@ impl WebApp {
                 UserEvent::RequestRedraw => self.needs_render = true,
                 UserEvent::SetCustomScaleFactor(_) => {}
                 UserEvent::Erased(command) => {
-                    if let Ok(command) = command.0.downcast::<NativeDragCommand>() {
+                    if let Ok(command) = command.0.downcast::<PlatformDragCommand>() {
                         let _ = command.response.send(Err(DragError::Unsupported));
                     }
                 }

@@ -11,26 +11,26 @@ use torin::prelude::{
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     NativeDrag::new(|| TransferData::text("Hello from Freya!"))
+///     PlatformDrag::new(|| TransferData::text("Hello from Freya!"))
 ///         .preview(|| "Dragging text".into_element())
 ///         .child("Drag me")
 /// }
 /// ```
 #[derive(Clone, PartialEq)]
-pub struct NativeDrag {
+pub struct PlatformDrag {
     children: Vec<Element>,
     data: NoArgCallback<TransferData>,
     actions: Vec<DropAction>,
     preview: Option<NoArgCallback<Element>>,
     preview_size: Option<Size2D>,
-    on_finished: Option<EventHandler<Result<NativeDragResult, DragError>>>,
+    on_finished: Option<EventHandler<Result<PlatformDragResult, DragError>>>,
     enabled: bool,
     drag_threshold: f64,
     layout: LayoutData,
     key: DiffKey,
 }
 
-impl NativeDrag {
+impl PlatformDrag {
     /// Creates a drag source with a data factory called when dragging starts.
     pub fn new(data: impl Into<NoArgCallback<TransferData>>) -> Self {
         Self {
@@ -68,7 +68,7 @@ impl NativeDrag {
     /// Called when dragging completes, is cancelled, or fails.
     pub fn on_finished(
         mut self,
-        on_finished: impl Into<EventHandler<Result<NativeDragResult, DragError>>>,
+        on_finished: impl Into<EventHandler<Result<PlatformDragResult, DragError>>>,
     ) -> Self {
         self.on_finished = Some(on_finished.into());
         self
@@ -87,27 +87,27 @@ impl NativeDrag {
     }
 }
 
-impl ChildrenExt for NativeDrag {
+impl ChildrenExt for PlatformDrag {
     fn children_mut(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
-impl KeyExt for NativeDrag {
+impl KeyExt for PlatformDrag {
     fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
-impl LayoutExt for NativeDrag {
+impl LayoutExt for PlatformDrag {
     fn layout_mut(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
 
-impl ContainerExt for NativeDrag {}
+impl ContainerExt for PlatformDrag {}
 
-impl ComponentOwned for NativeDrag {
+impl ComponentOwned for PlatformDrag {
     fn render(self) -> impl IntoElement {
         let mut press = use_state(|| None::<(CursorPoint, Vector2D)>);
         let mut dragging = use_state(|| false);
@@ -148,12 +148,12 @@ impl ComponentOwned for NativeDrag {
 
                     let area = area();
                     let preview = match &preview {
-                        Some(preview) => NativeDragPreview::Element {
+                        Some(preview) => PlatformDragPreview::Element {
                             element: preview.call(),
                             size: preview_size.unwrap_or(area.size),
                             offset,
                         },
-                        None => NativeDragPreview::Snapshot { area, offset },
+                        None => PlatformDragPreview::Snapshot { area, offset },
                     };
 
                     let window = Platform::get().current_window();

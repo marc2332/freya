@@ -17,10 +17,10 @@ pub mod io;
 pub mod layers;
 pub mod lifecycle;
 pub mod metrics;
-pub mod native_drag;
 pub mod node_id;
 pub mod path_element;
 pub mod platform;
+pub mod platform_drag;
 pub mod reactive_context;
 pub mod render_pipeline;
 pub mod rendering_ticker;
@@ -141,8 +141,8 @@ pub mod prelude {
             writable_setter::*,
             writable_utils::*,
         },
-        native_drag::*,
         platform::*,
+        platform_drag::*,
         reactive_context::ReactiveContext,
         rendering_ticker::RenderingTicker,
         scope_id::ScopeId,
@@ -217,9 +217,9 @@ pub mod integration {
             state::State,
             writable_utils::WritableUtils,
         },
-        native_drag::*,
         node_id::NodeId,
         platform::*,
+        platform_drag::*,
         render_pipeline::RenderPipeline,
         rendering_ticker::*,
         runner::{

@@ -7,13 +7,13 @@ use freya_testing::prelude::*;
 struct DragState {
     generated: usize,
     previews: usize,
-    finished: Option<Result<NativeDragResult, DragError>>,
+    finished: Option<Result<PlatformDragResult, DragError>>,
 }
 
 fn app(enabled: bool) -> impl IntoElement {
     let mut state = use_consume::<State<DragState>>();
 
-    NativeDrag::new(move || {
+    PlatformDrag::new(move || {
         state.write().generated += 1;
         TransferData::text("Dragged text")
     })

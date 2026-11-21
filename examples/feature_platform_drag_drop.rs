@@ -24,7 +24,7 @@ fn app() -> impl IntoElement {
         .padding(24.)
         .spacing(24.)
         .child(
-            NativeDrag::new(|| TransferData::text("Hello from Freya!"))
+            PlatformDrag::new(|| TransferData::text("Hello from Freya!"))
                 .preview(|| {
                     rect()
                         .padding(16.)
@@ -34,10 +34,10 @@ fn app() -> impl IntoElement {
                         .into_element()
                 })
                 .preview_size(220., 64.)
-                .on_finished(move |result: Result<NativeDragResult, DragError>| {
+                .on_finished(move |result: Result<PlatformDragResult, DragError>| {
                     status.set_if_modified(match result {
-                        Ok(NativeDragResult::Dropped(_)) => "Drag completed".into(),
-                        Ok(NativeDragResult::Cancelled) => "Drag cancelled".into(),
+                        Ok(PlatformDragResult::Dropped(_)) => "Drag completed".into(),
+                        Ok(PlatformDragResult::Cancelled) => "Drag cancelled".into(),
                         Err(DragError::Unsupported) => {
                             "Dragging is not supported on this platform".into()
                         }
