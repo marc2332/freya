@@ -1,13 +1,3 @@
-//! Touch interaction with editable text, as mobile platforms do it:
-//!
-//! - A tap places the cursor once the finger lifts, unless the finger moved to scroll.
-//! - A double tap or a long press selects a word. Dragging after a long press extends the
-//!   selection word by word.
-//! - Handles under the cursor and at both ends of a selection move them.
-//! - A toolbar offers cut, copy, paste and select all.
-//!
-//! Dragging a finger over the text never selects it on its own, it scrolls.
-
 use std::{
     ops::Mul,
     time::{
@@ -55,7 +45,7 @@ pub enum SelectionHandle {
 }
 
 /// What a finger on the text is doing.
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
 enum Gesture {
     #[default]
     Idle,
@@ -182,7 +172,7 @@ impl TouchEditEvent<'_> {
                 editor_line,
                 holder,
             } => {
-                let gesture = touch.peek().gesture.clone();
+                let gesture = touch.peek().gesture;
                 match gesture {
                     Gesture::Pressed { origin } if origin.distance_to(location) > TOUCH_SLOP => {
                         touch.write().gesture = Gesture::Scrolling;
@@ -195,14 +185,24 @@ impl TouchEditEvent<'_> {
                         } else {
                             TextSelection::new_range((anchor.0, end.max(anchor.1)))
                         };
-                        set_selection(&mut editor, selection);
+                        editor.write_if(|mut editor| {
+                            if *editor.selection() == selection {
+                                return false;
+                            }
+                            *editor.selection_mut() = selection;
+                            true
+                        });
                     }
                     Gesture::DraggingHandle(handle) => {
                         let position = position_at(&*editor.peek(), location, editor_line, holder);
-                        let selection = editor.peek().selection().clone();
-                        // A selection made backwards starts at its `to` end.
-                        let first = selection.start().min(selection.end());
-                        let last = selection.start().max(selection.end());
+                        let (first, last) = {
+                            let editor = editor.peek();
+                            let selection = editor.selection();
+                            (
+                                selection.start().min(selection.end()),
+                                selection.start().max(selection.end()),
+                            )
+                        };
                         let selection = match handle {
                             SelectionHandle::Cursor => TextSelection::new_cursor(position),
                             // An end never crosses the other one, the selection keeps at least
@@ -215,7 +215,13 @@ impl TouchEditEvent<'_> {
                                 TextSelection::new_range((first, position.max(first + 1)))
                             }
                         };
-                        set_selection(&mut editor, selection);
+                        editor.write_if(|mut editor| {
+                            if *editor.selection() == selection {
+                                return false;
+                            }
+                            *editor.selection_mut() = selection;
+                            true
+                        });
                     }
                     _ => {}
                 }
@@ -245,7 +251,14 @@ impl TouchEditEvent<'_> {
                                 && editor.peek().cursor_pos() == position;
                             touch.toolbar = on_cursor && !touch.toolbar;
                             touch.handles = true;
-                            set_selection(&mut editor, TextSelection::new_cursor(position));
+                            let selection = TextSelection::new_cursor(position);
+                            editor.write_if(|mut editor| {
+                                if *editor.selection() == selection {
+                                    return false;
+                                }
+                                *editor.selection_mut() = selection;
+                                true
+                            });
                         }
                     }
                     Gesture::SelectingWords { .. } | Gesture::DraggingHandle(_) => {
@@ -311,27 +324,31 @@ fn select_word<T: TextEditor>(
     touch: &mut TouchSelection,
     position: usize,
 ) {
-    let (start, end) = editor.peek().find_word_boundaries(position);
-    let text = editor.peek().text().into_owned();
-    let start_char = editor.peek().utf16_cu_to_char(start);
-    let end_char = editor.peek().utf16_cu_to_char(end);
-    let is_word = text
-        .chars()
-        .skip(start_char)
-        .take(end_char - start_char)
-        .any(|ch| !ch.is_whitespace());
+    let (start, end, is_word) = {
+        let editor = editor.peek();
+        let (start, end) = editor.find_word_boundaries(position);
+        let start_char = editor.utf16_cu_to_char(start);
+        let end_char = editor.utf16_cu_to_char(end);
+        let is_word = editor
+            .text()
+            .chars()
+            .skip(start_char)
+            .take(end_char - start_char)
+            .any(|character| !character.is_whitespace());
+        (start, end, is_word)
+    };
     let selection = if is_word {
         TextSelection::new_range((start, end))
     } else {
         TextSelection::new_cursor(position)
     };
-    touch.handles = true;
-    touch.toolbar = true;
-    set_selection(editor, selection);
-}
+    touch.show();
 
-fn set_selection<T: TextEditor>(editor: &mut Writable<T>, selection: TextSelection) {
-    if *editor.peek().selection() != selection {
-        *editor.write().selection_mut() = selection;
-    }
+    editor.write_if(|mut editor| {
+        if *editor.selection() == selection {
+            return false;
+        }
+        *editor.selection_mut() = selection;
+        true
+    });
 }
