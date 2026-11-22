@@ -25,10 +25,9 @@ pub struct EditorLineUI {
     pub(crate) show_whitespace: bool,
     pub(crate) font_family: Cow<'static, str>,
     pub(crate) cursor_mode: CursorMode,
-    // The colour is decided by the editor so a single row can hide the caret.
-    pub(crate) cursor_color: Color,
     pub(crate) theme: EditorTheme,
     pub(crate) a11y_id: AccessibilityId,
+    pub(crate) focus: Memo<Focus>,
     pub(crate) scroll_controller: ScrollController,
 }
 
@@ -46,9 +45,9 @@ impl Component for EditorLineUI {
             show_whitespace,
             font_family,
             cursor_mode,
-            cursor_color,
             theme,
             a11y_id,
+            focus,
             scroll_controller,
         } = self.clone();
 
@@ -107,11 +106,8 @@ impl Component for EditorLineUI {
             }
         };
 
-        let cursor_index = if read_only {
-            None
-        } else {
-            is_line_selected.then(|| editor_data.cursor_col())
-        };
+        let focused = !read_only && is_line_selected && focus().is_focused();
+        let cursor_index = focused.then(|| editor_data.cursor_col());
         let visible_selection = match editor_data.get_selection() {
             None => false,
             Some((s, e)) if s != e => true,
@@ -133,7 +129,7 @@ impl Component for EditorLineUI {
                     .holder(holder.read().clone())
                     .on_pointer_move(on_pointer_move)
                     .on_focus_press(on_tap)
-                    .cursor_color(cursor_color)
+                    .cursor_color(theme.cursor)
                     .cursor_style(CursorStyle::Block)
                     .cursor_index(cursor_index)
                     .cursor_mode(cursor_mode)

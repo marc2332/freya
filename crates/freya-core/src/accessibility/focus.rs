@@ -162,13 +162,12 @@ pub fn use_focus(a11y_id: AccessibilityId) -> Memo<Focus> {
     let id = use_reactive(&a11y_id);
     use_memo(move || {
         let platform = Platform::get().current_window();
-        let is_focused = *platform.focused_accessibility_id.read() == id();
-        let is_keyboard = *platform.navigation_mode.read() == NavigationMode::Keyboard;
-
-        match (is_focused, is_keyboard) {
-            (true, false) => Focus::Pointer,
-            (true, true) => Focus::Keyboard,
-            _ => Focus::Not,
+        if !*platform.is_app_focused.read() || *platform.focused_accessibility_id.read() != id() {
+            Focus::Not
+        } else if *platform.navigation_mode.read() == NavigationMode::Keyboard {
+            Focus::Keyboard
+        } else {
+            Focus::Pointer
         }
     })
 }
