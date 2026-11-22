@@ -4,7 +4,6 @@ use crate::theming::component_themes::AnyMap;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct CornerRadiusScale {
-    /// Base radius in logical pixels.
     pub base_radius: f32,
     pub xs: CornerRadiusSize,
     pub sm: CornerRadiusSize,
