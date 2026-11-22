@@ -440,7 +440,7 @@ demos! {
     }
 
     SvgViewerDemo => "SvgViewer" {
-        let color = use_theme().read().colors.text_primary;
+        let color = *use_theme().read().get_var::<Color>(ColorRole::TextPrimary.key());
 
         rect()
             .horizontal()

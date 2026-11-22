@@ -12,7 +12,6 @@ use torin::{
 };
 
 use crate::{
-    corner_radius::CornerRadiusSize,
     define_theme,
     get_theme,
     icons::{
@@ -33,7 +32,7 @@ define_theme! {
         padding: Gaps,
         shadow: Color,
         border_fill: Color,
-        corner_radius: CornerRadiusSize,
+        corner_radius: CornerRadius,
     }
 }
 
@@ -50,7 +49,7 @@ define_theme! {
         select_background: Color,
         border_fill: Color,
         focus_border_fill: Color,
-        corner_radius: CornerRadiusSize,
+        corner_radius: CornerRadius,
         color: Color,
         select_color: Color,
     }

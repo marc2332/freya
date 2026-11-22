@@ -29,7 +29,10 @@ use crate::{
         ImageSource,
     },
     loader::CircularLoader,
-    theming::hooks::get_theme_or_default,
+    theming::{
+        hooks::get_theme_or_default,
+        themes::ColorRole,
+    },
 };
 
 /// Limit the amount of SVGs rasterized in parallel.
@@ -396,31 +399,31 @@ pub trait SvgThemeExt {
 impl SvgThemeExt for SvgViewer {
     fn theme_color(self) -> Self {
         let theme = get_theme_or_default();
-        self.color(theme.read().colors.text_primary)
+        self.color(*theme.read().get_var::<Color>(ColorRole::TextPrimary.key()))
     }
 
     fn theme_accent_color(self) -> Self {
         let theme = get_theme_or_default();
-        self.color(theme.read().colors.primary)
+        self.color(*theme.read().get_var::<Color>(ColorRole::Primary.key()))
     }
 
     fn theme_fill(self) -> Self {
         let theme = get_theme_or_default();
-        self.fill(theme.read().colors.text_primary)
+        self.fill(*theme.read().get_var::<Color>(ColorRole::TextPrimary.key()))
     }
 
     fn theme_stroke(self) -> Self {
         let theme = get_theme_or_default();
-        self.stroke(theme.read().colors.text_primary)
+        self.stroke(*theme.read().get_var::<Color>(ColorRole::TextPrimary.key()))
     }
 
     fn theme_accent_fill(self) -> Self {
         let theme = get_theme_or_default();
-        self.fill(theme.read().colors.primary)
+        self.fill(*theme.read().get_var::<Color>(ColorRole::Primary.key()))
     }
 
     fn theme_accent_stroke(self) -> Self {
         let theme = get_theme_or_default();
-        self.stroke(theme.read().colors.primary)
+        self.stroke(*theme.read().get_var::<Color>(ColorRole::Primary.key()))
     }
 }

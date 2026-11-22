@@ -27,8 +27,7 @@ use crate::{
     color_picker::ColorPickerThemePreference,
     corner_radius::{
         CornerRadiusRole,
-        CornerRadiusSize,
-        CornerRadiusThemePreference,
+        CornerRadiusScale,
     },
     floating_tab::FloatingTabThemePreference,
     icons::IconThemePreference,
@@ -68,7 +67,7 @@ use crate::{
     table::TableThemePreference,
     theming::{
         component_themes::{
-            ColorsSheet,
+            AnyMap,
             Theme,
         },
         macros::Preference,
@@ -76,226 +75,290 @@ use crate::{
     tooltip::TooltipThemePreference,
     typography::{
         TextRole,
-        TypographyThemePreference,
+        TypographyScale,
     },
 };
 
-pub const LIGHT_COLORS: ColorsSheet = ColorsSheet {
+/// Map of color names used by freya's built-in themes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ColorRole {
+    Primary,
+    Secondary,
+    Tertiary,
+    Success,
+    Warning,
+    Error,
+    Info,
+    Background,
+    SurfacePrimary,
+    SurfaceSecondary,
+    SurfaceTertiary,
+    SurfaceInverse,
+    SurfaceInverseSecondary,
+    SurfaceInverseTertiary,
+    Border,
+    BorderFocus,
+    BorderDisabled,
+    TextPrimary,
+    TextSecondary,
+    TextPlaceholder,
+    TextInverse,
+    TextHighlight,
+    Focus,
+    Active,
+    Disabled,
+    Overlay,
+    Shadow,
+}
+
+impl ColorRole {
+    pub const fn key(self) -> &'static str {
+        match self {
+            Self::Primary => "primary",
+            Self::Secondary => "secondary",
+            Self::Tertiary => "tertiary",
+            Self::Success => "success",
+            Self::Warning => "warning",
+            Self::Error => "error",
+            Self::Info => "info",
+            Self::Background => "background",
+            Self::SurfacePrimary => "surface_primary",
+            Self::SurfaceSecondary => "surface_secondary",
+            Self::SurfaceTertiary => "surface_tertiary",
+            Self::SurfaceInverse => "surface_inverse",
+            Self::SurfaceInverseSecondary => "surface_inverse_secondary",
+            Self::SurfaceInverseTertiary => "surface_inverse_tertiary",
+            Self::Border => "border",
+            Self::BorderFocus => "border_focus",
+            Self::BorderDisabled => "border_disabled",
+            Self::TextPrimary => "text_primary",
+            Self::TextSecondary => "text_secondary",
+            Self::TextPlaceholder => "text_placeholder",
+            Self::TextInverse => "text_inverse",
+            Self::TextHighlight => "text_highlight",
+            Self::Focus => "focus",
+            Self::Active => "active",
+            Self::Disabled => "disabled",
+            Self::Overlay => "overlay",
+            Self::Shadow => "shadow",
+        }
+    }
+}
+
+pub const LIGHT_COLORS: &[(ColorRole, Color)] = &[
     // Brand & Accent
-    primary: Color::from_rgb(103, 80, 164),
-    secondary: Color::from_rgb(202, 193, 227),
-    tertiary: Color::from_rgb(79, 61, 130),
-
+    (ColorRole::Primary, Color::from_rgb(103, 80, 164)),
+    (ColorRole::Secondary, Color::from_rgb(202, 193, 227)),
+    (ColorRole::Tertiary, Color::from_rgb(79, 61, 130)),
     // Status
-    success: Color::from_rgb(76, 175, 80),
-    warning: Color::from_rgb(255, 193, 7),
-    error: Color::from_rgb(244, 67, 54),
-    info: Color::from_rgb(33, 150, 243),
-
+    (ColorRole::Success, Color::from_rgb(76, 175, 80)),
+    (ColorRole::Warning, Color::from_rgb(255, 193, 7)),
+    (ColorRole::Error, Color::from_rgb(244, 67, 54)),
+    (ColorRole::Info, Color::from_rgb(33, 150, 243)),
     // Surfaces
-    background: Color::from_rgb(250, 250, 250),
-    surface_primary: Color::from_rgb(210, 210, 210),
-    surface_secondary: Color::from_rgb(225, 225, 225),
-    surface_tertiary: Color::from_rgb(245, 245, 245),
-    surface_inverse: Color::from_rgb(125, 125, 125),
-    surface_inverse_secondary: Color::from_rgb(110, 110, 110),
-    surface_inverse_tertiary: Color::from_rgb(90, 90, 90),
-
+    (ColorRole::Background, Color::from_rgb(250, 250, 250)),
+    (ColorRole::SurfacePrimary, Color::from_rgb(210, 210, 210)),
+    (ColorRole::SurfaceSecondary, Color::from_rgb(225, 225, 225)),
+    (ColorRole::SurfaceTertiary, Color::from_rgb(245, 245, 245)),
+    (ColorRole::SurfaceInverse, Color::from_rgb(125, 125, 125)),
+    (
+        ColorRole::SurfaceInverseSecondary,
+        Color::from_rgb(110, 110, 110),
+    ),
+    (
+        ColorRole::SurfaceInverseTertiary,
+        Color::from_rgb(90, 90, 90),
+    ),
     // Borders
-    border: Color::from_rgb(210, 210, 210),
-    border_focus: Color::from_rgb(180, 180, 180),
-    border_disabled: Color::from_rgb(210, 210, 210),
-
+    (ColorRole::Border, Color::from_rgb(210, 210, 210)),
+    (ColorRole::BorderFocus, Color::from_rgb(180, 180, 180)),
+    (ColorRole::BorderDisabled, Color::from_rgb(210, 210, 210)),
     // Text
-    text_primary: Color::from_rgb(10, 10, 10),
-    text_secondary: Color::from_rgb(100, 100, 100),
-    text_placeholder: Color::from_rgb(150, 150, 150),
-    text_inverse: Color::WHITE,
-    text_highlight: Color::from_rgb(38, 89, 170),
-
+    (ColorRole::TextPrimary, Color::from_rgb(10, 10, 10)),
+    (ColorRole::TextSecondary, Color::from_rgb(100, 100, 100)),
+    (ColorRole::TextPlaceholder, Color::from_rgb(150, 150, 150)),
+    (ColorRole::TextInverse, Color::WHITE),
+    (ColorRole::TextHighlight, Color::from_rgb(38, 89, 170)),
     // States
-    focus: Color::from_rgb(225, 225, 255),
-    active: Color::from_rgb(200, 200, 200),
-    disabled: Color::from_rgb(210, 210, 210),
-
+    (ColorRole::Focus, Color::from_rgb(225, 225, 255)),
+    (ColorRole::Active, Color::from_rgb(200, 200, 200)),
+    (ColorRole::Disabled, Color::from_rgb(210, 210, 210)),
     // Utility
-    overlay: Color::from_af32rgb(0.5, 0, 0, 0),
-    shadow: Color::from_af32rgb(0.2, 0, 0, 0),
-};
+    (ColorRole::Overlay, Color::from_af32rgb(0.5, 0, 0, 0)),
+    (ColorRole::Shadow, Color::from_af32rgb(0.2, 0, 0, 0)),
+];
 
-pub const DARK_COLORS: ColorsSheet = ColorsSheet {
+pub const DARK_COLORS: &[(ColorRole, Color)] = &[
     // Brand & Accent
-    primary: Color::from_rgb(103, 80, 164),
-    secondary: Color::from_rgb(202, 193, 227),
-    tertiary: Color::from_rgb(79, 61, 130),
-
+    (ColorRole::Primary, Color::from_rgb(103, 80, 164)),
+    (ColorRole::Secondary, Color::from_rgb(202, 193, 227)),
+    (ColorRole::Tertiary, Color::from_rgb(79, 61, 130)),
     // Status
-    success: Color::from_rgb(129, 199, 132),
-    warning: Color::from_rgb(255, 213, 79),
-    error: Color::from_rgb(229, 115, 115),
-    info: Color::from_rgb(100, 181, 246),
-
+    (ColorRole::Success, Color::from_rgb(129, 199, 132)),
+    (ColorRole::Warning, Color::from_rgb(255, 213, 79)),
+    (ColorRole::Error, Color::from_rgb(229, 115, 115)),
+    (ColorRole::Info, Color::from_rgb(100, 181, 246)),
     // Surfaces
-    background: Color::from_rgb(20, 20, 20),
-    surface_primary: Color::from_rgb(60, 60, 60),
-    surface_secondary: Color::from_rgb(45, 45, 45),
-    surface_tertiary: Color::from_rgb(25, 25, 25),
-    surface_inverse: Color::from_rgb(135, 135, 135),
-    surface_inverse_secondary: Color::from_rgb(150, 150, 150),
-    surface_inverse_tertiary: Color::from_rgb(170, 170, 170),
-
+    (ColorRole::Background, Color::from_rgb(20, 20, 20)),
+    (ColorRole::SurfacePrimary, Color::from_rgb(60, 60, 60)),
+    (ColorRole::SurfaceSecondary, Color::from_rgb(45, 45, 45)),
+    (ColorRole::SurfaceTertiary, Color::from_rgb(25, 25, 25)),
+    (ColorRole::SurfaceInverse, Color::from_rgb(135, 135, 135)),
+    (
+        ColorRole::SurfaceInverseSecondary,
+        Color::from_rgb(150, 150, 150),
+    ),
+    (
+        ColorRole::SurfaceInverseTertiary,
+        Color::from_rgb(170, 170, 170),
+    ),
     // Borders
-    border: Color::from_rgb(60, 60, 60),
-    border_focus: Color::from_rgb(110, 110, 110),
-    border_disabled: Color::from_rgb(80, 80, 80),
-
+    (ColorRole::Border, Color::from_rgb(60, 60, 60)),
+    (ColorRole::BorderFocus, Color::from_rgb(110, 110, 110)),
+    (ColorRole::BorderDisabled, Color::from_rgb(80, 80, 80)),
     // Text
-    text_primary: Color::from_rgb(250, 250, 250),
-    text_secondary: Color::from_rgb(210, 210, 210),
-    text_placeholder: Color::from_rgb(150, 150, 150),
-    text_inverse: Color::WHITE,
-    text_highlight: Color::from_rgb(96, 145, 224),
-
+    (ColorRole::TextPrimary, Color::from_rgb(250, 250, 250)),
+    (ColorRole::TextSecondary, Color::from_rgb(210, 210, 210)),
+    (ColorRole::TextPlaceholder, Color::from_rgb(150, 150, 150)),
+    (ColorRole::TextInverse, Color::WHITE),
+    (ColorRole::TextHighlight, Color::from_rgb(96, 145, 224)),
     // States
-    focus: Color::from_rgb(100, 100, 120),
-    active: Color::from_rgb(70, 70, 70),
-    disabled: Color::from_rgb(50, 50, 50),
-
+    (ColorRole::Focus, Color::from_rgb(100, 100, 120)),
+    (ColorRole::Active, Color::from_rgb(70, 70, 70)),
+    (ColorRole::Disabled, Color::from_rgb(50, 50, 50)),
     // Utility
-    overlay: Color::from_af32rgb(0.2, 255, 255, 255),
-    shadow: Color::from_af32rgb(0.6, 0, 0, 0),
-};
+    (ColorRole::Overlay, Color::from_af32rgb(0.2, 255, 255, 255)),
+    (ColorRole::Shadow, Color::from_af32rgb(0.6, 0, 0, 0)),
+];
 
 fn register_base_component_themes(theme: &mut Theme) {
-    theme.set("typography", TypographyThemePreference::default());
-    theme.set("corner_radius", CornerRadiusThemePreference::default());
-    theme.set(
+    theme.set_theme(
         "button_layout",
         ButtonLayoutThemePreference {
-            font_size: Preference::Typography(TextRole::Control),
+            font_size: Preference::Reference(TextRole::Control.key()),
             padding: Preference::Specific(Gaps::new(6., 12., 6., 12.)),
             margin: Preference::Specific(Gaps::new_all(0.)),
-            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
+            corner_radius: Preference::Reference(CornerRadiusRole::Md.key()),
             width: Preference::Specific(Size::Inner),
             height: Preference::Specific(Size::Inner),
         },
     );
-    theme.set(
+    theme.set_theme(
         "compact_button_layout",
         ButtonLayoutThemePreference {
-            font_size: Preference::Typography(TextRole::Control),
+            font_size: Preference::Reference(TextRole::Control.key()),
             padding: Preference::Specific(Gaps::new(3., 6., 3., 6.)),
             margin: Preference::Specific(Gaps::new_all(0.)),
-            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
+            corner_radius: Preference::Reference(CornerRadiusRole::Md.key()),
             width: Preference::Specific(Size::Inner),
             height: Preference::Specific(Size::Inner),
         },
     );
-    theme.set(
+    theme.set_theme(
         "expanded_button_layout",
         ButtonLayoutThemePreference {
-            font_size: Preference::Typography(TextRole::Control),
+            font_size: Preference::Reference(TextRole::Control.key()),
             padding: Preference::Specific(Gaps::new(10., 16., 10., 16.)),
             margin: Preference::Specific(Gaps::new_all(0.)),
-            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
+            corner_radius: Preference::Reference(CornerRadiusRole::Md.key()),
             width: Preference::Specific(Size::Inner),
             height: Preference::Specific(Size::Inner),
         },
     );
-    theme.set(
+    theme.set_theme(
         "button",
         ButtonColorsThemePreference {
-            background: Preference::Reference("surface_tertiary"),
-            hover_background: Preference::Reference("surface_secondary"),
-            border_fill: Preference::Reference("border"),
-            focus_border_fill: Preference::Reference("border_focus"),
-            color: Preference::Reference("text_primary"),
+            background: Preference::Reference(ColorRole::SurfaceTertiary.key()),
+            hover_background: Preference::Reference(ColorRole::SurfaceSecondary.key()),
+            border_fill: Preference::Reference(ColorRole::Border.key()),
+            focus_border_fill: Preference::Reference(ColorRole::BorderFocus.key()),
+            color: Preference::Reference(ColorRole::TextPrimary.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "filled_button",
         ButtonColorsThemePreference {
-            background: Preference::Reference("primary"),
-            hover_background: Preference::Reference("tertiary"),
+            background: Preference::Reference(ColorRole::Primary.key()),
+            hover_background: Preference::Reference(ColorRole::Tertiary.key()),
             border_fill: Preference::Specific(Color::TRANSPARENT),
-            focus_border_fill: Preference::Reference("secondary"),
-            color: Preference::Reference("text_inverse"),
+            focus_border_fill: Preference::Reference(ColorRole::Secondary.key()),
+            color: Preference::Reference(ColorRole::TextInverse.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "outline_button",
         ButtonColorsThemePreference {
-            background: Preference::Reference("surface_tertiary"),
-            hover_background: Preference::Reference("surface_secondary"),
-            border_fill: Preference::Reference("border"),
-            focus_border_fill: Preference::Reference("secondary"),
-            color: Preference::Reference("primary"),
+            background: Preference::Reference(ColorRole::SurfaceTertiary.key()),
+            hover_background: Preference::Reference(ColorRole::SurfaceSecondary.key()),
+            border_fill: Preference::Reference(ColorRole::Border.key()),
+            focus_border_fill: Preference::Reference(ColorRole::Secondary.key()),
+            color: Preference::Reference(ColorRole::Primary.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "flat_button",
         ButtonColorsThemePreference {
             background: Preference::Specific(Color::TRANSPARENT),
-            hover_background: Preference::Reference("surface_secondary"),
+            hover_background: Preference::Reference(ColorRole::SurfaceSecondary.key()),
             border_fill: Preference::Specific(Color::TRANSPARENT),
-            focus_border_fill: Preference::Reference("border"),
-            color: Preference::Reference("text_primary"),
+            focus_border_fill: Preference::Reference(ColorRole::Border.key()),
+            color: Preference::Reference(ColorRole::TextPrimary.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "card_layout",
         CardLayoutThemePreference {
             padding: Preference::Specific(Gaps::new(16., 16., 16., 16.)),
-            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
+            corner_radius: Preference::Reference(CornerRadiusRole::Md.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "compact_card_layout",
         CardLayoutThemePreference {
             padding: Preference::Specific(Gaps::new(8., 12., 8., 12.)),
-            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
+            corner_radius: Preference::Reference(CornerRadiusRole::Md.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "filled_card",
         CardColorsThemePreference {
-            background: Preference::Reference("primary"),
-            hover_background: Preference::Reference("tertiary"),
+            background: Preference::Reference(ColorRole::Primary.key()),
+            hover_background: Preference::Reference(ColorRole::Tertiary.key()),
             border_fill: Preference::Specific(Color::TRANSPARENT),
-            color: Preference::Reference("text_inverse"),
-            shadow: Preference::Reference("shadow"),
+            color: Preference::Reference(ColorRole::TextInverse.key()),
+            shadow: Preference::Reference(ColorRole::Shadow.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "outline_card",
         CardColorsThemePreference {
-            background: Preference::Reference("surface_tertiary"),
-            hover_background: Preference::Reference("surface_secondary"),
-            border_fill: Preference::Reference("border"),
-            color: Preference::Reference("text_primary"),
-            shadow: Preference::Reference("shadow"),
+            background: Preference::Reference(ColorRole::SurfaceTertiary.key()),
+            hover_background: Preference::Reference(ColorRole::SurfaceSecondary.key()),
+            border_fill: Preference::Reference(ColorRole::Border.key()),
+            color: Preference::Reference(ColorRole::TextPrimary.key()),
+            shadow: Preference::Reference(ColorRole::Shadow.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "accordion",
         AccordionThemePreference {
-            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
-            color: Preference::Reference("text_primary"),
-            background: Preference::Reference("surface_tertiary"),
-            border_fill: Preference::Reference("border"),
+            corner_radius: Preference::Reference(CornerRadiusRole::Md.key()),
+            color: Preference::Reference(ColorRole::TextPrimary.key()),
+            background: Preference::Reference(ColorRole::SurfaceTertiary.key()),
+            border_fill: Preference::Reference(ColorRole::Border.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "switch",
         SwitchColorsThemePreference {
-            background: Preference::Reference("surface_secondary"),
-            thumb_background: Preference::Reference("surface_inverse"),
-            toggled_background: Preference::Reference("secondary"),
-            toggled_thumb_background: Preference::Reference("primary"),
-            focus_border_fill: Preference::Reference("border_focus"),
+            background: Preference::Reference(ColorRole::SurfaceSecondary.key()),
+            thumb_background: Preference::Reference(ColorRole::SurfaceInverse.key()),
+            toggled_background: Preference::Reference(ColorRole::Secondary.key()),
+            toggled_thumb_background: Preference::Reference(ColorRole::Primary.key()),
+            focus_border_fill: Preference::Reference(ColorRole::BorderFocus.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "switch_layout",
         SwitchLayoutThemePreference {
             margin: Preference::Specific(Gaps::new_all(0.)),
@@ -309,7 +372,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             toggled_thumb_offset: Preference::Specific(20.),
         },
     );
-    theme.set(
+    theme.set_theme(
         "expanded_switch_layout",
         SwitchLayoutThemePreference {
             margin: Preference::Specific(Gaps::new_all(0.)),
@@ -323,13 +386,13 @@ fn register_base_component_themes(theme: &mut Theme) {
             toggled_thumb_offset: Preference::Specific(26.),
         },
     );
-    theme.set(
+    theme.set_theme(
         "scrollbar",
         ScrollBarThemePreference {
-            background: Preference::Reference("border"),
-            thumb_background: Preference::Reference("surface_inverse"),
-            hover_thumb_background: Preference::Reference("surface_inverse_secondary"),
-            active_thumb_background: Preference::Reference("surface_inverse_tertiary"),
+            background: Preference::Reference(ColorRole::Border.key()),
+            thumb_background: Preference::Reference(ColorRole::SurfaceInverse.key()),
+            hover_thumb_background: Preference::Reference(ColorRole::SurfaceInverseSecondary.key()),
+            active_thumb_background: Preference::Reference(ColorRole::SurfaceInverseTertiary.key()),
             thumb_cross_size: Preference::Specific(5.),
             expanded_thumb_cross_size: Preference::Specific(8.),
             opacity: Preference::Specific(0.),
@@ -338,200 +401,200 @@ fn register_base_component_themes(theme: &mut Theme) {
             expanded_cross_gap: Preference::Specific(3.),
         },
     );
-    theme.set(
+    theme.set_theme(
         "progressbar",
         ProgressBarThemePreference {
-            color: Preference::Reference("text_inverse"),
-            background: Preference::Reference("surface_primary"),
-            progress_background: Preference::Reference("primary"),
+            color: Preference::Reference(ColorRole::TextInverse.key()),
+            background: Preference::Reference(ColorRole::SurfacePrimary.key()),
+            progress_background: Preference::Reference(ColorRole::Primary.key()),
             height: Preference::Specific(20.),
-            font_size: Preference::Typography(TextRole::Caption),
+            font_size: Preference::Reference(TextRole::Caption.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "sidebar_item",
         SideBarItemThemePreference {
-            font_size: Preference::Typography(TextRole::Control),
-            color: Preference::Reference("text_primary"),
-            background: Preference::Reference("surface_tertiary"),
-            active_background: Preference::Reference("surface_secondary"),
-            hover_background: Preference::Reference("surface_secondary"),
-            focus_border_fill: Preference::Reference("border_focus"),
-            corner_radius: Preference::CornerRadius(CornerRadiusRole::Xl),
+            font_size: Preference::Reference(TextRole::Control.key()),
+            color: Preference::Reference(ColorRole::TextPrimary.key()),
+            background: Preference::Reference(ColorRole::SurfaceTertiary.key()),
+            active_background: Preference::Reference(ColorRole::SurfaceSecondary.key()),
+            hover_background: Preference::Reference(ColorRole::SurfaceSecondary.key()),
+            focus_border_fill: Preference::Reference(ColorRole::BorderFocus.key()),
+            corner_radius: Preference::Reference(CornerRadiusRole::Xl.key()),
             margin: Preference::Specific(Gaps::new_all(0.)),
             padding: Preference::Specific(Gaps::new(8., 12., 8., 12.)),
         },
     );
     #[cfg(feature = "router")]
-    theme.set(
+    theme.set_theme(
         "link",
         LinkThemePreference {
-            color: Preference::Reference("text_highlight"),
+            color: Preference::Reference(ColorRole::TextHighlight.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "tooltip",
         TooltipThemePreference {
-            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
-            background: Preference::Reference("surface_tertiary"),
-            color: Preference::Reference("text_primary"),
-            border_fill: Preference::Reference("surface_primary"),
-            font_size: Preference::Typography(TextRole::Control),
+            corner_radius: Preference::Reference(CornerRadiusRole::Md.key()),
+            background: Preference::Reference(ColorRole::SurfaceTertiary.key()),
+            color: Preference::Reference(ColorRole::TextPrimary.key()),
+            border_fill: Preference::Reference(ColorRole::SurfacePrimary.key()),
+            font_size: Preference::Reference(TextRole::Control.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "circular_loader",
         CircularLoaderThemePreference {
-            primary_color: Preference::Reference("surface_primary"),
+            primary_color: Preference::Reference(ColorRole::SurfacePrimary.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "input_layout",
         InputLayoutThemePreference {
-            font_size: Preference::Typography(TextRole::Control),
-            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
+            font_size: Preference::Reference(TextRole::Control.key()),
+            corner_radius: Preference::Reference(CornerRadiusRole::Md.key()),
             padding: Preference::Specific(Gaps::new(8., 8., 8., 8.)),
         },
     );
-    theme.set(
+    theme.set_theme(
         "compact_input_layout",
         InputLayoutThemePreference {
-            font_size: Preference::Typography(TextRole::Control),
-            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
+            font_size: Preference::Reference(TextRole::Control.key()),
+            corner_radius: Preference::Reference(CornerRadiusRole::Md.key()),
             padding: Preference::Specific(Gaps::new(4., 6., 4., 6.)),
         },
     );
-    theme.set(
+    theme.set_theme(
         "expanded_input_layout",
         InputLayoutThemePreference {
-            font_size: Preference::Typography(TextRole::Control),
-            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
+            font_size: Preference::Reference(TextRole::Control.key()),
+            corner_radius: Preference::Reference(CornerRadiusRole::Md.key()),
             padding: Preference::Specific(Gaps::new(12., 12., 12., 12.)),
         },
     );
-    theme.set(
+    theme.set_theme(
         "input",
         InputColorsThemePreference {
-            background: Preference::Reference("surface_tertiary"),
-            focus_background: Preference::Reference("background"),
-            color: Preference::Reference("text_primary"),
-            placeholder_color: Preference::Reference("text_secondary"),
-            border_fill: Preference::Reference("border"),
-            focus_border_fill: Preference::Reference("border_focus"),
+            background: Preference::Reference(ColorRole::SurfaceTertiary.key()),
+            focus_background: Preference::Reference(ColorRole::Background.key()),
+            color: Preference::Reference(ColorRole::TextPrimary.key()),
+            placeholder_color: Preference::Reference(ColorRole::TextSecondary.key()),
+            border_fill: Preference::Reference(ColorRole::Border.key()),
+            focus_border_fill: Preference::Reference(ColorRole::BorderFocus.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "filled_input",
         InputColorsThemePreference {
-            background: Preference::Reference("primary"),
-            focus_background: Preference::Reference("tertiary"),
-            color: Preference::Reference("text_inverse"),
-            placeholder_color: Preference::Reference("text_inverse"),
+            background: Preference::Reference(ColorRole::Primary.key()),
+            focus_background: Preference::Reference(ColorRole::Tertiary.key()),
+            color: Preference::Reference(ColorRole::TextInverse.key()),
+            placeholder_color: Preference::Reference(ColorRole::TextInverse.key()),
             border_fill: Preference::Specific(Color::TRANSPARENT),
-            focus_border_fill: Preference::Reference("secondary"),
+            focus_border_fill: Preference::Reference(ColorRole::Secondary.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "flat_input",
         InputColorsThemePreference {
             background: Preference::Specific(Color::TRANSPARENT),
-            focus_background: Preference::Reference("surface_tertiary"),
-            color: Preference::Reference("text_primary"),
-            placeholder_color: Preference::Reference("text_secondary"),
+            focus_background: Preference::Reference(ColorRole::SurfaceTertiary.key()),
+            color: Preference::Reference(ColorRole::TextPrimary.key()),
+            placeholder_color: Preference::Reference(ColorRole::TextSecondary.key()),
             border_fill: Preference::Specific(Color::TRANSPARENT),
-            focus_border_fill: Preference::Reference("border"),
+            focus_border_fill: Preference::Reference(ColorRole::Border.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "radio",
         RadioItemThemePreference {
-            unselected_fill: Preference::Reference("surface_inverse_tertiary"),
-            selected_fill: Preference::Reference("primary"),
-            border_fill: Preference::Reference("surface_primary"),
+            unselected_fill: Preference::Reference(ColorRole::SurfaceInverseTertiary.key()),
+            selected_fill: Preference::Reference(ColorRole::Primary.key()),
+            border_fill: Preference::Reference(ColorRole::SurfacePrimary.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "checkbox",
         CheckboxThemePreference {
-            unselected_fill: Preference::Reference("surface_inverse_tertiary"),
-            selected_fill: Preference::Reference("primary"),
-            selected_icon_fill: Preference::Reference("secondary"),
-            border_fill: Preference::Reference("surface_primary"),
+            unselected_fill: Preference::Reference(ColorRole::SurfaceInverseTertiary.key()),
+            selected_fill: Preference::Reference(ColorRole::Primary.key()),
+            selected_icon_fill: Preference::Reference(ColorRole::Secondary.key()),
+            border_fill: Preference::Reference(ColorRole::SurfacePrimary.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "resizable_handle",
         ResizableHandleThemePreference {
-            background: Preference::Reference("surface_secondary"),
-            hover_background: Preference::Reference("surface_primary"),
-            corner_radius: Preference::CornerRadius(CornerRadiusRole::Sm),
+            background: Preference::Reference(ColorRole::SurfaceSecondary.key()),
+            hover_background: Preference::Reference(ColorRole::SurfacePrimary.key()),
+            corner_radius: Preference::Reference(CornerRadiusRole::Sm.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "floating_tab",
         FloatingTabThemePreference {
-            font_size: Preference::Typography(TextRole::Control),
+            font_size: Preference::Reference(TextRole::Control.key()),
             background: Preference::Specific(Color::TRANSPARENT),
-            hover_background: Preference::Reference("surface_secondary"),
-            color: Preference::Reference("text_primary"),
+            hover_background: Preference::Reference(ColorRole::SurfaceSecondary.key()),
+            color: Preference::Reference(ColorRole::TextPrimary.key()),
             padding: Preference::Specific(Gaps::new(6., 12., 6., 12.)),
             width: Preference::Specific(Size::Inner),
             height: Preference::Specific(Size::Inner),
-            corner_radius: CornerRadiusSize::from(99.).into(),
+            corner_radius: CornerRadius::new_all(99.).into(),
         },
     );
-    theme.set(
+    theme.set_theme(
         "slider",
         SliderThemePreference {
-            background: Preference::Reference("surface_primary"),
-            thumb_background: Preference::Reference("secondary"),
-            thumb_inner_background: Preference::Reference("primary"),
-            border_fill: Preference::Reference("surface_primary"),
+            background: Preference::Reference(ColorRole::SurfacePrimary.key()),
+            thumb_background: Preference::Reference(ColorRole::Secondary.key()),
+            thumb_inner_background: Preference::Reference(ColorRole::Primary.key()),
+            border_fill: Preference::Reference(ColorRole::SurfacePrimary.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "color_picker",
         ColorPickerThemePreference {
-            background: Preference::Reference("surface_tertiary"),
-            border_fill: Preference::Reference("border"),
-            color: Preference::Reference("text_primary"),
+            background: Preference::Reference(ColorRole::SurfaceTertiary.key()),
+            border_fill: Preference::Reference(ColorRole::Border.key()),
+            color: Preference::Reference(ColorRole::TextPrimary.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "select",
         SelectThemePreference {
-            corner_radius: Preference::CornerRadius(CornerRadiusRole::Lg),
-            list_corner_radius: Preference::CornerRadius(CornerRadiusRole::Xxxl),
-            font_size: Preference::Typography(TextRole::Control),
+            corner_radius: Preference::Reference(CornerRadiusRole::Lg.key()),
+            list_corner_radius: Preference::Reference(CornerRadiusRole::Xxxl.key()),
+            font_size: Preference::Reference(TextRole::Control.key()),
             width: Preference::Specific(Size::Inner),
             margin: Preference::Specific(Gaps::new_all(0.)),
-            select_background: Preference::Reference("background"),
-            background_button: Preference::Reference("surface_secondary"),
-            hover_background: Preference::Reference("surface_primary"),
-            color: Preference::Reference("text_primary"),
-            border_fill: Preference::Reference("surface_primary"),
-            focus_border_fill: Preference::Reference("border_focus"),
-            arrow_fill: Preference::Reference("text_primary"),
+            select_background: Preference::Reference(ColorRole::Background.key()),
+            background_button: Preference::Reference(ColorRole::SurfaceSecondary.key()),
+            hover_background: Preference::Reference(ColorRole::SurfacePrimary.key()),
+            color: Preference::Reference(ColorRole::TextPrimary.key()),
+            border_fill: Preference::Reference(ColorRole::SurfacePrimary.key()),
+            focus_border_fill: Preference::Reference(ColorRole::BorderFocus.key()),
+            arrow_fill: Preference::Reference(ColorRole::TextPrimary.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "popup_title",
         PopupTitleThemePreference {
-            font_size: Preference::Typography(TextRole::Subtitle),
+            font_size: Preference::Reference(TextRole::Subtitle.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "popup_content",
         PopupContentThemePreference {
-            font_size: Preference::Typography(TextRole::Content),
+            font_size: Preference::Reference(TextRole::Content.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "popup",
         PopupThemePreference {
-            corner_radius: Preference::CornerRadius(CornerRadiusRole::Xl),
-            background: Preference::Reference("background"),
-            color: Preference::Reference("text_primary"),
+            corner_radius: Preference::Reference(CornerRadiusRole::Xl.key()),
+            background: Preference::Reference(ColorRole::Background.key()),
+            color: Preference::Reference(ColorRole::TextPrimary.key()),
             width: Preference::Specific(Size::px(500.)),
             height: Preference::Specific(Size::auto()),
             min_width: Preference::Specific(Size::px(100.)),
@@ -542,115 +605,115 @@ fn register_base_component_themes(theme: &mut Theme) {
             spacing: Preference::Specific(4.),
         },
     );
-    theme.set(
+    theme.set_theme(
         "icon",
         IconThemePreference {
-            fill: Preference::Reference("text_primary"),
+            fill: Preference::Reference(ColorRole::TextPrimary.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "table",
         TableThemePreference {
-            background: Preference::Reference("background"),
+            background: Preference::Reference(ColorRole::Background.key()),
             row_background: Preference::Specific(Color::TRANSPARENT),
-            hover_row_background: Preference::Reference("surface_secondary"),
-            divider_fill: Preference::Reference("surface_primary"),
-            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
+            hover_row_background: Preference::Reference(ColorRole::SurfaceSecondary.key()),
+            divider_fill: Preference::Reference(ColorRole::SurfacePrimary.key()),
+            corner_radius: Preference::Reference(CornerRadiusRole::Md.key()),
             cell_padding: Preference::Specific(Gaps::new(8., 12., 8., 12.)),
-            color: Preference::Reference("text_primary"),
+            color: Preference::Reference(ColorRole::TextPrimary.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "chip",
         ChipThemePreference {
-            font_size: Preference::Typography(TextRole::Control),
-            background: Preference::Reference("background"),
-            hover_background: Preference::Reference("tertiary"),
-            selected_background: Preference::Reference("primary"),
-            border_fill: Preference::Reference("border"),
-            hover_border_fill: Preference::Reference("tertiary"),
-            selected_border_fill: Preference::Reference("primary"),
-            focus_border_fill: Preference::Reference("secondary"),
+            font_size: Preference::Reference(TextRole::Control.key()),
+            background: Preference::Reference(ColorRole::Background.key()),
+            hover_background: Preference::Reference(ColorRole::Tertiary.key()),
+            selected_background: Preference::Reference(ColorRole::Primary.key()),
+            border_fill: Preference::Reference(ColorRole::Border.key()),
+            hover_border_fill: Preference::Reference(ColorRole::Tertiary.key()),
+            selected_border_fill: Preference::Reference(ColorRole::Primary.key()),
+            focus_border_fill: Preference::Reference(ColorRole::Secondary.key()),
             padding: Preference::Specific(Gaps::new(8., 14., 8., 14.)),
             margin: Preference::Specific(0.),
-            corner_radius: CornerRadiusSize::from(99.).into(),
+            corner_radius: CornerRadius::new_all(99.).into(),
             width: Preference::Specific(Size::Inner),
             height: Preference::Specific(Size::Inner),
-            color: Preference::Reference("text_primary"),
-            hover_color: Preference::Reference("text_inverse"),
-            selected_color: Preference::Reference("text_inverse"),
-            selected_icon_fill: Preference::Reference("secondary"),
-            hover_icon_fill: Preference::Reference("secondary"),
+            color: Preference::Reference(ColorRole::TextPrimary.key()),
+            hover_color: Preference::Reference(ColorRole::TextInverse.key()),
+            selected_color: Preference::Reference(ColorRole::TextInverse.key()),
+            selected_icon_fill: Preference::Reference(ColorRole::Secondary.key()),
+            hover_icon_fill: Preference::Reference(ColorRole::Secondary.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "menu_item",
         MenuItemThemePreference {
-            font_size: Preference::Typography(TextRole::Control),
+            font_size: Preference::Reference(TextRole::Control.key()),
             background: Preference::Specific(Color::TRANSPARENT),
-            hover_background: Preference::Reference("surface_secondary"),
-            select_background: Preference::Reference("surface_primary"),
+            hover_background: Preference::Reference(ColorRole::SurfaceSecondary.key()),
+            select_background: Preference::Reference(ColorRole::SurfacePrimary.key()),
             border_fill: Preference::Specific(Color::TRANSPARENT),
-            focus_border_fill: Preference::Reference("border_focus"),
-            corner_radius: Preference::CornerRadius(CornerRadiusRole::Lg),
-            color: Preference::Reference("text_primary"),
-            select_color: Preference::Reference("text_primary"),
+            focus_border_fill: Preference::Reference(ColorRole::BorderFocus.key()),
+            corner_radius: Preference::Reference(CornerRadiusRole::Lg.key()),
+            color: Preference::Reference(ColorRole::TextPrimary.key()),
+            select_color: Preference::Reference(ColorRole::TextPrimary.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "menu_container",
         MenuContainerThemePreference {
-            background: Preference::Reference("background"),
+            background: Preference::Reference(ColorRole::Background.key()),
             padding: Preference::Specific(Gaps::new_all(6.)),
             shadow: Preference::Specific(Color::from((0, 0, 0, 0.25))),
-            border_fill: Preference::Reference("surface_primary"),
-            corner_radius: Preference::CornerRadius(CornerRadiusRole::Xl),
+            border_fill: Preference::Reference(ColorRole::SurfacePrimary.key()),
+            corner_radius: Preference::Reference(CornerRadiusRole::Xl.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "button_segment",
         ButtonSegmentThemePreference {
-            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
-            font_size: Preference::Typography(TextRole::Control),
+            corner_radius: Preference::Reference(CornerRadiusRole::Md.key()),
+            font_size: Preference::Reference(TextRole::Control.key()),
             background: Preference::Specific(Color::TRANSPARENT),
-            hover_background: Preference::Reference("surface_secondary"),
-            disabled_background: Preference::Reference("disabled"),
-            selected_background: Preference::Reference("surface_secondary"),
-            focus_background: Preference::Reference("surface_primary"),
+            hover_background: Preference::Reference(ColorRole::SurfaceSecondary.key()),
+            disabled_background: Preference::Reference(ColorRole::Disabled.key()),
+            selected_background: Preference::Reference(ColorRole::SurfaceSecondary.key()),
+            focus_background: Preference::Reference(ColorRole::SurfacePrimary.key()),
             padding: Preference::Specific(Gaps::new(6., 14., 6., 14.)),
             selected_padding: Preference::Specific(Gaps::new(6., 14., 6., 14.)),
             width: Preference::Specific(Size::Inner),
             height: Preference::Specific(Size::FillMinimum),
-            color: Preference::Reference("text_primary"),
+            color: Preference::Reference(ColorRole::TextPrimary.key()),
         },
     );
-    theme.set(
+    theme.set_theme(
         "segmented_button",
         SegmentedButtonThemePreference {
-            background: Preference::Reference("background"),
-            border_fill: Preference::Reference("border"),
-            corner_radius: Preference::CornerRadius(CornerRadiusRole::Xl),
+            background: Preference::Reference(ColorRole::Background.key()),
+            border_fill: Preference::Reference(ColorRole::Border.key()),
+            corner_radius: Preference::Reference(CornerRadiusRole::Xl.key()),
         },
     );
     #[cfg(feature = "titlebar")]
-    theme.set(
+    theme.set_theme(
         "titlebar_button",
         TitlebarButtonThemePreference {
             background: Preference::Specific(Color::TRANSPARENT),
-            hover_background: Preference::Reference("surface_secondary"),
-            corner_radius: CornerRadiusSize::from(0.).into(),
+            hover_background: Preference::Reference(ColorRole::SurfaceSecondary.key()),
+            corner_radius: CornerRadius::new_all(0.).into(),
             width: Preference::Specific(Size::Pixels(Length::new(46.0))),
             height: Preference::Specific(Size::Fill),
         },
     );
-    theme.set(
+    theme.set_theme(
         "skeleton",
         SkeletonThemePreference {
-            background: Preference::Reference("surface_primary"),
+            background: Preference::Reference(ColorRole::SurfacePrimary.key()),
             shimmer_color: Preference::Specific(Color::WHITE.with_a(160)),
             duration: Preference::Specific(Duration::from_millis(1000)),
             animation: Preference::Specific(SkeletonAnimation::Pulse),
-            corner_radius: Preference::CornerRadius(CornerRadiusRole::Xs),
+            corner_radius: Preference::Reference(CornerRadiusRole::Xs.key()),
             shimmer_from: Preference::Specific(-320.),
             shimmer_to: Preference::Specific(960.),
             shimmer_width: Preference::Specific(300.),
@@ -674,13 +737,25 @@ pub fn dark_theme() -> Theme {
     build_theme("dark", DARK_COLORS)
 }
 
-fn build_theme(name: &'static str, mut colors: ColorsSheet) -> Theme {
-    if let Some(primary) = current_accent_color() {
-        colors.primary = primary;
-        colors.secondary = Color::lerp(primary, Color::WHITE, 0.65);
-        colors.tertiary = Color::lerp(primary, Color::BLACK, 0.23);
+fn build_theme(name: &'static str, colors: &[(ColorRole, Color)]) -> Theme {
+    let mut variables = AnyMap::default();
+    for &(role, color) in colors {
+        variables.set(role.key(), color);
     }
-    let mut theme = Theme::new(name, colors);
+    TypographyScale::default().apply_to(&mut variables);
+    CornerRadiusScale::default().apply_to(&mut variables);
+    if let Some(primary) = current_accent_color() {
+        variables.set(ColorRole::Primary.key(), primary);
+        variables.set(
+            ColorRole::Secondary.key(),
+            Color::lerp(primary, Color::WHITE, 0.65),
+        );
+        variables.set(
+            ColorRole::Tertiary.key(),
+            Color::lerp(primary, Color::BLACK, 0.23),
+        );
+    }
+    let mut theme = Theme::new(name, variables);
     register_base_component_themes(&mut theme);
     theme
 }

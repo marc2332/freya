@@ -19,7 +19,10 @@ use freya_components::{
         Table,
         TableRow,
     },
-    theming::macros::Preference,
+    theming::{
+        macros::Preference,
+        themes::ColorRole,
+    },
 };
 use freya_core::{
     elements::rect::Rect,
@@ -65,13 +68,13 @@ define_theme! {
 
 fn markdown_theme_preference() -> MarkdownViewerThemePreference {
     MarkdownViewerThemePreference {
-        color: Preference::Reference("text_primary"),
-        color_link: Preference::Reference("text_highlight"),
-        background_code: Preference::Reference("surface_tertiary"),
-        color_code: Preference::Reference("text_primary"),
-        background_blockquote: Preference::Reference("surface_tertiary"),
-        border_blockquote: Preference::Reference("surface_primary"),
-        background_divider: Preference::Reference("border"),
+        color: Preference::Reference(ColorRole::TextPrimary.key()),
+        color_link: Preference::Reference(ColorRole::TextHighlight.key()),
+        background_code: Preference::Reference(ColorRole::SurfaceTertiary.key()),
+        color_code: Preference::Reference(ColorRole::TextPrimary.key()),
+        background_blockquote: Preference::Reference(ColorRole::SurfaceTertiary.key()),
+        border_blockquote: Preference::Reference(ColorRole::SurfacePrimary.key()),
+        background_divider: Preference::Reference(ColorRole::Border.key()),
         heading_h1: Preference::Specific(32.0),
         heading_h2: Preference::Specific(28.0),
         heading_h3: Preference::Specific(24.0),

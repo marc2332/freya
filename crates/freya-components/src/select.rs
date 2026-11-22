@@ -3,7 +3,6 @@ use freya_core::prelude::*;
 use torin::prelude::*;
 
 use crate::{
-    corner_radius::CornerRadiusSize,
     define_theme,
     get_theme,
     icons::{
@@ -18,8 +17,8 @@ define_theme! {
     pub Select {
         %[fields]
         font_size: f32,
-        corner_radius: CornerRadiusSize,
-        list_corner_radius: CornerRadiusSize,
+        corner_radius: CornerRadius,
+        list_corner_radius: CornerRadius,
         width: Size,
         margin: Gaps,
         select_background: Color,

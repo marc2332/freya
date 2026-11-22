@@ -10,7 +10,6 @@ use torin::{
 };
 
 use crate::{
-    corner_radius::CornerRadiusSize,
     define_theme,
     get_theme,
 };
@@ -21,7 +20,7 @@ define_theme! {
         %[fields]
         background: Color,
         color: Color,
-        corner_radius: CornerRadiusSize,
+        corner_radius: CornerRadius,
         width: Size,
         height: Size,
         min_width: Size,

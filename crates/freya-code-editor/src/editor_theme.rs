@@ -209,20 +209,20 @@ pub trait CodeEditorThemeExt {
 
 impl CodeEditorThemeExt for Theme {
     fn with_dark_code_editor(mut self) -> Self {
-        self.set(
+        self.set_theme(
             "code_editor",
             EditorThemePreference::from(EditorTheme::dark()),
         );
-        self.set("code_editor_syntax", EditorSyntaxTheme::dark());
+        self.set_theme("code_editor_syntax", EditorSyntaxTheme::dark());
         self
     }
 
     fn with_light_code_editor(mut self) -> Self {
-        self.set(
+        self.set_theme(
             "code_editor",
             EditorThemePreference::from(EditorTheme::light()),
         );
-        self.set("code_editor_syntax", EditorSyntaxTheme::light());
+        self.set_theme("code_editor_syntax", EditorSyntaxTheme::light());
         self
     }
 }

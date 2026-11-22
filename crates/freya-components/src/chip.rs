@@ -5,7 +5,6 @@ use torin::{
 };
 
 use crate::{
-    corner_radius::CornerRadiusSize,
     define_theme,
     get_theme,
     icons::{
@@ -27,7 +26,7 @@ define_theme! {
         hover_border_fill: Color,
         focus_border_fill: Color,
         margin: f32,
-        corner_radius: CornerRadiusSize,
+        corner_radius: CornerRadius,
         width: Size,
         height: Size,
         padding: Gaps,

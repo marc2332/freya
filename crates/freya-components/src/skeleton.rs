@@ -8,16 +8,8 @@ use torin::{
 };
 
 use crate::{
-    corner_radius::CornerRadiusSize,
     define_theme,
     get_theme,
-    theming::{
-        component_themes::ColorsSheet,
-        macros::{
-            Preference,
-            ResolvablePreference,
-        },
-    },
 };
 
 /// Animation style for the skeleton placeholder.
@@ -28,15 +20,6 @@ pub enum SkeletonAnimation {
     Shimmer,
 }
 
-impl ResolvablePreference<SkeletonAnimation> for Preference<SkeletonAnimation> {
-    fn resolve(&self, _: &ColorsSheet) -> SkeletonAnimation {
-        match self {
-            Self::Specific(value) => *value,
-            _ => panic!("Skeleton animations do not support references."),
-        }
-    }
-}
-
 define_theme! {
     %[component]
     pub Skeleton {
@@ -45,7 +28,7 @@ define_theme! {
         shimmer_color: Color,
         duration: Duration,
         animation: SkeletonAnimation,
-        corner_radius: CornerRadiusSize,
+        corner_radius: CornerRadius,
         shimmer_from: f32,
         shimmer_to: f32,
         shimmer_width: f32,

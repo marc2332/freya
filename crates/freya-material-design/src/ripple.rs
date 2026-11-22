@@ -1,7 +1,10 @@
 use std::time::Duration;
 
 use freya_animation::prelude::*;
-use freya_components::theming::hooks::get_theme_or_default;
+use freya_components::theming::{
+    hooks::get_theme_or_default,
+    themes::ColorRole,
+};
 use freya_core::prelude::*;
 use torin::prelude::{
     Point2D,
@@ -105,7 +108,7 @@ impl Component for Ripple {
 
         let color = self.color.unwrap_or_else(|| {
             let theme = get_theme_or_default();
-            theme.read().colors.primary
+            *theme.read().get_var::<Color>(ColorRole::Primary.key())
         });
         let duration = self.duration;
 

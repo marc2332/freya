@@ -263,7 +263,7 @@ pub mod components {
         table::*,
         theming::{
             component_themes::{
-                ColorsSheet,
+                AnyMap,
                 Theme,
             },
             extensions::*,

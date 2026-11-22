@@ -10,15 +10,13 @@ fn main() {
 
 fn custom_theme(base_size: f32) -> Theme {
     let mut theme = light_theme();
-    theme.set(
-        "typography",
-        TypographyThemePreference {
-            base_size: base_size.into(),
-            title: TypographySize::Fixed(36.0).into(),
-            subtitle: TypographySize::Relative(1.25).into(),
-            ..TypographyThemePreference::default()
-        },
-    );
+    TypographyScale {
+        base_size,
+        title: TypographySize::Fixed(36.),
+        subtitle: TypographySize::Relative(1.25),
+        ..TypographyScale::default()
+    }
+    .apply_to(&mut theme.variables);
     theme
 }
 

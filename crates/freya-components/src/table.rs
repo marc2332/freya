@@ -8,7 +8,6 @@ use torin::{
 };
 
 use crate::{
-    corner_radius::CornerRadiusSize,
     define_theme,
     get_theme,
 };
@@ -24,7 +23,7 @@ define_theme! {
         hover_row_background: Color,
         row_background: Color,
         divider_fill: Color,
-        corner_radius: CornerRadiusSize,
+        corner_radius: CornerRadius,
         cell_padding: Gaps,
         color: Color,
     }

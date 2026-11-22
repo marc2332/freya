@@ -10,14 +10,12 @@ fn main() {
 
 fn custom_theme(base_radius: f32) -> Theme {
     let mut theme = light_theme();
-    theme.set(
-        "corner_radius",
-        CornerRadiusThemePreference {
-            base_radius,
-            md: CornerRadiusSize::Relative(1.25),
-            ..CornerRadiusThemePreference::default()
-        },
-    );
+    CornerRadiusScale {
+        base_radius,
+        md: CornerRadiusSize::Relative(1.25),
+        ..CornerRadiusScale::default()
+    }
+    .apply_to(&mut theme.variables);
     theme
 }
 

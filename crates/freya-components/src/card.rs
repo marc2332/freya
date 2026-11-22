@@ -2,7 +2,6 @@ use freya_core::prelude::*;
 use torin::gaps::Gaps;
 
 use crate::{
-    corner_radius::CornerRadiusSize,
     define_theme,
     get_theme,
 };
@@ -14,7 +13,7 @@ define_theme! {
     %[component]
     pub CardLayout {
         %[fields]
-        corner_radius: CornerRadiusSize,
+        corner_radius: CornerRadius,
         padding: Gaps,
     }
 }

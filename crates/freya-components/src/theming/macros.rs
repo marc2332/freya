@@ -1,38 +1,12 @@
-use std::time::Duration;
-
 #[doc(hidden)]
 pub use ::paste::paste;
-use freya_core::prelude::*;
-use torin::{
-    gaps::Gaps,
-    size::Size,
-};
 
-use crate::{
-    corner_radius::CornerRadiusRole,
-    theming::component_themes::{
-        ColorsSheet,
-        Theme,
-    },
-    typography::TextRole,
-};
-
+use crate::theming::component_themes::AnyMap;
 #[doc(hidden)]
 #[macro_export]
 macro_rules! theme_setter_param {
     (f32) => { f32 };
     ($field_ty:ty) => { impl ::core::convert::Into<$field_ty> };
-}
-
-#[doc(hidden)]
-#[macro_export]
-macro_rules! theme_resolved_type {
-    (CornerRadiusSize) => {
-        $crate::corner_radius::ResolvedCornerRadius
-    };
-    ($field_ty:ty) => {
-        $field_ty
-    };
 }
 
 #[macro_export]
@@ -114,7 +88,7 @@ macro_rules! define_theme {
             pub struct [<$name Theme>] {
                 $($(
                     $(#[$field_attrs])*
-                    pub $field_name: $crate::theme_resolved_type!($field_ty),
+                    pub $field_name: $field_ty,
                 )*)?
             }
 
@@ -127,23 +101,11 @@ macro_rules! define_theme {
                     )*)?
                 }
 
-                /// Resolve color references using a color sheet.
-                /// Panics for typography references and named or relative radii. Use [`Self::resolve_with_theme`] for those.
-                pub fn resolve(&self, colors_sheet: &$crate::theming::component_themes::ColorsSheet) -> [<$name Theme>] {
-                    use $crate::theming::macros::ResolvablePreference;
+                /// Resolve references using the supplied variables.
+                pub fn resolve(&self, variables: &$crate::theming::component_themes::AnyMap) -> [<$name Theme>] {
                     [<$name Theme>] {
                         $($(
-                            $field_name: self.$field_name.resolve(colors_sheet),
-                        )*)?
-                    }
-                }
-
-                /// Resolve references and relative radii using the supplied theme.
-                pub fn resolve_with_theme(&self, theme: &$crate::theming::component_themes::Theme) -> [<$name Theme>] {
-                    use $crate::theming::macros::ResolvablePreference;
-                    [<$name Theme>] {
-                        $($(
-                            $field_name: self.$field_name.resolve_with_theme(theme),
+                            $field_name: self.$field_name.resolve(variables),
                         )*)?
                     }
                 }
@@ -274,7 +236,7 @@ macro_rules! get_theme_or_default {
         let theme = $crate::theming::hooks::get_theme_or_default();
         let theme = theme.read();
         let default_theme: $theme_type;
-        let requested_theme = match theme.get::<$theme_type>($theme_key) {
+        let requested_theme = match theme.get_theme::<$theme_type>($theme_key) {
             Some(requested_theme) => requested_theme,
             None => {
                 default_theme = ($default)();
@@ -285,9 +247,9 @@ macro_rules! get_theme_or_default {
         if let Some(theme_override) = $theme_prop {
             let mut requested_theme = requested_theme.clone();
             requested_theme.apply_optional(&theme_override);
-            requested_theme.resolve_with_theme(&theme)
+            requested_theme.resolve(&theme.variables)
         } else {
-            requested_theme.resolve_with_theme(&theme)
+            requested_theme.resolve(&theme.variables)
         }
     }};
 }
@@ -305,131 +267,20 @@ macro_rules! get_theme {
 pub enum Preference<T> {
     Specific(T),
     Reference(&'static str),
-    /// A role for an `f32` font-size field. Resolve it with a full theme.
-    Typography(TextRole),
-    /// A named size for a `CornerRadiusSize` field. Resolve it with a full theme.
-    CornerRadius(CornerRadiusRole),
 }
 
 impl<T> From<T> for Preference<T> {
     fn from(value: T) -> Self {
-        Preference::Specific(value)
+        Self::Specific(value)
     }
 }
 
-pub trait ResolvablePreference<T: Clone> {
-    fn resolve(&self, colors_sheet: &ColorsSheet) -> T;
-
-    fn resolve_with_theme(&self, theme: &Theme) -> T {
-        self.resolve(&theme.colors)
-    }
-}
-
-impl ResolvablePreference<Color> for Preference<Color> {
-    fn resolve(&self, colors_sheet: &ColorsSheet) -> Color {
-        match self {
-            Self::Reference(reference) => match *reference {
-                // Brand & Accent
-                "primary" => colors_sheet.primary,
-                "secondary" => colors_sheet.secondary,
-                "tertiary" => colors_sheet.tertiary,
-
-                // Status
-                "success" => colors_sheet.success,
-                "warning" => colors_sheet.warning,
-                "error" => colors_sheet.error,
-                "info" => colors_sheet.info,
-
-                // Surfaces
-                "background" => colors_sheet.background,
-                "surface_primary" => colors_sheet.surface_primary,
-                "surface_secondary" => colors_sheet.surface_secondary,
-                "surface_tertiary" => colors_sheet.surface_tertiary,
-                "surface_inverse" => colors_sheet.surface_inverse,
-                "surface_inverse_secondary" => colors_sheet.surface_inverse_secondary,
-                "surface_inverse_tertiary" => colors_sheet.surface_inverse_tertiary,
-
-                // Borders
-                "border" => colors_sheet.border,
-                "border_focus" => colors_sheet.border_focus,
-                "border_disabled" => colors_sheet.border_disabled,
-
-                // Text
-                "text_primary" => colors_sheet.text_primary,
-                "text_secondary" => colors_sheet.text_secondary,
-                "text_placeholder" => colors_sheet.text_placeholder,
-                "text_inverse" => colors_sheet.text_inverse,
-                "text_highlight" => colors_sheet.text_highlight,
-
-                // States
-                "focus" => colors_sheet.focus,
-                "active" => colors_sheet.active,
-                "disabled" => colors_sheet.disabled,
-
-                // Utility
-                "overlay" => colors_sheet.overlay,
-                "shadow" => colors_sheet.shadow,
-
-                _ => colors_sheet.primary,
-            },
-
-            Self::Specific(value) => *value,
-            Self::Typography(_) => panic!("Typography references require a font-size field."),
-            Self::CornerRadius(_) => panic!("Radius references require a corner-radius field."),
-        }
-    }
-}
-
-impl ResolvablePreference<Size> for Preference<Size> {
-    fn resolve(&self, _colors_sheet: &ColorsSheet) -> Size {
+impl<T: Clone + 'static> Preference<T> {
+    /// Resolve the preference. A reference must exist with the expected type.
+    pub fn resolve(&self, variables: &AnyMap) -> T {
         match self {
             Self::Specific(value) => value.clone(),
-            _ => panic!("Size fields do not support references."),
-        }
-    }
-}
-
-impl ResolvablePreference<Gaps> for Preference<Gaps> {
-    fn resolve(&self, _colors_sheet: &ColorsSheet) -> Gaps {
-        match self {
-            Self::Specific(value) => *value,
-            _ => panic!("Gaps fields do not support references."),
-        }
-    }
-}
-
-impl ResolvablePreference<CornerRadius> for Preference<CornerRadius> {
-    fn resolve(&self, _colors_sheet: &ColorsSheet) -> CornerRadius {
-        match self {
-            Self::Specific(value) => *value,
-            _ => panic!("Corner-radius fields do not support references."),
-        }
-    }
-}
-
-impl ResolvablePreference<f32> for Preference<f32> {
-    fn resolve(&self, _colors_sheet: &ColorsSheet) -> f32 {
-        match self {
-            Self::Reference(_) => panic!("Only Colors support color references."),
-            Self::Typography(_) => panic!("Typography references require a full theme."),
-            Self::CornerRadius(_) => panic!("Radius references require a corner-radius field."),
-            Self::Specific(value) => *value,
-        }
-    }
-
-    fn resolve_with_theme(&self, theme: &Theme) -> f32 {
-        match self {
-            Self::Typography(role) => theme.font_size(*role),
-            _ => self.resolve(&theme.colors),
-        }
-    }
-}
-
-impl ResolvablePreference<Duration> for Preference<Duration> {
-    fn resolve(&self, _colors_sheet: &ColorsSheet) -> Duration {
-        match self {
-            Self::Specific(value) => *value,
-            _ => panic!("Duration fields do not support references."),
+            Self::Reference(key) => variables.get::<T>(key).clone(),
         }
     }
 }

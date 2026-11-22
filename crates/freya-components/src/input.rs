@@ -35,7 +35,6 @@ use tracing::warn;
 
 use crate::{
     context_menu::ContextMenu,
-    corner_radius::CornerRadiusSize,
     cursor_blink::use_cursor_blink,
     define_theme,
     get_theme,
@@ -58,7 +57,7 @@ define_theme! {
     pub InputLayout {
         %[fields]
         font_size: f32,
-        corner_radius: CornerRadiusSize,
+        corner_radius: CornerRadius,
         padding: Gaps,
     }
 }

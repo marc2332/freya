@@ -6,7 +6,6 @@ use torin::{
 };
 
 use crate::{
-    corner_radius::CornerRadiusSize,
     define_theme,
     get_theme,
 };
@@ -16,7 +15,7 @@ define_theme! {
     pub ButtonSegment {
         %[fields]
         font_size: f32,
-        corner_radius: CornerRadiusSize,
+        corner_radius: CornerRadius,
         background: Color,
         hover_background: Color,
         disabled_background: Color,
@@ -36,7 +35,7 @@ define_theme! {
         %[fields]
         background: Color,
         border_fill: Color,
-        corner_radius: CornerRadiusSize,
+        corner_radius: CornerRadius,
     }
 }
 

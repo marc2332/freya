@@ -1,7 +1,10 @@
 use freya_core::prelude::*;
 
 use crate::{
-    theming::hooks::get_theme_or_default,
+    theming::{
+        hooks::get_theme_or_default,
+        themes::ColorRole,
+    },
     typography::{
         TextRole,
         TextRoleExt,
@@ -16,12 +19,12 @@ pub trait RectThemeExt {
 impl RectThemeExt for Rect {
     fn theme_background(self) -> Self {
         let theme = get_theme_or_default();
-        self.background(theme.read().colors.background)
+        self.background(*theme.read().get_var::<Color>(ColorRole::Background.key()))
     }
 
     fn theme_color(self) -> Self {
         let theme = get_theme_or_default();
-        self.color(theme.read().colors.text_primary)
+        self.color(*theme.read().get_var::<Color>(ColorRole::TextPrimary.key()))
     }
 }
 
@@ -47,7 +50,7 @@ pub trait LabelThemeExt {
 impl LabelThemeExt for Label {
     fn theme_color(self) -> Self {
         let theme = get_theme_or_default();
-        self.color(theme.read().colors.text_primary)
+        self.color(*theme.read().get_var::<Color>(ColorRole::TextPrimary.key()))
     }
 
     fn title(self) -> Self {
@@ -78,6 +81,6 @@ pub trait ParagraphThemeExt {
 impl ParagraphThemeExt for Paragraph {
     fn theme_color(self) -> Self {
         let theme = get_theme_or_default();
-        self.color(theme.read().colors.text_primary)
+        self.color(*theme.read().get_var::<Color>(ColorRole::TextPrimary.key()))
     }
 }

@@ -34,14 +34,12 @@
 //! fn app() -> impl IntoElement {
 //!     use_init_theme(|| {
 //!         let mut theme = light_theme();
-//!         theme.set(
-//!             "typography",
-//!             TypographyThemePreference {
-//!                 base_size: 18.0.into(),
-//!                 title: TypographySize::Fixed(28.0).into(),
-//!                 ..TypographyThemePreference::default()
-//!             },
-//!         );
+//!         TypographyScale {
+//!             base_size: 18.,
+//!             title: TypographySize::Fixed(28.),
+//!             ..TypographyScale::default()
+//!         }
+//!         .apply_to(&mut theme.variables);
 //!         theme
 //!     });
 //!
@@ -58,7 +56,7 @@
 //! }
 //! ```
 //!
-//! Use `Preference::Typography(TextRole::Control)` in a component theme's `font_size` field to follow the scale.
+//! Use `Preference::Reference(TextRole::Control.key())` in a component theme's `font_size` field.
 //! A per-instance override such as `Button::new().font_size(18.)` uses a fixed size.
 //!
 //! The `title`, `subtitle`, `body`, `caption` and `overline` label helpers use the same scale.

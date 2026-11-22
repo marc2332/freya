@@ -1,20 +1,9 @@
 use freya_core::prelude::*;
 
-use crate::theming::{
-    component_themes::{
-        ColorsSheet,
-        Theme,
-    },
-    hooks::get_theme_or_default,
-    macros::{
-        Preference,
-        ResolvablePreference,
-    },
-};
+use crate::theming::component_themes::AnyMap;
 
-/// Set under the `"corner_radius"` theme key to customize the shared radius scale.
 #[derive(Clone, Debug, PartialEq)]
-pub struct CornerRadiusThemePreference {
+pub struct CornerRadiusScale {
     /// Base radius in logical pixels.
     pub base_radius: f32,
     pub xs: CornerRadiusSize,
@@ -26,7 +15,7 @@ pub struct CornerRadiusThemePreference {
     pub xxxl: CornerRadiusSize,
 }
 
-impl Default for CornerRadiusThemePreference {
+impl Default for CornerRadiusScale {
     fn default() -> Self {
         Self {
             base_radius: 8.,
@@ -53,23 +42,36 @@ pub enum CornerRadiusRole {
     Xxxl,
 }
 
-impl CornerRadiusThemePreference {
-    pub fn corner_radius(&self, role: CornerRadiusRole) -> CornerRadius {
-        let size = match role {
-            CornerRadiusRole::Xs => self.xs,
-            CornerRadiusRole::Sm => self.sm,
-            CornerRadiusRole::Md => self.md,
-            CornerRadiusRole::Lg => self.lg,
-            CornerRadiusRole::Xl => self.xl,
-            CornerRadiusRole::Xxl => self.xxl,
-            CornerRadiusRole::Xxxl => self.xxxl,
-        };
-        size.resolve(self.base_radius)
+impl CornerRadiusRole {
+    pub const fn key(self) -> &'static str {
+        match self {
+            Self::Xs => "corner_radius.xs",
+            Self::Sm => "corner_radius.sm",
+            Self::Md => "corner_radius.md",
+            Self::Lg => "corner_radius.lg",
+            Self::Xl => "corner_radius.xl",
+            Self::Xxl => "corner_radius.xxl",
+            Self::Xxxl => "corner_radius.xxxl",
+        }
     }
 }
 
-#[doc(hidden)]
-pub type ResolvedCornerRadius = CornerRadius;
+impl CornerRadiusScale {
+    /// Write resolved corner radius values.
+    pub fn apply_to(&self, variables: &mut AnyMap) {
+        for (role, size) in [
+            (CornerRadiusRole::Xs, self.xs),
+            (CornerRadiusRole::Sm, self.sm),
+            (CornerRadiusRole::Md, self.md),
+            (CornerRadiusRole::Lg, self.lg),
+            (CornerRadiusRole::Xl, self.xl),
+            (CornerRadiusRole::Xxl, self.xxl),
+            (CornerRadiusRole::Xxxl, self.xxxl),
+        ] {
+            variables.set(role.key(), size.resolve(self.base_radius));
+        }
+    }
+}
 
 /// A fixed corner radius or a multiplier of the theme's base radius.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -120,7 +122,7 @@ impl CornerRadiusSize {
         Self::Relative(2.5)
     }
 
-    /// Resolve using a base in logical pixels. Fixed radii ignore the base.
+    /// Resolve the corner radius to actual values.
     pub fn resolve(self, base_radius: f32) -> CornerRadius {
         match self {
             Self::Fixed(radius) => radius,
@@ -128,36 +130,3 @@ impl CornerRadiusSize {
         }
     }
 }
-
-impl ResolvablePreference<CornerRadius> for Preference<CornerRadiusSize> {
-    fn resolve(&self, _colors_sheet: &ColorsSheet) -> CornerRadius {
-        match self {
-            Self::Specific(CornerRadiusSize::Fixed(radius)) => *radius,
-            Self::Specific(CornerRadiusSize::Relative(_)) | Self::CornerRadius(_) => {
-                panic!("Named and relative radii require a full theme.")
-            }
-            _ => panic!("Radius sizes must be fixed values or relative multipliers."),
-        }
-    }
-
-    fn resolve_with_theme(&self, theme: &Theme) -> CornerRadius {
-        match self {
-            Self::Specific(radius @ CornerRadiusSize::Relative(_)) => {
-                radius.resolve(theme.corner_radius_theme().base_radius)
-            }
-            Self::CornerRadius(role) => theme.corner_radius_theme().corner_radius(*role),
-            _ => self.resolve(&theme.colors),
-        }
-    }
-}
-
-pub trait ThemeCornerRadiusExt: DecorationExt {
-    /// Apply a fixed radius or a multiplier of the active theme's base radius.
-    fn theme_corner_radius(self, radius: CornerRadiusSize) -> Self {
-        self.corner_radius(
-            Preference::Specific(radius).resolve_with_theme(&get_theme_or_default().read()),
-        )
-    }
-}
-
-impl<T: DecorationExt> ThemeCornerRadiusExt for T {}

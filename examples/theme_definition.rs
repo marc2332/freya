@@ -46,18 +46,15 @@ impl Component for StatusBadge {
 fn custom_theme() -> Theme {
     let mut theme = dark_theme();
     theme.name = "custom";
-    theme.colors = ColorsSheet {
-        primary: Color::from_rgb(37, 52, 63),
-        secondary: Color::from_rgb(255, 155, 81),
-        tertiary: Color::from_rgb(81, 155, 255),
-        ..DARK_COLORS
-    };
-    theme.set(
+    theme.set_var(ColorRole::Primary.key(), Color::from_rgb(37, 52, 63));
+    theme.set_var("app.badge_background", Color::from_rgb(255, 155, 81));
+    theme.set_var("app.badge_radius", CornerRadius::new_all(99.));
+    theme.set_theme(
         "status_badge",
         StatusBadgeThemePreference {
-            background: Preference::Reference("secondary"),
-            color: Preference::Reference("text_inverse"),
-            corner_radius: CornerRadius::new_all(99.).into(),
+            background: Preference::Reference("app.badge_background"),
+            color: Preference::Reference(ColorRole::TextInverse.key()),
+            corner_radius: Preference::Reference("app.badge_radius"),
             padding: Gaps::new(4., 10., 4., 10.).into(),
         },
     );

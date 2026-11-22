@@ -6,7 +6,6 @@ use torin::{
 
 use crate::{
     activable_context::use_is_active,
-    corner_radius::CornerRadiusSize,
     define_theme,
     get_theme,
 };
@@ -21,7 +20,7 @@ define_theme! {
         hover_background: Color,
         active_background: Color,
         focus_border_fill: Color,
-        corner_radius: CornerRadiusSize,
+        corner_radius: CornerRadius,
         margin: Gaps,
         padding: Gaps,
     }

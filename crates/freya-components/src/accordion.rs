@@ -11,7 +11,6 @@ use torin::{
 };
 
 use crate::{
-    corner_radius::CornerRadiusSize,
     define_theme,
     get_theme,
 };
@@ -23,7 +22,7 @@ define_theme! {
         color: Color,
         background: Color,
         border_fill: Color,
-        corner_radius: CornerRadiusSize,
+        corner_radius: CornerRadius,
     }
 }
 

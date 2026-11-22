@@ -25,12 +25,9 @@ fn accent_theme(accent: Color) -> Theme {
 
     let mut theme = light_theme();
     theme.name = "accent";
-    theme.colors = ColorsSheet {
-        primary: accent,
-        secondary,
-        tertiary,
-        ..LIGHT_COLORS
-    };
+    theme.set_var(ColorRole::Primary.key(), accent);
+    theme.set_var(ColorRole::Secondary.key(), secondary);
+    theme.set_var(ColorRole::Tertiary.key(), tertiary);
     theme
 }
 

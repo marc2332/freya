@@ -1,39 +1,15 @@
 use freya_core::prelude::*;
 
-use crate::{
-    define_theme,
-    theming::{
-        component_themes::ColorsSheet,
-        hooks::get_theme_or_default,
-        macros::{
-            Preference,
-            ResolvablePreference,
-        },
-    },
+use crate::theming::{
+    component_themes::AnyMap,
+    hooks::get_theme_or_default,
 };
 
-/// A font size in logical pixels or a multiplier of the typography base size.
+/// A font size in logical pixels or a multiplier of the base size.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum TypographySize {
     Fixed(f32),
     Relative(f32),
-}
-
-impl From<f32> for TypographySize {
-    fn from(size: f32) -> Self {
-        Self::Fixed(size)
-    }
-}
-
-impl ResolvablePreference<TypographySize> for Preference<TypographySize> {
-    fn resolve(&self, _colors_sheet: &ColorsSheet) -> TypographySize {
-        match self {
-            Self::Specific(size) => *size,
-            _ => {
-                panic!("Typography sizes must be fixed values or relative multipliers.")
-            }
-        }
-    }
 }
 
 /// The semantic purpose of text, independent of its concrete font size.
@@ -48,57 +24,69 @@ pub enum TextRole {
     Overline,
 }
 
-define_theme! {
-    %[no_ext]
-    pub Typography {
-        %[fields]
-        base_size: f32,
-        control: TypographySize,
-        title: TypographySize,
-        subtitle: TypographySize,
-        body: TypographySize,
-        caption: TypographySize,
-        overline: TypographySize,
-    }
-}
-
-impl Default for TypographyThemePreference {
-    fn default() -> Self {
-        Self {
-            base_size: 16.0.into(),
-            control: TypographySize::Relative(0.875).into(),
-            title: TypographySize::Relative(1.5).into(),
-            subtitle: TypographySize::Relative(1.125).into(),
-            body: TypographySize::Relative(1.0).into(),
-            caption: TypographySize::Relative(0.75).into(),
-            overline: TypographySize::Relative(0.6875).into(),
+impl TextRole {
+    pub const fn key(self) -> &'static str {
+        match self {
+            Self::Control => "font_size.control",
+            Self::Content => "font_size.content",
+            Self::Title => "font_size.title",
+            Self::Subtitle => "font_size.subtitle",
+            Self::Caption => "font_size.caption",
+            Self::Overline => "font_size.overline",
         }
     }
 }
 
-impl TypographyTheme {
-    pub fn font_size(&self, role: TextRole) -> f32 {
-        let size = match role {
-            TextRole::Control => self.control,
-            TextRole::Content => self.body,
-            TextRole::Title => self.title,
-            TextRole::Subtitle => self.subtitle,
-            TextRole::Caption => self.caption,
-            TextRole::Overline => self.overline,
-        };
+/// Builds font-size variables from a shared base size.
+#[derive(Clone, Debug, PartialEq)]
+pub struct TypographyScale {
+    pub base_size: f32,
+    pub control: TypographySize,
+    pub body: TypographySize,
+    pub title: TypographySize,
+    pub subtitle: TypographySize,
+    pub caption: TypographySize,
+    pub overline: TypographySize,
+}
 
-        match size {
-            TypographySize::Fixed(size) => size,
-            TypographySize::Relative(multiplier) => self.base_size * multiplier,
+impl Default for TypographyScale {
+    fn default() -> Self {
+        Self {
+            base_size: 16.,
+            control: TypographySize::Relative(0.875),
+            body: TypographySize::Relative(1.),
+            title: TypographySize::Relative(1.5),
+            subtitle: TypographySize::Relative(1.125),
+            caption: TypographySize::Relative(0.75),
+            overline: TypographySize::Relative(0.6875),
+        }
+    }
+}
+
+impl TypographyScale {
+    /// Write resolved font sizes.
+    pub fn apply_to(&self, variables: &mut AnyMap) {
+        for (role, size) in [
+            (TextRole::Control, self.control),
+            (TextRole::Content, self.body),
+            (TextRole::Title, self.title),
+            (TextRole::Subtitle, self.subtitle),
+            (TextRole::Caption, self.caption),
+            (TextRole::Overline, self.overline),
+        ] {
+            let size = match size {
+                TypographySize::Fixed(size) => size,
+                TypographySize::Relative(multiplier) => self.base_size * multiplier,
+            };
+            variables.set(role.key(), size);
         }
     }
 }
 
 /// Apply semantic font sizes to text or a container whose children inherit them.
 pub trait TextRoleExt: TextStyleExt + Sized {
-    /// Resolve the role against the current theme's typography scale.
     fn theme_font_size(self, role: TextRole) -> Self {
-        self.font_size(get_theme_or_default().read().font_size(role))
+        self.font_size(*get_theme_or_default().read().get_var::<f32>(role.key()))
     }
 }
 
