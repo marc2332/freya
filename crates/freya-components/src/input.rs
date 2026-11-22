@@ -430,10 +430,9 @@ impl Component for Input {
             ),
         };
 
-        let (mut movement_timeout, cursor_color) =
-            use_cursor_blink(focus() != Focus::Not, theme_colors.color);
-
         let enabled = use_reactive(&self.enabled);
+        let focused = enabled() && focus().is_focused();
+        let (mut movement_timeout, cursor_color) = use_cursor_blink(focused, theme_colors.color);
 
         let on_validate = self.on_validate.clone();
         let on_submit = self.on_submit.clone();
@@ -767,7 +766,7 @@ impl Component for Input {
             }
         };
 
-        let (background, cursor_index, text_selection) = if enabled() && focus() != Focus::Not {
+        let (background, cursor_index, text_selection) = if focused {
             (
                 theme_colors.focus_background,
                 Some(editable.editor().read().cursor_pos()),
@@ -780,7 +779,7 @@ impl Component for Input {
             (theme_colors.background, None, None)
         };
 
-        let border = if focus().is_focused() {
+        let border = if focused {
             Border::new()
                 .fill(theme_colors.focus_border_fill)
                 .width(2.)
