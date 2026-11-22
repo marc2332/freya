@@ -8,33 +8,49 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app).with_size(420., 360.)))
 }
 
-fn custom_theme() -> Theme {
+fn custom_theme(base_size: f32) -> Theme {
     let mut theme = light_theme();
     theme.set(
         "typography",
         TypographyThemePreference {
-            title: Preference::Specific(36.0),
-            subtitle: Preference::Specific(22.0),
-            body: Preference::Specific(16.0),
-            caption: Preference::Specific(13.0),
-            overline: Preference::Specific(11.0),
+            base_size: base_size.into(),
+            title: TypographySize::Fixed(36.0).into(),
+            subtitle: TypographySize::Relative(1.25).into(),
+            ..TypographyThemePreference::default()
         },
     );
     theme
 }
 
 fn app() -> impl IntoElement {
-    use_init_theme(custom_theme);
+    let mut theme = use_init_theme(|| custom_theme(18.));
 
     rect()
         .theme_background()
         .theme_color()
+        .theme_font_size(TextRole::Content)
         .center()
         .expanded()
         .spacing(8.)
-        .child(label().title().text("Title"))
+        .child(label().title().text("Fixed title"))
         .child(label().subtitle().text("Subtitle"))
         .child(label().body().text("Body"))
         .child(label().caption().text("Caption"))
         .child(label().overline().text("Overline"))
+        .child("Inherited content size")
+        .child(
+            rect()
+                .horizontal()
+                .spacing(8.)
+                .child(
+                    Button::new()
+                        .on_press(move |_| theme.set(custom_theme(18.)))
+                        .child("18 px base"),
+                )
+                .child(
+                    Button::new()
+                        .on_press(move |_| theme.set(custom_theme(24.)))
+                        .child("24 px base"),
+                ),
+        )
 }

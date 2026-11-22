@@ -78,6 +78,7 @@ impl Component for AppTopBar {
                         .padding((0., 0., 8., 0.))
                         .child(AnimatedOutlet),
                 )
+                .child(label().font_size(16.).text("Widgets"))
                 .child(
                     rect()
                         .horizontal()

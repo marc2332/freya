@@ -16,6 +16,7 @@ define_theme! {
     %[component]
     pub Select {
         %[fields]
+        font_size: f32,
         width: Size,
         margin: Gaps,
         select_background: Color,
@@ -256,6 +257,7 @@ impl Component for Select {
             })
             .child(
                 rect()
+                    .font_size(theme.font_size)
                     .a11y_id(a11y_id)
                     .a11y_member_of(a11y_id)
                     .a11y_role(AccessibilityRole::ListBox)

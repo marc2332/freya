@@ -8,7 +8,13 @@ use freya_core::{
     prelude::*,
 };
 
-use crate::theming::themes::light_theme;
+use crate::{
+    theming::themes::light_theme,
+    typography::{
+        TextRole,
+        TypographyThemePreference,
+    },
+};
 
 pub struct Theme {
     pub name: &'static str,
@@ -34,6 +40,19 @@ impl Theme {
     pub fn set<T: 'static>(&mut self, key: &'static str, val: T) {
         self.themes.insert(key, Box::new(val));
     }
+
+    fn typography(&self) -> Option<&TypographyThemePreference> {
+        self.get("typography")
+    }
+
+    pub(crate) fn font_size(&self, role: TextRole) -> f32 {
+        let typography = match self.typography() {
+            Some(preference) => preference.resolve(&self.colors),
+            None => TypographyThemePreference::default().resolve(&self.colors),
+        };
+
+        typography.font_size(role)
+    }
 }
 
 impl fmt::Debug for Theme {
@@ -48,7 +67,9 @@ impl fmt::Debug for Theme {
 
 impl PartialEq for Theme {
     fn eq(&self, other: &Self) -> bool {
-        self.name == other.name && self.colors == other.colors
+        self.name == other.name
+            && self.colors == other.colors
+            && self.typography() == other.typography()
     }
 }
 

@@ -14,6 +14,7 @@ define_theme! {
     %[component]
     pub ButtonSegment {
         %[fields]
+        font_size: f32,
         background: Color,
         hover_background: Color,
         disabled_background: Color,
@@ -159,6 +160,7 @@ impl Component for ButtonSegment {
         let focus = use_focus(a11y_id);
 
         let ButtonSegmentTheme {
+            font_size,
             background,
             hover_background,
             disabled_background,
@@ -209,6 +211,7 @@ impl Component for ButtonSegment {
         };
 
         rect()
+            .font_size(font_size)
             .a11y_id(a11y_id)
             .a11y_enabled(self.enabled)
             .a11y_focusable(self.enabled)

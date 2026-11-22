@@ -43,6 +43,7 @@ define_theme! {
     %[component]
     pub MenuItem {
         %[fields]
+        font_size: f32,
         background: Color,
         hover_background: Color,
         select_background: Color,
@@ -457,6 +458,7 @@ impl ComponentOwned for MenuItem {
         };
 
         rect()
+            .font_size(theme.font_size)
             .a11y_role(AccessibilityRole::MenuItem)
             .a11y_id(a11y_id)
             .a11y_focusable(true)

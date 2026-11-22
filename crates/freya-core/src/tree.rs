@@ -74,6 +74,10 @@ use crate::{
         MutationRemove,
         Mutations,
     },
+    style::font_size::{
+        FontSizeConverter,
+        TextScale,
+    },
     text_cache::TextCache,
     tree_layout_adapter::TreeAdapterFreya,
 };
@@ -105,6 +109,7 @@ pub struct Tree {
     pub layout: Torin<NodeId>,
     pub layers: Layers,
     pub text_cache: TextCache,
+    font_size_converter: Option<FontSizeConverter>,
 
     // Accessibility
     pub accessibility_groups: AccessibilityGroups,
@@ -132,6 +137,15 @@ impl Tree {
     fn remove_element(&mut self, node_id: NodeId) -> Option<Rc<dyn ElementExt>> {
         self.layout_nodes.remove(&node_id);
         self.elements.remove(&node_id)
+    }
+
+    /// Replace platform text scaling and invalidate measured text.
+    pub fn set_font_size_converter(&mut self, converter: Option<FontSizeConverter>) {
+        if self.font_size_converter.is_some() || converter.is_some() {
+            self.font_size_converter = converter;
+            self.layout.reset();
+            self.text_cache.reset();
+        }
     }
 
     /// Rescale every layout node.
@@ -726,7 +740,10 @@ impl Tree {
             font_collection,
             font_manager,
             events: &mut self.events,
-            scale_factor,
+            text_scale: TextScale {
+                scale_factor,
+                converter: self.font_size_converter.as_ref(),
+            },
             fallback_fonts,
             text_cache: &mut self.text_cache,
         };
@@ -874,7 +891,7 @@ pub struct LayoutMeasurerAdapter<'a> {
     elements: &'a FxHashMap<NodeId, Rc<dyn ElementExt>>,
     text_style_state: &'a FxHashMap<NodeId, TextStyleState>,
     events: &'a mut Vec<EmmitableEvent>,
-    scale_factor: f64,
+    text_scale: TextScale<'a>,
     fallback_fonts: &'a [Cow<'static, str>],
     text_cache: &'a mut TextCache,
 }
@@ -893,7 +910,8 @@ impl LayoutMeasurer<NodeId> for LayoutMeasurerAdapter<'_> {
             font_collection: self.font_collection,
             font_manager: self.font_manager,
             text_style_state: self.text_style_state.get(&node_id).unwrap(),
-            scale_factor: self.scale_factor,
+            scale_factor: self.text_scale.scale_factor,
+            text_scale: self.text_scale,
             fallback_fonts: self.fallback_fonts,
             text_cache: self.text_cache,
         })
@@ -938,7 +956,8 @@ impl LayoutMeasurer<NodeId> for LayoutMeasurerAdapter<'_> {
                 font_collection: self.font_collection,
                 text_style_state: self.text_style_state.get(&node_id).unwrap(),
                 fallback_fonts: self.fallback_fonts,
-                scale_factor: self.scale_factor,
+                scale_factor: self.text_scale.scale_factor,
+                text_scale: self.text_scale,
             })
     }
 
@@ -950,7 +969,7 @@ impl LayoutMeasurer<NodeId> for LayoutMeasurerAdapter<'_> {
         inner_sizes: Size2D,
     ) {
         let mut data = SizedEventData::new(area, visible_area, inner_sizes);
-        data.div(self.scale_factor as f32);
+        data.div(self.text_scale.scale_factor as f32);
         self.events.push(EmmitableEvent {
             node_id,
             name: EventName::Sized,

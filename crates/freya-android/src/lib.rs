@@ -21,6 +21,7 @@ use winit::{
 
 use crate::window_insets::WindowInsets;
 
+mod font_size;
 mod status_bar;
 mod window_insets;
 
@@ -102,6 +103,19 @@ impl AndroidPlugin {
     }
 }
 
+impl AndroidPlugin {
+    fn refresh_font_size(&self, tree: &mut Tree) {
+        let converter = match font_size::converter(&self.app) {
+            Ok(converter) => Some(converter),
+            Err(error) => {
+                tracing::warn!(%error, "Could not read Android display metrics");
+                None
+            }
+        };
+        tree.set_font_size_converter(converter);
+    }
+}
+
 impl FreyaPlugin for AndroidPlugin {
     fn plugin_id(&self) -> &'static str {
         "android"
@@ -115,13 +129,19 @@ impl FreyaPlugin for AndroidPlugin {
                     Some(runner.provide_root_context(|| State::create(WindowInsets::default())));
                 self.refresh_insets();
             }
-            // TODO(marc2332): Refresh on inset changes that do not resize the surface.
-            PluginEvent::WindowResumed { .. }
+            PluginEvent::TreeCreated { tree, .. } => self.refresh_font_size(tree),
+            PluginEvent::WindowResumed { tree, .. }
             | PluginEvent::WindowEvent {
-                raw:
-                    WindowEvent::Focused(true)
-                    | WindowEvent::SurfaceResized(_)
-                    | WindowEvent::ScaleFactorChanged { .. },
+                raw: WindowEvent::ScaleFactorChanged { .. },
+                tree,
+                ..
+            } => {
+                self.refresh_insets();
+                self.refresh_font_size(tree);
+            }
+            // TODO(marc2332): Refresh on inset changes that do not resize the surface.
+            PluginEvent::WindowEvent {
+                raw: WindowEvent::Focused(true) | WindowEvent::SurfaceResized(_),
                 ..
             } => self.refresh_insets(),
             PluginEvent::WindowClosed { .. } => self.insets = None,

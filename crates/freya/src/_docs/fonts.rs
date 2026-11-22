@@ -21,6 +21,52 @@
 //! A font family applies to the element and its descendants unless a descendant chooses another
 //! family. This makes it possible to set an application-wide family on the root element.
 //!
+//! ## Semantic font sizes
+//!
+//! The default scale uses a 16px base. Relative sizes follow the base size and fixed sizes do not.
+//!
+//! Buttons, inputs, menu items, selects, chips, sidebar items, button segments and floating tabs
+//! use `TextRole::Control`.
+//! Apply `TextRole::Content` to a container to set the body size for its descendants.
+//!
+//! ```rust,no_run
+//! # use freya::prelude::*;
+//! fn app() -> impl IntoElement {
+//!     use_init_theme(|| {
+//!         let mut theme = light_theme();
+//!         theme.set(
+//!             "typography",
+//!             TypographyThemePreference {
+//!                 base_size: 18.0.into(),
+//!                 title: TypographySize::Fixed(28.0).into(),
+//!                 ..TypographyThemePreference::default()
+//!             },
+//!         );
+//!         theme
+//!     });
+//!
+//!     rect()
+//!         .theme_font_size(TextRole::Content)
+//!         .child(label().title().text("Settings"))
+//!         .child("This text inherits the content size")
+//!         .child(Button::new().child("Save"))
+//!         .child(
+//!             label()
+//!                 .theme_font_size(TextRole::Caption)
+//!                 .text("Supporting text"),
+//!         )
+//! }
+//! ```
+//!
+//! Use `Preference::Typography(TextRole::Control)` in a component theme's `font_size` field to follow the scale.
+//! A per-instance override such as `Button::new().font_size(18.)` uses a fixed size.
+//!
+//! The `title`, `subtitle`, `body`, `caption` and `overline` label helpers use the same scale.
+//! Set `font_size` after `theme_font_size` or on a child element to override the role's size.
+//!
+//! With `AndroidPlugin`, both themed and explicit font sizes follow Android's Font size setting.
+//! This does not scale padding or other layout dimensions.
+//!
 //! ## Embedding a font
 //!
 //! Register a font before launching the application with [`LaunchConfig::with_font`](freya_winit::config::LaunchConfig::with_font).

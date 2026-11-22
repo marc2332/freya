@@ -1,11 +1,10 @@
 use freya_core::prelude::*;
 
 use crate::{
-    get_theme,
     theming::hooks::get_theme_or_default,
     typography::{
-        TypographyThemePartial,
-        TypographyThemePreference,
+        TextRole,
+        TextRoleExt,
     },
 };
 
@@ -45,14 +44,6 @@ pub trait LabelThemeExt {
     fn overline(self) -> Self;
 }
 
-fn typography() -> crate::typography::TypographyTheme {
-    get_theme!(
-        &None::<TypographyThemePartial>,
-        TypographyThemePreference,
-        "typography"
-    )
-}
-
 impl LabelThemeExt for Label {
     fn theme_color(self) -> Self {
         let theme = get_theme_or_default();
@@ -60,23 +51,23 @@ impl LabelThemeExt for Label {
     }
 
     fn title(self) -> Self {
-        self.font_size(typography().title)
+        self.theme_font_size(TextRole::Title)
     }
 
     fn subtitle(self) -> Self {
-        self.font_size(typography().subtitle)
+        self.theme_font_size(TextRole::Subtitle)
     }
 
     fn body(self) -> Self {
-        self.font_size(typography().body)
+        self.theme_font_size(TextRole::Content)
     }
 
     fn caption(self) -> Self {
-        self.font_size(typography().caption)
+        self.theme_font_size(TextRole::Caption)
     }
 
     fn overline(self) -> Self {
-        self.font_size(typography().overline)
+        self.theme_font_size(TextRole::Overline)
     }
 }
 

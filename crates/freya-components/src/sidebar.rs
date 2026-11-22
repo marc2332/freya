@@ -14,6 +14,7 @@ define_theme! {
     %[component]
     pub SideBarItem {
         %[fields]
+        font_size: f32,
         color: Color,
         background: Color,
         hover_background: Color,
@@ -125,6 +126,7 @@ impl SideBarItem {
 impl Component for SideBarItem {
     fn render(&self) -> impl IntoElement {
         let SideBarItemTheme {
+            font_size,
             margin,
             hover_background,
             active_background,
@@ -162,6 +164,7 @@ impl Component for SideBarItem {
 
         let on_press = self.on_press.clone();
         rect()
+            .font_size(font_size)
             .a11y_id(a11y_id)
             .a11y_focusable(true)
             .a11y_role(AccessibilityRole::Link)

@@ -30,7 +30,9 @@ pub enum SkeletonAnimation {
 impl ResolvablePreference<SkeletonAnimation> for Preference<SkeletonAnimation> {
     fn resolve(&self, _: &ColorsSheet) -> SkeletonAnimation {
         match self {
-            Self::Reference(_) => panic!("Only Colors support references."),
+            Self::Reference(_) | Self::Typography(_) => {
+                panic!("Skeleton animations do not support references.")
+            }
             Self::Specific(v) => *v,
         }
     }

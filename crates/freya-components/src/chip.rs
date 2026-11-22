@@ -17,6 +17,7 @@ define_theme! {
     %[component]
     pub Chip {
         %[fields]
+        font_size: f32,
         background: Color,
         hover_background: Color,
         selected_background: Color,
@@ -142,6 +143,7 @@ impl Component for Chip {
         let focus = use_focus(a11y_id);
 
         let ChipTheme {
+            font_size,
             background,
             hover_background,
             selected_background,
@@ -214,6 +216,7 @@ impl Component for Chip {
         };
 
         rect()
+            .font_size(font_size)
             .a11y_id(a11y_id)
             .a11y_enabled(self.enabled)
             .a11y_focusable(self.enabled)

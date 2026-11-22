@@ -69,7 +69,10 @@ use crate::{
         macros::Preference,
     },
     tooltip::TooltipThemePreference,
-    typography::TypographyThemePreference,
+    typography::{
+        TextRole,
+        TypographyThemePreference,
+    },
 };
 
 pub const LIGHT_COLORS: ColorsSheet = ColorsSheet {
@@ -159,19 +162,11 @@ pub const DARK_COLORS: ColorsSheet = ColorsSheet {
 };
 
 fn register_base_component_themes(theme: &mut Theme) {
-    theme.set(
-        "typography",
-        TypographyThemePreference {
-            title: Preference::Specific(24.0),
-            subtitle: Preference::Specific(18.0),
-            body: Preference::Specific(16.0),
-            caption: Preference::Specific(12.0),
-            overline: Preference::Specific(11.0),
-        },
-    );
+    theme.set("typography", TypographyThemePreference::default());
     theme.set(
         "button_layout",
         ButtonLayoutThemePreference {
+            font_size: Preference::Typography(TextRole::Control),
             padding: Preference::Specific(Gaps::new(6., 12., 6., 12.)),
             margin: Preference::Specific(Gaps::new_all(0.)),
             corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
@@ -182,6 +177,7 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "compact_button_layout",
         ButtonLayoutThemePreference {
+            font_size: Preference::Typography(TextRole::Control),
             padding: Preference::Specific(Gaps::new(3., 6., 3., 6.)),
             margin: Preference::Specific(Gaps::new_all(0.)),
             corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
@@ -192,6 +188,7 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "expanded_button_layout",
         ButtonLayoutThemePreference {
+            font_size: Preference::Typography(TextRole::Control),
             padding: Preference::Specific(Gaps::new(10., 16., 10., 16.)),
             margin: Preference::Specific(Gaps::new_all(0.)),
             corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
@@ -341,12 +338,13 @@ fn register_base_component_themes(theme: &mut Theme) {
             background: Preference::Reference("surface_primary"),
             progress_background: Preference::Reference("primary"),
             height: Preference::Specific(20.),
-            font_size: Preference::Specific(13.),
+            font_size: Preference::Typography(TextRole::Caption),
         },
     );
     theme.set(
         "sidebar_item",
         SideBarItemThemePreference {
+            font_size: Preference::Typography(TextRole::Control),
             color: Preference::Reference("text_primary"),
             background: Preference::Reference("surface_tertiary"),
             active_background: Preference::Reference("surface_secondary"),
@@ -370,7 +368,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             background: Preference::Reference("surface_tertiary"),
             color: Preference::Reference("text_primary"),
             border_fill: Preference::Reference("surface_primary"),
-            font_size: Preference::Specific(14.),
+            font_size: Preference::Typography(TextRole::Control),
         },
     );
     theme.set(
@@ -382,6 +380,7 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "input_layout",
         InputLayoutThemePreference {
+            font_size: Preference::Typography(TextRole::Control),
             corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
             padding: Preference::Specific(Gaps::new(8., 8., 8., 8.)),
         },
@@ -389,6 +388,7 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "compact_input_layout",
         InputLayoutThemePreference {
+            font_size: Preference::Typography(TextRole::Control),
             corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
             padding: Preference::Specific(Gaps::new(4., 6., 4., 6.)),
         },
@@ -396,6 +396,7 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "expanded_input_layout",
         InputLayoutThemePreference {
+            font_size: Preference::Typography(TextRole::Control),
             corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
             padding: Preference::Specific(Gaps::new(12., 12., 12., 12.)),
         },
@@ -461,6 +462,7 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "floating_tab",
         FloatingTabThemePreference {
+            font_size: Preference::Typography(TextRole::Control),
             background: Preference::Specific(Color::TRANSPARENT),
             hover_background: Preference::Reference("surface_secondary"),
             color: Preference::Reference("text_primary"),
@@ -490,6 +492,7 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "select",
         SelectThemePreference {
+            font_size: Preference::Typography(TextRole::Control),
             width: Preference::Specific(Size::Inner),
             margin: Preference::Specific(Gaps::new_all(0.)),
             select_background: Preference::Reference("background"),
@@ -504,13 +507,13 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "popup_title",
         PopupTitleThemePreference {
-            font_size: Preference::Specific(18.),
+            font_size: Preference::Typography(TextRole::Subtitle),
         },
     );
     theme.set(
         "popup_content",
         PopupContentThemePreference {
-            font_size: Preference::Specific(15.),
+            font_size: Preference::Typography(TextRole::Content),
         },
     );
     theme.set(
@@ -549,6 +552,7 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "chip",
         ChipThemePreference {
+            font_size: Preference::Typography(TextRole::Control),
             background: Preference::Reference("background"),
             hover_background: Preference::Reference("tertiary"),
             selected_background: Preference::Reference("primary"),
@@ -571,6 +575,7 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "menu_item",
         MenuItemThemePreference {
+            font_size: Preference::Typography(TextRole::Control),
             background: Preference::Specific(Color::TRANSPARENT),
             hover_background: Preference::Reference("surface_secondary"),
             select_background: Preference::Reference("surface_primary"),
@@ -594,6 +599,7 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "button_segment",
         ButtonSegmentThemePreference {
+            font_size: Preference::Typography(TextRole::Control),
             background: Preference::Specific(Color::TRANSPARENT),
             hover_background: Preference::Reference("surface_secondary"),
             disabled_background: Preference::Reference("disabled"),

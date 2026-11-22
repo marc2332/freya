@@ -231,7 +231,7 @@ impl ElementExt for LabelElement {
 
                     let text_style = context.text_style_state.to_text_style(
                         context.fallback_fonts,
-                        context.scale_factor,
+                        context.text_scale,
                         self.line_height,
                         fill_area,
                     );
