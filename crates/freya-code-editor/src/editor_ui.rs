@@ -163,6 +163,7 @@ impl Component for CodeEditor {
             EditorTheme::light().into()
         });
 
+        let focus = use_focus(a11y_id);
         let editor_data = editor.read_unchecked();
 
         let mut scroll_controller =
@@ -326,6 +327,7 @@ impl Component for CodeEditor {
                                 cursor_mode,
                                 theme: theme.clone(),
                                 a11y_id,
+                                focus,
                                 scroll_controller,
                             }
                             .into()
