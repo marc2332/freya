@@ -564,7 +564,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "select",
         SelectThemePreference {
             corner_radius: Preference::Reference(CornerRadiusRole::Lg.key()),
-            list_corner_radius: Preference::Reference(CornerRadiusRole::Xxxl.key()),
+            list_corner_radius: Preference::Reference(CornerRadiusRole::Xl.key()),
             font_size: Preference::Reference(TextRole::Control.key()),
             width: Preference::Specific(Size::Inner),
             margin: Preference::Specific(Gaps::new_all(0.)),
