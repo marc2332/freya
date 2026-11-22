@@ -593,9 +593,9 @@ Use Freya's `spawn()` for UI updates. `tokio::spawn` runs on the Tokio runtime a
 
 ## Theming
 
-Use the theming system to centralize component styling. Prefer it over hand-rolled structs of `Color`/size constants or scattered hardcoded values.
+Prefer Freya's shared theme variables and component preferences over hardcoded styling or hand-rolled theme structs. Built-in components use the active theme automatically. For reusable components, use `define_theme!` and reference shared values so appearance stays consistent across the app.
 
-A `Theme` bundles a `ColorsSheet` (the app palette) and per-component `*ThemePreference` entries indexed by string key. Components read their theme via `get_theme!` and resolve color references against the active `ColorsSheet`.
+A `Theme` stores shared values in `theme.variables` and component preferences separately. See the [theming guide](https://github.com/marc2332/freya/blob/main/crates/freya/src/_docs/theming.rs) for built-in components, extension traits, custom values, and custom component themes.
 
 ### Provide a theme
 
@@ -613,35 +613,36 @@ fn app() -> impl IntoElement {
 }
 ```
 
-Use `use_init_root_theme` to register at the root scope. To follow the OS preference, convert `Platform::get().preferred_theme` via the `FromPreference::to_theme` extension.
+Use `use_theme()` in a descendant to read or update the active theme. To follow the OS preference, convert `Platform::get().current_window().preferred_theme.read()` with the `FromPreference::to_theme` extension.
 
 ### Theme extensions
 
 Built-in elements and components expose helpers that read the active theme - prefer these over hardcoded colors:
 
 - `rect().theme_background()`, `rect().theme_color()`
-- `label().theme_color()`, `paragraph().theme_color()`
+- `label().theme_color().title()`, `paragraph().theme_color()`
 - `SvgViewer::new(...).theme_color()` / `.theme_accent_color()` / `.theme_fill()` / `.theme_stroke()` / `.theme_accent_fill()` / `.theme_accent_stroke()`
 
 ### Custom themes
 
-Start from `light_theme()` / `dark_theme()` and override what you need. Use `LIGHT_COLORS` / `DARK_COLORS` as base palettes with struct update syntax:
+Start from `light_theme()` or `dark_theme()`. Use `set_var` with `ColorRole`, `TextRole`, or `CornerRadiusRole` keys to replace built-in values, or use a namespaced string for an app-specific value.
 
 ```rust
 fn brand_theme() -> Theme {
     let mut theme = dark_theme();
     theme.name = "brand";
-    theme.colors = ColorsSheet {
-        primary: Color::from_rgb(37, 52, 63),
-        secondary: Color::from_rgb(255, 155, 81),
-        tertiary: Color::from_rgb(81, 155, 255),
-        ..DARK_COLORS
-    };
+    theme.set_var(ColorRole::Primary.key(), Color::from_rgb(37, 52, 63));
+    theme.set_var("app.badge_radius", CornerRadius::new_all(12.));
+    CornerRadiusScale {
+        base_radius: 10.,
+        ..CornerRadiusScale::default()
+    }
+    .apply_to(&mut theme.variables);
     theme
 }
 ```
 
-`ColorsSheet` covers brand (`primary`/`secondary`/`tertiary`), status (`success`/`warning`/`error`/`info`), surfaces (`background`, `surface_primary`/`secondary`/`tertiary`, `surface_inverse[_secondary|_tertiary]`), borders (`border`, `border_focus`, `border_disabled`), text (`text_primary`/`secondary`/`placeholder`/`inverse`/`highlight`), interaction states (`hover`, `focus`, `active`, `disabled`), and utility (`overlay`, `shadow`).
+Use `get_var::<T>()` for direct reads. `TypographyScale` and `CornerRadiusScale` write concrete values with `apply_to`, so reapply the scale after changing its base.
 
 ### Defining a theme for your component
 
@@ -683,29 +684,29 @@ The macro generates three structs:
 - `StatusBadgeThemePreference` - `Preference<T>` per field, registered in the `Theme` as the default.
 - `StatusBadgeTheme` - resolved concrete values, returned by `get_theme!`.
 
-`get_theme!(&self.theme, StatusBadgeThemePreference, "status_badge")` looks up the registered preference, applies any `ThemePartial` override on the instance, and resolves it against the active `ColorsSheet`.
+`get_theme!` looks up the registered preference, applies any instance overrides, and resolves references against the active theme variables.
 
 Register the default preference on your custom theme:
 
 ```rust
-theme.set(
+theme.set_theme(
     "status_badge",
     StatusBadgeThemePreference {
-        background: Preference::Reference("secondary"),    // resolves from ColorsSheet
-        color: Preference::Reference("text_inverse"),
-        corner_radius: CornerRadius::new_all(99.).into(),  // Specific via Into
+        background: Preference::Reference(ColorRole::Secondary.key()),
+        color: Preference::Reference(ColorRole::TextInverse.key()),
+        corner_radius: Preference::Reference("app.badge_radius"),
         padding: Gaps::new(4., 10., 4., 10.).into(),
     },
 );
 ```
 
-`Preference::Reference("...")` looks up the named color in the active `ColorsSheet` so the component automatically follows theme switches. Only `Color` fields support references - `Size`, `Gaps`, `CornerRadius`, `f32`, and `Duration` must use `Preference::Specific(v)` (or `v.into()`).
+`Preference::Reference(key)` works for any theme field as long as the key exists and its value matches the field type. Use `Preference::Specific(value)` or `value.into()` for a fixed value.
 
 The macro also generates a `StatusBadgeThemePartialExt` trait implemented on the component, giving callers per-field builder methods:
 
 ```rust
 StatusBadge::new()
-    .background(Color::from_rgb(123, 123, 123))   // from the generated Ext trait
+    .background(Color::from_rgb(123, 123, 123))
     .corner_radius(CornerRadius::new_all(4.))
 ```
 

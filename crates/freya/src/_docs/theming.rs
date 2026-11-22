@@ -77,10 +77,6 @@
 //! The filled button uses the overridden primary color and radius scale. The badge reads
 //! the custom background directly.
 //!
-//! [`CornerRadiusScale`](crate::prelude::CornerRadiusScale) and
-//! [`TypographyScale`](crate::prelude::TypographyScale) compute relative sizes when applied.
-//! Reapply the scale after changing its base.
-//!
 //! Examples: [custom accent colors](https://github.com/marc2332/freya/blob/main/examples/theme_color_accent.rs),
 //! [corner radius scale](https://github.com/marc2332/freya/blob/main/examples/theme_corner_radius.rs).
 //!

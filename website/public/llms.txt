@@ -75,6 +75,7 @@ fn app() -> impl IntoElement {
 
 - [Stable Documentation](https://docs.rs/freya/latest/freya/): Official Rust API documentation
 - [Development Setup](https://docs.rs/freya/latest/freya/_docs/development_setup/index.html): Getting started guide
+- [Theming guide (main branch)](https://github.com/marc2332/freya/blob/main/crates/freya/src/_docs/theming.rs): Built-in themes, shared variables, and custom component themes
 
 ## Release Candidate docs
 - [UI and Components](https://docs.rs/freya/0.4.0/freya/_docs/ui_and_components/index.html): UI patterns and components guide
