@@ -93,8 +93,13 @@ impl Component for ProgressBar {
                 .function(Function::Expo)
         });
 
+        let formatted_progress = format!("{:.2}", self.progress);
+        let percentage = formatted_progress
+            .trim_end_matches('0')
+            .trim_end_matches('.');
+
         rect()
-            .a11y_alt(format!("Progress {:.2}%", self.progress))
+            .a11y_alt(format!("Progress {percentage}%"))
             .a11y_focusable(true)
             .a11y_role(AccessibilityRole::ProgressIndicator)
             .horizontal()
@@ -118,7 +123,7 @@ impl Component for ProgressBar {
                                 .width(Size::fill())
                                 .color(progressbar_theme.color)
                                 .text_align(TextAlign::Center)
-                                .text(format!("{:.2}%", self.progress))
+                                .text(format!("{percentage}%"))
                                 .max_lines(1),
                         )
                     }),
