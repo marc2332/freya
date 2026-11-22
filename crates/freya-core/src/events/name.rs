@@ -222,6 +222,7 @@ impl ragnarok::NameOfEvent for EventName {
                 ]);
             }
             Self::CaptureGlobalPointerUp => {
+                events.remove(self);
                 events.extend([
                     Self::MouseUp,
                     Self::TouchEnd,
