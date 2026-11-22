@@ -87,7 +87,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-26.04, windows-latest, macos-latest]
+        os: [ubuntu-22.04, ubuntu-26.04, windows-latest, windows-11-arm, macos-latest]
+        include:
+          - os: windows-11-arm
+            target: aarch64-pc-windows-msvc
+            cargo_flags: --target aarch64-pc-windows-msvc
     env:
       FREYA_SMOKE_SCREENSHOT: ${{ github.workspace }}/artifacts/smoke.png
     steps:
@@ -96,6 +100,8 @@ jobs:
           submodules: true
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1
+        with:
+          target: ${{ matrix.target }}
       - name: Set up cargo cache
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
         with:
@@ -110,7 +116,7 @@ jobs:
           sudo apt update
           sudo apt install -y build-essential libssl-dev pkg-config libudev-dev libasound2-dev liblzma-dev libfontconfig1-dev libfreetype6-dev libegl1-mesa-dev libgl1-mesa-dev libgles2-mesa-dev libwayland-dev xvfb xauth fonts-noto-color-emoji libxkbcommon-x11-0
       - name: Build smoke test
-        run: cargo test -p freya-winit --test smoke --features smoke-test --locked --no-run
+        run: just t-winit --no-run ${{ matrix.cargo_flags }}
       - name: Run smoke test on Linux
         if: runner.os == 'Linux'
         timeout-minutes: 2
@@ -118,7 +124,7 @@ jobs:
       - name: Run smoke test on macOS and Windows
         if: runner.os != 'Linux'
         timeout-minutes: 2
-        run: just t-winit
+        run: just t-winit ${{ matrix.cargo_flags }}
       - name: Upload screenshot
         if: always()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
