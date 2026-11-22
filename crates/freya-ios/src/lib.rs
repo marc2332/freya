@@ -29,7 +29,7 @@ impl FreyaPlugin for IosPlugin {
     fn on_event(&mut self, event: &mut PluginEvent, handle: PluginHandle) {
         match event {
             PluginEvent::WindowCreated { window, .. } => {
-                match SoftKeyboard::attach(window, handle) {
+                match SoftKeyboard::attach(*window, handle) {
                     Ok(keyboard) => {
                         self.keyboards.insert(window.id(), keyboard);
                     }
