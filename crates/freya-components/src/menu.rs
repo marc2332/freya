@@ -12,6 +12,7 @@ use torin::{
 };
 
 use crate::{
+    corner_radius::CornerRadiusSize,
     define_theme,
     get_theme,
     icons::{
@@ -32,7 +33,7 @@ define_theme! {
         padding: Gaps,
         shadow: Color,
         border_fill: Color,
-        corner_radius: CornerRadius,
+        corner_radius: CornerRadiusSize,
     }
 }
 
@@ -49,7 +50,7 @@ define_theme! {
         select_background: Color,
         border_fill: Color,
         focus_border_fill: Color,
-        corner_radius: CornerRadius,
+        corner_radius: CornerRadiusSize,
         color: Color,
         select_color: Color,
     }
@@ -154,7 +155,6 @@ impl ComponentOwned for Menu {
 
         rect()
             .layer(Layer::Overlay)
-            .corner_radius(8.0)
             .on_press(move |ev: Event<PressEventData>| {
                 ev.stop_propagation();
             })

@@ -3,6 +3,7 @@ use freya_core::prelude::*;
 use torin::prelude::*;
 
 use crate::{
+    corner_radius::CornerRadiusSize,
     define_theme,
     get_theme,
     icons::{
@@ -17,6 +18,8 @@ define_theme! {
     pub Select {
         %[fields]
         font_size: f32,
+        corner_radius: CornerRadiusSize,
+        list_corner_radius: CornerRadiusSize,
         width: Size,
         margin: Gaps,
         select_background: Color,
@@ -280,7 +283,7 @@ impl Component for Select {
                     .content(Content::flex())
                     .center()
                     .color(theme.color)
-                    .corner_radius(10.)
+                    .corner_radius(theme.corner_radius)
                     .maybe_child(self.selected_item.clone())
                     .child(
                         ArrowIcon::new()
@@ -315,7 +318,7 @@ impl Component for Select {
                                         .alignment(BorderAlignment::Inner),
                                 )
                                 .overflow(Overflow::Clip)
-                                .corner_radius(20.)
+                                .corner_radius(theme.list_corner_radius)
                                 .background(theme.select_background)
                                 .padding(6.)
                                 .maybe(!self.list_match_width, |el| el.content(Content::Fit))

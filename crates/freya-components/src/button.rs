@@ -5,6 +5,7 @@ use torin::{
 };
 
 use crate::{
+    corner_radius::CornerRadiusSize,
     define_theme,
     get_theme,
 };
@@ -18,7 +19,7 @@ define_theme! {
         %[fields]
         font_size: f32,
         margin: Gaps,
-        corner_radius: CornerRadius,
+        corner_radius: CornerRadiusSize,
         width: Size,
         height: Size,
         padding: Gaps,

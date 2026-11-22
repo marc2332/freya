@@ -9,6 +9,7 @@ use freya_core::{
 };
 
 use crate::{
+    corner_radius::CornerRadiusThemePreference,
     theming::themes::light_theme,
     typography::{
         TextRole,
@@ -53,6 +54,14 @@ impl Theme {
 
         typography.font_size(role)
     }
+
+    fn corner_radius(&self) -> Option<&CornerRadiusThemePreference> {
+        self.get("corner_radius")
+    }
+
+    pub(crate) fn corner_radius_theme(&self) -> CornerRadiusThemePreference {
+        self.corner_radius().cloned().unwrap_or_default()
+    }
 }
 
 impl fmt::Debug for Theme {
@@ -69,6 +78,7 @@ impl PartialEq for Theme {
     fn eq(&self, other: &Self) -> bool {
         self.name == other.name
             && self.colors == other.colors
+            && self.corner_radius() == other.corner_radius()
             && self.typography() == other.typography()
     }
 }

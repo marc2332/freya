@@ -8,6 +8,7 @@ use torin::{
 };
 
 use crate::{
+    corner_radius::CornerRadiusSize,
     define_theme,
     get_theme,
     theming::{
@@ -30,10 +31,8 @@ pub enum SkeletonAnimation {
 impl ResolvablePreference<SkeletonAnimation> for Preference<SkeletonAnimation> {
     fn resolve(&self, _: &ColorsSheet) -> SkeletonAnimation {
         match self {
-            Self::Reference(_) | Self::Typography(_) => {
-                panic!("Skeleton animations do not support references.")
-            }
-            Self::Specific(v) => *v,
+            Self::Specific(value) => *value,
+            _ => panic!("Skeleton animations do not support references."),
         }
     }
 }
@@ -46,7 +45,7 @@ define_theme! {
         shimmer_color: Color,
         duration: Duration,
         animation: SkeletonAnimation,
-        corner_radius: CornerRadius,
+        corner_radius: CornerRadiusSize,
         shimmer_from: f32,
         shimmer_to: f32,
         shimmer_width: f32,

@@ -9,6 +9,7 @@ use torin::{
 };
 
 use crate::{
+    corner_radius::CornerRadiusRole,
     theming::component_themes::{
         ColorsSheet,
         Theme,
@@ -16,12 +17,22 @@ use crate::{
     typography::TextRole,
 };
 
-/// Setter parameter type for a theme field, `f32` fields take a plain `f32`.
 #[doc(hidden)]
 #[macro_export]
 macro_rules! theme_setter_param {
     (f32) => { f32 };
     ($field_ty:ty) => { impl ::core::convert::Into<$field_ty> };
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! theme_resolved_type {
+    (CornerRadiusSize) => {
+        $crate::corner_radius::ResolvedCornerRadius
+    };
+    ($field_ty:ty) => {
+        $field_ty
+    };
 }
 
 #[macro_export]
@@ -62,7 +73,6 @@ macro_rules! define_theme {
         $( $(#[$field_attrs:meta])* $field_name:ident : $field_ty:tt , )*
     ) => {};
 
-    // Emits the structs and their inherent impls.
     (
         @types
         $(#[$attrs:meta])*
@@ -79,7 +89,7 @@ macro_rules! define_theme {
         $crate::define_theme!(NOTHING=$($($component_attr_control)?)?);
         $crate::theming::macros::paste! {
             #[derive(Default, Clone, Debug, PartialEq)]
-            #[doc = "You can use this to change a theme for only one component, with the `theme` property."]
+            #[doc = "Theme overrides for a single component instance."]
             $(#[$attrs])*
             pub struct [<$name ThemePartial>] {
                 $($(
@@ -104,7 +114,7 @@ macro_rules! define_theme {
             pub struct [<$name Theme>] {
                 $($(
                     $(#[$field_attrs])*
-                    pub $field_name: $field_ty,
+                    pub $field_name: $crate::theme_resolved_type!($field_ty),
                 )*)?
             }
 
@@ -118,7 +128,7 @@ macro_rules! define_theme {
                 }
 
                 /// Resolve color references using a color sheet.
-                /// Panics for typography references. Use `resolve_with_theme` for those.
+                /// Panics for typography references and named or relative radii. Use [`Self::resolve_with_theme`] for those.
                 pub fn resolve(&self, colors_sheet: &$crate::theming::component_themes::ColorsSheet) -> [<$name Theme>] {
                     use $crate::theming::macros::ResolvablePreference;
                     [<$name Theme>] {
@@ -128,7 +138,7 @@ macro_rules! define_theme {
                     }
                 }
 
-                /// Resolve color and typography references against the supplied theme.
+                /// Resolve references and relative radii using the supplied theme.
                 pub fn resolve_with_theme(&self, theme: &$crate::theming::component_themes::Theme) -> [<$name Theme>] {
                     use $crate::theming::macros::ResolvablePreference;
                     [<$name Theme>] {
@@ -199,7 +209,6 @@ macro_rules! define_theme {
         }
     };
 
-    // Skips the auto-generated `ThemePartialExt` trait.
     (
         $(#[$attrs:meta])*
         %[no_ext]
@@ -298,6 +307,8 @@ pub enum Preference<T> {
     Reference(&'static str),
     /// A role for an `f32` font-size field. Resolve it with a full theme.
     Typography(TextRole),
+    /// A named size for a `CornerRadiusSize` field. Resolve it with a full theme.
+    CornerRadius(CornerRadiusRole),
 }
 
 impl<T> From<T> for Preference<T> {
@@ -359,12 +370,12 @@ impl ResolvablePreference<Color> for Preference<Color> {
                 "overlay" => colors_sheet.overlay,
                 "shadow" => colors_sheet.shadow,
 
-                // Fallback
                 _ => colors_sheet.primary,
             },
 
             Self::Specific(value) => *value,
             Self::Typography(_) => panic!("Typography references require a font-size field."),
+            Self::CornerRadius(_) => panic!("Radius references require a corner-radius field."),
         }
     }
 }
@@ -372,10 +383,8 @@ impl ResolvablePreference<Color> for Preference<Color> {
 impl ResolvablePreference<Size> for Preference<Size> {
     fn resolve(&self, _colors_sheet: &ColorsSheet) -> Size {
         match self {
-            Self::Reference(_) | Self::Typography(_) => {
-                panic!("Only Colors support references.")
-            }
             Self::Specific(value) => value.clone(),
+            _ => panic!("Size fields do not support references."),
         }
     }
 }
@@ -383,10 +392,8 @@ impl ResolvablePreference<Size> for Preference<Size> {
 impl ResolvablePreference<Gaps> for Preference<Gaps> {
     fn resolve(&self, _colors_sheet: &ColorsSheet) -> Gaps {
         match self {
-            Self::Reference(_) | Self::Typography(_) => {
-                panic!("Only Colors support references.")
-            }
             Self::Specific(value) => *value,
+            _ => panic!("Gaps fields do not support references."),
         }
     }
 }
@@ -394,10 +401,8 @@ impl ResolvablePreference<Gaps> for Preference<Gaps> {
 impl ResolvablePreference<CornerRadius> for Preference<CornerRadius> {
     fn resolve(&self, _colors_sheet: &ColorsSheet) -> CornerRadius {
         match self {
-            Self::Reference(_) | Self::Typography(_) => {
-                panic!("Only Colors support references.")
-            }
             Self::Specific(value) => *value,
+            _ => panic!("Corner-radius fields do not support references."),
         }
     }
 }
@@ -407,6 +412,7 @@ impl ResolvablePreference<f32> for Preference<f32> {
         match self {
             Self::Reference(_) => panic!("Only Colors support color references."),
             Self::Typography(_) => panic!("Typography references require a full theme."),
+            Self::CornerRadius(_) => panic!("Radius references require a corner-radius field."),
             Self::Specific(value) => *value,
         }
     }
@@ -422,10 +428,8 @@ impl ResolvablePreference<f32> for Preference<f32> {
 impl ResolvablePreference<Duration> for Preference<Duration> {
     fn resolve(&self, _colors_sheet: &ColorsSheet) -> Duration {
         match self {
-            Self::Reference(_) | Self::Typography(_) => {
-                panic!("Only Colors support references.")
-            }
             Self::Specific(value) => *value,
+            _ => panic!("Duration fields do not support references."),
         }
     }
 }

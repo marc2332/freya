@@ -23,6 +23,7 @@ use crate::{
         AttachedPosition,
     },
     context_menu::ContextMenu,
+    corner_radius::CornerRadiusSize,
     define_theme,
     get_theme,
 };
@@ -34,6 +35,7 @@ define_theme! {
         color: Color,
         background: Color,
         border_fill: Color,
+        corner_radius: CornerRadiusSize,
         font_size: f32,
     }
 }
@@ -124,6 +126,7 @@ impl Component for Tooltip {
             background,
             color,
             border_fill,
+            corner_radius,
             font_size,
         } = theme;
 
@@ -137,7 +140,7 @@ impl Component for Tooltip {
                     .fill(border_fill),
             )
             .background(background)
-            .corner_radius(8.)
+            .corner_radius(corner_radius)
             .font_size(font_size)
             .color(color)
             .children(self.children.clone())

@@ -6,6 +6,7 @@ use torin::{
 
 use crate::{
     activable_context::use_is_active,
+    corner_radius::CornerRadiusSize,
     define_theme,
     get_theme,
 };
@@ -21,7 +22,7 @@ define_theme! {
         height: Size,
         padding: Gaps,
         color: Color,
-        corner_radius: CornerRadius,
+        corner_radius: CornerRadiusSize,
     }
 }
 

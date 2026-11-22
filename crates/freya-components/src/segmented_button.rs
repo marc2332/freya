@@ -6,6 +6,7 @@ use torin::{
 };
 
 use crate::{
+    corner_radius::CornerRadiusSize,
     define_theme,
     get_theme,
 };
@@ -15,6 +16,7 @@ define_theme! {
     pub ButtonSegment {
         %[fields]
         font_size: f32,
+        corner_radius: CornerRadiusSize,
         background: Color,
         hover_background: Color,
         disabled_background: Color,
@@ -34,7 +36,7 @@ define_theme! {
         %[fields]
         background: Color,
         border_fill: Color,
-        corner_radius: CornerRadius,
+        corner_radius: CornerRadiusSize,
     }
 }
 
@@ -161,6 +163,7 @@ impl Component for ButtonSegment {
 
         let ButtonSegmentTheme {
             font_size,
+            corner_radius,
             background,
             hover_background,
             disabled_background,
@@ -231,7 +234,7 @@ impl Component for ButtonSegment {
             .overflow(Overflow::Clip)
             .color(color.mul_if(!self.enabled, 0.9))
             .background(background.mul_if(!self.enabled, 0.9))
-            .corner_radius(8.)
+            .corner_radius(corner_radius)
             .maybe(self.enabled && focus() == Focus::Keyboard, |el| {
                 el.border(
                     Border::new()

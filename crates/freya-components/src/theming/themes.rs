@@ -25,6 +25,11 @@ use crate::{
     checkbox::CheckboxThemePreference,
     chip::ChipThemePreference,
     color_picker::ColorPickerThemePreference,
+    corner_radius::{
+        CornerRadiusRole,
+        CornerRadiusSize,
+        CornerRadiusThemePreference,
+    },
     floating_tab::FloatingTabThemePreference,
     icons::IconThemePreference,
     input::{
@@ -163,13 +168,14 @@ pub const DARK_COLORS: ColorsSheet = ColorsSheet {
 
 fn register_base_component_themes(theme: &mut Theme) {
     theme.set("typography", TypographyThemePreference::default());
+    theme.set("corner_radius", CornerRadiusThemePreference::default());
     theme.set(
         "button_layout",
         ButtonLayoutThemePreference {
             font_size: Preference::Typography(TextRole::Control),
             padding: Preference::Specific(Gaps::new(6., 12., 6., 12.)),
             margin: Preference::Specific(Gaps::new_all(0.)),
-            corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
+            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
             width: Preference::Specific(Size::Inner),
             height: Preference::Specific(Size::Inner),
         },
@@ -180,7 +186,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             font_size: Preference::Typography(TextRole::Control),
             padding: Preference::Specific(Gaps::new(3., 6., 3., 6.)),
             margin: Preference::Specific(Gaps::new_all(0.)),
-            corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
+            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
             width: Preference::Specific(Size::Inner),
             height: Preference::Specific(Size::Inner),
         },
@@ -191,7 +197,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             font_size: Preference::Typography(TextRole::Control),
             padding: Preference::Specific(Gaps::new(10., 16., 10., 16.)),
             margin: Preference::Specific(Gaps::new_all(0.)),
-            corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
+            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
             width: Preference::Specific(Size::Inner),
             height: Preference::Specific(Size::Inner),
         },
@@ -240,14 +246,14 @@ fn register_base_component_themes(theme: &mut Theme) {
         "card_layout",
         CardLayoutThemePreference {
             padding: Preference::Specific(Gaps::new(16., 16., 16., 16.)),
-            corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
+            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
         },
     );
     theme.set(
         "compact_card_layout",
         CardLayoutThemePreference {
             padding: Preference::Specific(Gaps::new(8., 12., 8., 12.)),
-            corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
+            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
         },
     );
     theme.set(
@@ -273,6 +279,7 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "accordion",
         AccordionThemePreference {
+            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
             color: Preference::Reference("text_primary"),
             background: Preference::Reference("surface_tertiary"),
             border_fill: Preference::Reference("border"),
@@ -350,7 +357,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             active_background: Preference::Reference("surface_secondary"),
             hover_background: Preference::Reference("surface_secondary"),
             focus_border_fill: Preference::Reference("border_focus"),
-            corner_radius: Preference::Specific(CornerRadius::new_all(12.)),
+            corner_radius: Preference::CornerRadius(CornerRadiusRole::Xl),
             margin: Preference::Specific(Gaps::new_all(0.)),
             padding: Preference::Specific(Gaps::new(8., 12., 8., 12.)),
         },
@@ -365,6 +372,7 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "tooltip",
         TooltipThemePreference {
+            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
             background: Preference::Reference("surface_tertiary"),
             color: Preference::Reference("text_primary"),
             border_fill: Preference::Reference("surface_primary"),
@@ -381,7 +389,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "input_layout",
         InputLayoutThemePreference {
             font_size: Preference::Typography(TextRole::Control),
-            corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
+            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
             padding: Preference::Specific(Gaps::new(8., 8., 8., 8.)),
         },
     );
@@ -389,7 +397,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "compact_input_layout",
         InputLayoutThemePreference {
             font_size: Preference::Typography(TextRole::Control),
-            corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
+            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
             padding: Preference::Specific(Gaps::new(4., 6., 4., 6.)),
         },
     );
@@ -397,7 +405,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "expanded_input_layout",
         InputLayoutThemePreference {
             font_size: Preference::Typography(TextRole::Control),
-            corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
+            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
             padding: Preference::Specific(Gaps::new(12., 12., 12., 12.)),
         },
     );
@@ -456,7 +464,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         ResizableHandleThemePreference {
             background: Preference::Reference("surface_secondary"),
             hover_background: Preference::Reference("surface_primary"),
-            corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
+            corner_radius: Preference::CornerRadius(CornerRadiusRole::Sm),
         },
     );
     theme.set(
@@ -469,7 +477,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             padding: Preference::Specific(Gaps::new(6., 12., 6., 12.)),
             width: Preference::Specific(Size::Inner),
             height: Preference::Specific(Size::Inner),
-            corner_radius: Preference::Specific(CornerRadius::new_all(99.)),
+            corner_radius: CornerRadiusSize::from(99.).into(),
         },
     );
     theme.set(
@@ -492,6 +500,8 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "select",
         SelectThemePreference {
+            corner_radius: Preference::CornerRadius(CornerRadiusRole::Lg),
+            list_corner_radius: Preference::CornerRadius(CornerRadiusRole::Xxxl),
             font_size: Preference::Typography(TextRole::Control),
             width: Preference::Specific(Size::Inner),
             margin: Preference::Specific(Gaps::new_all(0.)),
@@ -519,6 +529,7 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set(
         "popup",
         PopupThemePreference {
+            corner_radius: Preference::CornerRadius(CornerRadiusRole::Xl),
             background: Preference::Reference("background"),
             color: Preference::Reference("text_primary"),
             width: Preference::Specific(Size::px(500.)),
@@ -544,7 +555,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             row_background: Preference::Specific(Color::TRANSPARENT),
             hover_row_background: Preference::Reference("surface_secondary"),
             divider_fill: Preference::Reference("surface_primary"),
-            corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
+            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
             cell_padding: Preference::Specific(Gaps::new(8., 12., 8., 12.)),
             color: Preference::Reference("text_primary"),
         },
@@ -562,7 +573,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             focus_border_fill: Preference::Reference("secondary"),
             padding: Preference::Specific(Gaps::new(8., 14., 8., 14.)),
             margin: Preference::Specific(0.),
-            corner_radius: Preference::Specific(CornerRadius::new_all(99.)),
+            corner_radius: CornerRadiusSize::from(99.).into(),
             width: Preference::Specific(Size::Inner),
             height: Preference::Specific(Size::Inner),
             color: Preference::Reference("text_primary"),
@@ -581,7 +592,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             select_background: Preference::Reference("surface_primary"),
             border_fill: Preference::Specific(Color::TRANSPARENT),
             focus_border_fill: Preference::Reference("border_focus"),
-            corner_radius: Preference::Specific(CornerRadius::new_all(14.)),
+            corner_radius: Preference::CornerRadius(CornerRadiusRole::Lg),
             color: Preference::Reference("text_primary"),
             select_color: Preference::Reference("text_primary"),
         },
@@ -593,12 +604,13 @@ fn register_base_component_themes(theme: &mut Theme) {
             padding: Preference::Specific(Gaps::new_all(6.)),
             shadow: Preference::Specific(Color::from((0, 0, 0, 0.25))),
             border_fill: Preference::Reference("surface_primary"),
-            corner_radius: Preference::Specific(CornerRadius::new_all(20.)),
+            corner_radius: Preference::CornerRadius(CornerRadiusRole::Xl),
         },
     );
     theme.set(
         "button_segment",
         ButtonSegmentThemePreference {
+            corner_radius: Preference::CornerRadius(CornerRadiusRole::Md),
             font_size: Preference::Typography(TextRole::Control),
             background: Preference::Specific(Color::TRANSPARENT),
             hover_background: Preference::Reference("surface_secondary"),
@@ -617,7 +629,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         SegmentedButtonThemePreference {
             background: Preference::Reference("background"),
             border_fill: Preference::Reference("border"),
-            corner_radius: Preference::Specific(CornerRadius::new_all(12.)),
+            corner_radius: Preference::CornerRadius(CornerRadiusRole::Xl),
         },
     );
     #[cfg(feature = "titlebar")]
@@ -626,7 +638,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         TitlebarButtonThemePreference {
             background: Preference::Specific(Color::TRANSPARENT),
             hover_background: Preference::Reference("surface_secondary"),
-            corner_radius: Preference::Specific(CornerRadius::new_all(0.0)),
+            corner_radius: CornerRadiusSize::from(0.).into(),
             width: Preference::Specific(Size::Pixels(Length::new(46.0))),
             height: Preference::Specific(Size::Fill),
         },
@@ -638,7 +650,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             shimmer_color: Preference::Specific(Color::WHITE.with_a(160)),
             duration: Preference::Specific(Duration::from_millis(1000)),
             animation: Preference::Specific(SkeletonAnimation::Pulse),
-            corner_radius: Preference::Specific(CornerRadius::new_all(4.)),
+            corner_radius: Preference::CornerRadius(CornerRadiusRole::Xs),
             shimmer_from: Preference::Specific(-320.),
             shimmer_to: Preference::Specific(960.),
             shimmer_width: Preference::Specific(300.),

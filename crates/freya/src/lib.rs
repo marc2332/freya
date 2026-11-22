@@ -224,6 +224,7 @@ pub mod components {
         chip::*,
         color_picker::*,
         context_menu::*,
+        corner_radius::*,
         cursor_blink::*,
         define_theme,
         docking::*,

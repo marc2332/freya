@@ -29,7 +29,7 @@ impl ResolvablePreference<TypographySize> for Preference<TypographySize> {
     fn resolve(&self, _colors_sheet: &ColorsSheet) -> TypographySize {
         match self {
             Self::Specific(size) => *size,
-            Self::Reference(_) | Self::Typography(_) => {
+            _ => {
                 panic!("Typography sizes must be fixed values or relative multipliers.")
             }
         }

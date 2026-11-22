@@ -2,6 +2,7 @@ use freya_core::prelude::*;
 use torin::size::Size;
 
 use crate::{
+    corner_radius::CornerRadiusSize,
     define_theme,
     get_theme,
     svg_viewer::SvgViewer,
@@ -13,7 +14,7 @@ define_theme! {
         %[fields]
         background: Color,
         hover_background: Color,
-        corner_radius: CornerRadius,
+        corner_radius: CornerRadiusSize,
         width: Size,
         height: Size,
     }

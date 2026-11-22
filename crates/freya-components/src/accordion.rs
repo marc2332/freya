@@ -11,6 +11,7 @@ use torin::{
 };
 
 use crate::{
+    corner_radius::CornerRadiusSize,
     define_theme,
     get_theme,
 };
@@ -22,6 +23,7 @@ define_theme! {
         color: Color,
         background: Color,
         border_fill: Color,
+        corner_radius: CornerRadiusSize,
     }
 }
 
@@ -103,7 +105,7 @@ impl Component for Accordion {
             .a11y_id(header_a11y_id)
             .a11y_role(AccessibilityRole::Header)
             .a11y_focusable(true)
-            .corner_radius(CornerRadius::new_all(8.))
+            .corner_radius(accordion_theme.corner_radius)
             .padding(Gaps::new_all(8.))
             .color(accordion_theme.color)
             .background(accordion_theme.background)

@@ -10,6 +10,7 @@ use torin::{
 };
 
 use crate::{
+    corner_radius::CornerRadiusSize,
     define_theme,
     get_theme,
 };
@@ -20,6 +21,7 @@ define_theme! {
         %[fields]
         background: Color,
         color: Color,
+        corner_radius: CornerRadiusSize,
         width: Size,
         height: Size,
         min_width: Size,
@@ -202,6 +204,7 @@ impl Component for Popup {
         let PopupTheme {
             background,
             color,
+            corner_radius,
             width,
             height,
             min_width,
@@ -248,7 +251,7 @@ impl Component for Popup {
                         .a11y_role(AccessibilityRole::Dialog)
                         .scale((scale, scale))
                         .opacity(opacity)
-                        .corner_radius(12.)
+                        .corner_radius(corner_radius)
                         .background(background)
                         .color(color)
                         .shadow(Shadow::new().y(4.).blur(5.).color((0, 0, 0, 30)))
