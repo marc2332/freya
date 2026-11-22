@@ -116,6 +116,45 @@ fn event_propagate() {
 }
 
 #[test]
+fn preventing_capture_pointer_up_preserves_other_capture_handlers() {
+    fn app() -> Element {
+        let mut events = use_consume::<State<Vec<&'static str>>>();
+        rect()
+            .expanded()
+            .on_capture_global_pointer_up(move |event: Event<PointerEventData>| {
+                events.write().push("outer capture");
+                event.prevent_default();
+            })
+            .on_global_pointer_up(move |_| events.write().push("global release"))
+            .child(
+                rect()
+                    .expanded()
+                    .on_capture_global_pointer_up(move |event: Event<PointerEventData>| {
+                        events.write().push("inner capture");
+                        event.prevent_default();
+                    })
+                    .on_touch_end(move |_| events.write().push("touch end"))
+                    .on_press(move |_| events.write().push("press")),
+            )
+            .into()
+    }
+
+    let (mut test, events) = TestingRunner::new(
+        app,
+        (500., 500.).into(),
+        |runner| runner.provide_root_context(|| State::create(Vec::<&str>::new())),
+        1.,
+    );
+    test.sync_and_update();
+    test.press_touch((15., 15.));
+    test.release_touch((15., 15.));
+
+    let mut recorded = events.peek().clone();
+    recorded.sort_unstable();
+    assert_eq!(recorded, ["inner capture", "outer capture"]);
+}
+
+#[test]
 fn touch_events() {
     fn app() -> Element {
         let mut state = use_consume::<State<i32>>();
