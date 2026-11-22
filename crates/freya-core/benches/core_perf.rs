@@ -151,9 +151,11 @@ fn runner() {
             rect()
                 .on_mouse_up(|_| {})
                 .children((0..ROWS).map(|index| {
-                    rect().key(index).child(freya::helpers::from_fn_captured(
-                        move || rect().child(format!("Row {index}")).into(),
-                    ))
+                    rect()
+                        .key(index)
+                        .child(freya::helpers::from_fn_captured(move || {
+                            rect().child(format!("Row {index}")).into()
+                        }))
                 }))
                 .into()
         })
@@ -238,8 +240,7 @@ fn cascades() {
         ("cascades: styled listeners (1000)", ROWS),
         ("cascades: styled listeners (10000)", SPARSE_ROWS),
     ] {
-        let (mut runner, mut tree, target) =
-            mounted_runner(move || styled_cascade_app(row_count));
+        let (mut runner, mut tree, target) = mounted_runner(move || styled_cascade_app(row_count));
         tree.events.clear();
         bench(name, || {
             update(&mut runner, &mut tree, target, EventName::MouseUp);
