@@ -45,6 +45,7 @@
 //! - [Global Contexts](self::_docs::global_context)
 //! - [Async](self::_docs::_async)
 //! - [Fonts](self::_docs::fonts)
+//! - [Theming](self::_docs::theming)
 //! - [Layers](freya_core::prelude::Layer)
 //! - [Optimizing](self::_docs::optimizing)
 //! - [Platform Integration](freya_core::platform::Platform)
