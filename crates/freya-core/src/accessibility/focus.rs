@@ -20,7 +20,7 @@ use crate::{
         KeyboardEventData,
         Memo,
         ScreenReader,
-        UserEvent,
+        WindowCommand,
         consume_root_context,
         use_hook,
         use_memo,
@@ -71,7 +71,7 @@ impl AccessibilityIdExt for AccessibilityId {
         let platform = Platform::get().current_window();
 
         if *platform.focused_accessibility_id.peek() != *self {
-            platform.send(UserEvent::FocusAccessibilityNode(
+            platform.send(WindowCommand::FocusAccessibilityNode(
                 AccessibilityFocusStrategy::Node(*self),
             ));
         }
@@ -81,7 +81,7 @@ impl AccessibilityIdExt for AccessibilityId {
         let platform = Platform::get().current_window();
 
         if *platform.focused_accessibility_id.peek() == *self {
-            platform.send(UserEvent::FocusAccessibilityNode(
+            platform.send(WindowCommand::FocusAccessibilityNode(
                 AccessibilityFocusStrategy::Node(ACCESSIBILITY_ROOT_ID),
             ));
         }

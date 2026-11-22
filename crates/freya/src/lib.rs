@@ -140,9 +140,9 @@ pub mod prelude {
             WindowConfig,
         },
         renderer::{
-            LaunchProxy,
-            NativeEvent,
+            LaunchHandle,
             RendererContext,
+            RendererMessage,
         },
     };
 
@@ -244,6 +244,7 @@ pub mod components {
         loader::*,
         menu::*,
         overflowed_content::*,
+        platform_drag::*,
         popup::*,
         portal::*,
         progressbar::*,

@@ -104,7 +104,7 @@ impl FreyaPlugin for BorderlessPlugin {
                 if window.fullscreen().is_some() || window.is_maximized() {
                     return;
                 }
-                let size = window.inner_size();
+                let size = window.surface_size();
                 let radius = self.corner_radius * window.scale_factor() as f32;
                 let rounded_window = RRect::new_rect_xy(
                     SkRect::from_wh(size.width as f32, size.height as f32),

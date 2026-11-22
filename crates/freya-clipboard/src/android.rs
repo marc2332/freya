@@ -1,6 +1,10 @@
 use std::error::Error;
 
-use copypasta::ClipboardProvider;
+use freya_core::data_transfer::{
+    DataFormat,
+    DataValue,
+    TransferData,
+};
 use jni::{
     Env,
     JValue,
@@ -10,6 +14,12 @@ use jni::{
         JObject,
         JString,
     },
+};
+
+use crate::clipboard::{
+    ClipboardError,
+    ClipboardFuture,
+    ClipboardProvider,
 };
 
 /// Clipboard backed by Android's clipboard manager.
@@ -49,8 +59,8 @@ impl AndroidClipboard {
     }
 }
 
-impl ClipboardProvider for AndroidClipboard {
-    fn get_contents(&mut self) -> Result<String, Box<dyn Error + Send + Sync>> {
+impl AndroidClipboard {
+    fn read_text() -> Result<String, Box<dyn Error + Send + Sync>> {
         Self::with_manager(|env, manager, activity| {
             let clip = env
                 .call_method(
@@ -106,7 +116,7 @@ impl ClipboardProvider for AndroidClipboard {
         })
     }
 
-    fn set_contents(&mut self, contents: String) -> Result<(), Box<dyn Error + Send + Sync>> {
+    fn write_text(contents: String) -> Result<(), Box<dyn Error + Send + Sync>> {
         Self::with_manager(|env, manager, _activity| {
             let label = env.new_string("text")?;
             let text = env.new_string(contents)?;
@@ -127,5 +137,38 @@ impl ClipboardProvider for AndroidClipboard {
 
             Ok(())
         })
+    }
+}
+
+impl ClipboardProvider for AndroidClipboard {
+    fn get(&self, format: DataFormat) -> ClipboardFuture<DataValue> {
+        if format != DataFormat::Text {
+            return Box::pin(async { Err(ClipboardError::UnsupportedFormat) });
+        }
+        let result = Self::read_text()
+            .map(DataValue::Text)
+            .map_err(|_| ClipboardError::FailedToRead);
+        Box::pin(async move { result })
+    }
+
+    fn set(&self, data: TransferData) -> ClipboardFuture<()> {
+        let mut formats = data.formats.into_iter();
+        let Some((format, value)) = formats.next() else {
+            return Box::pin(async { Err(ClipboardError::FailedToSet) });
+        };
+        if format != DataFormat::Text || formats.next().is_some() {
+            return Box::pin(async { Err(ClipboardError::UnsupportedFormat) });
+        }
+        let contents = match value {
+            DataValue::Text(text) => Ok(text),
+            DataValue::Bytes(bytes) => {
+                String::from_utf8(bytes).map_err(|_| ClipboardError::FailedToSet)
+            }
+            DataValue::Files(_) => Err(ClipboardError::FailedToSet),
+        };
+        let result = contents.and_then(|contents| {
+            Self::write_text(contents).map_err(|_| ClipboardError::FailedToSet)
+        });
+        Box::pin(async move { result })
     }
 }

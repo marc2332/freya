@@ -24,6 +24,12 @@ freya = "0.5"
 freya = { git = "https://github.com/marc2332/freya", branch = "main" }
 ```
 
+Pre-release:
+
+```toml
+freya = "0.6.0-alpha.2"
+```
+
 ### Trying it out 🚀
 
 Make sure to have [Development Setup](https://docs.rs/freya/latest/freya/_docs/development_setup/index.html) ready.
@@ -581,8 +587,7 @@ fn app() -> impl IntoElement {
         // Dont move when the cursor goes outside the window
         if e.global_location().to_tuple() != (-1., -1.) {
             cursor_position.set(e.global_location());
-            let platform = Platform::get();
-            platform.send(UserEvent::RequestRedraw);
+            Platform::get().current_window().request_redraw();
         }
     };
 

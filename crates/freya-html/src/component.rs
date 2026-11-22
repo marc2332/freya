@@ -77,7 +77,7 @@ impl Component for HtmlViewer {
             let wake = handle.wake.peek().clone();
             spawn(async move {
                 while wake.recv().await.is_ok() {
-                    platform.send(UserEvent::RequestRedraw);
+                    platform.request_redraw();
                 }
             });
         });

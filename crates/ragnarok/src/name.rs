@@ -5,8 +5,14 @@ pub trait NameOfEvent:
 {
     /// Check if this event means that the pointer device as moved while hovering a node.
     fn is_moved(&self) -> bool;
-    /// Check if this event means that the pointer device started hovering a node.
-    fn is_enter(&self) -> bool;
+    /// Whether a pointer or drag entered a node.
+    fn is_enter(&self) -> bool {
+        self.is_pointer_enter() || self.is_drag_enter()
+    }
+
+    /// Whether a pointer entered a node.
+    fn is_pointer_enter(&self) -> bool;
+
     /// Check if this enter event should only fire on the deepest (most specific) node,
     /// not on all nodes under the cursor simultaneously.
     fn is_exclusive_enter(&self) -> bool {
@@ -42,6 +48,30 @@ pub trait NameOfEvent:
     /// Create a new exclusive leave event for when the deepest (entered) node changes
     /// without the node necessarily leaving the cursor area entirely.
     fn new_exclusive_enter() -> Self;
+
+    fn is_drag_enter(&self) -> bool {
+        false
+    }
+
+    fn is_drag_over(&self) -> bool {
+        false
+    }
+
+    fn is_drag_leave(&self) -> bool {
+        false
+    }
+
+    fn is_drop(&self) -> bool {
+        false
+    }
+
+    fn new_drag_enter() -> Option<Self> {
+        None
+    }
+
+    fn new_drag_leave() -> Option<Self> {
+        None
+    }
 
     /// Get a set of events derived from this event. For example, mouse movement derives into mouse movement + mouse enter.
     fn get_derived_events(&self) -> HashSet<Self>;
