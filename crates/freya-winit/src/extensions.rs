@@ -1,16 +1,16 @@
 use freya_core::{
+    command::ErasedCommand,
     elements::rect::Rect,
     prelude::{
+        AppCommand,
         Event,
         EventHandlersExt,
         EventsCombos,
-        GlobalUserEvent,
         MouseButton,
         Platform,
         PlatformWindow,
         PointerEventData,
     },
-    user_event::SingleThreadErasedEvent,
 };
 use freya_engine::prelude::Surface as SkiaSurface;
 use winit::window::{
@@ -21,8 +21,8 @@ use winit::window::{
 use crate::{
     config::WindowConfig,
     renderer::{
-        NativePlatformErasedEventAction,
         RendererContext,
+        WinitCommand,
     },
 };
 
@@ -121,7 +121,7 @@ pub trait WinitPlatformExt {
     ///     });
     /// }
     /// ```
-    fn with_window(&self, window_id: WindowId, callback: impl FnOnce(&mut Window) + 'static);
+    fn with_window(&self, window_id: WindowId, callback: impl FnOnce(&mut dyn Window) + 'static);
 
     /// Queue a renderer callback without an originating window.
     /// The returned receiver can be awaited for its result or dropped.
@@ -189,13 +189,13 @@ impl WindowDragExt for Rect {
 
 impl WinitPlatformExt for Platform {
     fn window_id() -> WindowId {
-        Platform::get().current_window().id.into()
+        WindowId::from_raw(Platform::get().current_window().id as usize)
     }
 
     async fn launch_window(&self, window_config: WindowConfig) -> WindowId {
         let (sender, receiver) = futures_channel::oneshot::channel();
-        self.send(GlobalUserEvent::Erased(SingleThreadErasedEvent(Box::new(
-            NativePlatformErasedEventAction::LaunchWindow {
+        self.send(AppCommand::Erased(ErasedCommand(Box::new(
+            WinitCommand::LaunchWindow {
                 window_config: Box::new(window_config),
                 ack: sender,
             },
@@ -204,8 +204,8 @@ impl WinitPlatformExt for Platform {
     }
 
     fn close_window(&self, window_id: WindowId) {
-        self.send(GlobalUserEvent::Erased(SingleThreadErasedEvent(Box::new(
-            NativePlatformErasedEventAction::CloseWindow(window_id),
+        self.send(AppCommand::Erased(ErasedCommand(Box::new(
+            WinitCommand::CloseWindow(window_id),
         ))));
     }
 
@@ -215,8 +215,8 @@ impl WinitPlatformExt for Platform {
 
     fn set_window_title(&self, window_id: WindowId, title: impl Into<String>) {
         let title = title.into();
-        self.send(GlobalUserEvent::Erased(SingleThreadErasedEvent(Box::new(
-            NativePlatformErasedEventAction::RendererCallback(Box::new(move |context| {
+        self.send(AppCommand::Erased(ErasedCommand(Box::new(
+            WinitCommand::RendererCallback(Box::new(move |context| {
                 if let Some(app) = context.windows.get_mut(&window_id) {
                     app.set_title(&title);
                 }
@@ -224,11 +224,11 @@ impl WinitPlatformExt for Platform {
         ))));
     }
 
-    fn with_window(&self, window_id: WindowId, callback: impl FnOnce(&mut Window) + 'static) {
-        self.send(GlobalUserEvent::Erased(SingleThreadErasedEvent(Box::new(
-            NativePlatformErasedEventAction::RendererCallback(Box::new(move |context| {
+    fn with_window(&self, window_id: WindowId, callback: impl FnOnce(&mut dyn Window) + 'static) {
+        self.send(AppCommand::Erased(ErasedCommand(Box::new(
+            WinitCommand::RendererCallback(Box::new(move |context| {
                 if let Some(app) = context.windows.get_mut(&window_id) {
-                    callback(&mut app.window);
+                    callback(app.window.as_mut());
                 }
             })),
         ))));
@@ -239,8 +239,8 @@ impl WinitPlatformExt for Platform {
         F: FnOnce(&mut RendererContext) -> T + 'static,
     {
         let (sender, receiver) = futures_channel::oneshot::channel();
-        self.send(GlobalUserEvent::Erased(SingleThreadErasedEvent(Box::new(
-            NativePlatformErasedEventAction::RendererCallback(Box::new(move |context| {
+        self.send(AppCommand::Erased(ErasedCommand(Box::new(
+            WinitCommand::RendererCallback(Box::new(move |context| {
                 let _ = sender.send(callback(context));
             })),
         ))));
@@ -256,10 +256,10 @@ impl WinitPlatformWindowExt for PlatformWindow {
     where
         F: FnOnce(&mut SkiaSurface) -> T + 'static,
     {
-        let window_id = self.id.into();
+        let window_id = WindowId::from_raw(self.id as usize);
         let (sender, receiver) = futures_channel::oneshot::channel();
-        Platform::get().send(GlobalUserEvent::Erased(SingleThreadErasedEvent(Box::new(
-            NativePlatformErasedEventAction::RendererCallback(Box::new(move |context| {
+        Platform::get().send(AppCommand::Erased(ErasedCommand(Box::new(
+            WinitCommand::RendererCallback(Box::new(move |context| {
                 if let Some(app) = context.windows.get_mut(&window_id) {
                     app.render_callbacks.push(Box::new(move |surface| {
                         let _ = sender.send(callback(surface));

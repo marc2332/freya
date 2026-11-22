@@ -11,6 +11,7 @@ use keyboard_types::NamedKey;
 use torin::prelude::CursorPoint;
 
 use crate::{
+    Clipboard,
     EditableConfig,
     EditorLine,
     TextSelection,
@@ -20,9 +21,12 @@ use crate::{
     },
 };
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum EditableEvent<'a> {
     Release,
+    Paste {
+        contents: &'a str,
+    },
     Move {
         location: CursorPoint,
         editor_line: EditorLine,
@@ -45,13 +49,72 @@ pub enum EditableEvent<'a> {
 }
 
 impl EditableEvent<'_> {
+    /// Passes events through immediately, except paste shortcuts wait for the clipboard.
+    pub fn resolve_and_then<T: TextEditor>(
+        self,
+        editor: Readable<T>,
+        config: &EditableConfig,
+        process: impl FnOnce(EditableEvent<'_>) + 'static,
+    ) {
+        if matches!(&self, EditableEvent::KeyDown { key: Key::Character(character), modifiers, .. }
+            if modifiers.contains(Modifiers::ctrl_or_meta()) && matches!(character.as_str(), "v" | "V"))
+        {
+            if config.allow_read_clipboard && config.allow_changes {
+                let (selection, text) = {
+                    let editor = editor.peek();
+                    (editor.selection().clone(), editor.text().into_owned())
+                };
+                let read = Clipboard::get_text();
+                spawn(async move {
+                    let Ok(contents) = read.await else {
+                        return;
+                    };
+                    {
+                        let editor = editor.peek();
+                        if editor.selection() != &selection || editor.text().as_ref() != text {
+                            return;
+                        }
+                    }
+                    process(EditableEvent::Paste {
+                        contents: &contents,
+                    });
+                });
+            }
+        } else {
+            process(self);
+        }
+    }
+
     pub fn process<T: TextEditor>(
+        self,
+        editor: Writable<T>,
+        dragging: Writable<TextDragging>,
+        config: &EditableConfig,
+    ) {
+        let config = *config;
+        self.resolve_and_then::<T>(editor.clone().into(), &config, move |event| {
+            event.process_inner(editor, dragging, &config);
+        });
+    }
+
+    pub(crate) fn process_inner<T: TextEditor>(
         self,
         mut editor: Writable<T>,
         mut dragging: Writable<TextDragging>,
-        config: &'_ EditableConfig,
+        config: &EditableConfig,
     ) {
         match self {
+            EditableEvent::Paste { contents } => {
+                if config.allow_changes && config.allow_read_clipboard {
+                    editor.write_if(|mut editor| {
+                        let event = editor.paste(contents);
+                        if event.contains(TextEvent::TEXT_CHANGED) {
+                            *dragging.write() = TextDragging::default();
+                        }
+                        !event.is_empty()
+                    });
+                }
+            }
             EditableEvent::Down {
                 location,
                 editor_line,
@@ -166,7 +229,6 @@ impl EditableEvent<'_> {
                                 holder,
                                 config.allow_tabs,
                                 config.allow_changes,
-                                config.allow_read_clipboard,
                                 config.allow_write_clipboard,
                             );
                             if event.contains(TextEvent::TEXT_CHANGED) {

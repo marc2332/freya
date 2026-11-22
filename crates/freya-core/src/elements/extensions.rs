@@ -304,15 +304,17 @@ pub trait EventHandlersExt: Sized {
     }
 
     event_handlers! {
-        File,
-        FileEventData;
+        Drag,
+        DragEventData;
 
-        /// Fires when a file is dropped onto the element.
-        file_drop => EventName::FileDrop;
-        /// Fires when a dragged file hovers anywhere over the window.
-        global_file_hover => EventName::GlobalFileHover;
-        /// Fires when a dragged file stops hovering over the window.
-        global_file_hover_cancelled => EventName::GlobalFileHoverCancelled;
+        /// Fires when a platform drag enters the element's area.
+        drag_enter => EventName::DragEnter;
+        /// Fires on entry and movement over the element and bubbles to ancestors.
+        drag_over => EventName::DragOver;
+        /// Fires when a platform drag leaves the element's area.
+        drag_leave => EventName::DragLeave;
+        /// Fires when accepted drag data is dropped onto the element.
+        drop => EventName::Drop;
     }
 
     event_handlers! {
@@ -539,16 +541,34 @@ pub enum PressEventData {
     Touch(TouchEventData),
 }
 
+/// Methods for setting the direction.
+pub trait DirectionExt: Sized {
+    /// Set the direction.
+    fn direction(self, direction: Direction) -> Self;
+
+    /// Set the direction to [`Direction::Vertical`].
+    fn vertical(self) -> Self {
+        self.direction(Direction::vertical())
+    }
+
+    /// Set the direction to [`Direction::Horizontal`].
+    fn horizontal(self) -> Self {
+        self.direction(Direction::horizontal())
+    }
+}
+
+impl<T: ContainerWithContentExt> DirectionExt for T {
+    fn direction(mut self, direction: Direction) -> Self {
+        self.layout_mut().layout.direction = direction;
+        self
+    }
+}
+
 /// Layout methods for containers that arrange children along a direction axis.
 pub trait ContainerWithContentExt
 where
     Self: LayoutExt,
 {
-    /// Set the axis children are stacked along. See [`Direction`].
-    fn direction(mut self, direction: Direction) -> Self {
-        self.layout_mut().layout.direction = direction;
-        self
-    }
     /// Set how children are aligned along the direction axis. See [`Alignment`].
     fn main_align(mut self, main_align: impl Into<Alignment>) -> Self {
         self.layout_mut().layout.main_alignment = main_align.into();
@@ -589,18 +609,6 @@ where
     /// Shift the element's children vertically by the given pixels.
     fn offset_y(mut self, offset_y: f32) -> Self {
         self.layout_mut().layout.offset_y = Length::new(offset_y);
-        self
-    }
-
-    /// Stack children vertically. Shorthand for [`direction`](Self::direction) set to [`Direction::Vertical`].
-    fn vertical(mut self) -> Self {
-        self.layout_mut().layout.direction = Direction::vertical();
-        self
-    }
-
-    /// Stack children horizontally. Shorthand for [`direction`](Self::direction) set to [`Direction::Horizontal`].
-    fn horizontal(mut self) -> Self {
-        self.layout_mut().layout.direction = Direction::horizontal();
         self
     }
 }
@@ -1207,6 +1215,12 @@ pub trait EffectExt: Sized {
     /// Rotate the element by the given angle in degrees.
     fn rotation(mut self, rotation: f32) -> Self {
         self.effect_mut().rotation = Some(rotation);
+        self
+    }
+
+    /// Mask this element and its children using the fill's opacity.
+    fn mask(mut self, mask: impl Into<Fill>) -> Self {
+        self.effect_mut().mask = Some(mask.into());
         self
     }
 

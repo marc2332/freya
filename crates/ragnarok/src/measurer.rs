@@ -23,7 +23,7 @@ where
     type Name: NameOfEvent;
     type Key: NodeKey;
     type Emmitable: EmmitableEvent<Key = Self::Key, Name = Self::Name>;
-    type Source: SourceEvent<Name = Self::Name>;
+    type Source: SourceEvent<Name = Self::Name, Key = Self::Key>;
 
     fn get_layers(&self) -> impl Iterator<Item = (&i16, impl Iterator<Item = &Self::Key>)>;
     fn get_listeners_of(&self, name: &Self::Name) -> impl Iterator<Item = &Self::Key>;
@@ -75,12 +75,13 @@ impl<T: EventsMeasurer + private::Sealed> EventsMeasurerRunner for T {
                 self,
             );
 
-        // Get potential collateral events, e.g. mousemove -> mouseenter
-        let collateral_emmitable_events =
-            nodes_state.retain_states(self, &emmitable_events, source_events);
-        nodes_state.filter_emmitable_events::<Self::Emmitable, Self::Name>(&mut emmitable_events);
         let nodes_states_update =
             nodes_state.create_update::<Self::Name, Self::Source>(self, &potential_events);
+
+        // Get potential collateral events, e.g. mousemove -> mouseleave.
+        let collateral_emmitable_events =
+            nodes_state.retain_states(self, &emmitable_events, source_events, &nodes_states_update);
+        nodes_state.filter_emmitable_events(&mut emmitable_events, source_events);
 
         // Get the global events
         measure_source_global_events::<Self::Key, Self::Name, Self::Source, Self::Emmitable>(
@@ -113,7 +114,7 @@ where
     type Name: NameOfEvent;
     type Key: NodeKey;
     type Emmitable: EmmitableEvent<Key = Self::Key, Name = Self::Name>;
-    type Source: SourceEvent<Name = Self::Name>;
+    type Source: SourceEvent<Name = Self::Name, Key = Self::Key>;
 
     fn run(
         &mut self,

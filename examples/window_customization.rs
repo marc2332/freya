@@ -23,7 +23,10 @@ fn main() {
                         .primary_monitor()
                         .or_else(|| el.available_monitors().next())
                     {
-                        let size = monitor.size();
+                        let Some(mode) = monitor.current_video_mode() else {
+                            return attributes;
+                        };
+                        let size = mode.size();
                         attributes.with_position(LogicalPosition {
                             x: size.width as i32 / 2 - width / 2,
                             y: size.height as i32 / 2 - height / 2,

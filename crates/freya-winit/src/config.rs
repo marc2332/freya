@@ -14,8 +14,11 @@ use freya_core::{
 use image::ImageReader;
 use winit::{
     event_loop::ActiveEventLoop,
-    window::{
+    icon::{
         Icon,
+        RgbaIcon,
+    },
+    window::{
         Window,
         WindowAttributes,
         WindowId,
@@ -27,12 +30,12 @@ use crate::{
         FreyaPlugin,
         PluginsManager,
     },
-    renderer::LaunchProxy,
+    renderer::LaunchHandle,
 };
 
 pub type WindowBuilderHook =
-    Box<dyn FnOnce(WindowAttributes, &ActiveEventLoop) -> WindowAttributes>;
-pub type WindowHandleHook = Box<dyn FnOnce(&mut Window)>;
+    Box<dyn FnOnce(WindowAttributes, &dyn ActiveEventLoop) -> WindowAttributes>;
+pub type WindowHandleHook = Box<dyn FnOnce(&mut dyn Window)>;
 
 /// Preferred GPU type, with fallback to other available hardware.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
@@ -265,7 +268,7 @@ impl WindowConfig {
     /// Register a Window Attributes hook.
     pub fn with_window_attributes(
         mut self,
-        window_attributes_hook: impl FnOnce(WindowAttributes, &ActiveEventLoop) -> WindowAttributes
+        window_attributes_hook: impl FnOnce(WindowAttributes, &dyn ActiveEventLoop) -> WindowAttributes
         + 'static,
     ) -> Self {
         self.window_attributes_hook = Some(Box::new(window_attributes_hook));
@@ -275,7 +278,7 @@ impl WindowConfig {
     /// Register a Window handle hook.
     pub fn with_window_handle(
         mut self,
-        window_handle_hook: impl FnOnce(&mut Window) + 'static,
+        window_handle_hook: impl FnOnce(&mut dyn Window) + 'static,
     ) -> Self {
         self.window_handle_hook = Some(Box::new(window_handle_hook));
         self
@@ -336,7 +339,7 @@ pub type TrayHandler =
     Box<dyn FnMut(crate::tray_icon::TrayEvent, crate::renderer::RendererContext)>;
 
 pub type TaskHandler =
-    Box<dyn FnOnce(crate::renderer::LaunchProxy) -> Pin<Box<dyn Future<Output = ()>>> + 'static>;
+    Box<dyn FnOnce(crate::renderer::LaunchHandle) -> Pin<Box<dyn Future<Output = ()>>> + 'static>;
 
 pub type GlobalContextInserter = Box<dyn FnOnce(&GlobalContexts)>;
 
@@ -354,7 +357,7 @@ pub struct LaunchConfig {
     pub(crate) tasks: Vec<TaskHandler>,
     pub(crate) globals: Vec<GlobalContextInserter>,
     pub(crate) exit_on_close: bool,
-    pub(crate) event_loop: Option<winit::event_loop::EventLoop<crate::renderer::NativeEvent>>,
+    pub(crate) event_loop: Option<winit::event_loop::EventLoop>,
     pub(crate) gpu_resource_cache_limit: usize,
 }
 
@@ -392,7 +395,9 @@ impl LaunchConfig {
             .into_rgba8();
         let (width, height) = image.dimensions();
         let rgba = image.into_raw();
-        Icon::from_rgba(rgba, width, height).expect("Failed to open icon")
+        RgbaIcon::new(rgba, width, height)
+            .expect("Failed to open icon")
+            .into()
     }
 
     #[cfg(feature = "tray")]
@@ -507,7 +512,7 @@ impl LaunchConfig {
     /// ```
     pub fn with_task<F, Fut>(mut self, task: F) -> Self
     where
-        F: FnOnce(LaunchProxy) -> Fut + 'static,
+        F: FnOnce(LaunchHandle) -> Fut + 'static,
         Fut: Future<Output = ()> + 'static,
     {
         self.tasks
@@ -517,10 +522,7 @@ impl LaunchConfig {
 
     /// Provide a custom winit [EventLoop](winit::event_loop::EventLoop) to use instead of the default one.
     /// This allows configuring platform-specific options on the event loop builder before passing it.
-    pub fn with_event_loop(
-        mut self,
-        event_loop: winit::event_loop::EventLoop<crate::renderer::NativeEvent>,
-    ) -> Self {
+    pub fn with_event_loop(mut self, event_loop: winit::event_loop::EventLoop) -> Self {
         self.event_loop = Some(event_loop);
         self
     }

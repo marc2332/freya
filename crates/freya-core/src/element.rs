@@ -57,7 +57,7 @@ use crate::{
     node_id::NodeId,
     prelude::{
         Color,
-        FileEventData,
+        DragEventData,
         ImePreeditEventData,
         MaybeExt,
     },
@@ -177,6 +177,11 @@ pub trait ElementExt: Any {
 
     /// Applies clipping for this element before it and its children are rendered.
     fn clip(&self, _context: ClipContext) {}
+
+    /// Whether this element paints content, excluding backdrop effects and descendants.
+    fn paints_content(&self) -> bool {
+        true
+    }
 
     /// Renders this element using the supplied canvas and layout context.
     fn render(&self, _context: RenderContext) {}
@@ -523,5 +528,5 @@ pub enum EventHandlerType {
     Touch(EventHandler<Event<TouchEventData>>),
     Pointer(EventHandler<Event<PointerEventData>>),
     ImePreedit(EventHandler<Event<ImePreeditEventData>>),
-    File(EventHandler<Event<FileEventData>>),
+    Drag(EventHandler<Event<DragEventData>>),
 }

@@ -8,18 +8,21 @@ use freya_core::{
     integration::*,
     prelude::*,
 };
-use freya_winit::{
-    integration::is_ime_role,
-    plugins::{
-        FreyaPlugin,
-        PluginEvent,
-        PluginHandle,
-    },
+use freya_winit::plugins::{
+    FreyaPlugin,
+    PluginEvent,
+    PluginHandle,
 };
-use winit::platform::android::activity::AndroidApp;
+use torin::prelude::Gaps;
+use winit::{
+    event::WindowEvent,
+    platform::android::activity::AndroidApp,
+};
 
-mod keyboard;
+use crate::window_insets::WindowInsets;
+
 mod status_bar;
+mod window_insets;
 
 /// Extension trait for [`Platform`] providing Android-specific APIs.
 pub trait AndroidExt {
@@ -31,6 +34,10 @@ pub trait AndroidExt {
 
     /// Hide the Android soft keyboard.
     fn hide_keyboard(&self) -> Result<(), jni::errors::Error>;
+
+    /// System bar and cutout padding in logical pixels for edge-to-edge layouts on API 30+.
+    /// Call during rendering to track inset and scale changes.
+    fn content_padding(&self) -> Gaps;
 }
 
 impl AndroidExt for Platform {
@@ -44,33 +51,54 @@ impl AndroidExt for Platform {
 
     fn show_keyboard(&self) -> Result<(), jni::errors::Error> {
         if let Some(app) = GlobalContexts::get().try_get_context::<AndroidApp>() {
-            keyboard::show_keyboard(&app)
-        } else {
-            Ok(())
+            app.show_soft_input(false);
         }
+
+        Ok(())
     }
 
     fn hide_keyboard(&self) -> Result<(), jni::errors::Error> {
         if let Some(app) = GlobalContexts::get().try_get_context::<AndroidApp>() {
-            keyboard::hide_keyboard(&app)
-        } else {
-            Ok(())
+            app.hide_soft_input(false);
         }
+
+        Ok(())
+    }
+
+    fn content_padding(&self) -> Gaps {
+        let Some(insets) = try_consume_root_context::<State<WindowInsets>>() else {
+            return Gaps::default();
+        };
+        let insets = insets.read();
+        let scale_factor = *self.current_window().scale_factor.read() as f32;
+
+        Gaps::new(
+            insets.top as f32 / scale_factor,
+            insets.right as f32 / scale_factor,
+            insets.bottom as f32 / scale_factor,
+            insets.left as f32 / scale_factor,
+        )
     }
 }
 
-/// Freya plugin for Android integration.
-///
-/// Stores the [`AndroidApp`] handle, provides it as root context,
-/// and registers a root component that syncs the status bar
-/// appearance with the app theme and manages the soft keyboard.
+/// Provides Android window insets and syncs status-bar appearance with the app theme.
 pub struct AndroidPlugin {
     app: AndroidApp,
+    insets: Option<State<WindowInsets>>,
 }
 
 impl AndroidPlugin {
     pub fn new(app: AndroidApp) -> Self {
-        Self { app }
+        Self { app, insets: None }
+    }
+
+    fn refresh_insets(&mut self) {
+        if let Some(insets) = &mut self.insets {
+            match WindowInsets::read(&self.app) {
+                Ok(value) => insets.set_if_modified(value),
+                Err(error) => tracing::warn!(?error, "Failed to read Android window insets"),
+            }
+        }
     }
 }
 
@@ -80,8 +108,24 @@ impl FreyaPlugin for AndroidPlugin {
     }
 
     fn on_event(&mut self, event: &mut PluginEvent, _handle: PluginHandle) {
-        if let PluginEvent::RunnerCreated { .. } = event {
-            GlobalContexts::get().insert_context(self.app.clone());
+        match event {
+            PluginEvent::RunnerCreated { runner } => {
+                GlobalContexts::get().insert_context(self.app.clone());
+                self.insets =
+                    Some(runner.provide_root_context(|| State::create(WindowInsets::default())));
+                self.refresh_insets();
+            }
+            // TODO(marc2332): Refresh on inset changes that do not resize the surface.
+            PluginEvent::WindowResumed { .. }
+            | PluginEvent::WindowEvent {
+                raw:
+                    WindowEvent::Focused(true)
+                    | WindowEvent::SurfaceResized(_)
+                    | WindowEvent::ScaleFactorChanged { .. },
+                ..
+            } => self.refresh_insets(),
+            PluginEvent::WindowClosed { .. } => self.insets = None,
+            _ => {}
         }
     }
 
@@ -112,21 +156,6 @@ impl Component for AndroidRoot {
             let is_light = theme.read().name == "light";
             if let Err(err) = platform.set_status_bar_light(is_light) {
                 tracing::error!("Failed to set status bar appearance: {err:?}");
-            }
-        });
-
-        // Show/hide keyboard based on focused node type
-        use_side_effect(move || {
-            let platform = Platform::get();
-            let window = platform.current_window();
-            let focused_node = window.focused_accessibility_node.read();
-            let result = if is_ime_role(focused_node.role()) {
-                platform.show_keyboard()
-            } else {
-                platform.hide_keyboard()
-            };
-            if let Err(err) = result {
-                tracing::error!("Failed to toggle soft keyboard: {err:?}");
             }
         });
 

@@ -8,7 +8,7 @@ use std::{
 
 use freya_core::prelude::{
     ModifiersExt,
-    UserEvent,
+    WindowCommand,
 };
 use freya_engine::prelude::{
     Color,
@@ -29,9 +29,9 @@ use freya_winit::{
     },
     reexports::winit::window::WindowId,
     renderer::{
-        NativeEvent,
-        NativeWindowEvent,
-        NativeWindowEventAction,
+        RendererMessage,
+        RendererWindowMessage,
+        RendererWindowPayload,
     },
 };
 
@@ -140,18 +140,26 @@ impl FreyaPlugin for MetricsPlugin {
                 }
                 if performance_toggled {
                     for window_id in self.metrics.keys() {
-                        handle.send_event_loop_event(NativeEvent::Window(NativeWindowEvent {
-                            window_id: *window_id,
-                            action: NativeWindowEventAction::User(UserEvent::RequestRedraw),
-                        }));
+                        handle.send_renderer_message(RendererMessage::Window(
+                            RendererWindowMessage {
+                                window_id: *window_id,
+                                payload: RendererWindowPayload::Command(
+                                    WindowCommand::RequestRedraw,
+                                ),
+                            },
+                        ));
                     }
                 }
                 if stats_toggled {
                     for window_id in self.metrics.keys() {
-                        handle.send_event_loop_event(NativeEvent::Window(NativeWindowEvent {
-                            window_id: *window_id,
-                            action: NativeWindowEventAction::User(UserEvent::RequestRedraw),
-                        }));
+                        handle.send_renderer_message(RendererMessage::Window(
+                            RendererWindowMessage {
+                                window_id: *window_id,
+                                payload: RendererWindowPayload::Command(
+                                    WindowCommand::RequestRedraw,
+                                ),
+                            },
+                        ));
                     }
                 }
             }
@@ -224,9 +232,9 @@ impl FreyaPlugin for MetricsPlugin {
                     metrics.tasks_poll_time += started.elapsed();
                 }
                 if self.overlay_visible() {
-                    handle.send_event_loop_event(NativeEvent::Window(NativeWindowEvent {
+                    handle.send_renderer_message(RendererMessage::Window(RendererWindowMessage {
                         window_id: window.id(),
-                        action: NativeWindowEventAction::User(UserEvent::RequestRedraw),
+                        payload: RendererWindowPayload::Command(WindowCommand::RequestRedraw),
                     }));
                 }
             }
@@ -240,9 +248,9 @@ impl FreyaPlugin for MetricsPlugin {
                     metrics.events_batches += 1;
                 }
                 if self.overlay_visible() {
-                    handle.send_event_loop_event(NativeEvent::Window(NativeWindowEvent {
+                    handle.send_renderer_message(RendererMessage::Window(RendererWindowMessage {
                         window_id: window.id(),
-                        action: NativeWindowEventAction::User(UserEvent::RequestRedraw),
+                        payload: RendererWindowPayload::Command(WindowCommand::RequestRedraw),
                     }));
                 }
             }
@@ -373,8 +381,8 @@ impl FreyaPlugin for MetricsPlugin {
                             "Window Size",
                             format!(
                                 "{}x{}",
-                                window.inner_size().width,
-                                window.inner_size().height
+                                window.surface_size().width,
+                                window.surface_size().height
                             ),
                         ),
                         ("Scale Factor", format!("{}x", window.scale_factor())),
@@ -524,7 +532,7 @@ impl FreyaPlugin for MetricsPlugin {
                         canvas,
                         font_collection,
                         window.scale_factor() as f32,
-                        window.inner_size().width,
+                        window.surface_size().width,
                         *metrics,
                     );
                 }

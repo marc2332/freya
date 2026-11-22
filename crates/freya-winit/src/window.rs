@@ -1,6 +1,5 @@
 use std::{
     borrow::Cow,
-    path::PathBuf,
     rc::Rc,
     sync::Arc,
     task::Waker,
@@ -11,7 +10,7 @@ use std::{
 };
 
 #[cfg(feature = "accessibility")]
-use accesskit_winit::Adapter;
+use accesskit_xplat::Adapter;
 use freya_components::{
     cache::AssetCacher,
     integration::integration,
@@ -45,20 +44,21 @@ use ragnarok::{
     EventsMeasurerRunner,
     NodesState,
 };
+#[cfg(all(feature = "accessibility", not(target_os = "android")))]
+use raw_window_handle::HasWindowHandle;
 use torin::prelude::{
     CursorPoint,
     Size2D,
 };
+#[cfg(all(feature = "accessibility", target_os = "android"))]
+use winit::platform::android::ActiveEventLoopExtAndroid;
 use winit::{
     dpi::{
         LogicalPosition,
         LogicalSize,
     },
     event::ElementState,
-    event_loop::{
-        ActiveEventLoop,
-        EventLoopProxy,
-    },
+    event_loop::ActiveEventLoop,
     keyboard::ModifiersState,
     window::{
         Theme,
@@ -68,6 +68,8 @@ use winit::{
     },
 };
 
+#[cfg(feature = "accessibility")]
+use crate::renderer::AccessibilityEventHandler;
 use crate::{
     accessibility::AccessibilityTask,
     config::{
@@ -80,15 +82,17 @@ use crate::{
         GraphicsDriver,
     },
     integration::is_ime_role,
+    platform_drag::PlatformDragState,
     plugins::{
         PluginEvent,
         PluginHandle,
         PluginsManager,
     },
     renderer::{
-        NativeEvent,
-        NativeWindowEvent,
-        NativeWindowEventAction,
+        RendererMessage,
+        RendererSender,
+        RendererWindowMessage,
+        RendererWindowPayload,
     },
 };
 
@@ -98,7 +102,7 @@ pub struct AppWindow {
     pub(crate) runner: Runner,
     pub(crate) tree: Tree,
     pub(crate) driver: Option<GraphicsDriver>,
-    pub(crate) window: Window,
+    pub(crate) window: Box<dyn Window>,
     pub(crate) nodes_state: NodesState<NodeId>,
 
     pub(crate) position: CursorPoint,
@@ -114,7 +118,7 @@ pub struct AppWindow {
 
     pub(crate) accessibility: AccessibilityTree,
     #[cfg(feature = "accessibility")]
-    pub(crate) accessibility_adapter: accesskit_winit::Adapter,
+    pub(crate) accessibility_adapter: Adapter,
     pub(crate) accessibility_tasks_for_next_render: AccessibilityTask,
     #[cfg(feature = "accessibility")]
     pub(crate) screen_reader: ScreenReader,
@@ -135,7 +139,8 @@ pub struct AppWindow {
 
     pub(crate) background: Color,
 
-    pub(crate) dropped_file_paths: Vec<PathBuf>,
+    pub(crate) active_touches: rustc_hash::FxHashMap<u64, CursorPoint>,
+    pub(crate) platform_drag: PlatformDragState,
 
     pub(crate) on_close: Option<OnCloseHook>,
 
@@ -155,6 +160,81 @@ fn clamp_custom_scale_factor(custom_scale_factor: f64) -> f64 {
 }
 
 impl AppWindow {
+    pub(crate) fn handle_platform_drag(
+        &mut self,
+        command: PlatformDragCommand,
+        event_loop: &dyn ActiveEventLoop,
+        font_collection: &mut FontCollection,
+        font_manager: &FontMgr,
+        fallback_fonts: &[Cow<'static, str>],
+    ) {
+        let PlatformDragCommand {
+            data,
+            actions,
+            preview,
+            scope_id,
+            response,
+        } = command;
+        let icon = preview
+            .map(|preview| {
+                self.render_drag_preview(
+                    preview,
+                    scope_id,
+                    font_collection,
+                    font_manager,
+                    fallback_fonts,
+                )
+            })
+            .transpose();
+        match icon {
+            Ok(icon) => self.platform_drag.start(
+                event_loop,
+                self.window.id(),
+                data,
+                actions,
+                icon,
+                response,
+            ),
+            Err(error) => {
+                let _ = response.send(Err(error));
+            }
+        }
+    }
+
+    #[cfg(feature = "accessibility")]
+    pub(crate) fn process_accessibility_window_event(&mut self, event: &winit::event::WindowEvent) {
+        use winit::event::WindowEvent;
+
+        match event {
+            WindowEvent::Focused(is_focused) => {
+                self.accessibility_adapter.set_focus(*is_focused);
+            }
+            WindowEvent::Moved(_) | WindowEvent::SurfaceResized(_) => {
+                let outer_position = match event {
+                    WindowEvent::Moved(position) => *position,
+                    _ => self.window.outer_position().unwrap_or_default(),
+                };
+                let inner_size = match event {
+                    WindowEvent::SurfaceResized(size) => *size,
+                    _ => self.window.surface_size(),
+                };
+                let surface_position = self.window.surface_position();
+                let inner_position = (
+                    f64::from(outer_position.x) + f64::from(surface_position.x),
+                    f64::from(outer_position.y) + f64::from(surface_position.y),
+                );
+                let outer_position: (_, _) = outer_position.cast::<f64>().into();
+                let outer_size: (_, _) = self.window.outer_size().cast::<f64>().into();
+                let inner_size: (_, _) = inner_size.cast::<f64>().into();
+                self.accessibility_adapter.set_window_bounds(
+                    accesskit::Rect::from_origin_size(outer_position, outer_size),
+                    accesskit::Rect::from_origin_size(inner_position, inner_size),
+                );
+            }
+            _ => {}
+        }
+    }
+
     pub(crate) fn process_accessibility_update(&mut self, mode: Option<NavigationMode>) {
         let title = self.window.title();
         let updated_nodes = self
@@ -176,8 +256,7 @@ impl AppWindow {
         let node_id = self.accessibility.focused_node_id().unwrap();
         let layout_node = self.tree.layout.get(&node_id).unwrap();
         let focused_node = AccessibilityTree::create_node(node_id, layout_node, &self.tree, &title);
-        self.window
-            .set_ime_allowed(is_ime_role(focused_node.role()));
+        let ime_allowed = is_ime_role(focused_node.role());
         self.platform
             .focused_accessibility_node
             .set_if_modified(focused_node);
@@ -186,7 +265,9 @@ impl AppWindow {
         }
 
         let area = layout_node.visible_area();
-        self.window.set_ime_cursor_area(
+        crate::integration::update_ime(
+            self.window.as_ref(),
+            ime_allowed,
             LogicalPosition::new(area.min_x(), area.min_y()),
             LogicalSize::new(area.width(), area.height()),
         );
@@ -206,8 +287,8 @@ impl AppWindow {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         mut window_config: WindowConfig,
-        active_event_loop: &ActiveEventLoop,
-        event_loop_proxy: &EventLoopProxy<NativeEvent>,
+        active_event_loop: &dyn ActiveEventLoop,
+        event_loop_proxy: &RendererSender,
         plugins: &mut PluginsManager,
         font_collection: &mut FontCollection,
         font_manager: &FontMgr,
@@ -217,27 +298,41 @@ impl AppWindow {
     ) -> Self {
         #[cfg(feature = "hotreload")]
         let hot_reload_pending = Arc::new(std::sync::atomic::AtomicBool::new(false));
-        let mut window_attributes = Window::default_attributes()
+        let mut window_attributes = WindowAttributes::default()
             .with_resizable(window_config.resizable)
             .with_window_icon(window_config.icon.take())
             .with_visible(false)
             .with_title(window_config.title)
             .with_decorations(window_config.decorations)
             .with_transparent(window_config.transparent)
-            .with_inner_size(LogicalSize::<f64>::from(window_config.size));
+            .with_surface_size(LogicalSize::<f64>::from(window_config.size));
 
         if let Some(min_size) = window_config.min_size {
             window_attributes =
-                window_attributes.with_min_inner_size(LogicalSize::<f64>::from(min_size));
+                window_attributes.with_min_surface_size(LogicalSize::<f64>::from(min_size));
         }
         if let Some(max_size) = window_config.max_size {
             window_attributes =
-                window_attributes.with_max_inner_size(LogicalSize::<f64>::from(max_size));
+                window_attributes.with_max_surface_size(LogicalSize::<f64>::from(max_size));
         }
         #[cfg(target_os = "linux")]
         if let Some(app_id) = window_config.app_id.take() {
-            use winit::platform::wayland::WindowAttributesExtWayland;
-            window_attributes = window_attributes.with_name(&app_id, &app_id);
+            use winit::platform::{
+                wayland::WindowAttributesWayland,
+                x11::{
+                    ActiveEventLoopExtX11,
+                    WindowAttributesX11,
+                },
+            };
+            window_attributes = if active_event_loop.is_x11() {
+                window_attributes.with_platform_attributes(Box::new(
+                    WindowAttributesX11::default().with_name(&app_id, &app_id),
+                ))
+            } else {
+                window_attributes.with_platform_attributes(Box::new(
+                    WindowAttributesWayland::default().with_name(&app_id, &app_id),
+                ))
+            };
         }
         if let Some(window_attributes_hook) = window_config.window_attributes_hook.take() {
             window_attributes = window_attributes_hook(window_attributes, active_event_loop);
@@ -254,7 +349,7 @@ impl AppWindow {
             "Using the {} graphics driver on {}, transparency is {}",
             driver.name(),
             driver.gpu_name().unwrap_or("an unknown GPU"),
-            if window_attributes.transparent {
+            if window_attributes.transparent() {
                 "enabled"
             } else {
                 "disabled"
@@ -262,7 +357,7 @@ impl AppWindow {
         );
 
         if let Some(window_handle_hook) = window_config.window_handle_hook.take() {
-            window_handle_hook(&mut window);
+            window_handle_hook(window.as_mut());
         }
 
         let on_close = window_config.on_close.take();
@@ -295,13 +390,13 @@ impl AppWindow {
         let mut tree = Tree::default();
         plugins.send(
             PluginEvent::TreeCreated {
-                window: &window,
+                window: window.as_ref(),
                 tree: &mut tree,
             },
             PluginHandle::new(event_loop_proxy),
         );
 
-        let window_size = window.inner_size().to_logical::<f32>(scale_factor);
+        let window_size = window.surface_size().to_logical::<f32>(scale_factor);
         let accent_color_preference = accent_color_preference();
         runner.provide_root_context(TargetPlatform::detect);
         let platform = runner.run_in({
@@ -313,7 +408,7 @@ impl AppWindow {
             };
             let is_app_focused = window.has_focus();
             move || PlatformWindow {
-                id: u64::from(window_id),
+                id: window_id.into_raw() as u64,
                 focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
                 focused_accessibility_node: State::create(accesskit::Node::new(
                     accesskit::Role::Window,
@@ -325,11 +420,13 @@ impl AppWindow {
                 preferred_theme: State::create(theme),
                 is_app_focused: State::create(is_app_focused),
                 accent_color: State::create(accent_color_preference.accent_color),
-                sender: Rc::new(move |user_event| {
-                    let _ = event_loop_proxy.send_event(NativeEvent::Window(NativeWindowEvent {
-                        window_id,
-                        action: NativeWindowEventAction::User(user_event),
-                    }));
+                sender: Rc::new(move |command| {
+                    let _ = event_loop_proxy.send_message(RendererMessage::Window(
+                        RendererWindowMessage {
+                            window_id,
+                            payload: RendererWindowPayload::Command(command),
+                        },
+                    ));
                 }),
             }
         });
@@ -360,8 +457,8 @@ impl AppWindow {
         }
         tree.measure_layout(
             (
-                window.inner_size().width as f32,
-                window.inner_size().height as f32,
+                window.surface_size().width as f32,
+                window.surface_size().height as f32,
             )
                 .into(),
             font_collection,
@@ -373,20 +470,31 @@ impl AppWindow {
         );
 
         #[cfg(feature = "accessibility")]
-        let accessibility_adapter =
-            Adapter::with_event_loop_proxy(active_event_loop, &window, event_loop_proxy.clone());
+        let accessibility_adapter = Adapter::with_combined_handler(
+            #[cfg(target_os = "android")]
+            active_event_loop.android_app(),
+            #[cfg(not(target_os = "android"))]
+            window
+                .window_handle()
+                .expect("The newly created window must have a window handle")
+                .as_raw(),
+            Arc::new(AccessibilityEventHandler {
+                window_id: window.id(),
+                proxy: event_loop_proxy.clone(),
+            }),
+        );
 
         window.set_visible(true);
 
-        struct TreeHandle(EventLoopProxy<NativeEvent>, WindowId);
+        struct TreeHandle(RendererSender, WindowId);
 
         impl ArcWake for TreeHandle {
             fn wake_by_ref(arc_self: &Arc<Self>) {
                 _ = arc_self
                     .0
-                    .send_event(NativeEvent::Window(NativeWindowEvent {
+                    .send_message(RendererMessage::Window(RendererWindowMessage {
                         window_id: arc_self.1,
-                        action: NativeWindowEventAction::PollRunner,
+                        payload: RendererWindowPayload::PollRunner,
                     }));
             }
         }
@@ -400,16 +508,17 @@ impl AppWindow {
             let hot_reload_pending_handler = hot_reload_pending.clone();
             freya_core::hotreload::subsecond::register_handler(Arc::new(move || {
                 hot_reload_pending_handler.store(true, std::sync::atomic::Ordering::Release);
-                let _ = event_loop_proxy.send_event(NativeEvent::Window(NativeWindowEvent {
-                    window_id,
-                    action: NativeWindowEventAction::PollRunner,
-                }));
+                let _ =
+                    event_loop_proxy.send_message(RendererMessage::Window(RendererWindowMessage {
+                        window_id,
+                        payload: RendererWindowPayload::PollRunner,
+                    }));
             }));
         }
 
         plugins.send(
             PluginEvent::WindowCreated {
-                window: &window,
+                window: window.as_ref(),
                 font_collection,
                 tree: &tree,
                 animation_clock: &animation_clock,
@@ -420,7 +529,7 @@ impl AppWindow {
             PluginHandle::new(event_loop_proxy),
         );
 
-        let input_interval = frame_interval(&window);
+        let input_interval = frame_interval(window.as_ref());
 
         AppWindow {
             runner,
@@ -463,7 +572,8 @@ impl AppWindow {
 
             background: window_config.background,
 
-            dropped_file_paths: Vec::new(),
+            active_touches: Default::default(),
+            platform_drag: Default::default(),
 
             on_close,
 
@@ -484,7 +594,7 @@ impl AppWindow {
         let cursor_icon = self.tree.cursor_icon(&self.nodes_state);
         if cursor_icon != self.cursor_icon {
             self.cursor_icon = cursor_icon;
-            self.window.set_cursor(cursor_icon);
+            self.window.set_cursor(cursor_icon.into());
         }
         let cursor_visible = self.tree.cursor_visible(&self.nodes_state);
         if cursor_visible != self.cursor_visible {
@@ -493,12 +603,12 @@ impl AppWindow {
         }
     }
 
-    pub fn window(&self) -> &Window {
-        &self.window
+    pub fn window(&self) -> &dyn Window {
+        self.window.as_ref()
     }
 
-    pub fn window_mut(&mut self) -> &mut Window {
-        &mut self.window
+    pub fn window_mut(&mut self) -> &mut dyn Window {
+        self.window.as_mut()
     }
 
     pub fn effective_scale_factor(&self) -> f64 {
@@ -508,7 +618,7 @@ impl AppWindow {
     /// Syncs the effective scale factor on [`PlatformWindow`] and invalidates layout.
     pub fn scale_factor_changed(&mut self) {
         let scale_factor = self.effective_scale_factor();
-        let size = self.window.inner_size().to_logical::<f32>(scale_factor);
+        let size = self.window.surface_size().to_logical::<f32>(scale_factor);
         self.platform.scale_factor.set(scale_factor);
         self.platform
             .root_size
@@ -560,19 +670,19 @@ impl AppWindow {
         }
 
         {
-            let mut observer = plugins.tasks_poll_observer(&self.window, handle.clone());
+            let mut observer = plugins.tasks_poll_observer(self.window.as_ref(), handle.clone());
             let future = std::pin::pin!(self.runner.handle_events_with(&mut observer));
             if future.poll(&mut context).is_ready() {
                 self.waker.wake_by_ref();
             }
         }
         self.runner.handle_events_immediately_with(
-            &mut plugins.tasks_poll_observer(&self.window, handle.clone()),
+            &mut plugins.tasks_poll_observer(self.window.as_ref(), handle.clone()),
         );
 
         plugins.send(
             PluginEvent::StartedUpdatingTree {
-                window: &self.window,
+                window: self.window.as_ref(),
                 tree: &self.tree,
             },
             handle.clone(),
@@ -595,14 +705,16 @@ impl AppWindow {
                 AccessibilityTask::ProcessUpdate { mode: None };
         }
         if let Some(strategy) = result.auto_focus {
-            handle.send_event_loop_event(NativeEvent::Window(NativeWindowEvent {
+            handle.send_renderer_message(RendererMessage::Window(RendererWindowMessage {
                 window_id: self.window.id(),
-                action: NativeWindowEventAction::User(UserEvent::FocusAccessibilityNode(strategy)),
+                payload: RendererWindowPayload::Command(WindowCommand::FocusAccessibilityNode(
+                    strategy,
+                )),
             }));
         }
         plugins.send(
             PluginEvent::FinishedUpdatingTree {
-                window: &self.window,
+                window: self.window.as_ref(),
                 tree: &self.tree,
             },
             handle,
@@ -623,14 +735,14 @@ impl AppWindow {
         }
         plugins.send(
             PluginEvent::StartedMeasuringLayout {
-                window: &self.window,
+                window: self.window.as_ref(),
                 tree: &self.tree,
             },
             handle.clone(),
         );
         let size: Size2D = (
-            self.window.inner_size().width as f32,
-            self.window.inner_size().height as f32,
+            self.window.surface_size().width as f32,
+            self.window.surface_size().height as f32,
         )
             .into();
         let scale_factor = self.effective_scale_factor();
@@ -649,7 +761,7 @@ impl AppWindow {
         self.process_layout_on_next_render = false;
         plugins.send(
             PluginEvent::FinishedMeasuringLayout {
-                window: &self.window,
+                window: self.window.as_ref(),
                 tree: &self.tree,
             },
             handle,
@@ -715,7 +827,7 @@ impl AppWindow {
         let mut platform_events = vec![platform_event];
         plugins.send(
             PluginEvent::StartedMeasuringEvents {
-                window: &self.window,
+                window: self.window.as_ref(),
                 tree: &self.tree,
             },
             handle.clone(),
@@ -732,7 +844,7 @@ impl AppWindow {
         );
         plugins.send(
             PluginEvent::FinishedMeasuringEvents {
-                window: &self.window,
+                window: self.window.as_ref(),
                 tree: &self.tree,
             },
             handle,
@@ -755,10 +867,12 @@ impl AppWindow {
     }
 }
 
-pub(crate) fn frame_interval(window: &Window) -> Duration {
+pub(crate) fn frame_interval(window: &dyn Window) -> Duration {
     let refresh_rate = window
         .current_monitor()
-        .and_then(|monitor| monitor.refresh_rate_millihertz())
+        .and_then(|monitor| monitor.current_video_mode())
+        .and_then(|mode| mode.refresh_rate_millihertz())
+        .map(|refresh_rate| refresh_rate.get())
         .filter(|refresh_rate| *refresh_rate > 1_000)
         .unwrap_or(60_000);
     Duration::from_secs_f64(1000.0 / refresh_rate as f64)

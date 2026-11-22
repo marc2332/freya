@@ -143,7 +143,7 @@ pub fn slider_vertical() {
             .child(
                 Slider::new(move |v| value.set(v))
                     .value(value())
-                    .direction(Direction::Vertical)
+                    .vertical()
                     .size(Size::px(200.)),
             )
     }

@@ -64,9 +64,9 @@ fn global_platform_works_after_its_originating_window_closes() {
 
     assert!(task.is_finished());
     assert!(
-        matches!(&events.borrow()[0], GlobalUserEvent::OpenUrl(url) if url == "https://freyaui.dev")
+        matches!(&events.borrow()[0], AppCommand::OpenUrl(url) if url == "https://freyaui.dev")
     );
-    assert!(matches!(&events.borrow()[1], GlobalUserEvent::Exit));
+    assert!(matches!(&events.borrow()[1], AppCommand::Exit));
     tasks.clear();
     contexts.unregister();
 }

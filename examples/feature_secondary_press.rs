@@ -15,20 +15,16 @@ fn app() -> impl IntoElement {
             Menu::new().child(
                 MenuItem::new()
                     .on_press(move |_| {
-                        let _ = Clipboard::set("Right Click Me".to_string());
+                        Clipboard::set_text_deferred("Right Click Me".to_string());
                     })
                     .child("Copy"),
             ),
         );
     };
 
-    rect()
-        .expanded()
-        .center()
-        .child(ContextMenuViewer::new())
-        .child(
-            label()
-                .text("Right click to copy")
-                .on_secondary_down(on_secondary_down),
-        )
+    rect().expanded().center().child(
+        label()
+            .text("Right click to copy")
+            .on_secondary_down(on_secondary_down),
+    )
 }

@@ -1,9 +1,10 @@
 use freya_core::prelude::*;
-use torin::geometry::{
-    CursorPoint,
-    Point2D,
-    Size2D,
-    Vector2D,
+use torin::geometry::CursorPoint;
+
+use crate::scrollviews::{
+    ScrollPoint,
+    ScrollSize,
+    ScrollVector,
 };
 
 const DRAG_THRESHOLD: f64 = 2.0;
@@ -12,8 +13,8 @@ const DRAG_THRESHOLD: f64 = 2.0;
 struct Candidate {
     id: AccessibilityId,
     // Room to scroll towards each end.
-    to_start: Vector2D,
-    to_end: Vector2D,
+    to_start: ScrollVector,
+    to_end: ScrollVector,
 }
 
 #[derive(Clone, PartialEq)]
@@ -117,9 +118,9 @@ impl TouchDrag {
     pub fn press(
         &mut self,
         origin: CursorPoint,
-        position: Point2D,
-        content: Size2D,
-        viewport: Size2D,
+        position: ScrollPoint,
+        content: ScrollSize,
+        viewport: ScrollSize,
     ) {
         let joined = self
             .gesture
@@ -136,8 +137,8 @@ impl TouchDrag {
             let room = content - viewport;
             gesture.candidates.push(Candidate {
                 id: self.id,
-                to_start: (-position.x, -position.y).into(),
-                to_end: (room.width + position.x, room.height + position.y).into(),
+                to_start: (position.x, position.y).into(),
+                to_end: (room.width - position.x, room.height - position.y).into(),
             });
         }
         self.gesture.set_if_modified(Some(gesture));
@@ -145,7 +146,7 @@ impl TouchDrag {
     }
 
     /// Return how far to scroll, or `None` if this view does not have the drag.
-    pub fn movement(&mut self, coords: CursorPoint) -> Option<Vector2D> {
+    pub fn movement(&mut self, coords: CursorPoint) -> Option<ScrollVector> {
         let (origin, owner) = {
             let mut gesture = self.gesture.write();
             let gesture = gesture
@@ -167,7 +168,7 @@ impl TouchDrag {
 
         let from = self.last.peek().unwrap_or(origin);
         self.last.set_if_modified(Some(coords));
-        Some((from - coords).to_f32())
+        Some(from - coords)
     }
 
     /// End the touch and return whether this view had the drag.

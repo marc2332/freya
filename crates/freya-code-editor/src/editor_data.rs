@@ -74,8 +74,8 @@ impl CodeEditorData {
         }
 
         let (scroll_x, scroll_y) = scroll_controller.into();
-        let scrolled_x = -scroll_x as f32;
-        let scrolled_y = -scroll_y as f32;
+        let scrolled_x = scroll_x as f32;
+        let scrolled_y = scroll_y as f32;
         let cursor_left = self.cursor_col() as f32 * self.metrics.char_width;
         let cursor_right = cursor_left + self.metrics.char_width;
         let cursor_top = self.cursor_row() as f32 * line_height;
@@ -100,11 +100,11 @@ impl CodeEditorData {
         let mut changed = false;
 
         if let Some(target) = horizontal_target {
-            changed |= scroll_controller.scroll_to_x(-target as i32);
+            changed |= scroll_controller.scroll_to_x(target.into());
         }
 
         if let Some(target) = vertical_target {
-            changed |= scroll_controller.scroll_to_y(-target as i32);
+            changed |= scroll_controller.scroll_to_y(target.into());
         }
 
         changed
@@ -153,6 +153,7 @@ impl CodeEditorData {
         edit_event: EditableEvent,
     ) -> bool {
         let mut processed = false;
+        let mut text_changed = false;
         match edit_event {
             EditableEvent::Down {
                 location,
@@ -244,6 +245,10 @@ impl CodeEditorData {
                     }
                 }
             }
+            EditableEvent::Paste { contents } => {
+                text_changed = self.paste(contents).contains(TextEvent::TEXT_CHANGED);
+                processed = text_changed;
+            }
             EditableEvent::Release => {
                 self.dragging.clicked = false;
                 EventsCombos::<()>::released();
@@ -269,13 +274,8 @@ impl CodeEditorData {
                             true,
                             true,
                             true,
-                            true,
                         );
-                        if event.contains(TextEvent::TEXT_CHANGED) {
-                            self.parse();
-                            self.measure(font_size, font_family);
-                            self.dragging = TextDragging::default();
-                        }
+                        text_changed = event.contains(TextEvent::TEXT_CHANGED);
                         if !event.is_empty() {
                             processed = true;
                         }
@@ -288,6 +288,11 @@ impl CodeEditorData {
                 }
             }
         };
+        if text_changed {
+            self.parse();
+            self.measure(font_size, font_family);
+            self.dragging = TextDragging::default();
+        }
         processed
     }
 }
@@ -490,6 +495,7 @@ impl TextEditor for CodeEditorData {
     fn set(&mut self, text: &str) {
         self.rope.remove(0..);
         self.rope.insert(0, text);
+        self.selection.clamp(&self.rope);
     }
 
     fn clear_selection(&mut self) {
@@ -504,6 +510,9 @@ impl TextEditor for CodeEditorData {
 
     fn get_selected_text(&self) -> Option<String> {
         let (start, end) = self.get_selection_range()?;
+        // The selection counts UTF-16 code units, Rope::get_slice counts chars.
+        let start = self.rope.try_utf16_cu_to_char(start).ok()?;
+        let end = self.rope.try_utf16_cu_to_char(end).ok()?;
 
         Some(self.rope.get_slice(start..end)?.to_string())
     }
