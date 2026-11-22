@@ -35,13 +35,17 @@ fn main() {
     accessibility();
 }
 
-#[cfg_attr(not(feature = "hotpath"), allow(unused_variables))]
 fn bench<T>(name: &'static str, mut scenario: impl FnMut() -> T) {
+    let started = std::time::Instant::now();
     for _ in 0..ITERATIONS {
         hotpath::measure_block!(name, {
             black_box(scenario());
         });
     }
+    println!(
+        "{name}: {:?} per iteration",
+        started.elapsed() / ITERATIONS as u32
+    );
 }
 
 fn mounted_runner(app: impl Fn() -> Element + 'static) -> (Runner, Tree, NodeId) {
@@ -142,6 +146,19 @@ fn runner() {
         mounted_runner(|| runner_app(RunnerReorder::None, ROWS))
     });
 
+    bench("runner: mount 1000 nested components", || {
+        mounted_runner(|| {
+            rect()
+                .on_mouse_up(|_| {})
+                .children((0..ROWS).map(|index| {
+                    rect().key(index).child(freya::helpers::from_fn_captured(
+                        move || rect().child(format!("Row {index}")).into(),
+                    ))
+                }))
+                .into()
+        })
+    });
+
     let (mut runner, mut tree, target) = mounted_runner(|| runner_app(RunnerReorder::None, ROWS));
     bench("runner: no-change rebuild", || {
         update(&mut runner, &mut tree, target, EventName::MouseUp)
@@ -190,8 +207,21 @@ fn cascade_app() -> Element {
         .into()
 }
 
+fn styled_cascade_app(row_count: usize) -> Element {
+    let mut version = use_state(|| 0u64);
+    rect()
+        .color((255, (*version.read() % 255) as u8, 0))
+        .on_mouse_up(move |_| *version.write() += 1)
+        .children((0..row_count).map(|index| rect().key(index).on_styled(|_| {})))
+        .into()
+}
+
 #[cfg_attr(feature = "hotpath", hotpath::measure)]
 fn cascades() {
+    bench("runner: mount 100 x 100 nested rows", || {
+        mounted_runner(cascade_app)
+    });
+
     let (mut runner, mut tree, target) = mounted_runner(cascade_app);
 
     bench("cascades: text style", || {
@@ -203,6 +233,20 @@ fn cascades() {
     bench("cascades: layer", || {
         update(&mut runner, &mut tree, target, EventName::MouseMove)
     });
+
+    for (name, row_count) in [
+        ("cascades: styled listeners (1000)", ROWS),
+        ("cascades: styled listeners (10000)", SPARSE_ROWS),
+    ] {
+        let (mut runner, mut tree, target) =
+            mounted_runner(move || styled_cascade_app(row_count));
+        tree.events.clear();
+        bench(name, || {
+            update(&mut runner, &mut tree, target, EventName::MouseUp);
+            assert_eq!(tree.events.len(), row_count);
+            tree.events.clear();
+        });
+    }
 }
 
 fn measure_layout(tree: &mut Tree) {
