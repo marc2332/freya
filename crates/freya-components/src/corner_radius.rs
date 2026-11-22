@@ -29,7 +29,6 @@ impl Default for CornerRadiusScale {
     }
 }
 
-/// A named size from the shared corner radius theme.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CornerRadiusRole {
     Xs,
