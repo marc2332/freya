@@ -94,7 +94,9 @@ impl Component for ProgressBar {
         });
 
         let formatted_progress = format!("{:.2}", self.progress);
-        let percentage = formatted_progress.trim_end_matches('0').trim_end_matches('.');
+        let percentage = formatted_progress
+            .trim_end_matches('0')
+            .trim_end_matches('.');
 
         rect()
             .a11y_alt(format!("Progress {percentage}%"))
