@@ -11,6 +11,7 @@ on:
           - macos-latest
           - ubuntu-latest
           - windows-latest
+          - windows-11-arm
       example_name:
         description: "Example name"
         required: true
@@ -30,6 +31,7 @@ jobs:
       BUILD_PROFILE: ${{ inputs.optimize_for_size && 'size-release' || 'release' }}
       CARGO_TARGET_DIR: target
       EXAMPLE_NAME: ${{ inputs.example_name }}
+      RUST_TARGET: ${{ inputs.os == 'windows-11-arm' && 'aarch64-pc-windows-msvc' || '' }}
     strategy:
       matrix:
         os: ["${{ inputs.os }}"]
@@ -47,6 +49,8 @@ jobs:
           sudo apt update && sudo apt install build-essential libssl-dev pkg-config libudev-dev libasound2-dev liblzma-dev libfontconfig1-dev libfreetype6-dev libegl1-mesa-dev libgl1-mesa-dev libgles2-mesa-dev libwayland-dev
       - name: Install stable rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6 # v1
+        with:
+          target: ${{ env.RUST_TARGET }}
       - name: Set up cargo cache
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
         with:
@@ -57,13 +61,18 @@ jobs:
 
       - name: Build example
         shell: bash
-        run: cargo build --locked --example "$EXAMPLE_NAME" --profile "$BUILD_PROFILE"
+        run: |
+          target_args=()
+          if [[ -n "$RUST_TARGET" ]]; then
+            target_args=(--target "$RUST_TARGET")
+          fi
+          cargo build --locked --example "$EXAMPLE_NAME" --profile "$BUILD_PROFILE" "${target_args[@]}"
         env:
-          RUSTFLAGS: ${{ runner.os == 'Windows' && '-Ctarget-feature=+crt-static' || '' }}
+          RUSTFLAGS: ${{ matrix.os == 'windows-latest' && '-Ctarget-feature=+crt-static' || '' }}
 
       - name: Upload example binary
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: ${{ env.EXAMPLE_NAME }}-${{ matrix.os }}-${{ env.BUILD_PROFILE }}
-          path: target/${{ env.BUILD_PROFILE }}/examples/${{ env.EXAMPLE_NAME }}${{ runner.os == 'Windows' && '.exe' || '' }}
+          path: target/${{ env.RUST_TARGET && format('{0}/', env.RUST_TARGET) || '' }}${{ env.BUILD_PROFILE }}/examples/${{ env.EXAMPLE_NAME }}${{ runner.os == 'Windows' && '.exe' || '' }}
           if-no-files-found: error
