@@ -1,13 +1,13 @@
 # Contributing to Freya
 
-Hey! I hope this guide can help you contribute to Freya. If you simply have question or issues you can go to the [Discussions Tab](https://github.com/marc2332/freya/discussions) or the [Issues Tracker](https://github.com/marc2332/freya/issues).
+Hey! I hope this guide can help you contribute to Freya. If you simply have question or issues you can go to the [Discussions Tab](https://github.com/freya-rs/freya/discussions) or the [Issues Tracker](https://github.com/freya-rs/freya/issues).
 
 ## Getting Started
 
 ### Clone the Repository
 
 ```sh
-git clone --recurse-submodules https://github.com/marc2332/freya.git
+git clone --recurse-submodules https://github.com/freya-rs/freya.git
 cd freya
 ```
 

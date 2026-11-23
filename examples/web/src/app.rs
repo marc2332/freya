@@ -186,7 +186,7 @@ fn sidebar(mut theme: State<Theme>) -> Rect {
             }),
         )
         .child(
-            Link::new("https://github.com/marc2332/freya").child(
+            Link::new("https://github.com/freya-rs/freya").child(
                 SideBarItem::new().child(
                     rect()
                         .horizontal()

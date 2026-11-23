@@ -352,10 +352,10 @@
 //!
 //! ## Examples
 //!
-//! - [`state_query.rs`](https://github.com/marc2332/freya/tree/main/examples/state_query.rs) - Basic query usage
-//! - [`state_mutation.rs`](https://github.com/marc2332/freya/tree/main/examples/state_mutation.rs) - Query + mutation with invalidation
-//! - [`hackernews.rs`](https://github.com/marc2332/freya/tree/main/examples/hackernews.rs) - Fetching from a real API with stale times
-//! - [`state_query_sqlite/`](https://github.com/marc2332/freya/tree/main/examples/state_query_sqlite) - Full CRUD app with SQLite
+//! - [`state_query.rs`](https://github.com/freya-rs/freya/tree/main/examples/state_query.rs) - Basic query usage
+//! - [`state_mutation.rs`](https://github.com/freya-rs/freya/tree/main/examples/state_mutation.rs) - Query + mutation with invalidation
+//! - [`hackernews.rs`](https://github.com/freya-rs/freya/tree/main/examples/hackernews.rs) - Fetching from a real API with stale times
+//! - [`state_query_sqlite/`](https://github.com/freya-rs/freya/tree/main/examples/state_query_sqlite) - Full CRUD app with SQLite
 
 pub mod captured;
 pub mod mutation;
