@@ -40,7 +40,7 @@ pub enum LinkTooltip {
 /// Pass a route variant to push it through the nearest router when pressed. Pass
 /// an absolute URL to open it in the system browser.
 ///
-/// See the [router example](https://github.com/marc2332/freya/blob/main/examples/feature_router.rs).
+/// See the [router example](https://github.com/freya-rs/freya/blob/main/examples/feature_router.rs).
 #[derive(PartialEq)]
 pub struct Link {
     /// Theme override.

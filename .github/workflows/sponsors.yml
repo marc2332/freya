@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.repository == 'marc2332/freya'
+    if: github.repository == 'freya-rs/freya'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️

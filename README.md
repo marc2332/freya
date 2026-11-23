@@ -4,8 +4,8 @@
 
 [![Discord Server](https://img.shields.io/discord/1015005816094478347.svg?logo=discord&style=flat-square)](https://discord.gg/sYejxCdewG)
 [![Github Sponsors](https://img.shields.io/github/sponsors/marc2332?style=social)](https://github.com/sponsors/marc2332)
-[![codecov](https://codecov.io/github/marc2332/freya/branch/main/graph/badge.svg?token=APSGEC84B8)](https://codecov.io/github/marc2332/freya)
-[![hotpath-rs](https://img.shields.io/endpoint?url=https://hotpath.rs/badge-cloud.json)](https://hotpath.rs/app/repos/marc2332/freya)
+[![codecov](https://codecov.io/github/freya-rs/freya/branch/main/graph/badge.svg?token=APSGEC84B8)](https://codecov.io/github/freya-rs/freya)
+[![hotpath-rs](https://img.shields.io/endpoint?url=https://hotpath.rs/badge-cloud.json)](https://hotpath.rs/app/repos/freya-rs/freya)
 
 [Website](https://freyaui.dev) | [Documentation](https://docs.rs/freya/) | [Discord](https://discord.gg/sYejxCdewG) | [Contact](#contact)
 
@@ -21,7 +21,7 @@ freya = "0.5"
 `main` branch:
 
 ```toml
-freya = { git = "https://github.com/marc2332/freya", branch = "main" }
+freya = { git = "https://github.com/freya-rs/freya", branch = "main" }
 ```
 
 Pre-release:
@@ -37,7 +37,7 @@ Make sure to have [Development Setup](https://docs.rs/freya/latest/freya/_docs/d
 > ⚠️ **This repo uses git submodules**, cloning without `--recurse-submodules` will make the examples fail to compile.
 
 ```shell
-git clone --recurse-submodules https://github.com/marc2332/freya.git
+git clone --recurse-submodules https://github.com/freya-rs/freya.git
 cd freya
 ```
 
@@ -49,7 +49,7 @@ Then run an example:
 cargo run --example counter
 ```
 
-> ⚠️ If you happen to be on Windows using `windows-gnu` and get compile errors, maybe go check this [issue](https://github.com/marc2332/freya/issues/794).
+> ⚠️ If you happen to be on Windows using `windows-gnu` and get compile errors, maybe go check this [issue](https://github.com/freya-rs/freya/issues/794).
 
 ### Components & State 
 
@@ -111,9 +111,9 @@ fn app() -> impl IntoElement {
 
 Freya comes with a set of components out of the box, from simple like `Button`, `Switch`, `Slider` to more complex like `VirtualScrollView`, `Calendar`, `ColorPicker`, etc.
 
-You can check all the examples that start with `component_` in the [examples folder](https://github.com/marc2332/freya/blob/main/examples/).
+You can check all the examples that start with `component_` in the [examples folder](https://github.com/freya-rs/freya/blob/main/examples/).
 
-Example of [`component_input.rs`](https://github.com/marc2332/freya/blob/main/examples/component_input.rs):
+Example of [`component_input.rs`](https://github.com/freya-rs/freya/blob/main/examples/component_input.rs):
 <div align="center">
   <img src="https://github.com/user-attachments/assets/3dd1b7bf-0c9e-4257-a308-f2e3ca057ff1">
 </div>
@@ -159,7 +159,7 @@ fn app() -> impl IntoElement {
   <img src="https://github.com/user-attachments/assets/ab0c4637-7c04-4dd3-8c6f-c841d4e163d7">
 </div>
 
-[Portal example](https://github.com/marc2332/freya/blob/main/examples/animation_portal.rs)
+[Portal example](https://github.com/freya-rs/freya/blob/main/examples/animation_portal.rs)
 
 [Component Portal](https://github.com/user-attachments/assets/720dd8ec-2a76-4f80-8787-25b3ebb06611)
 
@@ -789,7 +789,7 @@ Freya 0.1, 0.2 and 0.3 were based on the core crates of Dioxus. Starting 0.4 Fre
 A skill with Freya best practices and patterns is available for AI coding agents. Install it with [skills](https://skills.sh):
 
 ```sh
-npx skills add marc2332/freya --skill freya
+npx skills add freya-rs/freya --skill freya
 ```
 
 Choose your coding agent when prompted. You can also use the [skill document](skills/freya/SKILL.md) directly as context.

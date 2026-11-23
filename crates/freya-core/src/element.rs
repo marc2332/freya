@@ -80,7 +80,7 @@ use crate::{
 /// callers set its properties. Freya stores elements as `Rc<dyn ElementExt>`, so they must be
 /// `'static` through the [`Any`].
 ///
-/// See [`feature_element.rs`](https://github.com/marc2332/freya/blob/main/examples/feature_element.rs)
+/// See [`feature_element.rs`](https://github.com/freya-rs/freya/blob/main/examples/feature_element.rs)
 /// for a full example.
 pub trait ElementExt: Any {
     /// Converts this value into an [`Element`] if it implements `Into<Element>`.
