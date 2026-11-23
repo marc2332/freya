@@ -209,7 +209,6 @@ impl VulkanInner {
             return Err("Matching Wayland's GPU requires Vulkan 1.1".into());
         }
 
-        // Both handles are taken before the instance, so failing to get one leaves nothing to destroy.
         let display_handle = window.display_handle()?.as_raw();
         let window_handle = window.window_handle()?.as_raw();
         let instance_extensions = enumerate_required_extensions(display_handle)?;
