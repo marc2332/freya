@@ -1388,11 +1388,25 @@ impl WinitRenderer {
                 }
 
                 WindowEvent::Ime(Ime::Commit(text)) => {
-                    app.queue_platform_events(vec![PlatformEvent::Keyboard {
-                        name: KeyboardEventName::KeyDown,
-                        key: keyboard_types::Key::Character(text),
-                        code: keyboard_types::Code::Unidentified,
-                        modifiers: winit_mappings::map_winit_modifiers(app.modifiers_state),
+                    app.queue_platform_events(vec![
+                        PlatformEvent::ImePreedit {
+                            name: ImeEventName::Preedit,
+                            text: String::new(),
+                            cursor: None,
+                        },
+                        PlatformEvent::Keyboard {
+                            name: KeyboardEventName::KeyDown,
+                            key: keyboard_types::Key::Character(text),
+                            code: keyboard_types::Code::Unidentified,
+                            modifiers: winit_mappings::map_winit_modifiers(app.modifiers_state),
+                        },
+                    ]);
+                }
+                WindowEvent::Ime(Ime::Disabled) => {
+                    app.queue_platform_events(vec![PlatformEvent::ImePreedit {
+                        name: ImeEventName::Preedit,
+                        text: String::new(),
+                        cursor: None,
                     }]);
                 }
                 WindowEvent::Ime(Ime::Preedit(text, pos)) => {

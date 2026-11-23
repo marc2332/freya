@@ -516,11 +516,19 @@ impl Component for Input {
 
         let on_ime_preedit = move |e: Event<ImePreeditEventData>| {
             let mut editor = editable.editor_mut().write();
-            if e.data().text.is_empty() {
+            let data = e.data();
+            if data.text.is_empty() {
                 editor.clear_preedit();
             } else {
-                editor.set_preedit(&e.data().text);
+                editor.set_preedit(&data.text);
+                if let Some((_, end)) = data.cursor
+                    && let Some(suffix) = data.text.get(end..)
+                {
+                    let cursor = editor.cursor_pos() - suffix.encode_utf16().count();
+                    editor.move_cursor_to(cursor);
+                }
             }
+            movement_timeout.reset();
         };
 
         let on_pre_key_down = self.on_pre_key_down.clone().unwrap_or_else(|| {

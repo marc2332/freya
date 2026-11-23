@@ -51,6 +51,44 @@ fn input_external_editor_control() {
 }
 
 #[test]
+fn input_preedit_caret_tracks_ime_cursor() {
+    fn app() -> impl IntoElement {
+        Input::new_with_editor(use_consume::<UseEditable>()).auto_focus(true)
+    }
+
+    let (mut test, mut editor) = TestingRunner::new(
+        app,
+        (300., 300.).into(),
+        |runner| {
+            runner.provide_root_context(|| UseEditable::create("ab".into(), EditableConfig::new()))
+        },
+        1.,
+    );
+    test.sync_and_update();
+    editor.editor_mut().write().move_cursor_to(1);
+    test.sync_and_update();
+
+    for (text, cursor, expected) in [
+        ("你😀好", Some((7, 7)), 4),
+        ("你😀好", Some((3, 3)), 2),
+        ("你😀好", Some((7, 7)), 4),
+        ("", None, 1),
+    ] {
+        test.send_event(PlatformEvent::ImePreedit {
+            name: ImeEventName::Preedit,
+            text: text.to_string(),
+            cursor,
+        });
+        test.sync_and_update();
+        assert_eq!(editor.editor().peek().committed_text(), "ab");
+        let paragraph = test
+            .find(|_, element| Paragraph::try_downcast(element))
+            .expect("input paragraph");
+        assert_eq!(paragraph.cursor_index, Some(expected));
+    }
+}
+
+#[test]
 fn input_setter_reducer() {
     use freya::radio::*;
 
