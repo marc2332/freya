@@ -142,6 +142,85 @@ fn blocked_stylesheet_does_not_fetch() {
 }
 
 #[test]
+fn blocked_link_keeps_document_and_forward_history() {
+    let (mut runner, (mut handle, requests)) = TestingRunner::new(
+        || HtmlViewer::new(use_consume::<HtmlHandle>()),
+        (100., 100.).into(),
+        |runner| {
+            let requests = Rc::new(RefCell::new(Vec::new()));
+            let captured_requests = requests.clone();
+            let handle = runner.provide_root_context(|| {
+                HtmlHandle::create().resource_interceptor(move |url| {
+                    captured_requests.borrow_mut().push(url);
+                    ResourceResponse::Block
+                })
+            });
+            (handle, requests)
+        },
+        1.,
+    );
+    let contexts = GlobalContexts::get();
+    let destination = "https://test.local/blocked";
+    handle.load_html(format!(
+        "<body style='margin:0'><a style='display:block;height:30px' href='{destination}'>link</a></body>"
+    ));
+    handle.load_html("<body style='background:red'></body>");
+    handle.back();
+    runner.sync_and_update();
+    let before = runner.render();
+
+    runner.click_cursor((10., 10.));
+    runner.poll_n(Duration::ZERO, 8);
+    assert_eq!(*requests.borrow(), [Url::parse(destination).unwrap()]);
+    assert_eq!(handle.current_url(), None);
+    assert!(!handle.can_go_back());
+    assert!(handle.can_go_forward());
+    assert_eq!(before.as_bytes(), runner.render().as_bytes());
+    contexts.unregister();
+}
+
+#[test]
+fn document_interceptor_supplies_bytes_and_rechecks_history() {
+    let (mut runner, mut handle) = TestingRunner::new(
+        || HtmlViewer::new(use_consume::<HtmlHandle>()),
+        (100., 100.).into(),
+        |runner| runner.provide_root_context(HtmlHandle::create),
+        1.,
+    );
+    let contexts = GlobalContexts::get();
+    let url = "asset://app/page.html";
+    let html = "<body style='background:red'></body>";
+    handle = handle.resource_interceptor(move |requested| {
+        assert_eq!(requested.as_str(), url);
+        ResourceResponse::Bytes(Bytes::from_static(html.as_bytes()))
+    });
+    handle.load_html(html);
+    runner.sync_and_update();
+    let expected = runner.render();
+    handle.replace_html("<body style='background:blue'></body>");
+    handle.navigate(url);
+    runner.sync_and_update();
+    assert_eq!(handle.current_url().as_deref(), Some(url));
+    assert_eq!(expected.as_bytes(), runner.render().as_bytes());
+
+    let requests = Rc::new(RefCell::new(Vec::new()));
+    let captured_requests = requests.clone();
+    handle = handle.resource_interceptor(move |url| {
+        captured_requests.borrow_mut().push(url);
+        ResourceResponse::Block
+    });
+    handle.reload();
+    runner.sync_and_update();
+    assert_eq!(expected.as_bytes(), runner.render().as_bytes());
+    handle.back();
+    handle.forward();
+    assert_eq!(*requests.borrow(), vec![Url::parse(url).unwrap(); 2]);
+    assert_eq!(handle.current_url(), None);
+    assert!(handle.can_go_forward());
+    contexts.unregister();
+}
+
+#[test]
 fn loading_documents_updates_history() {
     let (mut runner, mut handle) = TestingRunner::new(
         || HtmlViewer::new(use_consume::<HtmlHandle>()),

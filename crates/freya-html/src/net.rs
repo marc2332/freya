@@ -21,15 +21,24 @@ use blitz_traits::{
 use futures_channel::mpsc::UnboundedSender;
 use url::Url;
 
-pub(crate) type FetchRequest = (Url, Box<dyn NetHandler>);
-
-pub(crate) struct HttpNetProvider {
-    pub fetch: UnboundedSender<FetchRequest>,
+pub(crate) enum HtmlRequest {
+    Navigate(Url),
+    FetchResource(Url, Box<dyn NetHandler>),
 }
 
-impl NetProvider for HttpNetProvider {
+pub(crate) struct HtmlRequestProvider(pub UnboundedSender<HtmlRequest>);
+
+impl NetProvider for HtmlRequestProvider {
     fn fetch(&self, _doc_id: usize, request: Request, handler: Box<dyn NetHandler>) {
-        let _ = self.fetch.unbounded_send((request.url, handler));
+        let _ = self
+            .0
+            .unbounded_send(HtmlRequest::FetchResource(request.url, handler));
+    }
+}
+
+impl NavigationProvider for HtmlRequestProvider {
+    fn navigate_to(&self, options: NavigationOptions) {
+        let _ = self.0.unbounded_send(HtmlRequest::Navigate(options.url));
     }
 }
 
@@ -43,16 +52,5 @@ impl ShellProvider for FreyaShellProvider {
     fn request_redraw(&self) {
         self.redraw.store(true, Ordering::Relaxed);
         let _ = self.wake.try_send(());
-    }
-}
-
-/// Forwards link clicks and form submissions.
-pub(crate) struct FreyaNavigationProvider {
-    pub navigate: UnboundedSender<String>,
-}
-
-impl NavigationProvider for FreyaNavigationProvider {
-    fn navigate_to(&self, options: NavigationOptions) {
-        let _ = self.navigate.unbounded_send(options.url.to_string());
     }
 }

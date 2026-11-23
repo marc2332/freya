@@ -74,10 +74,9 @@ use crate::{
     fonts::font_context,
     handle::ElementHit,
     net::{
-        FetchRequest,
-        FreyaNavigationProvider,
         FreyaShellProvider,
-        HttpNetProvider,
+        HtmlRequest,
+        HtmlRequestProvider,
     },
 };
 
@@ -100,21 +99,18 @@ pub(crate) struct BlitzState {
 }
 
 impl BlitzState {
-    pub fn new(
-        wake: async_channel::Sender<()>,
-        navigate: UnboundedSender<String>,
-        fetch: UnboundedSender<FetchRequest>,
-    ) -> Self {
+    pub fn new(wake: async_channel::Sender<()>, requests: UnboundedSender<HtmlRequest>) -> Self {
         let redraw = Arc::new(AtomicBool::new(true));
+        let request_provider = Arc::new(HtmlRequestProvider(requests));
         Self {
             document: None,
             font_context: font_context(&[]),
-            net_provider: Arc::new(HttpNetProvider { fetch }),
+            net_provider: request_provider.clone(),
             shell_provider: Arc::new(FreyaShellProvider {
                 redraw: redraw.clone(),
                 wake,
             }),
-            navigation_provider: Arc::new(FreyaNavigationProvider { navigate }),
+            navigation_provider: request_provider,
             cache: SkiaSceneCache::new(),
             picture: None,
             paint_key: None,
