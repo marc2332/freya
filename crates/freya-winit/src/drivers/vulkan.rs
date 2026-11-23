@@ -23,38 +23,23 @@ use ash::{
     },
     vk::{
         API_VERSION_1_0,
-        AccessFlags,
         ApplicationInfo,
         ColorSpaceKHR,
-        CommandBuffer,
-        CommandBufferAllocateInfo,
-        CommandBufferBeginInfo,
-        CommandBufferLevel,
-        CommandPool,
-        CommandPoolCreateFlags,
-        CommandPoolCreateInfo,
         CompositeAlphaFlagsKHR,
-        DependencyFlags,
         DeviceCreateInfo,
         DeviceQueueCreateInfo,
         Extent2D,
         Fence,
-        FenceCreateFlags,
         FenceCreateInfo,
         Format,
         Handle,
         Image,
-        ImageAspectFlags,
-        ImageLayout,
-        ImageMemoryBarrier,
-        ImageSubresourceRange,
         ImageUsageFlags,
         InstanceCreateInfo,
         KHR_SWAPCHAIN_NAME,
         PhysicalDevice,
         PhysicalDeviceFeatures,
         PhysicalDeviceType,
-        PipelineStageFlags,
         PresentInfoKHR,
         PresentModeKHR,
         Queue,
@@ -62,7 +47,6 @@ use ash::{
         Semaphore,
         SemaphoreCreateInfo,
         SharingMode,
-        SubmitInfo,
         SurfaceKHR,
         SwapchainCreateInfoKHR,
         SwapchainKHR,
@@ -80,7 +64,14 @@ use freya_engine::prelude::{
     SurfaceOrigin,
     backend_render_targets,
     direct_contexts,
-    gpu::ContextOptions,
+    gpu::{
+        ContextOptions,
+        FlushInfo,
+        MutableTextureState,
+        SemaphoresSubmitted,
+        SyncCpu,
+        backend_semaphores,
+    },
     vk,
 };
 use raw_window_handle::{
@@ -319,11 +310,11 @@ pub struct VulkanDriver {
     swapchain_extent: Extent2D,
     transparent: bool,
     wayland: bool,
-    image_available_semaphore: Semaphore,
-    render_finished_semaphore: Semaphore,
+    /// One per swapchain image: Skia signals it, and the present of that image waits on it.
+    present_ready: Vec<Semaphore>,
+    present_layout: MutableTextureState,
+    /// Signalled by each acquire.
     in_flight_fence: Fence,
-    cmd_buf: CommandBuffer,
-    cmd_pool: CommandPool,
     gpu_cache_purged: bool,
 }
 
@@ -339,10 +330,10 @@ impl Drop for VulkanDriver {
         let device = &self.shared.device;
         unsafe {
             let _ = device.device_wait_idle();
-            device.destroy_semaphore(self.image_available_semaphore, None);
-            device.destroy_semaphore(self.render_finished_semaphore, None);
+            for semaphore in &self.present_ready {
+                device.destroy_semaphore(*semaphore, None);
+            }
             device.destroy_fence(self.in_flight_fence, None);
-            device.destroy_command_pool(self.cmd_pool, None);
             self.shared
                 .swapchain_fns
                 .destroy_swapchain(self.swapchain, None);
@@ -384,11 +375,12 @@ impl VulkanDriver {
             swapchain_extent: Extent2D::default(),
             transparent,
             wayland,
-            image_available_semaphore: Semaphore::null(),
-            render_finished_semaphore: Semaphore::null(),
+            present_ready: Vec::new(),
+            present_layout: vk::mutable_texture_states::new_vulkan(
+                vk::ImageLayout::PRESENT_SRC_KHR,
+                ash::vk::QUEUE_FAMILY_IGNORED,
+            ),
             in_flight_fence: Fence::null(),
-            cmd_buf: CommandBuffer::null(),
-            cmd_pool: CommandPool::null(),
             gpu_cache_purged: false,
         };
 
@@ -404,29 +396,14 @@ impl VulkanDriver {
         driver.swapchain_images = swapchain_images;
         driver.swapchain_extent = swapchain_extent;
 
-        let (image_available_semaphore, render_finished_semaphore, in_flight_fence) =
-            create_sync_objects(&driver.shared.device)?;
-        driver.image_available_semaphore = image_available_semaphore;
-        driver.render_finished_semaphore = render_finished_semaphore;
-        driver.in_flight_fence = in_flight_fence;
-
-        driver.cmd_pool = unsafe {
-            driver.shared.device.create_command_pool(
-                &CommandPoolCreateInfo::default().flags(
-                    CommandPoolCreateFlags::TRANSIENT
-                        | CommandPoolCreateFlags::RESET_COMMAND_BUFFER,
-                ),
-                None,
-            )?
-        };
-
-        driver.cmd_buf = unsafe {
-            driver.shared.device.allocate_command_buffers(
-                &CommandBufferAllocateInfo::default()
-                    .command_pool(driver.cmd_pool)
-                    .level(CommandBufferLevel::PRIMARY)
-                    .command_buffer_count(1),
-            )?[0]
+        driver.present_ready =
+            create_semaphores(&driver.shared.device, driver.swapchain_images.len())?;
+        // Unsignalled: the first acquire signals it.
+        driver.in_flight_fence = unsafe {
+            driver
+                .shared
+                .device
+                .create_fence(&FenceCreateInfo::default(), None)?
         };
 
         Ok((driver, window))
@@ -464,7 +441,15 @@ impl VulkanDriver {
             self.shared
                 .swapchain_fns
                 .destroy_swapchain(old_swapchain, None);
+            for semaphore in self.present_ready.drain(..) {
+                self.shared.device.destroy_semaphore(semaphore, None);
+            }
         }
+        self.present_ready = create_semaphores(&self.shared.device, self.swapchain_images.len())
+            .map_err(|error| {
+                tracing::error!("Failed to create Vulkan present semaphores: {error}");
+                DriverError::DeviceLost
+            })?;
         Ok(())
     }
 
@@ -478,22 +463,22 @@ impl VulkanDriver {
             return Ok(());
         }
 
-        unsafe {
-            self.shared
-                .device
-                .wait_for_fences(&[self.in_flight_fence], true, u64::MAX)
-                .map_err(Self::vulkan_to_driver_error)?;
-        }
-
+        // The acquire signals the fence once the image may be written. Skia's own submission then draws into it,
+        // so the drawing never starts before the image is ours. It waits at most 50 ms: a window that cannot be
+        // shown now (hidden, being rotated, suspended) tries again on the next redraw instead of blocking.
         let (image_index, suboptimal) = match unsafe {
             self.shared.swapchain_fns.acquire_next_image(
                 self.swapchain,
-                u64::MAX,
-                self.image_available_semaphore,
-                Fence::null(),
+                50_000_000,
+                Semaphore::null(),
+                self.in_flight_fence,
             )
         } {
             Ok(acquired) => acquired,
+            Err(ash::vk::Result::TIMEOUT | ash::vk::Result::NOT_READY) => {
+                window.request_redraw();
+                return Ok(());
+            }
             Err(ash::vk::Result::ERROR_OUT_OF_DATE_KHR) => {
                 self.recreate_swapchain(size)?;
                 window.request_redraw();
@@ -518,7 +503,20 @@ impl VulkanDriver {
 
         self.gpu_cache_purged = false;
 
+        unsafe {
+            self.shared
+                .device
+                .wait_for_fences(&[self.in_flight_fence], true, u64::MAX)
+                .map_err(Self::vulkan_to_driver_error)?;
+            self.shared
+                .device
+                .reset_fences(&[self.in_flight_fence])
+                .map_err(Self::vulkan_to_driver_error)?;
+        }
+
         let image = self.swapchain_images[image_index as usize];
+        // Reacquiring this image proved its previous present no longer waits on this semaphore.
+        let present_ready = self.present_ready[image_index as usize];
 
         let alloc = vk::Alloc::default();
         let sk_image_info = unsafe {
@@ -555,79 +553,30 @@ impl VulkanDriver {
 
         window.pre_present_notify();
 
-        self.shared
-            .gr_context
-            .borrow_mut()
-            .flush_and_submit()
-            .map_err(|error| {
-                tracing::error!(?error, "Failed to submit Vulkan rendering commands");
-                DriverError::DeviceLost
-            })?;
+        // Skia moves the image to the presentation layout and signals this image's semaphore in its own
+        // submission: no command buffer or submit of ours.
+        {
+            let mut semaphores =
+                [unsafe { backend_semaphores::make_vk(present_ready.as_raw() as _) }];
+            let mut flush = FlushInfo::default();
+            unsafe { flush.set_signal_semaphores(&mut semaphores) };
+            let mut context = self.shared.gr_context.borrow_mut();
+            let flushed = context
+                .flush_surface_with_texture_state(&mut surface, &flush, Some(&self.present_layout))
+                .map_err(|error| {
+                    tracing::error!(?error, "Failed to submit Vulkan rendering commands");
+                    DriverError::DeviceLost
+                })?;
+            if flushed != SemaphoresSubmitted::Yes || !context.submit(SyncCpu::No) {
+                return Err(DriverError::DeviceLost);
+            }
+        }
 
-        unsafe {
-            self.shared
-                .device
-                .begin_command_buffer(self.cmd_buf, &CommandBufferBeginInfo::default())
-                .map_err(Self::vulkan_to_driver_error)?;
-
-            let image_barrier = ImageMemoryBarrier::default()
-                .src_access_mask(AccessFlags::COLOR_ATTACHMENT_WRITE)
-                .dst_access_mask(AccessFlags::MEMORY_READ)
-                .old_layout(ImageLayout::COLOR_ATTACHMENT_OPTIMAL)
-                .new_layout(ImageLayout::PRESENT_SRC_KHR)
-                .image(image)
-                .subresource_range(ImageSubresourceRange {
-                    aspect_mask: ImageAspectFlags::COLOR,
-                    base_mip_level: 0,
-                    level_count: 1,
-                    base_array_layer: 0,
-                    layer_count: 1,
-                });
-
-            self.shared.device.cmd_pipeline_barrier(
-                self.cmd_buf,
-                PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT,
-                PipelineStageFlags::BOTTOM_OF_PIPE,
-                DependencyFlags::empty(),
-                &[],
-                &[],
-                &[image_barrier],
-            );
-
-            self.shared
-                .device
-                .end_command_buffer(self.cmd_buf)
-                .map_err(Self::vulkan_to_driver_error)?;
-        };
-
-        let wait_semaphores = [self.image_available_semaphore];
-        let wait_stages = [PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT];
-
-        let signal_semaphores = [self.render_finished_semaphore];
-
-        let submit_infos = [SubmitInfo::default()
-            .wait_semaphores(&wait_semaphores)
-            .wait_dst_stage_mask(&wait_stages)
-            .command_buffers(std::slice::from_ref(&self.cmd_buf))
-            .signal_semaphores(&signal_semaphores)];
-
-        unsafe {
-            // Reset the fence before submission.
-            self.shared
-                .device
-                .reset_fences(&[self.in_flight_fence])
-                .map_err(Self::vulkan_to_driver_error)?;
-
-            self.shared
-                .device
-                .queue_submit(self.shared.queue, &submit_infos, self.in_flight_fence)
-                .map_err(Self::vulkan_to_driver_error)?;
-        };
-
+        let wait_semaphores = [present_ready];
         let swapchains = [self.swapchain];
         let image_indices = [image_index];
         let present_info = PresentInfoKHR::default()
-            .wait_semaphores(&signal_semaphores)
+            .wait_semaphores(&wait_semaphores)
             .swapchains(&swapchains)
             .image_indices(&image_indices);
 
@@ -1053,19 +1002,22 @@ fn create_gr_context(
     Ok(gr_context)
 }
 
-fn create_sync_objects(
+/// One present semaphore per swapchain image. On failure none of them is left behind.
+fn create_semaphores(
     device: &Device,
-) -> Result<(Semaphore, Semaphore, Fence), Box<dyn std::error::Error>> {
-    let semaphore_info = SemaphoreCreateInfo::default();
-    let fence_info = FenceCreateInfo::default().flags(FenceCreateFlags::SIGNALED);
-
-    let image_available_semaphore = unsafe { device.create_semaphore(&semaphore_info, None)? };
-    let render_finished_semaphore = unsafe { device.create_semaphore(&semaphore_info, None)? };
-    let in_flight_fence = unsafe { device.create_fence(&fence_info, None)? };
-
-    Ok((
-        image_available_semaphore,
-        render_finished_semaphore,
-        in_flight_fence,
-    ))
+    count: usize,
+) -> Result<Vec<Semaphore>, Box<dyn std::error::Error>> {
+    let mut semaphores = Vec::with_capacity(count);
+    for _ in 0..count {
+        match unsafe { device.create_semaphore(&SemaphoreCreateInfo::default(), None) } {
+            Ok(semaphore) => semaphores.push(semaphore),
+            Err(error) => {
+                for semaphore in semaphores {
+                    unsafe { device.destroy_semaphore(semaphore, None) };
+                }
+                return Err(error.into());
+            }
+        }
+    }
+    Ok(semaphores)
 }
