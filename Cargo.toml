@@ -205,7 +205,9 @@ rodio = { version = "0.20", default-features = false }
 tokio = { version = "1.0", default-features = false }
 
 [dev-dependencies]
-freya = { path = "./crates/freya", default-features = false, features = ["all-crossplatform-cpu"] }
+freya = { path = "./crates/freya", default-features = false, features = [
+  "all-crossplatform-cpu",
+] }
 freya-core = { workspace = true, features = ["debug-integrity", "test"] }
 freya-engine = { workspace = true }
 torin = { workspace = true }
