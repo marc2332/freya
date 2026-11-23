@@ -165,6 +165,7 @@
 //   +-------------------+
 //
 // [D] ANDROID
+// An explicit Vulkan preference tries Vulkan first, then follows this same fallback path.
 //             |
 //             v
 //   +-------------------+
@@ -215,7 +216,10 @@ mod gl;
 mod metal;
 mod software;
 mod surface;
-#[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
+#[cfg(all(
+    any(target_os = "linux", target_os = "windows", target_os = "android"),
+    feature = "gpu"
+))]
 mod vulkan;
 #[cfg(all(target_os = "linux", feature = "gpu"))]
 mod wayland_gpu;
@@ -279,7 +283,10 @@ fn wait_for_display(window: &dyn Window, last_present: &mut Option<std::time::In
 #[derive(Debug)]
 // Used by the Vulkan driver.
 #[cfg_attr(
-    not(all(any(target_os = "linux", target_os = "windows"), feature = "gpu")),
+    not(all(
+        any(target_os = "linux", target_os = "windows", target_os = "android"),
+        feature = "gpu"
+    )),
     allow(dead_code)
 )]
 pub enum DriverError {
@@ -290,7 +297,10 @@ pub enum DriverError {
 /// Shared Vulkan context.
 #[derive(Default)]
 pub struct GraphicsContext {
-    #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
+    #[cfg(all(
+        any(target_os = "linux", target_os = "windows", target_os = "android"),
+        feature = "gpu"
+    ))]
     vulkan: vulkan::SharedVulkan,
 }
 
@@ -303,7 +313,10 @@ pub enum GraphicsDriver {
     OpenGl(gl::OpenGLDriver),
     #[cfg(all(target_os = "macos", feature = "gpu"))]
     Metal(metal::MetalDriver),
-    #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
+    #[cfg(all(
+        any(target_os = "linux", target_os = "windows", target_os = "android"),
+        feature = "gpu"
+    ))]
     Vulkan(vulkan::VulkanDriver),
     Software(software::SoftwareDriver),
 }
@@ -357,21 +370,10 @@ impl GraphicsDriver {
             return (Self::Metal(driver), window);
         }
 
-        #[cfg(all(target_os = "android", feature = "gpu"))]
-        {
-            match gl::OpenGLDriver::new(
-                event_loop,
-                window_attributes.clone(),
-                gpu_resource_cache_limit,
-            ) {
-                Ok((driver, window)) => return (Self::OpenGl(driver), window),
-                Err(err) => {
-                    tracing::warn!("OpenGL initialization failed, falling back to software: {err}");
-                }
-            }
-        }
-
-        #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
+        #[cfg(all(
+            any(target_os = "linux", target_os = "windows", target_os = "android"),
+            feature = "gpu"
+        ))]
         {
             if matches!(renderer, RendererPreference::Vulkan { .. })
                 || (cfg!(target_os = "linux") && renderer == RendererPreference::Auto)
@@ -476,7 +478,10 @@ impl GraphicsDriver {
                 mtl.present(size, window, render);
                 Ok(())
             }
-            #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
+            #[cfg(all(
+                any(target_os = "linux", target_os = "windows", target_os = "android"),
+                feature = "gpu"
+            ))]
             Self::Vulkan(vk) => vk.present(size, window, render),
             Self::Software(sw) => {
                 sw.present(size, window, render);
@@ -494,7 +499,10 @@ impl GraphicsDriver {
             Self::OpenGl(driver) => Some(driver.resource_cache_usage()),
             #[cfg(all(target_os = "macos", feature = "gpu"))]
             Self::Metal(driver) => Some(driver.resource_cache_usage()),
-            #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
+            #[cfg(all(
+                any(target_os = "linux", target_os = "windows", target_os = "android"),
+                feature = "gpu"
+            ))]
             Self::Vulkan(driver) => Some(driver.resource_cache_usage()),
             Self::Software(_) => None,
         }
@@ -510,7 +518,10 @@ impl GraphicsDriver {
             Self::OpenGl(_) => "OpenGL",
             #[cfg(all(target_os = "macos", feature = "gpu"))]
             Self::Metal(_) => "Metal",
-            #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
+            #[cfg(all(
+                any(target_os = "linux", target_os = "windows", target_os = "android"),
+                feature = "gpu"
+            ))]
             Self::Vulkan(_) => "Vulkan",
             Self::Software(_) => "Software",
         }
@@ -524,7 +535,10 @@ impl GraphicsDriver {
                 feature = "gpu"
             ))]
             Self::OpenGl(gl) => gl.gpu_name.as_deref(),
-            #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
+            #[cfg(all(
+                any(target_os = "linux", target_os = "windows", target_os = "android"),
+                feature = "gpu"
+            ))]
             Self::Vulkan(vk) => Some(vk.gpu_name()),
             _ => None,
         }
@@ -545,7 +559,10 @@ impl GraphicsDriver {
                 mtl.resize(size);
                 Ok(())
             }
-            #[cfg(all(any(target_os = "linux", target_os = "windows"), feature = "gpu"))]
+            #[cfg(all(
+                any(target_os = "linux", target_os = "windows", target_os = "android"),
+                feature = "gpu"
+            ))]
             Self::Vulkan(vk) => vk.resize(size),
             Self::Software(sw) => {
                 sw.resize(size);

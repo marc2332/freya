@@ -88,18 +88,18 @@ freya-engine = { workspace = true, features = [
 ], optional = true }
 windows-sys = { version = "0.60", features = ["Win32_Graphics_Dwm"] }
 
-# Rendering OpenGL + Vulkan (Linux/Windows)
-[target.'cfg(any(target_os = "linux", target_os = "windows"))'.dependencies]
+# Rendering OpenGL + Vulkan (Linux/Windows/Android)
+[target.'cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))'.dependencies]
 gl = { workspace = true, optional = true }
 glutin = { workspace = true, optional = true }
 ash = { workspace = true, optional = true }
 ash-window = { workspace = true, optional = true }
 
-# Rendering OpenGL (Android)
 [target.'cfg(target_os = "android")'.dependencies]
-gl = { workspace = true, optional = true }
-glutin = { workspace = true, optional = true }
-freya-engine = { workspace = true, features = ["gl"], optional = true }
+freya-engine = { workspace = true, features = [
+  "gl",
+  "vulkan",
+], optional = true }
 
 # Rendering Metal (macOS)
 [target.'cfg(target_os = "macos")'.dependencies]

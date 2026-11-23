@@ -64,6 +64,7 @@ use ash::{
         SharingMode,
         SubmitInfo,
         SurfaceKHR,
+        SurfaceTransformFlagsKHR,
         SwapchainCreateInfoKHR,
         SwapchainKHR,
         api_version_major,
@@ -149,7 +150,7 @@ impl SharedVulkan {
         } else {
             None
         };
-        #[cfg(target_os = "windows")]
+        #[cfg(not(target_os = "linux"))]
         let compositor_device = None;
 
         tracing::info!(?gpu_preference, ?compositor_device, "Selecting Vulkan GPU");
@@ -242,6 +243,13 @@ impl VulkanInner {
         let (device, queue) =
             create_logical_device(&instance, physical_device, queue_family_index)?;
 
+        // An Android loader can be newer than its GPU: give Skia no more than the device supports.
+        let skia_api_version = if cfg!(target_os = "android") {
+            let properties = unsafe { instance.get_physical_device_properties(physical_device) };
+            api_version.min(properties.api_version)
+        } else {
+            api_version
+        };
         let gr_context = create_gr_context(
             &entry,
             &instance,
@@ -251,7 +259,7 @@ impl VulkanInner {
             queue_family_index,
             gpu_resource_cache_limit,
             instance_extensions,
-            api_version,
+            skia_api_version,
         )?;
 
         let swapchain_fns = DeviceSwapchainFns::new(&instance, &device);
@@ -317,6 +325,7 @@ pub struct VulkanDriver {
     swapchain: SwapchainKHR,
     swapchain_images: Vec<Image>,
     swapchain_extent: Extent2D,
+    swapchain_format: Format,
     transparent: bool,
     wayland: bool,
     image_available_semaphore: Semaphore,
@@ -382,6 +391,7 @@ impl VulkanDriver {
             swapchain: SwapchainKHR::null(),
             swapchain_images: Vec::new(),
             swapchain_extent: Extent2D::default(),
+            swapchain_format: Format::UNDEFINED,
             transparent,
             wayland,
             image_available_semaphore: Semaphore::null(),
@@ -392,7 +402,7 @@ impl VulkanDriver {
             gpu_cache_purged: false,
         };
 
-        let (swapchain, swapchain_images, swapchain_extent) = create_swapchain(
+        let (swapchain, swapchain_images, swapchain_extent, swapchain_format) = create_swapchain(
             &driver.shared,
             surface,
             window.surface_size(),
@@ -403,6 +413,7 @@ impl VulkanDriver {
         driver.swapchain = swapchain;
         driver.swapchain_images = swapchain_images;
         driver.swapchain_extent = swapchain_extent;
+        driver.swapchain_format = swapchain_format;
 
         let (image_available_semaphore, render_finished_semaphore, in_flight_fence) =
             create_sync_objects(&driver.shared.device)?;
@@ -445,7 +456,7 @@ impl VulkanDriver {
                 .map_err(Self::vulkan_to_driver_error)?;
         }
         let old_swapchain = self.swapchain;
-        let (swapchain, swapchain_images, swapchain_extent) = create_swapchain(
+        let (swapchain, swapchain_images, swapchain_extent, swapchain_format) = create_swapchain(
             &self.shared,
             self.surface,
             size,
@@ -460,6 +471,7 @@ impl VulkanDriver {
         self.swapchain = swapchain;
         self.swapchain_images = swapchain_images;
         self.swapchain_extent = swapchain_extent;
+        self.swapchain_format = swapchain_format;
         unsafe {
             self.shared
                 .swapchain_fns
@@ -519,6 +531,11 @@ impl VulkanDriver {
         self.gpu_cache_purged = false;
 
         let image = self.swapchain_images[image_index as usize];
+        let (skia_format, color_type) = if self.swapchain_format == Format::R8G8B8A8_UNORM {
+            (vk::Format::R8G8B8A8_UNORM, ColorType::RGBA8888)
+        } else {
+            (vk::Format::B8G8R8A8_UNORM, ColorType::BGRA8888)
+        };
 
         let alloc = vk::Alloc::default();
         let sk_image_info = unsafe {
@@ -527,7 +544,7 @@ impl VulkanDriver {
                 alloc,
                 vk::ImageTiling::OPTIMAL,
                 vk::ImageLayout::UNDEFINED,
-                vk::Format::B8G8R8A8_UNORM,
+                skia_format,
                 1,
                 None,
                 None,
@@ -547,7 +564,7 @@ impl VulkanDriver {
             &mut self.shared.gr_context.borrow_mut(),
             &render_target,
             SurfaceOrigin::TopLeft,
-            ColorType::BGRA8888,
+            color_type,
         )
         .ok_or(DriverError::DeviceLost)?;
 
@@ -654,7 +671,13 @@ impl VulkanDriver {
             Err(error) => return Err(Self::vulkan_to_driver_error(error)),
         }
 
-        if suboptimal {
+        // On Android a rotated device is suboptimal on every frame while the compositor rotates for us:
+        // there only a size change needs a new swapchain.
+        if suboptimal
+            && (!cfg!(target_os = "android")
+                || (size.width, size.height)
+                    != (self.swapchain_extent.width, self.swapchain_extent.height))
+        {
             self.recreate_swapchain(size)?;
         }
 
@@ -854,7 +877,9 @@ fn create_logical_device(
         .queue_family_index(queue_family_index)
         .queue_priorities(&queue_priorities);
 
-    let features = PhysicalDeviceFeatures::default().sample_rate_shading(true);
+    // Some Android GPUs lack it, and asking for it there fails the device.
+    let features =
+        PhysicalDeviceFeatures::default().sample_rate_shading(!cfg!(target_os = "android"));
 
     let extensions = DEVICE_EXTENSIONS
         .iter()
@@ -881,7 +906,7 @@ fn create_swapchain(
     old_swapchain: Option<SwapchainKHR>,
     transparent: bool,
     wayland: bool,
-) -> Result<(SwapchainKHR, Vec<Image>, Extent2D), Box<dyn std::error::Error>> {
+) -> Result<(SwapchainKHR, Vec<Image>, Extent2D, Format), Box<dyn std::error::Error>> {
     let surface_caps = unsafe {
         shared
             .surface_fns
@@ -894,10 +919,13 @@ fn create_swapchain(
             .get_physical_device_surface_formats(shared.physical_device, surface)?
     };
 
-    let format = surface_formats
+    // Android surfaces usually offer RGBA rather than BGRA.
+    let format = [Format::B8G8R8A8_UNORM, Format::R8G8B8A8_UNORM]
         .iter()
-        .find(|f| {
-            f.format == Format::B8G8R8A8_UNORM && f.color_space == ColorSpaceKHR::SRGB_NONLINEAR
+        .find_map(|wanted| {
+            surface_formats
+                .iter()
+                .find(|f| f.format == *wanted && f.color_space == ColorSpaceKHR::SRGB_NONLINEAR)
         })
         .ok_or("No suitable Vulkan surface format found")?;
 
@@ -913,7 +941,8 @@ fn create_swapchain(
         PresentModeKHR::FIFO
     };
 
-    let extent = if surface_caps.current_extent.width == u32::MAX {
+    // Android's current extent can still be the old one right after a rotation: follow the window.
+    let extent = if surface_caps.current_extent.width == u32::MAX || cfg!(target_os = "android") {
         Extent2D {
             width: size
                 .width
@@ -957,6 +986,20 @@ fn create_swapchain(
         CompositeAlphaFlagsKHR::OPAQUE
     };
 
+    // On Android the compositor rotates: Skia draws upright and does not pre-rotate. A surface that cannot take
+    // the identity transform would be shown rotated twice, so it is left to OpenGL.
+    let pre_transform = if cfg!(target_os = "android") {
+        if !surface_caps
+            .supported_transforms
+            .contains(SurfaceTransformFlagsKHR::IDENTITY)
+        {
+            return Err("Vulkan surface does not support the identity transform".into());
+        }
+        SurfaceTransformFlagsKHR::IDENTITY
+    } else {
+        surface_caps.current_transform
+    };
+
     let create_info = SwapchainCreateInfoKHR::default()
         .surface(surface)
         .min_image_count(image_count)
@@ -972,7 +1015,7 @@ fn create_swapchain(
         )
         .image_sharing_mode(SharingMode::EXCLUSIVE)
         .queue_family_indices(std::slice::from_ref(&shared.queue_family_index))
-        .pre_transform(surface_caps.current_transform)
+        .pre_transform(pre_transform)
         .composite_alpha(composite_alpha)
         .present_mode(present_mode)
         .clipped(true)
@@ -981,7 +1024,7 @@ fn create_swapchain(
     let swapchain = unsafe { shared.swapchain_fns.create_swapchain(&create_info, None)? };
     let images = unsafe { shared.swapchain_fns.get_swapchain_images(swapchain)? };
 
-    Ok((swapchain, images, extent))
+    Ok((swapchain, images, extent, format.format))
 }
 
 #[allow(clippy::too_many_arguments)]
