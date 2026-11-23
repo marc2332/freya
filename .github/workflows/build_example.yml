@@ -19,6 +19,10 @@ on:
         description: "Optimize for smaller binaries"
         type: boolean
         default: false
+      gpu:
+        description: "Enable GPU rendering (uncheck for CPU-only)"
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -31,6 +35,7 @@ jobs:
       BUILD_PROFILE: ${{ inputs.optimize_for_size && 'size-release' || 'release' }}
       CARGO_TARGET_DIR: target
       EXAMPLE_NAME: ${{ inputs.example_name }}
+      RENDERER: ${{ inputs.gpu && 'gpu' || 'cpu' }}
       RUST_TARGET: ${{ inputs.os == 'windows-11-arm' && 'aarch64-pc-windows-msvc' || '' }}
     strategy:
       matrix:
@@ -62,17 +67,20 @@ jobs:
       - name: Build example
         shell: bash
         run: |
-          target_args=()
+          build_args=()
           if [[ -n "$RUST_TARGET" ]]; then
-            target_args=(--target "$RUST_TARGET")
+            build_args+=(--target "$RUST_TARGET")
           fi
-          cargo build --locked --example "$EXAMPLE_NAME" --profile "$BUILD_PROFILE" "${target_args[@]}"
+          if [[ "$RENDERER" == cpu ]]; then
+            build_args+=(--no-default-features)
+          fi
+          cargo build --locked --example "$EXAMPLE_NAME" --profile "$BUILD_PROFILE" "${build_args[@]}"
         env:
           RUSTFLAGS: ${{ matrix.os == 'windows-latest' && '-Ctarget-feature=+crt-static' || '' }}
 
       - name: Upload example binary
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: ${{ env.EXAMPLE_NAME }}-${{ matrix.os }}-${{ env.BUILD_PROFILE }}
+          name: ${{ env.EXAMPLE_NAME }}-${{ matrix.os }}-${{ env.BUILD_PROFILE }}-${{ env.RENDERER }}
           path: target/${{ env.RUST_TARGET && format('{0}/', env.RUST_TARGET) || '' }}${{ env.BUILD_PROFILE }}/examples/${{ env.EXAMPLE_NAME }}${{ runner.os == 'Windows' && '.exe' || '' }}
           if-no-files-found: error
