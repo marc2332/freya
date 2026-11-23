@@ -57,6 +57,7 @@ pub enum RendererPreference {
     Auto,
     Software,
     OpenGl,
+    /// Try Vulkan before OpenGL. On Android, `Auto` still uses OpenGL ES.
     Vulkan {
         gpu_preference: GpuPreference,
     },
