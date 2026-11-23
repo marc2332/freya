@@ -253,6 +253,12 @@ redundant_clone = "warn"
 lto = true
 opt-level = 3
 
+[profile.size-release]
+inherits = "release"
+opt-level = "z"
+panic = "abort"
+strip = "symbols"
+
 [profile.bench]
 lto = true
 opt-level = 3

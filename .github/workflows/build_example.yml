@@ -14,6 +14,10 @@ on:
       example_name:
         description: "Example name"
         required: true
+      optimize_for_size:
+        description: "Optimize for smaller binaries"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -22,6 +26,10 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     if: ${{ always() }}
+    env:
+      BUILD_PROFILE: ${{ inputs.optimize_for_size && 'size-release' || 'release' }}
+      CARGO_TARGET_DIR: target
+      EXAMPLE_NAME: ${{ inputs.example_name }}
     strategy:
       matrix:
         os: ["${{ inputs.os }}"]
@@ -48,11 +56,14 @@ jobs:
         wait-all:
 
       - name: Build example
-        run: cargo build --example ${{inputs.example_name}} --release
+        shell: bash
+        run: cargo build --locked --example "$EXAMPLE_NAME" --profile "$BUILD_PROFILE"
         env:
           RUSTFLAGS: ${{ runner.os == 'Windows' && '-Ctarget-feature=+crt-static' || '' }}
 
-      - name: Upload artifacts
+      - name: Upload example binary
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          path: target/release/examples/*
+          name: ${{ env.EXAMPLE_NAME }}-${{ matrix.os }}-${{ env.BUILD_PROFILE }}
+          path: target/${{ env.BUILD_PROFILE }}/examples/${{ env.EXAMPLE_NAME }}${{ runner.os == 'Windows' && '.exe' || '' }}
+          if-no-files-found: error
