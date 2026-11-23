@@ -91,7 +91,7 @@ jobs:
         include:
           - os: windows-11-arm
             target: aarch64-pc-windows-msvc
-            cargo_flags: --target aarch64-pc-windows-msvc
+            cargo_flags: --target aarch64-pc-windows-msvc --no-default-features --features accessibility
     env:
       FREYA_SMOKE_SCREENSHOT: ${{ github.workspace }}/artifacts/smoke.png
     steps:
