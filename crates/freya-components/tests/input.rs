@@ -89,6 +89,74 @@ fn input_preedit_caret_tracks_ime_cursor() {
 }
 
 #[test]
+fn input_cancels_preedit_on_logical_focus_loss() {
+    fn app() -> impl IntoElement {
+        Input::new_with_editor(use_consume::<UseEditable>()).auto_focus(true)
+    }
+
+    let (mut test, mut editor) = TestingRunner::new(
+        app,
+        (300., 300.).into(),
+        |runner| {
+            runner.provide_root_context(|| UseEditable::create("ab".into(), EditableConfig::new()))
+        },
+        1.,
+    );
+    let input_id = test.sync_and_update().focus;
+    editor.editor_mut().write().move_cursor_to(1);
+    test.send_event(PlatformEvent::ImePreedit {
+        name: ImeEventName::Preedit,
+        text: "XY".into(),
+        cursor: Some((1, 1)),
+    });
+    test.sync_and_update();
+    assert!(editor.editor().peek().has_preedit());
+
+    test.press_key(Key::Named(NamedKey::Escape));
+    assert_ne!(test.sync_and_update().focus, input_id);
+    test.sync_and_update();
+    assert_eq!(editor.editor().peek().rope().to_string(), "ab");
+    assert_eq!(editor.editor().peek().cursor_pos(), 1);
+
+    test.run_in(|| input_id.request_focus());
+    assert_eq!(test.sync_and_update().focus, input_id);
+    test.write_text("x");
+    assert_eq!(editor.editor().peek().committed_text(), "axb");
+}
+
+#[test]
+fn input_scrolls_to_caret_when_only_preedit_cursor_changes() {
+    fn app() -> impl IntoElement {
+        let value = use_state(String::new);
+        Input::new(value).auto_focus(true).width(Size::px(100.))
+    }
+
+    let mut test = launch_test(app);
+    test.sync_and_update();
+    let text = "composition".repeat(10);
+
+    for cursor in [0, text.len(), 0] {
+        test.send_event(PlatformEvent::ImePreedit {
+            name: ImeEventName::Preedit,
+            text: text.clone(),
+            cursor: Some((cursor, cursor)),
+        });
+        test.sync_and_update();
+        test.sync_and_update();
+
+        let area = test
+            .find(|node, element| Paragraph::try_downcast(element).map(|_| node.layout().area))
+            .unwrap();
+        assert!(area.width() > 100.);
+        if cursor == 0 {
+            assert!(area.min_x().abs() < 2.);
+        } else {
+            assert!((area.max_x() - 100.).abs() < 2.);
+        }
+    }
+}
+
+#[test]
 fn input_setter_reducer() {
     use freya::radio::*;
 
