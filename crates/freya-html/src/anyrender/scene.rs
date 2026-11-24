@@ -46,7 +46,6 @@ use freya_engine::prelude::{
     PictureRecorder,
     Point,
     RRect,
-    Rect,
     SaveLayerRec,
     Shader,
     TileMode,

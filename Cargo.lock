@@ -861,9 +861,6 @@ name = "bitflags"
 version = "2.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b588b76d00fde79687d7646a9b5bdf3cc0f655e0bbd080335a95d7e96f3587da"
-dependencies = [
- "serde_core",
-]
 
 [[package]]
 name = "bitstream-io"
@@ -897,7 +894,7 @@ dependencies = [
  "icu_properties",
  "icu_segmenter",
  "image 0.25.10",
- "keyboard-types 0.8.3",
+ "keyboard-types",
  "kurbo",
  "linebender_resource_handle",
  "markup5ever",
@@ -970,7 +967,7 @@ dependencies = [
  "bytes",
  "cursor-icon",
  "http",
- "keyboard-types 0.8.3",
+ "keyboard-types",
  "serde",
  "smol_str",
  "url",
@@ -2789,7 +2786,7 @@ dependencies = [
  "generational-box",
  "hotpath",
  "itertools 0.14.0",
- "keyboard-types 0.8.3",
+ "keyboard-types",
  "mundy",
  "paste",
  "pathgraph",
@@ -2853,7 +2850,7 @@ dependencies = [
  "freya-clipboard",
  "freya-core",
  "freya-testing",
- "keyboard-types 0.8.3",
+ "keyboard-types",
  "ropey",
  "torin",
  "unicode-segmentation",
@@ -2886,7 +2883,7 @@ dependencies = [
  "futures-channel",
  "futures-lite",
  "hashbrown 0.17.1",
- "keyboard-types 0.7.0",
+ "keyboard-types",
  "kurbo",
  "oaty",
  "parley",
@@ -3064,7 +3061,7 @@ dependencies = [
  "freya-testing",
  "futures-channel",
  "futures-lite",
- "keyboard-types 0.8.3",
+ "keyboard-types",
  "linkify",
  "portable-pty",
  "rio-vt",
@@ -3150,7 +3147,7 @@ dependencies = [
  "glutin",
  "hotpath",
  "image 0.25.10",
- "keyboard-types 0.8.3",
+ "keyboard-types",
  "libc",
  "mundy",
  "objc2 0.6.5",
@@ -4249,17 +4246,6 @@ dependencies = [
 
 [[package]]
 name = "keyboard-types"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b750dcadc39a09dbadd74e118f6dd6598df77fa01df0cfcdc52c28dece74528a"
-dependencies = [
- "bitflags 2.13.1",
- "serde",
- "unicode-segmentation",
-]
-
-[[package]]
-name = "keyboard-types"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fbe853b403ae61a04233030ae8a79d94975281ed9770a1f9e246732b534b28d"
@@ -4679,7 +4665,7 @@ checksum = "4340e89c178916e62879c5c36b7f699019369be413e496178a6983ce91b8bc03"
 dependencies = [
  "crossbeam-channel",
  "dpi",
- "keyboard-types 0.8.3",
+ "keyboard-types",
  "objc2 0.6.5",
  "objc2-app-kit 0.3.2",
  "objc2-core-foundation",
@@ -9415,7 +9401,7 @@ dependencies = [
  "bitflags 2.13.1",
  "cursor-icon",
  "dpi",
- "keyboard-types 0.8.3",
+ "keyboard-types",
  "raw-window-handle",
  "smol_str",
  "web-time",

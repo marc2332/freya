@@ -19,7 +19,7 @@ freya-engine = { workspace = true }
 tracing = { workspace = true }
 rustc-hash = { workspace = true }
 
-keyboard-types = "=0.7.0"
+keyboard-types = { workspace = true }
 smol_str = "0.3"
 
 async-channel = { workspace = true }
