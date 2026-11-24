@@ -38,12 +38,12 @@
 //! ### Android
 //!
 //! Requires the Android SDK, the NDK and `cargo-ndk`. See the
-//! [`android`](https://github.com/marc2332/freya/blob/main/examples/android/README.md) example README.
+//! [`android`](https://github.com/freya-rs/freya/blob/main/examples/android/README.md) example README.
 //!
 //! ### Web
 //!
 //! Requires the `wasm32-unknown-emscripten` target and Emscripten. See the
-//! [`web`](https://github.com/marc2332/freya/blob/main/examples/web/README.md) example README.
+//! [`web`](https://github.com/freya-rs/freya/blob/main/examples/web/README.md) example README.
 //!
 //! ## Custom Linkers
 //!
@@ -61,4 +61,4 @@
 //!
 //! For individual APIs, browse [UI and Components](crate::_docs::ui_and_components),
 //! [State Management](crate::_docs::state_management), and the
-//! [runnable examples](https://github.com/marc2332/freya/tree/main/examples).
+//! [runnable examples](https://github.com/freya-rs/freya/tree/main/examples).

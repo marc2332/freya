@@ -51,13 +51,13 @@
     {
       "source": "/guides/publishing.html",
       "has": [{ "type": "host", "value": "book.freyaui.dev" }],
-      "destination": "https://github.com/marc2332/freya/blob/v0.3.0/book/src/guides/publishing.md",
+      "destination": "https://github.com/freya-rs/freya/blob/v0.3.0/book/src/guides/publishing.md",
       "permanent": true
     },
     {
       "source": "/faq.html",
       "has": [{ "type": "host", "value": "book.freyaui.dev" }],
-      "destination": "https://github.com/marc2332/freya/blob/v0.3.0/book/src/faq.md",
+      "destination": "https://github.com/freya-rs/freya/blob/v0.3.0/book/src/faq.md",
       "permanent": true
     },
     {

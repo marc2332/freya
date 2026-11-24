@@ -8,7 +8,7 @@ use crate::showcases::DemoGrid;
 
 const RUST_LOGO: &[u8] = include_bytes!("../rust_logo.png");
 const PREVIEW_URL: &str =
-    "https://raw.githubusercontent.com/marc2332/freya/main/website/public/preview.png";
+    "https://raw.githubusercontent.com/freya-rs/freya/main/website/public/preview.png";
 
 demos! {
     ButtonDemo => "Button" {
@@ -478,7 +478,7 @@ demos! {
     }
 
     LinkDemo => "Link" {
-        Link::new("https://github.com/marc2332/freya").child("github.com/marc2332/freya")
+        Link::new("https://github.com/freya-rs/freya").child("github.com/freya-rs/freya")
     }
 
     SelectableTextDemo => "SelectableText" {
