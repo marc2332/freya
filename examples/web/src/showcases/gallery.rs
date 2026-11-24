@@ -175,6 +175,15 @@ demos! {
             }))
     }
 
+    ComboBoxDemo => "ComboBox" {
+        let language = use_state(String::new);
+        let languages = ["Rust", "Ruby", "Python", "TypeScript"].map(String::from).to_vec();
+
+        ComboBox::new(language, languages)
+            .placeholder("Choose or type a language")
+            .width(Size::px(220.))
+    }
+
     MenuDemo => "Menu" {
         let mut selected = use_state(|| 0usize);
 

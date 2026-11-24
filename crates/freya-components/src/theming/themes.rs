@@ -25,6 +25,7 @@ use crate::{
     checkbox::CheckboxThemePreference,
     chip::ChipThemePreference,
     color_picker::ColorPickerThemePreference,
+    combobox::ComboBoxThemePreference,
     corner_radius::{
         CornerRadiusRole,
         CornerRadiusScale,
@@ -598,6 +599,25 @@ fn register_base_component_themes(theme: &mut Theme) {
             background_button: Preference::Reference(ColorRole::SurfaceSecondary.key()),
             hover_background: Preference::Reference(ColorRole::SurfacePrimary.key()),
             color: Preference::Reference(ColorRole::TextPrimary.key()),
+            border_fill: Preference::Reference(ColorRole::SurfacePrimary.key()),
+            focus_border_fill: Preference::Reference(ColorRole::BorderFocus.key()),
+            arrow_fill: Preference::Reference(ColorRole::TextPrimary.key()),
+        },
+    );
+    theme.set_theme(
+        "combobox",
+        ComboBoxThemePreference {
+            corner_radius: Preference::Reference(CornerRadiusRole::Lg.key()),
+            list_corner_radius: Preference::Reference(CornerRadiusRole::Xl.key()),
+            font_size: Preference::Reference(TextRole::Control.key()),
+            width: Preference::Specific(Size::px(260.)),
+            margin: Preference::Specific(Gaps::new_all(0.)),
+            padding: Preference::Specific(Gaps::new_all(8.)),
+            list_background: Preference::Reference(ColorRole::Background.key()),
+            background: Preference::Reference(ColorRole::SurfaceSecondary.key()),
+            focus_background: Preference::Reference(ColorRole::Background.key()),
+            color: Preference::Reference(ColorRole::TextPrimary.key()),
+            placeholder_color: Preference::Reference(ColorRole::TextSecondary.key()),
             border_fill: Preference::Reference(ColorRole::SurfacePrimary.key()),
             focus_border_fill: Preference::Reference(ColorRole::BorderFocus.key()),
             arrow_fill: Preference::Reference(ColorRole::TextPrimary.key()),

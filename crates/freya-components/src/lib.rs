@@ -12,6 +12,7 @@ pub mod card;
 pub mod checkbox;
 pub mod chip;
 pub mod color_picker;
+pub mod combobox;
 pub mod context_menu;
 pub mod corner_radius;
 pub mod cursor_blink;
