@@ -298,6 +298,8 @@ impl BlitzState {
         let coords = self.coords(x, y);
         self.dispatch(UiEvent::Wheel(BlitzWheelEvent {
             delta: BlitzWheelDelta::Pixels(delta_x, delta_y),
+            phase: Default::default(),
+            source: Default::default(),
             element: Point {
                 x: coords.client_x,
                 y: coords.client_y,
