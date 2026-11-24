@@ -1,5 +1,4 @@
 use std::{
-    str::FromStr,
     sync::{
         Arc,
         atomic::{
@@ -59,8 +58,6 @@ use freya_engine::prelude::{
 };
 use futures_channel::mpsc::UnboundedSender;
 use keyboard_types::{
-    Code as BlitzCode,
-    Key as BlitzKey,
     Location as BlitzLocation,
     Modifiers as BlitzModifiers,
 };
@@ -298,6 +295,8 @@ impl BlitzState {
         let coords = self.coords(x, y);
         self.dispatch(UiEvent::Wheel(BlitzWheelEvent {
             delta: BlitzWheelDelta::Pixels(delta_x, delta_y),
+            phase: Default::default(),
+            source: Default::default(),
             element: Point {
                 x: coords.client_x,
                 y: coords.client_y,
@@ -316,8 +315,8 @@ impl BlitzState {
         pressed: bool,
     ) {
         let event = BlitzKeyEvent {
-            key: convert_key(key),
-            code: convert_code(code),
+            key: key.clone(),
+            code: *code,
             modifiers: convert_modifiers(modifiers),
             location: BlitzLocation::Standard,
             is_auto_repeating: false,
@@ -406,14 +405,6 @@ fn convert_modifiers(modifiers: FreyaModifiers) -> BlitzModifiers {
         out |= BlitzModifiers::META;
     }
     out
-}
-
-fn convert_key(key: &FreyaKey) -> BlitzKey {
-    BlitzKey::from_str(&key.to_string()).unwrap_or(BlitzKey::Unidentified)
-}
-
-fn convert_code(code: &FreyaCode) -> BlitzCode {
-    BlitzCode::from_str(&code.to_string()).unwrap_or(BlitzCode::Unidentified)
 }
 
 fn key_text(key: &FreyaKey) -> Option<SmolStr> {

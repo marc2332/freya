@@ -457,14 +457,35 @@ let expensive = use_memo(move || {
 let value = expensive.read();
 ```
 
-For side effects that should re-run when state changes (e.g. logging, triggering external systems), use `use_side_effect`. Do not use it to sync one state into another - derive values directly or use `use_memo` instead:
+Use `use_derived` when you need the result as a `State<T>` or the result type does not implement `PartialEq`. It computes the initial value immediately, then recomputes in a task when dependencies change. Unlike `use_memo`, it notifies subscribers on every recomputation, even if the result is unchanged.
+
+If a dialog's draft must be cleared before drawing the closed state, do the cleanup directly in `render`.
+
+**CORRECT: Clear the draft with a guarded update in `render`.**
 
 ```rust
+let mut draft = use_state(String::new);
+
+if !*dialog_open.read() && !draft.peek().is_empty() {
+    draft.write().clear();
+}
+```
+
+**BAD: Defer the same cleanup to `use_side_effect`.**
+
+```rust
+let mut draft = use_state(String::new);
+
 use_side_effect(move || {
-    let value = *count.read(); // subscribed
-    println!("count changed: {value}");
+    if !*dialog_open.read() && !draft.peek().is_empty() {
+        draft.write().clear();
+    }
 });
 ```
+
+In `render`, `read()` subscribes to `dialog_open` and `peek()` checks the draft without subscribing. The guard only writes when there is something to clear, so no previous value is needed.
+
+Use `use_side_effect` for work outside rendering, such as logging or notifying an external system. For derived values, compute them directly or use `use_memo` or `use_derived` instead.
 
 ## Async
 
