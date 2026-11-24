@@ -163,7 +163,8 @@ impl SkiaScenePainter<'_> {
 
     fn clip(&self, fill: peniko::Fill, shape: &impl kurbo::Shape, operation: ClipOp) {
         if let Some(rect) = shape.as_rect() {
-            self.inner.clip_rect(sk_kurbo::rect_from(rect), operation, true);
+            self.inner
+                .clip_rect(sk_kurbo::rect_from(rect), operation, true);
         } else if let Some(rrect) = shape.as_rounded_rect() {
             self.inner
                 .clip_rrect(sk_kurbo::rrect_from(rrect), operation, true);
@@ -572,7 +573,8 @@ impl PaintScene for SkiaScenePainter<'_> {
         self.inner.restore();
 
         self.clip(fill, clip, ClipOp::Intersect);
-        self.inner.save_layer(&SaveLayerRec::default().paint(&self.cache.paint));
+        self.inner
+            .save_layer(&SaveLayerRec::default().paint(&self.cache.paint));
     }
 
     fn push_clip_layer(
@@ -662,7 +664,8 @@ impl PaintScene for SkiaScenePainter<'_> {
         self.set_paint_style(style);
         self.set_paint_alpha(brush_alpha);
 
-        let Some(mut font) = self.get_or_cache_font(font, normalized_coords, font_size, hint) else {
+        let Some(mut font) = self.get_or_cache_font(font, normalized_coords, font_size, hint)
+        else {
             return;
         };
         if !anti_aliasing.is_enabled() {
@@ -792,9 +795,12 @@ fn convert_filter_effect(filter: &Filter, id: FilterId) -> Option<ImageFilter> {
             let shader = shaders::color(sk_color);
             image_filters::shader(shader, None)
         }
-        FilterEffect::GaussianBlur(blur) => {
-            image_filters::blur((blur.std_deviation_x, blur.std_deviation_y), None, input, None)
-        }
+        FilterEffect::GaussianBlur(blur) => image_filters::blur(
+            (blur.std_deviation_x, blur.std_deviation_y),
+            None,
+            input,
+            None,
+        ),
         FilterEffect::DropShadow(drop_shadow) => image_filters::drop_shadow(
             (drop_shadow.dx, drop_shadow.dy),
             (drop_shadow.std_deviation_x, drop_shadow.std_deviation_y),
