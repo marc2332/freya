@@ -246,6 +246,11 @@ impl Component for Select {
         };
 
         rect()
+            .on_key_down(|event: Event<KeyboardEventData>| {
+                if matches!(event.key, Key::Named(NamedKey::ArrowUp | NamedKey::ArrowDown)) {
+                    event.stop_propagation();
+                }
+            })
             .child(
                 rect()
                     .a11y_id(a11y_id)
