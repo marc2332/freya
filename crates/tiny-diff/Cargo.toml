@@ -4,7 +4,7 @@ version.workspace = true
 edition = "2024"
 license = "MIT"
 description = "Keyed tree diffing with no_std support"
-repository = "https://github.com/marc2332/freya"
+repository = "https://github.com/freya-rs/freya"
 
 [lints]
 workspace = true

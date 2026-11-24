@@ -67,12 +67,12 @@
 //! Android support is highly experimental.
 //!
 //! Building for Android requires the Android SDK, the NDK and `cargo-ndk`. See the
-//! [`android`](https://github.com/marc2332/freya/tree/main/examples/android) example for a complete
+//! [`android`](https://github.com/freya-rs/freya/tree/main/examples/android) example for a complete
 //! project setup and step-by-step build instructions.
 //!
 //! ## Web
 //!
 //! Web support is experimental. Apps are compiled to WebAssembly with Emscripten and run in a
-//! `canvas` element. See the [`web`](https://github.com/marc2332/freya/tree/main/examples/web)
+//! `canvas` element. See the [`web`](https://github.com/freya-rs/freya/tree/main/examples/web)
 //! example for the project setup and build instructions, it is what runs at
 //! [freyaui.dev/demo](https://freyaui.dev/demo).

@@ -445,6 +445,8 @@ impl Component for Input {
             editor.set(&value.read());
             editor.editor_history_mut().clear();
             editor.clear_selection();
+        } else if !a11y_id.is_focused() && editable.editor().peek().has_preedit() {
+            editable.editor_mut().write().clear_preedit();
         }
 
         let display_placeholder = editable.editor().read().committed_text().is_empty()
@@ -515,12 +517,30 @@ impl Component for Input {
         };
 
         let on_ime_preedit = move |e: Event<ImePreeditEventData>| {
+            let data = e.data();
             let mut editor = editable.editor_mut().write();
-            if e.data().text.is_empty() {
+            if data.text.is_empty() {
                 editor.clear_preedit();
             } else {
-                editor.set_preedit(&e.data().text);
+                let previous_cursor = editor.cursor_pos();
+                let text_unchanged = editor
+                    .preedit_text()
+                    .is_some_and(|text| text == data.text.as_str());
+                editor.set_preedit(&data.text);
+
+                if let Some((_, end)) = data.cursor
+                    && let Some(suffix) = data.text.get(end..)
+                {
+                    let cursor = editor.cursor_pos() - suffix.encode_utf16().count();
+                    editor.move_cursor_to(cursor);
+                }
+
+                if text_unchanged && editor.cursor_pos() != previous_cursor {
+                    drop(editor);
+                    follow_cursor();
+                }
             }
+            movement_timeout.reset();
         };
 
         let on_pre_key_down = self.on_pre_key_down.clone().unwrap_or_else(|| {

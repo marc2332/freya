@@ -6,6 +6,7 @@ use std::{
 
 use ropey::{
     Rope,
+    RopeSlice,
     iter::Lines,
 };
 
@@ -109,6 +110,14 @@ impl RopeEditor {
     /// Whether there is active IME preedit text in the rope.
     pub fn has_preedit(&self) -> bool {
         self.preedit.is_some()
+    }
+
+    /// Returns the active IME preedit text, if any.
+    pub fn preedit_text(&self) -> Option<RopeSlice<'_>> {
+        let preedit = self.preedit.as_ref()?;
+        let start = self.rope.utf16_cu_to_char(preedit.start);
+        let end = self.rope.utf16_cu_to_char(preedit.start + preedit.len);
+        Some(self.rope.slice(start..end))
     }
 
     /// Returns the rope content with preedit text excluded.

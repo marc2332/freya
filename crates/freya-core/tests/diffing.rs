@@ -91,6 +91,38 @@ fn diff_preserves_public_field_types() {
 }
 
 #[test]
+fn nested_additions_preserve_children() {
+    let mut runner = Runner::new(|| {
+        let count = use_consume::<State<usize>>();
+        rect()
+            .children((0..count()).map(|index| {
+                rect()
+                    .key(index)
+                    .child(from_fn_captured(move || {
+                        rect().child(format!("Row {index}")).into()
+                    }))
+                    .into_element()
+            }))
+            .into()
+    });
+    let mut count = runner.provide_root_context(|| State::create(16usize));
+    let mut tree = Tree::default();
+
+    for length in [16, 32, 8, 24] {
+        count.set(length);
+        tree.apply_mutations(runner.sync_and_update(), 1.0);
+        tree.verify_tree_integrity();
+        runner.verify_scopes_integrity();
+        let root = tree.children[&NodeId::ROOT][0];
+        assert_eq!(tree.children[&root].len(), length);
+        assert_eq!(tree.size(), 2 + length * 3);
+        assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+        assert_eq!(runner.scopes.len(), length + 1);
+        assert!(runner.sync_and_update().is_empty());
+    }
+}
+
+#[test]
 fn mutations() {
     fn app() -> Element {
         rect()

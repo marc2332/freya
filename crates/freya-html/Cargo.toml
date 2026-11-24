@@ -5,7 +5,7 @@ description = "HTML + CSS rendering for Freya using Blitz"
 edition = "2024"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
-repository = "https://github.com/marc2332/freya"
+repository = "https://github.com/freya-rs/freya"
 keywords = ["gui", "ui", "desktop", "html", "css"]
 categories = ["gui"]
 

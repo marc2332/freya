@@ -13,7 +13,7 @@ use crate::prelude::{
 /// to a layout component to render a nested route. An outlet must be a descendant
 /// of a router.
 ///
-/// See the [nested routes example](https://github.com/marc2332/freya/blob/main/examples/feature_router_complex.rs).
+/// See the [nested routes example](https://github.com/freya-rs/freya/blob/main/examples/feature_router_complex.rs).
 pub struct Outlet<R>(PhantomData<R>);
 
 impl<R> Default for Outlet<R> {
