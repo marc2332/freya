@@ -11,7 +11,7 @@
 //! ```
 //!
 //! Start with section 1 in `src/main.rs`, then apply each section's changes.
-//! The [finished example](https://github.com/marc2332/freya/blob/main/examples/learn_building_app.rs)
+//! The [finished example](https://github.com/freya-rs/freya/blob/main/examples/learn_building_app.rs)
 //! includes tests.
 //!
 //! If you cloned the Freya repository, run it like this:
@@ -456,7 +456,7 @@
 //! }
 //! ```
 //!
-//! The [finished example](https://github.com/marc2332/freya/blob/main/examples/learn_building_app.rs)
+//! The [finished example](https://github.com/freya-rs/freya/blob/main/examples/learn_building_app.rs)
 //! combines these pieces.
 //!
 //! ## 7. Test the app
@@ -531,4 +531,4 @@
 //!
 //! - Read [State Management](crate::_docs::state_management) for props, context, Radio, and reusable state interfaces.
 //! - Read [Testing](freya_testing) for headless testing APIs.
-//! - Browse [Examples](https://github.com/marc2332/freya/tree/main/examples) for focused API demonstrations and larger apps.
+//! - Browse [Examples](https://github.com/freya-rs/freya/tree/main/examples) for focused API demonstrations and larger apps.

@@ -96,7 +96,7 @@ impl Component for Home {
                                             .child("Get Started")
                                         )
                                     )
-                                    .child(Link::new("https://github.com/marc2332/freya")
+                                    .child(Link::new("https://github.com/freya-rs/freya")
                                         .child(Button::new()
                                             .padding((10., 24.))
                                             .background((253, 186, 116))
@@ -161,7 +161,7 @@ impl Component for Home {
                                             .width(Size::fill())
                                             .cross_align(Alignment::Center)
                                             .child(
-                                                Link::new("https://github.com/marc2332/freya#want-to-try-it-")
+                                                Link::new("https://github.com/freya-rs/freya#want-to-try-it-")
                                                     .child(Button::new()
                                                         .padding((10., 24.))
                                                         .background((109, 78, 233))

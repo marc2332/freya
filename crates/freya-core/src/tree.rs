@@ -466,10 +466,9 @@ impl Tree {
                 }
 
                 if flags.intersects(DiffModifies::STYLE | DiffModifies::TEXT_STYLE)
-                    && self
-                        .listeners
-                        .get(&EventName::Styled)
-                        .is_some_and(|listeners| listeners.contains(&node_id))
+                    && element
+                        .events_handlers()
+                        .is_some_and(|handlers| handlers.contains_key(&EventName::Styled))
                 {
                     styled_nodes.insert(node_id);
                 }
@@ -642,10 +641,9 @@ impl Tree {
                                 &mut self.layout,
                             );
                             if changed
-                                && self
-                                    .listeners
-                                    .get(&EventName::Styled)
-                                    .is_some_and(|listeners| listeners.contains(node_id))
+                                && element.events_handlers().is_some_and(|handlers| {
+                                    handlers.contains_key(&EventName::Styled)
+                                })
                             {
                                 styled_nodes.insert(*node_id);
                             }

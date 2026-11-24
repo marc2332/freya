@@ -45,9 +45,9 @@
 //! Use `freya::components::NativeRouterExt` with `rect().native_router()` to
 //! handle native back and forward mouse buttons.
 //!
-//! See the [basic router example](https://github.com/marc2332/freya/blob/main/examples/feature_router.rs),
-//! [nested routes and history example](https://github.com/marc2332/freya/blob/main/examples/feature_router_complex.rs),
-//! and [shared multi-window router example](https://github.com/marc2332/freya/blob/main/examples/feature_multi_window_router.rs).
+//! See the [basic router example](https://github.com/freya-rs/freya/blob/main/examples/feature_router.rs),
+//! [nested routes and history example](https://github.com/freya-rs/freya/blob/main/examples/feature_router_complex.rs),
+//! and [shared multi-window router example](https://github.com/freya-rs/freya/blob/main/examples/feature_multi_window_router.rs).
 //!
 //! # Example
 //!
