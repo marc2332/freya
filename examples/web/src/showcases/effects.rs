@@ -75,7 +75,7 @@ impl Component for EffectsShowcase {
                     .center()
                     .color((255, 255, 255))
                     .font_size(20.)
-                    .child("github.com/marc2332/freya"),
+                    .child("github.com/freya-rs/freya"),
             )
     }
 }

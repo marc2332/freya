@@ -101,8 +101,8 @@ fn app() -> impl IntoElement {
 
 ## Examples
 
-- [Counter Example](https://github.com/marc2332/freya/blob/main/examples/counter.rs): Basic counter with state management
-- [All Examples](https://github.com/marc2332/freya/tree/main/examples): Complete collection of examples including components, animations, layouts, and more
+- [Counter Example](https://github.com/freya-rs/freya/blob/main/examples/counter.rs): Basic counter with state management
+- [All Examples](https://github.com/freya-rs/freya/tree/main/examples): Complete collection of examples including components, animations, layouts, and more
 - [Freya Template](https://github.com/marc2332/freya-template): Starter template for new projects
 
 ## Community
@@ -112,5 +112,5 @@ fn app() -> impl IntoElement {
 
 ## Optional
 
-- [Contributing Guide](https://github.com/marc2332/freya/blob/main/CONTRIBUTING.md): Guidelines for contributors
-- [GitHub Repository](https://github.com/marc2332/freya): Source code and issues
+- [Contributing Guide](https://github.com/freya-rs/freya/blob/main/CONTRIBUTING.md): Guidelines for contributors
+- [GitHub Repository](https://github.com/freya-rs/freya): Source code and issues

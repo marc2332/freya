@@ -11,11 +11,11 @@ slug: "announcement"
 
 ## hey 👋
 
-I'm [Marc](https://github.com/marc2332/) and I am happy to announce the first alpha (**v0.1**) of [**Freya**](https://github.com/marc2332/freya), an experimental cross-platform native GUI library for 🦀 [Rust](https://www.rust-lang.org/), built on top of **🧬** [**Dioxus**](https://dioxuslabs.com/) and powered by the 🖼️ [Skia](https://skia.org/) library.
+I'm [Marc](https://github.com/marc2332/) and I am happy to announce the first alpha (**v0.1**) of [**Freya**](https://github.com/freya-rs/freya), an experimental cross-platform native GUI library for 🦀 [Rust](https://www.rust-lang.org/), built on top of **🧬** [**Dioxus**](https://dioxuslabs.com/) and powered by the 🖼️ [Skia](https://skia.org/) library.
 
 * Website: [freyaui.dev/](https://freyaui.dev/)
     
-* Source Code: [github.com/marc2332/freya](https://github.com/marc2332/freya)
+* Source Code: [github.com/freya-rs/freya](https://github.com/freya-rs/freya)
     
 * Guides: [Freya documentation](https://docs.rs/freya/latest/freya/_docs/index.html)
     
@@ -23,7 +23,7 @@ I'm [Marc](https://github.com/marc2332/) and I am happy to announce the first al
     
 * Stable API docs: [docs.rs/freya/latest/freya/](https://docs.rs/freya/latest/freya/)
     
-* Development source: [Freya on GitHub](https://github.com/marc2332/freya)
+* Development source: [Freya on GitHub](https://github.com/freya-rs/freya)
     
 
 ### What is Freya 🦀 ?
@@ -32,7 +32,7 @@ I'm [Marc](https://github.com/marc2332/) and I am happy to announce the first al
 
 #### **Do you want to try it?**
 
-Read [this](https://github.com/marc2332/freya#want-to-try-it-). Just be aware that it is still in the ⚠️ experimentation phase, I would like this first release to be an opportunity to gather feedback, suggestions, new contributions and ideas!
+Read [this](https://github.com/freya-rs/freya#want-to-try-it-). Just be aware that it is still in the ⚠️ experimentation phase, I would like this first release to be an opportunity to gather feedback, suggestions, new contributions and ideas!
 
 ### What is Dioxus 🧬 ?
 
@@ -64,7 +64,7 @@ Read [this](https://github.com/marc2332/freya#want-to-try-it-). Just be aware th
 
 ## Example
 
-Here there is a simple counter app with Freya (source code [here](https://github.com/marc2332/freya/blob/main/examples/counter.rs)):
+Here there is a simple counter app with Freya (source code [here](https://github.com/freya-rs/freya/blob/main/examples/counter.rs)):
 
 ```rust
 fn app(cx: Scope) -> Element {
@@ -231,13 +231,13 @@ You can do:
 
 ## 🤓 Complex examples
 
-For simpler examples see the Freya [repository](https://github.com/marc2332/freya/tree/main/examples).
+For simpler examples see the Freya [repository](https://github.com/freya-rs/freya/tree/main/examples).
 
 [**Freya-editor**](https://github.com/marc2332/freya-editor): An experimental code editor.
 
 ![Freya Editor](/blog/announcement/freya_editor.jpg)
 
-[**Canvas**](https://github.com/marc2332/freya/blob/main/examples/canvas.rs): A canvas for floating editors that you can drag around.
+[**Canvas**](https://github.com/freya-rs/freya/blob/main/examples/canvas.rs): A canvas for floating editors that you can drag around.
 
 ![Canvas](/blog/announcement/canvas.png)
 
@@ -262,6 +262,6 @@ Make sure to give [Dioxus](https://dioxuslabs.com/) some love, [Jonathan](https:
 
 Also thanks to [Armin](https://github.com/pragmatrix) for his amazing work in [rust-skia](https://github.com/rust-skia/rust-skia) and help with issues and doubts 💪, and [Tropix126](https://github.com/Tropix126) for his work in new styling features like more font customization, better rounded corners, better shadows and a few more things 💯 !
 
-You can leave a star ⭐ in the [repository](https://github.com/marc2332/freya) or sponsor me on [GitHub Sponsors](https://github.com/sponsors/marc2332) if you want 💖. You can join the [**Discord**](https://discord.gg/sYejxCdewG) server or follow me on 🐦 [Twitter](https://twitter.com/mkenzo_8), I usually share the progress I make in Freya.
+You can leave a star ⭐ in the [repository](https://github.com/freya-rs/freya) or sponsor me on [GitHub Sponsors](https://github.com/sponsors/marc2332) if you want 💖. You can join the [**Discord**](https://discord.gg/sYejxCdewG) server or follow me on 🐦 [Twitter](https://twitter.com/mkenzo_8), I usually share the progress I make in Freya.
 
 Thanks!
