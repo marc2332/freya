@@ -221,22 +221,19 @@ impl AccessibilityTree {
             added_or_updated_ids.insert(*node_parent_id);
         }
 
-        let has_request_focus = requested_focus.is_some();
-
         // Return focus to the root when the focused node is removed or disabled.
         if !self.can_focus(self.focused_id, tree) {
             self.focused_id = ACCESSIBILITY_ROOT_ID;
         }
 
-        // Focus the requested node id if there is one
         if let Some(requested_focus) = requested_focus {
+            let previous_focus = self.focused_id;
             self.focus_node_with_strategy(requested_focus, tree);
-        }
-
-        if let Some(node_id) = self.focused_node_id()
-            && has_request_focus
-        {
-            self.scroll_to(node_id, tree, events_sender);
+            if self.focused_id != previous_focus
+                && let Some(node_id) = self.focused_node_id()
+            {
+                self.scroll_to(node_id, tree, events_sender);
+            }
         }
 
         added_or_updated_ids
