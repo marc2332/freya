@@ -7,6 +7,8 @@ publish = false
 workspace = true
 
 [features]
+default = ["gpu"]
+gpu = ["freya/gpu"]
 hotpath = ["freya/hotpath"]
 hotreload = ["freya/hotreload"]
 hotpath-alloc = ["hotpath/hotpath-alloc"]
@@ -153,7 +155,7 @@ euclid = "0.22.9"
 itertools = "0.14.0"
 
 # Rendering
-freya-skia-safe = { version = "0.105.0-beta.1", features = [
+freya-skia-safe = { version = "0.105.0-beta.5", features = [
   "textlayout",
   "svg",
   "webp",
@@ -203,7 +205,9 @@ rodio = { version = "0.20", default-features = false }
 tokio = { version = "1.0", default-features = false }
 
 [dev-dependencies]
-freya = { workspace = true, features = ["all-crossplatform"] }
+freya = { path = "./crates/freya", default-features = false, features = [
+  "all-crossplatform-cpu",
+] }
 freya-core = { workspace = true, features = ["debug-integrity", "test"] }
 freya-engine = { workspace = true }
 torin = { workspace = true }
@@ -252,6 +256,12 @@ redundant_clone = "warn"
 [profile.release]
 lto = true
 opt-level = 3
+
+[profile.size-release]
+inherits = "release"
+opt-level = "z"
+panic = "abort"
+strip = "symbols"
 
 [profile.bench]
 lto = true
