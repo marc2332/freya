@@ -53,10 +53,12 @@ fn combobox_uses_its_own_input_and_dropdown_colors() {
     );
     let has_background = |runner: &TestingRunner, color| {
         runner
-            .find(|_, element| match &Rect::try_downcast(element)?.style.background {
-                Fill::Color(background) if *background == color => Some(()),
-                _ => None,
-            })
+            .find(
+                |_, element| match &Rect::try_downcast(element)?.style.background {
+                    Fill::Color(background) if *background == color => Some(()),
+                    _ => None,
+                },
+            )
             .is_some()
     };
 
