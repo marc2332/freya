@@ -199,7 +199,6 @@ impl Component for Preview {
                     rect()
                         .width(Size::fill())
                         .spacing(8.)
-                        .child(label().overline().text("TYPOGRAPHY"))
                         .child(label().title().text("Some title"))
                         .child(
                             label()
