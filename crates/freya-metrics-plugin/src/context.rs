@@ -57,10 +57,10 @@ impl MetricsContext {
             return;
         }
 
-        drop(self.renderer.post_callback(|renderer| {
+        let _receiver = self.renderer.post_callback(|renderer| {
             for window in renderer.windows().values() {
                 window.window().request_redraw();
             }
-        }));
+        });
     }
 }
