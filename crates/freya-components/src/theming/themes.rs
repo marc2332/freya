@@ -31,7 +31,8 @@ use crate::{
     },
     floating_tab::FloatingTabThemePreference,
     icons::{
-        ICON_SIZE_VAR,
+        IconSize,
+        IconTheme,
         IconThemePreference,
     },
     input::{
@@ -372,7 +373,9 @@ fn register_base_component_themes(theme: &mut Theme) {
         "switch_layout",
         SwitchLayoutThemePreference {
             margin: Preference::Specific(Gaps::new_all(0.)),
-            padding: PaddingRole::TIGHT_SLIGHTLY_WIDE.into(),
+            width: Preference::Specific(48.),
+            height: Preference::Specific(28.),
+            padding: Preference::Specific(4.),
             thumb_size: Preference::Specific(16.),
             toggled_thumb_size: Preference::Specific(20.),
             pressed_thumb_size_offset: Preference::Specific(4.),
@@ -384,7 +387,9 @@ fn register_base_component_themes(theme: &mut Theme) {
         "expanded_switch_layout",
         SwitchLayoutThemePreference {
             margin: Preference::Specific(Gaps::new_all(0.)),
-            padding: PaddingRole::TIGHT_SLIGHTLY_WIDE.into(),
+            width: Preference::Specific(56.),
+            height: Preference::Specific(32.),
+            padding: Preference::Specific(4.),
             thumb_size: Preference::Specific(18.),
             toggled_thumb_size: Preference::Specific(22.),
             pressed_thumb_size_offset: Preference::Specific(4.),
@@ -636,7 +641,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "icon",
         IconThemePreference {
             fill: Preference::Reference(ColorRole::TextPrimary.key()),
-            size: Preference::Reference(ICON_SIZE_VAR),
+            size: Preference::Reference(IconTheme::size_key()),
         },
     );
     theme.set_theme(
@@ -775,7 +780,7 @@ fn build_theme(name: &'static str, colors: &[(ColorRole, Color)]) -> Theme {
     TypographyScale::default().apply_to(&mut variables);
     CornerRadiusScale::default().apply_to(&mut variables);
     PaddingScale::default().apply_to(&mut variables);
-    variables.set(ICON_SIZE_VAR, 10_f32);
+    IconSize::default().apply_to(&mut variables);
     if let Some(primary) = current_accent_color() {
         variables.set(ColorRole::Primary.key(), primary);
         variables.set(

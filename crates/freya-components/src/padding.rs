@@ -41,7 +41,6 @@ impl PaddingRole {
     pub const STANDARD: Self = Self::new("padding.standard", 8., 8.);
     pub const RELAXED: Self = Self::new("padding.relaxed", 12., 12.);
     pub const SPACIOUS: Self = Self::new("padding.spacious", 16., 16.);
-    pub const TIGHT_SLIGHTLY_WIDE: Self = Self::new("padding.tight_slightly_wide", 4., 5.);
     pub const TIGHT_WIDE: Self = Self::new("padding.tight_wide", 4., 8.);
     pub const COMPACT_WIDE: Self = Self::new("padding.compact_wide", 6., 12.);
     pub const STANDARD_WIDE: Self = Self::new("padding.standard_wide", 8., 12.);
@@ -53,7 +52,6 @@ impl PaddingRole {
         Self::STANDARD,
         Self::RELAXED,
         Self::SPACIOUS,
-        Self::TIGHT_SLIGHTLY_WIDE,
         Self::TIGHT_WIDE,
         Self::COMPACT_WIDE,
         Self::STANDARD_WIDE,

@@ -4,10 +4,8 @@ use torin::gaps::Gaps;
 use crate::{
     get_theme,
     icons::{
-        IconTheme,
         IconThemePartial,
         IconThemePreference,
-        icon_dimension,
     },
     svg_viewer::SvgViewer,
 };
@@ -48,7 +46,7 @@ impl TickIcon {
 
 impl Component for TickIcon {
     fn render(&self) -> impl IntoElement {
-        let IconTheme { fill, size } = get_theme!(&self.theme, IconThemePreference, "icon");
+        let theme = get_theme!(&self.theme, IconThemePreference, "icon");
         SvgViewer::new(
             r#"
             <svg viewBox="0 0 333 263" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -58,9 +56,9 @@ impl Component for TickIcon {
         "#
             .as_bytes(),
         )
-        .width(icon_dimension(&self.layout.width, size))
-        .height(icon_dimension(&self.layout.height, size))
+        .width(theme.dimension(&self.layout.width))
+        .height(theme.dimension(&self.layout.height))
         .margin(self.layout.margin)
-        .fill(fill)
+        .fill(theme.fill)
     }
 }

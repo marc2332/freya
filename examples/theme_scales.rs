@@ -20,13 +20,13 @@ fn app() -> impl IntoElement {
     let mut font_slider = use_state(|| 30.);
     let mut padding_slider = use_state(|| 50.);
     let mut radius_slider = use_state(|| 40.);
-    let (is_dark, icon_size) = {
-        let theme = theme.read();
-        (theme.name == "dark", *theme.get_var::<f32>(ICON_SIZE_VAR))
-    };
+    let mut icon_slider = use_state(|| (10. - 6.) * 5.);
+
+    let is_dark = theme.read().name == "dark";
     let font_size = 10. + font_slider() / 5.;
     let padding_percent = 50. + padding_slider();
     let base_radius = radius_slider() / 5.;
+    let icon_size = (6. + icon_slider() / 5.) as f32;
 
     rect()
         .theme_background()
@@ -88,62 +88,99 @@ fn app() -> impl IntoElement {
                                                         ..CornerRadiusScale::default()
                                                     }
                                                     .apply_to(&mut next_theme.variables);
-                                                    next_theme.set_var(ICON_SIZE_VAR, icon_size);
+                                                    IconSize(icon_size)
+                                                        .apply_to(&mut next_theme.variables);
                                                     theme.set(next_theme);
                                                 },
                                             ))),
                                     )
-                                    .child(control(
-                                        format!("Base font size: {font_size:.0} px"),
-                                        Slider::new(move |value| {
-                                            font_slider.set_if_modified_and_then(value, || {
-                                                TypographyScale {
-                                                    base_size: (10. + value / 5.) as f32,
-                                                    ..TypographyScale::default()
-                                                }
-                                                .apply_to(&mut theme.write().variables);
-                                            });
-                                        })
-                                        .value(font_slider())
-                                        .step(5.),
-                                    ))
-                                    .child(control(
-                                        format!("Component padding: {padding_percent:.0}%"),
-                                        Slider::new(move |value| {
-                                            padding_slider.set_if_modified_and_then(value, || {
-                                                PaddingScale {
-                                                    factor: (0.5 + value / 100.) as f32,
-                                                }
-                                                .apply_to(&mut theme.write().variables);
-                                            });
-                                        })
-                                        .value(padding_slider())
-                                        .step(1.),
-                                    ))
-                                    .child(control(
-                                        format!("Base corner radius: {base_radius:.0} px"),
-                                        Slider::new(move |value| {
-                                            radius_slider.set_if_modified_and_then(value, || {
-                                                CornerRadiusScale {
-                                                    base_radius: (value / 5.) as f32,
-                                                    ..CornerRadiusScale::default()
-                                                }
-                                                .apply_to(&mut theme.write().variables);
-                                            });
-                                        })
-                                        .value(radius_slider())
-                                        .step(5.),
-                                    ))
-                                    .child(control(
-                                        format!("Icon size: {icon_size:.0} px"),
-                                        Slider::new(move |value| {
-                                            theme
-                                                .write()
-                                                .set_var(ICON_SIZE_VAR, 6. + value as f32 / 5.);
-                                        })
-                                        .value(f64::from(icon_size - 6.) * 5.)
-                                        .step(5.),
-                                    ))
+                                    .child(
+                                        rect()
+                                            .width(Size::fill())
+                                            .child(format!("Base font size: {font_size:.0} px"))
+                                            .child(
+                                                Slider::new(move |value| {
+                                                    font_slider.set_if_modified_and_then(
+                                                        value,
+                                                        || {
+                                                            TypographyScale {
+                                                                base_size: (10. + value / 5.)
+                                                                    as f32,
+                                                                ..TypographyScale::default()
+                                                            }
+                                                            .apply_to(&mut theme.write().variables);
+                                                        },
+                                                    );
+                                                })
+                                                .value(font_slider())
+                                                .step(5.),
+                                            ),
+                                    )
+                                    .child(
+                                        rect()
+                                            .width(Size::fill())
+                                            .child(format!(
+                                                "Component padding: {padding_percent:.0}%"
+                                            ))
+                                            .child(
+                                                Slider::new(move |value| {
+                                                    padding_slider.set_if_modified_and_then(
+                                                        value,
+                                                        || {
+                                                            PaddingScale {
+                                                                factor: (0.5 + value / 100.) as f32,
+                                                            }
+                                                            .apply_to(&mut theme.write().variables);
+                                                        },
+                                                    );
+                                                })
+                                                .value(padding_slider())
+                                                .step(1.),
+                                            ),
+                                    )
+                                    .child(
+                                        rect()
+                                            .width(Size::fill())
+                                            .child(format!(
+                                                "Base corner radius: {base_radius:.0} px"
+                                            ))
+                                            .child(
+                                                Slider::new(move |value| {
+                                                    radius_slider.set_if_modified_and_then(
+                                                        value,
+                                                        || {
+                                                            CornerRadiusScale {
+                                                                base_radius: (value / 5.) as f32,
+                                                                ..CornerRadiusScale::default()
+                                                            }
+                                                            .apply_to(&mut theme.write().variables);
+                                                        },
+                                                    );
+                                                })
+                                                .value(radius_slider())
+                                                .step(5.),
+                                            ),
+                                    )
+                                    .child(
+                                        rect()
+                                            .width(Size::fill())
+                                            .child(format!("Icon size: {icon_size:.0} px"))
+                                            .child(
+                                                Slider::new(move |value| {
+                                                    icon_slider.set_if_modified_and_then(
+                                                        value,
+                                                        || {
+                                                            IconSize((6. + value / 5.) as f32)
+                                                                .apply_to(
+                                                                    &mut theme.write().variables,
+                                                                );
+                                                        },
+                                                    );
+                                                })
+                                                .value(icon_slider())
+                                                .step(5.),
+                                            ),
+                                    )
                                     .child(
                                         Button::new()
                                             .flat()
@@ -151,6 +188,7 @@ fn app() -> impl IntoElement {
                                                 font_slider.set(30.);
                                                 padding_slider.set(50.);
                                                 radius_slider.set(40.);
+                                                icon_slider.set((10. - 6.) * 5.);
                                                 theme.set(if is_dark {
                                                     dark_theme()
                                                 } else {
@@ -163,10 +201,6 @@ fn app() -> impl IntoElement {
                         ),
                 ),
         )
-}
-
-fn control(text: String, slider: Slider) -> impl IntoElement {
-    rect().width(Size::fill()).child(text).child(slider)
 }
 
 #[derive(Default, PartialEq)]
@@ -184,7 +218,6 @@ impl Component for Preview {
     fn render(&self) -> impl IntoElement {
         let name = use_state(String::new);
         let mut selected = use_state(|| "Rust");
-        let enabled = use_state(|| true);
 
         rect()
             .width(Size::fill())
@@ -232,8 +265,6 @@ impl Component for Preview {
                                 .horizontal()
                                 .cross_align(Alignment::center())
                                 .spacing(12.)
-                                .child(Switch::new(enabled))
-                                .child("Enabled")
                                 .child(ArrowIcon::new())
                                 .child(TickIcon::new()),
                         ),
