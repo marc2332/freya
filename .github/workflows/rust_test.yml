@@ -59,6 +59,7 @@ jobs:
       run: just t
     - name: Install FFmpeg on Windows
       if: runner.os == 'Windows'
+      continue-on-error: true
       shell: pwsh
       run: |
         choco install ffmpeg --yes --no-progress
