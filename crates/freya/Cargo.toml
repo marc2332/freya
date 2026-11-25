@@ -22,9 +22,9 @@ no-default-features = true
 default = ["winit", "gpu", "accessibility", "platform-text-gamma"]
 # Shortcuts
 all = ["all-crossplatform", "tray", "html", "camera", "video"]
-all-crossplatform = [
+all-crossplatform = ["all-crossplatform-cpu", "gpu"]
+all-crossplatform-cpu = [
   "winit",
-  "gpu",
   "accessibility",
   "platform-text-gamma",
   "router",
