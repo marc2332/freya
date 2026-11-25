@@ -1,9 +1,5 @@
 use freya_core::prelude::*;
-use torin::{
-    gaps::Gaps,
-    node::Node,
-    size::Size,
-};
+use torin::gaps::Gaps;
 
 use crate::{
     get_theme,
@@ -11,6 +7,7 @@ use crate::{
         IconTheme,
         IconThemePartial,
         IconThemePreference,
+        icon_dimension,
     },
     svg_viewer::SvgViewer,
 };
@@ -39,12 +36,7 @@ impl ContainerSizeExt for ArrowIcon {}
 impl ArrowIcon {
     pub fn new() -> Self {
         Self {
-            layout: Node {
-                width: Size::px(10.),
-                height: Size::px(10.),
-                ..Default::default()
-            }
-            .into(),
+            layout: LayoutData::default(),
             theme: None,
             rotate: None,
         }
@@ -63,11 +55,19 @@ impl ArrowIcon {
 
 impl Component for ArrowIcon {
     fn render(&self) -> impl IntoElement {
-        let IconTheme { fill } = get_theme!(&self.theme, IconThemePreference, "icon");
-        SvgViewer::new(r#"
+        let IconTheme { fill, size } = get_theme!(&self.theme, IconThemePreference, "icon");
+        SvgViewer::new(
+            r#"
             <svg viewBox="0 0 18 12" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M7.18177 9.58579L0 2.40401L1.81823 0.585785L9 7.76756L16.1818 0.585787L18 2.40402L10.8182 9.58579L10.8185 9.58601L9.00023 11.4042L9 11.404L8.99977 11.4042L7.18154 9.58602L7.18177 9.58579Z"/>
             </svg>
-        "#.as_bytes()).map(self.rotate, |el, data| el.rotation(data)).width(self.layout.width.clone()).height(self.layout.height.clone()).margin(self.layout.margin).fill(fill)
+        "#
+            .as_bytes(),
+        )
+        .map(self.rotate, |el, rotation| el.rotation(rotation))
+        .width(icon_dimension(&self.layout.width, size))
+        .height(icon_dimension(&self.layout.height, size))
+        .margin(self.layout.margin)
+        .fill(fill)
     }
 }

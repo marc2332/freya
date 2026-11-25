@@ -15,6 +15,7 @@ use freya_components::link::{
 use freya_components::{
     define_theme,
     get_theme_or_default,
+    padding::PaddingRole,
     table::{
         Table,
         TableRow,
@@ -63,6 +64,8 @@ define_theme! {
         paragraph_size: f32,
         code_font_size: f32,
         table_font_size: f32,
+        code_block_padding: Gaps,
+        blockquote_padding: Gaps,
     }
 }
 
@@ -84,6 +87,8 @@ fn markdown_theme_preference() -> MarkdownViewerThemePreference {
         paragraph_size: Preference::Specific(16.0),
         code_font_size: Preference::Specific(14.0),
         table_font_size: Preference::Specific(14.0),
+        code_block_padding: PaddingRole::RELAXED.into(),
+        blockquote_padding: PaddingRole::RELAXED.into(),
     }
 }
 
@@ -648,10 +653,7 @@ fn render_spans(
 /// Render a list and, recursively, the lists nested under its items.
 fn render_list(
     list: &List,
-    paragraph_size: f32,
-    color: Color,
-    color_link: Color,
-    color_code: Color,
+    theme: &MarkdownViewerTheme,
     inline_element: Option<&Callback<String, Option<Element>>>,
 ) -> Rect {
     rect()
@@ -670,8 +672,8 @@ fn render_list(
                             Some(start) => format!("{}.", start + item_idx as u64),
                             None => "•".to_string(),
                         })
-                        .font_size(paragraph_size)
-                        .color(color),
+                        .font_size(theme.paragraph_size)
+                        .color(theme.color),
                 )
                 .child(
                     rect()
@@ -679,22 +681,17 @@ fn render_list(
                         .spacing(4.)
                         .child(render_content(
                             &item.content,
-                            paragraph_size,
-                            color,
-                            color_link,
-                            color_code,
+                            theme.paragraph_size,
+                            theme.color,
+                            theme.color_link,
+                            theme.color_code,
                             inline_element,
                         ))
-                        .children(item.nested_lists.iter().map(|nested_list| {
-                            render_list(
-                                nested_list,
-                                paragraph_size,
-                                color,
-                                color_link,
-                                color_code,
-                                inline_element,
-                            )
-                        })),
+                        .children(
+                            item.nested_lists
+                                .iter()
+                                .map(|nested_list| render_list(nested_list, theme, inline_element)),
+                        ),
                 )
         }))
 }
@@ -788,13 +785,17 @@ impl Component for MarkdownViewer {
     fn render(&self) -> impl IntoElement {
         let elements = parse_markdown(&self.content);
 
+        let theme = get_theme_or_default!(
+            &self.theme,
+            MarkdownViewerThemePreference,
+            "markdown_viewer",
+            markdown_theme_preference
+        );
         let MarkdownViewerTheme {
             color,
             color_link,
             #[cfg(not(feature = "code-editor"))]
             background_code,
-            #[cfg(feature = "code-editor")]
-                background_code: _,
             color_code,
             background_blockquote,
             border_blockquote,
@@ -808,12 +809,8 @@ impl Component for MarkdownViewer {
             paragraph_size,
             code_font_size,
             table_font_size,
-        } = get_theme_or_default!(
-            &self.theme,
-            MarkdownViewerThemePreference,
-            "markdown_viewer",
-            markdown_theme_preference
-        );
+            ..
+        } = theme;
 
         let mut container = rect().vertical().layout(self.layout.clone()).spacing(12.);
 
@@ -867,7 +864,7 @@ impl Component for MarkdownViewer {
                         .width(Size::fill())
                         .background(background_code)
                         .corner_radius(6.)
-                        .padding(Gaps::new_all(12.))
+                        .padding(theme.code_block_padding)
                         .child(
                             label()
                                 .text(code)
@@ -879,16 +876,11 @@ impl Component for MarkdownViewer {
 
                     element
                 }
-                MarkdownElement::List(list) => render_list(
-                    &list,
-                    paragraph_size,
-                    color,
-                    color_link,
-                    color_code,
-                    self.inline_element.as_ref(),
-                )
-                .key(idx)
-                .into(),
+                MarkdownElement::List(list) => {
+                    render_list(&list, &theme, self.inline_element.as_ref())
+                        .key(idx)
+                        .into()
+                }
                 MarkdownElement::Image { url, alt } => rect()
                     .key(idx)
                     .child(render_image(&url, &alt, color))
@@ -933,7 +925,7 @@ impl Component for MarkdownViewer {
                 MarkdownElement::Blockquote { content } => rect()
                     .key(idx)
                     .width(Size::fill())
-                    .padding(Gaps::new(12., 12., 12., 16.))
+                    .padding(theme.blockquote_padding)
                     .border(
                         Border::new()
                             .width(4.)

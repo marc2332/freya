@@ -19,6 +19,7 @@ define_theme! {
         selected_fill: Color,
         selected_icon_fill: Color,
         border_fill: Color,
+        padding: Gaps,
     }
 }
 
@@ -106,6 +107,7 @@ impl Component for Checkbox {
             unselected_fill,
             selected_fill,
             selected_icon_fill,
+            padding,
         } = get_theme!(&self.theme, CheckboxThemePreference, "checkbox");
 
         let animation = use_animation_with_dependencies(&self.selected, move |conf, selected| {
@@ -161,7 +163,7 @@ impl Component for Checkbox {
             .a11y_role(AccessibilityRole::CheckBox)
             .width(Size::px(self.size))
             .height(Size::px(self.size))
-            .padding(Gaps::new_all(4.0))
+            .padding(padding)
             .main_align(Alignment::center())
             .cross_align(Alignment::center())
             .corner_radius(CornerRadius::new_all(self.size * 0.24))

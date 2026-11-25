@@ -41,7 +41,7 @@
 //! # }
 //! ```
 //!
-//! Example: [typography and themed elements](https://github.com/marc2332/freya/blob/main/examples/theme_typography.rs).
+//! Example: [interactive typography, padding, and corner radius](https://github.com/marc2332/freya/blob/main/examples/theme_scales.rs).
 //!
 //! ## 3. Set custom theme values
 //!
@@ -61,6 +61,7 @@
 //!             ..CornerRadiusScale::default()
 //!         }
 //!         .apply_to(&mut theme.variables);
+//!         PaddingScale { factor: 0.875 }.apply_to(&mut theme.variables);
 //!         theme
 //!     });
 //!
@@ -74,11 +75,12 @@
 //! }
 //! ```
 //!
-//! The filled button uses the overridden primary color and radius scale. The badge reads
-//! the custom background directly.
+//! The filled button uses the overridden primary color, radius scale, and padding scale.
+//! Replace a single shared padding value with [`PaddingRole`](crate::prelude::PaddingRole)
+//! and `Theme::set_var`, or use a component's `padding` builder for an instance override.
 //!
 //! Examples: [custom accent colors](https://github.com/marc2332/freya/blob/main/examples/theme_color_accent.rs),
-//! [corner radius scale](https://github.com/marc2332/freya/blob/main/examples/theme_corner_radius.rs).
+//! [interactive theme scales](https://github.com/marc2332/freya/blob/main/examples/theme_scales.rs).
 //!
 //! ## 4. Define a custom component theme
 //!

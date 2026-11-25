@@ -30,7 +30,10 @@ use crate::{
         CornerRadiusScale,
     },
     floating_tab::FloatingTabThemePreference,
-    icons::IconThemePreference,
+    icons::{
+        ICON_SIZE_VAR,
+        IconThemePreference,
+    },
     input::{
         InputColorsThemePreference,
         InputLayoutThemePreference,
@@ -40,7 +43,12 @@ use crate::{
         MenuContainerThemePreference,
         MenuItemThemePreference,
     },
+    padding::{
+        PaddingRole,
+        PaddingScale,
+    },
     popup::{
+        PopupButtonsThemePreference,
         PopupContentThemePreference,
         PopupThemePreference,
         PopupTitleThemePreference,
@@ -72,6 +80,7 @@ use crate::{
         },
         macros::Preference,
     },
+    tile::TileThemePreference,
     tooltip::TooltipThemePreference,
     typography::{
         TextRole,
@@ -236,7 +245,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "button_layout",
         ButtonLayoutThemePreference {
             font_size: Preference::Reference(TextRole::Control.key()),
-            padding: Preference::Specific(Gaps::new(6., 12., 6., 12.)),
+            padding: PaddingRole::COMPACT_WIDE.into(),
             margin: Preference::Specific(Gaps::new_all(0.)),
             corner_radius: Preference::Reference(CornerRadiusRole::Md.key()),
             width: Preference::Specific(Size::Inner),
@@ -247,7 +256,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "compact_button_layout",
         ButtonLayoutThemePreference {
             font_size: Preference::Reference(TextRole::Control.key()),
-            padding: Preference::Specific(Gaps::new(3., 6., 3., 6.)),
+            padding: PaddingRole::TIGHT_WIDE.into(),
             margin: Preference::Specific(Gaps::new_all(0.)),
             corner_radius: Preference::Reference(CornerRadiusRole::Md.key()),
             width: Preference::Specific(Size::Inner),
@@ -258,7 +267,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "expanded_button_layout",
         ButtonLayoutThemePreference {
             font_size: Preference::Reference(TextRole::Control.key()),
-            padding: Preference::Specific(Gaps::new(10., 16., 10., 16.)),
+            padding: PaddingRole::RELAXED_WIDE.into(),
             margin: Preference::Specific(Gaps::new_all(0.)),
             corner_radius: Preference::Reference(CornerRadiusRole::Md.key()),
             width: Preference::Specific(Size::Inner),
@@ -308,14 +317,14 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set_theme(
         "card_layout",
         CardLayoutThemePreference {
-            padding: Preference::Specific(Gaps::new(16., 16., 16., 16.)),
+            padding: PaddingRole::SPACIOUS.into(),
             corner_radius: Preference::Reference(CornerRadiusRole::Md.key()),
         },
     );
     theme.set_theme(
         "compact_card_layout",
         CardLayoutThemePreference {
-            padding: Preference::Specific(Gaps::new(8., 12., 8., 12.)),
+            padding: PaddingRole::STANDARD_WIDE.into(),
             corner_radius: Preference::Reference(CornerRadiusRole::Md.key()),
         },
     );
@@ -346,6 +355,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             color: Preference::Reference(ColorRole::TextPrimary.key()),
             background: Preference::Reference(ColorRole::SurfaceTertiary.key()),
             border_fill: Preference::Reference(ColorRole::Border.key()),
+            padding: PaddingRole::STANDARD.into(),
         },
     );
     theme.set_theme(
@@ -362,9 +372,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "switch_layout",
         SwitchLayoutThemePreference {
             margin: Preference::Specific(Gaps::new_all(0.)),
-            width: Preference::Specific(48.),
-            height: Preference::Specific(28.),
-            padding: Preference::Specific(4.),
+            padding: PaddingRole::TIGHT_SLIGHTLY_WIDE.into(),
             thumb_size: Preference::Specific(16.),
             toggled_thumb_size: Preference::Specific(20.),
             pressed_thumb_size_offset: Preference::Specific(4.),
@@ -376,9 +384,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "expanded_switch_layout",
         SwitchLayoutThemePreference {
             margin: Preference::Specific(Gaps::new_all(0.)),
-            width: Preference::Specific(56.),
-            height: Preference::Specific(32.),
-            padding: Preference::Specific(4.),
+            padding: PaddingRole::TIGHT_SLIGHTLY_WIDE.into(),
             thumb_size: Preference::Specific(18.),
             toggled_thumb_size: Preference::Specific(22.),
             pressed_thumb_size_offset: Preference::Specific(4.),
@@ -422,7 +428,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             focus_border_fill: Preference::Reference(ColorRole::BorderFocus.key()),
             corner_radius: Preference::Reference(CornerRadiusRole::Xl.key()),
             margin: Preference::Specific(Gaps::new_all(0.)),
-            padding: Preference::Specific(Gaps::new(8., 12., 8., 12.)),
+            padding: PaddingRole::STANDARD_WIDE.into(),
         },
     );
     #[cfg(feature = "router")]
@@ -440,6 +446,14 @@ fn register_base_component_themes(theme: &mut Theme) {
             color: Preference::Reference(ColorRole::TextPrimary.key()),
             border_fill: Preference::Reference(ColorRole::SurfacePrimary.key()),
             font_size: Preference::Reference(TextRole::Control.key()),
+            padding: PaddingRole::TIGHT_WIDE.into(),
+        },
+    );
+    theme.set_theme(
+        "tile",
+        TileThemePreference {
+            padding: PaddingRole::STANDARD.into(),
+            leading_padding: PaddingRole::TIGHT.into(),
         },
     );
     theme.set_theme(
@@ -453,7 +467,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         InputLayoutThemePreference {
             font_size: Preference::Reference(TextRole::Control.key()),
             corner_radius: Preference::Reference(CornerRadiusRole::Md.key()),
-            padding: Preference::Specific(Gaps::new(8., 8., 8., 8.)),
+            padding: PaddingRole::STANDARD.into(),
         },
     );
     theme.set_theme(
@@ -461,7 +475,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         InputLayoutThemePreference {
             font_size: Preference::Reference(TextRole::Control.key()),
             corner_radius: Preference::Reference(CornerRadiusRole::Md.key()),
-            padding: Preference::Specific(Gaps::new(4., 6., 4., 6.)),
+            padding: PaddingRole::TIGHT_WIDE.into(),
         },
     );
     theme.set_theme(
@@ -469,7 +483,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         InputLayoutThemePreference {
             font_size: Preference::Reference(TextRole::Control.key()),
             corner_radius: Preference::Reference(CornerRadiusRole::Md.key()),
-            padding: Preference::Specific(Gaps::new(12., 12., 12., 12.)),
+            padding: PaddingRole::RELAXED.into(),
         },
     );
     theme.set_theme(
@@ -508,6 +522,7 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set_theme(
         "radio",
         RadioItemThemePreference {
+            padding: PaddingRole::TIGHT.into(),
             unselected_fill: Preference::Reference(ColorRole::SurfaceInverseTertiary.key()),
             selected_fill: Preference::Reference(ColorRole::Primary.key()),
             border_fill: Preference::Reference(ColorRole::SurfacePrimary.key()),
@@ -516,6 +531,7 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set_theme(
         "checkbox",
         CheckboxThemePreference {
+            padding: PaddingRole::TIGHT.into(),
             unselected_fill: Preference::Reference(ColorRole::SurfaceInverseTertiary.key()),
             selected_fill: Preference::Reference(ColorRole::Primary.key()),
             selected_icon_fill: Preference::Reference(ColorRole::Secondary.key()),
@@ -537,7 +553,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             background: Preference::Specific(Color::TRANSPARENT),
             hover_background: Preference::Reference(ColorRole::SurfaceSecondary.key()),
             color: Preference::Reference(ColorRole::TextPrimary.key()),
-            padding: Preference::Specific(Gaps::new(6., 12., 6., 12.)),
+            padding: PaddingRole::COMPACT_WIDE.into(),
             width: Preference::Specific(Size::Inner),
             height: Preference::Specific(Size::Inner),
             corner_radius: CornerRadius::new_all(99.).into(),
@@ -555,6 +571,7 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set_theme(
         "color_picker",
         ColorPickerThemePreference {
+            padding: PaddingRole::STANDARD.into(),
             background: Preference::Reference(ColorRole::SurfaceTertiary.key()),
             border_fill: Preference::Reference(ColorRole::Border.key()),
             color: Preference::Reference(ColorRole::TextPrimary.key()),
@@ -566,6 +583,8 @@ fn register_base_component_themes(theme: &mut Theme) {
             corner_radius: Preference::Reference(CornerRadiusRole::Lg.key()),
             list_corner_radius: Preference::Reference(CornerRadiusRole::Xl.key()),
             font_size: Preference::Reference(TextRole::Control.key()),
+            padding: PaddingRole::STANDARD_WIDE.into(),
+            options_padding: PaddingRole::COMPACT.into(),
             width: Preference::Specific(Size::Inner),
             margin: Preference::Specific(Gaps::new_all(0.)),
             select_background: Preference::Reference(ColorRole::Background.key()),
@@ -580,13 +599,21 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set_theme(
         "popup_title",
         PopupTitleThemePreference {
+            padding: PaddingRole::STANDARD.into(),
             font_size: Preference::Reference(TextRole::Subtitle.key()),
         },
     );
     theme.set_theme(
         "popup_content",
         PopupContentThemePreference {
+            padding: PaddingRole::STANDARD.into(),
             font_size: Preference::Reference(TextRole::Content.key()),
+        },
+    );
+    theme.set_theme(
+        "popup_buttons",
+        PopupButtonsThemePreference {
+            padding: PaddingRole::STANDARD.into(),
         },
     );
     theme.set_theme(
@@ -601,7 +628,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             min_height: Preference::Specific(Size::auto()),
             max_width: Preference::Specific(Size::window_percent(90.)),
             max_height: Preference::Specific(Size::window_percent(90.)),
-            padding: Preference::Specific(Gaps::new_all(8.)),
+            padding: PaddingRole::STANDARD.into(),
             spacing: Preference::Specific(4.),
         },
     );
@@ -609,6 +636,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "icon",
         IconThemePreference {
             fill: Preference::Reference(ColorRole::TextPrimary.key()),
+            size: Preference::Reference(ICON_SIZE_VAR),
         },
     );
     theme.set_theme(
@@ -619,7 +647,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             hover_row_background: Preference::Reference(ColorRole::SurfaceSecondary.key()),
             divider_fill: Preference::Reference(ColorRole::SurfacePrimary.key()),
             corner_radius: Preference::Reference(CornerRadiusRole::Md.key()),
-            cell_padding: Preference::Specific(Gaps::new(8., 12., 8., 12.)),
+            cell_padding: PaddingRole::STANDARD_WIDE.into(),
             color: Preference::Reference(ColorRole::TextPrimary.key()),
         },
     );
@@ -634,7 +662,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             hover_border_fill: Preference::Reference(ColorRole::Tertiary.key()),
             selected_border_fill: Preference::Reference(ColorRole::Primary.key()),
             focus_border_fill: Preference::Reference(ColorRole::Secondary.key()),
-            padding: Preference::Specific(Gaps::new(8., 14., 8., 14.)),
+            padding: PaddingRole::STANDARD_WIDE.into(),
             margin: Preference::Specific(0.),
             corner_radius: CornerRadius::new_all(99.).into(),
             width: Preference::Specific(Size::Inner),
@@ -650,6 +678,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "menu_item",
         MenuItemThemePreference {
             font_size: Preference::Reference(TextRole::Control.key()),
+            padding: PaddingRole::COMPACT_WIDE.into(),
             background: Preference::Specific(Color::TRANSPARENT),
             hover_background: Preference::Reference(ColorRole::SurfaceSecondary.key()),
             select_background: Preference::Reference(ColorRole::SurfacePrimary.key()),
@@ -664,7 +693,7 @@ fn register_base_component_themes(theme: &mut Theme) {
         "menu_container",
         MenuContainerThemePreference {
             background: Preference::Reference(ColorRole::Background.key()),
-            padding: Preference::Specific(Gaps::new_all(6.)),
+            padding: PaddingRole::COMPACT.into(),
             shadow: Preference::Specific(Color::from((0, 0, 0, 0.25))),
             border_fill: Preference::Reference(ColorRole::SurfacePrimary.key()),
             corner_radius: Preference::Reference(CornerRadiusRole::Xl.key()),
@@ -680,8 +709,8 @@ fn register_base_component_themes(theme: &mut Theme) {
             disabled_background: Preference::Reference(ColorRole::Disabled.key()),
             selected_background: Preference::Reference(ColorRole::SurfaceSecondary.key()),
             focus_background: Preference::Reference(ColorRole::SurfacePrimary.key()),
-            padding: Preference::Specific(Gaps::new(6., 14., 6., 14.)),
-            selected_padding: Preference::Specific(Gaps::new(6., 14., 6., 14.)),
+            padding: PaddingRole::COMPACT_WIDE.into(),
+            selected_padding: PaddingRole::COMPACT_WIDE.into(),
             width: Preference::Specific(Size::Inner),
             height: Preference::Specific(Size::FillMinimum),
             color: Preference::Reference(ColorRole::TextPrimary.key()),
@@ -690,6 +719,7 @@ fn register_base_component_themes(theme: &mut Theme) {
     theme.set_theme(
         "segmented_button",
         SegmentedButtonThemePreference {
+            padding: PaddingRole::TIGHT.into(),
             background: Preference::Reference(ColorRole::Background.key()),
             border_fill: Preference::Reference(ColorRole::Border.key()),
             corner_radius: Preference::Reference(CornerRadiusRole::Xl.key()),
@@ -744,6 +774,8 @@ fn build_theme(name: &'static str, colors: &[(ColorRole, Color)]) -> Theme {
     }
     TypographyScale::default().apply_to(&mut variables);
     CornerRadiusScale::default().apply_to(&mut variables);
+    PaddingScale::default().apply_to(&mut variables);
+    variables.set(ICON_SIZE_VAR, 10_f32);
     if let Some(primary) = current_accent_color() {
         variables.set(ColorRole::Primary.key(), primary);
         variables.set(

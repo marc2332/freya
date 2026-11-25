@@ -283,6 +283,7 @@ define_theme! {
     pub PopupTitle {
         %[fields]
         font_size: f32,
+        padding: Gaps,
     }
 }
 
@@ -291,6 +292,16 @@ define_theme! {
     pub PopupContent {
         %[fields]
         font_size: f32,
+        padding: Gaps,
+    }
+}
+
+define_theme! {
+    %[no_ext]
+    %[component]
+    pub PopupButtons {
+        %[fields]
+        padding: Gaps,
     }
 }
 
@@ -322,12 +333,15 @@ impl Component for PopupTitle {
     fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, PopupTitleThemePreference, "popup_title");
 
-        rect().font_size(theme.font_size).padding(8.).child(
-            label()
-                .a11y_role(AccessibilityRole::TitleBar)
-                .width(Size::fill())
-                .text(self.text.read().to_string()),
-        )
+        rect()
+            .font_size(theme.font_size)
+            .padding(theme.padding)
+            .child(
+                label()
+                    .a11y_role(AccessibilityRole::TitleBar)
+                    .width(Size::fill())
+                    .text(self.text.read().to_string()),
+            )
     }
 
     fn render_key(&self) -> DiffKey {
@@ -367,7 +381,7 @@ impl Component for PopupContent {
 
         rect()
             .font_size(theme.font_size)
-            .padding(8.)
+            .padding(theme.padding)
             .children(self.children.clone())
     }
 
@@ -402,10 +416,16 @@ impl ChildrenExt for PopupButtons {
 
 impl Component for PopupButtons {
     fn render(&self) -> impl IntoElement {
+        let theme = get_theme!(
+            None::<PopupButtonsThemePartial>,
+            PopupButtonsThemePreference,
+            "popup_buttons"
+        );
+
         rect()
             .width(Size::fill())
             .main_align(Alignment::End)
-            .padding(8.)
+            .padding(theme.padding)
             .spacing(4.)
             .horizontal()
             .children(self.children.clone())

@@ -36,6 +36,7 @@ define_theme! {
         background: Color,
         border_fill: Color,
         corner_radius: CornerRadius,
+        padding: Gaps,
     }
 }
 
@@ -329,6 +330,7 @@ impl Component for SegmentedButton {
             background,
             border_fill,
             corner_radius,
+            padding,
         } = theme;
 
         rect()
@@ -340,7 +342,7 @@ impl Component for SegmentedButton {
                     .width(1.)
                     .alignment(BorderAlignment::Inner),
             )
-            .padding(4.)
+            .padding(padding)
             .spacing(4.)
             .corner_radius(corner_radius)
             .content(Content::Fit)

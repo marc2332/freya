@@ -14,6 +14,7 @@ define_theme! {
         unselected_fill: Color,
         selected_fill: Color,
         border_fill: Color,
+        padding: Gaps,
     }
 }
 
@@ -99,6 +100,7 @@ impl Component for RadioItem {
             unselected_fill,
             selected_fill,
             border_fill,
+            padding,
         } = get_theme!(&self.theme, RadioItemThemePreference, "radio");
 
         let animation = use_animation_with_dependencies(&self.selected, move |conf, selected| {
@@ -150,7 +152,7 @@ impl Component for RadioItem {
             .height(Size::px(self.size))
             .border(border)
             .border(focused_border)
-            .padding(Gaps::new_all(4.0))
+            .padding(padding)
             .main_align(Alignment::center())
             .cross_align(Alignment::center())
             .corner_radius(CornerRadius::new_all(99.))

@@ -1,9 +1,5 @@
 use freya_core::prelude::*;
-use torin::{
-    gaps::Gaps,
-    node::Node,
-    size::Size,
-};
+use torin::gaps::Gaps;
 
 use crate::{
     get_theme,
@@ -11,6 +7,7 @@ use crate::{
         IconTheme,
         IconThemePartial,
         IconThemePreference,
+        icon_dimension,
     },
     svg_viewer::SvgViewer,
 };
@@ -38,12 +35,7 @@ impl Default for TickIcon {
 impl TickIcon {
     pub fn new() -> Self {
         Self {
-            layout: Node {
-                width: Size::px(10.),
-                height: Size::px(10.),
-                ..Default::default()
-            }
-            .into(),
+            layout: LayoutData::default(),
             theme: None,
         }
     }
@@ -56,7 +48,7 @@ impl TickIcon {
 
 impl Component for TickIcon {
     fn render(&self) -> impl IntoElement {
-        let IconTheme { fill } = get_theme!(&self.theme, IconThemePreference, "icon");
+        let IconTheme { fill, size } = get_theme!(&self.theme, IconThemePreference, "icon");
         SvgViewer::new(
             r#"
             <svg viewBox="0 0 333 263" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -66,8 +58,8 @@ impl Component for TickIcon {
         "#
             .as_bytes(),
         )
-        .width(self.layout.width.clone())
-        .height(self.layout.height.clone())
+        .width(icon_dimension(&self.layout.width, size))
+        .height(icon_dimension(&self.layout.height, size))
         .margin(self.layout.margin)
         .fill(fill)
     }

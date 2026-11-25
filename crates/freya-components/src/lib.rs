@@ -30,6 +30,7 @@ pub mod lazy;
 pub mod loader;
 pub mod menu;
 pub mod overflowed_content;
+pub mod padding;
 pub mod platform_drag;
 pub mod popup;
 pub mod portal;

@@ -16,6 +16,7 @@ use freya_animation::{
     prelude::AnimNum,
 };
 use freya_core::prelude::*;
+use torin::gaps::Gaps;
 
 use crate::{
     attached::{
@@ -36,6 +37,7 @@ define_theme! {
         border_fill: Color,
         corner_radius: CornerRadius,
         font_size: f32,
+        padding: Gaps,
     }
 }
 
@@ -127,11 +129,12 @@ impl Component for Tooltip {
             border_fill,
             corner_radius,
             font_size,
+            padding,
         } = theme;
 
         rect()
             .interactive(Interactive::No)
-            .padding((4., 10.))
+            .padding(padding)
             .border(
                 Border::new()
                     .width(1.)
