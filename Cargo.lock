@@ -313,7 +313,7 @@ version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "40c48f72fd53cd289104fc64099abca73db4166ad86ea0b4341abe65af83dadc"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -324,7 +324,7 @@ checksum = "291e6a250ff86cd4a820112fb8898808a366d8f9f58ce16d1f538353ad55747d"
 dependencies = [
  "anstyle",
  "once_cell_polyfill",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -796,7 +796,7 @@ dependencies = [
  "lazycell",
  "log",
  "peeking_take_while",
- "prettyplease 0.2.37",
+ "prettyplease",
  "proc-macro2",
  "quote",
  "regex",
@@ -834,7 +834,6 @@ dependencies = [
  "cexpr",
  "clang-sys",
  "log",
- "prettyplease 0.3.0",
  "proc-macro2",
  "quote",
  "regex",
@@ -2227,7 +2226,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3015,9 +3014,9 @@ dependencies = [
 
 [[package]]
 name = "freya-skia-bindings"
-version = "0.105.0-beta.3"
+version = "0.105.0-beta.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "73c139cc847f5bdac5f1b9f57b16dfb2d7e9e9a5a6d85421cddcebe1c5a47326"
+checksum = "e18a7938af1ed9b404f3a0824e1238382f05106c1a0c11d263c3a0e2dd2e0bcd"
 dependencies = [
  "bindgen 0.73.2",
  "cc",
@@ -3032,9 +3031,9 @@ dependencies = [
 
 [[package]]
 name = "freya-skia-safe"
-version = "0.105.0-beta.3"
+version = "0.105.0-beta.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb4745382fb1a12a59612389e92c248edbd6f7970c1f8a98c32f1bbc2d2e1a04"
+checksum = "952a4d787ff70fe858aaa9f608e485919078269e20c11fbd8b80e4793b1903d5"
 dependencies = [
  "base64 0.23.1",
  "bitflags 2.13.1",
@@ -3045,9 +3044,9 @@ dependencies = [
 
 [[package]]
 name = "freya-skia-svg-macros"
-version = "0.105.0-beta.3"
+version = "0.105.0-beta.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d81fa7a989aa6f178ac748e943fe5eb857d5e007b5bf66221d3098d589ef2641"
+checksum = "363504ea0cf043fac8029da46303705eedfc990b49d75c348d20e16c49869ec5"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4674,7 +4673,7 @@ dependencies = [
  "objc2-foundation 0.3.2",
  "png 0.18.1",
  "thiserror 2.0.19",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4920,7 +4919,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5859,16 +5858,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "prettyplease"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2bfe0f4c752e450fc2faf62654f1c134747922825d5b04ca717b8874f41a40c0"
-dependencies = [
- "proc-macro2",
- "syn 3.0.3",
-]
-
-[[package]]
 name = "proc-macro-crate"
 version = "3.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6052,7 +6041,7 @@ dependencies = [
  "once_cell",
  "socket2",
  "tracing",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6694,7 +6683,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.12.1",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6753,7 +6742,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7227,7 +7216,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4"
 dependencies = [
  "libc",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7668,7 +7657,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix 1.1.6",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -8156,7 +8145,7 @@ dependencies = [
  "once_cell",
  "png 0.18.1",
  "thiserror 2.0.19",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -8270,7 +8259,7 @@ checksum = "f2f6fb2847f6742cd76af783a2a2c49e9375d0a111c7bef6f71cd9e738c72d6e"
 dependencies = [
  "memoffset",
  "tempfile",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -8904,7 +8893,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
