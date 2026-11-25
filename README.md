@@ -770,6 +770,8 @@ Thanks to my sponsors for supporting this project! 😄
 
 <!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;github.com&#x2F;piny4man.png" width="60px" alt="User avatar: " /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;github.com&#x2F;gqf2008.png" width="60px" alt="User avatar: 高庆丰" /></a><a href="https://github.com/DrigsterI"><img src="https:&#x2F;&#x2F;github.com&#x2F;DrigsterI.png" width="60px" alt="User avatar: Gabriel Jõe" /></a><a href="https://github.com/markalexander"><img src="https:&#x2F;&#x2F;github.com&#x2F;markalexander.png" width="60px" alt="User avatar: Mark" /></a><a href="https://github.com/LevitskyStudio"><img src="https:&#x2F;&#x2F;github.com&#x2F;LevitskyStudio.png" width="60px" alt="User avatar: Senary Domain" /></a><!-- sponsors -->
 
+[![CI powered by Blacksmith](website/public/blacksmith-ci-powered.png)](https://www.blacksmith.sh/)
+
 ### Special thanks 💪
 
 - [Jonathan Kelley](https://github.com/jkelleyrtp) and [Evan Almloff](https://github.com/ealmloff) for making [Dioxus](https://dioxuslabs.com/) and all their help, specially when I was still creating Freya.
