@@ -5,7 +5,7 @@ edition = "2024"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
 description = "i18n integration for Freya Apps based on Fluent Project."
 license = "MIT"
-repository = "https://github.com/marc2332/freya"
+repository = "https://github.com/freya-rs/freya"
 categories = ["accessibility", "gui", "localization", "internationalization"]
 
 [lints]

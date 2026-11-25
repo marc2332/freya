@@ -33,6 +33,7 @@ pub use skia_safe::{
     ClipOp,
     Color,
     Color4f,
+    ColorFilter,
     ColorSpace,
     ColorType,
     CubicResampler,

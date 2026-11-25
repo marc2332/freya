@@ -619,7 +619,7 @@ impl LayoutMeasurer<usize> for TextLikeMeasurer {
     }
 }
 
-/// Regression test for https://github.com/marc2332/freya/issues/1098
+/// Regression test for https://github.com/freya-rs/freya/issues/1098
 #[test]
 pub fn flex_with_cross_align_center_and_text() {
     let mut layout = Torin::<usize>::new();

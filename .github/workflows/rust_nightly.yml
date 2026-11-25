@@ -27,7 +27,7 @@ env:
 jobs:
   coverage:
     name: smoke / coverage
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 90
     env:
       RUSTFLAGS: -Cinstrument-coverage
@@ -35,7 +35,7 @@ jobs:
       LLVM_PROFILE_FILE: cargo-test-%p-%m.profraw
       FREYA_SMOKE_SCREENSHOT: ${{ github.workspace }}/artifacts/smoke.png
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: useblacksmith/checkout@v1 # v6.0.2
         with:
           fetch-depth: 2
           submodules: true
@@ -87,7 +87,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-26.04, windows-latest, windows-11-arm, macos-latest]
+        os: [blacksmith-4vcpu-ubuntu-2404, blacksmith-4vcpu-ubuntu-2604, windows-latest, windows-11-arm, blacksmith-6vcpu-macos-15]
         include:
           - os: windows-11-arm
             target: aarch64-pc-windows-msvc

@@ -991,13 +991,16 @@ impl Runner {
                 let scope = self.scopes.get(&scope_id).unwrap();
                 let scope = scope.borrow();
 
-                let path_node_parent = parent_scope.nodes.find(|v| {
-                    if let Some(v) = v {
-                        v.node_id == parent_node_id
-                    } else {
-                        false
-                    }
-                });
+                let path_node_parent = scope
+                    .path_in_parent
+                    .split_last()
+                    .and_then(|(_, parent_path)| parent_scope.nodes.get(parent_path))
+                    .filter(|node| node.node_id == parent_node_id)
+                    .or_else(|| {
+                        parent_scope
+                            .nodes
+                            .find(|node| node.is_some_and(|node| node.node_id == parent_node_id))
+                    });
 
                 if let Some(path_node_parent) = path_node_parent {
                     if let Some(scope_id) = path_node_parent.scope_id {
@@ -1369,11 +1372,7 @@ impl Runner {
             );
         }
 
-        let added = if diff.moved.is_empty() {
-            FxHashSet::default()
-        } else {
-            diff.added.iter().map(|path| path.as_ref()).collect()
-        };
+        let added: FxHashSet<&[u32]> = diff.added.iter().map(|path| path.as_ref()).collect();
 
         for (parent, movements) in diff.moved.into_iter().sorted_by(|(a, _), (b, _)| {
             for (x, y) in a.iter().zip(b.iter()) {
@@ -1464,7 +1463,7 @@ impl Runner {
         for parent in parents_to_resync_scopes {
             // But only if the parent already existed before otherwise its pointless
             // as Scopes will be created with the latest path already
-            if diff.added.contains(&parent) {
+            if added.contains(parent.as_ref()) {
                 // TODO: Maybe do this check before inserting
                 continue;
             }

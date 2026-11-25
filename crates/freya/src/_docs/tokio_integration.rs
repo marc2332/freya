@@ -125,5 +125,5 @@
 //!
 //! ## Examples
 //!
-//! - [`integration_tokio_spawn.rs`](https://github.com/marc2332/freya/tree/main/examples/integration_tokio_spawn.rs) : Minimal Tokio runtime setup
-//! - [`integration_tokio_watch.rs`](https://github.com/marc2332/freya/tree/main/examples/integration_tokio_watch.rs) : Reactive watch channel with `use_track_watcher`
+//! - [`integration_tokio_spawn.rs`](https://github.com/freya-rs/freya/tree/main/examples/integration_tokio_spawn.rs) : Minimal Tokio runtime setup
+//! - [`integration_tokio_watch.rs`](https://github.com/freya-rs/freya/tree/main/examples/integration_tokio_watch.rs) : Reactive watch channel with `use_track_watcher`

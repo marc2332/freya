@@ -10,13 +10,13 @@
 //!
 //! ## Use the Freya AI skill
 //!
-//! Freya provides an [AI skill](https://github.com/marc2332/freya/blob/main/skills/freya/SKILL.md)
+//! Freya provides an [AI skill](https://github.com/freya-rs/freya/blob/main/skills/freya/SKILL.md)
 //! for coding assistants. Install it with [skills](https://skills.sh):
 //!
 //! ```sh
-//! npx skills add marc2332/freya --skill freya
+//! npx skills add freya-rs/freya --skill freya
 //! ```
 //!
 //! Choose your coding agent when prompted. You can also provide the
-//! [skill document](https://github.com/marc2332/freya/blob/main/skills/freya/SKILL.md)
+//! [skill document](https://github.com/freya-rs/freya/blob/main/skills/freya/SKILL.md)
 //! as context directly.

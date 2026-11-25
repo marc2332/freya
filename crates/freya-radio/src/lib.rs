@@ -198,9 +198,9 @@
 //!
 //! ## Examples
 //!
-//! - [`state_radio.rs`](https://github.com/marc2332/freya/blob/main/examples/state_radio.rs): Basic usage
-//! - [`feature_tray_radio_state`](https://github.com/marc2332/freya/tree/main/examples/feature_tray_radio_state): Tray integration
-//! - [`feature_multi_window_radio.rs`](https://github.com/marc2332/freya/blob/main/examples/feature_multi_window_radio.rs): Multi-window state sharing
+//! - [`state_radio.rs`](https://github.com/freya-rs/freya/blob/main/examples/state_radio.rs): Basic usage
+//! - [`feature_tray_radio_state`](https://github.com/freya-rs/freya/tree/main/examples/feature_tray_radio_state): Tray integration
+//! - [`feature_multi_window_radio.rs`](https://github.com/freya-rs/freya/blob/main/examples/feature_multi_window_radio.rs): Multi-window state sharing
 
 pub mod hooks;
 pub mod slice;

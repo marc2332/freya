@@ -3,6 +3,11 @@
 use std::sync::Arc;
 
 use anyrender::{
+    AntiAliasing,
+    BoxShadowGeometry,
+    BoxShadowKind,
+    MaskMode,
+    NonUniformRoundedRect,
     PaintScene,
     RenderContext,
     filters::{
@@ -14,11 +19,15 @@ use anyrender::{
     },
 };
 use freya_engine::prelude::{
+    BlendMode,
     BlurStyle,
     Canvas,
+    ClipOp,
     Color,
+    ColorFilter,
     ColorSpace,
     Data,
+    FilterMode,
     Font,
     FontArguments,
     FontEdging as Edging,
@@ -33,11 +42,13 @@ use freya_engine::prelude::{
     PaintJoin,
     PaintStyle,
     PathEffect,
+    Picture,
+    PictureRecorder,
     Point,
     RRect,
-    Rect,
     SaveLayerRec,
     Shader,
+    TileMode,
     Typeface,
     VariationCoordinate as Coordinate,
     VariationPosition,
@@ -67,6 +78,7 @@ pub struct SkiaSceneCache {
     shared_typefaces: TypefaceCache,
     normalized_typeface: GenerationalCache<NormalizedTypefaceCacheKey, Typeface>,
     image_shader: GenerationalCache<u64, Shader>,
+    pattern_picture: GenerationalCache<u64, Picture>,
     font: GenerationalCache<FontCacheKey, Font>,
     font_mgr: FontMgr,
     glyph_id_buf: Vec<GlyphId>,
@@ -84,6 +96,7 @@ impl SkiaSceneCache {
         self.typeface.next_gen();
         self.normalized_typeface.next_gen();
         self.image_shader.next_gen();
+        self.pattern_picture.next_gen();
         self.font.next_gen();
     }
 }
@@ -99,6 +112,7 @@ impl Default for SkiaSceneCache {
             shared_typefaces: TypefaceCache::get(),
             normalized_typeface: GenerationalCache::new(1),
             image_shader: GenerationalCache::new(1),
+            pattern_picture: GenerationalCache::new(1),
             font: GenerationalCache::new(10),
             font_mgr: FontMgr::new(),
             glyph_id_buf: Default::default(),
@@ -147,16 +161,17 @@ impl SkiaScenePainter<'_> {
         self.inner.concat(&sk_kurbo::matrix_from_affine(transform));
     }
 
-    fn clip(&self, fill: peniko::Fill, shape: &impl kurbo::Shape) {
+    fn clip(&self, fill: peniko::Fill, shape: &impl kurbo::Shape, operation: ClipOp) {
         if let Some(rect) = shape.as_rect() {
-            self.inner.clip_rect(sk_kurbo::rect_from(rect), None, true);
+            self.inner
+                .clip_rect(sk_kurbo::rect_from(rect), operation, true);
         } else if let Some(rrect) = shape.as_rounded_rect() {
             self.inner
-                .clip_rrect(sk_kurbo::rrect_from(rrect), None, true);
+                .clip_rrect(sk_kurbo::rrect_from(rrect), operation, true);
         } else {
             let mut path = sk_kurbo::path_from_shape(shape);
             path.set_fill_type(sk_peniko::path_fill_type_from_fill(fill));
-            self.inner.clip_path(&path, None, true);
+            self.inner.clip_path(&path, operation, true);
         }
     }
 
@@ -195,13 +210,49 @@ impl SkiaScenePainter<'_> {
                 self.cache.paint.set_shader(image_shader);
             }
 
-            // Render unsupported custom paints as transparent
+            anyrender::Paint::Pattern(pattern) => {
+                if let Some(picture) = self.cache.pattern_picture.hit(&pattern.id()) {
+                    let tile = pattern.tile();
+                    let transform = brush_transform.unwrap_or(kurbo::Affine::IDENTITY)
+                        * kurbo::Affine::translate(tile.origin().to_vec2());
+                    let shader = picture.to_shader(
+                        (TileMode::Repeat, TileMode::Repeat),
+                        FilterMode::Linear,
+                        &sk_kurbo::matrix_from_affine(transform),
+                        &sk_kurbo::rect_from(tile.with_origin(kurbo::Point::ORIGIN)),
+                    );
+                    self.cache.paint.set_shader(shader);
+                } else {
+                    self.cache.paint.set_color(Color::TRANSPARENT);
+                }
+            }
             anyrender::Paint::Resource(_) | anyrender::Paint::Custom(_) => {
                 self.cache.paint.set_color4f(
                     sk_peniko::color4f_from_alpha_color(AlphaColor::TRANSPARENT),
                     &ColorSpace::new_srgb(),
                 );
             }
+        }
+    }
+
+    fn record_pattern(&mut self, brush: &anyrender::PaintRef<'_>) {
+        let anyrender::Paint::Pattern(pattern) = brush else {
+            return;
+        };
+        if self.cache.pattern_picture.hit(&pattern.id()).is_some() {
+            return;
+        }
+
+        let tile = pattern.tile();
+        let bounds = sk_kurbo::rect_from(tile.with_origin(kurbo::Point::ORIGIN));
+        let mut recorder = PictureRecorder::new();
+        let canvas = recorder.begin_recording(bounds, false);
+        pattern.scene().replay(
+            &mut SkiaScenePainter::new(canvas, self.cache),
+            kurbo::Affine::translate(-tile.origin().to_vec2()),
+        );
+        if let Some(picture) = recorder.finish_recording_as_picture(Some(&bounds)) {
+            self.cache.pattern_picture.insert(pattern.id(), picture);
         }
     }
 
@@ -490,7 +541,7 @@ impl PaintScene for SkiaScenePainter<'_> {
         self.inner.save();
 
         self.set_matrix(transform);
-        self.clip(fill, clip);
+        self.clip(fill, clip, ClipOp::Intersect);
 
         let backdrop_filter = backdrop_filter.as_ref().and_then(|f| convert_filter(f));
         let mut save_layer_rec = SaveLayerRec::default().paint(&self.cache.paint);
@@ -499,6 +550,31 @@ impl PaintScene for SkiaScenePainter<'_> {
         }
 
         self.inner.save_layer(&save_layer_rec);
+    }
+
+    fn push_mask_layer(
+        &mut self,
+        fill: peniko::Fill,
+        mode: MaskMode,
+        transform: kurbo::Affine,
+        clip: &impl kurbo::Shape,
+    ) {
+        self.reset_paint();
+        self.cache.paint.set_blend_mode(BlendMode::DstIn);
+        if mode == MaskMode::Luminance {
+            self.cache.paint.set_color_filter(ColorFilter::luma());
+        }
+
+        self.inner.save();
+        self.set_matrix(transform);
+        self.inner.save();
+        self.clip(fill, clip, ClipOp::Difference);
+        self.inner.draw_color(Color::TRANSPARENT, BlendMode::Clear);
+        self.inner.restore();
+
+        self.clip(fill, clip, ClipOp::Intersect);
+        self.inner
+            .save_layer(&SaveLayerRec::default().paint(&self.cache.paint));
     }
 
     fn push_clip_layer(
@@ -510,7 +586,7 @@ impl PaintScene for SkiaScenePainter<'_> {
         self.inner.save(); // we need to do two saves because of pop_layer
 
         self.set_matrix(transform);
-        self.clip(fill, clip);
+        self.clip(fill, clip, ClipOp::Intersect);
         self.inner.save();
     }
 
@@ -526,10 +602,14 @@ impl PaintScene for SkiaScenePainter<'_> {
         brush: impl Into<anyrender::PaintRef<'a>>,
         brush_transform: Option<kurbo::Affine>,
         shape: &impl kurbo::Shape,
+        anti_aliasing: AntiAliasing,
     ) {
+        let brush = brush.into();
+        self.record_pattern(&brush);
         self.set_matrix(transform);
 
         self.reset_paint();
+        self.cache.paint.set_anti_alias(anti_aliasing.is_enabled());
         self.set_paint_brush(brush, brush_transform);
         self.set_paint_style(style);
         self.draw_shape(shape);
@@ -542,10 +622,14 @@ impl PaintScene for SkiaScenePainter<'_> {
         brush: impl Into<anyrender::PaintRef<'a>>,
         brush_transform: Option<kurbo::Affine>,
         shape: &impl kurbo::Shape,
+        anti_aliasing: AntiAliasing,
     ) {
+        let brush = brush.into();
+        self.record_pattern(&brush);
         self.set_matrix(transform);
 
         self.reset_paint();
+        self.cache.paint.set_anti_alias(anti_aliasing.is_enabled());
         self.set_paint_brush(brush, brush_transform);
         self.set_paint_style(style);
         self.draw_shape_with_fill(shape, style);
@@ -564,7 +648,10 @@ impl PaintScene for SkiaScenePainter<'_> {
         transform: kurbo::Affine,
         glyph_transform: Option<kurbo::Affine>,
         glyphs: impl Iterator<Item = anyrender::Glyph>,
+        anti_aliasing: AntiAliasing,
     ) {
+        let brush = brush.into();
+        self.record_pattern(&brush);
         self.set_matrix(transform);
 
         if let Some(glyph_transform) = glyph_transform {
@@ -572,13 +659,18 @@ impl PaintScene for SkiaScenePainter<'_> {
         }
 
         self.reset_paint();
+        self.cache.paint.set_anti_alias(anti_aliasing.is_enabled());
         self.set_paint_brush(brush, None);
         self.set_paint_style(style);
         self.set_paint_alpha(brush_alpha);
 
-        let Some(font) = self.get_or_cache_font(font, normalized_coords, font_size, hint) else {
+        let Some(mut font) = self.get_or_cache_font(font, normalized_coords, font_size, hint)
+        else {
             return;
         };
+        if !anti_aliasing.is_enabled() {
+            font.set_edging(Edging::Alias);
+        }
 
         let (min_size, _) = glyphs.size_hint();
         self.cache.glyph_id_buf.reserve(min_size);
@@ -604,37 +696,71 @@ impl PaintScene for SkiaScenePainter<'_> {
     fn draw_box_shadow(
         &mut self,
         transform: kurbo::Affine,
-        rect: kurbo::Rect,
-        brush: peniko::Color,
-        radius: f64,
+        box_shape: &NonUniformRoundedRect,
+        offset: kurbo::Vec2,
+        spread: f64,
         std_dev: f64,
+        color: peniko::Color,
+        kind: BoxShadowKind,
     ) {
+        let geometry = BoxShadowGeometry::new(box_shape, offset, spread, std_dev, kind);
+        let rounded_rect = |shape: &NonUniformRoundedRect| {
+            let radius = |radius: kurbo::Vec2| {
+                if radius.x <= 0.0 || radius.y <= 0.0 {
+                    Point::new(0.0, 0.0)
+                } else {
+                    Point::new(radius.x as f32, radius.y as f32)
+                }
+            };
+            RRect::new_rect_radii(
+                sk_kurbo::rect_from(shape.rect),
+                &[
+                    radius(shape.radii.top_left),
+                    radius(shape.radii.top_right),
+                    radius(shape.radii.bottom_right),
+                    radius(shape.radii.bottom_left),
+                ],
+            )
+        };
+
+        self.inner.save();
         self.set_matrix(transform);
-
-        self.reset_paint();
-        self.set_paint_brush(brush, None);
-        self.cache.paint.set_style(PaintStyle::Fill);
-
-        if std_dev > 0.0 {
-            self.cache.paint.set_mask_filter(
-                MaskFilter::blur(BlurStyle::Normal, std_dev as f32, false).unwrap(),
-            );
+        let clip = match kind {
+            BoxShadowKind::Outset => Some(ClipOp::Difference),
+            BoxShadowKind::Inset => Some(ClipOp::Intersect),
+            BoxShadowKind::OutsetUnclipped => None,
+        };
+        if let Some(clip) = clip {
+            self.inner.clip_rrect(rounded_rect(box_shape), clip, true);
         }
 
-        let rrect = RRect::new_nine_patch(
-            Rect::new(
-                rect.x0 as f32,
-                rect.y0 as f32,
-                rect.x1 as f32,
-                rect.y1 as f32,
-            ),
-            radius as f32,
-            radius as f32,
-            radius as f32,
-            radius as f32,
-        );
+        self.reset_paint();
+        self.set_paint_brush(color, None);
+        self.cache.paint.set_style(PaintStyle::Fill);
+        if geometry.std_dev > 0.0 {
+            self.cache.paint.set_mask_filter(MaskFilter::blur(
+                BlurStyle::Normal,
+                geometry.std_dev as f32,
+                true,
+            ));
+        }
 
-        self.inner.draw_rrect(rrect, &self.cache.paint);
+        let shadow = rounded_rect(&geometry.shadow);
+        if geometry.is_inset() {
+            let margin = 3.0 * geometry.std_dev + 1.0;
+            let outer = box_shape
+                .rect
+                .union(geometry.shadow.rect)
+                .inflate(margin, margin);
+            self.inner.draw_drrect(
+                RRect::new_rect(sk_kurbo::rect_from(outer)),
+                shadow,
+                &self.cache.paint,
+            );
+        } else {
+            self.inner.draw_rrect(shadow, &self.cache.paint);
+        }
+        self.inner.restore();
     }
 }
 
@@ -669,12 +795,15 @@ fn convert_filter_effect(filter: &Filter, id: FilterId) -> Option<ImageFilter> {
             let shader = shaders::color(sk_color);
             image_filters::shader(shader, None)
         }
-        FilterEffect::GaussianBlur(blur) => {
-            image_filters::blur((blur.std_deviation, blur.std_deviation), None, input, None)
-        }
+        FilterEffect::GaussianBlur(blur) => image_filters::blur(
+            (blur.std_deviation_x, blur.std_deviation_y),
+            None,
+            input,
+            None,
+        ),
         FilterEffect::DropShadow(drop_shadow) => image_filters::drop_shadow(
             (drop_shadow.dx, drop_shadow.dy),
-            (drop_shadow.std_deviation, drop_shadow.std_deviation),
+            (drop_shadow.std_deviation_x, drop_shadow.std_deviation_y),
             color4f_from_alpha_color(drop_shadow.color),
             None,
             input,

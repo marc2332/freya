@@ -14,14 +14,21 @@ env:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    name: build (${{ matrix.os }})
+    runs-on: ${{ matrix.runner }}
     concurrency:
       group: deps-report-${{ matrix.os }}-${{ github.ref_name }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            runner: blacksmith-4vcpu-ubuntu-2604
+          - os: windows-latest
+            runner: blacksmith-4vcpu-windows-2025
+          - os: macos-latest
+            runner: blacksmith-6vcpu-macos-15
 
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -41,7 +48,7 @@ jobs:
     - name: Set up cargo cache
       uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
       with:
-        shared-key: "deps-report-${{ matrix.os }}"
+        shared-key: "deps-report-${{ matrix.runner }}"
         save-if: ${{ github.ref == 'refs/heads/main' }}
 
     - name: Wait for setup
