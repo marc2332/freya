@@ -1,13 +1,13 @@
 #[cfg(feature = "gpu")]
 use freya_engine::prelude::{
     BackendRenderTarget,
+    ColorType,
     RecordingContext,
     SurfaceOrigin,
     wrap_backend_render_target,
 };
 use freya_engine::prelude::{
     Borrows,
-    ColorType,
     ImageInfo,
     Surface,
     SurfaceProps,

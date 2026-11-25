@@ -111,7 +111,10 @@ objc2-app-kit = { version = "0.3", optional = true }
 freya-engine = { workspace = true, features = ["metal"], optional = true }
 
 [dev-dependencies]
-freya = { path = "../freya" }
+freya = { path = "../freya", default-features = false, features = [
+  "winit",
+  "platform-text-gamma",
+] }
 
 [[test]]
 name = "smoke"

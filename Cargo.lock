@@ -797,7 +797,7 @@ dependencies = [
  "lazycell",
  "log",
  "peeking_take_while",
- "prettyplease 0.2.37",
+ "prettyplease",
  "proc-macro2",
  "quote",
  "regex",
@@ -835,7 +835,6 @@ dependencies = [
  "cexpr",
  "clang-sys",
  "log",
- "prettyplease 0.3.0",
  "proc-macro2",
  "quote",
  "regex",
@@ -3012,9 +3011,9 @@ dependencies = [
 
 [[package]]
 name = "freya-skia-bindings"
-version = "0.105.0-beta.1"
+version = "0.105.0-beta.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "12f97166eefe7fc96cde7f6dd323deea7e2b91a03d631042b475cf2dd4d76766"
+checksum = "e18a7938af1ed9b404f3a0824e1238382f05106c1a0c11d263c3a0e2dd2e0bcd"
 dependencies = [
  "bindgen 0.73.2",
  "cc",
@@ -3029,9 +3028,9 @@ dependencies = [
 
 [[package]]
 name = "freya-skia-safe"
-version = "0.105.0-beta.1"
+version = "0.105.0-beta.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "510322b0991946b86dc8cc7bce88a99a995c6b6f6be73fe572a31b9ea1615b68"
+checksum = "952a4d787ff70fe858aaa9f608e485919078269e20c11fbd8b80e4793b1903d5"
 dependencies = [
  "base64 0.23.1",
  "bitflags 2.13.1",
@@ -3042,9 +3041,9 @@ dependencies = [
 
 [[package]]
 name = "freya-skia-svg-macros"
-version = "0.105.0-beta.1"
+version = "0.105.0-beta.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c55d2827ddf2c24fe7d9584f54c622da16a6e883d251dc4c3d1ac99fb1ad8532"
+checksum = "363504ea0cf043fac8029da46303705eedfc990b49d75c348d20e16c49869ec5"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5855,16 +5854,6 @@ checksum = "479ca8adacdd7ce8f1fb39ce9ecccbfe93a3f1344b3d0d97f20bc0196208f62b"
 dependencies = [
  "proc-macro2",
  "syn 2.0.119",
-]
-
-[[package]]
-name = "prettyplease"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2bfe0f4c752e450fc2faf62654f1c134747922825d5b04ca717b8874f41a40c0"
-dependencies = [
- "proc-macro2",
- "syn 3.0.3",
 ]
 
 [[package]]
