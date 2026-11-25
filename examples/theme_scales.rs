@@ -36,11 +36,7 @@ fn app() -> impl IntoElement {
         .padding(20.)
         .spacing(16.)
         .child(label().title().text("Theme scales"))
-        .child(
-            label()
-                .body()
-                .text("Adjust the theme and compare the results in the live preview."),
-        )
+        .child(label().body().text("Change the values"))
         .child(
             rect()
                 .horizontal()
@@ -200,11 +196,7 @@ impl Component for Preview {
                         .width(Size::fill())
                         .spacing(8.)
                         .child(label().title().text("Some title"))
-                        .child(
-                            label()
-                                .body()
-                                .text("Body text follows the shared type scale."),
-                        )
+                        .child(label().body().text("Lorem ipsum dolor sit amet."))
                         .child(label().caption().text("Captions use a smaller type role.")),
                 ),
             )
