@@ -61,7 +61,7 @@
 //!             ..CornerRadiusScale::default()
 //!         }
 //!         .apply_to(&mut theme.variables);
-//!         PaddingScale { factor: 0.875 }.apply_to(&mut theme.variables);
+//!         Density { factor: 0.875 }.apply_to(&mut theme.variables);
 //!         theme
 //!     });
 //!
@@ -75,7 +75,8 @@
 //! }
 //! ```
 //!
-//! The filled button uses the overridden primary color, radius scale, and padding scale.
+//! The filled button uses the overridden primary color, radius scale, and density.
+//! Switches use the theme density by default. Use `.density(0.875)` to override one switch.
 //! Replace a single shared padding value with [`PaddingRole`](crate::prelude::PaddingRole)
 //! and `Theme::set_var`, or use a component's `padding` builder for an instance override.
 //!

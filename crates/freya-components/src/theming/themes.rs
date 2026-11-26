@@ -29,6 +29,10 @@ use crate::{
         CornerRadiusRole,
         CornerRadiusScale,
     },
+    density::{
+        Density,
+        PaddingRole,
+    },
     floating_tab::FloatingTabThemePreference,
     icons::{
         IconSize,
@@ -43,10 +47,6 @@ use crate::{
     menu::{
         MenuContainerThemePreference,
         MenuItemThemePreference,
-    },
-    padding::{
-        PaddingRole,
-        PaddingScale,
     },
     popup::{
         PopupButtonsThemePreference,
@@ -376,6 +376,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             width: Preference::Specific(48.),
             height: Preference::Specific(28.),
             padding: Preference::Specific(4.),
+            density: Preference::Reference(Density::key()),
             thumb_size: Preference::Specific(16.),
             toggled_thumb_size: Preference::Specific(20.),
             pressed_thumb_size_offset: Preference::Specific(4.),
@@ -390,6 +391,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             width: Preference::Specific(56.),
             height: Preference::Specific(32.),
             padding: Preference::Specific(4.),
+            density: Preference::Reference(Density::key()),
             thumb_size: Preference::Specific(18.),
             toggled_thumb_size: Preference::Specific(22.),
             pressed_thumb_size_offset: Preference::Specific(4.),
@@ -588,7 +590,7 @@ fn register_base_component_themes(theme: &mut Theme) {
             corner_radius: Preference::Reference(CornerRadiusRole::Lg.key()),
             list_corner_radius: Preference::Reference(CornerRadiusRole::Xl.key()),
             font_size: Preference::Reference(TextRole::Control.key()),
-            padding: PaddingRole::STANDARD_WIDE.into(),
+            padding: PaddingRole::COMPACT_WIDE.into(),
             options_padding: PaddingRole::COMPACT.into(),
             width: Preference::Specific(Size::Inner),
             margin: Preference::Specific(Gaps::new_all(0.)),
@@ -779,7 +781,7 @@ fn build_theme(name: &'static str, colors: &[(ColorRole, Color)]) -> Theme {
     }
     TypographyScale::default().apply_to(&mut variables);
     CornerRadiusScale::default().apply_to(&mut variables);
-    PaddingScale::default().apply_to(&mut variables);
+    Density::default().apply_to(&mut variables);
     IconSize::default().apply_to(&mut variables);
     if let Some(primary) = current_accent_color() {
         variables.set(ColorRole::Primary.key(), primary);

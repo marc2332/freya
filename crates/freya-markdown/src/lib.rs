@@ -14,8 +14,8 @@ use freya_components::link::{
 };
 use freya_components::{
     define_theme,
+    density::PaddingRole,
     get_theme_or_default,
-    padding::PaddingRole,
     table::{
         Table,
         TableRow,

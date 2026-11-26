@@ -5,22 +5,27 @@ use crate::theming::{
     macros::Preference,
 };
 
-/// Controls the density of the built-in component padding.
+/// Scales the spacing and supported components in a theme.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct PaddingScale {
-    /// Multiplier for the default padding. Use `1.` to keep the default sizes.
+pub struct Density {
+    /// Use `1.` to keep the default sizes.
     pub factor: f32,
 }
 
-impl Default for PaddingScale {
+impl Default for Density {
     fn default() -> Self {
         Self { factor: 1. }
     }
 }
 
-impl PaddingScale {
-    /// Write the scaled padding values to the theme variables.
+impl Density {
+    /// Theme key for the density factor.
+    pub const fn key() -> &'static str {
+        "density"
+    }
+
     pub fn apply_to(&self, variables: &mut AnyMap) {
+        variables.set(Self::key(), self.factor);
         for role in PaddingRole::ALL {
             let [vertical, horizontal] = role.axes.map(|value| value * self.factor);
             variables.set(role.key(), Gaps::new_symmetric(vertical, horizontal));
