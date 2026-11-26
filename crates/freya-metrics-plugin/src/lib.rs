@@ -8,6 +8,7 @@ use std::{
 
 use freya_core::prelude::{
     ModifiersExt,
+    TargetPlatform,
     WindowCommand,
 };
 use freya_engine::prelude::{
@@ -390,6 +391,7 @@ impl FreyaPlugin for MetricsPlugin {
                             "Animation clock speed",
                             format!("{}x", animation_clock.speed()),
                         ),
+                        ("Target Platform", format!("{:?}", TargetPlatform::get())),
                         ("Renderer", performance_state.graphics_driver.to_string()),
                         ("Freya", env!("CARGO_PKG_VERSION").to_string()),
                         (

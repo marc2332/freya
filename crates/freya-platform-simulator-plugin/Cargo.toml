@@ -1,0 +1,23 @@
+[package]
+name = "freya-platform-simulator-plugin"
+version.workspace = true
+edition = "2024"
+description = "Simulate touch input and platform-specific UI behavior in Freya."
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui"]
+categories = ["gui"]
+
+[lints]
+workspace = true
+
+[dependencies]
+freya-core = { workspace = true }
+freya-winit = { workspace = true }
+keyboard-types = { workspace = true }
+rustc-hash = { workspace = true }
+torin = { workspace = true }
+winit = { workspace = true }

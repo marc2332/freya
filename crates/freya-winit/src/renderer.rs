@@ -788,14 +788,19 @@ impl WinitRenderer {
 
         let mut needs_recovery = false;
         if let Some(app) = self.windows.get_mut(&window_id) {
+            let mut input = Vec::new();
             self.plugins.send(
                 PluginEvent::WindowEvent {
                     window: app.window.as_ref(),
                     raw: &event,
                     tree: &mut app.tree,
+                    input: &mut input,
                 },
                 PluginHandle::new(&self.proxy),
             );
+            if !input.is_empty() {
+                app.queue_platform_events(input);
+            }
 
             #[cfg(feature = "accessibility")]
             app.process_accessibility_window_event(&event);

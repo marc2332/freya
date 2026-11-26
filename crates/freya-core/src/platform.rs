@@ -22,6 +22,7 @@ use crate::{
     prelude::{
         GlobalContexts,
         State,
+        WritableUtils,
         try_consume_root_context,
     },
 };
@@ -64,11 +65,24 @@ pub enum TargetPlatform {
 }
 
 impl TargetPlatform {
-    /// Returns the target platform from the current Freya context, or detects the compile target.
+    /// Returns the UI platform for all windows and tracks changes.
+    /// Defaults to the platform the app was built for.
     pub fn get() -> Self {
-        CurrentContext::try_with(|_| try_consume_root_context())
-            .flatten()
-            .unwrap_or_else(Self::detect)
+        match GlobalContexts::try_get() {
+            Some(contexts) => *Self::state(&contexts).read(),
+            None => Self::detect(),
+        }
+    }
+
+    /// Changes the UI platform for all windows, not the native backend.
+    /// Panics if Freya's global context isn't set up.
+    #[track_caller]
+    pub fn set(platform: Self) {
+        Self::state(&GlobalContexts::get()).set_if_modified(platform);
+    }
+
+    fn state(contexts: &GlobalContexts) -> State<Self> {
+        contexts.get_context_or_insert(|| State::create_global(Self::detect()))
     }
 
     /// Detects the operating system of the compile target.

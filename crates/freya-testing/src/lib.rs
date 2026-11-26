@@ -191,7 +191,6 @@ impl TestingRunner {
             }
         }));
 
-        runner.provide_root_context(TargetPlatform::detect);
         let platform = runner.run_in({
             let requested_focus_strategy = requested_focus_strategy.clone();
             || PlatformWindow {

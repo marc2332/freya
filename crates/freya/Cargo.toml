@@ -44,6 +44,7 @@ all-crossplatform = [
   "radio",
   "titlebar",
   "borderless",
+  "platform-simulator",
   "terminal",
   "terminal-pty",
   "query",
@@ -120,6 +121,7 @@ query = ["dep:freya-query"]
 html = ["dep:freya-html"]
 titlebar = ["freya-components/titlebar"]
 borderless = ["winit", "dep:freya-borderless-plugin"]
+platform-simulator = ["winit", "dep:freya-platform-simulator-plugin"]
 terminal = ["dep:freya-terminal"]
 terminal-pty = ["terminal", "freya-terminal/pty"]
 code-editor = ["dep:freya-code-editor"]
@@ -150,6 +152,7 @@ freya-code-editor = { workspace = true, optional = true }
 freya-video = { workspace = true, optional = true }
 freya-camera = { workspace = true, optional = true }
 freya-borderless-plugin = { workspace = true, optional = true }
+freya-platform-simulator-plugin = { workspace = true, optional = true }
 freya-web = { workspace = true, optional = true }
 
 # Performance

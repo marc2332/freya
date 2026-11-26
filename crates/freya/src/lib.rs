@@ -75,6 +75,10 @@
 //! - [Freya Query](freya_query)
 //! - [Tokio Integration](self::_docs::tokio_integration)
 //! - [Borderless Windows](self::_docs::borderless)
+#![cfg_attr(
+    feature = "platform-simulator",
+    doc = "- [Platform Simulator](freya_platform_simulator_plugin)"
+)]
 //! - [Devtools](self::_docs::devtools)
 //! - [Hot Reload](self::_docs::hot_reload)
 //! - [HTTP Requests](freya_components::http)
@@ -432,6 +436,13 @@ pub mod metrics {
 #[cfg_attr(feature = "docs", doc(cfg(feature = "borderless")))]
 pub mod borderless {
     pub use freya_borderless_plugin::*;
+}
+
+/// Reexport `freya-platform-simulator-plugin` when the `platform-simulator` feature is enabled.
+#[cfg(feature = "platform-simulator")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "platform-simulator")))]
+pub mod platform_simulator {
+    pub use freya_platform_simulator_plugin::*;
 }
 
 /// Reexport `freya-markdown` when the `markdown` feature is enabled.

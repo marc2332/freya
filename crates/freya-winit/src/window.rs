@@ -126,6 +126,7 @@ pub struct AppWindow {
     pub(crate) process_layout_on_next_render: bool,
     pub(crate) send_mouse_move_on_next_layout: bool,
     pub(crate) event_buffer: EventBuffer<PlatformEvent, Instant>,
+    plugins: PluginsManager,
 
     pub(crate) render_callbacks: Vec<RenderCallback>,
 
@@ -398,7 +399,6 @@ impl AppWindow {
 
         let window_size = window.surface_size().to_logical::<f32>(scale_factor);
         let accent_color_preference = accent_color_preference();
-        runner.provide_root_context(TargetPlatform::detect);
         let platform = runner.run_in({
             let event_loop_proxy = event_loop_proxy.clone();
             let window_id = window.id();
@@ -559,6 +559,7 @@ impl AppWindow {
             process_layout_on_next_render: true,
             send_mouse_move_on_next_layout: false,
             event_buffer: EventBuffer::new(input_interval),
+            plugins: plugins.clone(),
 
             render_callbacks: Vec::new(),
 
@@ -767,14 +768,11 @@ impl AppWindow {
             handle,
         );
         if std::mem::take(&mut self.send_mouse_move_on_next_layout) && self.cursor_in_window {
-            self.event_buffer.push(
-                [PlatformEvent::Mouse {
-                    name: MouseEventName::MouseMove,
-                    cursor: self.position,
-                    button: None,
-                }],
-                Instant::now(),
-            );
+            self.queue_platform_events(vec![PlatformEvent::Mouse {
+                name: MouseEventName::MouseMove,
+                cursor: self.position,
+                button: None,
+            }]);
         }
     }
 
@@ -812,7 +810,9 @@ impl AppWindow {
     }
 
     /// Queues input for the next update, preserving discrete event boundaries.
-    pub(crate) fn queue_platform_events(&mut self, platform_events: Vec<PlatformEvent>) {
+    pub(crate) fn queue_platform_events(&mut self, mut platform_events: Vec<PlatformEvent>) {
+        self.plugins
+            .filter_input(self.window.id(), &mut platform_events);
         self.event_buffer.push(platform_events, Instant::now());
     }
 
