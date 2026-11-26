@@ -199,6 +199,10 @@ impl AccessibilityTree {
             );
         }
 
+        let removed_focus_parent = self
+            .focused_node_id()
+            .and_then(|node_id| removed_ids.get(&node_id).copied());
+
         // Remove all the removed nodes from the update list
         for node_id in removed_ids.keys() {
             added_or_updated_ids.remove(node_id);
@@ -221,22 +225,30 @@ impl AccessibilityTree {
             added_or_updated_ids.insert(*node_parent_id);
         }
 
-        let has_request_focus = requested_focus.is_some();
-
-        // Return focus to the root when the focused node is removed or disabled.
+        // Recover focus in the nearest surviving focusable scrollable ancestor, or at the root.
         if !self.can_focus(self.focused_id, tree) {
-            self.focused_id = ACCESSIBILITY_ROOT_ID;
+            self.focused_id = std::iter::successors(removed_focus_parent, |node_id| {
+                removed_ids
+                    .get(node_id)
+                    .or_else(|| tree.parents.get(node_id))
+                    .copied()
+            })
+            .find_map(|node_id| {
+                let state = tree.accessibility_state.get(&node_id)?;
+                let effect = tree.elements.get(&node_id)?.effect()?;
+                (state.a11y_focusable.is_enabled() && effect.scrollable).then_some(state.a11y_id)
+            })
+            .unwrap_or(ACCESSIBILITY_ROOT_ID);
         }
 
-        // Focus the requested node id if there is one
         if let Some(requested_focus) = requested_focus {
+            let previous_focus = self.focused_id;
             self.focus_node_with_strategy(requested_focus, tree);
-        }
-
-        if let Some(node_id) = self.focused_node_id()
-            && has_request_focus
-        {
-            self.scroll_to(node_id, tree, events_sender);
+            if self.focused_id != previous_focus
+                && let Some(node_id) = self.focused_node_id()
+            {
+                self.scroll_to(node_id, tree, events_sender);
+            }
         }
 
         added_or_updated_ids

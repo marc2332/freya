@@ -77,6 +77,71 @@ fn disabled_nodes_reject_focus_and_release_existing_focus() {
 }
 
 #[test]
+fn unchanged_focus_does_not_scroll_the_focused_node_into_view() {
+    let focused_id = AccessibilityId(100);
+    let (mut test, mut controller) = TestingRunner::new(
+        move || {
+            let controller = use_consume::<ScrollController>();
+            ScrollView::new_controlled(controller)
+                .child(
+                    rect()
+                        .height(Size::px(30.))
+                        .a11y_id(focused_id)
+                        .a11y_focusable(true),
+                )
+                .child(rect().height(Size::px(600.)))
+        },
+        (200., 200.).into(),
+        |runner| runner.provide_root_context(|| ScrollController::new(0., 0.)),
+        1.,
+    );
+    test.sync_and_update();
+    test.run_in(|| focused_id.request_focus());
+    assert_eq!(test.sync_and_update().focus, focused_id);
+    test.run_in(|| controller.scroll_to_y(100.));
+    test.sync_and_update();
+
+    test.press_key(Key::Named(NamedKey::ArrowDown));
+    test.sync_and_update();
+    assert_eq!(test.sync_and_update().focus, focused_id);
+    assert_eq!(test.run_in(|| controller.position().y), 100.);
+}
+
+#[test]
+fn removing_the_focused_node_focuses_the_nearest_scrollable_ancestor() {
+    let outer_id = AccessibilityId(100);
+    let inner_id = AccessibilityId(101);
+    let focused_id = AccessibilityId(102);
+    let (mut test, mut show_child) = TestingRunner::new(
+        move || {
+            let show_child = use_consume::<State<bool>>();
+            rect()
+                .a11y_id(outer_id)
+                .a11y_focusable(true)
+                .scrollable(true)
+                .child(
+                    rect()
+                        .a11y_id(inner_id)
+                        .a11y_focusable(true)
+                        .scrollable(true)
+                        .maybe(*show_child.read(), |el| {
+                            el.child(rect().child(rect().a11y_id(focused_id).a11y_focusable(true)))
+                        }),
+                )
+        },
+        (200., 200.).into(),
+        |runner| runner.provide_root_context(|| State::create(true)),
+        1.,
+    );
+    test.sync_and_update();
+    test.run_in(|| focused_id.request_focus());
+    assert_eq!(test.sync_and_update().focus, focused_id);
+
+    show_child.set(false);
+    assert_eq!(test.sync_and_update().focus, inner_id);
+}
+
+#[test]
 fn moving_an_a11y_id_between_siblings() {
     let (mut test, mut holder) = TestingRunner::new(
         || {
