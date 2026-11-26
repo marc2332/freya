@@ -7,7 +7,10 @@ use freya::{
     animation::*,
     prelude::*,
 };
-use freya_metrics_plugin::MetricsPlugin;
+use freya_metrics_plugin::{
+    MetricsContext,
+    MetricsPlugin,
+};
 use tracing_subscriber::{
     filter::EnvFilter,
     fmt,
@@ -21,7 +24,7 @@ fn main() {
     launch(
         LaunchConfig::new()
             .with_plugin(MetricsPlugin::default().with_visible_performance(true))
-            .with_window(WindowConfig::new(app)),
+            .with_window(WindowConfig::new(app).with_size(1191., 911.)),
     )
 }
 
@@ -37,38 +40,52 @@ fn app() -> impl IntoElement {
 
     let progress = animation.get().value();
 
-    rect().expanded().center().children((0..32).map(|i| {
-        rect()
-            .key(i)
-            .offset_x(progress - i as f32 * 10.)
-            .horizontal()
-            .child(
+    rect()
+        .expanded()
+        .center()
+        .map(MetricsContext::try_get(), |el, metrics| {
+            let performance = metrics.clone();
+            el.child(
                 rect()
-                    .width(Size::px(45.))
-                    .height(Size::px(25.))
-                    .background((7, 102, 173))
-                    .corner_radius(100.),
+                    .horizontal()
+                    .spacing(8.)
+                    .child(
+                        Button::new()
+                            .on_press(move |_| {
+                                performance
+                                    .set_performance_visible(!performance.is_performance_visible());
+                            })
+                            .child("Toggle performance"),
+                    )
+                    .child(
+                        Button::new()
+                            .on_press(move |_| {
+                                metrics.set_stats_visible(!metrics.is_stats_visible());
+                            })
+                            .child("Toggle stats"),
+                    ),
             )
-            .child(
-                rect()
-                    .width(Size::px(45.))
-                    .height(Size::px(25.))
-                    .background((166, 207, 152))
-                    .corner_radius(100.),
-            )
-            .child(
-                rect()
-                    .width(Size::px(45.))
-                    .height(Size::px(25.))
-                    .background((179, 19, 18))
-                    .corner_radius(100.),
-            )
-            .child(
-                rect()
-                    .width(Size::px(45.))
-                    .height(Size::px(25.))
-                    .background((255, 108, 34))
-                    .corner_radius(100.),
-            )
-    }))
+        })
+        .children((0..32).map(|i| {
+            rect()
+                .key(i)
+                .offset_x(progress - i as f32 * 10.)
+                .horizontal()
+                .children(
+                    [
+                        (7, 102, 173),
+                        (166, 207, 152),
+                        (179, 19, 18),
+                        (255, 108, 34),
+                    ]
+                    .into_iter()
+                    .map(|color| {
+                        rect()
+                            .width(Size::px(45.))
+                            .height(Size::px(25.))
+                            .background(color)
+                            .corner_radius(100.)
+                    }),
+                )
+        }))
 }
