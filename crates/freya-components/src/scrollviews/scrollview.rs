@@ -504,7 +504,7 @@ impl Component for ScrollView {
                             .spacing(layout.spacing.get())
                             .overflow(Overflow::Clip)
                             .on_sized(move |e: Event<SizedEventData>| {
-                                size.set_if_modified(e.clone());
+                                size.set_if_modified(e.data().clone());
                                 if !follows_scroll_controller {
                                     scroll_controller
                                         .apply_layout(e.inner_sizes.to_f64(), e.area.size.to_f64());

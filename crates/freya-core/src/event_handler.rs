@@ -87,11 +87,28 @@ impl<R, H: FnMut() -> R + 'static> From<H> for NoArgCallback<R> {
     }
 }
 
-pub struct EventHandler<T>(Rc<RefCell<dyn FnMut(T)>>);
+pub struct EventHandler<T> {
+    callback: Rc<RefCell<dyn FnMut(T)>>,
+    pub(crate) stacked: bool,
+}
 
 impl<T> EventHandler<T> {
     pub fn new(handler: impl FnMut(T) + 'static) -> Self {
-        Self(Rc::new(RefCell::new(handler)))
+        Self {
+            callback: Rc::new(RefCell::new(handler)),
+            stacked: false,
+        }
+    }
+
+    /// Runs after existing handlers in registration order instead of replacing them.
+    pub fn stacked(mut self) -> Self {
+        self.stacked = true;
+        self
+    }
+
+    pub(crate) fn with_stacked(mut self, stacked: bool) -> Self {
+        self.stacked = stacked;
+        self
     }
 
     /// Create an event handler that runs under the given scope.
@@ -125,13 +142,16 @@ impl<T> EventHandler<T> {
     }
 
     pub fn call(&self, data: T) {
-        (self.0.borrow_mut())(data);
+        (self.callback.borrow_mut())(data);
     }
 }
 
 impl<T> Clone for EventHandler<T> {
     fn clone(&self) -> Self {
-        Self(self.0.clone())
+        Self {
+            callback: self.callback.clone(),
+            stacked: self.stacked,
+        }
     }
 }
 
