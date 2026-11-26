@@ -6,7 +6,7 @@ edition = "2024"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
 homepage = "https://freyaui.dev/"
-repository = "https://github.com/marc2332/freya"
+repository = "https://github.com/freya-rs/freya"
 keywords = ["gui", "android"]
 categories = ["gui"]
 

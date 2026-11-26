@@ -7,7 +7,7 @@ license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
 readme = "../../README.md"
 homepage = "https://freyaui.dev/"
-repository = "https://github.com/marc2332/freya"
+repository = "https://github.com/freya-rs/freya"
 keywords = ["freya"]
 categories = ["gui"]
 

@@ -209,17 +209,19 @@ impl VulkanInner {
             return Err("Matching Wayland's GPU requires Vulkan 1.1".into());
         }
 
-        let instance_extensions = enumerate_required_extensions(window.display_handle()?.as_raw())?;
+        let display_handle = window.display_handle()?.as_raw();
+        let window_handle = window.window_handle()?.as_raw();
+        let instance_extensions = enumerate_required_extensions(display_handle)?;
         let instance = create_instance(&entry, instance_extensions, api_version)?;
         let surface_fns = InstanceSurfaceFns::new(&entry, &instance);
-        let surface = unsafe {
-            ash_window::create_surface(
-                &entry,
-                &instance,
-                window.display_handle()?.as_raw(),
-                window.window_handle()?.as_raw(),
-                None,
-            )?
+        let surface = match unsafe {
+            ash_window::create_surface(&entry, &instance, display_handle, window_handle, None)
+        } {
+            Ok(surface) => surface,
+            Err(error) => {
+                unsafe { instance.destroy_instance(None) };
+                return Err(error.into());
+            }
         };
 
         let (physical_device, queue_family_index, gpu_name) = match pick_physical_device(
@@ -240,9 +242,18 @@ impl VulkanInner {
         };
 
         let (device, queue) =
-            create_logical_device(&instance, physical_device, queue_family_index)?;
+            match create_logical_device(&instance, physical_device, queue_family_index) {
+                Ok(created) => created,
+                Err(error) => {
+                    unsafe {
+                        surface_fns.destroy_surface(surface, None);
+                        instance.destroy_instance(None);
+                    }
+                    return Err(error);
+                }
+            };
 
-        let gr_context = create_gr_context(
+        let gr_context = match create_gr_context(
             &entry,
             &instance,
             physical_device,
@@ -252,7 +263,17 @@ impl VulkanInner {
             gpu_resource_cache_limit,
             instance_extensions,
             api_version,
-        )?;
+        ) {
+            Ok(context) => context,
+            Err(error) => {
+                unsafe {
+                    device.destroy_device(None);
+                    surface_fns.destroy_surface(surface, None);
+                    instance.destroy_instance(None);
+                }
+                return Err(error);
+            }
+        };
 
         let swapchain_fns = DeviceSwapchainFns::new(&instance, &device);
 

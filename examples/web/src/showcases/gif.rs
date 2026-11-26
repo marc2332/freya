@@ -3,7 +3,7 @@ use freya::prelude::*;
 use crate::showcases::heading;
 
 const FROG_URL: &str =
-    "https://raw.githubusercontent.com/marc2332/freya/main/examples/frog_typing.gif";
+    "https://raw.githubusercontent.com/freya-rs/freya/main/examples/frog_typing.gif";
 
 #[derive(PartialEq)]
 pub struct GifShowcase;

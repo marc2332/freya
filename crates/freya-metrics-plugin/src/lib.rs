@@ -1,5 +1,7 @@
 use std::{
+    cell::Cell,
     collections::HashMap,
+    rc::Rc,
     time::{
         Duration,
         Instant,
@@ -30,15 +32,19 @@ use freya_winit::{
     },
     reexports::winit::window::WindowId,
     renderer::{
+        LaunchHandle,
         RendererMessage,
         RendererWindowMessage,
         RendererWindowPayload,
     },
 };
 
+mod context;
 mod performance;
 mod stats;
 
+pub use context::MetricsContext;
+use context::OverlayVisibility;
 use performance::{
     FRAME_TIME_SAMPLES,
     WindowMetrics,
@@ -51,9 +57,8 @@ use stats::draw_stats_overlay;
 /// Metrics plugin that displays performance and stats overlays on top of the
 /// rendered frame. Both overlays are hidden by default.
 pub struct MetricsPlugin {
-    performance_enabled: bool,
+    visibility: Rc<Cell<OverlayVisibility>>,
     performance_toggle_shortcut: (Key, Modifiers),
-    stats_enabled: bool,
     stats_toggle_shortcut: (Key, Modifiers),
     metrics: HashMap<WindowId, WindowMetrics>,
 }
@@ -61,12 +66,11 @@ pub struct MetricsPlugin {
 impl Default for MetricsPlugin {
     fn default() -> Self {
         Self {
-            performance_enabled: false,
+            visibility: Rc::default(),
             performance_toggle_shortcut: (
                 Key::Character("p".into()),
                 Modifiers::ctrl_or_meta() | Modifiers::SHIFT,
             ),
-            stats_enabled: false,
             stats_toggle_shortcut: (
                 Key::Character("l".into()),
                 Modifiers::ctrl_or_meta() | Modifiers::SHIFT,
@@ -84,14 +88,20 @@ impl MetricsPlugin {
     }
 
     /// Set whether the performance overlay is visible by default.
-    pub fn with_visible_performance(mut self, visible: bool) -> Self {
-        self.performance_enabled = visible;
+    pub fn with_visible_performance(self, visible: bool) -> Self {
+        self.visibility.set(OverlayVisibility {
+            performance: visible,
+            ..self.visibility.get()
+        });
         self
     }
 
     /// Set whether the stats overlay is visible by default.
-    pub fn with_visible_stats(mut self, visible: bool) -> Self {
-        self.stats_enabled = visible;
+    pub fn with_visible_stats(self, visible: bool) -> Self {
+        self.visibility.set(OverlayVisibility {
+            stats: visible,
+            ..self.visibility.get()
+        });
         self
     }
 
@@ -104,10 +114,6 @@ impl MetricsPlugin {
     fn get_metrics(&mut self, id: WindowId) -> &mut WindowMetrics {
         self.metrics.entry(id).or_default()
     }
-
-    fn overlay_visible(&self) -> bool {
-        self.performance_enabled || self.stats_enabled
-    }
 }
 
 impl FreyaPlugin for MetricsPlugin {
@@ -117,51 +123,41 @@ impl FreyaPlugin for MetricsPlugin {
 
     fn on_event(&mut self, event: &mut PluginEvent, handle: PluginHandle) {
         match event {
+            PluginEvent::RunnerCreated { runner } => {
+                runner.provide_root_context(|| MetricsContext {
+                    visibility: self.visibility.clone(),
+                    renderer: LaunchHandle(handle.proxy),
+                });
+            }
             PluginEvent::KeyboardInput {
                 key,
                 modifiers,
-                is_pressed,
+                is_pressed: true,
                 ..
             } => {
-                let matches_shortcut = |shortcut: &(Key, Modifiers)| {
-                    let key_matches = match (&*key, &shortcut.0) {
-                        (Key::Character(a), Key::Character(b)) => a.eq_ignore_ascii_case(b),
-                        (a, b) => a == b,
-                    };
-                    *is_pressed && *modifiers == shortcut.1 && key_matches
+                let matches_shortcut = |(shortcut_key, shortcut_modifiers): &(Key, Modifiers)| {
+                    *modifiers == *shortcut_modifiers
+                        && match (&*key, shortcut_key) {
+                            (Key::Character(key), Key::Character(shortcut_key)) => {
+                                key.eq_ignore_ascii_case(shortcut_key)
+                            }
+                            (key, shortcut_key) => key == shortcut_key,
+                        }
                 };
 
-                let performance_toggled = matches_shortcut(&self.performance_toggle_shortcut);
-                if performance_toggled {
-                    self.performance_enabled = !self.performance_enabled;
-                }
-                let stats_toggled = matches_shortcut(&self.stats_toggle_shortcut);
-                if stats_toggled {
-                    self.stats_enabled = !self.stats_enabled;
-                }
-                if performance_toggled {
-                    for window_id in self.metrics.keys() {
-                        handle.send_renderer_message(RendererMessage::Window(
-                            RendererWindowMessage {
-                                window_id: *window_id,
-                                payload: RendererWindowPayload::Command(
-                                    WindowCommand::RequestRedraw,
-                                ),
-                            },
-                        ));
+                let visibility = self.visibility.get();
+                let next = OverlayVisibility {
+                    performance: visibility.performance
+                        ^ matches_shortcut(&self.performance_toggle_shortcut),
+                    stats: visibility.stats ^ matches_shortcut(&self.stats_toggle_shortcut),
+                };
+
+                if next != visibility {
+                    MetricsContext {
+                        visibility: self.visibility.clone(),
+                        renderer: LaunchHandle(handle.proxy),
                     }
-                }
-                if stats_toggled {
-                    for window_id in self.metrics.keys() {
-                        handle.send_renderer_message(RendererMessage::Window(
-                            RendererWindowMessage {
-                                window_id: *window_id,
-                                payload: RendererWindowPayload::Command(
-                                    WindowCommand::RequestRedraw,
-                                ),
-                            },
-                        ));
-                    }
+                    .set_visibility(next);
                 }
             }
             PluginEvent::WindowCreated {
@@ -232,7 +228,8 @@ impl FreyaPlugin for MetricsPlugin {
                 if let Some(started) = metrics.started_tasks_poll.take() {
                     metrics.tasks_poll_time += started.elapsed();
                 }
-                if self.overlay_visible() {
+
+                if self.visibility.get().any_visible() {
                     handle.send_renderer_message(RendererMessage::Window(RendererWindowMessage {
                         window_id: window.id(),
                         payload: RendererWindowPayload::Command(WindowCommand::RequestRedraw),
@@ -248,7 +245,8 @@ impl FreyaPlugin for MetricsPlugin {
                     metrics.events_time += started.elapsed();
                     metrics.events_batches += 1;
                 }
-                if self.overlay_visible() {
+
+                if self.visibility.get().any_visible() {
                     handle.send_renderer_message(RendererMessage::Window(RendererWindowMessage {
                         window_id: window.id(),
                         payload: RendererWindowPayload::Command(WindowCommand::RequestRedraw),
@@ -286,14 +284,16 @@ impl FreyaPlugin for MetricsPlugin {
                     metrics = ?metrics,
                 );
 
-                if !self.overlay_visible() {
+                let visibility = self.visibility.get();
+                if !visibility.any_visible() {
                     return;
                 }
+
                 canvas.save();
                 let scale_factor = window.scale_factor() as f32;
                 canvas.scale((scale_factor, scale_factor));
 
-                if self.performance_enabled {
+                if visibility.performance {
                     let performance_state = self.get_metrics(window.id());
                     let started_render = performance_state.started_render.take().unwrap();
 
@@ -529,7 +529,7 @@ impl FreyaPlugin for MetricsPlugin {
                     performance_state.overlay_time = overlay_started.elapsed();
                 }
 
-                if self.stats_enabled {
+                if visibility.stats {
                     draw_stats_overlay(
                         canvas,
                         font_collection,

@@ -1,6 +1,6 @@
 #![doc(
-    html_logo_url = "https://cdn.jsdelivr.net/gh/marc2332/freya@main/logo.svg",
-    html_favicon_url = "https://cdn.jsdelivr.net/gh/marc2332/freya@main/logo.svg"
+    html_logo_url = "https://cdn.jsdelivr.net/gh/freya-rs/freya@main/logo.svg",
+    html_favicon_url = "https://cdn.jsdelivr.net/gh/freya-rs/freya@main/logo.svg"
 )]
 #![cfg_attr(feature = "docs", feature(doc_cfg))]
 //! # Freya
@@ -49,8 +49,8 @@
 //! - [Optimizing](self::_docs::optimizing)
 //! - [Platform Integration](freya_core::platform::Platform)
 //! - [Platforms](self::_docs::platforms)
-//! - [Android](https://github.com/marc2332/freya/tree/main/examples/android)
-//! - [Web](https://github.com/marc2332/freya/tree/main/examples/web)
+//! - [Android](https://github.com/freya-rs/freya/tree/main/examples/android)
+//! - [Web](https://github.com/freya-rs/freya/tree/main/examples/web)
 //! - [Development Setup](self::_docs::development_setup)
 //! - [Extending Components](self::_docs::extending_components)
 //! - [Custom Elements](freya_core::element::ElementExt)

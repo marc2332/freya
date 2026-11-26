@@ -7,7 +7,7 @@ license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
 readme = "../../README.md"
 homepage = "https://freyaui.dev/"
-repository = "https://github.com/marc2332/freya"
+repository = "https://github.com/freya-rs/freya"
 keywords = ["gui", "ui", "desktop", "skia"]
 categories = ["gui", "asynchronous"]
 
@@ -22,9 +22,9 @@ no-default-features = true
 default = ["winit", "gpu", "accessibility", "platform-text-gamma"]
 # Shortcuts
 all = ["all-crossplatform", "tray", "html", "camera", "video"]
-all-crossplatform = [
+all-crossplatform = ["all-crossplatform-cpu", "gpu"]
+all-crossplatform-cpu = [
   "winit",
-  "gpu",
   "accessibility",
   "platform-text-gamma",
   "router",

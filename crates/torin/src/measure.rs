@@ -749,7 +749,7 @@ where
             // produce an incorrect cross-axis size, which then pollutes both
             // the per-child alignment sizes and the parent's accumulated cross-axis size.
             //
-            // See: https://github.com/marc2332/freya/issues/1098
+            // See: https://github.com/freya-rs/freya/issues/1098
             if parent_node.cross_alignment.is_not_start() {
                 let cross_axis = AlignAxis::new(&parent_node.direction, AlignmentDirection::Cross);
 

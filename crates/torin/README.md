@@ -4,7 +4,7 @@
 
 [![Discord Server](https://img.shields.io/discord/1015005816094478347.svg?logo=discord&style=flat-square)](https://discord.gg/sYejxCdewG)
 [![Github Sponsors](https://img.shields.io/github/sponsors/marc2332?style=social)](https://github.com/sponsors/marc2332)
-[![codecov](https://codecov.io/github/marc2332/freya/branch/main/graph/badge.svg?token=APSGEC84B8)](https://codecov.io/github/marc2332/freya)
+[![codecov](https://codecov.io/github/freya-rs/freya/branch/main/graph/badge.svg?token=APSGEC84B8)](https://codecov.io/github/freya-rs/freya)
 
 [Website](https://freyaui.dev) | [Discord](https://discord.gg/sYejxCdewG)
 

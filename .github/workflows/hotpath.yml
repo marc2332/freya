@@ -9,7 +9,7 @@ on:
 jobs:
   upload:
     if: github.event_name == 'push'
-    runs-on: ubuntu-26.04
+    runs-on: blacksmith-4vcpu-ubuntu-2604
     timeout-minutes: 60
     strategy: &benchmark-strategy
       fail-fast: false
@@ -69,7 +69,7 @@ jobs:
       # Blank (Criterion untouched) for the non-Criterion benchmarks.
       HOTPATH_CRITERION_ITERATIONS: ${{ matrix.iterations }}
     steps: &benchmark-steps
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: useblacksmith/checkout@v1 # v6.0.2
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           submodules: true
@@ -115,7 +115,7 @@ jobs:
           if-no-files-found: error
   report:
     if: github.event_name != 'push'
-    runs-on: ubuntu-26.04
+    runs-on: blacksmith-4vcpu-ubuntu-2604
     timeout-minutes: 60
     strategy: *benchmark-strategy
     concurrency:

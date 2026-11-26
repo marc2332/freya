@@ -16,7 +16,7 @@ use crate::{
 /// root [`Outlet`], which renders the component associated with the current route.
 /// Layout components can add further outlets for nested routes.
 ///
-/// See the [basic router example](https://github.com/marc2332/freya/blob/main/examples/feature_router.rs).
+/// See the [basic router example](https://github.com/freya-rs/freya/blob/main/examples/feature_router.rs).
 pub struct Router<R: Routable + Clone>(NoArgCallback<RouterConfig<R>>);
 
 impl<R: Routable + Clone> PartialEq for Router<R> {
