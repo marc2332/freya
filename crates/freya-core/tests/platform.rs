@@ -8,8 +8,12 @@ use std::{
 };
 
 use freya_core::prelude::*;
-use freya_testing::prelude::launch_test;
+use freya_testing::prelude::{
+    TestingRunner,
+    launch_test,
+};
 use futures_util::task::noop_waker;
+use torin::prelude::Size;
 
 #[test]
 fn platform_reads_selected_windows_and_keeps_calling_window_context() {
@@ -35,6 +39,38 @@ fn platform_reads_selected_windows_and_keeps_calling_window_context() {
     assert!(platform.try_window(other_id).is_none());
     drop(runner);
     assert!(platform.try_window(current.id).is_none());
+}
+
+#[test]
+fn changing_target_platform_updates_touch_focus_in_a_mounted_window() {
+    let (mut runner, focus_count) = TestingRunner::new(
+        || {
+            let mut focus_count = use_consume::<State<usize>>();
+            rect()
+                .width(Size::fill())
+                .height(Size::fill())
+                .on_focus_press(move |_| *focus_count.write() += 1)
+        },
+        (100., 100.).into(),
+        |runner| runner.provide_root_context(|| State::create(0_usize)),
+        1.,
+    );
+    assert_eq!(TargetPlatform::get(), TargetPlatform::detect());
+
+    TargetPlatform::set(TargetPlatform::Linux);
+    runner.sync_and_update();
+    runner.press_touch((25., 25.));
+    assert_eq!(*focus_count.peek(), 1);
+    runner.release_touch((25., 25.));
+    assert_eq!(*focus_count.peek(), 1);
+
+    TargetPlatform::set(TargetPlatform::Android);
+    assert_eq!(TargetPlatform::get(), TargetPlatform::Android);
+    runner.sync_and_update();
+    runner.press_touch((25., 25.));
+    assert_eq!(*focus_count.peek(), 1);
+    runner.release_touch((25., 25.));
+    assert_eq!(*focus_count.peek(), 2);
 }
 
 #[test]

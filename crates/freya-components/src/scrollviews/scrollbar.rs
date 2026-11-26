@@ -230,12 +230,12 @@ impl ComponentOwned for ScrollBar {
         };
 
         let on_pointer_over = move |_| {
-            if !cfg!(target_os = "android") {
+            if TargetPlatform::get() != TargetPlatform::Android {
                 hovering.set_if_modified(true);
             }
         };
         let on_pointer_out = move |_| {
-            if !cfg!(target_os = "android") {
+            if TargetPlatform::get() != TargetPlatform::Android {
                 hovering.set_if_modified(false);
             }
         };

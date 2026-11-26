@@ -84,7 +84,6 @@ impl WebApp {
         runner.provide_root_context(|| ticker);
         runner.provide_root_context(AnimationClock::new);
         runner.provide_root_context(AssetCacher::create);
-        runner.provide_root_context(TargetPlatform::detect);
 
         let window_commands = Rc::new(RefCell::new(Vec::new()));
         let app_commands = Rc::new(RefCell::new(Vec::new()));

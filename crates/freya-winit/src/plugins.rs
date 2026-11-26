@@ -81,6 +81,12 @@ impl PluginsManager {
         }
     }
 
+    pub(crate) fn filter_input(&mut self, window_id: WindowId, events: &mut Vec<PlatformEvent>) {
+        for plugin in self.plugins.borrow_mut().values_mut() {
+            plugin.filter_input(window_id, events);
+        }
+    }
+
     /// Observer reporting every tasks polling batch of a [Runner] as plugin events.
     pub fn tasks_poll_observer<'a>(
         &'a mut self,
@@ -121,6 +127,8 @@ pub enum PluginEvent<'a> {
         window: &'a dyn Window,
         raw: &'a WindowEvent,
         tree: &'a mut Tree,
+        /// Add events to queue before Freya handles the window event.
+        input: &'a mut Vec<PlatformEvent>,
     },
 
     /// A window resumed.
@@ -261,6 +269,9 @@ pub trait FreyaPlugin {
 
     /// React on events emitted by Freya.
     fn on_event(&mut self, event: &mut PluginEvent, handle: PluginHandle);
+
+    /// Remove or replace input events before Freya queues them.
+    fn filter_input(&mut self, _window_id: WindowId, _events: &mut Vec<PlatformEvent>) {}
 
     /// Wrap the root element with a custom component.
     /// Called during window creation. The default implementation returns the element unchanged.

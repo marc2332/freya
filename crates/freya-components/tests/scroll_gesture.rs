@@ -23,7 +23,7 @@ fn setup(virtualized: bool, platform: TargetPlatform) -> (TestingRunner, ScrollC
         },
         (500., 500.).into(),
         |runner| {
-            runner.provide_root_context(|| platform);
+            TargetPlatform::set(platform);
             runner.provide_root_context(|| ScrollController::new(0., 0.))
         },
         1.,

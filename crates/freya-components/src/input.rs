@@ -681,7 +681,7 @@ impl Component for Input {
 
         let mut focus_input = move |location| {
             ContextMenu::close();
-            if !cfg!(target_os = "android") || a11y_id.is_focused() {
+            if TargetPlatform::get() != TargetPlatform::Android || a11y_id.is_focused() {
                 is_dragging.set_if_modified(true);
             }
             movement_timeout.reset();
@@ -843,7 +843,7 @@ impl Component for Input {
                     .on_pointer_down(move |e: Event<PointerEventData>| {
                         if matches!(e.data(), PointerEventData::Mouse(mouse) if mouse.button == Some(MouseButton::Right)) {
                             on_secondary_down(e);
-                        } else if !cfg!(target_os = "android") && match e.data() {
+                        } else if TargetPlatform::get() != TargetPlatform::Android && match e.data() {
                             PointerEventData::Mouse(mouse) => mouse.button == Some(MouseButton::Left),
                             PointerEventData::Touch(_) => true,
                         } {

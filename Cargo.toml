@@ -40,6 +40,7 @@ members = [
   "./crates/freya-i18n",
   "./crates/freya-metrics-plugin",
   "./crates/freya-borderless-plugin",
+  "./crates/freya-platform-simulator-plugin",
   "./crates/freya-radio",
   "./crates/freya-engine",
   "./crates/freya-devtools",
@@ -95,6 +96,7 @@ freya-testing = { path = "./crates/freya-testing", version = "0.6.0-alpha.2" }
 freya-i18n = { path = "./crates/freya-i18n", version = "0.6.0-alpha.2" }
 freya-metrics-plugin = { path = "./crates/freya-metrics-plugin", version = "0.6.0-alpha.2" }
 freya-borderless-plugin = { path = "./crates/freya-borderless-plugin", version = "0.6.0-alpha.2" }
+freya-platform-simulator-plugin = { path = "./crates/freya-platform-simulator-plugin", version = "0.6.0-alpha.2" }
 freya-radio = { path = "./crates/freya-radio", version = "0.6.0-alpha.2" }
 freya-engine = { path = "./crates/freya-engine", version = "0.6.0-alpha.2" }
 freya-devtools = { path = "./crates/freya-devtools", version = "0.6.0-alpha.2" }
@@ -216,6 +218,7 @@ freya-winit = { workspace = true }
 freya-testing = { workspace = true }
 freya-i18n = { workspace = true }
 freya-metrics-plugin = { workspace = true }
+freya-platform-simulator-plugin = { workspace = true }
 freya-radio = { workspace = true }
 tree-sitter-rust = "0.24"
 
