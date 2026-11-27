@@ -401,9 +401,11 @@ impl ChildrenExt for MenuItem {
     }
 }
 
-impl ComponentOwned for MenuItem {
-    fn render(self) -> impl IntoElement {
-        let theme = get_theme!(self.theme, MenuItemThemePreference, "menu_item");
+impl ComponentContent for MenuItem {
+    type Content = Rect;
+
+    fn render_content(&self) -> Self::Content {
+        let theme = get_theme!(&self.theme, MenuItemThemePreference, "menu_item");
         let mut hovering = use_state(|| false);
         let a11y_id = use_a11y();
         let focus = use_focus(a11y_id);
@@ -435,9 +437,10 @@ impl ComponentOwned for MenuItem {
                 .alignment(BorderAlignment::Inner)
         };
 
+        let pointer_enter_handler = self.on_pointer_enter.clone();
         let on_pointer_enter = move |e: Event<PointerEventData>| {
             hovering.set(true);
-            if let Some(on_pointer_enter) = &self.on_pointer_enter {
+            if let Some(on_pointer_enter) = &pointer_enter_handler {
                 on_pointer_enter.call(e);
             }
         };
@@ -446,9 +449,10 @@ impl ComponentOwned for MenuItem {
             hovering.set(false);
         };
 
+        let press_handler = self.on_press.clone();
         let on_press = move |e: Event<PressEventData>| {
             let prevent_default = e.get_prevent_default();
-            if let Some(on_press) = &self.on_press {
+            if let Some(on_press) = &press_handler {
                 on_press.call(e);
             }
             if *prevent_default.borrow() {
@@ -485,7 +489,13 @@ impl ComponentOwned for MenuItem {
                         .child(ArrowIcon::new().rotate(270.).fill(color.with_a(180))),
                 )
             })
-            .children(self.children)
+            .children(self.children.clone())
+    }
+}
+
+impl ComponentOwned for MenuItem {
+    fn render(self) -> impl IntoElement {
+        self.render_content()
     }
 
     fn render_key(&self) -> DiffKey {

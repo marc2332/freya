@@ -77,6 +77,7 @@ pub mod prelude {
         element::{
             App,
             Component,
+            ComponentContent,
             ComponentKey,
             ComponentOwned,
             Element,

@@ -5,7 +5,7 @@ use freya::android::AndroidExt;
 use freya::{
     animation::*,
     icons::lucide,
-    material_design::FloatingTabRippleExt,
+    material_design::RippleExt,
     prelude::*,
     router::*,
 };

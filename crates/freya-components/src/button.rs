@@ -250,8 +250,10 @@ impl CornerRadiusExt for Button {
     }
 }
 
-impl Component for Button {
-    fn render(&self) -> impl IntoElement {
+impl ComponentContent for Button {
+    type Content = Rect;
+
+    fn render_content(&self) -> Self::Content {
         let mut hovering = use_state(|| false);
         let mut pressing = use_state(|| false);
         let a11y_id = use_a11y();
@@ -397,6 +399,12 @@ impl Component for Button {
                 CursorIcon::NotAllowed.into()
             })
             .children(self.elements.clone())
+    }
+}
+
+impl Component for Button {
+    fn render(&self) -> impl IntoElement {
+        self.render_content()
     }
 
     fn render_key(&self) -> DiffKey {

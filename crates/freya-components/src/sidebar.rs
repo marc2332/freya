@@ -122,8 +122,10 @@ impl SideBarItem {
     }
 }
 
-impl Component for SideBarItem {
-    fn render(&self) -> impl IntoElement {
+impl ComponentContent for SideBarItem {
+    type Content = Rect;
+
+    fn render_content(&self) -> Self::Content {
         let SideBarItemTheme {
             margin,
             hover_background,
@@ -181,6 +183,12 @@ impl Component for SideBarItem {
             .corner_radius(corner_radius)
             .map(border, |rect, border| rect.border(border))
             .children(self.children.clone())
+    }
+}
+
+impl Component for SideBarItem {
+    fn render(&self) -> impl IntoElement {
+        self.render_content()
     }
 
     fn render_key(&self) -> DiffKey {
