@@ -4,8 +4,8 @@
 )]
 use freya::{
     material_design::{
-        ButtonRippleExt,
         Ripple,
+        RippleExt,
     },
     prelude::*,
 };

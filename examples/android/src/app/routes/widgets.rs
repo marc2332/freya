@@ -5,10 +5,8 @@ use std::{
 
 use freya::{
     material_design::{
-        ButtonRippleExt,
-        MenuItemRippleExt,
         Ripple,
-        TileRippleExt,
+        RippleExt,
     },
     prelude::*,
 };

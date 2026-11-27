@@ -2935,6 +2935,8 @@ dependencies = [
  "freya-animation",
  "freya-components",
  "freya-core",
+ "freya-engine",
+ "freya-testing",
  "torin",
 ]
 

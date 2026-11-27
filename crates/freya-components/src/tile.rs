@@ -1,5 +1,9 @@
 use freya_core::prelude::*;
-use torin::prelude::*;
+use torin::prelude::{
+    Alignment,
+    Direction,
+    Gaps,
+};
 
 #[derive(Debug, Default, PartialEq, Clone, Copy)]
 pub enum TileStatus {
@@ -63,8 +67,10 @@ impl Tile {
     }
 }
 
-impl Component for Tile {
-    fn render(&self) -> impl IntoElement {
+impl ComponentContent for Tile {
+    type Content = Rect;
+
+    fn render_content(&self) -> Self::Content {
         let mut status = use_state(|| TileStatus::Idle);
 
         let on_press = {
@@ -103,6 +109,12 @@ impl Component for Tile {
                     .map(|leading| rect().padding(Gaps::new_all(4.0)).child(leading)),
             )
             .children(self.children.clone())
+    }
+}
+
+impl Component for Tile {
+    fn render(&self) -> impl IntoElement {
+        self.render_content()
     }
 
     fn render_key(&self) -> DiffKey {

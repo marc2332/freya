@@ -11,25 +11,13 @@
 //! fn app() -> impl IntoElement {
 //!     Button::new()
 //!         .on_press(|_| println!("Pressed"))
-//!         .ripple() // Renders a ripple effect upon press
+//!         .ripple()
 //!         .child("Material Button")
 //! }
 //! ```
 
-pub mod button;
-pub mod floating_tab;
-pub mod menu;
 pub mod ripple;
-pub mod sidebar;
-pub mod tile;
 
 pub mod prelude {
-    pub use crate::{
-        button::*,
-        floating_tab::*,
-        menu::*,
-        ripple::*,
-        sidebar::*,
-        tile::*,
-    };
+    pub use crate::ripple::*;
 }

@@ -420,6 +420,14 @@ pub trait Component: ComponentKey + PartialEq + 'static {
     }
 }
 
+/// Exposes the typed element returned by a component for use by extensions.
+pub trait ComponentContent: Component {
+    type Content: IntoElement;
+
+    /// Render the component's entire element. Follow the same hook rules as [`Component::render`].
+    fn render_content(&self) -> Self::Content;
+}
+
 pub trait ComponentOwned: ComponentKey + PartialEq + 'static {
     fn render(self) -> impl IntoElement;
 

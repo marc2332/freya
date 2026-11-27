@@ -98,8 +98,10 @@ impl FloatingTab {
     }
 }
 
-impl Component for FloatingTab {
-    fn render(&self) -> impl IntoElement {
+impl ComponentContent for FloatingTab {
+    type Content = Rect;
+
+    fn render_content(&self) -> Self::Content {
         let a11y_id = use_a11y();
         let focus = use_focus(a11y_id);
         let mut status = use_state(TabStatus::default);
@@ -147,6 +149,12 @@ impl Component for FloatingTab {
             .color(color)
             .corner_radius(corner_radius)
             .children(self.children.clone())
+    }
+}
+
+impl Component for FloatingTab {
+    fn render(&self) -> impl IntoElement {
+        self.render_content()
     }
 
     fn render_key(&self) -> DiffKey {
