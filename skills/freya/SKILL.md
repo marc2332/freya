@@ -337,7 +337,9 @@ Use `prevent_default()` to cancel follow up events that the current event would 
 
 Start with themed components and their variants
 
-Use theme extensions on primitives and read an existing `ColorRole` when no extension fits
+Use theme extensions such as `.theme_background()` on rectangles, `.theme_color()` on text, and `.theme_stroke()` on outlined SVGs
+
+When no extension fits, read a palette role with `theme.read().color(ColorRole::TextSecondary)` instead of using `get_var` with a color key
 
 Initialize the app theme with `use_init_theme(light_theme)` or `use_init_theme(dark_theme)`
 
@@ -346,7 +348,7 @@ Initialize the app theme with `use_init_theme(light_theme)` or `use_init_theme(d
 ```rust
 let theme = use_theme();
 
-let secondary_text = *theme.read().get_var::<Color>(ColorRole::TextSecondary.key());
+let secondary_text = theme.read().color(ColorRole::TextSecondary);
 
 rect()
     .theme_background()
