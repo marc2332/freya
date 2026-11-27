@@ -224,6 +224,7 @@ pub mod components {
         checkbox::*,
         chip::*,
         color_picker::*,
+        combobox::*,
         context_menu::*,
         corner_radius::*,
         cursor_blink::*,
