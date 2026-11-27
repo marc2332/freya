@@ -1,766 +1,181 @@
 ---
 name: freya
-description: Freya Rust GUI framework best practices, patterns, and conventions. Use when writing Freya components, hooks, elements, or working on a Freya project.
+description: Apply Freya best practices when writing or reviewing Rust GUI components, hooks, events, layout, or themes
 ---
 
-# Freya Best Practices
+# Freya best practices
 
-Freya is a cross-platform, native, declarative GUI library for Rust.
+## Index
 
-General rules:
-- Do not write unnecessary comments in code.
-- Do not use em dashes.
-- Be simple, elegant, and concise.
+* **General:** [Choose the cleanup scope](#choose-the-cleanup-scope), [Reuse existing Freya APIs](#reuse-existing-freya-apis)
+* **Components:** [Separate UI from logic](#separate-ui-from-logic), [Use structs for reusable components](#use-structs-for-reusable-components), [Require values in component constructors](#require-values-in-component-constructors), [Keep builder chains declarative](#keep-builder-chains-declarative), [Pass plain text directly](#pass-plain-text-directly), [Let layout adapt](#let-layout-adapt)
+* **Events:** [Bind event handlers before the UI](#bind-event-handlers-before-the-ui), [Use pointer events for gestures](#use-pointer-events-for-gestures), [Use press for activation](#use-press-for-activation), [Cancel the right event](#cancel-the-right-event)
+* **State:** [Call hooks in a stable order](#call-hooks-in-a-stable-order), [Derive values instead of syncing state](#derive-values-instead-of-syncing-state), [Derive values without PartialEq](#derive-values-without-partialeq), [Keep side effects out of render](#keep-side-effects-out-of-render), [Give children only the state access they need](#give-children-only-the-state-access-they-need), [Share dependencies through context](#share-dependencies-through-context), [Scope shared state with Freya Radio](#scope-shared-state-with-freya-radio), [Bind inputs directly](#bind-inputs-directly)
+* **Styling:** [Use existing theme colors](#use-existing-theme-colors), [Create a custom app theme](#create-a-custom-app-theme), [Override individual theme fields](#override-individual-theme-fields), [Animate changes in state](#animate-changes-in-state)
+* **Performance:** [Key lists by item ID](#key-lists-by-item-id), [Virtualize large lists](#virtualize-large-lists), [Downsample images for display](#downsample-images-for-display), [Choose an image sampling filter](#choose-an-image-sampling-filter), [Tune asset cache retention](#tune-asset-cache-retention), [Rasterize complex SVGs in the background](#rasterize-complex-svgs-in-the-background), [Cache expensive calculations with use_memo](#cache-expensive-calculations-with-use_memo), [Subscribe where values are displayed](#subscribe-where-values-are-displayed), [Skip unchanged state writes](#skip-unchanged-state-writes), [Share remote data with Freya Query](#share-remote-data-with-freya-query), [Keep cached data visible during refresh](#keep-cached-data-visible-during-refresh)
+* **App:** [Load data outside render](#load-data-outside-render), [Show honest loading progress](#show-honest-loading-progress), [Spawn tasks from event handlers](#spawn-tasks-from-event-handlers), [Release state guards before awaiting](#release-state-guards-before-awaiting), [Build the Tokio runtime manually](#build-the-tokio-runtime-manually), [Use the router for page navigation](#use-the-router-for-page-navigation), [Open external URLs through Freya](#open-external-urls-through-freya), [Translate complete messages](#translate-complete-messages), [Respect Android system bars and cutouts](#respect-android-system-bars-and-cutouts), [Test through the UI](#test-through-the-ui)
 
-Start by asking the user what they would like to do:
-- Lint and improve existing code
-- Refactor existing code
-- Add a new feature
+## Choose the cleanup scope
 
-## Components
+When asked to clean up existing code without a clear scope, ask:
 
-### Struct Components (for stateful UI)
+> How thorough should the cleanup be: Slightly, Medium, or Completely?
 
-```rust
-#[derive(PartialEq)]
-struct Counter {
-    initial: i32,
-}
+* **Slightly:** Make the smallest useful changes in the requested code and avoid structural refactors
+* **Medium:** Focus on the fixes that matter most and skip cosmetic changes with little benefit
+* **Completely:** Review all Rust code in the app and go through this guide one practice at a time without skipping any applicable practice
 
-impl Component for Counter {
-    fn render(&self) -> impl IntoElement {
-        let mut count = use_state(|| self.initial);
-        label()
-            .on_press(move |_| *count.write() += 1)
-            .text(format!("Count: {}", count.read()))
-    }
-}
-```
+If the user already specified the scope or asked for a specific fix or feature, proceed without asking
 
-- `#[derive(PartialEq)]` is required - Freya uses it to skip re-rendering unchanged subtrees.
-- Implement `KeyExt` and `ChildrenExt` when the component can be keyed or accept children.
+## Reuse existing Freya APIs
 
-#### ComponentOwned (when `render` needs to own `self`)
+Check Freya's components, hooks, and builder methods before writing your own
 
-`Component::render` takes `&self`, so moving fields into closures forces `let foo = self.foo.clone();` boilerplate. `ComponentOwned::render` takes `self` by value (the framework clones it for you), letting you move `self` directly. Requires `#[derive(Clone)]`. Reach for it only when you'd otherwise clone `self` (or several of its fields) inside `render`.
+Use the existing API if it meets the requirement
+
+Write custom code only for behavior the existing API cannot provide
+
+**CORRECT:** Use `.center()` to center children on both axes
 
 ```rust
-#[derive(PartialEq, Clone)]
-struct Item { state: State<Vec<i32>>, i: usize }
-
-impl ComponentOwned for Item {
-    fn render(mut self) -> impl IntoElement {
-        Button::new()
-            .on_press(move |_| { self.state.write().remove(self.i); })
-            .child("Remove")
-    }
-}
+rect().center().child("Ready")
 ```
 
-### Function Components (app root only)
-
-The app root is a plain function. Hooks like `use_init_theme`, `use_init_radio_station`, `use_provide_context` belong here.
-
-```rust
-fn app() -> impl IntoElement {
-    rect().child("Hello, World!")
-}
-```
-
-To pass data from `main` into the root, use the `App` trait:
-
-```rust
-struct MyApp { number: u8 }
-
-impl App for MyApp {
-    fn render(&self) -> impl IntoElement {
-        label().text(self.number.to_string())
-    }
-}
-```
-
-### Utility Functions (stateless, no hooks)
-
-```rust
-fn colored_label(color: Color, text: &str) -> impl IntoElement {
-    label().color(color).text(text.to_string())
-}
-```
-
-**Reusable UI that uses hooks or props MUST be a `Component`** (struct + `impl Component`). Plain functions are only for the app root and stateless helpers. Functions with hooks won't benefit from diffing/memoization and can't be keyed or accept reactive props cleanly.
-
-## Elements
-
-Built-in element constructors:
-
-- `rect()` - layout primitive (direction, alignment, sizing, background, borders, corners, shadows, padding, scroll).
-- `label()` - single-line text.
-- `paragraph()` - multi-line / rich text via `.text_span(...)` children; also the target for `use_editable`.
-- `image(handle)` - raster image; `handle` from `static_bytes(...)`, `dynamic_bytes(...)`, or asset loaders.
-
-`&str` / `String` implement `Into<Label>`, so prefer `rect().child("Hi")` over `rect().child(label().text("Hi"))`.
-
-## Element Builder Pattern
-
-Elements use a fluent builder API. **Never store an element in a variable to modify it later** - chain all methods directly or use `.maybe` / `.map`.
-
-```rust
-// Good
-rect()
-    .background((255, 0, 0))
-    .width(Size::fill())
-    .height(Size::px(100.))
-    .center()       // centers children both axes
-    .expanded()     // fills available space in parent's main axis
-    .horizontal()   // sets layout direction to horizontal
-    .maybe(is_active, |el| el.child("Active"))
-    .map(some_value, |el, v| el.child(v.to_string()))
-
-// Bad - storing to modify later
-let mut element = rect();
-```
-
-Common layout shorthands: `.center()` centers children on both axes; `.expanded()` makes the element fill all remaining space along the parent's main axis (equivalent to `flex: 1` in CSS); `.horizontal()` and `.vertical()` set the layout direction (prefer them over `.direction(Direction::Horizontal/Vertical)`).
-
-### Conditional and Dynamic Rendering
+**WRONG:** Set both axes to center separately when `.center()` does the same thing
 
 ```rust
 rect()
-    .maybe(show_badge, |el| el.child("New"))          // bool condition
-    .map(large_size, |el, size| el.height(size))      // Option<T>, passes value
-    .maybe_child(optional_element)                    // Option<impl IntoElement>
+    .main_align(Alignment::Center)
+    .cross_align(Alignment::Center)
+    .child("Ready")
 ```
 
-- `.maybe(bool, |el| el)` - applies the callback when the condition is true
-- `.map(Option<T>, |el, val| el)` - applies the callback when the `Option` is `Some`, passing the inner value
-- `.maybe_child(Option<impl IntoElement>)` - appends a child only when `Some`
+Use `.main_align()` and `.cross_align()` separately when the axes need different alignment
 
-Name the element argument `el` in `.maybe` / `.map` callbacks (not `r`, `rect`, `e`, etc.).
+## Separate UI from logic
 
-**Prefer one outer `.maybe` / `.map` over several consecutive `.maybe_child` calls gated on the same condition** - it keeps the gating in one place and avoids re-evaluating the same predicate.
+Use this order in every `render` with exactly one blank line between nonempty groups:
 
-```rust
-// Good, single .maybe wraps all conditional children
-rect()
-    .maybe(show, |el| {
-        el.child(Title::new("Hi"))
-            .child(Content::new().child("Hello"))
-            .child(Footer::new())
-    })
+1. Hooks in a stable order
+2. Derived values needed by handlers
+3. Named closures for event handlers
+4. Derived values needed only by the view
+5. UI builder chain as the final expression
 
-// Bad, same predicate repeated per child
-rect()
-    .maybe_child(show.then(|| Title::new("Hi")))
-    .maybe_child(show.then(|| Content::new().child("Hello")))
-    .maybe_child(show.then(|| Footer::new()))
-```
+Keep business rules and substantial state transitions in model methods or reducers
 
-## Events
-
-Attach handlers via builder methods on any element. Handlers receive `Event<T>`; use `move` closures to capture state.
+**CORRECT:** Separate groups with one blank line
 
 ```rust
-rect()
-    .on_press(move |_| { /* left click, tap, or Enter/Space when focused */ })
-    .on_key_down(move |e: Event<KeyboardEventData>| { /* only while focused */ })
-    .on_wheel(move |e| { /* scroll delta */ })
-    .on_pointer_enter(move |_| { /* hover begin (mouse or touch) */ })
-```
+fn render(&self) -> impl IntoElement {
+    let mut count = use_state(|| self.initial);
 
-Catalog (all prefixed `on_`):
+    let reset_value = self.initial;
 
-- **Press**: `press` (left/tap/Enter/Space), `all_press` (any mouse button), `secondary_down` (right-click).
-- **Mouse**: `mouse_up`, `mouse_down`, `mouse_move`.
-- **Pointer** (mouse + touch unified): `pointer_press`, `pointer_down`, `pointer_move`, `pointer_enter`, `pointer_leave`, `pointer_over`, `pointer_out`.
-- **Keyboard** (require focus): `key_down`, `key_up`.
-- **Wheel**: `wheel`.
-- **Touch**: `touch_start`, `touch_end`, `touch_move`, `touch_cancel`.
-- **File drop**: `file_drop`.
-- **Layout**: `sized` (measured size changed).
-- **Global** (no hit-test; use sparingly): `global_pointer_up`, `global_pointer_down`, `global_pointer_move`, `global_key_down`, `global_key_up`, `global_file_hover`, `global_file_hover_cancelled`.
-- **Capture** (run before regular handlers): `capture_global_pointer_up`, `capture_global_pointer_move`.
+    let on_reset = move |_: Event<PressEventData>| count.set(reset_value);
 
-**Prefer `on_press` over raw mouse/pointer events** for interactive elements: it covers click, tap, and keyboard activation, so accessibility comes free. Use `on_mouse_*` / `on_pointer_*` only when you need pointer-specific behavior (drag handles, canvas tools).
+    let caption = format!("Reset count ({})", count.read());
 
-`Event<T>` has two cancellation methods, plus `.map(...)` / `.try_map(...)` to transform inner data:
-
-- `.stop_propagation()`: don't bubble this event to ancestor handlers. No effect on events that don't bubble (move/enter/leave, capture, global).
-- `.prevent_default()`: don't fire the follow-up events this one triggers (e.g. in `on_mouse_up`, suppresses the `on_pointer_press` and `on_global_pointer_up` that would follow).
-
-### Callback props on custom components
-
-Use `EventHandler<T>` for callback props; closures convert via `.into()`.
-
-```rust
-#[derive(PartialEq)]
-struct Confirm { on_accept: EventHandler<()> }
-
-impl Component for Confirm {
-    fn render(&self) -> impl IntoElement {
-        let on_accept = self.on_accept;
-        Button::new().on_press(move |_| on_accept.call(())).child("OK")
-    }
-}
-
-Confirm { on_accept: (move |()| println!("yes")).into() }
-```
-
-`EventHandler<T>` is `Copy`; capture directly in `move` closures.
-
-## Focus and Accessibility
-
-Focusable elements need a stable `AccessibilityId` from `use_a11y()` (one per focusable node), attached via `.a11y_id(...)` and `.a11y_focusable(true)`. Track focus state with `use_focus(id)`.
-
-```rust
-#[derive(PartialEq)]
-struct FocusableBox;
-
-impl Component for FocusableBox {
-    fn render(&self) -> impl IntoElement {
-        let a11y_id = use_a11y();
-        let focus = use_focus(a11y_id);
-
-        rect()
-            .a11y_id(a11y_id)
-            .a11y_focusable(true)
-            .a11y_role(AccessibilityRole::Button)
-            .on_press(move |_| println!("activated"))
-            .maybe(focus() == Focus::Keyboard, |el| {
-                el.border(Border::new().fill(Color::BLUE).width(2.))
-            })
-            .child("Click or Tab to me")
-    }
+    Button::new().on_press(on_reset).child(caption)
 }
 ```
 
-`Focus` variants:
-- `Focus::Not` - not focused.
-- `Focus::Pointer` - focused by mouse/touch (no focus ring needed).
-- `Focus::Keyboard` - focused via Tab (render a focus ring).
-- `focus.is_focused()` matches `Pointer` or `Keyboard`.
-
-`on_press` already fires on Enter/Space when focused, so keyboard activation is free. For raw key handling, `KeyboardEventExt::is_press_event(&event)` detects the OS activation gesture (Enter/Space; Ctrl+Alt+Space on macOS with VoiceOver).
-
-Other a11y builders: `.a11y_role(...)`, `.a11y_alt("description")`, `.a11y_auto_focus(true)`, `.a11y_member_of(other_id)`, `.a11y_builder(|node| { /* raw accesskit::Node */ })`.
-
-Read the focused id globally via `Platform::get().focused_accessibility_id`.
-
-## Hooks
-
-Hooks are prefixed with `use_` (e.g. `use_state`, `use_animation`). Follow these rules:
-
-1. **Only call hooks at the top level of `render`** - never inside conditionals, loops, or closures.
-2. **Hooks must be called in the same order on every render.**
-3. **Never call hooks inside event handlers** - call them at the top of `render` and capture the values in `move` closures instead.
-4. **Never call hooks inside loops** - the number of hook calls must be constant across renders.
-5. **Never call hooks outside of components** - hooks only work inside a `render` method or a function component.
-6. **Never call hooks inside async tasks** - `spawn` callbacks are async and cannot call hooks; capture state before spawning. Some hooks have non-hook counterparts that are safe to call in async contexts (e.g. `use_consume` → `consume_context()`).
-
-**Capture hook values in `move` closures** for event handlers:
+**WRONG:** Skip the blank lines and inline the handler and caption
 
 ```rust
-let mut state = use_state(|| false);
-let on_click = move |_| state.set(true); // capture, not call inside handler
-rect().on_press(on_click)
-```
-
-## State Management
-
-### Local State
-
-```rust
-let mut count = use_state(|| 0);
-*count.write() += 1;          // write
-let n = *count.read();        // read
-count.set(5);                 // convenience setter
-count.set_if_modified(5);     // only writes (and notifies) if the new value differs
-```
-
-`use_state` returns a `Copy` type (`State<T>`). No `.clone()` needed when passing it around.
-
-Avoid `drop()` on guards from `.read()`/`.write()`; guards release on scope exit. Prefer a smaller scope (`{ let v = state.read(); ... }`) or copying the value out (`let n = *count.read();`). Only use explicit `drop(guard)` when you must release a borrow before re-borrowing in the same scope.
-
-Prefer `set_if_modified` over `set` when the new value may equal the current (syncing external/derived values, handlers that may fire unchanged). It skips the write and avoids waking subscribers. Requires `T: PartialEq`. `set_if_modified_and_then(value, || { ... })` runs a callback only on actual change.
-
-Pass local state to child components:
-
-```rust
-#[derive(PartialEq)]
-struct Child(State<i32>);
-```
-
-### Global State - Freya Radio
-
-Use Freya Radio for large or deeply nested app state where you need surgical, fine-grained updates - only the components subscribed to a specific channel re-render when that channel changes. This makes it well-suited for complex UIs (e.g. a tab system where each tab has independent state, or a big data model where different parts of the UI subscribe to different slices).
-
-Define your state and a channel enum that maps to the parts of the state that can change independently:
-
-```rust
-#[derive(Default, Clone)]
-struct AppState {
-    count: i32,
-    name: String,
-}
-
-#[derive(PartialEq, Eq, Clone, Debug, Copy, Hash)]
-enum AppChannel {
-    Count,
-    Name,
-}
-
-impl RadioChannel<AppState> for AppChannel {}
-```
-
-Initialize once in the root component, then subscribe from any descendant:
-
-```rust
-// Root
-use_init_radio_station::<AppState, AppChannel>(AppState::default);
-
-// Any component - only re-renders when AppChannel::Count changes
-let mut radio = use_radio(AppChannel::Count);
-radio.read().count;
-radio.write().count += 1;
-```
-
-For channels where a write to one should also notify subscribers of another, override `derive_channel`:
-
-```rust
-impl RadioChannel<AppState> for AppChannel {
-    fn derive_channel(self, _state: &AppState) -> Vec<Self> {
-        match self {
-            // Writing to Count also notifies Name subscribers
-            AppChannel::Count => vec![self, AppChannel::Name],
-            AppChannel::Name => vec![self],
-        }
-    }
+fn render(&self) -> impl IntoElement {
+    let mut count = use_state(|| self.initial);
+    let reset_value = self.initial;
+    Button::new().on_press(move |_: Event<PressEventData>| count.set(reset_value)).child(format!("Reset count ({})", count.read()))
 }
 ```
 
-For complex state transitions, implement the reducer pattern with `DataReducer`:
+## Use structs for reusable components
+
+Use plain functions for the app root and stateless helpers without hooks
+
+**CORRECT:** Put props and identity on a component and forward its key with `render_key`
 
 ```rust
-impl DataReducer for AppState {
-    type Channel = AppChannel;
-    type Action = AppAction;
-
-    fn reduce(&mut self, action: AppAction) -> ChannelSelection<AppChannel> {
-        match action {
-            AppAction::Increment => { self.count += 1; }
-            AppAction::SetName(n) => { self.name = n; }
-        }
-        ChannelSelection::Current
-    }
-}
-
-// Then in a component:
-radio.apply(AppAction::Increment);
-```
-
-### Readable / Writable / WritableSetter
-
-Use these as component props to hide the backing storage type. All implement `PartialEq` and `Clone`. `read()` subscribes to changes, while `peek()` does not.
-
-| Type | Use | Updates |
-|---|---|---|
-| `Readable<T>` | Read-only values | None |
-| `Writable<T>` | Direct mutation | `write()` and `WritableUtils` helpers |
-| `WritableSetter<T>` | Value replacement | `set()` and `set_if_modified()` through a callback |
-
-Conversions:
-- `State<T>` supports all three through `.into_readable()`, `.into_writable()`, and `.into_writable_setter()`.
-- `Memo<T>` and `RadioSlice` support `.into_readable()`.
-- `RadioSliceMut` supports all three conversions.
-- `Writable<T>` and `WritableSetter<T>` convert to `Readable<T>` through `.into()`.
-- Plain owned values convert to non-reactive `Readable<T>` through `.into()`.
-- `State<T>`, `Writable<T>`, and `RadioSliceMut` also convert to `WritableSetter<T>` through `.into()`.
-
-### Input and Switch
-
-`Input::new` accepts `Into<WritableSetter<String>>`, and `Switch::new` accepts `Into<WritableSetter<bool>>`. Pass state directly:
-
-```rust
-let name = use_state(String::new);
-let toggled = use_state(|| false);
-
-rect()
-    .child(Input::new(name))
-    .child(Switch::new(toggled))
-```
-
-Switch has no `.toggled(...)`, `.on_toggle(...)`, or `Default`.
-
-Use `WritableSetter::new(readable, callback)` to route edits through a reducer:
-
-```rust
-let mut radio = use_radio(AppChannel::Name);
-Input::new(WritableSetter::new(
-    radio.slice_current(|state| &state.name),
-    move |name| {
-        radio.apply(AppAction::SetName(name));
-    },
-))
-```
-
-The callback may accept, transform, or reject updates. Direct writable bindings bypass reducers. Keep model invariants in the reducer, not in component effects.
-
-### Context API
-
-Use context to make a value available to any descendant component without threading it through every prop. Prefer this over `static` variables, `thread_local!`, or global singletons - context is scoped to the component tree and plays well with Freya's reactivity.
-
-```rust
-// Provider: stores the value and makes it available to all descendants
-fn app() -> impl IntoElement {
-    use_provide_context(|| AppConfig { theme: Theme::Dark });
-    rect().child(DeepChild {})
-}
-
-// Consumer: retrieve by type, walks up the tree until found
-#[derive(PartialEq)]
-struct DeepChild;
-impl Component for DeepChild {
-    fn render(&self) -> impl IntoElement {
-        let config = use_consume::<AppConfig>();
-        format!("Theme: {:?}", config.theme)
-    }
-}
-```
-
-Use `use_try_consume::<T>()` when the context may not be present. If context is not found, `use_consume` panics.
-
-Context values are identified by type, so each distinct type gets its own slot. Providing the same type again in a deeper component shadows the ancestor's value for that subtree.
-
-Context is the right tool for dependency injection (e.g. passing a DB client, config, or theme down the tree). For reactive shared state use Freya Radio; for passing state between a parent and immediate children, plain props or `State<T>` are simpler.
-
-### Choosing state type
-
-- `use_state` - component-local state
-- Context API - dependency injection and non-reactive shared values across the tree; prefer over statics
-- Freya Radio - large/nested state, surgical per-channel updates, multi-window
-- `Readable`/`Writable`/`WritableSetter` - reusable components that don't care about backing storage
-
-## Derived State and Side Effects
-
-For simple derived values, compute them directly in `render` - no hook needed:
-
-```rust
-let doubled = *count.read() * 2;
-```
-
-For expensive computations that should only re-run when their dependencies change, use `use_memo`. It subscribes to any `State` read inside the callback and caches the result:
-
-```rust
-let expensive = use_memo(move || {
-    let n = *count.read(); // subscribed - reruns when count changes
-    compute_something(n)
-});
-let value = expensive.read();
-```
-
-Use `use_derived` when you need the result as a `State<T>` or the result type does not implement `PartialEq`. It computes the initial value immediately, then recomputes in a task when dependencies change. Unlike `use_memo`, it notifies subscribers on every recomputation, even if the result is unchanged.
-
-If a dialog's draft must be cleared before drawing the closed state, do the cleanup directly in `render`.
-
-**CORRECT: Clear the draft with a guarded update in `render`.**
-
-```rust
-let mut draft = use_state(String::new);
-
-if !*dialog_open.read() && !draft.peek().is_empty() {
-    draft.write().clear();
-}
-```
-
-**BAD: Defer the same cleanup to `use_side_effect`.**
-
-```rust
-let mut draft = use_state(String::new);
-
-use_side_effect(move || {
-    if !*dialog_open.read() && !draft.peek().is_empty() {
-        draft.write().clear();
-    }
-});
-```
-
-In `render`, `read()` subscribes to `dialog_open` and `peek()` checks the draft without subscribing. The guard only writes when there is something to clear, so no previous value is needed.
-
-Use `use_side_effect` for work outside rendering, such as logging or notifying an external system. For derived values, compute them directly or use `use_memo` or `use_derived` instead.
-
-## Async
-
-### Spawning tasks
-
-Use Freya's `spawn()` (not `tokio::spawn`) for async work that updates the UI. Tasks spawned with `spawn()` are tied to Freya's reactivity system and can safely write to component state:
-
-```rust
-let mut data = use_state(|| None);
-
-use_hook(move || {
-    spawn(async move {
-        let result = fetch_something().await;
-        data.set(Some(result));
-    });
-});
-```
-
-`use_hook` runs once on mount, making it the right place for one-shot side effects. `spawn` returns a `TaskHandle` you can cancel if needed.
-
-### Async functions in components
-
-Components and hooks are synchronous - you cannot `await` inside `render`. Prefer `use_future` for typical async work (see below). Only reach for `use_hook` + `spawn` when you need fine-grained control over the task lifecycle:
-
-```rust
-// Only when you need manual control
-use_hook(move || {
-    spawn(async move {
-        let s = some_async_fn().await;
-        result.set(s);
-    });
-});
-```
-
-### use_future
-
-`use_future` wraps this pattern: it starts an async task on mount and exposes its state as `FutureState<D>` (`Pending`, `Loading`, `Fulfilled(D)`):
-
-```rust
-let task = use_future(|| async {
-    fetch_user(42).await
-});
-
-match &*task.state() {
-    FutureState::Pending | FutureState::Loading => "Loading...",
-    FutureState::Fulfilled(user) => user.name.as_str(),
-}
-```
-
-Call `task.start()` to restart and `task.cancel()` to stop it.
-
-### freya-query (cached async data)
-
-For data that should be cached, deduplicated, and automatically refetched, use `freya-query` (`features = ["query"]`):
-
-```rust
-// Define the query
-#[derive(Clone, PartialEq, Hash, Eq)]
-struct FetchUser;
-
-impl QueryCapability for FetchUser {
-    type Ok = String;
-    type Err = String;
-    type Keys = u32;
-
-    async fn run(&self, user_id: &u32) -> Result<String, String> {
-        Ok(format!("User {user_id}"))
-    }
-}
-
-// Use it in a component
-impl Component for UserProfile {
-    fn render(&self) -> impl IntoElement {
-        let query = use_query(Query::new(self.0, FetchUser));
-
-        match &*query.read().state() {
-            QueryStateData::Pending => "Loading...",
-            QueryStateData::Settled { res, .. } => res.as_deref().unwrap_or("Error"),
-            QueryStateData::Loading { .. } => "Refreshing...",
-        }
-    }
-}
-```
-
-Multiple components using the same `(capability, keys)` pair share one cache entry. Invalidate with `query.invalidate()` or `QueriesStorage::<FetchUser>::invalidate_all().await`.
-
-For write operations, use `use_mutation` + `MutationCapability`. The `on_settled` callback is the right place to invalidate related queries after a mutation.
-
-Prefer `freya-query` over manual `use_future` + state when you need caching, background refetch, or deduplication.
-
-### Tokio integration
-
-Freya has its own async runtime. To use Tokio-ecosystem crates (`reqwest`, `sqlx`, etc.), enter a Tokio runtime context in `main` before launching:
-
-```rust
-fn main() {
-    let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
-    let _guard = rt.enter(); // keep alive for the whole program
-
-    launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
-}
-```
-
-Use Freya's `spawn()` for UI updates. `tokio::spawn` runs on the Tokio runtime and **cannot** update component state.
-
-## Theming
-
-Prefer Freya's shared theme variables and component preferences over hardcoded styling or hand-rolled theme structs. Built-in components use the active theme automatically. For reusable components, use `define_theme!` and reference shared values so appearance stays consistent across the app.
-
-A `Theme` stores shared values in `theme.variables` and component preferences separately. See the [theming guide](https://github.com/marc2332/freya/blob/main/crates/freya/src/_docs/theming.rs) for built-in components, extension traits, custom values, and custom component themes.
-
-### Provide a theme
-
-Initialize a theme in the root component. The returned `State<Theme>` is reactive - writing to it switches the theme app-wide:
-
-```rust
-fn app() -> impl IntoElement {
-    let mut theme = use_init_theme(light_theme); // or dark_theme, or your own
-    rect()
-        .theme_background()
-        .theme_color()
-        .expanded()
-        .center()
-        .child(Button::new().on_press(move |_| theme.set(dark_theme())).child("Dark"))
-}
-```
-
-Use `use_theme()` in a descendant to read or update the active theme. To follow the OS preference, convert `Platform::get().current_window().preferred_theme.read()` with the `FromPreference::to_theme` extension.
-
-### Theme extensions
-
-Built-in elements and components expose helpers that read the active theme - prefer these over hardcoded colors:
-
-- `rect().theme_background()`, `rect().theme_color()`
-- `label().theme_color().title()`, `paragraph().theme_color()`
-- `SvgViewer::new(...).theme_color()` / `.theme_accent_color()` / `.theme_fill()` / `.theme_stroke()` / `.theme_accent_fill()` / `.theme_accent_stroke()`
-
-### Custom themes
-
-Start from `light_theme()` or `dark_theme()`. Use `set_var` with `ColorRole`, `TextRole`, or `CornerRadiusRole` keys to replace built-in values, or use a namespaced string for an app-specific value.
-
-```rust
-fn brand_theme() -> Theme {
-    let mut theme = dark_theme();
-    theme.name = "brand";
-    theme.set_var(ColorRole::Primary.key(), Color::from_rgb(37, 52, 63));
-    theme.set_var("app.badge_radius", CornerRadius::new_all(12.));
-    CornerRadiusScale {
-        base_radius: 10.,
-        ..CornerRadiusScale::default()
-    }
-    .apply_to(&mut theme.variables);
-    theme
-}
-```
-
-Use `get_var::<T>()` for direct reads. `TypographyScale` and `CornerRadiusScale` write concrete values with `apply_to`, so reapply the scale after changing its base.
-
-### Defining a theme for your component
-
-Use `define_theme!` to generate the theme types for a component. This replaces hand-rolled "props struct of colors and sizes" patterns:
-
-```rust
-define_theme! {
-    %[component]
-    pub StatusBadge {
-        %[fields]
-        background: Color,
-        color: Color,
-        corner_radius: CornerRadius,
-        padding: Gaps,
-    }
-}
-
 #[derive(PartialEq)]
 struct StatusBadge {
-    theme: Option<StatusBadgeThemePartial>,
-}
-
-impl Component for StatusBadge {
-    fn render(&self) -> impl IntoElement {
-        let StatusBadgeTheme { background, color, corner_radius, padding } =
-            get_theme!(&self.theme, StatusBadgeThemePreference, "status_badge");
-
-        rect()
-            .background(background)
-            .corner_radius(corner_radius)
-            .padding(padding)
-            .child(label().text("Active").color(color).font_size(12.))
-    }
-}
-```
-
-The macro generates three structs:
-- `StatusBadgeThemePartial` - `Option<Preference<T>>` per field, used for per-instance overrides.
-- `StatusBadgeThemePreference` - `Preference<T>` per field, registered in the `Theme` as the default.
-- `StatusBadgeTheme` - resolved concrete values, returned by `get_theme!`.
-
-`get_theme!` looks up the registered preference, applies any instance overrides, and resolves references against the active theme variables.
-
-Register the default preference on your custom theme:
-
-```rust
-theme.set_theme(
-    "status_badge",
-    StatusBadgeThemePreference {
-        background: Preference::Reference(ColorRole::Secondary.key()),
-        color: Preference::Reference(ColorRole::TextInverse.key()),
-        corner_radius: Preference::Reference("app.badge_radius"),
-        padding: Gaps::new(4., 10., 4., 10.).into(),
-    },
-);
-```
-
-`Preference::Reference(key)` works for any theme field as long as the key exists and its value matches the field type. Use `Preference::Specific(value)` or `value.into()` for a fixed value.
-
-The macro also generates a `StatusBadgeThemePartialExt` trait implemented on the component, giving callers per-field builder methods:
-
-```rust
-StatusBadge::new()
-    .background(Color::from_rgb(123, 123, 123))
-    .corner_radius(CornerRadius::new_all(4.))
-```
-
-For components that store the partial under a non-default field name (e.g. `theme_colors` alongside `theme_layout`), pass `for = ...; theme_field = ...;` to point the generated builder at the right field. Examples: `Button`, `Card`, `Switch`, `Input` in `crates/freya-components/`.
-
-### When to define a theme
-
-- The component is reusable and could be styled differently across apps or theme switches: use `define_theme!`.
-- You currently have a struct of `Color`/size constants that callers tweak: replace it with a theme.
-- One-off internal helpers with no styling variation: plain values are fine, no theme needed.
-
-## Keying
-
-Use `.key(id)` on elements in dynamic lists to ensure correct reconciliation on reorders:
-
-```rust
-VirtualScrollView::new(|item, _| {
-    rect()
-        .key(item.index)
-        .child(format!("Item {}", item.index))
-        .into()
-})
-.length(items.len())
-```
-
-Missing `.key()` in dynamic lists causes element misidentification during reorders.
-
-A custom component can expose the same `.key` method by implementing `KeyExt` over a stored `DiffKey` and forwarding it from `render_key`, so it reconciles like a built-in element:
-
-```rust
-#[derive(PartialEq)]
-struct Task {
-    title: String,
+    text: String,
     key: DiffKey,
 }
 
-impl Task {
-    fn new(title: String) -> Self {
-        Self {
-            title,
-            key: DiffKey::None,
-        }
-    }
-}
-
-impl KeyExt for Task {
+impl KeyExt for StatusBadge {
     fn key_mut(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
-impl Component for Task {
+impl Component for StatusBadge {
     fn render(&self) -> impl IntoElement {
-        label().text(self.title.clone())
+        label().theme_color().caption().text(self.text.clone())
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
+    }
+}
+```
+
+**WRONG:** Use a plain helper as a reusable component with its own hooks
+
+```rust
+fn status_badge(text: String) -> impl IntoElement {
+    let mut visible = use_state(|| true);
+
+    let on_hide = move |_: Event<PressEventData>| visible.set(false);
+
+    rect().maybe(*visible.read(), |el| {
+        el.child(Button::new().on_press(on_hide).child(text))
+    })
+}
+```
+
+## Require values in component constructors
+
+Take all required values in `new(...)` or a named constructor like `new_with_data(...)`
+
+Give configurable values sensible defaults and expose them through chainable builder methods
+
+**CORRECT:** Require the title and make the summary optional
+
+```rust
+#[derive(PartialEq)]
+struct StatusCard {
+    title: String,
+    summary: Option<String>,
+    key: DiffKey,
+}
+
+impl StatusCard {
+    fn new(title: impl Into<String>) -> Self {
+        Self {
+            title: title.into(),
+            summary: None,
+            key: DiffKey::None,
+        }
+    }
+
+    fn summary(mut self, summary: impl Into<String>) -> Self {
+        self.summary = Some(summary.into());
+        self
+    }
+}
+
+impl KeyExt for StatusCard {
+    fn key_mut(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
+}
+
+impl Component for StatusCard {
+    fn render(&self) -> impl IntoElement {
+        rect()
+            .child(self.title.clone())
+            .maybe_child(self.summary.clone())
     }
 
     fn render_key(&self) -> DiffKey {
@@ -768,77 +183,1136 @@ impl Component for Task {
     }
 }
 
-fn app(ids: Vec<u64>) -> impl IntoElement {
-    rect().children(
-        ids.iter()
-            .map(|id| Task::new(format!("Task {id}")).key(*id).into()),
-    )
+fn app() -> impl IntoElement {
+    StatusCard::new("Sync status").summary("Up to date")
 }
 ```
 
-## Internationalization (freya-i18n)
-
-Enable with `features = ["i18n"]`. Uses [Fluent](https://projectfluent.org/) (`.ftl` files) for translations.
-
-**1. Define `.ftl` files:**
-
-```ftl
-# en-US.ftl
-hello_world = Hello, World!
-hello = Hello, { $name }!
-```
-
-**2. Initialize once in the root component:**
+**WRONG:** Use an empty title as a default and rely on callers to remember to set it
 
 ```rust
-use freya::i18n::*;
+impl StatusCard {
+    fn new() -> Self {
+        Self {
+            title: String::new(),
+            summary: None,
+            key: DiffKey::None,
+        }
+    }
 
-let mut i18n = use_init_i18n(|| {
-    I18nConfig::new(langid!("en-US"))
-        .with_locale(Locale::new_static(langid!("en-US"), include_str!("../i18n/en-US.ftl")))
-        .with_locale(Locale::new_static(langid!("es-ES"), include_str!("../i18n/es-ES.ftl")))
-        .with_fallback(langid!("en-US"))
+    fn title(mut self, title: impl Into<String>) -> Self {
+        self.title = title.into();
+        self
+    }
+}
+
+fn app() -> impl IntoElement {
+    StatusCard::new().summary("Up to date")
+}
+```
+
+## Bind event handlers before the UI
+
+Never inline an event handler, even for one line
+
+Use `EventHandler<T>` for callback props on custom components
+
+**CORRECT:** Pass the named closure
+
+```rust
+let on_save = move |_: Event<PressEventData>| save_draft();
+
+Button::new().on_press(on_save).child("Save")
+```
+
+**WRONG:** Put the closure inside the builder call
+
+```rust
+Button::new().on_press(move |_| save_draft()).child("Save")
+```
+
+### Scope shared captures and name handlers by action
+
+When several handlers need owned copies of the same data, clone it inside each handler's definition block and keep the original name
+
+Capture `Copy` handles like `State` directly and name handlers by their action or control instead of numbering them
+
+**CORRECT:** Scope each clone to its handler and name the two press handlers by action
+
+```rust
+let on_save = {
+    let draft = draft.clone();
+    move |_: Event<PressEventData>| save_draft(&draft)
+};
+let on_preview = {
+    let draft = draft.clone();
+    move |_: Event<PressEventData>| preview_draft(&draft)
+};
+
+rect()
+    .child(Button::new().on_press(on_save).child("Save"))
+    .child(Button::new().on_press(on_preview).child("Preview"))
+```
+
+**WRONG:** Scatter capture variables around the handlers and number the handlers
+
+```rust
+let draft_for_save = draft.clone();
+let draft_for_preview = draft.clone();
+let on_press = move |_: Event<PressEventData>| save_draft(&draft_for_save);
+let on_press_2 = move |_: Event<PressEventData>| preview_draft(&draft_for_preview);
+
+rect()
+    .child(Button::new().on_press(on_press).child("Save"))
+    .child(Button::new().on_press(on_press_2).child("Preview"))
+```
+
+## Use pointer events for gestures
+
+**CORRECT:** Share one handler across mouse and touch
+
+```rust
+let on_pointer_down = move |_: Event<PointerEventData>| start_drag();
+
+rect().on_pointer_down(on_pointer_down)
+```
+
+**WRONG:** Use a mouse event for a gesture that should also work on touch
+
+```rust
+let on_mouse_down = move |_: Event<MouseEventData>| start_drag();
+
+rect().on_mouse_down(on_mouse_down)
+```
+
+## Use press for activation
+
+**CORRECT:** Use `Button` with `on_press` for click, tap, and keyboard activation
+
+```rust
+let on_save = move |_: Event<PressEventData>| save_draft();
+
+Button::new().on_press(on_save).child("Save")
+```
+
+**WRONG:** Handle pointer input but not keyboard activation
+
+```rust
+let on_save = move |_: Event<PointerEventData>| save_draft();
+
+rect().on_pointer_press(on_save).child("Save")
+```
+
+## Cancel the right event
+
+**CORRECT:** Stop a child press from reaching the parent with `stop_propagation()`
+
+```rust
+let on_child_press = move |event: Event<PressEventData>| {
+    event.stop_propagation();
+    open_details();
+};
+
+rect().on_press(on_parent_press).child(
+    rect().on_press(on_child_press).child("Details"),
+)
+```
+
+**WRONG:** Use `prevent_default()` to stop the same event from bubbling
+
+```rust
+let on_child_press = move |event: Event<PressEventData>| {
+    event.prevent_default();
+    open_details();
+};
+
+rect().on_press(on_parent_press).child(
+    rect().on_press(on_child_press).child("Details"),
+)
+```
+
+Use `prevent_default()` to cancel follow up events that the current event would otherwise dispatch
+
+## Use existing theme colors
+
+Start with themed components and their variants
+
+Use theme extensions on primitives and read an existing `ColorRole` when no extension fits
+
+Initialize the app theme with `use_init_theme(light_theme)` or `use_init_theme(dark_theme)`
+
+**CORRECT:** Use theme extensions and read secondary text from the active palette
+
+```rust
+let theme = use_theme();
+
+let secondary_text = *theme.read().get_var::<Color>(ColorRole::TextSecondary.key());
+
+rect()
+    .theme_background()
+    .child(label().theme_color().title().text("Settings"))
+    .child(label().color(secondary_text).body().text("Manage your account"))
+```
+
+**WRONG:** Hardcode a light theme in the view, even through constants
+
+```rust
+const BACKGROUND: Color = Color::WHITE;
+const TEXT: Color = Color::BLACK;
+const SECONDARY_TEXT: Color = Color::from_rgb(100, 100, 100);
+
+rect()
+    .background(BACKGROUND)
+    .child(label().color(TEXT).font_size(24.).text("Settings"))
+    .child(label().color(SECONDARY_TEXT).font_size(14.).text("Manage your account"))
+```
+
+## Create a custom app theme
+
+Start with `light_theme()` or `dark_theme()` and override existing roles with `Theme::set_var` before adding app specific keys
+
+**CORRECT:** Set the brand color once and initialize the custom theme at the app root
+
+```rust
+fn brand_theme() -> Theme {
+    let mut theme = dark_theme();
+    theme.set_var(ColorRole::Primary.key(), Color::from_rgb(37, 52, 63));
+    theme
+}
+
+fn app() -> impl IntoElement {
+    use_init_theme(brand_theme);
+
+    Button::new().filled().child("Save")
+}
+```
+
+**WRONG:** Repeat the brand color on each filled button
+
+```rust
+Button::new()
+    .filled()
+    .background(Color::from_rgb(37, 52, 63))
+    .child("Save")
+```
+
+For custom component defaults, declare fields with `define_theme!`, register preferences with `Theme::set_theme`, and resolve them with `get_theme!`
+
+Use `Preference::Reference(role.key())` to follow shared values and provide the expected type in every active theme
+
+## Override individual theme fields
+
+Use the generated builder methods for individual fields and keep the rest of the active theme
+
+**CORRECT:** Set just the corner radius on this button
+
+```rust
+Button::new().filled().corner_radius(12.).child("Save")
+```
+
+**WRONG:** Build a partial theme by hand just to override one fixed value
+
+```rust
+Button::new()
+    .filled()
+    .theme_layout(ButtonLayoutThemePartial {
+        corner_radius: Some(Preference::Specific(CornerRadius::new_all(12.))),
+        ..Default::default()
+    })
+    .child("Save")
+```
+
+Pass a partial theme directly when sharing a group of overrides or when a field needs a `Preference::Reference` rather than a fixed value
+
+## Downsample images for display
+
+`ImageViewer` defaults to `DecodeMode::FromLayout` and uses the window scale factor when both dimensions are fixed in pixels
+
+With flexible dimensions, use `DecodeMode::Custom` to cap the resulting raster size for thumbnails
+
+The cap reduces the size of the retained raster, not the initial decode cost
+
+**CORRECT:** Downsample a thumbnail with flexible width
+
+```rust
+ImageViewer::new(photo)
+    .width(Size::fill())
+    .height(Size::px(120.))
+    .decode_mode(DecodeMode::Custom(Size2D::new(320., 240.)))
+```
+
+**WRONG:** Keep the full size raster for a thumbnail
+
+```rust
+ImageViewer::new(photo)
+    .width(Size::fill())
+    .height(Size::px(120.))
+    .decode_mode(DecodeMode::Source)
+```
+
+## Choose an image sampling filter
+
+Use `DecodeMode` for the resulting raster dimensions and `SamplingMode` for the scaling filter
+
+Keep the default `Trilinear` for general use and try `Mitchell` for smoother scaling or `CatmullRom` for sharper scaling when the result needs it
+
+**CORRECT:** Use `Nearest` for pixel art and keep smooth filtering for photos
+
+```rust
+rect()
+    .child(ImageViewer::new(sprite).sampling_mode(SamplingMode::Nearest))
+    .child(ImageViewer::new(photo))
+```
+
+**WRONG:** Force `Nearest` on a photo that needs smooth scaling
+
+```rust
+ImageViewer::new(photo).sampling_mode(SamplingMode::Nearest)
+```
+
+## Tune asset cache retention
+
+`.asset_age(...)` controls how long an asset stays cached after it is no longer in use
+
+Keep the default of one hour for assets you revisit often and shorten it when rarely revisited assets put pressure on memory
+
+**CORRECT:** Set a shorter retention time for thumbnails in a large gallery that users rarely revisit
+
+```rust
+use std::time::Duration;
+
+ImageViewer::new(photo).asset_age(Duration::from_secs(60))
+```
+
+**WRONG:** Keep every thumbnail cached until the app closes without a reason
+
+```rust
+ImageViewer::new(photo).asset_age(AssetAge::Unspecified)
+```
+
+## Rasterize complex SVGs in the background
+
+Local SVGs rasterize synchronously by default and remote SVGs already rasterize in the background
+
+Keep the default for cheap local icons and enable async rasterization for complex local artwork that could stall the UI
+
+**CORRECT:** Rasterize complex local artwork in the background
+
+```rust
+SvgViewer::new(include_bytes!("./map.svg"))
+    .width(Size::px(800.))
+    .height(Size::px(600.))
+    .async_rasterization(true)
+```
+
+**WRONG:** Leave expensive local artwork on the synchronous path when it stalls the UI
+
+```rust
+SvgViewer::new(include_bytes!("./map.svg"))
+    .width(Size::px(800.))
+    .height(Size::px(600.))
+```
+
+## Keep builder chains declarative
+
+Use `.maybe` for a condition, `.map` for an `Option` value, and `.maybe_child` for an optional child
+
+**CORRECT:** Group children behind one condition in the builder chain
+
+```rust
+rect().child("Status").maybe(show_details, |el| {
+    el.child("Last synced today").child("No errors")
+})
+```
+
+**WRONG:** Save the builder and reassign it to add children
+
+```rust
+let mut status = rect().child("Status");
+if show_details {
+    status = status.child("Last synced today").child("No errors");
+}
+status
+```
+
+## Pass plain text directly
+
+Pass `&str` or `String` as a child when the text needs no custom styling or behavior
+
+**CORRECT:** Pass strings directly
+
+```rust
+rect().child("Inbox").child(format!("Unread: {unread_count}"))
+```
+
+**WRONG:** Wrap every string in `label().text(...)`
+
+```rust
+rect()
+    .child(label().text("Inbox"))
+    .child(label().text(format!("Unread: {unread_count}")))
+```
+
+Use `label()` when the text needs its own styling or element properties
+
+## Let layout adapt
+
+**CORRECT:** Give the main pane the remaining width of a flex row
+
+```rust
+rect()
+    .width(Size::fill())
+    .horizontal()
+    .content(Content::Flex)
+    .child(rect().width(Size::px(220.)).child("Sidebar"))
+    .child(rect().width(Size::flex(1.)).child("Content"))
+```
+
+**WRONG:** Hardcode the remaining width from one window size
+
+```rust
+rect()
+    .width(Size::fill())
+    .horizontal()
+    .child(rect().width(Size::px(220.)).child("Sidebar"))
+    .child(rect().width(Size::px(800.)).child("Content"))
+```
+
+## Call hooks in a stable order
+
+**CORRECT:** Call hooks before branching and render optional children conditionally
+
+```rust
+let draft = use_state(String::new);
+
+rect().maybe(show_editor, |el| el.child(Input::new(draft)))
+```
+
+**WRONG:** Call a hook inside the conditional builder callback
+
+```rust
+rect().maybe(show_editor, |el| {
+    let draft = use_state(String::new);
+    el.child(Input::new(draft))
+})
+```
+
+If the draft should reset when the editor closes, put the hook in a conditionally mounted child component
+
+## Derive values instead of syncing state
+
+**CORRECT:** Compute cheap values directly from their source
+
+```rust
+let count = use_state(|| 0);
+
+let doubled = *count.read() * 2;
+
+label().text(doubled.to_string())
+```
+
+**WRONG:** Mirror a render value in a second state with an effect
+
+```rust
+let count = use_state(|| 0);
+let mut doubled = use_state(|| 0);
+use_side_effect(move || doubled.set(*count.read() * 2));
+
+label().text(doubled.read().to_string())
+```
+
+## Cache expensive calculations with use_memo
+
+Read reactive dependencies inside the memo and keep the callback free of side effects
+
+**CORRECT:** Sort again only when the scores change
+
+```rust
+let ranked = use_memo(move || {
+    let mut ranked = scores.read().clone();
+    ranked.sort_unstable_by(|left, right| right.cmp(left));
+    ranked
 });
+
+rect().children(ranked.read().iter().map(|score| score.to_string()))
 ```
 
-**3. Translate in any descendant component:**
+**WRONG:** Sort a large list again on every unrelated render
 
 ```rust
-// t! panics if key missing, te! returns Result, tid! falls back to the key string
-t!("hello_world")                  // "Hello, World!"
-t!("hello", name: {"Alice"})       // "Hello, Alice!"
-te!("hello_world")                 // Ok("Hello, World!")
-tid!("missing-key")                // "message-id: missing-key should be translated"
+let mut ranked = scores.read().clone();
+ranked.sort_unstable_by(|left, right| right.cmp(left));
+
+rect().children(ranked.iter().map(|score| score.to_string()))
 ```
 
-**4. Switch language at runtime:**
+## Derive values without PartialEq
+
+`use_derived` computes the initial value immediately and recomputes in a task when dependencies change
+
+It returns a `State<T>` and notifies subscribers on every recomputation
+
+Prefer `use_memo` when the result implements `PartialEq` and unchanged results should not notify subscribers
+
+**CORRECT:** Derive a preview whose type has no meaningful equality comparison
 
 ```rust
-let mut i18n = I18n::get(); // retrieve from any descendant
-i18n.set_language(langid!("es-ES"));
+struct Preview {
+    text: String,
+}
+
+let preview = use_derived(move || Preview {
+    text: render_preview(&draft.read()),
+});
+
+rect().child(preview.read().text.clone())
 ```
 
-The instance lives in the root context shared by all windows, so calling `use_init_i18n` in each window reuses the same state.
-
-## Animations
-
-Use `use_animation` for manual control and `use_animation_transition` to animate between two values reactively:
+**WRONG:** Use `use_memo` for the same `Preview` type even though it requires `PartialEq`
 
 ```rust
-// Manual: call .start() / .reverse() yourself
-let mut anim = use_animation(|_| AnimColor::new((240, 240, 240), (200, 80, 80)).time(400));
-rect().background(&*anim.read()).on_press(move |_| anim.start())
+let preview = use_memo(move || Preview {
+    text: render_preview(&draft.read()),
+});
 
-// Transition: re-runs automatically when the tracked value changes
-let color = use_animation_transition(is_active, |from, to| AnimColor::new(from, to).time(300));
+rect().child(preview.read().text.clone())
+```
+
+## Keep side effects out of render
+
+Use `use_side_effect` to synchronize with something outside the view when the state it reads changes
+
+Use an event handler instead when the work should happen only after that event
+
+**CORRECT:** Update the window title when the document name changes
+
+```rust
+use_side_effect(move || {
+    let title = document_name.read().clone();
+    update_window_title(title);
+});
+
+rect().child(document_name.read().clone())
+```
+
+**WRONG:** Update the window title whenever the component renders
+
+```rust
+let title = document_name.read().clone();
+update_window_title(title.clone());
+
+rect().child(title)
+```
+
+## Animate changes in state
+
+**CORRECT:** Let `use_animation_transition` animate when the target color changes
+
+```rust
+let color = use_animation_transition(target_color, |from, to| {
+    AnimColor::new(from, to).time(250)
+});
+
 rect().background(&*color.read())
 ```
 
-Animate colors (`AnimColor`), sizes, positions, and other numeric properties. Easing functions and sequencing are supported.
+**WRONG:** Start the animation in `render` even when the target has not changed
 
-## Routing
+```rust
+let mut color = use_animation(move |_| {
+    AnimColor::new(Color::TRANSPARENT, *target_color.read()).time(250)
+});
 
-Enable with `features = ["router"]`. Define routes with `#[derive(Routable)]`, render them with `router::<Route>()`, place the current page with `outlet::<Route>()`, and navigate with `Link` or `RouterContext::get().replace(...)`:
+color.start();
+
+rect().background(&*color.read())
+```
+
+## Subscribe where values are displayed
+
+Use `read()` for reactive rendering and `peek()` for snapshots that should not subscribe
+
+Capture the `State` handle when a handler needs the latest value
+
+Release state guards before calling another callback or awaiting a future, as shown in [Release state guards before awaiting](#release-state-guards-before-awaiting)
+
+**CORRECT:** Read in the child that displays the value
+
+```rust
+fn render(&self) -> impl IntoElement {
+    let count = *self.count.read();
+
+    label().text(count.to_string())
+}
+```
+
+**WRONG:** Subscribe the entire page just to pass the count to one badge
+
+```rust
+// In the page render
+let count = *count.read();
+
+rect().child(label().text(count.to_string()))
+```
+
+Keep state local with `use_state` and use context for shared dependencies
+
+## Give children only the state access they need
+
+Use `Readable<T>` for display, `Writable<T>` for direct mutation, and `WritableSetter<T>` when the parent controls how a replacement is applied
+
+Convert at the call site or in the constructor so the child does not depend on how the parent stores the value
+
+**CORRECT:** Give a display component a `Readable<T>` and turn a derived `State<T>` into a readable prop with `.into_readable()`
+
+```rust
+#[derive(PartialEq)]
+struct TitleView {
+    title: Readable<String>,
+    key: DiffKey,
+}
+
+impl KeyExt for TitleView {
+    fn key_mut(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
+}
+
+impl Component for TitleView {
+    fn render(&self) -> impl IntoElement {
+        rect().child(self.title.read().clone())
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
+    }
+}
+
+fn app() -> impl IntoElement {
+    let document_name = use_state(|| "Draft".to_string());
+    let title = use_derived(move || format!("Editing {}", document_name.read()));
+
+    TitleView {
+        title: title.into_readable(),
+        key: DiffKey::None,
+    }
+}
+```
+
+**WRONG:** Give a display component write access it never uses
+
+```rust
+#[derive(PartialEq)]
+struct TitleView {
+    title: State<String>,
+}
+```
+
+### Use Writable for direct edits from different sources
+
+**CORRECT:** Let the same component edit either local state or a mutable Radio slice
+
+```rust
+#[derive(PartialEq)]
+struct CountButton {
+    count: Writable<usize>,
+    key: DiffKey,
+}
+
+impl CountButton {
+    fn new(count: impl IntoWritable<usize>) -> Self {
+        Self {
+            count: count.into_writable(),
+            key: DiffKey::None,
+        }
+    }
+}
+
+impl KeyExt for CountButton {
+    fn key_mut(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
+}
+
+impl Component for CountButton {
+    fn render(&self) -> impl IntoElement {
+        let on_increment = {
+            let mut count = self.count.clone();
+            move |_: Event<PressEventData>| *count.write() += 1
+        };
+
+        let caption = format!("Count: {}", self.count.read());
+
+        Button::new().on_press(on_increment).child(caption)
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
+    }
+}
+
+fn app() -> impl IntoElement {
+    use_init_radio_station::<AppState, AppChannel>(AppState::default);
+    let local_count = use_state(|| 0usize);
+    let radio = use_radio::<AppState, AppChannel>(AppChannel::UnreadCount);
+
+    let shared_count = radio.slice_mut_current(|state| &mut state.unread_count);
+
+    rect()
+        .child(CountButton::new(local_count))
+        .child(CountButton::new(shared_count))
+}
+```
+
+**WRONG:** Require `State<T>` in a reusable component even though it only needs to read and edit the value
+
+```rust
+#[derive(PartialEq)]
+struct CountButton {
+    count: State<usize>,
+    key: DiffKey,
+}
+```
+
+## Skip unchanged state writes
+
+Use `set_if_modified` when an event can report the same value again and the value implements `PartialEq`
+
+**CORRECT:** Notify subscribers only when the measured width changes
+
+```rust
+let mut width = use_state(|| 0.);
+
+let on_sized = move |event: Event<SizedEventData>| {
+    width.set_if_modified(event.area.width());
+};
+
+rect().width(Size::fill()).on_sized(on_sized)
+```
+
+**WRONG:** Write the width again when only the height changed
+
+```rust
+let mut width = use_state(|| 0.);
+
+let on_sized = move |event: Event<SizedEventData>| {
+    width.set(event.area.width());
+};
+
+rect().width(Size::fill()).on_sized(on_sized)
+```
+
+## Share dependencies through context
+
+Provide shared clients or configuration once for the subtree that uses them
+
+**CORRECT:** Provide a client at the app root and consume it where needed
+
+```rust
+fn app() -> impl IntoElement {
+    use_provide_context(ApiClient::new);
+
+    rect().child(AccountPage)
+}
+
+impl Component for AccountPage {
+    fn render(&self) -> impl IntoElement {
+        let client = use_consume::<ApiClient>();
+
+        rect().child(client.service_name())
+    }
+}
+```
+
+**WRONG:** Construct a new client on every render of every consumer
+
+```rust
+impl Component for AccountPage {
+    fn render(&self) -> impl IntoElement {
+        let client = ApiClient::new();
+
+        rect().child(client.service_name())
+    }
+}
+```
+
+## Scope shared state with Freya Radio
+
+Enable the `radio` feature and initialize one station at the app root with `use_init_radio_station`
+
+### Keep global app state in the existing station
+
+If the app already uses Freya Radio, put new global app state in the existing station instead of providing a separate `State` through context
+
+**CORRECT:** Add the unread count to the existing Radio model
+
+```rust
+#[derive(Default, Clone)]
+struct AppState {
+    profile: Profile,
+    unread_count: usize,
+}
+
+use_init_radio_station::<AppState, AppChannel>(AppState::default);
+```
+
+**WRONG:** Create a parallel store through context while Radio already holds app state
+
+```rust
+use_init_radio_station::<AppState, AppChannel>(AppState::default);
+use_provide_context(|| State::create(UnreadCount(0)));
+```
+
+Keep using context for shared dependencies such as API clients and configuration
+
+### Subscribe by channel
+
+**CORRECT:** Subscribe the badge to the unread count channel so profile edits do not notify it
+
+```rust
+let radio = use_radio::<AppState, AppChannel>(AppChannel::UnreadCount);
+
+let unread_count = radio.read().unread_count;
+
+label().text(format!("Unread: {unread_count}"))
+```
+
+**WRONG:** Subscribe to a catchall channel that every edit notifies
+
+```rust
+let radio = use_radio::<AppState, AppChannel>(AppChannel::All);
+
+let unread_count = radio.read().unread_count;
+
+label().text(format!("Unread: {unread_count}"))
+```
+
+Write through the channel that matches the change and use a `DataReducer` when several actions must enforce the same model rules
+
+## Bind inputs directly
+
+Use `WritableSetter::new` when edits must pass through a reducer
+
+**CORRECT:** Pass writable state straight to `Input` and `Switch`
+
+```rust
+let name = use_state(String::new);
+let enabled = use_state(|| true);
+
+rect().child(Input::new(name)).child(Switch::new(enabled))
+```
+
+**WRONG:** Keep a second copy of the same input value and sync it with an effect
+
+```rust
+let mut name = use_state(String::new);
+let edit = use_state(String::new);
+use_side_effect(move || name.set(edit.read().clone()));
+
+Input::new(edit)
+```
+
+## Key lists by item ID
+
+**CORRECT:** Use a stable model ID unique among siblings
+
+```rust
+rect().children(items.iter().map(|item| {
+    label().key(item.id).text(item.name.clone())
+}))
+```
+
+**WRONG:** Key a list that can reorder by its current position
+
+```rust
+rect().children(items.iter().enumerate().map(|(index, item)| {
+    label().key(index).text(item.name.clone())
+}))
+```
+
+## Virtualize large lists
+
+Keep ordinary children for small lists and virtualize when mounting every row is costly
+
+**CORRECT:** Build only the rows needed for the viewport and keep stable item keys
+
+```rust
+let row_count = rows.len();
+
+VirtualScrollView::new_with_data(rows, |item, rows| {
+    let row = &rows[item.index];
+
+    rect()
+        .key(row.id)
+        .height(Size::px(item.size))
+        .child(row.title.clone())
+        .into()
+})
+.length(row_count)
+.item_size(32.)
+.height(Size::fill())
+```
+
+**WRONG:** Mount every row in a regular scroll view for a large collection
+
+```rust
+ScrollView::new().height(Size::fill()).children(rows.iter().map(|row| {
+    rect()
+        .key(row.id)
+        .height(Size::px(32.))
+        .child(row.title.clone())
+}))
+```
+
+## Load data outside render
+
+Use `use_future` for a task on mount and `spawn` for async work started by a handler that updates Freya state
+
+**CORRECT:** Render loading, success, and error from the same task
+
+```rust
+let profile = use_future(|| async { fetch_profile_name().await });
+
+let caption = match &*profile.read() {
+    FutureState::Pending | FutureState::Loading => "Loading".to_string(),
+    FutureState::Fulfilled(Ok(name)) => name.clone(),
+    FutureState::Fulfilled(Err(_)) => "Could not load profile".to_string(),
+};
+
+label().text(caption)
+```
+
+**WRONG:** Block `render` on a network request
+
+```rust
+let caption = fetch_profile_name_blocking();
+
+label().text(caption)
+```
+
+## Show honest loading progress
+
+Use `CircularLoader` when progress is unknown and there is no content layout to preserve
+
+Use `Skeleton` when the shape of the content is known and `ProgressBar` when the operation reports a percentage from 0 to 100
+
+Keep existing content visible during refresh and show a small loading indicator beside it
+
+**CORRECT:** Show measured progress when available and a loader otherwise
+
+```rust
+rect()
+    .child("Downloading")
+    .map(progress_percent, |el, percent| el.child(ProgressBar::new(percent)))
+    .maybe(progress_percent.is_none(), |el| el.child(CircularLoader::new()))
+```
+
+**WRONG:** Show a made up percentage while waiting for an operation that reports no progress
+
+```rust
+rect().child("Downloading").child(ProgressBar::new(50.))
+```
+
+**CORRECT:** Use a skeleton to reserve space for a profile title during the initial load
+
+```rust
+let title = if is_loading {
+    Skeleton::new(true)
+        .width(Size::fill())
+        .height(Size::px(24.))
+        .into_element()
+} else {
+    rect()
+        .width(Size::fill())
+        .height(Size::px(24.))
+        .child(profile_name)
+        .into_element()
+};
+
+rect().child(title)
+```
+
+Mount the skeleton only while loading so its animation stops when the real content appears
+
+**WRONG:** Remove the title row while loading so the content below it shifts when the title appears
+
+```rust
+rect().maybe_child((!is_loading).then(|| {
+    rect().height(Size::px(24.)).child(profile_name)
+}))
+```
+
+## Spawn tasks from event handlers
+
+`spawn` attaches work to the current scope and cancels it when that scope unmounts
+
+Use `EventHandler::new_current` when work should follow the component that creates the handler rather than the button that receives the event
+
+**CORRECT:** Start the refresh on press and tie it to the component that owns the status
+
+```rust
+let mut status = use_state(|| "Ready".to_string());
+
+let on_refresh = EventHandler::new_current(move |_: Event<PressEventData>| {
+    spawn(async move {
+        status.set(fetch_status().await);
+    });
+});
+
+rect()
+    .child(Button::new().on_press(on_refresh).child("Refresh"))
+    .child(status.read().clone())
+```
+
+**WRONG:** Spawn the request during render so its result can trigger another request
+
+```rust
+let mut status = use_state(|| "Ready".to_string());
+spawn(async move {
+    status.set(fetch_status().await);
+});
+
+rect().child(status.read().clone())
+```
+
+## Release state guards before awaiting
+
+Never hold a guard from `.read()` or `.write()` across `.await`
+
+Keep the `State<T>` handle, copy or clone the input before awaiting, and acquire a fresh guard only when you need it
+
+**CORRECT:** Take an owned snapshot before the request and update state after it returns
+
+```rust
+spawn(async move {
+    let user_name = profile.read().name.clone();
+    let avatar = fetch_avatar(&user_name).await;
+    profile.write().avatar = avatar;
+});
+```
+
+**WRONG:** Keep a write guard alive while the request runs
+
+```rust
+spawn(async move {
+    let mut profile = profile.write();
+    profile.avatar = fetch_avatar(&profile.name).await;
+});
+```
+
+## Build the Tokio runtime manually
+
+Never use `#[tokio::main]` in a Freya app
+
+If a dependency needs Tokio, build the runtime explicitly with `tokio::runtime::Builder` in a synchronous `main` and call `.enter()` before launching Freya
+
+Keep the runtime and its guard alive until `launch` returns
+
+Use Freya `spawn()` for tasks that update component state and reserve `tokio::spawn` for background work that does not touch it
+
+**CORRECT:** Enter Tokio without wrapping Freya's event loop in an async `main`
+
+```rust
+fn main() -> std::io::Result<()> {
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()?;
+    let _runtime_guard = runtime.enter();
+
+    launch(LaunchConfig::new().with_window(WindowConfig::new(app)));
+    Ok(())
+}
+```
+
+**WRONG:** Launch Freya inside `#[tokio::main]`
+
+```rust
+#[tokio::main]
+async fn main() {
+    launch(LaunchConfig::new().with_window(WindowConfig::new(app)));
+}
+```
+
+## Share remote data with Freya Query
+
+Enable the `query` feature and reuse the same query capability and key for the same resource
+
+**CORRECT:** Use the same `FetchUserName` query in every view that needs this user
+
+```rust
+let user_name = use_query(Query::new(user_id, FetchUserName));
+
+let caption = match &*user_name.read().state() {
+    QueryStateData::Settled { res: Ok(name), .. }
+    | QueryStateData::Loading { res: Some(Ok(name)) } => name.clone(),
+    QueryStateData::Settled { res: Err(_), .. } => "Could not load user".to_string(),
+    _ => "Loading".to_string(),
+};
+
+label().text(caption)
+```
+
+**WRONG:** Start a separate request for the same user in every view
+
+```rust
+let user_name = use_future(move || async move { fetch_user_name(user_id).await });
+
+let caption = match &*user_name.read() {
+    FutureState::Fulfilled(Ok(name)) => name.clone(),
+    FutureState::Fulfilled(Err(_)) => "Could not load user".to_string(),
+    _ => "Loading".to_string(),
+};
+
+label().text(caption)
+```
+
+After a successful mutation, call `QueriesStorage::<FetchUserName>::invalidate_matching(user_id).await` in `MutationCapability::on_settled`
+
+## Keep cached data visible during refresh
+
+**CORRECT:** Read successful data with `ok()` whether the query is settled or refreshing
+
+```rust
+let user_name = use_query(Query::new(user_id, FetchUserName));
+
+let caption = {
+    let query = user_name.read();
+    let state = query.state();
+    if let Some(name) = state.ok() {
+        name.clone()
+    } else if matches!(&*state, QueryStateData::Settled { res: Err(_), .. }) {
+        "Could not load user".to_string()
+    } else {
+        "Loading".to_string()
+    }
+};
+
+rect().child(caption)
+```
+
+**WRONG:** Hide a cached name whenever a refresh starts
+
+```rust
+let user_name = use_query(Query::new(user_id, FetchUserName));
+
+let caption = match &*user_name.read().state() {
+    QueryStateData::Settled { res: Ok(name), .. } => name.clone(),
+    QueryStateData::Settled { res: Err(_), .. } => "Could not load user".to_string(),
+    _ => "Loading".to_string(),
+};
+
+rect().child(caption)
+```
+
+## Use the router for page navigation
+
+Enable the `router` feature for pages with paths or navigation history
+
+Use `Link::new(Route::Settings)` for navigation controls and `RouterContext` when navigation follows an action
+
+Keep local UI state for toggles and panels that are not separate pages
+
+**CORRECT:** Declare routes and let Freya Router render the current page
 
 ```rust
 #[derive(Routable, Clone, PartialEq)]
@@ -850,187 +1324,135 @@ enum Route {
 }
 
 fn app() -> impl IntoElement {
-    router::<Route>(|| RouterConfig::default())
+    Router::<Route>::new(RouterConfig::default)
 }
 ```
 
-## Headless Testing
-
-`freya-testing` lets you test components without a window. Use `TestingRunner` to mount a component, simulate interactions, and assert on state:
+**WRONG:** Track the current page in local state and match it manually
 
 ```rust
-use freya_testing::prelude::*;
+let mut page = use_state(|| Page::Home);
 
-let (mut runner, state) = TestingRunner::new(app, (300., 300.).into(), |r| {
-    r.provide_root_context(|| State::create(0))
-}, 1.);
+let on_settings = move |_: Event<PressEventData>| page.set(Page::Settings);
 
-runner.sync_and_update();
-runner.click_cursor((15., 15.));
-assert_eq!(*state.peek(), 1);
+let content = match *page.read() {
+    Page::Home => Home.into_element(),
+    Page::Settings => Settings.into_element(),
+};
+
+rect()
+    .child(Button::new().on_press(on_settings).child("Settings"))
+    .child(content)
 ```
 
-Call `runner.render_to_file("out.png")` to snapshot the current UI.
+## Open external URLs through Freya
 
-## Icons
+### Display a link
 
-Enable with `features = ["icons"]`. Uses Lucide icons rendered as SVGs:
+**CORRECT:** Use `Link` when the `router` feature is enabled and the control only navigates
 
 ```rust
-use freya::icons;
-
-SvgViewer::new(icons::lucide::antenna()).color((120, 50, 255)).expanded()
+Link::new("https://freyaui.dev").child("Freya docs")
 ```
 
-## Rich Text Editing
-
-Use `use_editable` to manage a text editor with cursor, selection, keyboard shortcuts, and virtualization. Wire it to a `paragraph()` element's event handlers and feed `EditableEvent`s from mouse/keyboard events. See `examples/` for full wiring.
-
-## Code Editor
-
-Enable with `features = ["code-editor"]`. `CodeEditorData` holds a `Rope`-backed buffer with tree-sitter syntax highlighting. You bring your own tree-sitter grammar and highlights query via `EditorLanguage`, so any language can be supported (add the grammar crate, e.g. `tree-sitter-rust`, as a dependency). Pass `None` to disable highlighting. Then pass the data to the `CodeEditor` component:
+**WRONG:** Wire a custom handler just to reproduce the same link
 
 ```rust
-let editor = use_state(|| {
-    let language = EditorLanguage::new(
-        tree_sitter_rust::LANGUAGE,
-        tree_sitter_rust::HIGHLIGHTS_QUERY,
-    );
-    let mut e = CodeEditorData::new(Rope::from_str(src), language);
-    e.parse();
-    e.measure(14., "Jetbrains Mono");
-    e
+let on_open_docs = move |_: Event<PressEventData>| {
+    Platform::get().open_url("https://freyaui.dev");
+};
+
+rect().on_press(on_open_docs).child("Freya docs")
+```
+
+### Open a URL from an action
+
+**CORRECT:** Use `Platform::get().open_url(...)` in a custom handler or when the `router` feature is disabled
+
+```rust
+let on_open_docs = move |_: Event<PressEventData>| {
+    close_help_menu();
+    Platform::get().open_url("https://freyaui.dev");
+};
+
+Button::new().on_press(on_open_docs).child("Open docs")
+```
+
+**WRONG:** Add a separate opener dependency for the same action
+
+```rust
+let on_open_docs = move |_: Event<PressEventData>| {
+    close_help_menu();
+    let _ = open::that("https://freyaui.dev");
+};
+
+Button::new().on_press(on_open_docs).child("Open docs")
+```
+
+## Translate complete messages
+
+**CORRECT:** Use a single Fluent message so translators can move the argument or change the punctuation
+
+```ftl
+welcome = Welcome, { $name }!
+```
+
+```rust
+rect().child(t!("welcome", name: name))
+```
+
+**WRONG:** Put translated fragments together in a fixed order
+
+```rust
+rect().child(format!("{}, {name}!", t!("welcome_prefix")))
+```
+
+## Respect Android system bars and cutouts
+
+Read `content_padding()` during render so edge to edge layouts follow changes to the system insets and window scale
+
+**CORRECT:** Pad content with the current Android insets and use no extra padding on other platforms
+
+```rust
+#[cfg(target_os = "android")]
+use freya::android::AndroidExt;
+
+#[cfg(target_os = "android")]
+let content_padding = Platform::get().content_padding();
+#[cfg(not(target_os = "android"))]
+let content_padding = Gaps::default();
+
+rect().expanded().padding(content_padding).child("Settings")
+```
+
+**WRONG:** Guess a fixed status bar height and ignore the other edges
+
+```rust
+rect().expanded().padding((24., 0., 0., 0.)).child("Settings")
+```
+
+See the [Android example](../../examples/android) for setup with `AndroidPlugin`
+
+## Test through the UI
+
+Simulate the actual input with `freya-testing` and assert what the user sees
+
+**CORRECT:** Click the control and check the updated label
+
+```rust
+let mut test = launch_test(counter_app);
+
+test.click_cursor((15., 15.));
+
+let updated_label = test.find(|_, element| {
+    Label::try_downcast(element).filter(|label| label.text.as_ref() == "Count: 1")
 });
-CodeEditor::new(editor, focus.a11y_id())
+assert!(updated_label.is_some());
 ```
 
-## Plotting
-
-Enable with `features = ["plot"]`. Use the `plot()` element with a `RenderCallback` and draw into it using the Plotters API via `PlotSkiaBackend`:
+**WRONG:** Set the counter directly to test that its button works
 
 ```rust
-plot(RenderCallback::new(|ctx| {
-    let backend = PlotSkiaBackend::new(ctx.canvas, ctx.font_collection, size).into_drawing_area();
-    // ... Plotters drawing code
-})).expanded()
+count.set(1);
+assert_eq!(*count.peek(), 1);
 ```
-
-## Material Design
-
-Enable with `features = ["material-design"]`. Adds style modifiers like `.ripple()` to built-in components:
-
-```rust
-use freya::material_design::*;
-Button::new().ripple().child("Click me")
-```
-
-## HTML
-
-Enable with `features = ["html"]`. Renders an HTML + CSS document with Blitz:
-
-```rust
-use freya::html::*;
-// The view is driven by a handle, which also exposes history navigation
-// (back/forward) and the current URL. Sources can be remote or inline.
-let mut handle = use_hook(|| {
-    let mut handle = HtmlHandle::create();
-    handle.load(HtmlSource::url("https://example.com"));
-    handle
-});
-HtmlView::new(handle).expanded();
-handle.back();
-handle.navigate("https://freyaui.dev");
-use_hook(|| {
-    let mut handle = HtmlHandle::create();
-    handle.load(HtmlSource::html("<h1>Hello</h1>"));
-    handle
-});
-```
-
-## Terminal
-
-Enable with `features = ["terminal-pty"]`. Spawns a PTY process and renders it as a terminal:
-
-```rust
-use freya::terminal::*;
-let mut cmd = CommandBuilder::new("bash");
-cmd.env("TERM", "xterm-256color");
-let handle = TerminalHandle::new(TerminalId::new(), PtyBackend::new(cmd), None).ok();
-// Render with Terminal::new(handle) and forward keyboard events via handle.key_mut()
-```
-
-## Camera
-
-Enable with `features = ["camera"]`. Streams frames from a webcam into reactive state:
-
-```rust
-use freya::camera::*;
-let camera = use_camera(CameraConfig::default);
-CameraViewer::new(camera)
-```
-
-On macOS, call `freya::camera::init()` from `main` to request authorization before launching.
-
-## Borderless Windows
-
-Enable with `features = ["borderless"]`. For windows using `.with_decorations(false)`, register `BorderlessPlugin` (crate `freya-borderless-plugin`). Combine with `TitlebarButton` (`titlebar` feature) and `rect().window_drag()` for a custom titlebar.
-
-```rust
-use freya::borderless::BorderlessPlugin;
-
-launch(
-    LaunchConfig::new()
-        .with_plugin(BorderlessPlugin::new().with_corner_radius(12.))
-        .with_window(
-            WindowConfig::new(app)
-                .with_decorations(false)
-                .with_transparency(true)
-                .with_background(Color::TRANSPARENT),
-        ),
-)
-```
-
-## Developer Tools
-
-Enable with `features = ["devtools"]`. Adds a real-time component tree inspector. Run the devtools app alongside your app to examine layout, props, and state.
-
-## Crate Features
-
-Add to your `Cargo.toml` as needed:
-
-```toml
-freya = { version = "...", features = ["router", "radio"] }
-```
-
-| Feature | What it enables |
-|---|---|
-| `router` | Page routing (`freya-router`) |
-| `i18n` | Internationalization via Fluent (`freya-i18n`) |
-| `remote-asset` | Load images/assets from remote URLs |
-| `radio` | Global state management (`freya-radio`) |
-| `query` | Async data fetching with caching (`freya-query`) |
-| `sdk` | Generic utility APIs (`freya-sdk`) |
-| `plot` | Chart/plotting via Plotters (`freya-plotters-backend`) |
-| `gif` | Animated GIF support in `GifViewer` |
-| `calendar` | `Calendar` date-picker component |
-| `markdown` | `Markdown` renderer component |
-| `icons` | SVG icon library via Lucide (`freya-icons`) |
-| `material-design` | Material Design theme (`freya-material-design`) |
-| `html` | Render HTML + CSS via Blitz (`freya-html`) |
-| `terminal` | Terminal emulator (`freya-terminal`) |
-| `terminal-pty` | Built-in PTY backend for the terminal, implies `terminal` |
-| `code-editor` | Code editing APIs (`freya-code-editor`) |
-| `camera` | Webcam capture (`freya-camera`) |
-| `tray` | System tray support |
-| `titlebar` | Custom window titlebar component |
-| `borderless` | `BorderlessPlugin` helpers for undecorated windows (`freya-borderless-plugin`) |
-| `devtools` | Developer tools overlay |
-| `metrics` | Metrics overlay plugin (`freya-metrics-plugin`) |
-| `hotpath` | Hot-path optimization |
-| `all` | All of the above (except devtools/metrics/hotpath) |
-
-## Further Reference
-
-- `AGENTS.md` (also symlinked as `CLAUDE.md`) in the repo root - authoritative dev workflow and Rust conventions for working on Freya itself.
-- `crates/freya/src/_docs/` - in-source documentation for hooks, state management, components, routing, animations, and more.
-- `examples/` - 150+ working examples covering every feature.
