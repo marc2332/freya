@@ -19,12 +19,12 @@ pub trait RectThemeExt {
 impl RectThemeExt for Rect {
     fn theme_background(self) -> Self {
         let theme = get_theme_or_default();
-        self.background(*theme.read().get_var::<Color>(ColorRole::Background.key()))
+        self.background(theme.read().color(ColorRole::Background))
     }
 
     fn theme_color(self) -> Self {
         let theme = get_theme_or_default();
-        self.color(*theme.read().get_var::<Color>(ColorRole::TextPrimary.key()))
+        self.color(theme.read().color(ColorRole::TextPrimary))
     }
 }
 
@@ -50,7 +50,7 @@ pub trait LabelThemeExt {
 impl LabelThemeExt for Label {
     fn theme_color(self) -> Self {
         let theme = get_theme_or_default();
-        self.color(*theme.read().get_var::<Color>(ColorRole::TextPrimary.key()))
+        self.color(theme.read().color(ColorRole::TextPrimary))
     }
 
     fn title(self) -> Self {
@@ -81,6 +81,6 @@ pub trait ParagraphThemeExt {
 impl ParagraphThemeExt for Paragraph {
     fn theme_color(self) -> Self {
         let theme = get_theme_or_default();
-        self.color(*theme.read().get_var::<Color>(ColorRole::TextPrimary.key()))
+        self.color(theme.read().color(ColorRole::TextPrimary))
     }
 }
