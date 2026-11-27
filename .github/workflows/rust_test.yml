@@ -66,6 +66,14 @@ jobs:
         choco install ffmpeg --yes --no-progress
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         ffmpeg -version
+    - name: Install FFmpeg on macOS
+      if: runner.os == 'macOS'
+      continue-on-error: true
+      run: |
+        brew install ffmpeg
+        ffmpeg_bin="$(brew --prefix ffmpeg)/bin"
+        "$ffmpeg_bin/ffmpeg" -version
+        echo "$ffmpeg_bin" >> "$GITHUB_PATH"
     - name: Run MacOS and Windows tests
       if: runner.os != 'Linux'
       run: just t
