@@ -9,7 +9,7 @@ description: Apply Freya best practices when writing or reviewing Rust GUI compo
 
 * **General:** [Choose the cleanup scope](#choose-the-cleanup-scope), [Reuse existing Freya APIs](#reuse-existing-freya-apis)
 * **Components:** [Separate UI from logic](#separate-ui-from-logic), [Use structs for reusable components](#use-structs-for-reusable-components), [Require values in component constructors](#require-values-in-component-constructors), [Keep builder chains declarative](#keep-builder-chains-declarative), [Pass plain text directly](#pass-plain-text-directly), [Let layout adapt](#let-layout-adapt)
-* **Events:** [Bind event handlers before the UI](#bind-event-handlers-before-the-ui), [Use pointer events for gestures](#use-pointer-events-for-gestures), [Use press for activation](#use-press-for-activation), [Cancel the right event](#cancel-the-right-event)
+* **Events:** [Bind event handlers before the UI](#bind-event-handlers-before-the-ui), [Use pointer events for gestures](#use-pointer-events-for-gestures), [Use press for activation](#use-press-for-activation), [Make custom controls accessible](#make-custom-controls-accessible), [Cancel the right event](#cancel-the-right-event)
 * **State:** [Call hooks in a stable order](#call-hooks-in-a-stable-order), [Derive values instead of syncing state](#derive-values-instead-of-syncing-state), [Derive values without PartialEq](#derive-values-without-partialeq), [Keep side effects out of render](#keep-side-effects-out-of-render), [Give children only the state access they need](#give-children-only-the-state-access-they-need), [Share dependencies through context](#share-dependencies-through-context), [Scope shared state with Freya Radio](#scope-shared-state-with-freya-radio), [Bind inputs directly](#bind-inputs-directly)
 * **Styling:** [Use existing theme colors](#use-existing-theme-colors), [Create a custom app theme](#create-a-custom-app-theme), [Override individual theme fields](#override-individual-theme-fields), [Animate changes in state](#animate-changes-in-state)
 * **Performance:** [Key lists by item ID](#key-lists-by-item-id), [Virtualize large lists](#virtualize-large-lists), [Downsample images for display](#downsample-images-for-display), [Choose an image sampling filter](#choose-an-image-sampling-filter), [Tune asset cache retention](#tune-asset-cache-retention), [Rasterize complex SVGs in the background](#rasterize-complex-svgs-in-the-background), [Cache expensive calculations with use_memo](#cache-expensive-calculations-with-use_memo), [Subscribe where values are displayed](#subscribe-where-values-are-displayed), [Skip unchanged state writes](#skip-unchanged-state-writes), [Share remote data with Freya Query](#share-remote-data-with-freya-query), [Keep cached data visible during refresh](#keep-cached-data-visible-during-refresh)
@@ -302,6 +302,52 @@ let on_save = move |_: Event<PointerEventData>| save_draft();
 
 rect().on_pointer_press(on_save).child("Save")
 ```
+
+## Make custom controls accessible
+
+Prefer built in controls like `Button`
+
+Expose meaningful content and controls without making every element a tab stop
+
+Skip labels and tab stops for purely decorative icons, spacers, and layout wrappers
+
+Create one stable ID per custom focusable node with `use_a11y()`, attach it with `.a11y_id(...)`, and track focus with `use_focus(id)`
+
+**CORRECT:** Name the icon button and show visible keyboard focus
+
+```rust
+let control_id = use_a11y();
+let focus = use_focus(control_id);
+let theme = use_theme();
+
+let on_save = move |_: Event<PressEventData>| save_draft();
+
+let focus_color = theme.read().color(ColorRole::BorderFocus);
+
+rect()
+    .a11y_id(control_id)
+    .a11y_role(AccessibilityRole::Button)
+    .a11y_alt("Save draft")
+    .a11y_focusable(true)
+    .on_press(on_save)
+    .maybe(focus() == Focus::Keyboard, |el| {
+        el.border(Border::new().fill(focus_color).width(2.))
+    })
+    .child(save_icon())
+```
+
+**WRONG:** Make the icon respond only to pointer input
+
+```rust
+let on_save = move |_: Event<PointerEventData>| save_draft();
+
+rect().on_pointer_press(on_save).child(save_icon())
+```
+
+* `.a11y_enabled(...)` reports enabled state but does not disable handlers
+* `.a11y_auto_focus(true)` requests focus on mount
+* `.a11y_member_of(group_id)` associates the node with a group
+* `.a11y_builder(...)` sets properties not covered by the other methods
 
 ## Cancel the right event
 
