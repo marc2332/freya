@@ -78,6 +78,8 @@ pub struct OpenGLDriver {
     pub(crate) surface: SkiaSurface,
     pub(crate) gpu_name: Option<String>,
     #[cfg(target_os = "windows")]
+    use_manual_pacing: bool,
+    #[cfg(target_os = "windows")]
     last_present: Option<Instant>,
 }
 
@@ -206,9 +208,9 @@ impl OpenGLDriver {
 
         let gl_context = not_current_gl_context.make_current(&gl_surface)?;
 
-        if let Err(error) =
-            gl_surface.set_swap_interval(&gl_context, SwapInterval::Wait(NonZeroU32::MIN))
-        {
+        let swap_interval =
+            gl_surface.set_swap_interval(&gl_context, SwapInterval::Wait(NonZeroU32::MIN));
+        if let Err(error) = &swap_interval {
             tracing::warn!("Failed to enable OpenGL vsync: {error}");
         }
 
@@ -277,6 +279,8 @@ impl OpenGLDriver {
             surface,
             gpu_name,
             #[cfg(target_os = "windows")]
+            use_manual_pacing: swap_interval.is_err(),
+            #[cfg(target_os = "windows")]
             last_present: None,
         };
 
@@ -297,7 +301,9 @@ impl OpenGLDriver {
         }
 
         #[cfg(target_os = "windows")]
-        crate::drivers::wait_for_display(window, &mut self.last_present);
+        if self.use_manual_pacing {
+            crate::drivers::wait_for_display(window, &mut self.last_present);
+        }
     }
 
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
