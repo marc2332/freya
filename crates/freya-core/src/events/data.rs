@@ -83,10 +83,12 @@ impl KeyboardEventData {
     }
 }
 
+#[derive(Clone)]
 pub struct Event<D> {
     pub(crate) data: D,
     pub(crate) propagate: Rc<RefCell<bool>>,
     pub(crate) default: Rc<RefCell<bool>>,
+    pub(crate) stack_stopped: Rc<RefCell<bool>>,
 }
 
 impl<D> Deref for Event<D> {
@@ -103,6 +105,7 @@ impl<D> Event<D> {
             data: data(self.data),
             propagate: self.propagate,
             default: self.default,
+            stack_stopped: self.stack_stopped,
         }
     }
 
@@ -111,11 +114,17 @@ impl<D> Event<D> {
             data: data(self.data)?,
             propagate: self.propagate,
             default: self.default,
+            stack_stopped: self.stack_stopped,
         })
     }
 
     pub fn data(&self) -> &D {
         &self.data
+    }
+
+    /// Skips later handlers on this element without stopping propagation or preventing defaults.
+    pub fn stop_stack(&self) {
+        *self.stack_stopped.borrow_mut() = true;
     }
 
     pub fn stop_propagation(&self) {

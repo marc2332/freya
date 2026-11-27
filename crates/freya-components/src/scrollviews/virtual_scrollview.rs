@@ -782,7 +782,7 @@ impl<D: PartialEq + 'static, B: Fn(VirtualItem, &D) -> Element + 'static> Compon
                                 let on_sized = self.on_sized.clone();
                                 let follows_scroll_controller = self.follows_scroll_controller;
                                 move |e: Event<SizedEventData>| {
-                                    size.set_if_modified(e.clone());
+                                    size.set_if_modified(e.data().clone());
                                     if !follows_scroll_controller {
                                         let content_size = match direction {
                                             Direction::Vertical => ScrollSize::new(

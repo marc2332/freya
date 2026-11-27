@@ -287,6 +287,153 @@ fn pointer_events() {
 }
 
 #[test]
+fn stacked_event_handlers() {
+    fn app() -> Element {
+        let mut calls = use_consume::<State<Vec<&'static str>>>();
+        rect()
+            .expanded()
+            .on_pointer_press(move |_| calls.write().push("parent"))
+            .child(
+                rect()
+                    .expanded()
+                    .on_pointer_press(
+                        EventHandler::new(move |_| calls.write().push("replaced")).stacked(),
+                    )
+                    .on_pointer_press(move |event: Event<PointerEventData>| {
+                        event.stop_propagation();
+                        calls.write().push("first");
+                    })
+                    .on_pointer_press(
+                        EventHandler::new(move |_| calls.write().push("second")).stacked(),
+                    )
+                    .on_press(EventHandler::new(move |_| calls.write().push("press")).stacked()),
+            )
+            .into()
+    }
+
+    let (mut test, calls) = TestingRunner::new(
+        app,
+        (500., 500.).into(),
+        |runner| runner.provide_root_context(|| State::create(Vec::<&'static str>::new())),
+        1.,
+    );
+    test.sync_and_update();
+    test.click_cursor((15., 15.));
+    assert_eq!(&*calls.peek(), &["first", "second", "press"]);
+}
+
+#[test]
+fn stacked_handler_clone_does_not_change_original() {
+    fn app() -> Element {
+        let mut calls = use_consume::<State<Vec<&'static str>>>();
+        let handler = EventHandler::new(move |_| calls.write().push("original"));
+        rect()
+            .expanded()
+            .on_press(move |_| calls.write().push("replaced"))
+            .on_press(handler.clone().stacked())
+            .on_press(handler)
+            .on_all_press(EventHandler::new(move |_| calls.write().push("stacked")).stacked())
+            .into()
+    }
+
+    let (mut test, calls) = TestingRunner::new(
+        app,
+        (500., 500.).into(),
+        |runner| runner.provide_root_context(|| State::create(Vec::<&'static str>::new())),
+        1.,
+    );
+    test.sync_and_update();
+    test.click_cursor((15., 15.));
+    assert_eq!(&*calls.peek(), &["original", "stacked"]);
+}
+
+#[test]
+fn stacked_handlers_share_default_prevention() {
+    fn app() -> Element {
+        let mut calls = use_consume::<State<Vec<&'static str>>>();
+        rect()
+            .expanded()
+            .on_mouse_up(|event: Event<MouseEventData>| event.prevent_default())
+            .on_mouse_up(
+                EventHandler::new(move |event: Event<MouseEventData>| {
+                    assert!(!*event.get_prevent_default().borrow());
+                    calls.write().push("stacked");
+                })
+                .stacked(),
+            )
+            .into()
+    }
+
+    let (mut test, calls) = TestingRunner::new(
+        app,
+        (500., 500.).into(),
+        |runner| runner.provide_root_context(|| State::create(Vec::<&'static str>::new())),
+        1.,
+    );
+    test.sync_and_update();
+    test.click_cursor((15., 15.));
+    assert_eq!(&*calls.peek(), &["stacked"]);
+}
+
+#[test]
+fn stop_stack_skips_remaining_handlers_but_preserves_bubbling() {
+    fn app() -> Element {
+        let mut calls = use_consume::<State<Vec<&'static str>>>();
+        rect()
+            .expanded()
+            .on_pointer_press(move |event: Event<PointerEventData>| {
+                assert!(*event.get_prevent_default().borrow());
+                calls.write().push("parent");
+            })
+            .on_pointer_press(
+                EventHandler::new(move |_| calls.write().push("parent_stacked")).stacked(),
+            )
+            .child(
+                rect()
+                    .expanded()
+                    .on_pointer_press(move |_| calls.write().push("first"))
+                    .on_press(
+                        EventHandler::new(move |event: Event<PressEventData>| {
+                            calls.write().push("stop");
+                            event.stop_stack();
+                        })
+                        .stacked(),
+                    )
+                    .on_pointer_press(
+                        EventHandler::new(move |_| calls.write().push("skipped")).stacked(),
+                    )
+                    .on_all_press(
+                        EventHandler::new(move |_| calls.write().push("also_skipped")).stacked(),
+                    ),
+            )
+            .into()
+    }
+
+    let (mut test, calls) = TestingRunner::new(
+        app,
+        (500., 500.).into(),
+        |runner| runner.provide_root_context(|| State::create(Vec::<&'static str>::new())),
+        1.,
+    );
+    test.sync_and_update();
+    test.click_cursor((15., 15.));
+    test.click_cursor((15., 15.));
+    assert_eq!(
+        &*calls.peek(),
+        &[
+            "first",
+            "stop",
+            "parent",
+            "parent_stacked",
+            "first",
+            "stop",
+            "parent",
+            "parent_stacked"
+        ],
+    );
+}
+
+#[test]
 fn pointer_enter_leave_at_large_coordinates() {
     fn app() -> Element {
         let mut state = use_consume::<State<i32>>();

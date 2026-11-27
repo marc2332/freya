@@ -49,7 +49,10 @@ use crate::{
         paragraph::Paragraph,
         rect::Rect,
     },
-    event_handler::EventHandler,
+    event_handler::{
+        EventHandler,
+        EventHandlerEntry,
+    },
     events::{
         data::{
             Event,
@@ -182,8 +185,11 @@ macro_rules! event_handlers {
             $(
                 $(#[$attr])*
                 fn [<on_$name>](mut self, [<on_$name>]: impl Into<EventHandler<Event<$event_data>>>) -> Self {
-                    self.event_handlers_mut()
-                        .insert($event_variant, EventHandlerType::$handler_variant([<on_$name>].into()));
+                    self.insert_event_handler(
+                        $event_variant,
+                        [<on_$name>].into(),
+                        EventHandlerType::$handler_variant,
+                    );
                     self
                 }
             )*
@@ -201,6 +207,59 @@ macro_rules! event_handlers {
 pub trait EventHandlersExt: Sized {
     /// Returns a mutable reference to the element's event handler map.
     fn event_handlers_mut(&mut self) -> &mut EventHandlers;
+
+    /// Replaces existing handlers unless marked with [`EventHandler::stacked`].
+    fn insert_event_handler<D: Clone + 'static>(
+        &mut self,
+        name: EventName,
+        handler: EventHandler<Event<D>>,
+        handler_type: impl FnOnce(EventHandlerEntry<Event<D>>) -> EventHandlerType,
+    ) {
+        let stacked = handler.stacked;
+        let handler = handler_type(handler.entry);
+        let handlers = self.event_handlers_mut();
+        macro_rules! insert_handler {
+            ($($variant:ident => $event_data:ty),* $(,)?) => {
+                match handler {
+                    $(EventHandlerType::$variant(handler) => {
+                        let handler = if stacked {
+                            match handlers.get(&name) {
+                                Some(EventHandlerType::$variant(existing)) => {
+                                    let existing = existing.clone();
+                                    EventHandlerEntry::new(move |event: Event<$event_data>| {
+                                        existing.call(event.clone());
+                                        let stack_stopped = *event.stack_stopped.borrow();
+                                        if !stack_stopped {
+                                            handler.call(event);
+                                        }
+                                    })
+                                }
+                                Some(_) => unreachable!("event handler type does not match event name"),
+                                None => handler,
+                            }
+                        } else {
+                            handler
+                        };
+                        handlers.insert(name, EventHandlerType::$variant(handler));
+                    })*
+                }
+            };
+        }
+
+        insert_handler!(
+            AccessibilityAction => AccessibilityActionEventData,
+            Mouse => MouseEventData,
+            Keyboard => KeyboardEventData,
+            Sized => SizedEventData,
+            Visible => VisibleEventData,
+            Styled => StyledEventData,
+            Wheel => WheelEventData,
+            Touch => TouchEventData,
+            Pointer => PointerEventData,
+            ImePreedit => ImePreeditEventData,
+            Drag => DragEventData,
+        );
+    }
 
     /// Replace all of this element's event handlers with the given map.
     fn event_handlers(mut self, event_handlers: EventHandlers) -> Self {
@@ -325,40 +384,40 @@ pub trait EventHandlersExt: Sized {
         ime_preedit => EventName::ImePreedit;
     }
 
+    event_handlers! {
+        Styled,
+        StyledEventData;
+
+        /// Fires when the element's inherited text style is resolved or changes.
+        styled => EventName::Styled;
+    }
+
     /// Fires when the element's measured size or position changes.
     fn on_sized(mut self, on_sized: impl Into<EventHandler<Event<SizedEventData>>>) -> Self
     where
         Self: LayoutExt,
     {
-        self.event_handlers_mut()
-            .insert(EventName::Sized, EventHandlerType::Sized(on_sized.into()));
+        self.insert_event_handler(EventName::Sized, on_sized.into(), EventHandlerType::Sized);
         self.layout_mut().layout.has_layout_references = true;
         self
     }
 
     /// Fires when the element becomes visible, even partially, inside the viewports of its clipping ancestors.
     fn on_visible(mut self, on_visible: impl Into<EventHandler<Event<VisibleEventData>>>) -> Self {
-        self.event_handlers_mut().insert(
+        self.insert_event_handler(
             EventName::Visible,
-            EventHandlerType::Visible(on_visible.into()),
+            on_visible.into(),
+            EventHandlerType::Visible,
         );
         self
     }
 
     /// Fires when the element stops being visible inside the viewports of its clipping ancestors.
     fn on_hidden(mut self, on_hidden: impl Into<EventHandler<Event<VisibleEventData>>>) -> Self {
-        self.event_handlers_mut().insert(
+        self.insert_event_handler(
             EventName::Hidden,
-            EventHandlerType::Visible(on_hidden.into()),
-        );
-        self
-    }
-
-    /// Fires when the element's inherited text style is resolved or changes.
-    fn on_styled(mut self, on_styled: impl Into<EventHandler<Event<StyledEventData>>>) -> Self {
-        self.event_handlers_mut().insert(
-            EventName::Styled,
-            EventHandlerType::Styled(on_styled.into()),
+            on_hidden.into(),
+            EventHandlerType::Visible,
         );
         self
     }
@@ -375,35 +434,48 @@ pub trait EventHandlersExt: Sized {
         Self: AccessibilityExt,
     {
         let on_press = on_press.into();
+        let stacked = on_press.stacked;
+        let on_press = on_press.entry;
         self.a11y_builder(|builder| builder.add_action(AccessibilityAction::Click))
-            .on_accessibility_action({
-                let on_press = on_press.clone();
-                move |event: Event<AccessibilityActionEventData>| {
-                    if event.action == AccessibilityAction::Click {
-                        on_press.call(event.map(PressEventData::Accessibility));
-                    }
-                }
-            })
-            .on_pointer_press({
-                let on_press = on_press.clone();
-                move |e: Event<PointerEventData>| {
-                    let event = e.try_map(|d| match d {
-                        PointerEventData::Mouse(m) if m.button == Some(MouseButton::Left) => {
-                            Some(PressEventData::Mouse(m))
+            .on_accessibility_action(
+                EventHandler::new({
+                    let on_press = on_press.clone();
+                    move |event: Event<AccessibilityActionEventData>| {
+                        if event.action == AccessibilityAction::Click {
+                            on_press.call(event.map(PressEventData::Accessibility));
                         }
-                        PointerEventData::Touch(t) => Some(PressEventData::Touch(t)),
-                        _ => None,
-                    });
-                    if let Some(event) = event {
-                        on_press.call(event);
                     }
-                }
-            })
-            .on_key_down(move |e: Event<KeyboardEventData>| {
-                if e.is_press_event() {
-                    on_press.call(e.map(PressEventData::Keyboard))
-                }
-            })
+                })
+                .with_stacked(stacked),
+            )
+            .on_pointer_press(
+                EventHandler::new({
+                    let on_press = on_press.clone();
+                    move |event: Event<PointerEventData>| {
+                        let event = event.try_map(|data| match data {
+                            PointerEventData::Mouse(mouse)
+                                if mouse.button == Some(MouseButton::Left) =>
+                            {
+                                Some(PressEventData::Mouse(mouse))
+                            }
+                            PointerEventData::Touch(touch) => Some(PressEventData::Touch(touch)),
+                            _ => None,
+                        });
+                        if let Some(event) = event {
+                            on_press.call(event);
+                        }
+                    }
+                })
+                .with_stacked(stacked),
+            )
+            .on_key_down(
+                EventHandler::new(move |event: Event<KeyboardEventData>| {
+                    if event.is_press_event() {
+                        on_press.call(event.map(PressEventData::Keyboard))
+                    }
+                })
+                .with_stacked(stacked),
+            )
     }
 
     /// Also called the context menu click in other platforms.
@@ -414,17 +486,22 @@ pub trait EventHandlersExt: Sized {
         on_secondary_down: impl Into<EventHandler<Event<PressEventData>>>,
     ) -> Self {
         let on_secondary_down = on_secondary_down.into();
-        self.on_pointer_down(move |e: Event<PointerEventData>| {
-            let event = e.try_map(|d| match d {
-                PointerEventData::Mouse(m) if m.button == Some(MouseButton::Right) => {
-                    Some(PressEventData::Mouse(m))
+        let stacked = on_secondary_down.stacked;
+        let on_secondary_down = on_secondary_down.entry;
+        self.on_pointer_down(
+            EventHandler::new(move |event: Event<PointerEventData>| {
+                let event = event.try_map(|data| match data {
+                    PointerEventData::Mouse(mouse) if mouse.button == Some(MouseButton::Right) => {
+                        Some(PressEventData::Mouse(mouse))
+                    }
+                    _ => None,
+                });
+                if let Some(event) = event {
+                    on_secondary_down.call(event);
                 }
-                _ => None,
-            });
-            if let Some(event) = event {
-                on_secondary_down.call(event);
-            }
-        })
+            })
+            .with_stacked(stacked),
+        )
     }
 
     /// Gets triggered when:
@@ -437,31 +514,42 @@ pub trait EventHandlersExt: Sized {
         Self: AccessibilityExt,
     {
         let on_press = on_press.into();
+        let stacked = on_press.stacked;
+        let on_press = on_press.entry;
         self.a11y_builder(|builder| builder.add_action(AccessibilityAction::Click))
-            .on_accessibility_action({
-                let on_press = on_press.clone();
-                move |event: Event<AccessibilityActionEventData>| {
-                    if event.action == AccessibilityAction::Click {
-                        on_press.call(event.map(PressEventData::Accessibility));
+            .on_accessibility_action(
+                EventHandler::new({
+                    let on_press = on_press.clone();
+                    move |event: Event<AccessibilityActionEventData>| {
+                        if event.action == AccessibilityAction::Click {
+                            on_press.call(event.map(PressEventData::Accessibility));
+                        }
                     }
-                }
-            })
-            .on_pointer_press({
-                let on_press = on_press.clone();
-                move |e: Event<PointerEventData>| {
-                    let event = e.map(|d| match d {
-                        PointerEventData::Mouse(m) => PressEventData::Mouse(m),
-                        PointerEventData::Touch(t) => PressEventData::Touch(t),
-                    });
-                    on_press.call(event);
-                }
-            })
-            .on_key_down(move |e: Event<KeyboardEventData>| {
-                if e.is_press_event() {
-                    on_press.call(e.map(PressEventData::Keyboard))
-                }
-            })
+                })
+                .with_stacked(stacked),
+            )
+            .on_pointer_press(
+                EventHandler::new({
+                    let on_press = on_press.clone();
+                    move |event: Event<PointerEventData>| {
+                        on_press.call(event.map(|data| match data {
+                            PointerEventData::Mouse(mouse) => PressEventData::Mouse(mouse),
+                            PointerEventData::Touch(touch) => PressEventData::Touch(touch),
+                        }));
+                    }
+                })
+                .with_stacked(stacked),
+            )
+            .on_key_down(
+                EventHandler::new(move |event: Event<KeyboardEventData>| {
+                    if event.is_press_event() {
+                        on_press.call(event.map(PressEventData::Keyboard))
+                    }
+                })
+                .with_stacked(stacked),
+            )
     }
+
     /// Gets triggered when:
     /// - **Started clicking**: There is a `MouseDown` event (Left button)
     /// - **Touched**: There is a `TouchEnd` event in the same element that there had been a `TouchStart` just before
@@ -472,32 +560,25 @@ pub trait EventHandlersExt: Sized {
         on_focus_press: impl Into<EventHandler<Event<FocusPressEventData>>>,
     ) -> Self {
         let on_focus_press = on_focus_press.into();
+        let stacked = on_focus_press.stacked;
+        let on_focus_press = on_focus_press.entry;
+        let handler = EventHandler::new(move |event: Event<PointerEventData>| {
+            let event = event.try_map(|data| match data {
+                PointerEventData::Mouse(mouse) if mouse.button == Some(MouseButton::Left) => {
+                    Some(FocusPressEventData::Mouse(mouse))
+                }
+                PointerEventData::Touch(touch) => Some(FocusPressEventData::Touch(touch)),
+                _ => None,
+            });
+            if let Some(event) = event {
+                on_focus_press.call(event);
+            }
+        })
+        .with_stacked(stacked);
         if cfg!(target_os = "android") {
-            self.on_pointer_press(move |e: Event<PointerEventData>| {
-                let event = e.try_map(|d| match d {
-                    PointerEventData::Mouse(m) if m.button == Some(MouseButton::Left) => {
-                        Some(FocusPressEventData::Mouse(m))
-                    }
-                    PointerEventData::Touch(t) => Some(FocusPressEventData::Touch(t)),
-                    _ => None,
-                });
-                if let Some(event) = event {
-                    on_focus_press.call(event);
-                }
-            })
+            self.on_pointer_press(handler)
         } else {
-            self.on_pointer_down(move |e: Event<PointerEventData>| {
-                let event = e.try_map(|d| match d {
-                    PointerEventData::Mouse(m) if m.button == Some(MouseButton::Left) => {
-                        Some(FocusPressEventData::Mouse(m))
-                    }
-                    PointerEventData::Touch(t) => Some(FocusPressEventData::Touch(t)),
-                    _ => None,
-                });
-                if let Some(event) = event {
-                    on_focus_press.call(event);
-                }
-            })
+            self.on_pointer_down(handler)
         }
     }
 }

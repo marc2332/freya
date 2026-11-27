@@ -37,7 +37,7 @@ use crate::{
         TextStyleState,
     },
     diff_key::DiffKey,
-    event_handler::EventHandler,
+    event_handler::EventHandlerEntry,
     events::{
         data::{
             AccessibilityActionEventData,
@@ -518,15 +518,15 @@ pub type EventHandlers = FxHashMap<EventName, EventHandlerType>;
 
 #[derive(Clone, PartialEq)]
 pub enum EventHandlerType {
-    AccessibilityAction(EventHandler<Event<AccessibilityActionEventData>>),
-    Mouse(EventHandler<Event<MouseEventData>>),
-    Keyboard(EventHandler<Event<KeyboardEventData>>),
-    Sized(EventHandler<Event<SizedEventData>>),
-    Visible(EventHandler<Event<VisibleEventData>>),
-    Styled(EventHandler<Event<StyledEventData>>),
-    Wheel(EventHandler<Event<WheelEventData>>),
-    Touch(EventHandler<Event<TouchEventData>>),
-    Pointer(EventHandler<Event<PointerEventData>>),
-    ImePreedit(EventHandler<Event<ImePreeditEventData>>),
-    Drag(EventHandler<Event<DragEventData>>),
+    AccessibilityAction(EventHandlerEntry<Event<AccessibilityActionEventData>>),
+    Mouse(EventHandlerEntry<Event<MouseEventData>>),
+    Keyboard(EventHandlerEntry<Event<KeyboardEventData>>),
+    Sized(EventHandlerEntry<Event<SizedEventData>>),
+    Visible(EventHandlerEntry<Event<VisibleEventData>>),
+    Styled(EventHandlerEntry<Event<StyledEventData>>),
+    Wheel(EventHandlerEntry<Event<WheelEventData>>),
+    Touch(EventHandlerEntry<Event<TouchEventData>>),
+    Pointer(EventHandlerEntry<Event<PointerEventData>>),
+    ImePreedit(EventHandlerEntry<Event<ImePreeditEventData>>),
+    Drag(EventHandlerEntry<Event<DragEventData>>),
 }

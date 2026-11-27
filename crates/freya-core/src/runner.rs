@@ -401,6 +401,7 @@ impl Runner {
                                             event_handlers.get(&event_name)
                                     {
                                         handler.call(Event {
+                                            stack_stopped: Default::default(),
                                             data: data.clone(),
                                             propagate: propagate.clone(),
                                             default: default.clone(),
@@ -413,6 +414,7 @@ impl Runner {
                                         match event_handlers.get(&event_name) {
                                             Some(EventHandlerType::Mouse(handler)) => {
                                                 handler.call(Event {
+                                                    stack_stopped: Default::default(),
                                                     data: data.clone(),
                                                     propagate: propagate.clone(),
                                                     default: default.clone(),
@@ -429,6 +431,7 @@ impl Runner {
                                         match event_handlers.get(&event_name) {
                                             Some(EventHandlerType::Keyboard(handler)) => {
                                                 handler.call(Event {
+                                                    stack_stopped: Default::default(),
                                                     data: data.clone(),
                                                     propagate: propagate.clone(),
                                                     default: default.clone(),
@@ -445,6 +448,7 @@ impl Runner {
                                         match event_handlers.get(&event_name) {
                                             Some(EventHandlerType::Sized(handler)) => {
                                                 handler.call(Event {
+                                                    stack_stopped: Default::default(),
                                                     data: data.clone(),
                                                     propagate: propagate.clone(),
                                                     default: default.clone(),
@@ -461,6 +465,7 @@ impl Runner {
                                         match event_handlers.get(&event_name) {
                                             Some(EventHandlerType::Visible(handler)) => {
                                                 handler.call(Event {
+                                                    stack_stopped: Default::default(),
                                                     data: data.clone(),
                                                     propagate: propagate.clone(),
                                                     default: default.clone(),
@@ -477,6 +482,7 @@ impl Runner {
                                         match event_handlers.get(&event_name) {
                                             Some(EventHandlerType::Styled(handler)) => {
                                                 handler.call(Event {
+                                                    stack_stopped: Default::default(),
                                                     data: data.clone(),
                                                     propagate: propagate.clone(),
                                                     default: default.clone(),
@@ -493,6 +499,7 @@ impl Runner {
                                         match event_handlers.get(&event_name) {
                                             Some(EventHandlerType::Wheel(handler)) => {
                                                 handler.call(Event {
+                                                    stack_stopped: Default::default(),
                                                     data: data.clone(),
                                                     propagate: propagate.clone(),
                                                     default: default.clone(),
@@ -509,6 +516,7 @@ impl Runner {
                                         match event_handlers.get(&event_name) {
                                             Some(EventHandlerType::Touch(handler)) => {
                                                 handler.call(Event {
+                                                    stack_stopped: Default::default(),
                                                     data: data.clone(),
                                                     propagate: propagate.clone(),
                                                     default: default.clone(),
@@ -525,6 +533,7 @@ impl Runner {
                                         match event_handlers.get(&event_name) {
                                             Some(EventHandlerType::Pointer(handler)) => {
                                                 handler.call(Event {
+                                                    stack_stopped: Default::default(),
                                                     data: data.clone(),
                                                     propagate: propagate.clone(),
                                                     default: default.clone(),
@@ -545,6 +554,7 @@ impl Runner {
                                                     data.target = node.node_id;
                                                 }
                                                 handler.call(Event {
+                                                    stack_stopped: Default::default(),
                                                     data,
                                                     propagate: propagate.clone(),
                                                     default: default.clone(),
@@ -561,6 +571,7 @@ impl Runner {
                                         match event_handlers.get(&event_name) {
                                             Some(EventHandlerType::ImePreedit(handler)) => {
                                                 handler.call(Event {
+                                                    stack_stopped: Default::default(),
                                                     data: data.clone(),
                                                     propagate: propagate.clone(),
                                                     default: default.clone(),

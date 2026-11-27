@@ -87,11 +87,53 @@ impl<R, H: FnMut() -> R + 'static> From<H> for NoArgCallback<R> {
     }
 }
 
-pub struct EventHandler<T>(Rc<RefCell<dyn FnMut(T)>>);
+/// A stored event callback without registration options.
+pub struct EventHandlerEntry<T>(Rc<RefCell<dyn FnMut(T)>>);
+
+impl<T> EventHandlerEntry<T> {
+    pub fn new(handler: impl FnMut(T) + 'static) -> Self {
+        Self(Rc::new(RefCell::new(handler)))
+    }
+
+    pub fn call(&self, data: T) {
+        (self.0.borrow_mut())(data);
+    }
+}
+
+impl<T> Clone for EventHandlerEntry<T> {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
+impl<T> PartialEq for EventHandlerEntry<T> {
+    fn eq(&self, _other: &Self) -> bool {
+        false
+    }
+}
+
+pub struct EventHandler<T> {
+    pub(crate) entry: EventHandlerEntry<T>,
+    pub(crate) stacked: bool,
+}
 
 impl<T> EventHandler<T> {
     pub fn new(handler: impl FnMut(T) + 'static) -> Self {
-        Self(Rc::new(RefCell::new(handler)))
+        Self {
+            entry: EventHandlerEntry::new(handler),
+            stacked: false,
+        }
+    }
+
+    /// Runs after existing handlers in registration order instead of replacing them.
+    pub fn stacked(mut self) -> Self {
+        self.stacked = true;
+        self
+    }
+
+    pub(crate) fn with_stacked(mut self, stacked: bool) -> Self {
+        self.stacked = stacked;
+        self
     }
 
     /// Create an event handler that runs under the given scope.
@@ -125,13 +167,16 @@ impl<T> EventHandler<T> {
     }
 
     pub fn call(&self, data: T) {
-        (self.0.borrow_mut())(data);
+        self.entry.call(data);
     }
 }
 
 impl<T> Clone for EventHandler<T> {
     fn clone(&self) -> Self {
-        Self(self.0.clone())
+        Self {
+            entry: self.entry.clone(),
+            stacked: self.stacked,
+        }
     }
 }
 
@@ -142,9 +187,8 @@ impl<T> std::fmt::Debug for EventHandler<T> {
 }
 
 impl<T> PartialEq for EventHandler<T> {
-    fn eq(&self, _other: &Self) -> bool {
-        // TODO: Decide whether event handlers should be captured or not.
-        false
+    fn eq(&self, other: &Self) -> bool {
+        self.entry == other.entry
     }
 }
 
