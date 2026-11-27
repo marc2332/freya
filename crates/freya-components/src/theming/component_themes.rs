@@ -6,9 +6,15 @@ use std::{
     fmt,
 };
 
-use freya_core::integration::FxHashMap;
+use freya_core::{
+    integration::FxHashMap,
+    prelude::Color,
+};
 
-use crate::theming::themes::light_theme;
+use crate::theming::themes::{
+    ColorRole,
+    light_theme,
+};
 
 #[derive(PartialEq)]
 pub struct Theme {
@@ -40,6 +46,12 @@ impl Theme {
     #[track_caller]
     pub fn get_var<T: 'static>(&self, key: &str) -> &T {
         self.variables.get(key)
+    }
+
+    /// Get a palette color or panic if the role is missing or has a different type.
+    #[track_caller]
+    pub fn color(&self, role: ColorRole) -> Color {
+        *self.get_var(role.key())
     }
 
     /// Set or replace a variable, including its type.

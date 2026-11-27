@@ -134,11 +134,7 @@ impl Component for Column {
                     .expanded()
                     .padding(12.)
                     .spacing(8.)
-                    .background(
-                        *theme
-                            .read()
-                            .get_var::<Color>(ColorRole::SurfaceSecondary.key()),
-                    )
+                    .background(theme.read().color(ColorRole::SurfaceSecondary))
                     .corner_radius(12.)
                     .child(
                         label()

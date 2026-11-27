@@ -399,31 +399,31 @@ pub trait SvgThemeExt {
 impl SvgThemeExt for SvgViewer {
     fn theme_color(self) -> Self {
         let theme = get_theme_or_default();
-        self.color(*theme.read().get_var::<Color>(ColorRole::TextPrimary.key()))
+        self.color(theme.read().color(ColorRole::TextPrimary))
     }
 
     fn theme_accent_color(self) -> Self {
         let theme = get_theme_or_default();
-        self.color(*theme.read().get_var::<Color>(ColorRole::Primary.key()))
+        self.color(theme.read().color(ColorRole::Primary))
     }
 
     fn theme_fill(self) -> Self {
         let theme = get_theme_or_default();
-        self.fill(*theme.read().get_var::<Color>(ColorRole::TextPrimary.key()))
+        self.fill(theme.read().color(ColorRole::TextPrimary))
     }
 
     fn theme_stroke(self) -> Self {
         let theme = get_theme_or_default();
-        self.stroke(*theme.read().get_var::<Color>(ColorRole::TextPrimary.key()))
+        self.stroke(theme.read().color(ColorRole::TextPrimary))
     }
 
     fn theme_accent_fill(self) -> Self {
         let theme = get_theme_or_default();
-        self.fill(*theme.read().get_var::<Color>(ColorRole::Primary.key()))
+        self.fill(theme.read().color(ColorRole::Primary))
     }
 
     fn theme_accent_stroke(self) -> Self {
         let theme = get_theme_or_default();
-        self.stroke(*theme.read().get_var::<Color>(ColorRole::Primary.key()))
+        self.stroke(theme.read().color(ColorRole::Primary))
     }
 }
