@@ -63,7 +63,6 @@
 //! Set `font_size` after `theme_font_size` or on a child element to override the role's size.
 //!
 //! With `AndroidPlugin`, both themed and explicit font sizes follow Android's Font size setting.
-//! This does not scale padding or other layout dimensions.
 //!
 //! ## Embedding a font
 //!

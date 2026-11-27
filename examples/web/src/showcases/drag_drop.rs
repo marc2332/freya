@@ -35,7 +35,6 @@ struct TaskCard(Task);
 
 impl Component for TaskCard {
     fn render(&self) -> impl IntoElement {
-        let theme = use_theme();
         let animation = use_animation(|conf| {
             conf.on_creation(OnCreation::Finish);
             AnimNum::new(0.85, 1.)
@@ -45,7 +44,7 @@ impl Component for TaskCard {
         });
 
         rect()
-            .background(*theme.read().get_var::<Color>(ColorRole::Background.key()))
+            .theme_background()
             .corner_radius(10.)
             .padding(12.)
             .width(Size::fill())
@@ -174,9 +173,7 @@ impl Component for Column {
                                                 portal().child(
                                                     rect()
                                                         .interactive(false)
-                                                        .background(*theme.read().get_var::<Color>(
-                                                            ColorRole::Background.key(),
-                                                        ))
+                                                        .theme_background()
                                                         .layer(999)
                                                         .corner_radius(10.)
                                                         .padding(12.)
