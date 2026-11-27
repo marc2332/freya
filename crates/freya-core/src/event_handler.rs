@@ -87,15 +87,40 @@ impl<R, H: FnMut() -> R + 'static> From<H> for NoArgCallback<R> {
     }
 }
 
+/// A stored event callback without registration options.
+pub struct EventHandlerEntry<T>(Rc<RefCell<dyn FnMut(T)>>);
+
+impl<T> EventHandlerEntry<T> {
+    pub fn new(handler: impl FnMut(T) + 'static) -> Self {
+        Self(Rc::new(RefCell::new(handler)))
+    }
+
+    pub fn call(&self, data: T) {
+        (self.0.borrow_mut())(data);
+    }
+}
+
+impl<T> Clone for EventHandlerEntry<T> {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
+impl<T> PartialEq for EventHandlerEntry<T> {
+    fn eq(&self, _other: &Self) -> bool {
+        false
+    }
+}
+
 pub struct EventHandler<T> {
-    callback: Rc<RefCell<dyn FnMut(T)>>,
+    pub(crate) entry: EventHandlerEntry<T>,
     pub(crate) stacked: bool,
 }
 
 impl<T> EventHandler<T> {
     pub fn new(handler: impl FnMut(T) + 'static) -> Self {
         Self {
-            callback: Rc::new(RefCell::new(handler)),
+            entry: EventHandlerEntry::new(handler),
             stacked: false,
         }
     }
@@ -142,14 +167,14 @@ impl<T> EventHandler<T> {
     }
 
     pub fn call(&self, data: T) {
-        (self.callback.borrow_mut())(data);
+        self.entry.call(data);
     }
 }
 
 impl<T> Clone for EventHandler<T> {
     fn clone(&self) -> Self {
         Self {
-            callback: self.callback.clone(),
+            entry: self.entry.clone(),
             stacked: self.stacked,
         }
     }
@@ -162,9 +187,8 @@ impl<T> std::fmt::Debug for EventHandler<T> {
 }
 
 impl<T> PartialEq for EventHandler<T> {
-    fn eq(&self, _other: &Self) -> bool {
-        // TODO: Decide whether event handlers should be captured or not.
-        false
+    fn eq(&self, other: &Self) -> bool {
+        self.entry == other.entry
     }
 }
 

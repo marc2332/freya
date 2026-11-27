@@ -49,7 +49,10 @@ use crate::{
         paragraph::Paragraph,
         rect::Rect,
     },
-    event_handler::EventHandler,
+    event_handler::{
+        EventHandler,
+        EventHandlerEntry,
+    },
     events::{
         data::{
             Event,
@@ -184,7 +187,8 @@ macro_rules! event_handlers {
                 fn [<on_$name>](mut self, [<on_$name>]: impl Into<EventHandler<Event<$event_data>>>) -> Self {
                     self.insert_event_handler(
                         $event_variant,
-                        EventHandlerType::$handler_variant([<on_$name>].into()),
+                        [<on_$name>].into(),
+                        EventHandlerType::$handler_variant,
                     );
                     self
                 }
@@ -205,17 +209,24 @@ pub trait EventHandlersExt: Sized {
     fn event_handlers_mut(&mut self) -> &mut EventHandlers;
 
     /// Replaces existing handlers unless marked with [`EventHandler::stacked`].
-    fn insert_event_handler(&mut self, name: EventName, handler: EventHandlerType) {
+    fn insert_event_handler<D: Clone + 'static>(
+        &mut self,
+        name: EventName,
+        handler: EventHandler<Event<D>>,
+        handler_type: impl FnOnce(EventHandlerEntry<Event<D>>) -> EventHandlerType,
+    ) {
+        let stacked = handler.stacked;
+        let handler = handler_type(handler.entry);
         let handlers = self.event_handlers_mut();
         macro_rules! insert_handler {
             ($($variant:ident => $event_data:ty),* $(,)?) => {
                 match handler {
                     $(EventHandlerType::$variant(handler) => {
-                        let handler = if handler.stacked {
+                        let handler = if stacked {
                             match handlers.get(&name) {
                                 Some(EventHandlerType::$variant(existing)) => {
                                     let existing = existing.clone();
-                                    EventHandler::new(move |event: Event<$event_data>| {
+                                    EventHandlerEntry::new(move |event: Event<$event_data>| {
                                         existing.call(event.clone());
                                         let stack_stopped = *event.stack_stopped.borrow();
                                         if !stack_stopped {
@@ -386,7 +397,7 @@ pub trait EventHandlersExt: Sized {
     where
         Self: LayoutExt,
     {
-        self.insert_event_handler(EventName::Sized, EventHandlerType::Sized(on_sized.into()));
+        self.insert_event_handler(EventName::Sized, on_sized.into(), EventHandlerType::Sized);
         self.layout_mut().layout.has_layout_references = true;
         self
     }
@@ -395,7 +406,8 @@ pub trait EventHandlersExt: Sized {
     fn on_visible(mut self, on_visible: impl Into<EventHandler<Event<VisibleEventData>>>) -> Self {
         self.insert_event_handler(
             EventName::Visible,
-            EventHandlerType::Visible(on_visible.into()),
+            on_visible.into(),
+            EventHandlerType::Visible,
         );
         self
     }
@@ -404,7 +416,8 @@ pub trait EventHandlersExt: Sized {
     fn on_hidden(mut self, on_hidden: impl Into<EventHandler<Event<VisibleEventData>>>) -> Self {
         self.insert_event_handler(
             EventName::Hidden,
-            EventHandlerType::Visible(on_hidden.into()),
+            on_hidden.into(),
+            EventHandlerType::Visible,
         );
         self
     }
@@ -422,6 +435,7 @@ pub trait EventHandlersExt: Sized {
     {
         let on_press = on_press.into();
         let stacked = on_press.stacked;
+        let on_press = on_press.entry;
         self.a11y_builder(|builder| builder.add_action(AccessibilityAction::Click))
             .on_accessibility_action(
                 EventHandler::new({
@@ -473,6 +487,7 @@ pub trait EventHandlersExt: Sized {
     ) -> Self {
         let on_secondary_down = on_secondary_down.into();
         let stacked = on_secondary_down.stacked;
+        let on_secondary_down = on_secondary_down.entry;
         self.on_pointer_down(
             EventHandler::new(move |event: Event<PointerEventData>| {
                 let event = event.try_map(|data| match data {
@@ -500,6 +515,7 @@ pub trait EventHandlersExt: Sized {
     {
         let on_press = on_press.into();
         let stacked = on_press.stacked;
+        let on_press = on_press.entry;
         self.a11y_builder(|builder| builder.add_action(AccessibilityAction::Click))
             .on_accessibility_action(
                 EventHandler::new({
@@ -545,6 +561,7 @@ pub trait EventHandlersExt: Sized {
     ) -> Self {
         let on_focus_press = on_focus_press.into();
         let stacked = on_focus_press.stacked;
+        let on_focus_press = on_focus_press.entry;
         let handler = EventHandler::new(move |event: Event<PointerEventData>| {
             let event = event.try_map(|data| match data {
                 PointerEventData::Mouse(mouse) if mouse.button == Some(MouseButton::Left) => {
