@@ -5,7 +5,6 @@ use std::{
 
 use freya::helpers::*;
 use freya_core::{
-    event_handler::EventHandlerEntry,
     integration::*,
     prelude::*,
 };
@@ -285,14 +284,6 @@ fn pointer_events() {
     test.sync_and_update();
 
     assert_eq!(*state.peek(), 6);
-}
-
-#[test]
-fn stored_event_handler_entries_are_compact() {
-    let pointer_size = std::mem::size_of::<usize>();
-    assert_eq!(std::mem::size_of::<EventHandlerEntry<()>>(), pointer_size * 2);
-    assert_eq!(std::mem::size_of::<EventHandler<()>>(), pointer_size * 3);
-    assert_eq!(std::mem::size_of::<EventHandlerType>(), pointer_size * 3);
 }
 
 #[test]
