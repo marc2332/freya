@@ -14,6 +14,7 @@ use freya::{
         Size,
         Switch,
         VirtualScrollView,
+        light_theme,
     },
 };
 use freya_core::{
@@ -380,7 +381,10 @@ fn mount(app: impl Into<AppComponent>) -> (PaintingWorkload, Rc<Cell<usize>>) {
     let (mut runner, count) = TestingRunner::new(
         app,
         (900., 600.).into(),
-        |runner| runner.provide_root_context(|| Rc::new(Cell::new(0usize))),
+        |runner| {
+            runner.provide_root_context(|| State::create(light_theme()));
+            runner.provide_root_context(|| Rc::new(Cell::new(0usize)))
+        },
         1.,
     );
     runner.animation_clock().disable();
@@ -417,7 +421,10 @@ fn large_switches() {
     let (mut runner, count) = TestingRunner::new(
         switches_app,
         (COLUMNS as f32 * CELL_WIDTH, ROWS as f32 * CELL_HEIGHT).into(),
-        |runner| runner.provide_root_context(|| Rc::new(Cell::new(0usize))),
+        |runner| {
+            runner.provide_root_context(|| State::create(light_theme()));
+            runner.provide_root_context(|| Rc::new(Cell::new(0usize)))
+        },
         1.,
     );
     runner.animation_clock().disable();
@@ -442,6 +449,7 @@ fn images_medium() {
         images_app,
         (900., 600.).into(),
         |runner| {
+            runner.provide_root_context(|| State::create(light_theme()));
             runner.provide_root_context(|| ImageHandle::new(image, bytes));
             runner.provide_root_context(|| Rc::new(Cell::new(0usize)))
         },
@@ -504,6 +512,7 @@ fn medium_code_editor_typing() {
         editor_app,
         (900., 600.).into(),
         |runner| {
+            runner.provide_root_context(|| State::create(light_theme()));
             runner.provide_root_context(|| {
                 let language = EditorLanguage::new(
                     tree_sitter_rust::LANGUAGE,
@@ -558,7 +567,10 @@ fn medium_animation() {
     let (mut runner, changed) = TestingRunner::new(
         animation_app,
         (900., 600.).into(),
-        |runner| runner.provide_root_context(|| Rc::new(Cell::new(false))),
+        |runner| {
+            runner.provide_root_context(|| State::create(light_theme()));
+            runner.provide_root_context(|| Rc::new(Cell::new(false)))
+        },
         1.,
     );
     #[cfg(feature = "hotpath-callgrind")]

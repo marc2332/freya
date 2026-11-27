@@ -14,6 +14,7 @@ define_theme! {
     %[component]
     pub FloatingTab {
         %[fields]
+        font_size: f32,
         background: Color,
         hover_background: Color,
         width: Size,
@@ -106,6 +107,7 @@ impl Component for FloatingTab {
         let is_active = use_is_active();
 
         let FloatingTabTheme {
+            font_size,
             background,
             hover_background,
             padding,
@@ -131,6 +133,7 @@ impl Component for FloatingTab {
             };
 
         rect()
+            .font_size(font_size)
             .a11y_id(a11y_id)
             .a11y_focusable(Focusable::Enabled)
             .a11y_role(AccessibilityRole::Tab)

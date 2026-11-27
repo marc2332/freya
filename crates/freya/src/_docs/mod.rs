@@ -12,6 +12,7 @@ pub mod hot_reload;
 pub mod optimizing;
 pub mod platforms;
 pub mod state_management;
+pub mod theming;
 pub mod tokio_integration;
 pub mod ui_and_components;
 

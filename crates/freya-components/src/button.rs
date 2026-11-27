@@ -16,6 +16,7 @@ define_theme! {
     %[component]
     pub ButtonLayout {
         %[fields]
+        font_size: f32,
         margin: Gaps,
         corner_radius: CornerRadius,
         width: Size,
@@ -317,6 +318,7 @@ impl Component for Button {
         };
 
         rect()
+            .font_size(theme_layout.font_size)
             .overflow(Overflow::Clip)
             .a11y_id(a11y_id)
             .a11y_enabled(self.enabled)

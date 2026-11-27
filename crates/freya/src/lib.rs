@@ -45,6 +45,7 @@
 //! - [Global Contexts](self::_docs::global_context)
 //! - [Async](self::_docs::_async)
 //! - [Fonts](self::_docs::fonts)
+//! - [Theming](self::_docs::theming)
 //! - [Layers](freya_core::prelude::Layer)
 //! - [Optimizing](self::_docs::optimizing)
 //! - [Platform Integration](freya_core::platform::Platform)
@@ -224,8 +225,10 @@ pub mod components {
         chip::*,
         color_picker::*,
         context_menu::*,
+        corner_radius::*,
         cursor_blink::*,
         define_theme,
+        density::*,
         docking::*,
         drag_drop::*,
         draggable_canvas::*,
@@ -262,7 +265,7 @@ pub mod components {
         table::*,
         theming::{
             component_themes::{
-                ColorsSheet,
+                AnyMap,
                 Theme,
             },
             extensions::*,

@@ -440,8 +440,6 @@ demos! {
     }
 
     SvgViewerDemo => "SvgViewer" {
-        let color = use_theme().read().colors.text_primary;
-
         rect()
             .horizontal()
             .spacing(14.)
@@ -454,7 +452,7 @@ demos! {
                 ]
                 .map(|icon| {
                     SvgViewer::new(icon())
-                        .stroke(color)
+                        .theme_stroke()
                         .width(Size::px(28.))
                         .height(Size::px(28.))
                 }),

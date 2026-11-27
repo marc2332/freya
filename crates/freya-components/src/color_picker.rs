@@ -16,6 +16,7 @@ use torin::prelude::{
     Alignment,
     Area,
     CursorPoint,
+    Gaps,
     Point2D,
     Position,
     Size,
@@ -40,6 +41,7 @@ define_theme! {
         background: Color,
         color: Color,
         border_fill: Color,
+        padding: Gaps,
     }
 }
 
@@ -285,7 +287,7 @@ impl Component for ColorPicker {
             .on_global_pointer_move(on_global_pointer_move)
             .on_global_pointer_up(on_global_pointer_up)
             .width(self.width.clone())
-            .padding(8.)
+            .padding(theme.padding)
             .corner_radius(6.)
             .background(theme.background)
             .border(

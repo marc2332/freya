@@ -1,6 +1,20 @@
 use freya_core::prelude::*;
 use torin::prelude::*;
 
+use crate::{
+    define_theme,
+    get_theme,
+};
+
+define_theme! {
+    %[component]
+    pub Tile {
+        %[fields]
+        padding: Gaps,
+        leading_padding: Gaps,
+    }
+}
+
 #[derive(Debug, Default, PartialEq, Clone, Copy)]
 pub enum TileStatus {
     #[default]
@@ -18,6 +32,7 @@ pub enum TileStatus {
 /// ```
 #[derive(Clone, PartialEq)]
 pub struct Tile {
+    theme: Option<TileThemePartial>,
     children: Vec<Element>,
     leading: Option<Element>,
     on_select: Option<EventHandler<()>>,
@@ -45,6 +60,7 @@ impl ChildrenExt for Tile {
 impl Tile {
     pub fn new() -> Self {
         Self {
+            theme: None,
             children: Vec::new(),
             leading: None,
             on_select: None,
@@ -65,6 +81,7 @@ impl Tile {
 
 impl Component for Tile {
     fn render(&self) -> impl IntoElement {
+        let theme = get_theme!(&self.theme, TileThemePreference, "tile");
         let mut status = use_state(|| TileStatus::Idle);
 
         let on_press = {
@@ -91,7 +108,7 @@ impl Component for Tile {
 
         rect()
             .direction(Direction::Horizontal)
-            .padding(8.)
+            .padding(theme.padding)
             .spacing(8.)
             .cross_align(Alignment::center())
             .on_press(on_press)
@@ -100,7 +117,7 @@ impl Component for Tile {
             .maybe_child(
                 self.leading
                     .clone()
-                    .map(|leading| rect().padding(Gaps::new_all(4.0)).child(leading)),
+                    .map(|leading| rect().padding(theme.leading_padding).child(leading)),
             )
             .children(self.children.clone())
     }

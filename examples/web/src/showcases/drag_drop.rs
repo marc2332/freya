@@ -35,7 +35,6 @@ struct TaskCard(Task);
 
 impl Component for TaskCard {
     fn render(&self) -> impl IntoElement {
-        let colors = use_theme().read().colors.clone();
         let animation = use_animation(|conf| {
             conf.on_creation(OnCreation::Finish);
             AnimNum::new(0.85, 1.)
@@ -45,7 +44,7 @@ impl Component for TaskCard {
         });
 
         rect()
-            .background(colors.background)
+            .theme_background()
             .corner_radius(10.)
             .padding(12.)
             .width(Size::fill())
@@ -115,7 +114,7 @@ impl Component for Column {
         let mut tasks = self.tasks;
         let status = self.status;
         let dragging = use_drag::<usize>().read().is_some();
-        let colors = use_theme().read().colors.clone();
+        let theme = use_theme();
         let mut card_width = use_state(|| 0.);
 
         rect().width(Size::flex(1.)).height(Size::fill()).child(
@@ -135,7 +134,7 @@ impl Component for Column {
                     .expanded()
                     .padding(12.)
                     .spacing(8.)
-                    .background(colors.surface_secondary)
+                    .background(theme.read().color(ColorRole::SurfaceSecondary))
                     .corner_radius(12.)
                     .child(
                         label()
@@ -170,7 +169,7 @@ impl Component for Column {
                                                 portal().child(
                                                     rect()
                                                         .interactive(false)
-                                                        .background(colors.background)
+                                                        .theme_background()
                                                         .layer(999)
                                                         .corner_radius(10.)
                                                         .padding(12.)

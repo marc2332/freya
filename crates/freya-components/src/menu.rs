@@ -43,6 +43,7 @@ define_theme! {
     %[component]
     pub MenuItem {
         %[fields]
+        font_size: f32,
         background: Color,
         hover_background: Color,
         select_background: Color,
@@ -51,6 +52,7 @@ define_theme! {
         corner_radius: CornerRadius,
         color: Color,
         select_color: Color,
+        padding: Gaps,
     }
 }
 
@@ -153,7 +155,6 @@ impl ComponentOwned for Menu {
 
         rect()
             .layer(Layer::Overlay)
-            .corner_radius(8.0)
             .on_press(move |ev: Event<PressEventData>| {
                 ev.stop_propagation();
             })
@@ -316,7 +317,6 @@ pub struct MenuItem {
     on_pointer_enter: Option<EventHandler<Event<PointerEventData>>>,
     selected: bool,
     submenu: bool,
-    padding: Gaps,
     key: DiffKey,
 }
 
@@ -329,7 +329,6 @@ impl Default for MenuItem {
             on_pointer_enter: None,
             selected: false,
             submenu: false,
-            padding: (6.0, 14.0).into(),
             key: DiffKey::None,
         }
     }
@@ -370,17 +369,6 @@ impl MenuItem {
     pub fn submenu(mut self, submenu: bool) -> Self {
         self.submenu = submenu;
         self
-    }
-
-    /// Set the padding for this menu item.
-    pub fn padding(mut self, padding: impl Into<Gaps>) -> Self {
-        self.padding = padding.into();
-        self
-    }
-
-    /// Get the current padding.
-    pub fn get_padding(&self) -> Gaps {
-        self.padding
     }
 
     /// Get the theme override for this component.
@@ -457,6 +445,7 @@ impl ComponentOwned for MenuItem {
         };
 
         rect()
+            .font_size(theme.font_size)
             .a11y_role(AccessibilityRole::MenuItem)
             .a11y_id(a11y_id)
             .a11y_focusable(true)
@@ -464,7 +453,7 @@ impl ComponentOwned for MenuItem {
             .min_width(Size::px(120.))
             .width(Size::fill_minimum())
             .content(Content::fit())
-            .padding(self.padding)
+            .padding(theme.padding)
             .corner_radius(theme.corner_radius)
             .background(background)
             .border(border)
@@ -479,7 +468,6 @@ impl ComponentOwned for MenuItem {
                 el.child(
                     rect()
                         .position(Position::new_absolute().right(0.).top(0.))
-                        .width(Size::px(10.))
                         .height(Size::fill())
                         .main_align(Alignment::Center)
                         .child(ArrowIcon::new().rotate(270.).fill(color.with_a(180))),

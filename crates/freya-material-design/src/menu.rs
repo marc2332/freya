@@ -1,6 +1,13 @@
 use std::time::Duration;
 
-use freya_components::menu::MenuItem;
+use freya_components::{
+    get_theme,
+    menu::{
+        MenuItem,
+        MenuItemThemePartialExt,
+        MenuItemThemePreference,
+    },
+};
 use freya_core::prelude::*;
 use torin::size::Size;
 
@@ -60,12 +67,12 @@ impl Component for RippleMenuItem {
     fn render(&self) -> impl IntoElement {
         let mut item = self.item.clone();
 
-        let padding = item.get_padding();
+        let theme = get_theme!(item.get_theme(), MenuItemThemePreference, "menu_item");
 
         let ripple = self
             .ripple
             .clone()
-            .padding(padding)
+            .padding(theme.padding)
             .width(Size::fill_minimum());
 
         item.children_mut().clear();

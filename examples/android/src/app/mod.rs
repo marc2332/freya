@@ -78,6 +78,7 @@ impl Component for AppTopBar {
                         .padding((0., 0., 8., 0.))
                         .child(AnimatedOutlet),
                 )
+                .child(label().font_size(16.).text("Widgets"))
                 .child(
                     rect()
                         .horizontal()
@@ -96,7 +97,6 @@ impl Component for AppTopBar {
 }
 
 fn tab(route: Route, label: &'static str, icon: fn() -> Bytes) -> ActivableRoute<Route> {
-    let theme = get_theme_or_default();
     ActivableRoute::new(
         route.clone(),
         Link::new(route).child(
@@ -106,7 +106,7 @@ fn tab(route: Route, label: &'static str, icon: fn() -> Bytes) -> ActivableRoute
                     .spacing(2.)
                     .child(
                         SvgViewer::new(icon())
-                            .stroke(theme.read().colors.text_primary)
+                            .theme_stroke()
                             .width(Size::px(18.))
                             .height(Size::px(18.)),
                     )

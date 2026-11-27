@@ -10,13 +10,6 @@ use torin::{
 use crate::{
     define_theme,
     get_theme,
-    theming::{
-        component_themes::ColorsSheet,
-        macros::{
-            Preference,
-            ResolvablePreference,
-        },
-    },
 };
 
 /// Animation style for the skeleton placeholder.
@@ -25,15 +18,6 @@ pub enum SkeletonAnimation {
     #[default]
     Pulse,
     Shimmer,
-}
-
-impl ResolvablePreference<SkeletonAnimation> for Preference<SkeletonAnimation> {
-    fn resolve(&self, _: &ColorsSheet) -> SkeletonAnimation {
-        match self {
-            Self::Reference(_) => panic!("Only Colors support references."),
-            Self::Specific(v) => *v,
-        }
-    }
 }
 
 define_theme! {

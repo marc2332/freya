@@ -16,8 +16,13 @@ define_theme! {
     %[component]
     pub Select {
         %[fields]
+        font_size: f32,
+        corner_radius: CornerRadius,
+        list_corner_radius: CornerRadius,
         width: Size,
         margin: Gaps,
+        padding: Gaps,
+        options_padding: Gaps,
         select_background: Color,
         background_button: Color,
         hover_background: Color,
@@ -256,6 +261,7 @@ impl Component for Select {
             })
             .child(
                 rect()
+                    .font_size(theme.font_size)
                     .a11y_id(a11y_id)
                     .a11y_member_of(a11y_id)
                     .a11y_role(AccessibilityRole::ListBox)
@@ -272,13 +278,13 @@ impl Component for Select {
                     .width(theme.width)
                     .margin(theme.margin)
                     .background(background)
-                    .padding((8., 12., 8., 12.))
+                    .padding(theme.padding)
                     .border(border)
                     .horizontal()
                     .content(Content::flex())
                     .center()
                     .color(theme.color)
-                    .corner_radius(10.)
+                    .corner_radius(theme.corner_radius)
                     .maybe_child(self.selected_item.clone())
                     .child(
                         ArrowIcon::new()
@@ -313,9 +319,9 @@ impl Component for Select {
                                         .alignment(BorderAlignment::Inner),
                                 )
                                 .overflow(Overflow::Clip)
-                                .corner_radius(20.)
+                                .corner_radius(theme.list_corner_radius)
                                 .background(theme.select_background)
-                                .padding(6.)
+                                .padding(theme.options_padding)
                                 .maybe(!self.list_match_width, |el| el.content(Content::Fit))
                                 .opacity(opacity)
                                 .children(self.children.clone()),

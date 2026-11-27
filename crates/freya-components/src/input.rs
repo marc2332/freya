@@ -56,6 +56,7 @@ define_theme! {
     %[component]
     pub InputLayout {
         %[fields]
+        font_size: f32,
         corner_radius: CornerRadius,
         padding: Gaps,
     }
@@ -831,6 +832,7 @@ impl Component for Input {
         };
 
         rect()
+            .font_size(theme_layout.font_size)
             .a11y_id(a11y_id)
             .a11y_enabled(self.enabled)
             .a11y_focusable(self.enabled)

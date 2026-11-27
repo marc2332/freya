@@ -38,6 +38,7 @@ define_theme! {
         width: f32,
         height: f32,
         padding: f32,
+        density: f32,
         thumb_size: f32,
         toggled_thumb_size: f32,
         pressed_thumb_size_offset: f32,
@@ -152,44 +153,16 @@ impl Component for Switch {
 
         let toggled = *self.value.read();
 
-        let anim_toggle = use_animation_with_dependencies(
-            &(theme_colors.clone(), theme_layout.clone(), toggled),
-            |conf, (switch_colors, switch_layout, toggled)| {
-                conf.on_creation(OnCreation::Finish);
-                conf.on_change(OnChange::Rerun);
+        let anim_toggle = use_animation_with_dependencies(&toggled, |conf, toggled| {
+            conf.on_creation(OnCreation::Finish);
+            conf.on_change(OnChange::Rerun);
 
-                let value = (
-                    AnimNum::new(
-                        switch_layout.thumb_offset,
-                        switch_layout.toggled_thumb_offset,
-                    )
-                    .time(300)
-                    .function(Function::Expo)
-                    .ease(Ease::Out),
-                    AnimNum::new(switch_layout.thumb_size, switch_layout.toggled_thumb_size)
-                        .time(300)
-                        .function(Function::Expo)
-                        .ease(Ease::Out),
-                    AnimColor::new(switch_colors.background, switch_colors.toggled_background)
-                        .time(300)
-                        .function(Function::Expo)
-                        .ease(Ease::Out),
-                    AnimColor::new(
-                        switch_colors.thumb_background,
-                        switch_colors.toggled_thumb_background,
-                    )
-                    .time(300)
-                    .function(Function::Expo)
-                    .ease(Ease::Out),
-                );
-
-                if *toggled {
-                    value
-                } else {
-                    value.into_reversed()
-                }
-            },
-        );
+            let (from, to) = if *toggled { (0., 1.) } else { (1., 0.) };
+            AnimNum::new(from, to)
+                .time(300)
+                .function(Function::Expo)
+                .ease(Ease::Out)
+        });
 
         let anim_press = use_animation_with_dependencies(&pressing(), move |conf, pressing| {
             conf.on_creation(OnCreation::Finish);
@@ -214,7 +187,22 @@ impl Component for Switch {
         } else {
             Border::new()
         };
-        let (offset_x, size, background, thumb) = anim_toggle.get().value();
+        let progress = anim_toggle.get().value();
+        let interpolate = |off: f32, on: f32| off + (on - off) * progress;
+        let offset_x = interpolate(theme_layout.thumb_offset, theme_layout.toggled_thumb_offset);
+        let size = interpolate(theme_layout.thumb_size, theme_layout.toggled_thumb_size);
+        let background = Color::lerp(
+            theme_colors.background,
+            theme_colors.toggled_background,
+            progress,
+        );
+        let thumb = Color::lerp(
+            theme_colors.thumb_background,
+            theme_colors.toggled_thumb_background,
+            progress,
+        );
+        let density = theme_layout.density.max(0.);
+        let thumb_size = Size::px((size + press_size) * density);
 
         rect()
             .a11y_id(a11y_id)
@@ -222,12 +210,12 @@ impl Component for Switch {
             .a11y_focusable(self.enabled)
             .a11y_role(AccessibilityRole::Switch)
             .a11y_builder(|builder| builder.set_toggled(Toggled::from(toggled)))
-            .width(Size::px(theme_layout.width))
-            .height(Size::px(theme_layout.height))
+            .width(Size::px(theme_layout.width * density))
+            .height(Size::px(theme_layout.height * density))
             .margin(theme_layout.margin)
-            .padding(Gaps::new_all(theme_layout.padding))
+            .padding(Gaps::new_all(theme_layout.padding * density))
             .main_align(Alignment::center())
-            .offset_x(offset_x - press_size / 2.0)
+            .offset_x((offset_x - press_size / 2.) * density)
             .corner_radius(CornerRadius::new_all(50.))
             .background(
                 background
@@ -264,8 +252,8 @@ impl Component for Switch {
             })
             .child(
                 rect()
-                    .width(Size::px(size + press_size))
-                    .height(Size::px(size + press_size))
+                    .width(thumb_size.clone())
+                    .height(thumb_size)
                     .background(thumb.mul_if(!self.enabled, 0.85))
                     .corner_radius(CornerRadius::new_all(50.)),
             )

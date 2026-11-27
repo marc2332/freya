@@ -81,9 +81,12 @@ use crate::{
         TextStyleExt,
         VerticalAlign,
     },
-    style::cursor::{
-        CursorMode,
-        CursorStyle,
+    style::{
+        cursor::{
+            CursorMode,
+            CursorStyle,
+        },
+        font_size::TextScale,
     },
     text_cache::CachedParagraph,
     tree::DiffModifies,
@@ -355,7 +358,7 @@ impl ElementExt for ParagraphElement {
                 let paragraph = self.build_paragraph(
                     context.text_style_state,
                     context.fallback_fonts,
-                    context.scale_factor,
+                    context.text_scale,
                     context.font_collection,
                     width,
                     &[],
@@ -421,7 +424,7 @@ impl ElementExt for ParagraphElement {
         let paragraph = self.build_paragraph(
             context.text_style_state,
             context.fallback_fonts,
-            context.scale_factor,
+            context.text_scale,
             context.font_collection,
             width,
             &placeholders,
@@ -636,7 +639,7 @@ impl ParagraphElement {
         &self,
         text_style_state: &TextStyleState,
         fallback_fonts: &[Cow<'static, str>],
-        scale_factor: f64,
+        text_scale: TextScale<'_>,
         font_collection: &FontCollection,
         width: f32,
         placeholders: &[Size2D],
@@ -650,7 +653,7 @@ impl ParagraphElement {
 
             paragraph_style.set_text_style(&text_style_state.to_text_style(
                 fallback_fonts,
-                scale_factor,
+                text_scale,
                 self.line_height,
                 fill_area,
             ));
@@ -668,7 +671,7 @@ impl ParagraphElement {
                         paragraph_builder.push_style(&span.to_text_style(
                             text_style_state,
                             fallback_fonts,
-                            scale_factor,
+                            text_scale,
                             self.line_height,
                             fill_area,
                         ));
@@ -820,10 +823,11 @@ impl TextStyleState {
     pub(crate) fn to_text_style(
         &self,
         fallback_fonts: &[Cow<'static, str>],
-        scale_factor: f64,
+        text_scale: TextScale<'_>,
         line_height: Option<f32>,
         fill_area: Area,
     ) -> TextStyle {
+        let scale_factor = text_scale.scale_factor;
         let mut text_style = TextStyle::default();
 
         let mut font_families = self.font_families.clone();
@@ -831,7 +835,7 @@ impl TextStyleState {
 
         self.color
             .apply_to_text_style(&mut text_style, fill_area, self, scale_factor);
-        text_style.set_font_size(f32::from(self.font_size) * scale_factor as f32);
+        text_style.set_font_size(text_scale.physical_font_size(self.font_size));
         text_style.set_font_families(&font_families);
         text_style.set_font_style(FontStyle::new(
             self.font_weight.into(),
@@ -869,10 +873,11 @@ impl Span<'_> {
         &self,
         text_style_state: &TextStyleState,
         fallback_fonts: &[Cow<'static, str>],
-        scale_factor: f64,
+        text_scale: TextScale<'_>,
         line_height: Option<f32>,
         fill_area: Area,
     ) -> TextStyle {
+        let scale_factor = text_scale.scale_factor;
         let span_style = TextStyleState::from_data(text_style_state, &self.text_style_data);
         let mut text_style = TextStyle::new();
 
@@ -882,7 +887,7 @@ impl Span<'_> {
         span_style
             .color
             .apply_to_text_style(&mut text_style, fill_area, &span_style, scale_factor);
-        text_style.set_font_size(f32::from(span_style.font_size) * scale_factor as f32);
+        text_style.set_font_size(text_scale.physical_font_size(span_style.font_size));
         text_style.set_font_families(&font_families);
         text_style.set_font_style(FontStyle::new(
             span_style.font_weight.into(),

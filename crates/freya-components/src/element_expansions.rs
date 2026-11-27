@@ -1,11 +1,13 @@
 use freya_core::prelude::*;
 
 use crate::{
-    get_theme,
-    theming::hooks::get_theme_or_default,
+    theming::{
+        hooks::get_theme_or_default,
+        themes::ColorRole,
+    },
     typography::{
-        TypographyThemePartial,
-        TypographyThemePreference,
+        TextRole,
+        TextRoleExt,
     },
 };
 
@@ -17,12 +19,12 @@ pub trait RectThemeExt {
 impl RectThemeExt for Rect {
     fn theme_background(self) -> Self {
         let theme = get_theme_or_default();
-        self.background(theme.read().colors.background)
+        self.background(theme.read().color(ColorRole::Background))
     }
 
     fn theme_color(self) -> Self {
         let theme = get_theme_or_default();
-        self.color(theme.read().colors.text_primary)
+        self.color(theme.read().color(ColorRole::TextPrimary))
     }
 }
 
@@ -45,38 +47,30 @@ pub trait LabelThemeExt {
     fn overline(self) -> Self;
 }
 
-fn typography() -> crate::typography::TypographyTheme {
-    get_theme!(
-        &None::<TypographyThemePartial>,
-        TypographyThemePreference,
-        "typography"
-    )
-}
-
 impl LabelThemeExt for Label {
     fn theme_color(self) -> Self {
         let theme = get_theme_or_default();
-        self.color(theme.read().colors.text_primary)
+        self.color(theme.read().color(ColorRole::TextPrimary))
     }
 
     fn title(self) -> Self {
-        self.font_size(typography().title)
+        self.theme_font_size(TextRole::Title)
     }
 
     fn subtitle(self) -> Self {
-        self.font_size(typography().subtitle)
+        self.theme_font_size(TextRole::Subtitle)
     }
 
     fn body(self) -> Self {
-        self.font_size(typography().body)
+        self.theme_font_size(TextRole::Content)
     }
 
     fn caption(self) -> Self {
-        self.font_size(typography().caption)
+        self.theme_font_size(TextRole::Caption)
     }
 
     fn overline(self) -> Self {
-        self.font_size(typography().overline)
+        self.theme_font_size(TextRole::Overline)
     }
 }
 
@@ -87,6 +81,6 @@ pub trait ParagraphThemeExt {
 impl ParagraphThemeExt for Paragraph {
     fn theme_color(self) -> Self {
         let theme = get_theme_or_default();
-        self.color(theme.read().colors.text_primary)
+        self.color(theme.read().color(ColorRole::TextPrimary))
     }
 }

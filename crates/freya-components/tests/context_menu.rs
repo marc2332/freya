@@ -81,9 +81,7 @@ fn custom_viewer_removal_restores_fallback() {
                 rect()
                     .expanded()
                     .on_secondary_down(|_| {
-                        ContextMenu::open_from_down(
-                            Menu::new().child(MenuButton::new().child("Item")),
-                        );
+                        ContextMenu::open_from_down(Menu::new().child("Item"));
                     })
                     .child("Area"),
             )

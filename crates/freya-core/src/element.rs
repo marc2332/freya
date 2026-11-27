@@ -61,7 +61,10 @@ use crate::{
         ImePreeditEventData,
         MaybeExt,
     },
-    style::fill::Fill,
+    style::{
+        fill::Fill,
+        font_size::TextScale,
+    },
     text_cache::TextCache,
     tree::DiffModifies,
 };
@@ -215,6 +218,7 @@ pub struct LayoutContext<'a> {
     pub text_style_state: &'a TextStyleState,
     pub fallback_fonts: &'a [Cow<'static, str>],
     pub scale_factor: f64,
+    pub(crate) text_scale: TextScale<'a>,
     pub text_cache: &'a mut TextCache,
 }
 
@@ -241,6 +245,7 @@ pub struct PostMeasureContext<'a> {
     pub text_style_state: &'a TextStyleState,
     pub fallback_fonts: &'a [Cow<'static, str>],
     pub scale_factor: f64,
+    pub(crate) text_scale: TextScale<'a>,
 }
 
 pub struct ClipContext<'a> {

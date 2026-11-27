@@ -14,6 +14,8 @@ define_theme! {
     %[component]
     pub ButtonSegment {
         %[fields]
+        font_size: f32,
+        corner_radius: CornerRadius,
         background: Color,
         hover_background: Color,
         disabled_background: Color,
@@ -34,6 +36,7 @@ define_theme! {
         background: Color,
         border_fill: Color,
         corner_radius: CornerRadius,
+        padding: Gaps,
     }
 }
 
@@ -159,6 +162,8 @@ impl Component for ButtonSegment {
         let focus = use_focus(a11y_id);
 
         let ButtonSegmentTheme {
+            font_size,
+            corner_radius,
             background,
             hover_background,
             disabled_background,
@@ -209,6 +214,7 @@ impl Component for ButtonSegment {
         };
 
         rect()
+            .font_size(font_size)
             .a11y_id(a11y_id)
             .a11y_enabled(self.enabled)
             .a11y_focusable(self.enabled)
@@ -228,7 +234,7 @@ impl Component for ButtonSegment {
             .overflow(Overflow::Clip)
             .color(color.mul_if(!self.enabled, 0.9))
             .background(background.mul_if(!self.enabled, 0.9))
-            .corner_radius(8.)
+            .corner_radius(corner_radius)
             .maybe(self.enabled && focus() == Focus::Keyboard, |el| {
                 el.border(
                     Border::new()
@@ -324,6 +330,7 @@ impl Component for SegmentedButton {
             background,
             border_fill,
             corner_radius,
+            padding,
         } = theme;
 
         rect()
@@ -335,7 +342,7 @@ impl Component for SegmentedButton {
                     .width(1.)
                     .alignment(BorderAlignment::Inner),
             )
-            .padding(4.)
+            .padding(padding)
             .spacing(4.)
             .corner_radius(corner_radius)
             .content(Content::Fit)

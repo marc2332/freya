@@ -52,8 +52,8 @@ impl Component for AppShell {
     fn render(&self) -> impl IntoElement {
         let route = use_route::<Route>();
         let theme = use_init_theme(light_theme);
-        let surface = theme.read().colors.surface_tertiary;
-        let icon_color = theme.read().colors.text_primary;
+        let surface = theme.read().color(ColorRole::SurfaceTertiary);
+        let icon_color = theme.read().color(ColorRole::TextPrimary);
         let mut window_width = use_state(|| f32::MAX);
         let mut sidebar_open = use_state(|| false);
         let mut slide = use_animation(|_| {

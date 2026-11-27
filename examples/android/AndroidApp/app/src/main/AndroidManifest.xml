@@ -13,7 +13,7 @@
         android:theme="@style/Theme.AppCompat.NoActionBar">
         <activity
             android:name=".MainActivity"
-            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|fontScale"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
