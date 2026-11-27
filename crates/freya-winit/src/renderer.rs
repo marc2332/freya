@@ -548,8 +548,8 @@ impl WinitRenderer {
             }
             RendererMessage::App(RendererAppMessage::Command(event)) => match event {
                 AppCommand::OpenUrl(url) => {
-                    if let Err(error) = open::that(&url) {
-                        tracing::error!(%error, %url, "Failed to open URL");
+                    if let Err(error) = open::that_detached(&url) {
+                        tracing::error!(%error, %url, "Failed to launch URL opener");
                     }
                 }
                 AppCommand::Exit => active_event_loop.exit(),
