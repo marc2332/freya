@@ -56,6 +56,7 @@ use winit::{
     dpi::{
         LogicalPosition,
         LogicalSize,
+        PhysicalSize,
     },
     event::ElementState,
     event_loop::ActiveEventLoop,
@@ -68,20 +69,24 @@ use winit::{
     },
 };
 
+#[cfg(target_os = "android")]
+use crate::config::RendererPreference;
 #[cfg(feature = "accessibility")]
 use crate::renderer::AccessibilityEventHandler;
 use crate::{
     accessibility::AccessibilityTask,
     config::{
         OnCloseHook,
-        RendererPreference,
         WindowConfig,
     },
     drivers::{
         GraphicsContext,
         GraphicsDriver,
     },
-    integration::is_ime_role,
+    integration::{
+        is_ime_role,
+        update_ime,
+    },
     platform_drag::PlatformDragState,
     plugins::{
         PluginEvent,
@@ -125,6 +130,7 @@ pub struct AppWindow {
 
     pub(crate) process_layout_on_next_render: bool,
     pub(crate) send_mouse_move_on_next_layout: bool,
+    pub(crate) last_render_size: PhysicalSize<u32>,
     pub(crate) event_buffer: EventBuffer<PlatformEvent, Instant>,
 
     pub(crate) render_callbacks: Vec<RenderCallback>,
@@ -146,6 +152,7 @@ pub struct AppWindow {
 
     pub(crate) window_attributes: WindowAttributes,
 
+    #[cfg(target_os = "android")]
     pub(crate) renderer: RendererPreference,
 
     #[cfg(feature = "hotreload")]
@@ -160,6 +167,13 @@ fn clamp_custom_scale_factor(custom_scale_factor: f64) -> f64 {
 }
 
 impl AppWindow {
+    pub(crate) fn drawable_size(window: &dyn Window) -> PhysicalSize<u32> {
+        #[cfg(target_os = "ios")]
+        return window.outer_size();
+        #[cfg(not(target_os = "ios"))]
+        return window.surface_size();
+    }
+
     pub(crate) fn handle_platform_drag(
         &mut self,
         command: PlatformDragCommand,
@@ -235,7 +249,12 @@ impl AppWindow {
         }
     }
 
-    pub(crate) fn process_accessibility_update(&mut self, mode: Option<NavigationMode>) {
+    pub(crate) fn process_accessibility_update(
+        &mut self,
+        mode: Option<NavigationMode>,
+        plugins: &mut PluginsManager,
+        handle: PluginHandle,
+    ) {
         let title = self.window.title();
         let updated_nodes = self
             .accessibility
@@ -250,13 +269,29 @@ impl AppWindow {
         #[cfg(not(feature = "accessibility"))]
         let _ = updated_nodes;
 
+        self.process_accessibility_focus(&title, mode, plugins, handle);
+    }
+
+    pub(crate) fn process_accessibility_focus(
+        &mut self,
+        title: &str,
+        mode: Option<NavigationMode>,
+        plugins: &mut PluginsManager,
+        handle: PluginHandle,
+    ) {
+        let Some(node_id) = self.accessibility.focused_node_id() else {
+            return;
+        };
+        let Some(layout_node) = self.tree.layout.get(&node_id) else {
+            return;
+        };
+
+        let focused_id = self.accessibility.focused_id;
+        let focused_node = AccessibilityTree::create_node(node_id, layout_node, &self.tree, title);
+        let role = focused_node.role();
         self.platform
             .focused_accessibility_id
-            .set_if_modified(self.accessibility.focused_id);
-        let node_id = self.accessibility.focused_node_id().unwrap();
-        let layout_node = self.tree.layout.get(&node_id).unwrap();
-        let focused_node = AccessibilityTree::create_node(node_id, layout_node, &self.tree, &title);
-        let ime_allowed = is_ime_role(focused_node.role());
+            .set_if_modified(focused_id);
         self.platform
             .focused_accessibility_node
             .set_if_modified(focused_node);
@@ -264,13 +299,26 @@ impl AppWindow {
             self.platform.navigation_mode.set(mode);
         }
 
-        let area = layout_node.visible_area();
-        crate::integration::update_ime(
-            self.window.as_ref(),
-            ime_allowed,
-            LogicalPosition::new(area.min_x(), area.min_y()),
-            LogicalSize::new(area.width(), area.height()),
+        let mut handled = false;
+        plugins.send(
+            PluginEvent::ImeUpdate {
+                window: self.window.as_ref(),
+                focused_id,
+                role,
+                handled: &mut handled,
+            },
+            handle,
         );
+
+        if !handled {
+            let area = layout_node.visible_area();
+            update_ime(
+                self.window.as_ref(),
+                is_ime_role(role),
+                LogicalPosition::new(area.min_x(), area.min_y()),
+                LogicalSize::new(area.width(), area.height()),
+            );
+        }
     }
 
     /// Set the window title and refresh the accessibility label of the root node.
@@ -304,8 +352,19 @@ impl AppWindow {
             .with_visible(false)
             .with_title(window_config.title)
             .with_decorations(window_config.decorations)
-            .with_transparent(window_config.transparent)
-            .with_surface_size(LogicalSize::<f64>::from(window_config.size));
+            .with_transparent(window_config.transparent);
+
+        // Let UIKit size the root view instead of applying desktop window dimensions.
+        #[cfg(not(any(
+            target_os = "ios",
+            target_os = "tvos",
+            target_os = "watchos",
+            target_os = "visionos",
+        )))]
+        {
+            window_attributes =
+                window_attributes.with_surface_size(LogicalSize::<f64>::from(window_config.size));
+        }
 
         if let Some(min_size) = window_config.min_size {
             window_attributes =
@@ -344,6 +403,14 @@ impl AppWindow {
             window_config.renderer,
             graphics_context,
         );
+        #[cfg(any(
+            target_os = "ios",
+            target_os = "tvos",
+            target_os = "watchos",
+            target_os = "visionos",
+        ))]
+        window.set_fullscreen(Some(winit::monitor::Fullscreen::Borderless(None)));
+        let initial_render_size = Self::drawable_size(window.as_ref());
 
         tracing::info!(
             "Using the {} graphics driver on {}, transparency is {}",
@@ -396,7 +463,7 @@ impl AppWindow {
             PluginHandle::new(event_loop_proxy),
         );
 
-        let window_size = window.surface_size().to_logical::<f32>(scale_factor);
+        let window_size = initial_render_size.to_logical::<f32>(scale_factor);
         let accent_color_preference = accent_color_preference();
         runner.provide_root_context(TargetPlatform::detect);
         let platform = runner.run_in({
@@ -457,8 +524,8 @@ impl AppWindow {
         }
         tree.measure_layout(
             (
-                window.surface_size().width as f32,
-                window.surface_size().height as f32,
+                initial_render_size.width as f32,
+                initial_render_size.height as f32,
             )
                 .into(),
             font_collection,
@@ -558,6 +625,7 @@ impl AppWindow {
 
             process_layout_on_next_render: true,
             send_mouse_move_on_next_layout: false,
+            last_render_size: initial_render_size,
             event_buffer: EventBuffer::new(input_interval),
 
             render_callbacks: Vec::new(),
@@ -579,6 +647,7 @@ impl AppWindow {
 
             window_attributes,
 
+            #[cfg(target_os = "android")]
             renderer: window_config.renderer,
 
             #[cfg(feature = "hotreload")]
@@ -618,7 +687,7 @@ impl AppWindow {
     /// Syncs the effective scale factor on [`PlatformWindow`] and invalidates layout.
     pub fn scale_factor_changed(&mut self) {
         let scale_factor = self.effective_scale_factor();
-        let size = self.window.surface_size().to_logical::<f32>(scale_factor);
+        let size = Self::drawable_size(self.window.as_ref()).to_logical::<f32>(scale_factor);
         self.platform.scale_factor.set(scale_factor);
         self.platform
             .root_size
@@ -740,11 +809,8 @@ impl AppWindow {
             },
             handle.clone(),
         );
-        let size: Size2D = (
-            self.window.surface_size().width as f32,
-            self.window.surface_size().height as f32,
-        )
-            .into();
+        let size = Self::drawable_size(self.window.as_ref());
+        let size = Size2D::new(size.width as f32, size.height as f32);
         let scale_factor = self.effective_scale_factor();
         self.tree.measure_layout(
             size,

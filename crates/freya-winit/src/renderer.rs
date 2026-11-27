@@ -1,8 +1,9 @@
+#[cfg(target_os = "android")]
+use std::rc::Rc;
 use std::{
     borrow::Cow,
     fmt,
     io,
-    rc::Rc,
     time::Instant,
 };
 
@@ -27,11 +28,6 @@ use rustc_hash::FxHashMap;
 use torin::prelude::CursorPoint;
 #[cfg(feature = "tray")]
 use tray_icon::TrayIcon;
-#[cfg(feature = "accessibility")]
-use winit::dpi::{
-    LogicalPosition,
-    LogicalSize,
-};
 use winit::{
     application::ApplicationHandler,
     event::{
@@ -57,8 +53,6 @@ use winit::{
     },
 };
 
-#[cfg(feature = "accessibility")]
-use crate::integration::is_ime_role;
 use crate::{
     accessibility::AccessibilityTask,
     clipboard::PendingClipboardRead,
@@ -379,9 +373,8 @@ impl ApplicationHandler for WinitRenderer {
                 .proxy
                 .send_message(RendererMessage::App(RendererAppMessage::PollFutures));
         } else {
-            let old_windows: Vec<_> = self.windows.drain().collect();
-            for (old_id, mut app_window) in old_windows {
-                #[cfg(target_os = "android")]
+            #[cfg(target_os = "android")]
+            for (old_id, mut app_window) in self.windows.drain().collect::<Vec<_>>() {
                 if app_window.driver.is_some() {
                     self.windows.insert(old_id, app_window);
                     continue;
@@ -414,6 +407,7 @@ impl ApplicationHandler for WinitRenderer {
                 Platform::get().register_window(app_window.platform.clone());
                 app_window.driver = Some(new_driver);
                 app_window.window = new_window;
+                app_window.last_render_size = AppWindow::drawable_size(app_window.window.as_ref());
                 self.plugins.send(
                     PluginEvent::WindowResumed {
                         window: app_window.window.as_ref(),
@@ -431,6 +425,11 @@ impl ApplicationHandler for WinitRenderer {
                         payload: RendererWindowPayload::PollRunner,
                     }))
                     .ok();
+            }
+
+            #[cfg(not(target_os = "android"))]
+            for app_window in self.windows.values() {
+                app_window.window.request_redraw();
             }
         }
     }
@@ -1032,6 +1031,24 @@ impl WinitRenderer {
 
                     let scale_factor = app.effective_scale_factor();
                     hotpath::measure_block!("RedrawRequested", {
+                        let size = AppWindow::drawable_size(app.window.as_ref());
+                        if size != app.last_render_size {
+                            if let Some(driver) = &mut app.driver
+                                && let Err(error) = driver.resize(size)
+                            {
+                                tracing::warn!(
+                                    ?error,
+                                    "Graphics driver lost while reconciling window size"
+                                );
+                                needs_recovery = true;
+                            } else {
+                                app.last_render_size = size;
+                            }
+                            app.process_layout_on_next_render = true;
+                            app.tree.layout.clear_dirty();
+                            app.tree.layout.invalidate(NodeId::ROOT);
+                        }
+
                         app.measure_layout(
                             &mut self.font_collection,
                             &self.font_manager,
@@ -1044,69 +1061,61 @@ impl WinitRenderer {
                             return;
                         };
                         let resource_cache = driver.resource_cache_usage();
-                        let present_result = driver.present(
-                            app.window.surface_size().cast(),
-                            app.window.as_ref(),
-                            |surface| {
-                                self.plugins.send(
-                                    PluginEvent::BeforeRender {
-                                        window: app.window.as_ref(),
-                                        canvas: surface.canvas(),
-                                        font_collection: &self.font_collection,
-                                        tree: &app.tree,
-                                    },
-                                    PluginHandle::new(&self.proxy),
-                                );
-
-                                let render_pipeline = RenderPipeline {
-                                    font_collection: &mut self.font_collection,
-                                    font_manager: &self.font_manager,
-                                    tree: &app.tree,
+                        let present_result = driver.present(size, app.window.as_ref(), |surface| {
+                            self.plugins.send(
+                                PluginEvent::BeforeRender {
+                                    window: app.window.as_ref(),
                                     canvas: surface.canvas(),
-                                    scale_factor,
-                                    background: app.background,
-                                };
+                                    font_collection: &self.font_collection,
+                                    tree: &app.tree,
+                                },
+                                PluginHandle::new(&self.proxy),
+                            );
 
-                                render_pipeline.render();
+                            let render_pipeline = RenderPipeline {
+                                font_collection: &mut self.font_collection,
+                                font_manager: &self.font_manager,
+                                tree: &app.tree,
+                                canvas: surface.canvas(),
+                                scale_factor,
+                                background: app.background,
+                            };
 
-                                let cached_assets = app.runner.with_root_context(|| {
-                                    AssetCacher::try_get()
-                                        .map(|asset_cacher| asset_cacher.cached_size())
-                                        .unwrap_or_default()
-                                });
-                                let metrics = Metrics::new(
-                                    &app.runner,
-                                    &app.tree,
-                                    cached_assets,
-                                    resource_cache,
-                                );
+                            render_pipeline.render();
 
-                                self.plugins.send(
-                                    PluginEvent::AfterRender {
-                                        window: app.window.as_ref(),
-                                        canvas: surface.canvas(),
-                                        font_collection: &self.font_collection,
-                                        tree: &app.tree,
-                                        animation_clock: &app.animation_clock,
-                                        metrics,
-                                    },
-                                    PluginHandle::new(&self.proxy),
-                                );
+                            let cached_assets = app.runner.with_root_context(|| {
+                                AssetCacher::try_get()
+                                    .map(|asset_cacher| asset_cacher.cached_size())
+                                    .unwrap_or_default()
+                            });
+                            let metrics =
+                                Metrics::new(&app.runner, &app.tree, cached_assets, resource_cache);
 
-                                for render_callback in app.render_callbacks.drain(..) {
-                                    render_callback(&mut *surface);
-                                }
+                            self.plugins.send(
+                                PluginEvent::AfterRender {
+                                    window: app.window.as_ref(),
+                                    canvas: surface.canvas(),
+                                    font_collection: &self.font_collection,
+                                    tree: &app.tree,
+                                    animation_clock: &app.animation_clock,
+                                    metrics,
+                                },
+                                PluginHandle::new(&self.proxy),
+                            );
 
-                                self.plugins.send(
-                                    PluginEvent::BeforePresenting {
-                                        window: app.window.as_ref(),
-                                        font_collection: &self.font_collection,
-                                        tree: &app.tree,
-                                    },
-                                    PluginHandle::new(&self.proxy),
-                                );
-                            },
-                        );
+                            for render_callback in app.render_callbacks.drain(..) {
+                                render_callback(&mut *surface);
+                            }
+
+                            self.plugins.send(
+                                PluginEvent::BeforePresenting {
+                                    window: app.window.as_ref(),
+                                    font_collection: &self.font_collection,
+                                    tree: &app.tree,
+                                },
+                                PluginHandle::new(&self.proxy),
+                            );
+                        });
                         if let Err(error) = present_result {
                             tracing::warn!(
                                 "Graphics driver lost ({error:?}), rebuilding on the same window"
@@ -1134,41 +1143,25 @@ impl WinitRenderer {
 
                         match app.accessibility_tasks_for_next_render.take() {
                             AccessibilityTask::ProcessUpdate { mode } => {
-                                app.process_accessibility_update(mode);
+                                app.process_accessibility_update(
+                                    mode,
+                                    &mut self.plugins,
+                                    PluginHandle::new(&self.proxy),
+                                );
                             }
                             #[cfg(feature = "accessibility")]
                             AccessibilityTask::Init => {
                                 let title = app.window.title();
                                 let update = app.accessibility.init(&mut app.tree, &title);
-                                app.platform
-                                    .focused_accessibility_id
-                                    .set_if_modified(update.focus);
-                                let node_id = app.accessibility.focused_node_id().unwrap();
-                                let layout_node = app.tree.layout.get(&node_id).unwrap();
-                                let focused_node = AccessibilityTree::create_node(
-                                    node_id,
-                                    layout_node,
-                                    &app.tree,
+                                app.process_accessibility_focus(
                                     &title,
-                                );
-                                let ime_allowed = is_ime_role(focused_node.role());
-                                app.platform
-                                    .focused_accessibility_node
-                                    .set_if_modified(focused_node);
-
-                                let area = layout_node.visible_area();
-                                crate::integration::update_ime(
-                                    app.window.as_ref(),
-                                    ime_allowed,
-                                    LogicalPosition::new(area.min_x(), area.min_y()),
-                                    LogicalSize::new(area.width(), area.height()),
+                                    None,
+                                    &mut self.plugins,
+                                    PluginHandle::new(&self.proxy),
                                 );
 
-                                #[cfg(feature = "accessibility")]
-                                {
-                                    app.screen_reader.set(true);
-                                    app.accessibility_adapter.update_if_active(|| update);
-                                }
+                                app.screen_reader.set(true);
+                                app.accessibility_adapter.update_if_active(|| update);
                             }
                             AccessibilityTask::None => {}
                         }
@@ -1195,6 +1188,11 @@ impl WinitRenderer {
                     });
                 }
                 WindowEvent::SurfaceResized(size) => {
+                    let size = if cfg!(target_os = "ios") {
+                        AppWindow::drawable_size(app.window.as_ref())
+                    } else {
+                        size
+                    };
                     if let Some(driver) = &mut app.driver
                         && let Err(error) = driver.resize(size)
                     {
@@ -1202,6 +1200,8 @@ impl WinitRenderer {
                             "Graphics driver lost while resizing ({error:?}), rebuilding on the same window"
                         );
                         needs_recovery = true;
+                    } else {
+                        app.last_render_size = size;
                     }
 
                     app.window.request_redraw();

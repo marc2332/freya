@@ -7,6 +7,10 @@ use std::{
 use freya_core::{
     integration::*,
     metrics::Metrics,
+    prelude::{
+        AccessibilityId,
+        AccessibilityRole,
+    },
 };
 use freya_engine::prelude::{
     Canvas,
@@ -242,6 +246,15 @@ pub enum PluginEvent<'a> {
         window: &'a dyn Window,
         font_collection: &'a FontCollection,
         tree: &'a Tree,
+    },
+
+    /// Syncs IME with the focused node, even when focus is unchanged or outside an input.
+    /// Claim an unhandled update by setting `handled` to `true` to skip Winit's IME.
+    ImeUpdate {
+        window: &'a dyn Window,
+        focused_id: AccessibilityId,
+        role: AccessibilityRole,
+        handled: &'a mut bool,
     },
 
     /// A keyboard input was received.
