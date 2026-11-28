@@ -19,7 +19,7 @@
 //! Use [`HtmlSource::url`] for remote pages and [`HtmlHandle::fonts`] for local fonts.
 //! On web, provide a font for inline documents or load one through CSS `@font-face`.
 //!
-//! Resolve embedded CSS and other subresources with [`HtmlHandle::resource_interceptor`].
+//! Intercept document URLs and subresources with [`HtmlHandle::resource_interceptor`].
 //!
 //! ```rust,no_run
 //! # use freya_core::prelude::*;
@@ -39,7 +39,7 @@
 //! # }
 //! ```
 //!
-//! Return [`ResourceResponse::Block`] to skip a subresource without using the cache or network.
+//! Return [`ResourceResponse::Block`] to skip a request without using the cache or network.
 //!
 //! For HTTP requests outside the viewer,
 //! enable Freya's `remote-asset` feature and use [`freya_components::http::fetch`]:
