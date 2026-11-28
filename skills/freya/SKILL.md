@@ -11,7 +11,7 @@ description: Apply Freya best practices when writing or reviewing Rust GUI compo
 * **Components:** [Separate UI from logic](#separate-ui-from-logic), [Use structs for reusable components](#use-structs-for-reusable-components), [Require values in component constructors](#require-values-in-component-constructors), [Keep builder chains declarative](#keep-builder-chains-declarative), [Pass plain text directly](#pass-plain-text-directly), [Let layout adapt](#let-layout-adapt)
 * **Events:** [Bind event handlers before the UI](#bind-event-handlers-before-the-ui), [Use pointer events for gestures](#use-pointer-events-for-gestures), [Use press for activation](#use-press-for-activation), [Make custom controls accessible](#make-custom-controls-accessible), [Cancel the right event](#cancel-the-right-event)
 * **State:** [Call hooks in a stable order](#call-hooks-in-a-stable-order), [Derive values instead of syncing state](#derive-values-instead-of-syncing-state), [Derive values without PartialEq](#derive-values-without-partialeq), [Keep side effects out of render](#keep-side-effects-out-of-render), [Give children only the state access they need](#give-children-only-the-state-access-they-need), [Share dependencies through context](#share-dependencies-through-context), [Scope shared state with Freya Radio](#scope-shared-state-with-freya-radio), [Bind inputs directly](#bind-inputs-directly)
-* **Styling:** [Use existing theme colors](#use-existing-theme-colors), [Create a custom app theme](#create-a-custom-app-theme), [Override individual theme fields](#override-individual-theme-fields), [Animate changes in state](#animate-changes-in-state)
+* **Styling:** [Use existing theme colors](#use-existing-theme-colors), [Use the OS theme preference](#use-the-os-theme-preference), [Create a custom app theme](#create-a-custom-app-theme), [Override individual theme fields](#override-individual-theme-fields), [Animate changes in state](#animate-changes-in-state)
 * **Performance:** [Key lists by item ID](#key-lists-by-item-id), [Virtualize large lists](#virtualize-large-lists), [Downsample images for display](#downsample-images-for-display), [Choose an image sampling filter](#choose-an-image-sampling-filter), [Tune asset cache retention](#tune-asset-cache-retention), [Rasterize complex SVGs in the background](#rasterize-complex-svgs-in-the-background), [Cache expensive calculations with use_memo](#cache-expensive-calculations-with-use_memo), [Subscribe where values are displayed](#subscribe-where-values-are-displayed), [Skip unchanged state writes](#skip-unchanged-state-writes), [Share remote data with Freya Query](#share-remote-data-with-freya-query), [Keep cached data visible during refresh](#keep-cached-data-visible-during-refresh)
 * **App:** [Load data outside render](#load-data-outside-render), [Show honest loading progress](#show-honest-loading-progress), [Spawn tasks from event handlers](#spawn-tasks-from-event-handlers), [Release state guards before awaiting](#release-state-guards-before-awaiting), [Build the Tokio runtime manually](#build-the-tokio-runtime-manually), [Use the router for page navigation](#use-the-router-for-page-navigation), [Open external URLs through Freya](#open-external-urls-through-freya), [Translate complete messages](#translate-complete-messages), [Respect Android system bars and cutouts](#respect-android-system-bars-and-cutouts), [Test through the UI](#test-through-the-ui)
 
@@ -414,6 +414,32 @@ rect()
     .child(label().color(TEXT).font_size(24.).text("Settings"))
     .child(label().color(SECONDARY_TEXT).font_size(14.).text("Manage your account"))
 ```
+
+## Use the OS theme preference
+
+Read `preferred_theme` from the current `PlatformWindow`, not from `Platform` directly. Use `FromPreference::to_theme` to convert the preference into a Freya theme.
+
+**CORRECT:** Initialize the app theme from the current window's preference and keep it in sync with `use_side_effect`
+
+```rust
+let preferred_theme = Platform::get().current_window().preferred_theme;
+let mut theme = use_init_theme(|| preferred_theme.peek().to_theme());
+
+use_side_effect(move || {
+    theme.set(preferred_theme.read().to_theme());
+});
+```
+
+**WRONG:** Expect `use_init_theme` alone to follow OS changes
+
+```rust
+let preferred_theme = Platform::get().current_window().preferred_theme;
+use_init_theme(|| preferred_theme.peek().to_theme());
+```
+
+The initializer runs once. The `peek()` call takes a snapshot, while `read()` inside the effect subscribes to changes and reruns the effect to update the app theme. If a component only needs the preference for its own rendering, read it directly in `render` without an effect.
+
+See [`examples/theme_preference.rs`](../../examples/theme_preference.rs).
 
 ## Create a custom app theme
 
